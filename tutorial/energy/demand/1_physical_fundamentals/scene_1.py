@@ -329,6 +329,47 @@ def _beam_pulses(scene, paths, color, *, repeats: int = 2, run_time: float = 2.4
 #endregion
 
 
+#region Glyphs — sun shading
+def _blind(x: float, y_top: float, y_bot: float, *, pitch: float = 0.3, length: float = 0.5,
+           angle: float = 45 * DEGREES, color=P_TEAL):
+    """🪟 Venetian blind in section — head rail, slats tilted outer edge low (like shingles) and the two ladder cords.
+
+    ``ys`` are the slat centres, ``tilt`` the slat direction; the slats overlap in projection so a closed blind
+    leaves no gap for the sun.
+    """
+    ys = np.arange(y_top - 0.06, y_bot - 1e-6, -pitch)
+    tilt = np.array([np.cos(angle), np.sin(angle), 0.0])
+    slats = VGroup(*[Line(np.array([x, y, 0.0]) - tilt * length / 2, np.array([x, y, 0.0]) + tilt * length / 2,
+                          color=color, stroke_width=7) for y in ys])
+    half = length * np.cos(angle) / 2
+    rail = Rectangle(width=2 * half + 0.12, height=0.12, color=P_WHITE, stroke_width=1.6, fill_color=color,
+                     fill_opacity=1.0).move_to(np.array([x, y_top + 0.06, 0.0]))
+    cords = VGroup(*[Line(np.array([x + dx, y_top, 0.0]), np.array([x + dx, ys[-1] - length * np.sin(angle) / 2, 0.0]), color=P_WHITE,
+                          stroke_width=1.2, stroke_opacity=0.6) for dx in (-half, half)])
+    return {"ys": ys, "tilt": tilt, "length": length, "angle": angle, "x": x, "slats": slats, "rail": rail,
+            "cords": cords, "group": VGroup(rail, cords, slats)}
+
+
+def _blind_hit(blind, start, direction):
+    """🎯 First point where a straight ray meets a slat of ``blind`` — rays end on the slat faces, not on a flat line."""
+    start, direction = np.array(start, dtype=float), np.array(direction, dtype=float)
+    d, half = blind["tilt"], blind["length"] / 2
+    best = None
+    for y in blind["ys"]:
+        rhs = np.array([blind["x"], y, 0.0]) - start
+        det = -direction[0] * d[1] + d[0] * direction[1]
+        if abs(det) < 1e-9:
+            continue
+        t = (-rhs[0] * d[1] + d[0] * rhs[1]) / det
+        u = (direction[0] * rhs[1] - direction[1] * rhs[0]) / det
+        if t > 0 and abs(u) <= half and (best is None or t < best):
+            best = t
+    if best is None:
+        best = (blind["x"] - start[0]) / direction[0]
+    return start + direction * best
+#endregion
+
+
 #region Glyphs — buildings
 def _window(x: float, sill: float, lintel: float, *, depth: float = 0.42, color=P_CYAN):
     """🪟 Window set into a line wall — reveal ticks at sill and lintel, a glazed sash seen edge-on in the wall line.
@@ -1403,6 +1444,9 @@ class Beat3_Energieerhaltung(Scene):
         ("balance",
          "What goes into a room either leaves it again or stays stored in it.",
          "Was in einen Raum hineingeht, verlässt ihn wieder oder bleibt in ihm gespeichert."),
+        ("losses",
+         "But not everything gets in: the glass reflects 20 joules. And what is stored gives 10 joules back later.",
+         "Nicht alles kommt hinein: Das Glas reflektiert 20 J. Und Gespeichertes gibt später 10 J wieder ab."),
         ("lamp",
          "A lamp draws a hundred watts of electrical power.",
          "Eine Lampe nimmt 100 W elektrische Leistung auf."),
@@ -1449,19 +1493,53 @@ class Beat3_Energieerhaltung(Scene):
             return bar
 
         forms = [form_bar([(1.0, P_CYAN)]), form_bar([(0.05, P_YELLOW), (0.95, P_RED)]), form_bar([(1.0, P_RED)])]
+        bar_base = form_y - 0.09
+
+        def in_bar_lbl(src, frac_from, frac_to):
+            cx = form_x0 + form_w * (frac_from + frac_to) / 2
+            return _m(src, np.array([cx, bar_base, 0.0]), size=LABEL_FONT_SIZE, color=P_WHITE)
+
         form_lbls = [
-            _m(r"\text{elektrisch}\;100\,\mathrm{J}", np.array([form_x0, form_y + 0.45, 0.0]), color=P_CYAN, edge="left"),
-            _m(r"\text{Licht}\;5\,\mathrm{J} + \text{Wärme}\;95\,\mathrm{J}", np.array([form_x0, form_y + 0.45, 0.0]),
-               color=P_YELLOW, edge="left"),
-            _m(r"\text{Wärme}\;100\,\mathrm{J}", np.array([form_x0, form_y + 0.45, 0.0]), color=P_RED, edge="left"),
+            VGroup(in_bar_lbl(r"\text{elektrisch}\;100\,\mathrm{J}\;(100\,\%)", 0.0, 1.0)),
+            VGroup(in_bar_lbl(r"\text{Wärme}\;95\,\mathrm{J}\;(95\,\%)", 0.05, 1.0),
+                   _m(r"\text{Licht}\;5\,\mathrm{J}\;(5\,\%)", np.array([form_x0, form_y + 0.45, 0.0]),
+                      size=LABEL_FONT_SIZE, color=P_YELLOW, edge="left")),
+            VGroup(in_bar_lbl(r"\text{Wärme}\;100\,\mathrm{J}\;(100\,\%)", 0.0, 1.0)),
         ]
         form_brace = Brace(forms[0], DOWN, color=P_WHITE)
         form_sum = _m(r"E = \text{konstant}", form_brace.get_bottom() + DOWN * 0.38, color=P_WHITE)
-        self.play(FadeIn(room["group"]), GrowFromEdge(forms[0], LEFT), FadeIn(form_lbls[0]), run_time=1.0)
-        self.play(GrowFromCenter(form_brace), FadeIn(form_sum), run_time=0.6)
-        self.play(ReplacementTransform(forms[0], forms[1]), ReplacementTransform(form_lbls[0], form_lbls[1]), run_time=0.9)
-        self.play(ReplacementTransform(forms[1], forms[2]), ReplacementTransform(form_lbls[1], form_lbls[2]), run_time=0.9)
-        hold_for(self, N, "law", used=BEAT_SUBTITLE_FADE + 0.3 + 3.4)
+        law_lamp = _lamp(np.array([room["center"][0], room["y_c"], 0.0]))
+        law_bulb = law_lamp["bulb"].get_center()
+        law_cable = Line(law_lamp["cable"].get_start(), law_lamp["cable"].get_end())
+        law_rays = VGroup(*[
+            Line(law_bulb, end, color=P_YELLOW, stroke_width=2.2, stroke_opacity=0.85)
+            for end in (np.array([room["x_l"] + 0.05, law_bulb[1] - 0.3, 0.0]),
+                        np.array([room["center"][0] + 0.4, room["y_f"] + 0.02, 0.0]),
+                        np.array([room["x_r"] - 0.05, law_bulb[1] - 0.6, 0.0]))
+        ])
+        law_glow = Circle(radius=0.3, stroke_width=0, fill_color=P_RED, fill_opacity=0.25).move_to(law_bulb)
+
+        def law_heat(rt: float):
+            return _ripples([law_bulb], r_max=0.8, color=P_RED, down=True, cycles=max(1.0, rt / 1.4))
+
+        _paced_flow(self, [([law_cable], P_CYAN, None, None, False)], run_time=4.0, waves=3, cycles=2.5, radius=0.045,
+                    extra=[FadeIn(room["group"]), FadeIn(law_lamp["group"]),
+                           GrowFromEdge(forms[0], LEFT, rate_func=linear)])
+        self.play(FadeIn(form_lbls[0]), run_time=0.7)
+        self.play(GrowFromCenter(form_brace), FadeIn(form_sum), run_time=1.0)
+        _paced_flow(self, [([law_cable], P_CYAN, None, None, False)], run_time=2.0, waves=3, cycles=1.5, radius=0.045)
+        self.play(FadeOut(form_lbls[0]), run_time=0.5)
+        self.play(ReplacementTransform(forms[0], forms[1], rate_func=linear), FadeIn(law_glow, scale=0.4),
+                  LaggedStart(*[Create(r) for r in law_rays], lag_ratio=0.2), law_heat(4.0), run_time=4.0)
+        self.play(FadeIn(form_lbls[1]), run_time=0.7)
+        self.play(law_heat(2.5), run_time=2.5)
+        self.play(FadeOut(form_lbls[1]), run_time=0.5)
+        self.play(ReplacementTransform(forms[1], forms[2], rate_func=linear), law_rays.animate.set_color(P_ORANGE),
+                  LaggedStart(*[Flash(r.get_end(), color=P_ORANGE, flash_radius=0.18, line_length=0.12)
+                                for r in law_rays], lag_ratio=0.3),
+                  room["air"].animate.set_fill(P_RED, opacity=0.1), law_heat(4.0), run_time=4.0)
+        self.play(FadeIn(form_lbls[2]), FadeOut(law_rays), run_time=0.7)
+        hold_for(self, N, "law", used=BEAT_SUBTITLE_FADE + 0.3 + 24.5, during=lambda rt: [law_heat(rt)])
 
         caption = swap_caption(self, caption, subtitle_text(N, "balance"))
         mid_y = room["center"][1]
@@ -1475,29 +1553,59 @@ class Beat3_Energieerhaltung(Scene):
             return Rectangle(width=max(0.002, width * frac), height=0.42, stroke_width=0, fill_color=color,
                              fill_opacity=0.7).move_to(np.array([x0 + width * frac / 2, y, 0.0]))
 
-        in_bar = bar(1.0, bx, 1.0, bw, P_CYAN)
-        out_bar = bar(0.25, bx, 1.0, bw * 0.7, P_RED)
-        st_bar = bar(0.25, bx + bw * 0.7, 1.0, bw * 0.3, P_ORANGE)
-        in_t = Text("hinein", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(np.array([bx + 0.5, 1.48, 0.0]))
-        out_t = Text("hinaus", font_size=LABEL_FONT_SIZE, color=P_RED).move_to(np.array([bx + 0.5, -0.23, 0.0]))
-        st_t = Text("gespeichert", font_size=LABEL_FONT_SIZE, color=P_ORANGE).move_to(
-            np.array([bx + bw * 0.85, -0.23, 0.0]))
+        def lost_bar(y, x0, frac, width, color, ghost_opacity: float = 0.15):
+            ghost = Rectangle(width=width * frac, height=0.42, stroke_width=0, fill_color=color,
+                              fill_opacity=ghost_opacity)
+            outline = DashedVMobject(Rectangle(width=width * frac, height=0.42, color=P_WHITE, stroke_width=2.5),
+                                     num_dashes=14)
+            return VGroup(ghost, outline).move_to(np.array([x0 + width * frac / 2, y, 0.0]))
+
+        in_bar = bar(1.15, bx, 0.8, bw, P_CYAN)
+        out_bar = bar(0.0, bx, 0.5, bw, P_RED)
+        st_bar = bar(0.0, bx + bw * 0.5, 0.3, bw, P_ORANGE)
+        refl_bar = lost_bar(1.15, bx + bw * 0.8, 0.2, bw, P_BLUE)
+        st_lost = lost_bar(0.0, bx + bw * 0.7, 0.1, bw, P_ORANGE, ghost_opacity=0.0)
+        in_t = _m(r"\text{hinein}\;80\,\mathrm{J}", np.array([bx, 1.63, 0.0]), size=LABEL_FONT_SIZE, color=P_CYAN,
+                  edge="left")
+        out_t = _m(r"\text{hinaus}\;50\,\mathrm{J}", np.array([bx, -0.48, 0.0]), size=LABEL_FONT_SIZE,
+                   color=P_RED, edge="left")
+        st_t = _m(r"\text{gespeichert}\;30\,\mathrm{J}", np.array([bx + bw * 0.5, -0.48, 0.0]),
+                  size=LABEL_FONT_SIZE, color=P_ORANGE, edge="left")
+        refl_t = _m(r"\text{Verlust}\;20\,\mathrm{J}", np.array([bx + bw, 1.63, 0.0]), size=LABEL_FONT_SIZE,
+                    color=P_BLUE, edge="right")
+        lost_t = _m(r"10\,\mathrm{J}\;\text{später wieder hinaus}", np.array([bx + bw * 0.8, 0.5, 0.0]),
+                    size=LABEL_FONT_SIZE, color=P_ORANGE, edge="right")
+        lost_leader = Line(np.array([bx + bw * 0.75, 0.38, 0.0]), np.array([bx + bw * 0.75, 0.24, 0.0]),
+                           color=P_ORANGE, stroke_width=1.6, stroke_opacity=0.8)
+        refl_arrow = Arrow(np.array([room["glass_x"] - 0.05, mid_y + 0.3, 0.0]),
+                           np.array([room["glass_x"] - 0.72, mid_y + 0.97, 0.0]), buff=0, color=P_BLUE,
+                           stroke_width=4, stroke_opacity=0.9, max_tip_length_to_length_ratio=0.2)
+        refl_tag = Text("Reflexion", font_size=LABEL_FONT_SIZE - 2, color=P_BLUE)
+        refl_tag.move_to(refl_arrow.get_end() + UP * 0.33)
         row, box, items = _panel([
             ("in", r"E_{\mathrm{ein}}", P_CYAN), (None, "=", P_WHITE), ("out", r"E_{\mathrm{aus}}", P_RED),
             (None, "+", P_WHITE), ("st", r"\Delta E_{\mathrm{Speicher}}", P_ORANGE),
         ])
-        self.play(FadeOut(VGroup(forms[2], form_lbls[2], form_brace, form_sum)), run_time=0.4)
+        self.play(FadeOut(VGroup(forms[2], form_lbls[2], form_brace, form_sum, law_lamp["group"], law_glow)),
+                  room["air"].animate.set_fill(P_RED, opacity=0.0), run_time=0.6)
         self.play(FadeIn(e_in), FadeIn(in_bar), FadeIn(in_t), run_time=1.4)
         self.play(FadeIn(e_out), FadeIn(out_bar), FadeIn(st_bar), FadeIn(out_t), FadeIn(st_t),
                   room["ceiling"].animate.set_fill(P_ORANGE, opacity=0.55), run_time=1.4)
         self.play(FadeIn(row), Create(box), run_time=0.8)
         hold_for(self, N, "balance")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "losses"))
+        self.play(GrowArrow(refl_arrow), FadeIn(refl_tag), FadeIn(refl_bar), FadeIn(refl_t), run_time=1.6)
+        self.play(FadeIn(st_lost), FadeIn(lost_t), Create(lost_leader), run_time=1.6)
+        hold_for(self, N, "losses", during=lambda rt: [
+            ShowPassingFlash(refl_arrow.copy().set_stroke(width=8), time_width=0.6, run_time=rt),
+            Indicate(st_lost, color=P_ORANGE, scale_factor=1.0, run_time=rt)])
         #endregion
 
         #region lamp and split
+        self.play(FadeOut(VGroup(e_in, e_out, in_t, out_t, st_t, row, box, refl_arrow, refl_tag, refl_bar, refl_t, st_lost,
+                                 lost_t, lost_leader)), FadeOut(in_bar), FadeOut(out_bar), FadeOut(st_bar), room["ceiling"].animate.set_fill(P_WHITE, opacity=0.14), run_time=0.6)
         caption = swap_caption(self, caption, subtitle_text(N, "lamp"))
-        self.play(FadeOut(VGroup(e_in, e_out, in_t, out_t, st_t, row, box)), FadeOut(in_bar), FadeOut(out_bar),
-                  FadeOut(st_bar), room["ceiling"].animate.set_fill(P_WHITE, opacity=0.14), run_time=0.6)
         lamp = _lamp(np.array([room["center"][0], room["y_c"], 0.0]))
         p_el = ValueTracker(0.0)
         p_read = _readout(lambda: rf"P_{{\mathrm{{el}}}} = {_de(p_el.get_value())}\,\mathrm{{W}}",
@@ -2248,28 +2356,18 @@ class Beat5_Strahlung(Scene):
         hold_for(self, N, "winter")
 
         caption = swap_caption(self, caption, subtitle_text(N, "summer"))
-        slat_angle = 50 * DEGREES
-        slat_x = gx - 0.62
-        slat_ys = np.arange(room["win_hi"] + 0.05, room["win_lo"] - 0.1, -0.3)
-        slats = VGroup(*[
-            Rectangle(width=0.52, height=0.11, color=P_WHITE, stroke_width=2, fill_color=P_TEAL,
-                      fill_opacity=1.0).move_to(np.array([slat_x, y, 0.0])).rotate(slat_angle)
-            for y in slat_ys
-        ])
-        rail = Rectangle(width=0.62, height=0.22, color=P_WHITE, stroke_width=2, fill_color=P_TEAL,
-                         fill_opacity=1.0).move_to(np.array([slat_x, room["win_hi"] + 0.42, 0.0]))
-        cords = VGroup(*[Line(rail.get_bottom() + RIGHT * dx, np.array([slat_x + dx, slat_ys[-1], 0.0]),
-                              color=P_WHITE, stroke_width=1.2, stroke_opacity=0.6) for dx in (-0.12, 0.12)])
+        out_blind = _blind(gx - 0.3, room["win_hi"] + 0.06, room["win_lo"] + 0.18)
+        rail, cords, slats = out_blind["rail"], out_blind["cords"], out_blind["slats"]
         blind_lbl = Text("Raffstore", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(
-            np.array([slat_x - 0.1, room["win_lo"] - 0.35, 0.0]))
-        bounce_up = _mirror(sun_dir, slat_angle)
+            np.array([gx - 0.85, room["win_lo"] - 0.35, 0.0]))
         stopped, shade_paths = VGroup(), []
         for start in starts:
-            stop = start + sun_dir * ((slat_x - 0.05 - start[0]) / sun_dir[0])
+            stop = _blind_hit(out_blind, start, sun_dir)
             stopped.add(_wave([start, stop], "short"))
-            back = stop + bounce_up * 0.6
-            stopped.add(_wave([stop, back], "short", opacity=0.45))
-            shade_paths.append([start, stop, back])
+            bounce = _mirror(sun_dir, out_blind["angle"])
+            back = stop + bounce * min(0.4, max(0.05, (room["win_hi"] + 0.04 - stop[1]) / max(bounce[1], 1e-6)))
+            stopped.add(_beam(stop, back, opacity=0.4, width=1.6))
+            shade_paths.append([start, stop])
         norm2 = Text("DIN 4108-2", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(np.array([-3.7, -1.0, 0.0]))
         self.play(FadeOut(radiator), FadeOut(need_read), FadeOut(lowe_lbl), FadeOut(lowe_leader), FadeOut(plain_lbl), FadeOut(plain_leader),
                   run_time=0.4)
@@ -2277,7 +2375,7 @@ class Beat5_Strahlung(Scene):
                                                             lag_ratio=0.12),
                   FadeIn(blind_lbl), run_time=1.2)
         self.play(ReplacementTransform(beams_out, stopped), shaft.animate.set_fill(opacity=0.03), FadeOut(patch),
-                  slats.animate.set_fill(interpolate_color(ManimColor(P_TEAL), ManimColor(P_ORANGE), 0.45)),
+                  slats.animate.set_stroke(color=interpolate_color(ManimColor(P_TEAL), ManimColor(P_ORANGE), 0.45)),
                   t_room.animate.set_value(22.0), room["air"].animate.set_fill(P_RED, opacity=0.04),
                   room["floor"].animate.set_fill(P_WHITE, opacity=0.14),
                   room["wall_lo"].animate.set_fill(P_WHITE, opacity=0.14),
@@ -2304,34 +2402,26 @@ class Beat5_Strahlung(Scene):
         in_val = always_redraw(lambda: _m(rf"{_de(22 + 8 * in_frac.get_value())}\,\mathrm{{°C}}", np.array(
             [bar_x["in"], bar_base + max(0.002, (22 + 8 * in_frac.get_value() - 15) * bar_unit) + 0.3, 0.0]),
             size=LABEL_FONT_SIZE, color=P_RED))
-        in_x = gx + 0.8
-        in_slats = VGroup(*[
-            Rectangle(width=0.52, height=0.11, color=P_WHITE, stroke_width=2, fill_color=P_TEAL,
-                      fill_opacity=1.0).move_to(np.array([in_x, y, 0.0])).rotate(slat_angle)
-            for y in slat_ys
-        ])
-        in_rail = Rectangle(width=0.62, height=0.22, color=P_WHITE, stroke_width=2, fill_color=P_TEAL,
-                            fill_opacity=1.0).move_to(np.array([in_x, room["win_hi"] + 0.42 - 0.3, 0.0]))
-        in_cords = VGroup(*[Line(in_rail.get_bottom() + RIGHT * dx, np.array([in_x + dx, slat_ys[-1], 0.0]),
-                                 color=P_WHITE, stroke_width=1.2, stroke_opacity=0.6) for dx in (-0.12, 0.12)])
+        in_blind = _blind(gx + 0.3, room["win_hi"] + 0.06, room["win_lo"] + 0.18)
+        in_rail, in_cords, in_slats = in_blind["rail"], in_blind["cords"], in_blind["slats"]
         in_lbl = Text("Raffstore innen", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(
-            np.array([in_x + 1.6, room["y_f"] + 0.3, 0.0]))
+            np.array([gx + 1.9, room["y_f"] + 0.3, 0.0]))
         in_beams, in_paths = VGroup(), []
         for start in starts:
-            stop = start + sun_dir * ((in_x - 0.05 - start[0]) / sun_dir[0])
+            stop = _blind_hit(in_blind, start, sun_dir)
             in_beams.add(_wave([start, stop], "short"))
             in_paths.append([start, stop])
-        slat_pts = [np.array([in_x + 0.3, y, 0.0]) for y in slat_ys[::2]]
+        slat_pts = [np.array([gx + 0.55, y, 0.0]) for y in in_blind["ys"][::3]]
         self.play(FadeOut(VGroup(rail, cords, slats, blind_lbl, norm2)), FadeOut(stopped), run_time=0.6)
         self.play(FadeIn(in_rail), Create(in_cords), LaggedStart(*[FadeIn(s_, shift=DOWN * 0.2) for s_ in in_slats],
                                                                   lag_ratio=0.1), FadeIn(in_lbl),
                   LaggedStart(*[Create(b) for b in in_beams], lag_ratio=0.08), run_time=1.4)
         warm_slats = interpolate_color(ManimColor(P_TEAL), ManimColor(P_RED), 0.7)
-        self.play(in_slats.animate.set_fill(warm_slats), shaft.animate.set_fill(opacity=0.0), LaggedStart(
+        self.play(in_slats.animate.set_stroke(color=warm_slats), shaft.animate.set_fill(opacity=0.0), LaggedStart(
             *[Flash(np.array(pth[1]), color=P_ORANGE, flash_radius=0.12, line_length=0.08) for pth in in_paths],
             lag_ratio=0.1), run_time=1.0)
         _beam_pulses(self, in_paths, P_YELLOW, repeats=1, run_time=2.0, kind="short", extra=[
-                         _ripples(slat_pts, r_max=0.8), t_room.animate.set_value(30.0),
+                         _ripples(slat_pts, r_max=0.6), t_room.animate.set_value(30.0),
                          in_frac.animate.set_value(1.0), room["air"].animate.set_fill(P_RED, opacity=0.1)])
         hold_for(self, N, "inner")
 
@@ -2439,8 +2529,9 @@ class Beat6_ThermischeMasse(Scene):
                   FadeIn(d_t_lbl), run_time=1.0)
         self.play(FadeIn(v_line, shift=RIGHT * 0.1), run_time=0.8)
         self.play(FadeIn(m_line, shift=RIGHT * 0.1), slab.animate.set_fill(P_CYAN, opacity=0.25), run_time=0.8)
-        self.play(FadeOut(v_line), m_line.animate.move_to(np.array([m_line.get_center()[0], rows[0], 0.0])),
-                  run_time=0.6)
+        self.wait(2.5)
+        self.play(FadeOut(v_line), run_time=1.6)
+        self.play(m_line.animate.move_to(np.array([m_line.get_center()[0], rows[0], 0.0])), run_time=1.2)
         hold_for(self, N, "mass")
 
         caption = swap_caption(self, caption, subtitle_text(N, "heat"))
@@ -2448,7 +2539,8 @@ class Beat6_ThermischeMasse(Scene):
             (None, "Q", P_ORANGE), (None, "=", P_WHITE), ("m", "m", P_CYAN), (None, r"\cdot", P_WHITE),
             ("c", "c", P_WHITE), (None, r"\cdot", P_WHITE), ("dt", r"\Delta T", P_ORANGE),
         ])
-        self.play(FadeOut(VGroup(d_w, d_w_lbl, d_d, d_d_lbl, d_t, d_t_lbl)), FadeOut(m_line), run_time=0.5)
+        self.wait(1.5)
+        self.play(FadeOut(VGroup(d_w, d_w_lbl, d_d, d_d_lbl, d_t, d_t_lbl)), FadeOut(m_line), run_time=1.8)
         self.play(FadeIn(row), Create(box), LaggedStart(*[GrowArrow(a) for a in heat_in], lag_ratio=0.15), run_time=0.8)
         _reveal(self, dt_read, q_read, kwh_read)
         self.play(dT.animate.set_value(2.0), slab.animate.set_fill(P_ORANGE, opacity=0.45),

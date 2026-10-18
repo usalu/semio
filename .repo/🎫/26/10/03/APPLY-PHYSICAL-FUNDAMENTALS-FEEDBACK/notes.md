@@ -133,3 +133,24 @@ New clause `final` before `compare1`: „Endenergie ist, was ans Haus geliefert 
 - B7 end: split `relevance` into `rel_winter` + `rel_summer`, slower build-up; air-state labels now with φ (26 °C → 56 %, 14 °C → 95 %, computed from x and p_sat); register drawn without the serpentine tube (reading of „Schlange raus“); headings moved to y = 2.3.
 - B8: Venturi removed (duct, Bernoulli, wind over the ridge, A_Zu/A_Ab/V̇ formula = „zu viel / Venturi weglassen“). Now `Beat8_Lueftung`: openings + V̇ → Q̇_V = ρ·c·V̇·ΔT (0,34 only appears as „ρ·c ≈ 0,34 Wh/(m³K)“ in its own step) → 680 W → night ventilation. Massivdecke slab/label replaced by a coloured roof board „Dach“ (reading of the „auch weglassen“ comment + user’s hint).
 - B9 Kraft removed (user: „Der Exkurs zur Kraft erscheint mir zu viel“). Kept: 1 kWh = 3,6 MJ already in B2. BEATS now has 8 entries; KONZEPTE_UND_FORMELN.md updated. Code is in git history (commit e6fc21fbba9 and earlier).
+
+## Round 7 — Energieerhaltung bar pacing
+
+B3 `law`: bar grows over 4 s (linear), cyan → yellow+red → red each over 4 s with 2–2.5 s pauses; labels now fade (no morph) and carry numbers: „elektrisch 100 J (100 %)“, „Licht 5 J (5 %)“ + „Wärme 95 J (95 %)“, „Wärme 100 J (100 %)“. Beat3 re-rendered at 1080p60 and re-concatenated with the other 1080p60 clips (script not re-run because scene_1.py mtime would force all clips to re-render) → rendered/Full_Physical_Fundamentals_1080p60.mp4, 15:01.
+
+Round 7b — B3 `law`: room synced with the bar (pendant lamp: cyan current on the cable → red glow + ripples + 3 yellow rays → rays turn orange/flash, room tints red; all removed before `balance`). Physics check: incandescent ≈ 5 % light / 95 % direct heat (IR + convection), light becomes heat on absorption. Beat3 re-rendered 1080p60 and re-concatenated.
+
+## Round 8 — balance losses, blinds, thermal-mass pacing
+
+- B3 `losses` (new clause): row 1 = hinein 80 J + dashed „Verlust 20 J“ (Reflexion am Glas, reflected arrow at the window), row 2 = hinaus 50 J + gespeichert 30 J whose last 10 J is dashed („später wieder hinaus“, Speicherverlust). Reading of the user’s „auch Verlust bei hinein/gespeichert“ — numbers are schematic. Caption now swaps after the diagram fades.
+- B5: `_blind` / `_blind_hit` helpers (head rail, 2 cords, 6 slats at 45° outer edge low); rays end on slat faces, outside blind reflects up/out; inside blind right behind the glass.
+- B6: V line / dimension labels fade slower (waits 1.5–2.5 s, fades 1.6–1.8 s).
+- Beat3, Beat5, Beat6 re-rendered at 1080p60 and re-concatenated by hand → rendered/Full_Physical_Fundamentals_1080p60.mp4.
+
+## Round 9 — intro credits
+
+`tutorial/intro/intro_scene.py`: `NGSIntro` got optional `credit_title_de` / `credits_de` (no credits block when empty); only `Demo_Intro_PhysikalischeGrundlagen` sets them: „Konzeption & Produktion der Animation“ — Niloufar Ghandeharioun · Ueli Saluz. Block fades in right after the frame border is drawn, sits on a dark plate at the bottom (hides the castle watermark), upper card shifted up 0.43 when credits are present. Intro re-rendered 1080p60 (15,5 s) and re-concatenated.
+
+Round 9b — intro credit reworked per user: no plate/block; one line „Konzeption & Produktion der Animation: Niloufar Ghandeharioun · Ueli Saluz“ in the same size/colour as the Geyer line, appended below it and faded in after it (NGSIntro identity block). Intro re-rendered 1080p60 and re-concatenated.
+
+Round 9c — Geyer name line in NGSIntro 14 → 18 pt (shared by all series intros; only the PF intro was re-rendered). Credit line stays 14 pt.

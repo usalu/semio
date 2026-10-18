@@ -6,5 +6,4 @@ file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/1_phy
 file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/1_physical_fundamentals/media/videos/scene_1/1080p60/Beat5_Strahlung.mp4'
 file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/1_physical_fundamentals/media/videos/scene_1/1080p60/Beat6_ThermischeMasse.mp4'
 file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/1_physical_fundamentals/media/videos/scene_1/1080p60/Beat7_SensibelLatent.mp4'
-file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/1_physical_fundamentals/media/videos/scene_1/1080p60/Beat8_Venturi.mp4'
-file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/1_physical_fundamentals/media/videos/scene_1/1080p60/Beat9_Kraft.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/1_physical_fundamentals/media/videos/scene_1/1080p60/Beat8_Lueftung.mp4'
