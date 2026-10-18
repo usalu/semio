@@ -12,19 +12,19 @@
 pub use messages::{render, row_of, Row, LOCALES};
 pub use index::{categories, category_of, DiagnosticIndex, ElementFindings, SeverityCounts};
 
-use super::super::components::ComponentValue;
-use super::super::curtain_layout::CurtainLayout;
-use super::super::mep::clash::MepClashes;
-use super::super::mep::MepValue;
-use super::super::element_solids::roofs::RoofFallback;
-use super::super::element_solids::stairs::stringer_ignored;
-use super::super::element_solids::{dep_object, dep_records, dep_types, dep_value};
-use super::super::opening_frames::OpeningFrame;
-use super::super::spaces::StoreyRooms;
-use super::super::ramp_runs::RampRun;
-use super::super::stair_runs::StairRun;
-use super::super::storey_levels::StoreyLevel;
-use super::super::wall_layout::WallLayout;
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::stringer_ignored;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};
@@ -299,8 +299,8 @@ pub fn storey_findings(snapshot: &ModelSnapshot, storey: &str, inputs: &Inputs<'
     let mut found = references::storey(snapshot, storey);
     found.extend(validity::storey(snapshot, storey, inputs));
     found.extend(wall_depth::storey(snapshot, storey, inputs));
-    found.extend(super::super::components::findings::storey(storey, inputs));
-    found.extend(super::super::mep::findings::storey(storey, inputs));
+    found.extend(crate::standards::v1::subsets::any::schema::inferences::components::findings::storey(storey, inputs));
+    found.extend(crate::standards::v1::subsets::any::schema::inferences::mep::findings::storey(storey, inputs));
     found
 }
 
@@ -425,6 +425,4 @@ pub fn measure_of(finding: &Diagnostic) -> f64 {
 
 //#endregion 🔖️Scopes
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

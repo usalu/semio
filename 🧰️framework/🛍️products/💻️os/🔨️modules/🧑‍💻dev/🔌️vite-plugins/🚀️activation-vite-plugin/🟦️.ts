@@ -58,7 +58,7 @@ export async function reportActivationFreshness(receipt: ActivationReceipt, opti
   return stagedModuleReportLines(facts.map(stagedModuleVerdict), `bun repo run @semio-tech/framework-os-dev:activate-${receipt.variant}-react-${receipt.profile}`);
 }
 
-/** 📡️ Announces explicit Nx activation completion and releases every server-owned subscription. */
+/** 📡️ Announces explicit build activation completion and releases every server-owned subscription. */
 export function semioActivationVitePlugin(options: { readonly receiptDirectory: string; readonly moduleRoot: string; readonly installRoot: string; readonly freshnessRoot?: string; readonly components: readonly ActivationComponentSpec[] }) {
   let dispose = (): void => {};
   let staleness: readonly string[] = [];

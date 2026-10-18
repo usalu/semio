@@ -12,7 +12,7 @@ thread_local! {
 /// run; an over-ceiling step extends it, and a run of `SUSTAINED_OVERRUN_QUARANTINE_STEPS` consecutive over-ceiling
 /// steps fails — the run production's `StepOverrunLedger` quarantines, never a single descheduled reading.
 #[track_caller]
-pub(crate) fn admit_step(elapsed: std::time::Duration, what: std::fmt::Arguments<'_>) {
+pub fn admit_step(elapsed: std::time::Duration, what: std::fmt::Arguments<'_>) {
     let elapsed_us = u64::try_from(elapsed.as_micros()).unwrap_or(u64::MAX);
     let run = CONSECUTIVE_OVERRUNS.with(|overruns| {
         let next = if semio_framework_job::interactive_step_contract_violated(elapsed_us) { overruns.get() + 1 } else { 0 };

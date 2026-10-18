@@ -7,7 +7,7 @@
 import { opendir, readFile as readFileAsync } from "node:fs/promises";
 import { basename, join, posix, relative, sep } from "node:path";
 import ts from "typescript";
-import { type BreachRecord } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
 import { pathEmojiStatuteFindings } from "@semio-tech/framework/identity/path";
 import { leadingEmojiIdentity } from "@semio-tech/framework/identity/grapheme";
 import { isExcludedTestPath, testFeatureFilename, type TestInPackageImplementation, testTaxonomy, type TestTaxonomy } from "../🗂️taxonomy/🟦️.ts";

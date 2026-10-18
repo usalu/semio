@@ -2,10 +2,10 @@
 //! arc segments, and the area of the straight cut poché and the length of the straight lines per style. Built from the plans and the sheet frames the writer snaps its coordinates with,
 //! so the numbers are those of the written geometry. Arcs are counted, never measured (a third-party library can only sample them).
 
-use super::path::{has_arc, is_arc, path_length, points, ring_area, snap};
-use super::sheet::{layout, Slot};
-use super::drawing::tint;
-use super::style::{annotated, kind_class, style_class, view_class, STYLE_CLASSES};
+use crate::standards::v1::subsets::any::io::export::svg::path::{has_arc, is_arc, path_length, points, ring_area, snap};
+use crate::standards::v1::subsets::any::io::export::svg::sheet::{layout, Slot};
+use crate::standards::v1::subsets::any::io::export::svg::drawing::tint;
+use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, style_class, view_class, STYLE_CLASSES};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
@@ -181,6 +181,4 @@ impl Projection {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

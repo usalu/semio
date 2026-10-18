@@ -8,7 +8,9 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryCargoTests, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
@@ -32,11 +34,11 @@ export class DocumentMountSingleFlightCheckScript extends BundleScript {
       if (row.authority === "ready") assert.equal(row.database, "open", row.id);
       if (row.database === "terminal" || row.database === "absent") assert.equal(row.databaseActivities, "closed", row.id);
     }
-    const mountedEngine = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs"), "utf8");
-    const mountedArtifact = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"), "utf8");
-    const mountedSync = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs"), "utf8");
+    const mountedEngine = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs"));
+    const mountedArtifact = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"));
+    const mountedSync = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs"));
     assert(mountedEngine.includes('#[cfg(test)]\n#[path = "🧪️tests/🔬️unit/🦀️.rs"]\nmod tests;'), "missing actual database pool-use test mount");
-    const engineLaws = readFileSync(join(owner, "..", "🧪️tests", "🔬️unit", "🦀️.rs"), "utf8");
+    const engineLaws = readModuleTreeSource(join(owner, "..", "🧪️tests", "🔬️unit", "🦀️.rs"));
     for (const marker of ["pool_use: Option<Arc<WorkerPoolUse>>", "let pool_use = pool.acquire_use()", "fn require_open_use(&self)", "self.pool_use.take()", "DatabaseRetainedActivityRejected::Closed", "DatabaseDocumentMountDriver::NonRunnable", "DatabaseShutdownBlock::Executor(kind)"]) assert(mountedEngine.includes(marker), `missing mounted pool-use marker ${marker}`);
     const catalogStateStart = mountedEngine.indexOf("struct DatabaseCreateCatalogState {");
     const catalogState = mountedEngine.slice(catalogStateStart, mountedEngine.indexOf("\n}", catalogStateStart));
@@ -189,7 +191,7 @@ export class DocumentMountSingleFlightCheckScript extends BundleScript {
       assert.equal(maximumQueued, row.expected.maximumQueuedPollers, row.name);
       assert.equal(cleanupResumes, row.expected.cleanupResumes, row.name);
     }
-    const source = readFileSync(join(owner, "..", "🦀️.rs"), "utf8");
+    const source = readModuleTreeSource(join(owner, "..", "🦀️.rs"));
     for (const marker of [
       "enum DatabaseDocumentMountSlot",
       "Opening {",
@@ -238,7 +240,7 @@ export class DocumentMountSingleFlightCheckScript extends BundleScript {
     assert(hello.includes("DatabaseSyncHelloFuture::try_submit_with_use") && !hello.includes("DatabaseSyncHelloFuture::try_submit("));
     const requestDrive = mountOwner.slice(mountOwner.indexOf("fn request_drive(self: &Arc<Self>"), mountOwner.indexOf("fn resume_parked("));
     assert(!requestDrive.includes("self.work.try_lock()") && !requestDrive.includes("self.work.lock()"));
-    const artifact = readFileSync(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"), "utf8");
+    const artifact = readModuleTreeSource(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"));
     for (const marker of [
       "enum ArtifactRunnerDriver",
       "RunnableIdle",
@@ -263,7 +265,7 @@ export class DocumentMountSingleFlightCheckScript extends BundleScript {
     for (const marker of ["close_error", "WorkerMaintenanceStep::Fault"]) {
       assert(artifact.includes(marker), `missing retained artifact close-fault marker: ${marker}`);
     }
-    const artifactLaws = readFileSync(join(owner, "..", "..", "🗿️artifact", "🧪️tests", "🔬️unit", "🦀️.rs"), "utf8");
+    const artifactLaws = readModuleTreeSource(join(owner, "..", "..", "🗿️artifact", "🧪️tests", "🔬️unit", "🦀️.rs"));
     for (const law of [
       "artifact_engine_close_fault_retries_on_bounded_timer_backoff_until_terminal",
       "artifact_engine_close_fault_exhausts_its_budget_then_polls_only_on_readmission",
@@ -417,9 +419,9 @@ export class DurableGroupJournalCheckScript extends BundleScript {
     assert(successorHeaderBytes + transactionBytes(fixture.limits.storeEventBytes) <= fixture.limits.walSegmentBytes);
     assert(successorHeaderBytes + transactionBytes(maximumEventBytes + 1) > fixture.limits.walSegmentBytes);
     const storeSource = readFileSync(join(storeOwner, "🦀️.rs"), "utf8");
-    const artifactSource = readFileSync(join(artifactOwner, "🦀️.rs"), "utf8");
+    const artifactSource = readModuleTreeSource(join(artifactOwner, "🦀️.rs"));
     const walSource = readFileSync(join(artifactOwner, "../📝️wal/🦀️.rs"), "utf8");
-    const engineSource = readFileSync(join(artifactOwner, "../⚙️engine/🦀️.rs"), "utf8");
+    const engineSource = readModuleTreeSource(join(artifactOwner, "../⚙️engine/🦀️.rs"));
     assert(storeSource.includes("pub struct DurableOwnedGroupJournalRecordV1") && storeSource.includes("DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&canonical_pack)"));
     assert(storeSource.includes("pub enum DurableOwnedGroupJournalAdvanceV1") && storeSource.includes("Rejected(String)"));
     const append = artifactSource.slice(artifactSource.indexOf("async fn append_durable_group_decision("), artifactSource.indexOf("pub(crate) async fn compact_retained", artifactSource.indexOf("async fn append_durable_group_decision(")));
@@ -463,7 +465,7 @@ export class DurableGroupJournalCheckScript extends BundleScript {
       "db_artifact::tests::document_authority_durable_group_journal_cancellation_before_handoff_is_absent",
       "db_artifact::tests::document_authority_durable_group_journal_rejects_hash_before_mailbox",
     ];
-    const artifactLawsSource = readFileSync(join(artifactOwner, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    const artifactLawsSource = readModuleTreeSource(join(artifactOwner, "🧪️tests/🔬️unit/🦀️.rs"));
     for (const law of laws) assert(artifactLawsSource.includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     console.log(
       `durable-group-journal-independent-oracle: behavior-oracles=retained cases=${fixture.cases.length} witnesses=${fixture.committedDecisionWitnessCases.length} recovery=${fixture.committedRecovery.cases.length} max-event=${maximumEventBytes} store-margin=${fixture.limits.walSegmentBytes - fixture.limits.storeMaximumSegmentBytes}`,

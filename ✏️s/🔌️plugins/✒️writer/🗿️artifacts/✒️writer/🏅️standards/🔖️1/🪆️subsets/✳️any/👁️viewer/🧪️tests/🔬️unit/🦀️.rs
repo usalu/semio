@@ -28,7 +28,7 @@ use semio_framework_plugin::NoTransient;
 #[allow(unused_imports)]
 use semio_framework_plugin::NoTransientMutation;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::writer::*;
 
 #[semio_framework_async_macros::async_test]

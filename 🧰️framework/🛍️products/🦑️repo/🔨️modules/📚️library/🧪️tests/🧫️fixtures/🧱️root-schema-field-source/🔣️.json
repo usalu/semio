@@ -71,7 +71,7 @@
   ],
   "consumers": [
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧬️schema-overhaul-s2/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧬️schema-overhaul-s2/🪞️facet-mirror-drift/🟦️.ts",
       "owners": [
         "🧬️schema/🔍️field-discovery/🧱️contract/🟦️.ts"
       ]

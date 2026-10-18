@@ -1,0 +1,11 @@
+{
+ "name": "c5b4",
+ "crates": [
+  "semio-framework-plugin-reactor-patches",
+  "semio-framework-plugin-app-builder",
+  "semio-framework-plugin-decl-registry",
+  "semio-framework-plugin-decl-app",
+  "semio-framework-plugin-decl-surface"
+ ],
+ "note": "CENSUS5-B package 4: the owning crates of the six split files"
+}

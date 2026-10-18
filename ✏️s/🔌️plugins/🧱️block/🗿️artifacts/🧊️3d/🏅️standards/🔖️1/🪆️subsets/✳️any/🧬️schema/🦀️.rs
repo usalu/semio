@@ -8,7 +8,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-use semio_s_artifact_block_3d_model::{Block3dSnapshot, Block3dVortexKindExtra};
+use semio_s_artifact_block_3d_model::{Block3dSnapshot, Block3dVortexKindExtra, Block3dVortexTemplate};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 

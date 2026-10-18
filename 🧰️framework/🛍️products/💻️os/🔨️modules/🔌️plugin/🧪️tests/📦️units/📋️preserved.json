@@ -6,98 +6,98 @@
   "laws": [
     {
       "name": "app_owned_request_context_identity_matches_language_neutral_oracle_and_rejects_every_root_drift",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
-      "sha256": "9be5bf22157698f4d1d163ee70f9d7e7d3df53401bc61ce21133426190a47027",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
+      "sha256": "e15ac0958855ee288caca173c689f2d0cdcfe478263d4a4e24397baeee719031",
       "assertions": 10
     },
     {
       "name": "serializer_entry_of_and_deserializer_entry_of_erase_correctly",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
       "sha256": "483cea08e041908dd13d52350c372e77cd760cdfcc5302f1b7caf98d22b0b8c6",
       "assertions": 8
     },
     {
       "name": "declared_child_projection_default_preserves_empty_and_full_literal_references",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🔚️close-turn-wire-input-and-no-state-disposers/🦀️.rs",
       "sha256": "f5b0abb9d1b352492001b0e40e70cbd3db5d659d071fdae829f37ee490213f18",
       "assertions": 9
     },
     {
       "name": "keyed_fixture_no_state_disposers_and_retirement_factories_close_live_owners",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🔚️close-turn-wire-input-and-no-state-disposers/🦀️.rs",
       "sha256": "fa47de0b24c5d792785520092023d8c70d3d1a8354b8b078b8de7a7a49cc7ea4",
       "assertions": 23
     },
     {
       "name": "retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🎟️typed-operation-slots/🦀️.rs",
       "sha256": "ca11765601744d24a5e78c375e6624ae93074923c90c73a1f1e22c1efd28b797",
       "assertions": 0
     },
     {
       "name": "typed_operation_ingress_pre_admits_the_exact_slot_before_it_mints_an_operation_id",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🎟️typed-operation-slots/🦀️.rs",
       "sha256": "a0b184bb079f04b5f6f74ce8d9bb5e0017fa7217afa8555e4221f9f9ad0c501a",
       "assertions": 0
     },
     {
       "name": "every_admitted_typed_operation_slot_is_released_by_the_host_continuation_that_reports_it_runnable",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🎟️typed-operation-slots/🦀️.rs",
       "sha256": "b502d606dba398bd637de4453207294a679ddd521f51a12f987473dfa9ad330c",
       "assertions": 0
     },
     {
       "name": "a_settled_a_replaced_and_a_cancelled_typed_operation_all_release_their_exact_slot",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🎟️typed-operation-slots/🦀️.rs",
       "sha256": "502ebdd17b7673ec2954725b2daaab3d159b5f9b81b5fc15d8aa6e67ba2f372a",
       "assertions": 0
     },
     {
       "name": "a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🎟️typed-operation-slots/🦀️.rs",
       "sha256": "a13d422b1f4f1c1c9766df2ddb59180dd4a38a984a2a55599b16be583a4090cb",
       "assertions": 0
     },
     {
       "name": "a_status_only_host_call_finishes_every_typed_operation_it_admitted",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🎟️typed-operation-slots/🦀️.rs",
       "sha256": "a9b8037902d004c90954afe202571f2f017ae66e21d927f54febbbe711cb8935",
       "assertions": 0
     },
     {
       "name": "an_admitting_host_call_hands_back_the_terminal_lane_it_earned",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🎟️typed-operation-slots/🦀️.rs",
       "sha256": "46afb7df9bdecbdc0f5bf6eb6e5ea4ffa746a62afd45b9684fbcb19c29a92354",
       "assertions": 0
     },
     {
       "name": "microsecond_registered_factory_dispatch_preserves_exact_half_ms_fake_clock",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🎟️typed-operation-slots/🦀️.rs",
       "sha256": "4c47a0d33849d5e2557d8c486aa2a88a885ed551f9202e58b4c20dd16667e5c9",
       "assertions": 0
     },
     {
       "name": "concurrent_typed_operations_hand_every_presentable_page_to_one_turn",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
-      "sha256": "4cbb92bfd29c827d26cba03580d7242f249bee1768a64177dfa65c31b45a1419",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🛂️continuation-publication-and-host-crossing/🦀️.rs",
+      "sha256": "ff90782eda0fbd2cb945728050d779a1f69f0f449b7f6cc5bc481cbabb352fd6",
       "assertions": 5
     },
     {
       "name": "a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🛂️continuation-publication-and-host-crossing/🦀️.rs",
       "sha256": "2df83914c9fed9fe60578dc2c4de155dc5bc04080ccf8eb047f07b634060afec",
       "assertions": 6
     },
     {
       "name": "a_host_crossing_outranks_every_background_hold_on_the_same_app",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🛂️continuation-publication-and-host-crossing/🦀️.rs",
       "sha256": "0fd48f5e73d743ab261b6298067042cc17b2fa39be12ca0785113e86bdf5a2a4",
       "assertions": 7
     },
     {
       "name": "retained_operation_continues_after_command_admission_until_publication_and_retirement",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
-      "sha256": "6a3d86b9f677faff1f9b503b802ec55a3a5541a782622af5e4e8f5126364d30b",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/📍️retained-operation-close-and-checkpoint/🦀️.rs",
+      "sha256": "56ded0e9271fa60ddcc253c45f9c8c20449cf264833623524c45724f8cdf7f3e",
       "assertions": 9
     },
     {
@@ -108,55 +108,55 @@
     },
     {
       "name": "activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🏭️tool-factory-keys-and-shared-actions/🦀️.rs",
       "sha256": "42c25fd79a37bdeed5eb1ac920ff116242d9eb8037a9f48c55efd5e56b745160",
       "assertions": 13
     },
     {
       "name": "shared_framework_actions_have_exact_registered_factory_and_joined_bus_identity",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🏭️tool-factory-keys-and-shared-actions/🦀️.rs",
       "sha256": "5cf18951ba17ac5822d2391ea9433a52504b85ed6d14fb9e4d09a5789598121e",
       "assertions": 9
     },
     {
       "name": "shared_framework_job_is_cancellable_resumable_and_boundedly_closeable",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
       "sha256": "7bcbb28bb28b3b65e9037b89bb0118345e964b707f64096314a95abf8f5a30dc",
       "assertions": 11
     },
     {
       "name": "retained_factory_proof_requires_the_exact_registered_runtime_authority",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧯️retained-proof-and-app-maintenance/🦀️.rs",
       "sha256": "4db87f73cd69bd0d95db990e43b4685e886dc0f0f8eb8b878dd30eed7b7294e9",
       "assertions": 0
     },
     {
       "name": "retained_latest_wins_cancellation_guards_real_store_publication_and_preserves_committed_ack",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
       "sha256": "4e2e09a027930bbf09da8b90cc3999a8a0178132fdf89928e2791603b34b06f2",
       "assertions": 0
     },
     {
       "name": "retained_latest_wins_reserved_slots_and_ready_publisher_are_fair",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
       "sha256": "16c59a14cc7a8c6e59a7e4085748a686cfeba329387794ca64c02f8c464362a8",
       "assertions": 0
     },
     {
       "name": "retained_latest_wins_raw_capacity_is_not_initialized_byte_retirement",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
       "sha256": "825e709a24a2dcef86cf63ea871107d931a94ff3395dd2c803cd9fcd0ade39e2",
       "assertions": 0
     },
     {
       "name": "retained_latest_wins_real_document_publication_cancellation_and_delayed_ack_close",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🆔️request-context-serializer-and-shared-job/🦀️.rs",
       "sha256": "676036ac0ed74a0b65f651d32f56ea26154e21938c6ffed41bc424f08ab24c78",
       "assertions": 0
     },
     {
       "name": "copied_app_type_cannot_inherit_same_controller_schema_and_id_proof",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧯️retained-proof-and-app-maintenance/🦀️.rs",
       "sha256": "0d3f659b4df44f147b6b85e1e2de5487b9af7997e7596703481d59274343dba4",
       "assertions": 2
     },
@@ -195,79 +195,79 @@
     },
     {
       "name": "completed_media_result_uses_explicit_mime_instead_of_schema",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
       "sha256": "2988f0c7488411c20013cd94cf34fc58b45a7506629adc7ad85121e37e0c364f",
       "assertions": 7
     },
     {
       "name": "segmented_download_remains_addressable_until_terminal_none_is_observed",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎡️maintenance-rotation-download-and-ingress/🦀️.rs",
       "sha256": "45006b397b06eeb8e14d00aa7ca4b0c0a295bbe516f8fe56044600e28e7f35a0",
       "assertions": 8
     },
     {
       "name": "completed_media_cancel_moves_exact_output_to_bounded_cleanup",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🎞️host-events-media-cancel-and-download-seam/🦀️.rs",
       "sha256": "4922a478bb1bd0abe0ab262c83a8608dcc1947d9091642e1881636a5e987a0e4",
       "assertions": 14
     },
     {
       "name": "app_maintenance_reclaims_late_envelope_field_returns_before_close_terminal",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧯️retained-proof-and-app-maintenance/🦀️.rs",
       "sha256": "f230825af4d798c614430e2f4231c4b6b7f2749a775f2840dfaf6d2a95e09f9b",
       "assertions": 6
     },
     {
       "name": "app_maintenance_and_close_retain_completed_envelope_results_until_terminal_empty",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧯️retained-proof-and-app-maintenance/🦀️.rs",
       "sha256": "b705b72c3a3ef98d2f188d3b8449fc36fbf6b470ca1ee5dc8d322c190dc43985",
       "assertions": 8
     },
     {
       "name": "app_close_step_drains_at_most_one_segment_and_one_chunk_budget",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/📍️retained-operation-close-and-checkpoint/🦀️.rs",
       "sha256": "fdd9be760129305fd915afcc80c3fd6731dabad8977395d801878054e9b9d363",
       "assertions": 14
     },
     {
       "name": "artifact_close_final_destructor_is_constant_after_every_owned_field_is_drained",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
       "sha256": "ebd33393abb6e5da70327553049d79d0eb2e50bc001bdedf9008f16625b88e54",
       "assertions": 6
     },
     {
       "name": "retained_field_maximum_and_maximum_plus_one_are_language_neutral",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
       "sha256": "f6d15726953270b39edffe58931bf2f962695c8a7a39110c5551e0cd9152be48",
       "assertions": 8
     },
     {
       "name": "retained_command_download_seam_keeps_original_chunks_and_bounded_cancel_owner",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
-      "sha256": "feac8f06eb04af55c6a827caf7b05eda8833e31c541324aa78af5acc051a6d91",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🎞️host-events-media-cancel-and-download-seam/🦀️.rs",
+      "sha256": "cb7bb05e14a5f5e70ce001a3358b4795ee467b1ea450372b12b85e66c778eb2d",
       "assertions": 17
     },
     {
       "name": "shared_retained_command_checkpoint_resumes_exact_cursor_and_cancels_with_bounded_close",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/📍️retained-operation-close-and-checkpoint/🦀️.rs",
       "sha256": "f20db209dc9b091afbeb6c7bb86b7a392718fecb2cdf27115e7b32d49f9ee73b",
       "assertions": 9
     },
     {
       "name": "retained_command_child_emit_prepublication_close_and_rejected_handoff_are_bounded",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
-      "sha256": "76af1caa4fcea2cab35dea44667d7c3ac3205a130080ad8011da1219e2d7dbc6",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/👶️child-emit-prepublication-and-ephemeral-lanes/🦀️.rs",
+      "sha256": "b70a87ba57a08b48c2dd3c5384174753e781b4a2f0a8f02b74a7438908ae9073",
       "assertions": 16
     },
     {
       "name": "unproved_command_fails_before_an_overrun_reducer_can_start",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
       "sha256": "e95209158fe476c2f1b4f25acf859c2875c743565d8d1faf1f6afd9376065a7e",
       "assertions": 3
     },
     {
       "name": "a_command_page_set_reaches_its_terminal_status_in_one_turn_per_page",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/📥️command-ingress-pages/🦀️.rs",
       "sha256": "095608258efbeae0a9f00e949c017b65988246dbe2b6d9ad79b8e960fb9667ae",
       "assertions": 3
     },
@@ -285,97 +285,97 @@
     },
     {
       "name": "a_command_page_that_is_not_the_next_one_is_refused_by_its_order",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
-      "sha256": "5bf0e12eea3936fbc4469eef0219e5278ca673016bf3e3f444fd9c8f03ad1c87",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/📥️command-ingress-pages/🦀️.rs",
+      "sha256": "e56b9729052f8cd129c59521c1a4339e6dd6c81cc5232fe7a33ca66c229bb1f3",
       "assertions": 3
     },
     {
       "name": "an_abandoned_ingress_owner_never_answers_the_command_the_host_is_driving",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/📥️command-ingress-pages/🦀️.rs",
       "sha256": "2f152343650479a32f3050c53d961524c9214985711bf1ff8b6320e7ea995773",
       "assertions": 4
     },
     {
       "name": "a_long_command_stream_never_pins_the_retained_ingress_authority",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎡️maintenance-rotation-download-and-ingress/🦀️.rs",
       "sha256": "0ff307dab74f6b3aeef31120cdf2c62b6b7c07017b6aa9723c97198034932b47",
       "assertions": 3
     },
     {
       "name": "plugin_builder_builds_bundle_from_fluent_spec",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
       "sha256": "399260610d78626bcbaa14001e0b7d1730e02a8486eb59d112850d036d64bbd7",
       "assertions": 4
     },
     {
       "name": "test_app_id_matches_its_own_dialect",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
       "sha256": "c4d581a605378af5c06438c0142ca5bfab2dcec8a7dae75183ad6d3b0e2318d3",
       "assertions": 1
     },
     {
       "name": "plugin_builder_wires_app_factory_for_create_app",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
-      "sha256": "8771afc8f6b41fb65d0667070f267f341d67580d76a9399b98b5dbfa8d133e74",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🏗️media-result-close-destructor-and-builder/🦀️.rs",
+      "sha256": "1a3356fffd0b5213581f4c98301e5d0f8adfe32e4e8378f987c28d3e0a0f7e1a",
       "assertions": 8
     },
     {
       "name": "merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🔀️merge-heads-and-media-import/🦀️.rs",
       "sha256": "d146d3db384c350ee2a7499e732fd9d2ee1d7cbe4b1d7ef207a90e1c25a66c18",
       "assertions": 15
     },
     {
       "name": "operation_action_emits_kernel_op_with_true_inverse",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
       "sha256": "3afca549f3170a9c5b2a8175792967b0f8b7b434f865e1e87b3ca591bb413375",
       "assertions": 5
     },
     {
       "name": "a_command_reaches_both_ephemeral_lanes_without_touching_history",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
-      "sha256": "29e4ff30ec00477a4e91e34c8ed7c4edc668e8da9617470d05f37296c7ef5a99",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/👶️child-emit-prepublication-and-ephemeral-lanes/🦀️.rs",
+      "sha256": "b2ebbb1e9888a5e329aa8372c62da152b4e5ca9e9402ca5a8ceb4689578bef64",
       "assertions": 15
     },
     {
       "name": "a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🔀️merge-heads-and-media-import/🦀️.rs",
       "sha256": "a468e924660c3a54f7922248537a0b773f95a827e86070e5fbd64c29ff27afe8",
       "assertions": 2
     },
     {
       "name": "ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
       "sha256": "8ef2de0bdc5259ede37d1d675c9dcfcbcce2bc28de03c7931956a3bc12aec0ac",
       "assertions": 5
     },
     {
       "name": "one_framework_reserved_route_fits_a_bounded_thread_stack",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
       "sha256": "c4fc2a41333b306207fe3cca4c669d4c228c4da2654a0c98750284e344b5e93f",
       "assertions": 0
     },
     {
       "name": "retained_presence_fills_presence_store_and_peer_marks_and_drops_left_peers",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/📍️retained-operation-close-and-checkpoint/🦀️.rs",
       "sha256": "26f4db540972fe2ba6f023866a56a69820533e11dd5f0628df40ea59496a1d62",
       "assertions": 12
     },
     {
       "name": "peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
       "sha256": "951e63b011e700ad21b8859f9e10e6e0ce6398c59adbef4ddb9141f9285047cb",
       "assertions": 7
     },
     {
       "name": "peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🥾️operation-action-stack-and-peer-presence/🦀️.rs",
       "sha256": "da53045f41c64adcecccb38a90a92481f5bb4cb51aa962f8f81a90947b32fde8",
       "assertions": 11
     },
     {
       "name": "interaction_view_peers_selecting_returns_actor_and_color",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "664603f374b739f9bbfe83fb4751c4dbcb866f5b4644e791f8e80c0b23b93804",
       "assertions": 9
     },
@@ -387,7 +387,7 @@
     },
     {
       "name": "member_factory_closed_dialect_register_rejects_pin_without_mutating_member",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🪦️snapshot-retirement-gesture-and-agent-transaction/🦀️.rs",
       "sha256": "f6b0295f373a548987f6718731f843658e79b194f33acdd22394bf197134488a",
       "assertions": 7
     },
@@ -399,506 +399,506 @@
     },
     {
       "name": "composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🪦️snapshot-retirement-gesture-and-agent-transaction/🦀️.rs",
       "sha256": "54b131e1c08a643b62e49305e49eb63776169b21669baf6745fd7851d65f948b",
       "assertions": 12
     },
     {
       "name": "an_agent_transaction_carries_owned_child_op_groups_and_commits_undoes_and_redoes_them_as_one_group",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🪦️snapshot-retirement-gesture-and-agent-transaction/🦀️.rs",
       "sha256": "ca8c66cd67d3acda7c9485796cc28643e373f005583882d44636a60f95727034",
       "assertions": 18
     },
     {
       "name": "a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
       "sha256": "04869fff8e844e4b523fc9e413d350e50ef4ed414003baa80416518e43ce264a",
       "assertions": 9
     },
     {
       "name": "a_composed_documents_child_heads_answer_each_owned_childs_current_head_snapshot",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🔀️merge-heads-and-media-import/🦀️.rs",
       "sha256": "cc8349b7553d7d7f6ef02677e977825cffe8d0137cd26b627d470536f3ea8520",
       "assertions": 3
     },
     {
       "name": "a_whole_document_media_import_is_a_stepped_archive_load_and_never_folds_inside_the_call",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
-      "sha256": "6df2527fd9cb79d6ca3c4c3bdfc6779191b086b895b5518ea44f1af7f9a0a75a",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🔀️merge-heads-and-media-import/🦀️.rs",
+      "sha256": "0098e77bdb33563db1b3588bba84e3d980ec7ed513b6563b9fed5a20bbb5b0d0",
       "assertions": 9
     },
     {
       "name": "a_composed_document_crosses_a_media_edge_with_its_children",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
-      "sha256": "a05f72371af24fc4b0603326cc9ebdcf920c679193fa9e576c5d149be0739313",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
+      "sha256": "a087294000b1c8f2ffe8ba351ff2d6fd5bdcf51ac6186e0da7264ce16e166f96",
       "assertions": 4
     },
     {
       "name": "a_composed_checkpoint_commit_is_driven_one_ready_unit_per_turn_with_progress",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧷️composed-checkpoint-commit/🦀️.rs",
       "sha256": "de6ba650450493a54e9ae4c63ef7d6d664728c2b7b62cf2f36de62c9f2ca48ea",
       "assertions": 9
     },
     {
       "name": "a_composed_checkpoint_commit_cancels_between_units",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧷️composed-checkpoint-commit/🦀️.rs",
       "sha256": "1dd2ab2e9b2c344f56c9c27b31db23f9b3bf3256315a8aa7707718868ce575e7",
       "assertions": 6
     },
     {
       "name": "a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧷️composed-checkpoint-commit/🦀️.rs",
       "sha256": "4d49994c3d9b25893e7a6f140119e8aab5b9bc95a1941ecea55787fd4931274b",
       "assertions": 4
     },
     {
       "name": "child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧷️composed-checkpoint-commit/🦀️.rs",
       "sha256": "c92b9b3bf8d77d75a77459722cf7907441a8fe731873347c2b7c6d97624a4746",
       "assertions": 6
     },
     {
       "name": "child_snapshot_retirement_rejection_preserves_exact_erased_owner",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "4feec9897e7edd1ad5db8bcf9cbdc350a2fbe17f051de61e6994a107ddec3583",
       "assertions": 1
     },
     {
       "name": "child_root_maintenance_requires_terminal_empty_before_reclaim",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
       "sha256": "c10261d92f32304d516ad5b3188fe8fa02be5092e7b2504f7e8bcb0611538d12",
       "assertions": 5
     },
     {
       "name": "child_root_maintenance_reclaims_completed_owner_for_later_publication",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
       "sha256": "6d38ae607e2f115e42613e5268a395b0a196137057aebbeef6c8be637ebf0636",
       "assertions": 1
     },
     {
       "name": "child_publications_at_the_maximum_rate_wait_on_retirement_instead_of_faulting",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
       "sha256": "00749bc8cb129f4e10209c35164a5959eb6b84f71580d4c0cca07e4abf823bdc",
       "assertions": 4
     },
     {
       "name": "maximum_child_public_dispatch_reaches_first_continuation_without_clone_or_encode",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
       "sha256": "ffe0873c1c044c96d4921efa950cbfbe5e25feec6ea17bc8693549dd0ac4aa47",
       "assertions": 5
     },
     {
       "name": "the_child_content_view_never_goes_stale_across_undo_and_redo",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
       "sha256": "ad3b4b57d73fd6a56b820d39d4810e2cb6d3195fb8e7d60e791e2ca7885c5cf8",
       "assertions": 3
     },
     {
       "name": "group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
       "sha256": "2ecfb494b1d39f8df9bfdef87d2cd1be2cf3e037e5f818ecc29dfce109276805",
       "assertions": 5
     },
     {
       "name": "created_children_survive_absorb_into_the_child_store_map",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🧹️child-root-maintenance-and-rates/🦀️.rs",
       "sha256": "282652ace3d993417125a7bc384fc18b1276178697358f477c41304bb27a4d95",
       "assertions": 2
     },
     {
       "name": "view_action_emits_no_operations",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "7b2a2f1aa5583e8ccd2b50c6ffc4e03481b2519599cf32c4d8d6930d0e6205d9",
       "assertions": 3
     },
     {
       "name": "a_row_follows_its_parent_document_lane_and_else_its_children",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "22cfc66c8b917a265b430ff9ade4e74d6cabe518922d61f7e66b2e69654bf60a",
       "assertions": 6
     },
     {
       "name": "a_config_lane_edit_is_never_a_history_row_and_undo_never_steps_over_it",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "c3f58c12db06c74172bb7e366c1726a11873c18fe0a45fb37107bf02f8951143",
       "assertions": 4
     },
     {
       "name": "revert_to_command_walks_the_document_lane_and_leaves_config_alone",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📚️archive-load-reload-and-revert/🦀️.rs",
       "sha256": "9b696295be1e6c1d8fdfef5bb62a7ea70b87f0f1a416676e57790ec6bdb28bdf",
       "assertions": 6
     },
     {
       "name": "shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "a727844718cb848d78dceebd41868b55c963a3ef25a8d41e1f65afbf5b8a6165",
       "assertions": 4
     },
     {
       "name": "shell_action_emits_host_effect_without_operations",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "42d170574187a86e168295bc99a664da7aa5eddb6513677d7294708485bd7196",
       "assertions": 2
     },
     {
       "name": "copy_emits_clipboard_write_effect_with_no_operations",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "e9f81b2dcadb46949d816431749ebde87c9b880b9668d04e209636715cca73e2",
       "assertions": 4
     },
     {
       "name": "copy_on_empty_selection_is_a_benign_no_operation",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "2631937097f6127652fdcac2d394aa4acf77de2a02001ef33ac200a4ef595ec4",
       "assertions": 2
     },
     {
       "name": "cut_removes_label_and_emits_clipboard_write_as_one_undo_unit",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "05d7ce9cdb209195056e411956a2b8758793ee06a4b5644c201ee82d85d33b4d",
       "assertions": 4
     },
     {
       "name": "paste_materializes_fragment_at_original_anchor",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "d7f21adf38d9b35f8a8fade170a96b25b9dc86b2dfba3cfd88476b1911b0db2e",
       "assertions": 1
     },
     {
       "name": "paste_with_non_original_anchor_reaches_the_app_placement",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "ebbb6a27ac5fe205bfc35db928539982826f501eca55ff662d7e517b8a722a97",
       "assertions": 1
     },
     {
       "name": "paste_with_no_fragment_arg_is_a_benign_no_operation",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📎️member-owners-media-edge-and-clipboard/🦀️.rs",
       "sha256": "6dd64dc8364726146574dbc13a6ded254fea6de832cc259540b8f544120e731f",
       "assertions": 2
     },
     {
       "name": "copy_cut_paste_are_registered_as_clipboard_kind_actions",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "9ceff6af69581367a10cd8c88ee09ca128a58d726694ca27c69aea466ae6abab",
       "assertions": 1
     },
     {
       "name": "streamed_ticks_and_their_commit_are_one_undo_step",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
       "sha256": "f2e696fb7f438c32546635d39bb75adfde3900b92b92cc76192400415a82eb1e",
       "assertions": 2
     },
     {
       "name": "plain_emissions_never_coalesce",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
       "sha256": "21d6e9e78563ccc4a6d5f8392534942557e58a63ea6f817e402bcf73ceef8a81",
       "assertions": 1
     },
     {
       "name": "history_actions_round_trip_through_the_store",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
       "sha256": "32edadb3f7ca6f9d95cc79d28ce3a0cc9e4581692b5d187458d92fd9a62d9bb9",
       "assertions": 7
     },
     {
       "name": "reserved_undo_invocation_does_not_require_window_ownership",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
       "sha256": "5fbe4bde71c2e9a49df3012c78fb290ce5f2be7cc998b1257958f27ce89dd1fd",
       "assertions": 1
     },
     {
       "name": "reserved_undo_actor_ingress_admits_undeclared_window_kind",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
       "sha256": "7fde489565ef975f0b8430e9cf89ddbc52c83f003018b5363c5e7c6c526ed032",
       "assertions": 8
     },
     {
       "name": "reserved_undo_first_turn_admits_spawn_job_and_drive_commits_history_route",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧶️streamed-ticks-and-reserved-undo/🦀️.rs",
       "sha256": "3dd60ce1f2979296aad77979917dd9cac484128bd20e77f886e94e6b76d41585",
       "assertions": 6
     },
     {
       "name": "reserved_undo_pops_chrome_top_shell_then_publishes_history_patch",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
       "sha256": "2aaf94cc528c2b78b2ed78b841addb08eb0180f2379d9698c5e2a0bd59da6d7d",
       "assertions": 24
     },
     {
       "name": "reserved_undo_reaches_done_within_host_drive_contract",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "183544ebcc5316edea796a86e2e122ba287b46ef5b9988fc2ddbe37f015f0599",
       "assertions": 4
     },
     {
       "name": "reserved_undo_pops_shell_then_falls_through_to_document_store",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
       "sha256": "8006f14a50c00fac97b8de623a85c5a2d31e22feba0b0e8ef3687e8fa2adb3fb",
       "assertions": 10
     },
     {
       "name": "reserved_undo_addressed_receiver_admits_isolated_spawn_job",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "801fb91082f265d2c63a2fddd74a90fc56d3c6259711ef77cdec06766a5c2788",
       "assertions": 2
     },
     {
       "name": "reserved_undo_browser_note_without_inverse_is_not_an_undo_target",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
-      "sha256": "c3232118a1e9ed47cce06fdedc58c027568438523bc025fccf9fbf7ef84504c9",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
+      "sha256": "03fd7aa8cb94f01cad66e0a7be0a0aa6a7088123a6c421c57f6a0e8daab96dad",
       "assertions": 12
     },
     {
       "name": "reserved_undo_steps_over_undeclared_chrome_and_pops_the_document_edit",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
       "sha256": "4ccdd84f1ef3c31f458ad469c560ddf72800498435661f3dc99cd8e5339210e9",
       "assertions": 6
     },
     {
       "name": "reserved_undo_replay_shell_command_survives_wire_roundtrip",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
-      "sha256": "44429d88f32aef8f0cbf5d83ce5d6c5159874dc49b07f6bfb9f9a1ee59b7b82e",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
+      "sha256": "edf227f847abcf8d38083e17fc585e88c92eb729a38692920884a84e85e4a440",
       "assertions": 1
     },
     {
       "name": "an_operation_action_appends_one_command_log_entry_linked_to_its_edit",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "b1ea80c4191ee8d82e10bcafbc9aa119c9bfaa020332164f1caa6f4d2983d617",
       "assertions": 8
     },
     {
       "name": "a_streamed_gesture_appends_exactly_one_command_log_entry",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "a0dc8a25ff14580d8c7152dfaa2822a264aeb73ae89dfb223287120cc94f1ad6",
       "assertions": 1
     },
     {
       "name": "a_long_streamed_gesture_previews_its_newest_operations_only",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "9f30baf62ec70e6a237d633ce115561d21c2876ccf6c571c2ada4a0b4e12dd4a",
       "assertions": 4
     },
     {
       "name": "undo_and_redo_append_entries_and_never_shrink_the_log",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "95b694ebf7da443e9e423162dff6ae6d30cb19b45336dbdcd594515e6372e789",
       "assertions": 5
     },
     {
       "name": "revert_to_command_restores_the_snapshot_and_appends_one_entry",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
       "sha256": "82425569ef5d6421ee1969e537479973f6cfa1fdc7a1e7edcf51de50b26f093f",
       "assertions": 5
     },
     {
       "name": "ingested_remote_edits_are_backfilled_into_the_command_log",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "83d569e6c23e95402e32d7818235f38e5420707ec06d2fb2a2a725cb2c9b4c06",
       "assertions": 3
     },
     {
       "name": "set_history_command_filter_emits_no_operations_and_updates_the_view",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "d51d284da8960d226216dfa48acb3f610bc0a08630803aaf267041e326805d2d",
       "assertions": 2
     },
     {
       "name": "ui_history_panel_filters_rows_and_gates_the_backwards_action",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "0ab8d8b08106fafe900863426f09b09f3645dc827c6a8ae3a9636c501b17afcf",
       "assertions": 14
     },
     {
       "name": "ui_history_panel_clips_an_oversized_operation_description",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "6037bd807b9f99014538e0cf62faa0052254520a6c7b760e71dd5e1d0dfc5c21",
       "assertions": 2
     },
     {
       "name": "ui_history_panel_clips_an_oversized_command_label_and_its_folded_count",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "c3deb4bae943f9a2f7554d262bb2e3a7d51ebb9bd427ee0aae6f6965cda10c0f",
       "assertions": 3
     },
     {
       "name": "ui_history_panel_windows_command_rows_over_the_live_count",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "e80612a943eeca70f57d251845ed41d5e5a3dc6a4f75829142f5eaa59ca0b7e8",
       "assertions": 11
     },
     {
       "name": "ui_history_panel_keeps_every_materialised_revert_inside_the_arena_page",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "7fbfa21b86f041d3945c3a518f672b11c77c5783a9dbc0f5f95fe3b345a69bb4",
       "assertions": 4
     },
     {
       "name": "a_config_only_view_action_is_not_a_history_row",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "58b8f2283abd9265243bb8ed07bc57362aa3e2bcdc1ff97b102566dcc55dccea",
       "assertions": 2
     },
     {
       "name": "consecutive_config_only_view_dispatches_add_no_history_rows",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
       "sha256": "0814b9ac766c53cd3dabe85b7c605a7d86f082619d9956af275f2c13f6615bf5",
       "assertions": 2
     },
     {
       "name": "interleaved_config_only_views_leave_only_the_document_row",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "b081ef29d875978e07970fb04692a3b5eac98fee58c780c7a90a4a8b9d439d14",
       "assertions": 1
     },
     {
       "name": "note_shell_command_is_intercepted_before_the_app_and_records_each_repeat",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/↩️reserved-undo-and-note-shell-command/🦀️.rs",
       "sha256": "f32ce3b76e5ec1d28ee306827df61b1a14f7742e9fbd5eed3db0cf596dcaf364",
       "assertions": 8
     },
     {
       "name": "a_shell_noted_row_carries_the_same_text_in_every_locale",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "3c4b02f1bc6eec51e82f377b06884c4be8fadc502abb6b6f2638ab52dd327032",
       "assertions": 1
     },
     {
       "name": "history_delivery_does_not_widen_a_none_ui_scope",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "33bbafe51efb0a5c7c370a6551fb6f6b3cfcdf721656900bb1323b6d3fc2f43d",
       "assertions": 1
     },
     {
       "name": "a_utility_switch_in_a_dispatch_view_delivers_one_host_event_to_its_window",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
       "sha256": "bdfa7ea79997e30761ea7ea46f2068b1cdbbe23a0bf2f1a287401884860b49b7",
       "assertions": 3
     },
     {
       "name": "a_forwarded_host_event_reaches_the_app_and_its_answer_is_never_a_history_row",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
       "sha256": "ce4d6df2b24576be04ca1a6c6db821f7a14e78be95eefee1fd299e10ad81f5d5",
       "assertions": 3
     },
     {
       "name": "a_pure_view_verb_is_no_history_row",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "e93e68c0646b8d15c0bb3af4502b2ac1d27a96cf95fb4c94c11d2975e26c8568",
       "assertions": 1
     },
     {
       "name": "history_rows_exclude_interactions_and_pure_views",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🗒️peers-clipboard-and-history-panel/🦀️.rs",
       "sha256": "73f930fd5c65874ff2f8991b2d5c671a305cb033637bbd6a58f58dd31b8a8490",
       "assertions": 1
     },
     {
       "name": "history_delivery_preserves_partial_ui_scope",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "4792108cdad3617350b0680820bedcab64632d2150af9fc640582a8684bc5118",
       "assertions": 2
     },
     {
       "name": "scope_upgrade_full_stays_full",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "e72dd5c5987cf4ae724caa123e0b3e7eacb6b2ff1a0b61894a44c7615ec82adb",
       "assertions": 1
     },
     {
       "name": "benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "e08575434464e1fbd6dd34779a18aeb46d112d29bb939174d234f77b999ed92b",
       "assertions": 2
     },
     {
       "name": "set_history_command_filter_is_never_logged",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "db5c1e7433581bb1d4e1f2aac19b8931612e8ce50a57fc25c5fca2f4260e06d2",
       "assertions": 1
     },
     {
       "name": "rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "65097821d8572d20b5fe4d6196839021d8dd9e2b37e6af81ba6a1b173fc76337",
       "assertions": 2
     },
     {
       "name": "an_operation_kind_action_with_zero_operations_still_logs_one_entry",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/📔️command-log-laws/🦀️.rs",
       "sha256": "f59bee7d57f9f5e5d57ecd0ccb144eb0412022d86f0e4f784d47ff4064b12334",
       "assertions": 5
     },
     {
       "name": "undo_on_empty_history_is_a_benign_no_operation",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
       "sha256": "f64c90bf21db0b7cbbd6807cb148ea53161c98602375b191e8cae3a8082ca4d8",
       "assertions": 2
     },
     {
       "name": "document_round_trips_through_serialization",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
       "sha256": "e19b042042af38428199bd7f7e32de5e8687029fdaffabd0d496148da6ecdb0b",
       "assertions": 1
     },
     {
       "name": "ingest_operations_is_idempotent",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
       "sha256": "67fee46443d480efa0f9420709e24753c9fcf56282da32678fb437854483a87b",
       "assertions": 2
     },
     {
       "name": "attach_detach_reattach_resumes_backbone_convergence",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
       "sha256": "1d48cab24f042d71f86635f6eb5fa39b7e5d7fc0fb86ac4a4cf07d790d5357a2",
       "assertions": 8
     },
     {
       "name": "selection_count_phrase_formats_mixed_selection",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
       "sha256": "3b923f88f2c4cdfab6600007c4add3ce7678dac683bb80524fdf5989b5bf2a3c",
       "assertions": 3
     },
     {
       "name": "context_menu_resolves_labels_from_the_registry_and_respects_guards",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
       "sha256": "3205519cbbc99a17f9d0b2052e1fd88da62026080d3d3ec9d854841bab30d950",
       "assertions": 4
     },
     {
       "name": "action_definition_with_category_sets_the_ribbon_taxonomy_field",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
       "sha256": "6ed73bbb236ef1ebce1297d14f74b9a48765954b1d691ce0e5a979a6217ce3d2",
       "assertions": 1
     },
     {
       "name": "menu_group_produces_a_group_row_keyed_by_category",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
       "sha256": "59c3eb4b81af9032bf54667f10af50aeb8019c2b5c453885442f29753a6fca28",
       "assertions": 4
     },
     {
       "name": "context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
       "sha256": "9c6e812b3ed8c3ec5e21d386cdec1dc1a36db35440ac0c0dfe510e3fdb70638b",
       "assertions": 3
     },
     {
       "name": "context_menu_wire_requires_and_forwards_canonical_view_state",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
-      "sha256": "0b4aa1b5dfaa1f62e40fce6e510eede299e6b841fdf6bfadc100ca3cb5f6fbd3",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
+      "sha256": "d4134feef6b501940dab326edd1afc1f8282388678f7c98bbc84d83a2c281dc9",
       "assertions": 7
     },
     {
       "name": "surface_context_reaches_real_app_render_and_rejects_hidden_surfaces",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
-      "sha256": "4b36faccc721ee2bf0fbd401a8c4268afd5b1217723c75c9290242b227b62ec3",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
+      "sha256": "c7067caecd25eb421b411db55644f395847f137d15e08a81b0a4c069839d7707",
       "assertions": 7
     },
     {
       "name": "surface_context_refresh_projects_panels_from_focused_window_state",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
-      "sha256": "448a822be4bbcdc31e3a3b939dfb7972188048145d6e09af3aa0b903758261c6",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
+      "sha256": "163c1a6d43f9997678a246514bd2bf43a2db00dfbbb9f073cc3365f1c45a9656",
       "assertions": 3
     },
     {
@@ -957,253 +957,253 @@
     },
     {
       "name": "surface_context_presence_targets_each_concrete_surface",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
-      "sha256": "31c52bae56a1a5966b8d895c1b5f89cf4b75f060eb4cd65732a8d1a3f9b1f00f",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
+      "sha256": "8cc567de7315caafa2297bed06e1990b2d5c5ff2b3be09a25028420c7c5b63fe",
       "assertions": 2
     },
     {
       "name": "view_action_emitting_ops_is_rejected",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/↩️view-action-undo-and-history-delivery/🦀️.rs",
       "sha256": "93e41f0dd236f780db5915a5fb830c8e87cc74f410c0af7b1c58c5eebceffb01",
       "assertions": 2
     },
     {
       "name": "activate_intent_dispatches_through_the_typed_command_path_same_turn",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
       "sha256": "8b87e53057a2f60fd80d97f5e7e02e685a6b25dc3a3a84d6cc917f42f9886bbc",
       "assertions": 3
     },
     {
       "name": "view_kind_intent_returning_operations_hard_faults",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
       "sha256": "464868fd591383d99cc18dd1e273a25f99676584fbea88e5ed522cc387081d5e",
       "assertions": 2
     },
     {
       "name": "command_from_intent_rejects_a_non_v1_action_version",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
       "sha256": "9debf7b4bd898e5ca9131873707a9ed82a789feac0dc33a7dd62b7456091a21e",
       "assertions": 1
     },
     {
       "name": "set_active_utility_carries_its_value_directly_and_emits_no_operations",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🔭️empty-undo-ingest-and-context-menu/🦀️.rs",
       "sha256": "ae06711fb23439630b6da4dc1d080ea1d91f18edb48f351eaabb2645120416dd",
       "assertions": 2
     },
     {
       "name": "a_streamed_gesture_is_one_undo_step_while_each_commit_is_its_own",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
       "sha256": "d161a5250811ac648894cc280461e43c706aad1490f01a50a1dbb0a462d5d1d3",
       "assertions": 4
     },
     {
       "name": "a_streamed_tick_reports_only_its_own_new_operation",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/📡️host-events-intents-and-streamed-tick/🦀️.rs",
       "sha256": "eb68ea84e7a7f7d60e141b6b0124fb5412daf444f9df5770fd1a1dd1ab2a0a80",
       "assertions": 7
     },
     {
       "name": "operation_command_emits_kernel_op_with_true_inverse",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
       "sha256": "83e58998260b79cbc3bda44481f47a82742a88b067b3c819f3c0e6f8a5dfe9ca",
       "assertions": 4
     },
     {
       "name": "manifest_command_dispatch_validates_structural_app_ownership",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
       "sha256": "b764c167db34d67142e2db646f5fd63cb2864525199a58284d25a693a0b6c297",
       "assertions": 2
     },
     {
       "name": "ui_dispatch_backstop_rejects_every_non_migrated_action_and_command",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧭️ribbon-menus-and-surface-context/🦀️.rs",
       "sha256": "e555d0ddf209015b28b5329aeb737b3a8f487963953b77a5c7edd777264e9e9f",
       "assertions": 6
     },
     {
       "name": "manifest_mode_command_requires_the_active_structural_owner",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
       "sha256": "be2dbdb89ea5a8506328a7d25d8cb2bb12657977f3d2d2af9413911a02f5c5be",
       "assertions": 2
     },
     {
       "name": "addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
       "sha256": "cef81357870c33cf3909d78df09727ffe405895865fe6245c426701ce70d9983",
       "assertions": 1
     },
     {
       "name": "plugin_command_handler_is_program_owned_across_app_instances",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🪪️command-handler-and-registry-laws/🦀️.rs",
       "sha256": "2389cb9f6b9a0b2013d9df1565569f7cac27a6f8c5a500013509e4f74b492e59",
       "assertions": 1
     },
     {
       "name": "command_op_records_history_exactly_like_an_operation_action",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
       "sha256": "7a962d88788ed4aafead9072df6a22d4ee46ac6c9ff7d1ce0b6f20d5ea923348",
       "assertions": 2
     },
     {
       "name": "registry_less_construction_rejects_before_the_reducer",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🪪️command-handler-and-registry-laws/🦀️.rs",
       "sha256": "c5fd301fc941e21f5da6098aec6072b5ba6a5a763b2b1903ac2a805b5518be0a",
       "assertions": 2
     },
     {
       "name": "interaction_select_replace_persists_through_the_interaction_store",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
       "sha256": "2c9f684943ad6d32478e0803b1214591ab651ed6791a02134530177147764257",
       "assertions": 2
     },
     {
       "name": "interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
       "sha256": "95f1ca44b5eaf7fa0b6f2647dea8755bf802834f15c27ef26da297ec8cf5275d",
       "assertions": 3
     },
     {
       "name": "a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🧮️gestures-manifest-commands-and-selection-persistence/🦀️.rs",
       "sha256": "b81a9a70ccbf193815c2faa3b61097a2643d79f6616592444d90ccbe06f0aab2",
       "assertions": 3
     },
     {
       "name": "set_selection_mode_and_set_interaction_granularity_persist_immediately",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "319ecf1b3cc1c5c77dfd8b4468782d9906dd7718f9f6d685609d979645e32781",
       "assertions": 3
     },
     {
       "name": "clear_selection_and_select_all_apply_across_every_declared_domain",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "32cb014860ed461ca9a6d1d0904b9aff463e1ab40505ed846aa4c1da8ebf9738",
       "assertions": 2
     },
     {
       "name": "validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "a373cc65dffd74df09f66dea94595071e985bef843c33e7ed46fe9720dfe09d2",
       "assertions": 2
     },
     {
       "name": "interaction_verbs_never_become_history_rows",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "954d46f5e642e640617e5368ffb6848e46185913ad296c64c16bc0e007493267",
       "assertions": 1
     },
     {
       "name": "build_definition_rejects_transitive_flat_interaction",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🪪️command-handler-and-registry-laws/🦀️.rs",
       "sha256": "c82bdb8b4b1e9428eb59d146dec2abe005c79751c5638a50b17b26f76b4f36ee",
       "assertions": 1
     },
     {
       "name": "ui_tree_stamping_caches_interaction_topology_from_a_domain_bound_tree",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
       "sha256": "c19646b7a41fbe36613b4b1939f2940d41e74210a0ce5525688bc3f479ad2093",
       "assertions": 14
     },
     {
       "name": "a_dropped_selection_publishes_a_cleared_presence_update",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/↪️reserved-undo-ui-stamping-and-selection/🦀️.rs",
       "sha256": "bc2b683633d92be8b2f7e7e51af2a8b9b4106620c7ad18815d035f371eff5402",
       "assertions": 4
     },
     {
       "name": "interaction_select_job_completion_publishes_interaction_view_on_leftover",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
       "sha256": "c5f62ce0f6effc5bf0d4c15de754816cced4b2b83033ff1ae7c11fcf0623807b",
       "assertions": 4
     },
     {
       "name": "leftover_interaction_select_object_id_on_vortex_domain_lands_in_selected_ids",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "0712275269e69bd5c25ea937b2e86cec02ecc685baa239135b3c0aa8f0d310c9",
       "assertions": 1
     },
     {
       "name": "interaction_hover_job_completion_publishes_hover_target_on_leftover",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "ce49106e27776f9492343c59cfd6717dc95e016313900423a3bef40fb0eed044",
       "assertions": 2
     },
     {
       "name": "interaction_hover_dirties_only_the_hovering_windows_own_lane",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "7c80450b5e56badb2a88ebd53bd33af6181e069f13a023b6817c2a38bf8a620c",
       "assertions": 3
     },
     {
       "name": "interaction_select_carries_the_apps_declared_selection_lane",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "62e2712e118172b5f91c5f68b48a3426ac682981d873c88ed45fb8d84691d51c",
       "assertions": 1
     },
     {
       "name": "an_undeclared_interaction_verb_falls_through_to_the_declared_surface_scope",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "0db1a063b30d8ec6462925defee18386dcc7517c97d6185364fd8ebe1b1f57f2",
       "assertions": 1
     },
     {
       "name": "a_domain_no_window_declares_keeps_the_framework_full_scope",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🪪️command-handler-and-registry-laws/🦀️.rs",
       "sha256": "22d3220411f3ddf9c807805fb4b891153afaeb026a93cd4048d037e086383908",
       "assertions": 3
     },
     {
       "name": "every_intercepted_interaction_id_round_trips_through_its_verb",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🪪️command-handler-and-registry-laws/🦀️.rs",
       "sha256": "1d9e3c235654094177fcea7a9dceee3aba18bb426457195c4b4d8e6354dec086",
       "assertions": 4
     },
     {
       "name": "emitted_empty_replace_write_clears_selection_while_hover_remains",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
       "sha256": "2d1dca88b8ef8d4b0fc5b99be3dd27a0384e0b5594a9cb401961d7475dbbf8bc",
       "assertions": 3
     },
     {
       "name": "empty_target_interaction_select_clears_selection_while_hover_remains",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
       "sha256": "12a8d0298b4c90685777fbaa28ff6d0fb5f93b184a487a151548a44995704aec",
       "assertions": 2
     },
     {
       "name": "guest_emitted_interaction_select_is_folded_into_the_carrying_turn",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
       "sha256": "c10eb6e9ca94bc1d6267e480e12375ce6c480807ce803ec1a5705f751c3ff4da",
       "assertions": 6
     },
     {
       "name": "guest_emitted_empty_replace_select_clears_and_unions_the_carrier_scope",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
       "sha256": "d1967472ac93aabea0845d7cb25b3acdb239beac559e6070e9fb38b438174878",
       "assertions": 8
     },
     {
       "name": "guest_emitted_interaction_select_on_an_undeclared_domain_is_a_diagnostic_not_a_fault",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "5f476e7ce72e96726f6b5fa4299d7d252b2f32318e27c9eb1fdf094e45a41bdd",
       "assertions": 6
     },
     {
       "name": "non_interaction_replay_shell_commands_still_reach_the_host",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "fb533a965e6d5037fb6ba945d52dfd9f25f175345cac46cb12a6c2936dfdd944",
       "assertions": 3
     },
     {
       "name": "guest_emitted_dispatch_action_interaction_select_is_folded_into_the_carrying_turn",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🖱️interaction-hover-and-select-laws/🦀️.rs",
       "sha256": "d4968e34b27603b981d425f6b423cce3c07683a34d1cb52e7ad5b9257b41f6ab",
       "assertions": 6
     },
     {
       "name": "non_interaction_dispatch_actions_still_reach_the_host",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🎚️selection-modes-verbs-and-hover/🦀️.rs",
       "sha256": "71cc8b860d7202d488494c164e147a63935c08a5c27cf53ea8317a871b0f4c50",
       "assertions": 4
     },
@@ -1215,86 +1215,86 @@
     },
     {
       "name": "typed_operation_leftover_merges_into_exactly_the_carrying_reply",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🪪️command-handler-and-registry-laws/🦀️.rs",
       "sha256": "2cf50a9909ae9a6c6cf927833852e9ada7bae5ad097e74838fd782ec3b86088d",
       "assertions": 6
     },
     {
       "name": "leftover_interaction_view_selected_ids_are_a_set_for_every_merge",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
-      "sha256": "3f7a5b634b4a6251765461a65027d4d48c17803dfd4b41159bd1a18b6893a145",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🔀️selected-ids-merge-vocabulary-and-checkpoint/🦀️.rs",
+      "sha256": "e3d8b25c3bc6c7dac16a28d29735514bad19d84f73f051cc3f08581c3c674334",
       "assertions": 5
     },
     {
       "name": "interaction_select_speaks_exactly_the_schema_merge_vocabulary",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
-      "sha256": "a849046269485f5ec0281dbcea51f9d3c5c0154542cf07a74efb5ce417550244",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🔀️selected-ids-merge-vocabulary-and-checkpoint/🦀️.rs",
+      "sha256": "ce03156f1ffedf5e0c60e290ae825d9d9bad04381a76147fd1737ffa86cf6d79",
       "assertions": 3
     },
     {
       "name": "a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🧵️spawned-task-resume/🦀️.rs",
       "sha256": "f3645790f21c8dacb08629a0ea89f6815cfdfd909bbaac6ef18b55a65eb50083",
       "assertions": 18
     },
     {
       "name": "task_admission_defers_the_user_factory_until_actor_execution",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
-      "sha256": "6afffcf5a81c0200e41bb421be0c3d202649e53c93d223351216637bf0b8454b",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧩️task-admission-and-cancellation/🦀️.rs",
+      "sha256": "8110d0cf93109a04583074bfe6f3b203e003c672079313dc8581ae14c2a2bb34",
       "assertions": 4
     },
     {
       "name": "spawn_task_quota_gate_faults_the_n_plus_1th_task_and_never_silently_drops_it",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧩️task-admission-and-cancellation/🦀️.rs",
       "sha256": "e75964c21b6cce12dce9d6e968fe4497247112aaaaa13f3e172b525b6a36d142",
       "assertions": 4
     },
     {
       "name": "key_dedupe_cancels_the_previously_live_task_under_the_same_key",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧩️task-admission-and-cancellation/🦀️.rs",
       "sha256": "0d1fc8f5a1bfccba73b2d6d3af0abb619783f82de0e31813278a1574ae97efd8",
       "assertions": 6
     },
     {
       "name": "instance_close_cancellation_drops_the_instances_tasks_and_leaks_no_registry_slot",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🧩️task-admission-and-cancellation/🦀️.rs",
       "sha256": "1c5828075940694d4737b4e700f3e6bff88c4aada66e614dff956a550f167eac",
       "assertions": 8
     },
     {
       "name": "checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🔀️selected-ids-merge-vocabulary-and-checkpoint/🦀️.rs",
       "sha256": "97cca9fca9ff41d058069aa992b88cdd6515b780dea6b403de92f314242fa9e6",
       "assertions": 12
     },
     {
       "name": "checkpoint_restart_mode_requires_its_exact_concrete_factory_owner",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/📜️mounted-history-and-reserved-job-currency/🦀️.rs",
       "sha256": "ef74c5450c67adfd2525e695c08c9c5fa0aed9bdbb73bdb629e54be3c9355c67",
       "assertions": 6
     },
     {
       "name": "mounted_command_history_original_pages_retain_exact_app_close_authority",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/📜️mounted-history-and-reserved-job-currency/🦀️.rs",
       "sha256": "45d963b6f81280aa077f7b7a2b7e0fe5fb13e22e1df8f37176f2c913c383d7dc",
       "assertions": 0
     },
     {
       "name": "mounted_command_history_document_replacement_keeps_original_held_rows",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/📜️mounted-history-and-reserved-job-currency/🦀️.rs",
       "sha256": "dffb3c75db439146bd0bb7fd60d2c9847afaed23b6e807f02287d0fd6e7be7b4",
       "assertions": 0
     },
     {
       "name": "mounted_private_child_frame_retains_exact_admission_and_close_authority",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/📜️mounted-history-and-reserved-job-currency/🦀️.rs",
       "sha256": "cb0130bc5c7325cfa7d210f9beed52f093f5500c9bf7cc386bfc345a3f579530",
       "assertions": 0
     },
     {
       "name": "original_reserved_job_currency_law_retains_spare_backing_until_exact_release",
-      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
-      "sha256": "1afa0642637cbd74179e89453f48055c13561a5809d8eebd9fddadff85ad0644",
+      "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/📜️mounted-history-and-reserved-job-currency/🦀️.rs",
+      "sha256": "130c80a243d8f2589218008da49e04764557ebac13fd67310e394ca799e43f91",
       "assertions": 26
     }
   ],

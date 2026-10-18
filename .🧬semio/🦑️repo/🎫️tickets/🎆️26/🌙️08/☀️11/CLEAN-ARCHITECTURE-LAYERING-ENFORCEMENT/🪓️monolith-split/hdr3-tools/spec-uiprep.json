@@ -1,0 +1,5 @@
+{"owner": "semio-framework-ui-prepared", "suffix": "laws", "kind": "plain",
+ "new_root": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-laws/🦀️.rs",
+ "moves": [
+  {"mount_file": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs", "module_path": "", "mount_name": "tests", "as": "unit"}
+ ]}

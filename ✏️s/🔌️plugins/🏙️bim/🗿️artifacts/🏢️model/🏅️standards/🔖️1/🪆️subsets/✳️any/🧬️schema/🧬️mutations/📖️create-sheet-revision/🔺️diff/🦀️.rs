@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateSheetRevision`: one created revision entry. The id must be free across every collection, then the revision must be writable (see `revision_problem`).
 
-use super::super::elements;
-use super::CreateSheetRevision;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_sheet_revision::CreateSheetRevision;
 use crate::standards::v1::subsets::any::schema::{snapshot::{revision_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -11,11 +11,11 @@ pub struct Neo4jDirectory {
 
 #[cfg(test)]
 struct ArtifactGenesisTestControlV1 {
-    pause_before_authority: std::sync::atomic::AtomicBool,
-    reached_before_authority: tokio::sync::Semaphore,
-    resume_before_authority: tokio::sync::Semaphore,
-    observed_now_ms: std::sync::atomic::AtomicU64,
-    pub(super) fail_commit_ack: std::sync::atomic::AtomicBool,
+    pub pause_before_authority: std::sync::atomic::AtomicBool,
+    pub reached_before_authority: tokio::sync::Semaphore,
+    pub resume_before_authority: tokio::sync::Semaphore,
+    pub observed_now_ms: std::sync::atomic::AtomicU64,
+    pub fail_commit_ack: std::sync::atomic::AtomicBool,
 }
 
 /// 🚦️ `tokio::sync::Semaphore` has no `Default`, and the two rendezvous gates start closed on

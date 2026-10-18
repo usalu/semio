@@ -162,6 +162,23 @@ afterEach(async () => {
   vi.unstubAllGlobals();
 });
 
+/** 👁️ Settles when every root holds a rendered shell: it waits on the roots' own mutations (no polling clock), so a loaded machine only delays the mount, and the test timeout stays the one budget. */
+function untilShellsReady(roots: readonly HTMLElement[]): Promise<void> {
+  return new Promise(resolve => {
+    const ready = () => roots.every(root => root.querySelector("[data-shell-ready]") !== null);
+    const observer = new MutationObserver(() => {
+      if (!ready()) return;
+      observer.disconnect();
+      resolve();
+    });
+    for (const root of roots) observer.observe(root, { childList: true, subtree: true, attributes: true });
+    if (ready()) {
+      observer.disconnect();
+      resolve();
+    }
+  });
+}
+
 function mountRoots() {
   return fixture.roots.map(row => {
     const root = document.createElement("main");
@@ -633,7 +650,7 @@ describe("admitted General empty React mounts", () => {
       mounts.push(mounted);
       cleanups.push(() => mounted.dispose());
     }
-    await vi.waitFor(() => expect(roots.every(root => root.querySelector("[data-shell-ready]"))).toBe(true));
+    await untilShellsReady(roots);
     mounts[0]!.dispose();
     expect(roots[0]!.childElementCount).toBe(0);
     expect(roots[1]!.querySelector("[data-shell-ready]")).not.toBeNull();
@@ -647,7 +664,7 @@ describe("admitted General empty React mounts", () => {
     const root = mountRoots()[0]!;
     const mounted = await bootFrameworkOs({ catalog: emptyCatalogRows, rootId: root.id, locks: { locale: "en" } }, { backboneWorkerFactory: () => new MountWorker("https://example.test/backbone.js", { type: "module" }) as unknown as Worker, hostPorts: { catalogAdmission: { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 }, wasmBindings: bindings } });
     cleanups.push(() => mounted.dispose());
-    await vi.waitFor(() => expect(root.querySelector("[data-shell-ready]")).not.toBeNull());
+    await untilShellsReady([root]);
     await expect(createRasterSession()).resolves.toBeInstanceOf(Object);
     expect(surface).toHaveBeenCalledTimes(1);
     mounted.dispose();
@@ -660,7 +677,7 @@ describe("admitted General empty React mounts", () => {
     const root = mountRoots()[0]!;
     const mounted = await bootFrameworkOs({ catalog: emptyCatalogRows, rootId: root.id, locks: { locale: "en" } }, { backboneWorkerFactory: () => new MountWorker("https://example.test/backbone.js", { type: "module" }) as unknown as Worker, hostPorts: { catalogAdmission: { admit: admitPluginCatalogV1, catalogOf: pluginCatalogV1 }, pluginDistribution: { extensionRoute: "/rhu3-extension-modules", hubPluginSource } } });
     cleanups.push(() => mounted.dispose());
-    await vi.waitFor(() => expect(root.querySelector("[data-shell-ready]")).not.toBeNull());
+    await untilShellsReady([root]);
     expect(hubPluginSource).not.toHaveBeenCalled();
   });
 });

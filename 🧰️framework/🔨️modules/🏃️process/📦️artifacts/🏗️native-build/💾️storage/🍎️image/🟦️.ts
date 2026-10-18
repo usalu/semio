@@ -1,6 +1,6 @@
 import{requireNativeImagePublicationSettledV1}from"../🌐️platform/📋️contract/🟦️.ts";
 import{withNativeStorageMappingReadV1}from"../🔒️mapping/🟦️.ts";
-import{requireArtifactDescriptorClosureV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{requireArtifactDescriptorClosureV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{observeNativeImageMountDirectoryV1,readNativeImageMountDirectoryV1,requireNativeImageMountDirectoryV1,type NativeImageMountDirectoryV1}from"../🌐️platform/📋️contract/📂️mount/🟦️.ts";
 import mountDirectorySchema from"../🌐️platform/📋️contract/📂️mount/🧬️schema/🔣️.json";
 import{syncNativeDirectoryMetadataV1}from"../🧾️metadata/🟦️.ts";

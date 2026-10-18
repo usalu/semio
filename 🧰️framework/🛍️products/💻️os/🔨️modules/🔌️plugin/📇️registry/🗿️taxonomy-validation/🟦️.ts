@@ -1,12 +1,16 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { discoverPackages } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🌐️rust-module-graph/🟦️.ts";
+import { isDiscoverySkipDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
+import { schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { registrySchemaValidator } from "../✅️catalog-verification/🟦️.ts";
+import { registrySchemaValidator } from "../✅️catalog-verification/🎯️native-selection/🟦️.ts";
 import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind, requiredRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";
-import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import type { SemanticFacetPrimaryFileProjectionContract } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
 
 
 //#endregion 🎮️PlaygroundSession
@@ -110,7 +114,7 @@ export const TAXONOMY_MODE_CHILDREN = TAXONOMY.modeChildDirs ?? [];
  * `🧬️data` facet owns the five data projections; `📜️.wit` belongs to the `📜️interface` kind, which the
  * taxonomy grants to exactly the two enumerated `facetPathIdentities` — so demanding a `📜️.wit` leaf
  * from every `🎚️config`/`👥️presence`/artifact schema facet contradicts the taxonomy that defines them.
- * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts `schemaFacetFormatEntries` */
+ * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts `schemaFacetFormatEntries` */
 export function taxonomySchemaFilenames(facetAbs: string): string[] {
   const facetRel = relative(getWorkspaceRoot(), facetAbs).replaceAll("\\", "/");
   return schemaFacetFormatEntries(facetRel, TAXONOMY).map(([, format]) => primaryFilenameForKind(format.fileKindId));

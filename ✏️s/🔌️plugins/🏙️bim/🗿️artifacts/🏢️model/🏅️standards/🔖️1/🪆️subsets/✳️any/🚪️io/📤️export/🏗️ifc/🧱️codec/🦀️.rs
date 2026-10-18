@@ -43,6 +43,4 @@ pub fn decode_ifc4(bytes: &[u8]) -> Result<Part21Document, String> {
     Ok(document)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

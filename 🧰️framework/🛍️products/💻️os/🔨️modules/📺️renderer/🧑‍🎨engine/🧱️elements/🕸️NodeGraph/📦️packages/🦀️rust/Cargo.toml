@@ -21,6 +21,8 @@ semio-framework-os-infinite-directed-presentation = { path = "../../../../../../
 semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-surface = { path = "../../../../../../../../../🔨️modules/🗺️surface/📦️packages/🦀️rust" }
 semio-framework-os-infinite = { path = "../../../../../../♾️infinite/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-dag-graph = { path = "../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🕸️graph/📦️packages/🦀️rust" }
+semio-framework-os-infinite-board-dag-host = { path = "../../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-pack-error = { path = "../../../../../../../../../🔨️modules/🎒️pack/⚠️error/📦️packages/🦀️rust" }

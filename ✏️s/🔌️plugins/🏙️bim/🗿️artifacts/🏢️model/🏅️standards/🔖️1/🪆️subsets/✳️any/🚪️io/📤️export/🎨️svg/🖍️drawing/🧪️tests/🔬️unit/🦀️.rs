@@ -1,4 +1,21 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use crate::standards::v1::subsets::any::io::export::svg::codec::{element, text, CommonAttrs, SvgElement, TransformOp};
+use crate::standards::v1::subsets::any::io::export::svg::sheet::Slot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::codec::attr;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::path::{commands, snap};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::sheet::TITLE_BAND;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanText};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::export::svg::drawing::*;
 use crate::standards::v1::subsets::any::io::export::svg::codec::{document_text, PathCommand, ViewBox};
 use crate::standards::v1::subsets::any::io::export::svg::sheet::layout;
 use crate::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;

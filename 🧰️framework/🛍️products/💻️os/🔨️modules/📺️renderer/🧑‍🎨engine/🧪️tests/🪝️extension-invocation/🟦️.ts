@@ -97,7 +97,8 @@ describe("extension invocation completion ownership", () => {
     const { decodePackValue } = await import("@semio-tech/framework-os");
     const request = JSON.parse(row.requestJson) as Record<string, unknown>;
     const present = extensionInvocationWireFixture.requestFields.filter((field) => request[field] !== undefined);
-    expect(present.length === extensionInvocationWireFixture.requestFields.length).toBe(row.outcome === "ok");
+    if (present.length !== extensionInvocationWireFixture.requestFields.length) expect(row.outcome).toBe("fault");
+    if (row.outcome === "ok") expect(present.length).toBe(extensionInvocationWireFixture.requestFields.length);
     const answer = row.outcome === "ok" ? Object.fromEntries((row.outputKeys ?? []).map((key) => [key, row.outputEmpty ? {} : { value: 1 }])) : undefined;
     const complete = vi.fn(async () => {});
     const invoke = vi.fn(async () => {

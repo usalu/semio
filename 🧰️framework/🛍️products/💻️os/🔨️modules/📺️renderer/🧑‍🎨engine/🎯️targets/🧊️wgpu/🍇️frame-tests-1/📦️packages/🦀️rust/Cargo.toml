@@ -36,6 +36,7 @@ semio-framework-os-renderer-wgpu-ui-engine-tests = { path = "../../../🧿️ui-
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-action = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎬️action/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }

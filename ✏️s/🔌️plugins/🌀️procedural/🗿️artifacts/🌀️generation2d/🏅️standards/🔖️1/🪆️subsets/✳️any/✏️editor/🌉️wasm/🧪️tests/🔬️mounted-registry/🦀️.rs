@@ -440,20 +440,32 @@ mod mounted_laws {
         assert!(semio_s_artifact_procedural_2d_host::generation2d_release_publication_authority(operation, Generation(42)));
     }
 
+    /// 🗺️ The source text of a module tree: the directory's own root file followed by its child module directories in name order, tests and package manifests excluded.
+    fn module_tree_text(directory: &std::path::Path) -> String {
+        let mut children = std::fs::read_dir(directory).expect("scanned source directory").map(|child| child.expect("scanned source entry").path()).collect::<Vec<_>>();
+        children.sort();
+        let root = std::fs::read_to_string(directory.join("🦀️.rs")).unwrap_or_default();
+        root + &children.iter().filter(|child| child.is_dir() && !child.ends_with("🧪️tests") && !child.ends_with("📦️packages")).map(|child| module_tree_text(child)).collect::<String>()
+    }
+
     #[test]
     fn domain_local_static_verifier_rejects_raw_routes_and_proves_two_dimensional_coverage() {
         let owner_source = &std::fs::read_to_string(fixture_path!("../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs")).expect("scanned source");
-        let snapshot_source = &std::fs::read_to_string(fixture_path!("../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs")).expect("scanned source");
+        let host_source = &module_tree_text(&fixture_path!("../../../../../../../🔨️modules/🏠️host"));
+        let snapshot_source = &["🦀️.rs", "🏷️mounted-owner-state/🦀️.rs", "🔤️owner-string-targets/🦀️.rs", "🧮️owner-values-and-dictionaries/🦀️.rs", "🗃️owner-containers-and-widgets/🦀️.rs", "🔌️owner-pack-protocol/🦀️.rs"]
+            .iter()
+            .map(|part| std::fs::read_to_string(fixture_path!(format!("../../../🚪️io/💾️binary/📸️snapshot/{part}"))).expect("scanned source"))
+            .collect::<String>();
         let lifecycle_fixture = super::fixture_text!("../../../🧪️tests/🧫️fixtures/🧷️p8yz-a-retained-mounted-laws.json");
         let owner_fixture = super::fixture_text!("../../../🧪️tests/🧫️fixtures/👑️p8yz-a-owner-catalog-laws.json");
 
-        assert!(owner_source.contains("mutations.clear-widget-layout.2d-only"));
+        assert!(host_source.contains("mutations.clear-widget-layout.2d-only"));
         assert!(owner_source.contains("GENERATION2D_RETAINED_SCHEMA_DISCRIMINATOR"));
-        let mounted_snapshot = snapshot_source.split_once("//#region 🔖️MountedCanonicalPackSession").expect("P2 mounted snapshot region").1;
+        let mounted_snapshot = snapshot_source.split("//#region 🔖️MountedCanonicalPackSession").skip(1).map(|region| region.split_once("//#endregion 🔖️MountedCanonicalPackSession").expect("P2 mounted snapshot region end").0).collect::<String>();
         for forbidden in ["OwnedSchemaHexAuthority", "decode_pack", "decode_document", "RecordValue"] {
             assert!(!mounted_snapshot.contains(forbidden), "mounted P2 typed snapshot route regained a whole decoder edge: {forbidden}");
         }
-        let mounted_field = owner_source.split_once("struct Generation2dPackSnapshotAuthority").expect("P2 mounted envelope snapshot authority").1.split_once("enum Generation2dMutationDecodeState").expect("P2 mounted snapshot authority boundary").0;
+        let mounted_field = host_source.split_once("struct Generation2dPackSnapshotAuthority").expect("P2 mounted envelope snapshot authority").1.split_once("enum Generation2dMutationDecodeState").expect("P2 mounted snapshot authority boundary").0;
         for forbidden in ["OwnedSchemaHexAuthority", "ArtifactPack", "decode_pack", "decode_document", "RecordValue"] {
             assert!(!mounted_field.contains(forbidden), "mounted P2 envelope authority regained a whole decode edge: {forbidden}");
         }

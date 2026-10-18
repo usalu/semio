@@ -53,7 +53,7 @@ use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub use catalogue_panel::NOTE_PLAY_BODY_CATALOGUE;

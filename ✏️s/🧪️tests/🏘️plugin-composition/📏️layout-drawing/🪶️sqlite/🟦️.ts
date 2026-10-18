@@ -139,9 +139,9 @@ import changeFixture from "../../../../../🌎️hub/🧩️compositions/📏️
 
 import{parseLayoutDiff}from"@semio-tech/layout-layout-ts/standards/1/subsets/any/schema/diff";
 test("Layout dictionary changes distinguish unchanged, clear, present empty and member null",()=>{
- expect(changeFixture["schema"]).toEqual("layout.dictionary-change/v1");expect(changeFixture["states"]).toEqual([{"name":"unchanged","change":null},{"name":"clear","change":{"dictionary":null}},{"name":"empty","change":{"dictionary":{"entries":[]}}},{"name":"memberNull","change":{"dictionary":{"entries":[{"questionId":"","value":{"kind":"null"}}]}}}]);
+ expect(changeFixture["schema"]).toEqual("layout.dictionary-change/v2");expect(changeFixture["states"]).toEqual([{"name":"unchanged","change":null},{"name":"clear","change":{"presence":"deleted","entries":null}},{"name":"empty","change":{"presence":"created","entries":{"removed":[],"inserted":[],"moved":[]}}},{"name":"memberNull","change":{"presence":"created","entries":{"removed":[],"inserted":[{"index":0,"row":{"questionId":"","value":{"kind":"null"}}}],"moved":[]}}}]);
  for(const state of changeFixture.states){const change=state.change,wire=JSON.parse(Buffer.from(JSON.stringify({...documents.diff,dataFields:change}),"utf8").toString("utf8")),actual=layoutDiffFromNativeJson(wire);expect(Bun.deepEquals(change, actual.dataFields)).toBe(true);}
- expect(()=>parseLayoutDiff({...documents.diff,dataFields:{dictionary:null,extra:true}})).toThrow();
+ expect(()=>parseLayoutDiff({...documents.diff,dataFields:{presence:null,entries:null,extra:true}})).toThrow();
 });
 
 import{parse as parseGraphql,buildASTSchema,graphql,GraphQLScalarType,Kind}from"graphql";

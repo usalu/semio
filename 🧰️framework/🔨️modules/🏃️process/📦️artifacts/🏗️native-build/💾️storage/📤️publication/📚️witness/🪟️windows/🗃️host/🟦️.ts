@@ -1,3 +1,4 @@
+import{nativeWindowsReadProtocolV1}from"../../../../🧱️fixed/🗂️system/🟦️.ts";
 /** 🪟️ Host: module exporting `NativeWindowsPublicationHostRecordV1`, `NativeWindowsPublicationHostRequestV1`, `NativeWindowsPublicationHostEvidenceV1`, `readNativeWindowsPublicationHostV1` and more. */
 import type{AcceptedPhysicalCleanupV1}from"../../../../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
@@ -7,7 +8,7 @@ import{win32}from"node:path";
 import{createHash}from"node:crypto";
 import{withNativeWindowsPublicationHandlesV1,withNativeWindowsPublicationAcceptedHandlesV1,withNativeWindowsAcceptedReadContextV1,type NativeWindowsAcceptedReadContextV1,type NativeWindowsAcceptedReadBindingV1,type NativeWindowsReadHandlesV1,requireNativeWindowsPhysicalPathV1,type NativeWindowsReadFactsV1,type NativeWindowsReadDescriptorV1}from"../🔒️handles/🟦️.ts";
 import canonicalSchema from"../../🧬️schema/🔣️.json";
-const fullSchema=JSON.parse(JSON.stringify(canonicalSchema))as typeof canonicalSchema,schema=fullSchema.definitions.Windows,protocol=Object.freeze({...schema.definitions.Protocol.const}),same=(a:NativeWindowsReadFactsV1,b:NativeWindowsReadFactsV1)=>JSON.stringify(a)===JSON.stringify(b);
+const fullSchema=JSON.parse(JSON.stringify(canonicalSchema))as typeof canonicalSchema,schema=fullSchema.definitions.Windows,protocol=nativeWindowsReadProtocolV1,same=(a:NativeWindowsReadFactsV1,b:NativeWindowsReadFactsV1)=>JSON.stringify(a)===JSON.stringify(b);
 /** 🗃️ Names only existing files in the publisher's fixed host metadata roster. */
 export type NativeWindowsPublicationHostRecordV1="fixed.vhd"|"image.json"|".publication/intent.json"|".publication/receipt.json";
 /** 🧷️ Constrains Native host observation with the private producer's actual current identity DATA. */

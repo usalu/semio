@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetWindowType`: a sparse window type patch of exactly the provided fields. A provided material
 //! must exist and every provided value must keep the dimensions valid; providing nothing new is a no-op.
 
-use super::SetWindowType;
+use crate::standards::v1::subsets::any::schema::mutations::set_window_type::SetWindowType;
 use crate::standards::v1::subsets::any::schema::{snapshot::{is_non_negative_length, is_positive_length, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

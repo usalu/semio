@@ -1,6 +1,6 @@
 /** 🔺️ Sparse procedural field delta using the same owned primitive model. */
 import type{CameraJson,WidgetLayout,SynapseSpec,Widget,FormGeneration}from"../🟦️.ts";
-export type{Generation3dArtifact,CameraJson,WidgetLayout,SynapseSpec,Widget,FlowTree,FlowNeuron,FlowUi,FlowNodeGui,NodeChrome,FlowPreviewGui,FlowChannelRef,FlowHostSnapshot,FormGeneration,GenerationPlayState}from"../🟦️.ts";
+export type{ProceduralSnapshot,CameraJson,WidgetLayout,SynapseSpec,Widget,FlowTree,FlowNeuron,FlowUi,FlowNodeGui,NodeChrome,FlowPreviewGui,FlowChannelRef,FlowHostSnapshot,FormGeneration,GenerationPlayState}from"../🟦️.ts";
 export interface Generation3dDiff{schema?:string;camera?:CameraJson;widgets?:Generation3dWidgetsDelta;synapses?:Generation3dSynapsesDelta;layout?:Generation3dLayoutDelta;generations?:Generation3dGenerationsDelta;selectedGeneration?:Generation3dSelectionChange;previewText?:Generation3dPreviewChange}
 export interface Generation3dWidgetRemoval{id:string;index:number}
 export interface Generation3dWidgetInsertion{index:number;row:Widget}

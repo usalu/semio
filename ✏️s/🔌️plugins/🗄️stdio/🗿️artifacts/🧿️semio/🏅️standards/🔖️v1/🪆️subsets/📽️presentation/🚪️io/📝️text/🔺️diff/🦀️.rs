@@ -137,12 +137,12 @@ pub(crate) fn dec_semio_point2(s: &str) -> Result<SemioPoint2, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_frame(f: &SlideFrame) -> String {
+pub fn enc_frame(f: &SlideFrame) -> String {
     format!("[{},{},{}]", enc_semio_point2(&f.origin), enc_f64(f.width), enc_f64(f.height))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_frame(s: &str) -> Result<SlideFrame, String> {
+pub fn dec_frame(s: &str) -> Result<SlideFrame, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [origin, width, height] = parts.as_slice() else { return Err(format!("frame: expected 3 fields, got {}", parts.len())) };
@@ -219,7 +219,7 @@ pub(crate) fn dec_table_row(s: &str) -> Result<SlideTableRow, String> {
 /// 🌳️ `X[frame,blocks]` TextBox / `P[frame,image]` Picture / `T[frame,rows]` Table /
 /// `H[frame,kind]` placeHolder.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_shape(shape: &SlideShape) -> String {
+pub fn enc_shape(shape: &SlideShape) -> String {
     match shape {
         SlideShape::TextBox { frame, blocks } => format!("X[{},{}]", enc_frame(frame), enc_list(blocks, enc_block)),
         SlideShape::Picture { frame, image } => format!("P[{},{}]", enc_frame(frame), enc_image(image)),
@@ -229,7 +229,7 @@ pub(crate) fn enc_shape(shape: &SlideShape) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_shape(s: &str) -> Result<SlideShape, String> {
+pub fn dec_shape(s: &str) -> Result<SlideShape, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     let parts = split_top_level(inner, ',');
@@ -255,12 +255,12 @@ pub(crate) fn dec_shape(s: &str) -> Result<SlideShape, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_master(m: &SlideMaster) -> String {
+pub fn enc_master(m: &SlideMaster) -> String {
     format!("[{},{}]", enc_str(&m.id), enc_list(&m.shapes, enc_shape))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_master(s: &str) -> Result<SlideMaster, String> {
+pub fn dec_master(s: &str) -> Result<SlideMaster, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, shapes] = parts.as_slice() else { return Err(format!("master: expected 2 fields, got {}", parts.len())) };
@@ -268,12 +268,12 @@ pub(crate) fn dec_master(s: &str) -> Result<SlideMaster, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_layout(l: &SlideLayout) -> String {
+pub fn enc_layout(l: &SlideLayout) -> String {
     format!("[{},{},{}]", enc_str(&l.id), enc_str(&l.master_id), enc_list(&l.shapes, enc_shape))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_layout(s: &str) -> Result<SlideLayout, String> {
+pub fn dec_layout(s: &str) -> Result<SlideLayout, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, master_id, shapes] = parts.as_slice() else { return Err(format!("layout: expected 3 fields, got {}", parts.len())) };
@@ -281,12 +281,12 @@ pub(crate) fn dec_layout(s: &str) -> Result<SlideLayout, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_slide(sl: &Slide) -> String {
+pub fn enc_slide(sl: &Slide) -> String {
     format!("[{},{},{},{}]", enc_str(&sl.id), encode_option(&sl.layout_id, |v| enc_str(v)), enc_list(&sl.shapes, enc_shape), enc_list(&sl.notes, enc_block))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_slide(s: &str) -> Result<Slide, String> {
+pub fn dec_slide(s: &str) -> Result<Slide, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, layout_id, shapes, notes] = parts.as_slice() else { return Err(format!("slide: expected 4 fields, got {}", parts.len())) };

@@ -339,6 +339,7 @@
     "@semio-tech/stdio-txt": "workspace:*",
     "@semio-tech/trinity-rewriting": "workspace:*",
     "@semio-tech/value-ts": "workspace:*",
+    "@xmldom/xmldom": "^0.9.10",
     "fast-xml-parser": "^5.11.2",
     "fflate": "^0.8.3",
     "jszip": "^3.10.2",

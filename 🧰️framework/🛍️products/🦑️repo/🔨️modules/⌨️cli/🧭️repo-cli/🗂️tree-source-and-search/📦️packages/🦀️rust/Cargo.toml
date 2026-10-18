@@ -30,6 +30,7 @@ semio-framework-repo-graphql = { path = "../../../../../🔗️graphql/📦️pa
 semio-framework-repo-identity = { path = "../../../../../🪪️identity/📦️packages/🦀️rust" }
 semio-framework-repo-languages = { path = "../../../../../🗣️languages/📦️packages/🦀️rust" }
 semio-framework-repo-model = { path = "../../../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-model-entity = { path = "../../../../../📐️model/🪪️entity/📦️packages/🦀️rust" }
 semio-framework-repo-search = { path = "../../../../../🔎️search/📦️packages/🦀️rust" }
 semio-framework-repo-tree = { path = "../../../../../🌳️tree/📦️packages/🦀️rust" }
 semio-framework-repo-workspace = { path = "../../../../../🏠️workspace/📦️packages/🦀️rust" }

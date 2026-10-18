@@ -18,50 +18,30 @@ use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Value};
 use std::collections::BTreeMap;
 
-#[path = "🧱️codec/🦀️.rs"]
-pub mod codec;
-#[path = "🧾️context/🦀️.rs"]
-pub mod context;
-#[path = "🧰️writer/🦀️.rs"]
-pub mod writer;
-#[path = "🧭️frames/🦀️.rs"]
-pub mod frames;
-#[path = "🧊️brep/🦀️.rs"]
-pub mod brep;
-#[path = "🏛️spatial/🦀️.rs"]
-pub mod spatial;
-#[path = "🧬️data/🦀️.rs"]
-pub mod data;
-#[path = "🏰️walls/🦀️.rs"]
-pub mod walls;
-#[path = "🧷️wall-sweeps/🦀️.rs"]
-pub mod wall_sweeps;
-#[path = "🏗️frame/🦀️.rs"]
-pub mod frame;
-#[path = "⬜️horizontal/🦀️.rs"]
-pub mod horizontal;
-#[path = "🔲️ceilings/🦀️.rs"]
-pub mod ceilings;
-#[path = "🪜️circulation/🦀️.rs"]
-pub mod circulation;
-#[path = "🛝️ramps/🦀️.rs"]
-pub mod ramps;
-#[path = "🪑️components/🦀️.rs"]
-pub mod components;
-#[path = "🌀️mep/🦀️.rs"]
-pub mod mep;
-#[path = "🏠️spaces/🦀️.rs"]
-pub mod spaces;
-#[path = "🏘️zoning/🦀️.rs"]
-pub mod zoning;
+pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::export::ifc::codec;
+pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::context;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::ifc::writer;
+pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::ifc::frames;
+pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::export::ifc::brep;
+pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::ifc::spatial;
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::data;
+pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::walls;
+pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::wall_sweeps;
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::frame;
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::horizontal;
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ceilings;
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::circulation;
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::ramps;
+pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::components;
+pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::mep;
+pub use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::spaces;
+pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::zoning;
 #[path = "🧭️options/🦀️.rs"]
 pub mod options;
-#[path = "🪟️curtain/🦀️.rs"]
-pub mod curtain;
+pub use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::ifc::curtain;
 #[path = "📏️grids/🦀️.rs"]
 pub mod grids;
-#[path = "🪧️annotations/🦀️.rs"]
-pub mod annotations;
+pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::ifc::annotations;
 #[path = "🔬️projection/🦀️.rs"]
 pub mod projection;
 #[path = "📚️ifc4/🦀️.rs"]
@@ -224,13 +204,8 @@ impl Serializer<ModelSnapshot> for ModelIntoIfc2x3 {
 #[path = "🧪️tests/🧰️testkit/🦀️.rs"]
 pub mod testkit;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔭️schema4/🦀️.rs"]
-mod schema4_tests;
 
-#[path = "🦴️structure/🦀️.rs"]
-pub mod structure;
+
+
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::ifc::structure;

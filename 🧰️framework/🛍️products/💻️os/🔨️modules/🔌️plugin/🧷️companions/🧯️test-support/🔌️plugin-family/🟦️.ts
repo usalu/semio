@@ -45,3 +45,33 @@ export function pluginSubtreeText(...segments: string[]): string {
   }
   return text;
 }
+
+/** 🔌️ The text of every non-test Rust source file below a folder of a sibling module of the plugin (for example `📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell`), read once per process, for laws about one owner folder whose crate root was cut into staged files. */
+export function moduleSubtreeText(...segments: string[]): string {
+  const key = "module/" + segments.join("/");
+  let text = subtrees.get(key);
+  if (text === undefined) {
+    text = sources(join(modules, ...segments)).map(path => readFileSync(path, "utf8")).map(source => (source.endsWith("\n") ? source : source + "\n")).join("");
+    subtrees.set(key, text);
+  }
+  return text;
+}
+
+/** 🧪️ The text of every Rust file below one folder of the plugin, test folders included (read once per process): for laws about a Rust test whose file the cut split into topic folders next to it. */
+export function pluginTestTreeText(...segments: string[]): string {
+  const key = "tests/" + segments.join("/");
+  let text = subtrees.get(key);
+  if (text === undefined) {
+    const files: string[] = [];
+    const walk = (directory: string): void => {
+      for (const entry of readdirSync(directory, { withFileTypes: true }).sort((left, right) => (left.name < right.name ? -1 : 1))) {
+        if (entry.isDirectory()) { if (entry.name !== "node_modules" && entry.name !== "target") walk(join(directory, entry.name)); }
+        else if (entry.name.endsWith(".rs")) files.push(join(directory, entry.name));
+      }
+    };
+    walk(join(plugin, ...segments));
+    text = files.map(path => readFileSync(path, "utf8")).map(source => (source.endsWith("\n") ? source : source + "\n")).join("");
+    subtrees.set(key, text);
+  }
+  return text;
+}

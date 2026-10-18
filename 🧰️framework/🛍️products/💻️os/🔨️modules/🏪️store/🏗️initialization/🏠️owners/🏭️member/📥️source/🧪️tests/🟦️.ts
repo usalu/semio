@@ -5,11 +5,13 @@ import Ajv from "ajv";
 import {toolJobMemberStoreProducerExact,memberStoreProducerSourceDeclarationV1,type ToolJobMemberStoreProducerSources, type MemberProducerSourceRole,type MemberProducerSourceBody} from "../🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixtures from "./🧫️fixtures/🔣️.json" with {type:"json"};
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 /** 🧪️ Runs portable current-body producer laws without importing the executable workspace script. */
 export function memberStoreProducerSourceSelfTests(check:typeof toolJobMemberStoreProducerExact):number{
  const root=resolve(dirname(fileURLToPath(import.meta.url)),"../../../../../../../../../..");
- const read=(path:string)=>({path,source:readFileSync(resolve(root,path),"utf8")});
+ const splitRoots=["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs"];
+ const read=(path:string)=>({path,source:splitRoots.includes(path)?readModuleTreeSource(resolve(root,path)):readFileSync(resolve(root,path),"utf8")});
  const ajv=new Ajv({strict:true,allErrors:true});ajv.addKeyword({keyword:"x-semio-formats",valid:true});ajv.addSchema(schema);
  const validate=ajv.getSchema(schema.$id)!,validateSources=ajv.getSchema(schema.$id+"#/$defs/ToolJobMemberStoreProducerSources")!;
  if(!validate(memberStoreProducerSourceDeclarationV1))throw Error("[member producer source] defining schema refused current declaration");

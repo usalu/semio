@@ -23,6 +23,7 @@ use semio_framework_plugin::UtilityDefinition;
 use semio_framework_tool_machine::{GestureChart, GesturePhase, ToolMachineRunner, ToolStep, ToolYield};
 use semio_framework_pack_json::{json,Value};
 use std::sync::Arc;
+use semio_s_artifact_puzzle_2d::editor::puzzle2d::commands::proximity_connect::puzzle2d_proximity_pairs;
 
 pub const UTILITY_ID: &str = crate::editor::puzzle2d::config::PUZZLE2D_SELECT_UTILITY_ID;
 

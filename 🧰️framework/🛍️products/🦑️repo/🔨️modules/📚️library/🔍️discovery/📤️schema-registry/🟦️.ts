@@ -1,5 +1,5 @@
 import { requireRecord, validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import type { SchemaRustEntryDump } from "../🟦️.ts";
+import type { SchemaRustEntryDump } from "../🧾️schema-scope-catalog/🟦️.ts";
 
 /** 📤️ Supplies only freshly completed native registry output. */
 export interface SchemaRegistryProducerV1 {

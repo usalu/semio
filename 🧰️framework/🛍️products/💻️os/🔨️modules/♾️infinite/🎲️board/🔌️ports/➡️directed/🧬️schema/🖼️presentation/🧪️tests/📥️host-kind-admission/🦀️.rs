@@ -3,7 +3,7 @@ use crate::DagHostSnapshot;
 /// 📥️ The actual typed decoder owns unknown-kind refusal without a concrete manifest lookup.
 #[test]
 fn host_kind_admission_matches_language_neutral_vectors() {
-    let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📥️host-kind-admission/🔣️.json")).expect("host admission corpus");
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🖼️presentation/📥️host-kind-admission/🔣️.json")).expect("host admission corpus");
     let cases = corpus["cases"].as_array().expect("host admission cases");
     assert_eq!(cases.len(), 15);
     for case in cases {

@@ -1,12 +1,20 @@
 import Ajv from "ajv";
 import { test, expect } from "bun:test";
 import { readFileSync } from "node:fs";
-import { resolve, join } from "node:path";
+import { resolve, join, dirname } from "node:path";
 import { applyPatch as applyJsonPatch, type Operation } from "fast-json-patch";
 import { Database } from "bun:sqlite";
+import { inspectRustPathMounts } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { between, readRetirementCopyDemandLaw, readRetirementPhysicalWorkLaw, retirementCopyDemand } from "../../🧪️tests/🧫️fixtures/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../../..");
+const CONTRACT_ROOT = join(owner, "🧬️retained-clone/🧬️contract/🦀️.rs");
+
+/** 🧬️ The retained clone contract root together with the cursor modules it mounts from its own folder (sibling owners and tests excluded). */
+function contractSource(): string {
+  const root = readFileSync(CONTRACT_ROOT, "utf8");
+  return [root, ...inspectRustPathMounts(root).filter(mount => !mount.path.startsWith("../") && !mount.path.startsWith("🧪️tests")).map(mount => readFileSync(join(dirname(CONTRACT_ROOT), mount.path), "utf8"))].join("\n");
+}
 
 /** 🩹 Applies a validated JSON patch to a copy and hands back the patched document as untrusted data. */
 function patched(document: Readonly<Record<string, unknown>>, operations: readonly Operation[]): Record<string, unknown> {
@@ -84,7 +92,7 @@ test("controlled paged retirement exposes typed child metadata and exact scaffol
   expect(database.query("SELECT SUM(release) AS bytes FROM ownership").get()).toEqual({bytes:corpus.physicalCursorBytes});
   expect(patched({child:corpus.inputByte,backing:corpus.physicalCursorBytes},[{op:"remove",path:"/child"}])).toEqual({backing:corpus.physicalCursorBytes});
  }finally{database.close();}
- const trait=readFileSync(join(owner,"🧬️retained-clone/🧬️contract/🦀️.rs"),"utf8"),field=readFileSync(join(owner,"🧬️retained-clone/📋️field/🦀️.rs"),"utf8");
+ const trait=contractSource(),field=readFileSync(join(owner,"🧬️retained-clone/📋️field/🦀️.rs"),"utf8");
  expect(between(trait,"pub trait RetainedCloneCursor","pub struct RetainedCloneClose")).toContain("fn next_close_capacity_byte_demand(");
  expect(field).toContain("fn next_close_release_byte_demand(");expect(field).toContain("child.next_close_capacity_byte_demand(");
 });
@@ -105,7 +113,7 @@ test("controlled paged retirement observes retained scalar and UTF8 leaf birth d
   database.exec("CREATE TABLE body_grants(bytes INTEGER); INSERT INTO body_grants VALUES(0),(1)");
   expect(database.query("SELECT MIN(bytes) AS bytes FROM body_grants WHERE bytes>=?").get(law.minimumBodyCopyBytes)).toEqual({bytes:1});
  }finally{database.close();}
- const source=readFileSync(join(owner,"🧬️retained-clone/🧬️contract/🦀️.rs"),"utf8"),scalar=between(source,"RetainedCloneCursor<T> for ScalarCursor","macro_rules! retained_clone_scalar"),text=between(source,"RetainedCloneCursor<String> for StringCursor","impl RetainedClone for String");
+ const source=contractSource(),scalar=between(source,"RetainedCloneCursor<T> for ScalarCursor","macro_rules! retained_clone_scalar"),text=between(source,"RetainedCloneCursor<String> for StringCursor","impl RetainedClone for String");
  expect(scalar).toContain("fn next_close_capacity_byte_demand(");expect(text).toContain("fn next_close_release_byte_demand(");
  const retirement=readFileSync(join(owner,"♻️retirement/🦀️.rs"),"utf8"),leaf=between(retirement,"RetirementCursor for Leaf<T>","pub fn leaf<");
  expect(leaf).toContain("fn next_close_byte_demand(");
@@ -169,7 +177,7 @@ test("controlled paged retirement preserves copy demand through native clone clo
   expect(database.query("SELECT COUNT(*) AS count FROM frontier").get()).toEqual({count:0});
  }finally{database.close();}
  for(const path of ["🧬️retained-clone/🧬️contract/🦀️.rs","🧬️retained-clone/📋️field/🦀️.rs","🧬️retained-clone/📋️paged-list/🦀️.rs","🧬️retained-clone/📦️paged/🦀️.rs","✨️derive/🧬️retained-clone/🦀️.rs","📦️paged/🎮️append/🦀️.rs"]){
-  expect(readFileSync(join(owner,path),"utf8").includes("fn next_close_copy_byte_demand(")).toBe(true);
+  expect((join(owner,path)===CONTRACT_ROOT?contractSource():readFileSync(join(owner,path),"utf8")).includes("fn next_close_copy_byte_demand(")).toBe(true);
  }
 });
 

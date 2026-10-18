@@ -8,10 +8,10 @@ use super::*;
 /// every other identity validates and applies through its package's own component. `guest` is never
 /// optional: it is the only creation authority there is, always the identity's own package.
 pub struct VerifiedNativeArtifactCodec {
-    pub(super) identity: TrustedArtifactIdentity,
-    pub(super) codec: Option<ArtifactCodec>,
-    pub(super) guest: GuestArtifactCodecBinding,
-    pub(super) owner_declaration: ArtifactCatalogBinding,
+    pub identity: TrustedArtifactIdentity,
+    pub codec: Option<ArtifactCodec>,
+    pub guest: GuestArtifactCodecBinding,
+    pub owner_declaration: ArtifactCatalogBinding,
 }
 
 impl VerifiedNativeArtifactCodec {

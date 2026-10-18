@@ -2,9 +2,9 @@
 //! window panel an existing type, and the cell (curtain wall, u, v) is overridden at most once. Whether the cell lies inside the inferred grid is a diagnostic, never a
 //! refusal: the grid follows the type and the wall and may change under the override.
 
-use super::super::elements;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::panel_flaw;
-use super::CreateCurtainPanelOverride;
+use crate::standards::v1::subsets::any::schema::mutations::create_curtain_panel_override::CreateCurtainPanelOverride;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

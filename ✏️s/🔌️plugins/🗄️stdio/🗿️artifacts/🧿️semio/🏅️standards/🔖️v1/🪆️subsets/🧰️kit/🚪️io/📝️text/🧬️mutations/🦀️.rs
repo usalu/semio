@@ -163,7 +163,7 @@ impl protocol::OpText for SemioKitMutation {
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🚪️io/🦀️.rs`.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioKitMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioKitMutation> {
     let ref_of = |subset: &str, id: &str| semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
     vec![
         SemioKitMutation::CreateObject(CreateObject { child_id: "o1".into(), target: ref_of("object", "t1"), at: None }),

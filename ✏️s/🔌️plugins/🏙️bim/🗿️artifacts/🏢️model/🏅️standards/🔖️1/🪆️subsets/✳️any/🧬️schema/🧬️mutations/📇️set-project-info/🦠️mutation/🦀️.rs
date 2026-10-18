@@ -1,6 +1,6 @@
 //! 📇️ `set-project-info` payload. Patches the project metadata (name, description, author, organization, phase names): exactly the provided fields change, an empty patch is a no-op.
 
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::ProjectPatch}, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::ProjectPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -31,13 +31,16 @@ impl SetProjectInfo {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetProjectInfo {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetProjectInfo
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetProjectInfo>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "project", kind: "set-project-info", record: "SetProjectInfo" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_project_info::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_project_info::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&String::from("Update the project info"), &String::from("Projektinformationen ändern"))

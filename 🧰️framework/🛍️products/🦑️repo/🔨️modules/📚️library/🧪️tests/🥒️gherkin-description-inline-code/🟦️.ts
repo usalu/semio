@@ -4,6 +4,7 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import MarkdownIt from "markdown-it";
 import ts from "typescript";
+import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Span = Readonly<{ start: number; end: number; value: string }>;
 type Vector = Readonly<{
@@ -15,15 +16,18 @@ type Vector = Readonly<{
 
 const library = resolve(import.meta.dir, "../..");
 const root = resolve(library, "../../../../..");
-const normalizerPath = join(library, "🧹️normalization/🟦️.ts");
+const normalizerPath = join(library, "🧹️normalization");
 const vectorPath = join(import.meta.dir, "../🧫️fixtures/🥒️gherkin-description-inline-code/🔣️.json");
 const vector: Vector = JSON.parse(readFileSync(vectorPath, "utf8"));
-const normalizerText = readFileSync(normalizerPath, "utf8");
+const normalizerText = normalizationEngineDeclarations(normalizerPath);
 const syntax = ts.createSourceFile("./🟦️.ts", normalizerText, ts.ScriptTarget.Latest, true);
 
 const spanDeclaration = syntax.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "gherkinDescriptionInlineCodeSpans");
 if (!spanDeclaration) throw new Error("Missing actual gherkinDescriptionInlineCodeSpans implementation");
 const spanSource = spanDeclaration.getText(syntax);
+const requireValueDeclaration = syntax.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "requireTaxonomyValue");
+if (!requireValueDeclaration) throw new Error("Missing actual requireTaxonomyValue implementation");
+const requireValueSource = requireValueDeclaration.getText(syntax);
 
 const gherkinTokensDeclaration = syntax.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "gherkinTokens");
 if (!gherkinTokensDeclaration) throw new Error("Missing actual gherkinTokens implementation");
@@ -46,7 +50,7 @@ function assertPureClosure(): void {
 }
 
 function compiledSpans(compiler: typeof compilers[number]): (content: string) => Span[] {
-  return new Function(compiler.compile(spanSource) + "\nreturn gherkinDescriptionInlineCodeSpans;")() as (content: string) => Span[];
+  return new Function(compiler.compile(requireValueSource + "\n" + spanSource) + "\nreturn gherkinDescriptionInlineCodeSpans;")() as (content: string) => Span[];
 }
 
 /** 🥒️ Slices the raw code-unit span the actual production function reports, without duplicating its scanning logic. */

@@ -28,12 +28,11 @@ pub enum RuntimeCleanupFault {
     Checkout = 10,
     CheckedOutJob = 11,
     TakeOutcome = 12,
-    CooperativeClock = 13,
-    OwnerPoisoned = 14,
-    InstancePoisoned = 15,
-    InstanceNotDrained = 16,
-    MaintenancePoisoned = 17,
-    MaintenanceNotDrained = 18,
+    OwnerPoisoned = 13,
+    InstancePoisoned = 14,
+    InstanceNotDrained = 15,
+    MaintenancePoisoned = 16,
+    MaintenanceNotDrained = 17,
 }
 /// 🩺️ Wire projection of one {@link RuntimeCleanupFault}: the fixture key, the emitted
 /// `Fault::code`, and the human sentence spliced into `Fault::message`.
@@ -43,7 +42,7 @@ struct RuntimeCleanupFaultVector {
     pub detail: &'static str,
 }
 #[doc(hidden)]
-pub const RUNTIME_CLEANUP_FAULTS: [RuntimeCleanupFault; 19] = [
+pub const RUNTIME_CLEANUP_FAULTS: [RuntimeCleanupFault; 18] = [
     RuntimeCleanupFault::Clock,
     RuntimeCleanupFault::ClockRegression,
     RuntimeCleanupFault::InteractiveCeiling,
@@ -57,14 +56,13 @@ pub const RUNTIME_CLEANUP_FAULTS: [RuntimeCleanupFault; 19] = [
     RuntimeCleanupFault::Checkout,
     RuntimeCleanupFault::CheckedOutJob,
     RuntimeCleanupFault::TakeOutcome,
-    RuntimeCleanupFault::CooperativeClock,
     RuntimeCleanupFault::OwnerPoisoned,
     RuntimeCleanupFault::InstancePoisoned,
     RuntimeCleanupFault::InstanceNotDrained,
     RuntimeCleanupFault::MaintenancePoisoned,
     RuntimeCleanupFault::MaintenanceNotDrained,
 ];
-const RUNTIME_CLEANUP_FAULT_VECTORS: [RuntimeCleanupFaultVector; 19] = [
+const RUNTIME_CLEANUP_FAULT_VECTORS: [RuntimeCleanupFaultVector; 18] = [
     RuntimeCleanupFaultVector { slug: "clock", code: "plugin.internal.clock", detail: "no monotonic clock reading at turn start" },
     RuntimeCleanupFaultVector { slug: "clock-regression", code: "plugin.internal.clock-regression", detail: "the monotonic clock ran backwards across the turn" },
     RuntimeCleanupFaultVector { slug: "interactive-ceiling", code: "plugin.internal.interactive-ceiling", detail: "the turn overran the interactive step ceiling" },
@@ -78,7 +76,6 @@ const RUNTIME_CLEANUP_FAULT_VECTORS: [RuntimeCleanupFaultVector; 19] = [
     RuntimeCleanupFaultVector { slug: "checkout", code: "plugin.internal.checkout", detail: "the cleanup job session produced no checkout after a step" },
     RuntimeCleanupFaultVector { slug: "checked-out-job", code: "plugin.internal.checked-out-job", detail: "the checked out cleanup job body was unreachable" },
     RuntimeCleanupFaultVector { slug: "take-outcome", code: "plugin.internal.take-outcome", detail: "the cleanup job session produced no step outcome" },
-    RuntimeCleanupFaultVector { slug: "clock-cooperative", code: "plugin.internal.clock-cooperative", detail: "cooperative maintenance requires an installed monotonic clock" },
     RuntimeCleanupFaultVector { slug: "owner-poisoned", code: "plugin.internal.owner-poisoned", detail: "the instance owner lock was poisoned by a panicking turn" },
     RuntimeCleanupFaultVector { slug: "instance-poisoned", code: "plugin.internal.instance-poisoned", detail: "the app instance lock was poisoned by a panicking turn" },
     RuntimeCleanupFaultVector { slug: "instance-not-drained", code: "plugin.internal.instance-not-drained", detail: "the app instance still held terminal state at retirement" },

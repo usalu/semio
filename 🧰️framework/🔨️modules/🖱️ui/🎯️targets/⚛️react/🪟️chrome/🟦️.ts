@@ -23,19 +23,9 @@ export {
   type OverviewCardProps,
   type OverviewCardSectionProps,
 } from "../../../🧱️elements/🃏️OverviewCard/🟦️.tsx";
-export {
-  LayeredOverview,
-  capturePosterFromCanvases,
-  type LayeredCardState,
-  type LayeredChromeState,
-  type LayeredDirection,
-  type LayeredInsets,
-  type LayeredLabels,
-  type LayeredMode,
-  type LayeredOverviewProps,
-  type LayeredPane,
-  type LayeredPaneState,
-} from "../../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
+export { LayeredOverview, type LayeredDirection } from "../../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
+export { capturePosterFromCanvases } from "../../../🧱️elements/🥞️LayeredOverview/🧰️pane-helpers/🟦️.ts";
+export { type LayeredCardState, type LayeredChromeState, type LayeredInsets, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState } from "../../../🧱️elements/🥞️LayeredOverview/📋️types/🟦️.ts";
 export {
   LAYERED_DEFAULT_LIFECYCLE,
   LAYERED_FOLLOW_EPSILON,

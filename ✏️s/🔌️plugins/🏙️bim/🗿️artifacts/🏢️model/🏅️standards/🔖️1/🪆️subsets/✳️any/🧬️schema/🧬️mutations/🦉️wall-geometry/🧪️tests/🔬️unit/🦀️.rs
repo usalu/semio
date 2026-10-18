@@ -1,5 +1,11 @@
-use super::testing::close;
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, Slope};
+#[allow(unused_imports)]
+use protocol::MutationOutcome;
+#[allow(unused_imports)]
+use std::f64::consts::TAU;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::close;
+use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::*;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Point2, Profile, TopConstraint, Vertex}, diff::ModelDiff};
 use protocol::OutcomeCode;
 use semio_framework_geometry::bulge::BulgeSeg;
@@ -38,7 +44,7 @@ async fn flipping_twice_restores_the_axis_and_keeps_the_curve() {
     for axis in [line((0.0, 0.0), (8.0, 3.0)), arc((0.0, 0.0), (8.0, 0.0), 0.5), arc((1.0, 2.0), (4.0, -2.0), -1.7)] {
         let flipped = flipped(&axis);
         assert_ne!(flipped, axis);
-        assert_eq!(super::flipped(&flipped), axis);
+        assert_eq!(crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flipped(&flipped), axis);
         assert!(close(length(&flipped), length(&axis)));
         let (forward, backward) = (kernel(&axis), kernel(&flipped));
         assert!(forward.point_at(0.3).distance(backward.point_at(0.7)) < 1e-9, "the same curve is run the other way");

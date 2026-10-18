@@ -1,0 +1,9 @@
+# Complete ALL Source Alias Observation
+
+The fixed Source-only audit uses fresh actual ALL workspace custody and the production unique-source owner relation. It observes each declared source parent's ordinary nofollow identity and its node_modules endpoint with lstat/readlink only. It never opens or lists node_modules, resolves a target with realpath, probes target metadata, enters Dependencies backing, or grants readiness, retirement or binding authority.
+
+Rows distinguish absent, directory and link. Other endpoint kinds refuse. Parent seven-field identity and physical ancestor dev/ino/mode are retained; each present endpoint retains seven fields, links retain exact raw target and lexical absolute resolution. The fixed Dependencies root is derived by the ordinary lexical budget policy and only used for string containment classification. Unknown target existence is deliberately not inferred.
+
+The production observer uses the existing maximumPackages, Source observation/work/byte limits and progress quantum. It replays all observed ancestors, parents and endpoints before returning. The caller compares complete observations around actual custody.recheck, then waits for full ALL settlement before saving observational DATA; completion is announced after issued scope settlement. The receipt binds full owner-relation digest and endpoint relation digest. Topology drift/cancellation leaves no accepted receipt/completion.
+
+Tests use closed language-neutral vectors, actual Generated nofollow fixtures, Python os.lstat/os.readlink/path lexical normalization and SQLite row ordering. Hostile links into a nonexistent protected-looking sibling remain observable DATA with zero target reads. These tests grant no Native authority. Actual ALL execution remains a separate runtime observation, required before accepted receipt.

@@ -61,12 +61,12 @@ use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 use std::collections::BTreeMap;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -74,17 +74,17 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_bool(b: &bool) -> String {
+pub fn enc_bool(b: &bool) -> String {
     if *b {
         "1".to_string()
     } else {
@@ -93,7 +93,7 @@ pub(crate) fn enc_bool(b: &bool) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+pub fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
@@ -102,7 +102,7 @@ pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -125,12 +125,12 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
@@ -138,7 +138,7 @@ pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> S
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -148,7 +148,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 
@@ -175,7 +175,7 @@ pub(crate) fn dec_attr(s: &str) -> Result<XmlAttr, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
+pub fn enc_xml_node(n: &XmlNode) -> String {
     match n {
         XmlNode::Element { name, attrs, children } => {
             let attrs = attrs.iter().map(enc_attr).collect::<Vec<_>>().join(",");
@@ -190,7 +190,7 @@ pub(crate) fn enc_xml_node(n: &XmlNode) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
+pub fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -280,7 +280,7 @@ pub(crate) fn dec_table(s: &str) -> Result<DocxTable, String> {
 
 /// 🌳️ `P[paragraph]` / `T[table]` -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block(b: &DocxBlock) -> String {
+pub fn enc_block(b: &DocxBlock) -> String {
     match b {
         DocxBlock::Paragraph(p) => format!("P{}", enc_paragraph(p)),
         DocxBlock::Table(t) => format!("T{}", enc_table(t)),
@@ -288,7 +288,7 @@ pub(crate) fn enc_block(b: &DocxBlock) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block(s: &str) -> Result<DocxBlock, String> {
+pub fn dec_block(s: &str) -> Result<DocxBlock, String> {
     let (tag, rest) = s.split_at(1);
     match tag {
         "P" => Ok(DocxBlock::Paragraph(dec_paragraph(rest)?)),
@@ -298,12 +298,12 @@ pub(crate) fn dec_block(s: &str) -> Result<DocxBlock, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_style(s: &DocxStyle) -> String {
+pub fn enc_style(s: &DocxStyle) -> String {
     format!("[{},{},{}]", enc_str(&s.id), enc_str(&s.name), encode_option(&s.based_on, |v| enc_str(v)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_style(s: &str) -> Result<DocxStyle, String> {
+pub fn dec_style(s: &str) -> Result<DocxStyle, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, name, based_on] = parts.as_slice() else { return Err(format!("style: expected 3 fields, got {}", parts.len())) };
@@ -330,7 +330,7 @@ use semio_s_artifact_stdio_zip::opc::{OpcContentTypes, OpcPackage, OpcPart, OpcR
 use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 use std::collections::BTreeMap;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 }

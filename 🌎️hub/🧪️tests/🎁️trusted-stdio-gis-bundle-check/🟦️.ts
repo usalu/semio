@@ -12,7 +12,8 @@ import { isAbsolute, join, relative, resolve } from "node:path";
 import { withRepositoryPublishedCargoExecutableV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { proveGisComponentColdMapPatch } from "../../🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
-import { runRepositoryCargoTests, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withCapturedLocalHubHostV1 } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { readHubScriptModule } from "../../🧪️testing/📜️script-sources/🟦️.ts";
@@ -24,7 +25,7 @@ import { TRUSTED_BOOTSTRAP_LINKED_PACKAGES, trustedBootstrapSelectPackages } fro
 import { proveGisMapTwoAuthorCompositionFixture } from "../🌍️gis-map-fixtures/🟦️.ts";
 import { proveGisMapTwoAuthorShellProcess } from "../🕹️gis-map-process/🟦️.ts";
 import { readHubBinSource, readTrustedCatalogSource } from "../../🧪️testing/📖️source-readers/🟦️.ts";
-import { proveTrustedStdioGisBootstrapFixture } from "../🏛️trusted-catalog-fixtures/🟦️.ts";
+import { proveTrustedStdioGisBootstrapFixture } from "../🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures/🟦️.ts";
 import { proveTrustedGenerationStageFixture, proveTrustedPublicationFixture } from "../📮️trusted-publication-fixtures/🟦️.ts";
 
 export class TrustedStdioGisBundleCheckScript extends BundleScript {

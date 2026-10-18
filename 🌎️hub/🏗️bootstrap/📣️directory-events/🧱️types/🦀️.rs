@@ -95,7 +95,7 @@ pub const DIRECTORY_EVENT_PAGE_DEADLINE_MS: u64 = 5_000;
 
 pub struct DirectoryEventPageHttpControl {
     pub cancelled: std::sync::atomic::AtomicBool,
-    pub(crate) active: std::sync::atomic::AtomicBool,
+    pub active: std::sync::atomic::AtomicBool,
 }
 
 impl DirectoryEventPageHttpControl {

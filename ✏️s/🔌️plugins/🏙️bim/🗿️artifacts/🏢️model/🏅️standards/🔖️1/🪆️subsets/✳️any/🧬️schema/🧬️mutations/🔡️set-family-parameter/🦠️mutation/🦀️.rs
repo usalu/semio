@@ -1,6 +1,6 @@
 //! 🔡️ `set-family-parameter` payload. Sets exactly the provided kind and formula of the parameter `name` of a family, or adds it (a new parameter needs both). Formulas are canonical text of the expression language, use only existing parameters and never close a circle.
 
-use crate::standards::v1::subsets::any::schema::{diff::{patches::FamilyParameterPatch, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, ParameterKind}};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::FamilyParameterPatch, ModelDiff}, snapshot::{ModelSnapshot, ParameterKind}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -27,13 +27,16 @@ impl SetFamilyParameter {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetFamilyParameter {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetFamilyParameter
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetFamilyParameter> + From<crate::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "family-parameter", kind: "set-family-parameter", record: "SetFamilyParameter" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set parameter \"{}\" of family \"{}\"", self.name, self.family), &format!("Parameter \"{}\" der Familie \"{}\" setzen", self.name, self.family))

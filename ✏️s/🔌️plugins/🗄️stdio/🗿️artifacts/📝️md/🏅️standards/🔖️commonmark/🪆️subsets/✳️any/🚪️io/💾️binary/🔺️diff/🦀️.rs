@@ -30,13 +30,13 @@ pub(crate) fn read_bool_bin(reader: &mut store::ByteReader<'_>) -> Result<bool, 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
@@ -156,7 +156,7 @@ pub(crate) fn dec_inline_bin(reader: &mut store::ByteReader<'_>) -> Result<MdInl
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
+pub fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for n in list {
         enc_inline_bin(n, out);
@@ -164,7 +164,7 @@ pub(crate) fn enc_inline_list_bin(list: &[MdInline], out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdInline>, String> {
+pub fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdInline>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_inline_bin(reader)).collect()
 }
@@ -172,7 +172,7 @@ pub(crate) fn dec_inline_list_bin(reader: &mut store::ByteReader<'_>) -> Result<
 /// 🧪️ P2-FG1: real recursive binary twin of [`enc_block`]/[`dec_block`] above — same 0-6 ordinal
 /// order as the text codec's `J`-`P` tag range.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
+pub fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
     match b {
         MdBlock::Heading { level, inlines } => {
             out.push(0);
@@ -208,7 +208,7 @@ pub(crate) fn enc_block_bin(b: &MdBlock, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlock, String> {
+pub fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBlock, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -237,7 +237,7 @@ pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<MdBloc
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
+pub fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for b in list {
         enc_block_bin(b, out);
@@ -245,7 +245,7 @@ pub(crate) fn enc_block_list_bin(list: &[MdBlock], out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdBlock>, String> {
+pub fn dec_block_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<MdBlock>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_block_bin(reader)).collect()
 }

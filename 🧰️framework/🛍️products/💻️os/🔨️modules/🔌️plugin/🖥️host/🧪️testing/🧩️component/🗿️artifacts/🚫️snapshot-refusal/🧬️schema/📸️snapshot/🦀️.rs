@@ -5,6 +5,7 @@ use semio_framework_value_derive::{ToValue,FromValue};
 #[value(deny_unknown_fields)]
 #[dsl(id="fixture.neutral-host-fixture.snapshot-refusal",layout="lines")]
 pub struct Snapshot {pub value:i32}
+semio_framework_value::artifact_retire_struct!(Snapshot { value });
 impl semio_framework_schema_composition::ArtifactCompositionFields for Snapshot {
  fn visit_child_refs<'a,V:semio_framework_schema_composition::ChildRefVisitor<'a>>(&'a self,_visitor:&mut V)->Result<(),V::Error>{Ok(())}
 }

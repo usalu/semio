@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/build/inference-reload-corpus/v1",
+  "title": "Build inference revision reload corpus",
+  "description": "A language-agnostic scenario for the revisioned component graph: components with values and needs, steps that edit values and load a symbolic revision, and the observable result every implementation must reproduce.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "revisionToken",
+    "top",
+    "components",
+    "steps",
+    "rosters"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "revisionToken": {
+      "type": "string",
+      "minLength": 1
+    },
+    "top": {
+      "$ref": "#/definitions/Name"
+    },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Component"
+      }
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Step"
+      }
+    },
+    "rosters": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/RosterCase"
+      }
+    }
+  },
+  "definitions": {
+    "Name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "Component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "needs",
+        "value"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/Name"
+        },
+        "needs": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/Name"
+          }
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Counts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "revision",
+        "expect"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "set": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "concurrent": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "refuseWire": {
+          "$ref": "#/definitions/Name"
+        },
+        "expect": {
+          "$ref": "#/definitions/Expectation"
+        }
+      }
+    },
+    "Expectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "accepted",
+        "wired",
+        "evaluations"
+      ],
+      "properties": {
+        "accepted": {
+          "type": "boolean"
+        },
+        "render": {
+          "type": "string"
+        },
+        "error": {
+          "type": "string"
+        },
+        "wired": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Name"
+          }
+        },
+        "evaluations": {
+          "$ref": "#/definitions/Counts"
+        },
+        "scope": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "shared": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RosterCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "components",
+        "accepted",
+        "schema"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "schema": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

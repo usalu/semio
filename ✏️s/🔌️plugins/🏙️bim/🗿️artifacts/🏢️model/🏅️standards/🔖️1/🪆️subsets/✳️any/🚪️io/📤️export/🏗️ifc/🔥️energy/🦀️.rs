@@ -204,6 +204,4 @@ pub fn thermal_report(schema: Schema, model: &crate::standards::v1::subsets::any
 }
 //#endregion 🔖️Report
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

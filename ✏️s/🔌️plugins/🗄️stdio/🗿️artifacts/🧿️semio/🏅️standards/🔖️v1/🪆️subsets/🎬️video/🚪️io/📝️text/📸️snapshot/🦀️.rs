@@ -21,12 +21,12 @@ use framework_schema::ArtifactSchema;
 /// `snapshot` — the base type `diff`/`mutations` both depend ON — free of a reverse dependency on
 /// either sibling facet (same convention `flow`'s own pilot established).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -34,17 +34,17 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_bool(b: &bool) -> String {
+pub fn enc_bool(b: &bool) -> String {
     if *b {
         "1".to_string()
     } else {
@@ -55,7 +55,7 @@ pub(crate) fn enc_bool(b: &bool) -> String {
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_bool;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_kind(k: &SemioVideoStreamKind) -> String {
+pub fn enc_kind(k: &SemioVideoStreamKind) -> String {
     match k {
         SemioVideoStreamKind::Video => "V",
         SemioVideoStreamKind::Audio => "A",
@@ -65,7 +65,7 @@ pub(crate) fn enc_kind(k: &SemioVideoStreamKind) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
+pub fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
     match s {
         "V" => Ok(SemioVideoStreamKind::Video),
         "A" => Ok(SemioVideoStreamKind::Audio),
@@ -75,12 +75,12 @@ pub(crate) fn dec_kind(s: &str) -> Result<SemioVideoStreamKind, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_rational(r: &SemioRational) -> String {
+pub fn enc_rational(r: &SemioRational) -> String {
     format!("[{},{}]", r.num, r.den)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_rational(s: &str) -> Result<SemioRational, String> {
+pub fn dec_rational(s: &str) -> Result<SemioRational, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [num, den] = parts.as_slice() else { return Err(format!("rational: expected 2 fields, got {}", parts.len())) };
@@ -88,12 +88,12 @@ pub(crate) fn dec_rational(s: &str) -> Result<SemioRational, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_sample(s: &SemioVideoSample) -> String {
+pub fn enc_sample(s: &SemioVideoSample) -> String {
     format!("[{},{},{}]", s.pts, enc_bool(&s.key), hex_encode(&s.data))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
+pub fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [pts, key, data] = parts.as_slice() else { return Err(format!("sample: expected 3 fields, got {}", parts.len())) };
@@ -101,12 +101,12 @@ pub(crate) fn dec_sample(s: &str) -> Result<SemioVideoSample, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_stream(s: &SemioVideoStream) -> String {
+pub fn enc_stream(s: &SemioVideoStream) -> String {
     format!("[{},{},{},{},{},[{}]]", enc_kind(&s.kind), enc_str(&s.codec), s.width, s.height, enc_rational(&s.rate), s.samples.iter().map(enc_sample).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
+pub fn dec_stream(s: &str) -> Result<SemioVideoStream, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [kind, codec, width, height, rate, samples] = parts.as_slice() else { return Err(format!("stream: expected 6 fields, got {}", parts.len())) };

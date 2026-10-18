@@ -29,7 +29,7 @@ use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
 use semio_framework_plugin::ViewEmit;
 use semio_framework_plugin::Viewer;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#endregion 🔖️Command
 

@@ -93,7 +93,7 @@ describe("browser frame worker transport", () => {
   });
 
   it("transfers node-addressed accessibility focus activation and value events exactly once", () => {
-    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as { readonly events: readonly { readonly wire: Parameters<BrowserFrameTransport["enqueueLossless"]>[0] }[] };
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as { readonly events: readonly { readonly wire: Parameters<BrowserFrameTransport["enqueueLossless"]>[0] }[] };
     const worker = new FakeWorker();
     const subject = transport(worker);
     worker.reply({ kind: "booted", lifecycle: 1 });
@@ -129,7 +129,7 @@ describe("browser frame worker transport", () => {
   });
 
   it("admits an accessibility address by its credits alone: a document root (node id 0) is an address, liveness is the renderer's", () => {
-    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as { readonly transportCredits: Record<"admitted" | "refused", readonly { readonly id: string; readonly wire: Parameters<BrowserFrameTransport["enqueueLossless"]>[0] }[]> };
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/♿️wgpu-accessibility-interaction/🔣️.json"), "utf8")) as { readonly transportCredits: Record<"admitted" | "refused", readonly { readonly id: string; readonly wire: Parameters<BrowserFrameTransport["enqueueLossless"]>[0] }[]> };
     for (const row of fixture.transportCredits.admitted) {
       const worker = new FakeWorker();
       const subject = transport(worker);

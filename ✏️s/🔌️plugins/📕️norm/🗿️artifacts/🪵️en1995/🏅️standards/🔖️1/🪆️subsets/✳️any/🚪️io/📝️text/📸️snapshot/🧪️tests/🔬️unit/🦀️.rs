@@ -20,7 +20,7 @@ async fn glulam_footbridge_example_fixture_parses_and_round_trips() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_bundled_example_round_trips_through_the_dsl() {
-    for example in semio_s_artifact_norm_en1995_model::examples() {
+    for example in semio_s_artifact_norm_en1995_examples::examples() {
         let document = parse_dsl(&example.document()).unwrap_or_else(|e| panic!("{}: {e:?}", example.id()));
         assert_eq!(parse_dsl(&print_dsl(&document)).expect("reparse"), document, "{}", example.id());
     }

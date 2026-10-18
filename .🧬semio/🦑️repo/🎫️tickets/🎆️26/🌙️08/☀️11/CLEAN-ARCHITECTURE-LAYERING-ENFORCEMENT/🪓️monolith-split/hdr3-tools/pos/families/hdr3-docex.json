@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-docex",
+ "crates": ["semio-s-artifact-stdio-semio-document-examples", "semio-s-artifact-stdio-semio-document-examples-unit-tests"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-s-artifact-stdio-semio-document-examples"]},
+ "note": "HDR-3: document examples unit tests to a companion"
+}

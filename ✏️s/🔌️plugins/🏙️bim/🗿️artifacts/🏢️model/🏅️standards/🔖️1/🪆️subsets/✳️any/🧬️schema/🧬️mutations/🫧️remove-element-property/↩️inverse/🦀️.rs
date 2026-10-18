@@ -1,12 +1,15 @@
 //! ↩️ Inverse of `RemoveElementProperty`: the concrete `SetElementProperty` carrying the removed typed value, none when the property was absent.
 
-use super::super::set_element_property::SetElementProperty;
-use super::RemoveElementProperty;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty;
+use crate::standards::v1::subsets::any::schema::mutations::remove_element_property::RemoveElementProperty;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &RemoveElementProperty, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &RemoveElementProperty, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty>,
+{
     match base.properties.get(&payload.id).and_then(|sets| sets.get(&payload.pset)).and_then(|properties| properties.get(&payload.property)) {
-        Some(value) => vec![ModelMutation::SetElementProperty(SetElementProperty { id: payload.id.clone(), pset: payload.pset.clone(), property: payload.property.clone(), value: value.clone() })],
+        Some(value) => vec![Op::from(SetElementProperty { id: payload.id.clone(), pset: payload.pset.clone(), property: payload.property.clone(), value: value.clone() })],
         None => Vec::new(),
     }
 }

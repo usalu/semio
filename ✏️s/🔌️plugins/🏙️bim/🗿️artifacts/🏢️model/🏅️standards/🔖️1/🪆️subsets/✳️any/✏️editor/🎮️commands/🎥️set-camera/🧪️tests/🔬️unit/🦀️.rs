@@ -1,4 +1,15 @@
-use super::*;
+use crate::editor::bim::kit::fault;
+use crate::editor::bim::modes::edit::windows::{plan, section, world};
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::commands::set_camera::*;
 use crate::editor::bim::fixture::context::view;
 use crate::editor::bim::fixture::support::{demo, run};
 use semio_framework_ui_locale::Locale;

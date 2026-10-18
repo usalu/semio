@@ -142,7 +142,8 @@ pub use crate::os_dsl::grammar::{family_fragments,product_macros,verify_protocol
 
 
 use semio_framework_dsl_record::*;
-use semio_framework_value::{DslValue,FromValue,ToValue,ValueError,ValueRefusalKind,ValueShape,ValueEdit,edit_through_value,NativeDecodeControl,NativeEncodeControl};
+pub use semio_framework_value::{DslValue,FromValue,ToValue};
+use semio_framework_value::{ValueError,ValueRefusalKind,ValueShape,ValueEdit,edit_through_value,NativeDecodeControl,NativeEncodeControl};
 
 
 pub use semio_framework_ui_viewport::{Viewport2d, Viewport3dOrbit};

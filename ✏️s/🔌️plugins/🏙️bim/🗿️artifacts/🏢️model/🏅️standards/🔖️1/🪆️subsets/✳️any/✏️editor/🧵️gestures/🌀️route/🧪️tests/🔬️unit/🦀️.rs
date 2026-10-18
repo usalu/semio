@@ -1,4 +1,4 @@
-use super::{UTILITY};
+use crate::editor::bim::gestures::route::{UTILITY};
 use crate::editor::bim::gestures::session::{GestureKey, Step, ToolEvent};
 use crate::editor::bim::gestures::typed::INVALID;
 use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, Point3};
@@ -6,6 +6,7 @@ use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::editor::bim::fixture::furnished;
 use crate::editor::bim::marks::Shape;
 use crate::editor::bim::fixture::Rig;
+use semio_framework_test_fixtures::fixture_text;
 
 fn created(step: &Step) -> &MepElement {
     match step.mutations.as_slice() {
@@ -137,11 +138,11 @@ async fn moving_never_writes_and_a_lost_pointer_drops_the_route() {
     assert!(rig.finish().mutations.is_empty());
 }
 
-const GESTURE_CASES: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json");
+static GESTURE_CASES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_routes_the_oracle_measured_replay_through_the_clicks_to_the_same_path_and_length() {
-    let all: serde_json::Value = serde_json::from_str(GESTURE_CASES).expect("the committed cases");
+    let all: serde_json::Value = serde_json::from_str((*GESTURE_CASES)).expect("the committed cases");
     let routes = all["routes"].as_array().expect("routes");
     assert!(routes.len() >= 3);
     for case in routes {

@@ -1,6 +1,7 @@
 //! 🧭️ Editor impl and manifest of the VCS play app: the dispatch-only artifact editor surface and the app definition that stitches every command, panel and window. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️VcsPlayApp
 impl ArtifactEditor for VcsPlayApp {

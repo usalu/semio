@@ -42,7 +42,7 @@
       "dependsOn": [
         {
           "projects": [
-            "@semio-tech/note-plugin"
+            "semio-hub-note-component"
           ],
           "target": "component"
         }
@@ -84,7 +84,7 @@
       "dependsOn": [
         {
           "projects": [
-            "@semio-tech/note-plugin"
+            "semio-hub-note-component"
           ],
           "target": "component"
         }
@@ -109,7 +109,7 @@
       "dependsOn": [
         {
           "projects": [
-            "@semio-tech/note-plugin"
+            "semio-hub-note-component"
           ],
           "target": "component"
         }

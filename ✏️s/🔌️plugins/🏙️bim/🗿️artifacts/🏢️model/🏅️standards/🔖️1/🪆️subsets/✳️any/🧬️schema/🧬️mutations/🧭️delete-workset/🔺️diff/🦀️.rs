@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative delete-workset diff.
-use super::DeleteWorkset;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::mutations::delete_workset::DeleteWorkset;
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &DeleteWorkset, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     if !base.worksets.contains_key(&payload.id) { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Record is missing.", [payload.id.clone()]); }

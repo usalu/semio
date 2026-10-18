@@ -1,7 +1,7 @@
 import { checkScriptInvocation, type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { discoverPackages } from "../../../🔍️discovery/🟦️.ts";
+import { discoverPackages } from "../../../🔍️discovery/🔭️repository-scan/🟦️.ts";
 import { runRepositoryCommand } from "../../🎛️owned-execution/🟦️.ts";
 
 /** 🧾️ One present owner's declarative workspace command contribution. */

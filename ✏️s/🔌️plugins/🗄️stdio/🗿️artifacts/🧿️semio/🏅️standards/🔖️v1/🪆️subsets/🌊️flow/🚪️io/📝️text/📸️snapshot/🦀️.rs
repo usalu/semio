@@ -35,12 +35,12 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
@@ -49,12 +49,12 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::dec_f64;
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
+pub fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", enc_f64(p.x), enc_f64(p.y))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
+pub fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
@@ -62,12 +62,12 @@ pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_port_ref(p: &PortRef) -> String {
+pub fn enc_port_ref(p: &PortRef) -> String {
     format!("[{},{}]", enc_str(&p.node), enc_str(&p.port))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_port_ref(s: &str) -> Result<PortRef, String> {
+pub fn dec_port_ref(s: &str) -> Result<PortRef, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [node, port] = parts.as_slice() else { return Err(format!("port ref: expected 2 fields, got {}", parts.len())) };
@@ -88,12 +88,12 @@ pub(crate) fn dec_param(s: &str) -> Result<FlowParam, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_node(n: &FlowNode) -> String {
+pub fn enc_node(n: &FlowNode) -> String {
     format!("[{},{},{},{},{}]", enc_str(&n.id), enc_str(&n.kind), enc_str(&n.label), format_args!("[{}]", n.params.iter().map(enc_param).collect::<Vec<_>>().join(",")), enc_point2(&n.position))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_node(s: &str) -> Result<FlowNode, String> {
+pub fn dec_node(s: &str) -> Result<FlowNode, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, kind, label, params, position] = parts.as_slice() else { return Err(format!("node: expected 5 fields, got {}", parts.len())) };
@@ -102,12 +102,12 @@ pub(crate) fn dec_node(s: &str) -> Result<FlowNode, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_edge(e: &FlowEdge) -> String {
+pub fn enc_edge(e: &FlowEdge) -> String {
     format!("[{},{},{},{}]", enc_str(&e.id), enc_port_ref(&e.from), enc_port_ref(&e.to), enc_str(&e.kind))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_edge(s: &str) -> Result<FlowEdge, String> {
+pub fn dec_edge(s: &str) -> Result<FlowEdge, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, from, to, kind] = parts.as_slice() else { return Err(format!("edge: expected 4 fields, got {}", parts.len())) };

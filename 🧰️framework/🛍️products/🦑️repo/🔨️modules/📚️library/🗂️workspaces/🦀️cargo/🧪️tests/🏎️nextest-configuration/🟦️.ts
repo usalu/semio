@@ -3,7 +3,7 @@ import {mkdirSync,mkdtempSync,readFileSync,writeFileSync} from "node:fs";
 import {dirname,join,resolve} from "node:path";
 import TOML from "@iarna/toml";
 import {cargoNextestConfiguration} from "../../🟦️.ts";
-import {repositoryCargoTestPolicyV1} from "../../../../🟦️.ts";
+import {repositoryCargoTestPolicyV1} from "../../../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
 import fixture from "../🧫️fixtures/🏎️nextest-configuration/🔣️.json";
 
 test("native test profiles belong to their selected workspace or repository configuration",()=>{

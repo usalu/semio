@@ -3,7 +3,7 @@
 use super::{MAX_LAYOUT_EXPORT_JSON_NODES, MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES, MAX_LAYOUT_EXPORT_STRING_BYTES};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-const JSON_INPUT_BYTES_PER_UNIT: usize = 2_048;
+pub(super) const JSON_INPUT_BYTES_PER_UNIT: usize = 2_048;
 
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 enum JsonRootState {
@@ -82,16 +82,16 @@ enum JsonToken {
 
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 pub struct JsonValidationCursor {
-    byte_cursor: usize,
+    pub byte_cursor: usize,
     nodes: usize,
     require_array: bool,
     root: JsonRootState,
-    stack: Vec<JsonContainer>,
+    pub stack: Vec<JsonContainer>,
     token: JsonToken,
 }
 
 impl JsonValidationCursor {
-    fn new(text: &str, require_array: bool) -> Result<Self, String> {
+    pub fn new(text: &str, require_array: bool) -> Result<Self, String> {
         if text.len() > MAX_LAYOUT_EXPORT_PACKAGE_FRAGMENT_BYTES {
             return Err("layout-export-json-byte-limit".into());
         }
@@ -338,7 +338,7 @@ impl JsonValidationCursor {
         self.stack.pop().ok_or_else(|| "layout-export-json-structure".into()).map(|_| ())
     }
 
-    fn advance(&mut self, text: &str) -> Result<bool, String> {
+    pub fn advance(&mut self, text: &str) -> Result<bool, String> {
         let bytes = text.as_bytes();
         let end = self.byte_cursor.saturating_add(JSON_INPUT_BYTES_PER_UNIT).min(bytes.len());
         while self.byte_cursor < end {

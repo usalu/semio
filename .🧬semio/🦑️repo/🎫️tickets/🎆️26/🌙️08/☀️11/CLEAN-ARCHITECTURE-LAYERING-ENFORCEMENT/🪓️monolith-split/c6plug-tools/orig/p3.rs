@@ -1,0 +1,1068 @@
+//! 🧬️ Process3d snapshot schema — artifact-lane fields only.
+//!
+//! 🌉️ `stock_solid`/`steps`/`tool_solids` compose real `s.stdio.semio.brep`/`s.stdio.semio.flow`
+//! CHILD HANDLES. The snapshot is a `dsl::DslRecord`: text, pack and the pack-schema identity all
+//! come from the one derived `__dsl_spec()`, and mounted envelope ingress decodes that same canonical
+//! pack through the framework retained cursors into typed owners (`🔖️MountedTypedSnapshotOwner`).
+use protocol::{Identified, Patchable};
+use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_brep::{schema::snapshot::BrepCurve, schema::snapshot::BrepEdge, schema::snapshot::BrepFace, schema::snapshot::BrepLoop, schema::snapshot::BrepLoopEdge, schema::snapshot::BrepShell, schema::snapshot::BrepShellFace, schema::snapshot::BrepSolid, schema::snapshot::BrepSolidShell, schema::snapshot::BrepSurface, schema::snapshot::BrepVertex, schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_flow::{schema::snapshot::FlowEdge, schema::snapshot::FlowNode, schema::snapshot::FlowParam, schema::snapshot::PortRef, schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+
+use framework_schema::ArtifactSchema;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+
+
+//#region 🔖️Snapshot
+/// 📸️ Persisted process3d document snapshot (persistent fields of the artifact). `stock_solid`/
+/// `steps`/`tool_solids` are composed CHILD slots — `#[child(...)]` drives
+/// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Children must sit directly
+/// on this struct (not nested inside a helper record) for the derive to see them.
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[value(rename_all = "camelCase")]
+#[dsl(extension = "process3d")]
+#[artifact_schema(id = "s.process.process3d")]
+pub struct Process3dSnapshot {
+    #[state(artifact)]
+    pub workshop: Workshop,
+    #[state(artifact)]
+    pub stock_id: String,
+    #[state(artifact)]
+    pub stock_label: String,
+    #[state(artifact)]
+    pub stock_pose: Pose,
+    #[state(artifact)]
+    pub stock_payload: Stock,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio")]
+    pub stock_solid: store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio")]
+    pub steps: store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot>,
+    #[state(artifact)]
+    #[value(default)]
+    pub step_payloads: Vec<ProcessStep>,
+    #[state(artifact)]
+    #[child(kind = "s.stdio.semio")]
+    #[value(default)]
+    pub tool_solids: Vec<store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>>,
+}
+
+impl Default for Process3dSnapshot {
+    fn default() -> Self {
+        crate::snapshot::empty_process3d_snapshot()
+    }
+}
+
+
+
+//#region 🔖️DerivedArtifactCodecs
+
+
+
+//#endregion 🔖️DerivedArtifactCodecs
+//#endregion 🔖️Snapshot
+
+//#region 🌉️IdentityBridge
+
+//#endregion 🌉️IdentityBridge
+
+pub const PROCESS_3D_SCHEMA: &str = "process.3d";
+/// 🪪️ ARTIFACT-LEVEL dialect constant (contract §1 grammar) — lives here, not under `editor`/
+/// `viewer`, specifically so the sibling `viewer` module can read it without ever importing through
+/// the `editor` module. `artifact_kind` matches this schema's own `#[artifact_schema(id = "…")]`
+/// (`🧬️schema/🦀️component.rs:17`, `"s.process.process3d"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.process.process3d@1/*#editor` / `s.process.process3d@1/*#viewer`.
+pub const PROCESS3D_DIALECT: Dialect = Dialect { artifact_kind: "s.process.process3d", standard: StandardId("1"), subset: SubsetId::ANY };
+//#region 🔖️Workshop
+/// 📏️ A stock dimension a capability rule checks against a capability's own parameter value.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+pub enum StockQuantity {
+    #[default]
+    Width,
+    Depth,
+    Height,
+    MaxDimension,
+    MinDimension,
+}
+/// 🌉️ Hand-written, not derived: `#[derive(ToValue, FromValue)]`'s enum path only supports
+/// internally-tagged (`#[value(tag = "…")]`) representations, but `StockQuantity` is a plain
+/// unit-only "string enum" — serde's own default (untagged bare-string) representation for an
+/// enum with no `#[serde(...)]` attribute at all — so the wire shape here is just the bare variant
+/// name, matching what `Serialize`/`Deserialize` already produce for this type today.
+impl semio_framework_value::ToValue for StockQuantity {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        let name = match self {
+            StockQuantity::Width => "width",
+            StockQuantity::Depth => "depth",
+            StockQuantity::Height => "height",
+            StockQuantity::MaxDimension => "maxDimension",
+            StockQuantity::MinDimension => "minDimension",
+        };
+        semio_framework_value::DslValue::String(name.to_string())
+    }
+}
+impl semio_framework_value::FromValue for StockQuantity {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        match value {
+            semio_framework_value::DslValue::String(s) => match s.as_str() {
+                "width" => Ok(StockQuantity::Width),
+                "depth" => Ok(StockQuantity::Depth),
+                "height" => Ok(StockQuantity::Height),
+                "maxDimension" => Ok(StockQuantity::MaxDimension),
+                "minDimension" => Ok(StockQuantity::MinDimension),
+                other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("unknown StockQuantity variant `{other}`"))),
+            },
+            other => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("expected a string, found {other:?}"))),
+        }
+    }
+}
+/// 🪚️ Which kernel geometry effect a capability produces — `ProcessMeasure`'s three shapes are the
+/// fixed, small vocabulary every machine capability ultimately maps onto via its `MeasureRecipe`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum MeasureKind {
+    Cut,
+    Drill,
+    Attach,
+}
+/// ✅️ "the named stock quantity must be at least/at most the named capability parameter's value (±
+/// margin)" — a capability's rules are ANDed together, e.g. a crosscut capability needs stock width
+/// AND height above the blade diameter.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "kind", rename_all = "camelCase")]
+pub enum CapabilityRule {
+    Min {
+        quantity: StockQuantity,
+        parameter: String,
+        #[dsl(unit = "m")]
+        margin: f64,
+    },
+    Max {
+        quantity: StockQuantity,
+        parameter: String,
+        #[dsl(unit = "m")]
+        margin: f64,
+    },
+}
+/// 🔧️ One named numeric parameter of a capability (e.g. blade diameter) — workshop-editable, and
+/// referenced by id from the capability's own `MeasureRecipe`/`CapabilityRule`s.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct CapabilityParameter {
+    pub id: String,
+    pub label: String,
+    #[dsl(unit = "m")]
+    pub value: f64,
+}
+/// 🪚️ How a capability's parameters build a kernel `ProcessMeasure` — every field names a
+/// `Capability::parameters` entry by id, resolved at measure-build time; `measure_kind()` derives the
+/// fixed Cut/Drill/Attach effect so it never needs to be stored redundantly alongside the recipe.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "recipe", rename_all = "camelCase")]
+pub enum MeasureRecipe {
+    /// ✂️ A disc-shaped cut tool sized from a blade `diameter` and `kerf` (tool thickness).
+    DiscCut { diameter: String, kerf: String },
+    /// ✂️ A blade-shaped cut tool sized from `kerf` (width), cut `length` (depth), and cut `depth` (height).
+    BladeCut { kerf: String, length: String, depth: String },
+    /// ✂️ A square pocket cut tool sized from a `diameter` (width/depth) and `depth` (height).
+    PocketCut { diameter: String, depth: String },
+    /// 🕳️ A cylindrical bore sized from `radius` and `depth`.
+    BoreDrill { radius: String, depth: String },
+    /// 🔩️ A cylindrical additive component sized from `radius` and `length` (height).
+    CylinderAttach { radius: String, length: String },
+    /// 🔩️ A box-shaped additive component sized from `width`, `depth`, and `height`.
+    BoxAttach { width: String, depth: String, height: String },
+}
+impl MeasureRecipe {
+    pub fn measure_kind(&self) -> MeasureKind {
+        match self {
+            MeasureRecipe::DiscCut { .. } | MeasureRecipe::BladeCut { .. } | MeasureRecipe::PocketCut { .. } => MeasureKind::Cut,
+            MeasureRecipe::BoreDrill { .. } => MeasureKind::Drill,
+            MeasureRecipe::CylinderAttach { .. } | MeasureRecipe::BoxAttach { .. } => MeasureKind::Attach,
+        }
+    }
+}
+/// 🌉️ Hand `dsl::DslField` impl — `MeasureRecipe` is a `DslEnum` (`DslVariants` only), and
+/// `Capability::recipe` is a REQUIRED, never-optional field that must stay a bare `MeasureRecipe`.
+/// 🏷️ A tagged enum stored in one field is a one-statement `Shape::Statements` keyed by its variant.
+include!("../../🚪️io/🪶️sqlite/📸️snapshot/🪆️native-fields/🦀️.rs");
+controlled_tagged_variant_field!(MeasureRecipe, WorkingSolid, ProcessMeasure);
+/// 🪚️ One thing a machine can do; every capability turns into a step: `recipe` fixes the geometric
+/// effect and how it's sized, `parameters` size the tool, `rules` gate legality against the stock.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct Capability {
+    pub id: String,
+    pub label: String,
+    pub icon_id: String,
+    pub recipe: MeasureRecipe,
+    #[value(default)]
+    pub parameters: Vec<CapabilityParameter>,
+    #[value(default)]
+    #[dsl(statements, block)]
+    pub rules: Vec<CapabilityRule>,
+}
+/// 🛠️ A machine in the document's workshop — an embedded snapshot, never a reference; consistent with
+/// `StepOrigin`'s never-resolve invariant (see its doc comment), and robust to catalog drift: editing
+/// or removing an installed catalog can never retroactively change an already-configured workshop.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct WorkshopMachine {
+    pub id: String,
+    pub label: String,
+    pub icon_id: String,
+    /// 🏷️ Which installed catalog this snapshot was seeded from — informational only, never resolved
+    /// (a machine stays fully usable after its source catalog is uninstalled).
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub catalog_id: Option<String>,
+    #[value(default)]
+    pub capabilities: Vec<Capability>,
+}
+impl Identified<String> for WorkshopMachine {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+/// 🩹️ Sparse edit for a `WorkshopMachine` — `None` fields are left untouched.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
+#[value(rename_all = "camelCase")]
+pub struct WorkshopMachinePatch {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub icon_id: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub capabilities: Option<Vec<Capability>>,
+}
+impl Patchable<WorkshopMachinePatch> for WorkshopMachine {
+    fn apply_patch(&mut self, patch: &WorkshopMachinePatch) {
+        if let Some(label) = &patch.label {
+            self.label = label.clone();
+        }
+        if let Some(icon_id) = &patch.icon_id {
+            self.icon_id = icon_id.clone();
+        }
+        if let Some(capabilities) = &patch.capabilities {
+            self.capabilities = capabilities.clone();
+        }
+    }
+}
+/// 🏭️ The document's configured workshop: the machines available to build steps from.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct Workshop {
+    #[value(default)]
+    pub machines: Vec<WorkshopMachine>,
+}
+impl Default for Workshop {
+    fn default() -> Self {
+        Self { machines: generic_machines() }
+    }
+}
+/// 📦️ The three built-in generic machines (saw/drill/attacher), reproducing the same default tool
+/// sizes `ProcessMeasure` used before capabilities existed — pure data with no catalog dependency, so
+/// every document (including ones deserialized without a `workshop` field) always has a working
+/// workshop and the utility bar's click-to-place cut/drill/attach never dead-ends.
+pub fn generic_machines() -> Vec<WorkshopMachine> {
+    vec![
+        WorkshopMachine {
+            id: "saw".into(),
+            label: "Generic Saw".into(),
+            icon_id: "scissors".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "cut".into(),
+                label: "Cut".into(),
+                icon_id: "scissors".into(),
+                recipe: MeasureRecipe::BladeCut { kerf: "kerf".into(), length: "length".into(), depth: "depth".into() },
+                parameters: vec![
+                    CapabilityParameter { id: "kerf".into(), label: "Kerf".into(), value: 0.05 },
+                    CapabilityParameter { id: "length".into(), label: "Length".into(), value: 0.5 },
+                    CapabilityParameter { id: "depth".into(), label: "Depth".into(), value: 0.5 },
+                ],
+                rules: Vec::new(),
+            }],
+        },
+        WorkshopMachine {
+            id: "drill".into(),
+            label: "Generic Drill".into(),
+            icon_id: "circle-dot".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "drill".into(),
+                label: "Drill".into(),
+                icon_id: "circle-dot".into(),
+                recipe: MeasureRecipe::BoreDrill { radius: "radius".into(), depth: "depth".into() },
+                parameters: vec![CapabilityParameter { id: "radius".into(), label: "Radius".into(), value: 0.05 }, CapabilityParameter { id: "depth".into(), label: "Depth".into(), value: 0.3 }],
+                rules: Vec::new(),
+            }],
+        },
+        WorkshopMachine {
+            id: "attacher".into(),
+            label: "Generic Attacher".into(),
+            icon_id: "plus".into(),
+            catalog_id: None,
+            capabilities: vec![Capability {
+                id: "attach".into(),
+                label: "Attach".into(),
+                icon_id: "plus".into(),
+                recipe: MeasureRecipe::CylinderAttach { radius: "radius".into(), length: "length".into() },
+                parameters: vec![CapabilityParameter { id: "radius".into(), label: "Radius".into(), value: 0.03 }, CapabilityParameter { id: "length".into(), label: "Length".into(), value: 0.2 }],
+                rules: Vec::new(),
+            }],
+        },
+    ]
+}
+/// 🧩️ A machine catalog: contributes machines (with capabilities) the workshop configurator can
+/// install into a document's workshop. Implemented by the built-in generic/domain catalogs
+/// (`crate::schema::{GenericCatalog, MetalCatalog, WoodCatalog, RoboticCatalog,
+/// ConcreteCatalog}`) and by the app's runtime-contributed `ContributedMachineCatalog`
+/// (`crate::editor::process3d::ContributedMachineCatalog`) — closed into `MachineCatalogs` below
+/// (O1: dyn dispatch is banned from trait-method return position; R11: closed implementor set ⇒
+/// `dyn_enum_close!`, never a box).
+// 🚫️async: E1 pure — every implementor (5 in `schema`, `editor`'s `ContributedMachineCatalog`, plus
+// each `process-extension-*` crate's local catalog) is a zero-suspension struct-literal/field
+// accessor; every caller (`editor::installed_catalogs`/`catalog_machine`, each extension's `bundle()`)
+// already consumes these unawaited — see R9.
+#[dyn_enum]
+pub trait MachineCatalog {
+    fn catalog_id(&self) -> &str;
+    fn label(&self) -> &str;
+    fn icon_id(&self) -> &str;
+    fn machines(&self) -> Vec<WorkshopMachine>;
+}
+semio_framework_dispatch_macros::dyn_enum_close! {
+    /// 🗃️ The closed set of `MachineCatalog` implementors. Closed HERE, in the same module as `#[dyn_enum]`
+    /// (not at the `editor::installed_catalogs` call site that gathers them): the generated
+    /// `__semio_dispatch_MachineCatalog!` is `#[macro_export]`ed, and rustc rejects any reference to a
+    /// `macro_export`ed macro produced by expansion IN THE SAME CRATE via an absolute/`crate::`-qualified
+    /// path (rust-lang/rust#52234) — verified directly against real rustc: even the documented
+    /// `use crate::__semio_dispatch_MachineCatalog;` cross-module recipe (`📓️terra-dyn-enum-macro-report.md`
+    /// finding 1) still hits this error when the closing site is a genuine sibling module tree (`editor` is
+    /// a top-level sibling of `artifacts`, not a descendant of `process3d`), because that `use` is itself an
+    /// absolute path. Only a BARE invocation in the trait's OWN literal module resolves it, via ordinary
+    /// `macro_rules!` textual scoping — so the enum lives here, and `editor::installed_catalogs` imports
+    /// `MachineCatalogs` like any other type.
+    pub enum MachineCatalogs: MachineCatalog {
+        Generic(crate::GenericCatalog),
+        Metal(crate::MetalCatalog),
+        Wood(crate::WoodCatalog),
+        Robotic(crate::RoboticCatalog),
+        Concrete(crate::ConcreteCatalog),
+        Contributed(crate::snapshot::ContributedMachineCatalog),
+    }
+}
+//#endregion 🔖️Workshop
+//#region 🔖️Document
+fn default_axis_z() -> [f64; 3] {
+    [0.0, 0.0, 1.0]
+}
+fn default_true() -> bool {
+    true
+}
+/// 🧭️ Position + axis-angle rotation applied via the brep kernel's `rotate_sync`/`translate_sync`.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct Pose {
+    #[value(default)]
+    #[dsl(coord)]
+    pub position: [f64; 3],
+    #[value(default = "default_axis_z")]
+    #[dsl(dir)]
+    pub axis: [f64; 3],
+    #[value(default)]
+    #[dsl(angle = "rad")]
+    pub angle: f64,
+}
+impl Default for Pose {
+    fn default() -> Self {
+        Self { position: [0.0, 0.0, 0.0], axis: default_axis_z(), angle: 0.0 }
+    }
+}
+/// 🏭️ Provenance: which workshop machine/capability produced a step (display + future re-validation).
+/// Purely informational — kernel replay only ever reads `ProcessMeasure`, never resolves this back to a
+/// workshop entry, so editing or removing the machine/capability can never retroactively change
+/// already-authored geometry.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct StepOrigin {
+    pub machine_id: String,
+    pub capability_id: String,
+}
+//#endregion 🔖️Document
+//#region 🔖️Document
+//#region 🔖️WorkingScene
+/// 🧱️ EPHEMERAL, per-invocation working representation of a process3d document's editable geometry
+/// and step timeline — never persisted, never a `Process3dSnapshot` field (ticket
+/// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4, following the `EngineRep` contract in
+/// `⚙️engine/🦀️.rs`: wholly derived, dropped at the end of the call that built it).
+///
+/// `WorkingSolid` is the direct successor of the old, now-DELETED persisted `SolidSpec` DSL-enum —
+/// same five variants, same role (a parametric/imported solid the kernel resolves into real
+/// geometry), but demoted from "part of the document's own content model" (duplicating what stdio's
+/// `brep` subset already expresses) to "the plugin's own ephemeral editing vocabulary", exactly
+/// mirroring `📐️cad`'s `CadObject`/`CadGeometry` (ephemeral bridge types kept beside a composed
+/// child, never re-persisted themselves). `Process3dSnapshot` composes `SemioBrepSnapshot` CHILD
+/// HANDLES for `stock_solid`/`tool_solids`; this is what the app derives a `WorkingSolid` from (or
+/// builds fresh input for) before it can call the kernel — see `brep_snapshot_for_working_solid`
+/// (WRITE, real) below for the analytic converter that turns a `WorkingSolid` into real,
+/// content-addressable `SemioBrepSnapshot` topology.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum WorkingSolid {
+    Box {
+        #[dsl(unit = "m")]
+        width: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+        #[dsl(unit = "m")]
+        height: f64,
+    },
+    Cylinder {
+        #[dsl(unit = "m")]
+        radius: f64,
+        #[dsl(unit = "m")]
+        height: f64,
+    },
+    Sphere {
+        #[dsl(unit = "m")]
+        radius: f64,
+    },
+    /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology.
+    ImportedMesh {
+        mesh_url: String,
+    },
+    /// 🧊️ STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
+    /// session by handle id; ephemeral to that session.
+    ImportedSolid {
+        solid_handle: String,
+    },
+    /// 🏛️ A reference solid this artifact ships as exact STEP B-Rep (`reference_solid`), addressed by
+    /// its stable id and rebuilt into real kernel topology at every replay — the durable, cross-session
+    /// counterpart of `ImportedSolid` for the `♻️mit-bestand` reuse inventory (the hexagonal-cut
+    /// concrete forest pieces).
+    Reference {
+        reference_id: String,
+    },
+}
+impl Default for WorkingSolid {
+    fn default() -> Self {
+        WorkingSolid::Box { width: 1.0, depth: 1.0, height: 1.0 }
+    }
+}
+/// 🪵️ The raw workpiece the process starts from — ephemeral working-scene counterpart of the
+/// persisted `stock_id`/`stock_label`/`stock_pose`/`stock_solid` fields on `Process3dSnapshot`.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct Stock {
+    pub id: String,
+    pub label: String,
+    pub solid: WorkingSolid,
+    pub pose: Pose,
+}
+impl Default for Stock {
+    fn default() -> Self {
+        Self { id: "stock".into(), label: "Stock".into(), solid: WorkingSolid::default(), pose: Pose::default() }
+    }
+}
+/// 🪚️ One processing measure: subtractive (cut/drill via `cut_sync`) or additive (attach via `fuse_sync`).
+/// Ephemeral working-scene counterpart of a `flow` node's `kind`/`params` — see
+/// `flow_node_from_process_step`/`process_step_from_flow_node` below for the real bidirectional
+/// converter.
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(tag = "measure", rename_all = "camelCase")]
+pub enum ProcessMeasure {
+    /// ✂️ Subtractive: subtracts an arbitrary tool solid (e.g. a thin box as a saw blade).
+    Cut { tool: WorkingSolid, pose: Pose },
+    /// 🕳️ Subtractive: a cylinder of `radius`×`depth` subtracted at `pose` (axis = drill direction).
+    Drill {
+        #[dsl(unit = "m")]
+        radius: f64,
+        #[dsl(unit = "m")]
+        depth: f64,
+        pose: Pose,
+    },
+    /// 🔩️ Additive: fuses another component solid at `pose`.
+    Attach { component: WorkingSolid, pose: Pose },
+}
+impl ProcessMeasure {
+    pub fn kind_slug(&self) -> &'static str {
+        match self {
+            ProcessMeasure::Cut { .. } => "cut",
+            ProcessMeasure::Drill { .. } => "drill",
+            ProcessMeasure::Attach { .. } => "attach",
+        }
+    }
+
+    pub fn pose(&self) -> &Pose {
+        match self {
+            ProcessMeasure::Cut { pose, .. } | ProcessMeasure::Drill { pose, .. } | ProcessMeasure::Attach { pose, .. } => pose,
+        }
+    }
+}
+/// 🎞️ One ordered step of the process timeline — ephemeral working-scene counterpart of one
+/// `SemioFlowSnapshot` `FlowNode` (see `flow_node_from_process_step`/`process_step_from_flow_node`).
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
+#[value(rename_all = "camelCase")]
+pub struct ProcessStep {
+    pub id: String,
+    pub label: String,
+    #[value(default = "default_true")]
+    pub enabled: bool,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<StepOrigin>,
+    pub measure: ProcessMeasure,
+}
+impl Identified<String> for ProcessStep {
+    fn id(&self) -> &String {
+        &self.id
+    }
+}
+/// 🩹️ Sparse edit for a `ProcessStep` — `None` fields are left untouched.
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ProcessStepPatch {
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub enabled: Option<bool>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub measure: Option<ProcessMeasure>,
+    /// 🏭️ Outer `Option` = "this patch touches origin"; inner `Option` = the new value (`None` clears it).
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub origin: Option<Option<StepOrigin>>,
+}
+impl Patchable<ProcessStepPatch> for ProcessStep {
+    fn apply_patch(&mut self, patch: &ProcessStepPatch) {
+        if let Some(label) = &patch.label {
+            self.label = label.clone();
+        }
+        if let Some(enabled) = patch.enabled {
+            self.enabled = enabled;
+        }
+        if let Some(measure) = &patch.measure {
+            self.measure = measure.clone();
+        }
+        if let Some(origin) = &patch.origin {
+            self.origin = origin.clone();
+        }
+    }
+}
+/// 🧱️ The full ephemeral working scene: current stock + ordered step timeline, exactly the shape
+/// `Process3dSnapshot` used to carry inline before this migration. Lives beside the persisted
+/// document — populated at mutation-diff-build time (`process_working_scene_to_snapshot`, the WRITE
+/// direction — the only place literal content is in hand) or at fixture-construction time; the READ
+/// direction (`process_working_scene_from_snapshot`, resolving a persisted document's composed
+/// children back into a working scene) is a documented gap until a real `LinkResolver`/
+/// `ChildStoreFactory` seam reaches `ArtifactApp::handle` (checked directly against
+/// `🔌️plugin/🦀️.rs`, W1-owned, confirmed still absent as of this wave — see
+/// `process_working_scene_from_snapshot`'s own doc comment).
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ProcessWorkingScene {
+    pub stock: Stock,
+    pub steps: Vec<ProcessStep>,
+}
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Document
+//#region 🔖️Document
+//#region 🔖️WorkingScene
+//#region 🔖️BrepConverters
+/// 🌉️ WRITE direction, real (not a stub): analytic B-Rep topology for each `WorkingSolid` variant.
+/// `Box`/`Cylinder`/`Sphere` are exact (no tessellation/approximation — `BrepSurface::Cylinder`/
+/// `Sphere` are themselves analytic surface primitives, and a `BrepLoop` with zero edges is the
+/// correct "untrimmed, spans the whole surface" shape for the sphere's single closed face and the
+/// cylinder's lateral face). `ImportedMesh`/`ImportedSolid` reference content the app's own kernel
+/// session must resolve (mesh URL / kernel-session-local handle) — this plugin-only migration cannot
+/// tessellate/import that here, so it mints an honest EMPTY-topology placeholder rather than
+/// fabricating fake geometry; the doc comment on `SolidSpec`'s old `ImportedMesh`/`ImportedSolid`
+/// variants already flagged this as kernel-session-resolved, never persisted-content-resolved.
+pub fn brep_snapshot_for_working_solid(solid: &WorkingSolid) -> SemioBrepSnapshot {
+    match solid {
+        WorkingSolid::Box { width, depth, height } => brep_snapshot_for_box(*width, *depth, *height),
+        WorkingSolid::Cylinder { radius, height } => brep_snapshot_for_cylinder(*radius, *height),
+        WorkingSolid::Sphere { radius } => brep_snapshot_for_sphere(*radius),
+        WorkingSolid::Reference { reference_id } => reference_solid(reference_id).and_then(|reference| reference.brep_snapshot()).unwrap_or_else(empty_brep_snapshot),
+        WorkingSolid::ImportedMesh { .. } | WorkingSolid::ImportedSolid { .. } => empty_brep_snapshot(),
+    }
+}
+//#endregion 🔖️BrepConverters
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Document
+//#region 🔖️Document
+//#region 🔖️WorkingScene
+//#region 🔖️BrepConverters
+//#region 🔖️ReferenceSolids
+/// 🏛️ One shipped reference solid: its exact STEP text (`🖼️assets/<slug>/📐️.stp`) plus the authored
+/// axis-aligned extent the capability rules read without a kernel (`stock_extent`) — pinned against
+/// the kernel's own bounding box by `reference_solid_extents_match_the_kernel`.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ReferenceSolid {
+    pub id: &'static str,
+    pub label: &'static str,
+    pub step: &'static str,
+    pub extent: [f64; 3],
+}
+impl ReferenceSolid {
+    /// 🧊️ The reference rebuilt in a fresh kernel session — one real solid handle, or `None` when
+    /// the shipped STEP does not read (a build-time asset defect, never a user-facing state).
+    pub fn import(&self, kernel: &mut semio_framework_3d_brep_engine::Brep) -> Option<semio_framework_3d_brep_engine::GeometryHandle> {
+        semio_s_artifact_stdio_step_geometry::geometry::import_step(kernel,self.step).ok()?.into_iter().next()
+    }
+
+    /// 🌉️ The reference's real, lossless B-Rep content — the composed `stock_solid` child this
+    /// stock mints.
+    pub fn brep_snapshot(&self) -> Option<SemioBrepSnapshot> {
+        let mut kernel = semio_framework_3d_brep_engine::Brep::new();
+        self.import(&mut kernel)?;
+        Some(semio_s_artifact_stdio_semio_brep::schema::snapshot::body::snapshot_from_body(kernel.tessellation_body()))
+    }
+}
+/// 🌲️ The left hexagonal-cut concrete forest piece (`♻️mit-bestand/🖼️asset/🏚️abbau-aufbau`): a
+/// 8.1 m × 4.68 m parallelogram slab on a triangular beam grid over two hexagonal columns, 3 m tall.
+pub const REFERENCE_SOLID_CONCRETE_FOREST_LEFT: &str = "hexagonal-cut-concrete-forest-left";
+/// 🏛️ Every reference solid this artifact ships, by stable id.
+pub const REFERENCE_SOLIDS: &[ReferenceSolid] = &[ReferenceSolid {
+    id: REFERENCE_SOLID_CONCRETE_FOREST_LEFT,
+    label: "Hexagonal Cut Concrete Forest Left",
+    step: semio_s_artifact_process_process3d_reference_solids::CONCRETE_FOREST_LEFT_STEP,
+    extent: [10.800_010_282_482_4, 4.676_537_180_435_97, 3.0],
+}];
+pub fn reference_solid(reference_id: &str) -> Option<&'static ReferenceSolid> {
+    REFERENCE_SOLIDS.iter().find(|reference| reference.id == reference_id)
+}
+//#endregion 🔖️ReferenceSolids
+//#endregion 🔖️BrepConverters
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Document
+//#region 🔖️Document
+//#region 🔖️WorkingScene
+//#region 🔖️BrepConverters
+fn empty_brep_snapshot() -> SemioBrepSnapshot {
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new(), coedges: Vec::new(), next_label: 0 }
+}
+fn point3(p: [f64; 3]) -> semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 {
+    semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: p[0], y: p[1], z: p[2] }
+}
+/// 📦️ Corner-at-local-origin box, spanning `[0,w]×[0,d]×[0,h]` — 8 vertices, 12 straight edges, 6
+/// planar faces, 1 shell, 1 solid.
+fn brep_snapshot_for_box(width: f64, depth: f64, height: f64) -> SemioBrepSnapshot {
+    let (w, d, h) = (width, depth, height);
+    let corners = [[0.0, 0.0, 0.0], [w, 0.0, 0.0], [w, d, 0.0], [0.0, d, 0.0], [0.0, 0.0, h], [w, 0.0, h], [w, d, h], [0.0, d, h]];
+    let vertices: Vec<BrepVertex> = corners.iter().enumerate().map(|(i, c)| BrepVertex { id: format!("v{i}"), point: point3(*c), tol: 0.0 }).collect();
+    let line_edge = |id: &str, a: usize, b: usize| -> BrepEdge {
+        let origin = corners[a];
+        let direction = [corners[b][0] - corners[a][0], corners[b][1] - corners[a][1], corners[b][2] - corners[a][2]];
+        BrepEdge { id: id.into(), start_vertex: format!("v{a}"), end_vertex: format!("v{b}"), curve: BrepCurve::Line { origin: point3(origin), direction: point3(direction) }, tol: 0.0 }
+    };
+    let edges = vec![
+        line_edge("e0", 0, 1),
+        line_edge("e1", 1, 2),
+        line_edge("e2", 2, 3),
+        line_edge("e3", 3, 0),
+        line_edge("e4", 4, 5),
+        line_edge("e5", 5, 6),
+        line_edge("e6", 6, 7),
+        line_edge("e7", 7, 4),
+        line_edge("e8", 0, 4),
+        line_edge("e9", 1, 5),
+        line_edge("e10", 2, 6),
+        line_edge("e11", 3, 7),
+    ];
+    let loop_of = |id: &str, edges: &[(&str, bool)]| -> BrepLoop { BrepLoop { id: id.into(), edges: edges.iter().map(|(e, o)| BrepLoopEdge { edge: (*e).into(), orientation: *o }).collect() } };
+    let loops = vec![
+        loop_of("l0", &[("e0", true), ("e1", true), ("e2", true), ("e3", true)]),
+        loop_of("l1", &[("e4", true), ("e5", true), ("e6", true), ("e7", true)]),
+        loop_of("l2", &[("e0", true), ("e9", true), ("e4", false), ("e8", false)]),
+        loop_of("l3", &[("e1", true), ("e10", true), ("e5", false), ("e9", false)]),
+        loop_of("l4", &[("e2", true), ("e11", true), ("e6", false), ("e10", false)]),
+        loop_of("l5", &[("e3", true), ("e8", true), ("e7", false), ("e11", false)]),
+    ];
+    let plane_face = |id: &str, loop_id: &str, origin: [f64; 3], normal: [f64; 3], orientation: bool| -> BrepFace {
+        BrepFace { id: id.into(), outer_loop: loop_id.into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3(origin), normal: point3(normal) }, orientation, tol: 0.0 }
+    };
+    let faces = vec![
+        plane_face("f0", "l0", [0.0, 0.0, 0.0], [0.0, 0.0, -1.0], true),
+        plane_face("f1", "l1", [0.0, 0.0, h], [0.0, 0.0, 1.0], true),
+        plane_face("f2", "l2", [0.0, 0.0, 0.0], [0.0, -1.0, 0.0], true),
+        plane_face("f3", "l3", [w, 0.0, 0.0], [1.0, 0.0, 0.0], true),
+        plane_face("f4", "l4", [0.0, d, 0.0], [0.0, 1.0, 0.0], true),
+        plane_face("f5", "l5", [0.0, 0.0, 0.0], [-1.0, 0.0, 0.0], true),
+    ];
+    let shells = vec![BrepShell { id: "s0".into(), faces: (0..6).map(|i| BrepShellFace { face: format!("f{i}"), orientation: true }).collect() }];
+    let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids, coedges: Vec::new(), next_label: 0 }
+}
+/// 🥫️ Axis-aligned cylinder, base centered at local origin, axis along +Z, spanning `[0,height]`.
+/// Two circular cap edges + two planar cap faces + one analytic `BrepSurface::Cylinder` lateral
+/// face (untrimmed — its loop has no bounding edges, since the lateral surface is naturally closed
+/// around the axis and only bounded top/bottom by the shared circular edges via the loop's implicit
+/// parametric domain, matching the same "loop may be empty" convention the sphere face uses).
+fn brep_snapshot_for_cylinder(radius: f64, height: f64) -> SemioBrepSnapshot {
+    let (r, h) = (radius, height);
+    let vertices = vec![BrepVertex { id: "v0".into(), point: point3([r, 0.0, 0.0]), tol: 0.0 }, BrepVertex { id: "v1".into(), point: point3([r, 0.0, h]), tol: 0.0 }];
+    let edges = vec![
+        BrepEdge { id: "e0".into(), start_vertex: "v0".into(), end_vertex: "v0".into(), curve: BrepCurve::Circle { center: point3([0.0, 0.0, 0.0]), axis: point3([0.0, 0.0, 1.0]), radius: r }, tol: 0.0 },
+        BrepEdge { id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v1".into(), curve: BrepCurve::Circle { center: point3([0.0, 0.0, h]), axis: point3([0.0, 0.0, 1.0]), radius: r }, tol: 0.0 },
+    ];
+    let loops = vec![
+        BrepLoop { id: "l0".into(), edges: vec![BrepLoopEdge { edge: "e0".into(), orientation: true }] },
+        BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }] },
+        BrepLoop { id: "l2".into(), edges: Vec::new() },
+    ];
+    let faces = vec![
+        BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3([0.0, 0.0, 0.0]), normal: point3([0.0, 0.0, -1.0]) }, orientation: true, tol: 0.0 },
+        BrepFace { id: "f1".into(), outer_loop: "l1".into(), inner_loops: Vec::new(), surface: BrepSurface::Plane { origin: point3([0.0, 0.0, h]), normal: point3([0.0, 0.0, 1.0]) }, orientation: true, tol: 0.0 },
+        BrepFace { id: "f2".into(), outer_loop: "l2".into(), inner_loops: Vec::new(), surface: BrepSurface::Cylinder { origin: point3([0.0, 0.0, 0.0]), axis: point3([0.0, 0.0, 1.0]), radius: r }, orientation: true, tol: 0.0 },
+    ];
+    let shells = vec![BrepShell { id: "s0".into(), faces: vec![BrepShellFace { face: "f0".into(), orientation: true }, BrepShellFace { face: "f1".into(), orientation: true }, BrepShellFace { face: "f2".into(), orientation: true }] }];
+    let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices, edges, loops, faces, shells, solids, coedges: Vec::new(), next_label: 0 }
+}
+/// 🔮️ Sphere centered at local origin — one closed, untrimmed analytic `BrepSurface::Sphere` face
+/// (no boundary curves at all: zero vertices/edges, one loop with zero edges, matching the shared
+/// "a `BrepLoop` with no edges means the whole surface" convention).
+fn brep_snapshot_for_sphere(radius: f64) -> SemioBrepSnapshot {
+    let loops = vec![BrepLoop { id: "l0".into(), edges: Vec::new() }];
+    let faces = vec![BrepFace { id: "f0".into(), outer_loop: "l0".into(), inner_loops: Vec::new(), surface: BrepSurface::Sphere { center: point3([0.0, 0.0, 0.0]), radius }, orientation: true, tol: 0.0 }];
+    let shells = vec![BrepShell { id: "s0".into(), faces: vec![BrepShellFace { face: "f0".into(), orientation: true }] }];
+    let solids = vec![BrepSolid { id: "so0".into(), shells: vec![BrepSolidShell { shell: "s0".into(), is_void: false }] }];
+    SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops, faces, shells, solids, coedges: Vec::new(), next_label: 0 }
+}
+/// 🌉️ READ direction, documented gap: recovering a `WorkingSolid` (a small parametric vocabulary)
+/// from an arbitrary resolved `SemioBrepSnapshot` (general topology) is not generally invertible —
+/// nothing tags a brep as "this originated from a box/cylinder/sphere". Mirrors `📐️cad`'s own
+/// documented read-side gap for its per-pane object lists. Callers that only need SOME extent
+/// (rendering/bounds) should read `stock_bounding_box`, which works directly off the brep's own
+/// vertex list instead of trying to recover a `WorkingSolid`.
+pub fn working_solid_from_brep_snapshot(_brep: &SemioBrepSnapshot) -> WorkingSolid {
+    WorkingSolid::default()
+}
+/// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.brep` CHILD HANDLE from `content`
+/// (mirrors `📐️cad`'s `cad_model_child_handle`/`💠️lowpoly`'s `mesh_child_handle` — same
+/// `store::os_store::artifact_child::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical content
+/// mint the same handle.
+pub fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot> {
+    brep_child_handle_for_text(slug, &serde_json::to_string(&semio_framework_value::ToValue::to_value(content)).unwrap_or_default())
+}
+/// 🪪️ The `s.stdio.semio.brep` child handle of a `WorkingSolid`: analytic solids are addressed by
+/// their minted snapshot, a `Reference` by the shipped STEP text it is — the same content-addressing,
+/// without materialising a 57-face snapshot's JSON inside the guest on every step mutation.
+pub fn working_solid_child_handle(slug: &str, solid: &WorkingSolid) -> store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot> {
+    match solid {
+        WorkingSolid::Reference { reference_id } => brep_child_handle_for_text(slug, reference_solid(reference_id).map_or(reference_id.as_str(), |reference| reference.step)),
+        _ => brep_child_handle(slug, &brep_snapshot_for_working_solid(solid)),
+    }
+}
+fn brep_child_handle_for_text(slug: &str, content: &str) -> store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot> {
+    let child_id = store::content_id(&format!("{slug}-brep"), content.as_bytes());
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
+}
+//#endregion 🔖️BrepConverters
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Document
+//#region 🔖️Document
+//#region 🔖️WorkingScene
+//#region 🌱️GenesisChildren
+/// 🌱️ `ArtifactApp::genesis_child_pack` for the three composed members every process3d document
+/// declares — `stockSolid` (the stock's B-Rep), `steps` (the timeline flow) and each `toolSolids`
+/// entry (a cut tool / attached component's B-Rep) — all pure functions of the inline
+/// `stock_payload`/`step_payloads` records, so a fresh boot and a whole-document load
+/// (`Effect::LoadDocument`, whose archive the react shell sends member-less) materialise exactly the
+/// children `process_working_scene_to_snapshot` minted handles for. Mirrors `🌍️gis`'s
+/// `genesis_gis_map_child_pack`; without it the archive closure reports `Incomplete` and every example
+/// switch fails.
+pub fn genesis_process3d_child_pack(snapshot: &Process3dSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
+    use pack::snapshot::ArtifactPack;
+    match slot {
+        "stockSolid" if child_id == snapshot.stock_solid.child_id => Some(<SemioBrepSnapshot as ArtifactPack>::encode_pack(&brep_snapshot_for_working_solid(&snapshot.stock_payload.solid))),
+        "steps" if child_id == snapshot.steps.child_id => {
+            let tool_child_ids = snapshot.step_payloads.iter().zip(step_tool_solids(&snapshot.step_payloads)).filter_map(|(step, solid)| solid.map(|solid| (step.id.clone(), working_solid_child_handle(&format!("tool-{}", step.id), solid).child_id))).collect();
+            Some(<SemioFlowSnapshot as ArtifactPack>::encode_pack(&flow_snapshot_for_steps(&snapshot.step_payloads, &tool_child_ids)))
+        }
+        "toolSolids" => snapshot
+            .step_payloads
+            .iter()
+            .zip(step_tool_solids(&snapshot.step_payloads))
+            .filter_map(|(step, solid)| solid.map(|solid| (step, solid)))
+            .find(|(step, solid)| working_solid_child_handle(&format!("tool-{}", step.id), solid).child_id == child_id)
+            .map(|(_, solid)| <SemioBrepSnapshot as ArtifactPack>::encode_pack(&brep_snapshot_for_working_solid(solid))),
+        _ => None,
+    }
+}
+/// 🪚️ The tool/component solid each step carries — `None` for a `Drill`, which mints no child.
+fn step_tool_solids(steps: &[ProcessStep]) -> impl Iterator<Item = Option<&WorkingSolid>> {
+    steps.iter().map(|step| match &step.measure {
+        ProcessMeasure::Cut { tool, .. } => Some(tool),
+        ProcessMeasure::Attach { component, .. } => Some(component),
+        ProcessMeasure::Drill { .. } => None,
+    })
+}
+/// 🧬️ The bounded projection of this snapshot's composed child handles (`stockSolid`, `steps`, every
+/// `toolSolids` row), as both surfaces hand it to the framework's replacement pump
+/// (`ArtifactEditor::child_restore_projection` / `ArtifactViewer::child_restore_projection`). The
+/// trait default grants no restore authority, so without it every live envelope load faults
+/// `editor did not declare a loaded-parent child projection`. Mirrors `energy_child_restore_projection`.
+pub fn process3d_child_restore_projection(snapshot: &Process3dSnapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, semio_framework_plugin::Fault> {
+    semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| semio_framework_plugin::Fault::from(format!("process3d child projection failed: {error}")))
+}
+//#endregion 🌱️GenesisChildren
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Document
+//#region 🔖️Document
+//#region 🔖️WorkingScene
+//#region 🔖️FlowConverters
+/// 🌉️ WRITE direction, real: one `FlowNode` per `ProcessStep`, laid out left-to-right in timeline
+/// order. `enabled`/`origin`/measure-specific scalars round-trip exactly via string params;
+/// `Cut`/`Attach`'s `WorkingSolid` tool/component is addressed indirectly by a `toolChildId` param
+/// naming its entry in `Process3dSnapshot::tool_solids` (minted alongside by the caller — see
+/// `process_working_scene_to_snapshot`), since a `FlowParam` value is a plain string, never a child
+/// handle itself.
+pub fn flow_node_from_process_step(step: &ProcessStep, index: usize, tool_child_id: Option<&str>) -> FlowNode {
+    let mut params = vec![FlowParam { key: "enabled".into(), value: step.enabled.to_string() }];
+    if let Some(origin) = &step.origin {
+        params.push(FlowParam { key: "originMachineId".into(), value: origin.machine_id.clone() });
+        params.push(FlowParam { key: "originCapabilityId".into(), value: origin.capability_id.clone() });
+    }
+    let pose = step.measure.pose();
+    params.push(FlowParam { key: "posePositionX".into(), value: pose.position[0].to_string() });
+    params.push(FlowParam { key: "posePositionY".into(), value: pose.position[1].to_string() });
+    params.push(FlowParam { key: "posePositionZ".into(), value: pose.position[2].to_string() });
+    params.push(FlowParam { key: "poseAxisX".into(), value: pose.axis[0].to_string() });
+    params.push(FlowParam { key: "poseAxisY".into(), value: pose.axis[1].to_string() });
+    params.push(FlowParam { key: "poseAxisZ".into(), value: pose.axis[2].to_string() });
+    params.push(FlowParam { key: "poseAngle".into(), value: pose.angle.to_string() });
+    match &step.measure {
+        ProcessMeasure::Drill { radius, depth, .. } => {
+            params.push(FlowParam { key: "radius".into(), value: radius.to_string() });
+            params.push(FlowParam { key: "depth".into(), value: depth.to_string() });
+        }
+        ProcessMeasure::Cut { .. } | ProcessMeasure::Attach { .. } => {
+            if let Some(child_id) = tool_child_id {
+                params.push(FlowParam { key: "toolChildId".into(), value: child_id.to_string() });
+            }
+        }
+    }
+    FlowNode { id: step.id.clone(), kind: step.measure.kind_slug().into(), label: step.label.clone(), params, position: SemioPoint2 { x: index as f64 * 200.0, y: 0.0 } }
+}
+/// 🌉️ READ direction, real for everything reachable from the node's own params (`enabled`/`origin`/
+/// pose/radius/depth); `Cut`/`Attach`'s tool/component solid is a documented gap
+/// (`working_solid_from_brep_snapshot`'s own doc comment — a `toolChildId` param names WHICH child
+/// holds the resolved geometry, but resolving that handle to real content needs a `LinkResolver`
+/// this ticket doesn't add).
+pub fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
+    let param = |key: &str| node.params.iter().find(|p| p.key == key).map(|p| p.value.as_str());
+    let f = |key: &str| -> f64 { param(key).and_then(|v| v.parse().ok()).unwrap_or(0.0) };
+    let enabled = param("enabled").is_none_or(|v| v == "true");
+    let origin = match (param("originMachineId"), param("originCapabilityId")) {
+        (Some(machine_id), Some(capability_id)) => Some(StepOrigin { machine_id: machine_id.into(), capability_id: capability_id.into() }),
+        _ => None,
+    };
+    let pose = Pose { position: [f("posePositionX"), f("posePositionY"), f("posePositionZ")], axis: [f("poseAxisX"), f("poseAxisY"), f("poseAxisZ")], angle: f("poseAngle") };
+    let measure = match node.kind.as_str() {
+        "drill" => ProcessMeasure::Drill { radius: f("radius"), depth: f("depth"), pose },
+        "attach" => ProcessMeasure::Attach { component: WorkingSolid::default(), pose },
+        _ => ProcessMeasure::Cut { tool: WorkingSolid::default(), pose },
+    };
+    ProcessStep { id: node.id.clone(), label: node.label.clone(), enabled, origin, measure }
+}
+/// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.flow` CHILD HANDLE from `content`.
+pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot> {
+    let child_id = store::content_id("steps-flow", semio_framework_pack_json::to_json_string(content).as_bytes());
+    let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
+    let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
+}
+/// 🌉️ WRITE direction, real: the full flow graph for a step timeline — one node per step (see
+/// `flow_node_from_process_step`) plus a linear sequence edge between consecutive steps (this
+/// plugin's timeline has no branching, so a simple chain is an honest, lossless topology — not an
+/// approximation of a richer graph the old `Vec<ProcessStep>` never had either).
+pub fn flow_snapshot_for_steps(steps: &[ProcessStep], tool_child_ids: &std::collections::BTreeMap<String, String>) -> SemioFlowSnapshot {
+    let nodes: Vec<FlowNode> = steps.iter().enumerate().map(|(i, step)| flow_node_from_process_step(step, i, tool_child_ids.get(&step.id).map(|s| s.as_str()))).collect();
+    let edges: Vec<FlowEdge> = steps
+        .windows(2)
+        .map(|pair| FlowEdge { id: format!("e-{}-{}", pair[0].id, pair[1].id), from: PortRef { node: pair[0].id.clone(), port: "out".into() }, to: PortRef { node: pair[1].id.clone(), port: "in".into() }, kind: "sequence".into() })
+        .collect();
+    SemioFlowSnapshot { schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes, edges }
+}
+/// 🌉️ READ direction: node order in `SemioFlowSnapshot.nodes` IS the step order (matches
+/// `flow_snapshot_for_steps`'s construction — the `position.x` synthetic layout is display-only,
+/// never re-derived from).
+pub fn process_steps_from_flow_snapshot(flow: &SemioFlowSnapshot) -> Vec<ProcessStep> {
+    flow.nodes.iter().map(process_step_from_flow_node).collect()
+}
+//#endregion 🔖️FlowConverters
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Document
+//#region 🔖️Document
+//#region 🔖️WorkingScene
+//#region 🔖️SceneConverters
+// 🧠️ Same-process working-scene cache, keyed by the composed child's own content-addressed
+// `child_id` — populated at mint time (`process_working_scene_to_snapshot`, the only place literal
+// content is in hand), read at scene-reconstruction time
+// (`process_working_scene_from_snapshot`). Mirrors `🌊️flow`'s own `FLOW_SCRATCH` pattern (this
+// ticket's wave 4, `📓️wave4-reports/flow-report.md`) rather than lowpoly/cad/writer's plain
+// "always empty" fallback: within the SAME process, a document round-tripped only through this
+// module (never serialized out and a fresh process spun up to read it back) gets its real content
+// back, not a fabricated empty scene. Still an `EngineRep`-shaped bridge, not a real resolver —
+// crossing a process boundary (a fresh process loading a saved document, or an undo/redo that
+// bypasses `ArtifactApp::handle`) still degrades to the honest empty fallback, matching every
+// other exemplar's documented staleness gap.
+/// 🌉️ WRITE direction, real: builds the full persisted `Process3dSnapshot` from a literal
+/// `ProcessWorkingScene` — the only place this migration can mint real composed-child CONTENT
+/// (fixture construction, `empty_process3d_snapshot`, and any host-level "mint then dispatch"
+/// gesture), since there is no `LinkResolver` to pull literal content back out of an
+/// already-persisted child handle later. Mints one `stock_solid` brep child, one `steps` flow
+/// child, and one `tool_solids` brep child per `Cut`/`Attach` step (skipped for `Drill`, which
+/// carries no `WorkingSolid`) — and caches the literal `Stock`/`Vec<ProcessStep>` behind each
+/// snapshot-owned payload records so reopen and worker migration reconstruct the same scene.
+pub fn process_working_scene_to_snapshot(scene: &ProcessWorkingScene, workshop: Workshop) -> Process3dSnapshot {
+    let mut tool_solids = Vec::new();
+    let mut tool_child_ids = std::collections::BTreeMap::new();
+    for step in &scene.steps {
+        let solid = match &step.measure {
+            ProcessMeasure::Cut { tool, .. } => Some(tool),
+            ProcessMeasure::Attach { component, .. } => Some(component),
+            ProcessMeasure::Drill { .. } => None,
+        };
+        if let Some(solid) = solid {
+            let handle = working_solid_child_handle(&format!("tool-{}", step.id), solid);
+            tool_child_ids.insert(step.id.clone(), handle.child_id.clone());
+            tool_solids.push(handle);
+        }
+    }
+    let stock_solid = working_solid_child_handle("stock", &scene.stock.solid);
+    let flow_content = flow_snapshot_for_steps(&scene.steps, &tool_child_ids);
+    let steps = flow_child_handle(&flow_content);
+    Process3dSnapshot {
+        workshop,
+        stock_id: scene.stock.id.clone(),
+        stock_label: scene.stock.label.clone(),
+        stock_pose: scene.stock.pose.clone(),
+        stock_payload: scene.stock.clone(),
+        stock_solid,
+        steps,
+        step_payloads: scene.steps.clone(),
+        tool_solids,
+    }
+}
+/// 🌉️ READ direction: `Process3dSnapshot` composes its `stock_solid`/`steps`/`tool_solids` fields
+/// as HANDLES only (`child_id`+`target`, never resolved content — see `🏪️store/🦀️.rs`'s
+/// `🔖️Composition` region), and no `LinkResolver`/`ChildStoreFactory` seam reaches
+/// `ArtifactApp::handle` yet (confirmed directly against `🔌️plugin/🦀️.rs`, W1-owned,
+/// read-only for this wave). The durable stock/step records are authoritative while the child
+/// handles retain composition identity.
+pub fn process_working_scene_from_snapshot(snapshot: &Process3dSnapshot) -> ProcessWorkingScene {
+    let mut stock = snapshot.stock_payload.clone();
+    stock.id = snapshot.stock_id.clone();
+    stock.label = snapshot.stock_label.clone();
+    stock.pose = snapshot.stock_pose.clone();
+    ProcessWorkingScene { stock, steps: snapshot.step_payloads.clone() }
+}
+//#endregion 🔖️SceneConverters
+//#endregion 🔖️WorkingScene
+//#endregion 🔖️Document
+//#region 🔖️Document
+/// 🗄️ Empty process3d snapshot (default workshop + stock, no steps) — real composed children minted
+/// from the default `ProcessWorkingScene` via `process_working_scene_to_snapshot`, never bare/unset
+/// handles.
+pub fn empty_process3d_snapshot() -> Process3dSnapshot {
+    process_working_scene_to_snapshot(&ProcessWorkingScene::default(), Workshop::default())
+}
+//#endregion 🔖️Document
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — stitched into the app manifest by
+/// `crate::editor::process3d::create_process3d_app`'s `🔖️Manifest` region.
+pub fn artifact_kind() -> ArtifactKindSpec {
+    ArtifactKindSpec {
+        id: "3d.process".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("3D Process", "3D-Prozess"),
+        source_format: PROCESS_3D_SCHEMA.into(),
+        component_kind: "process3d".into(),
+        dimension: "3d".into(),
+        media_capability: OsMediaCapability::Brep,
+        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+        schema: PROCESS_3D_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.json".into()],
+        import_stdio_kinds: vec!["stdio.json".into()],
+    }
+}
+//#endregion 🔖️ArtifactKind
+
+//#region 🔧️Behavior
+/// 🧩️ One hot-installed machine catalog deserialized from the `"process.machines"` topic contribution.
+/// 🔓️ `pub` (not private): a variant payload of `crate::MachineCatalogs`
+/// (closed in the trait's own module, not here — see that enum's doc comment for why), which is
+/// itself `pub` — a variant field can never be less visible than the enum wrapping it.
+#[derive(Clone)]
+pub struct ContributedMachineCatalog {
+    pub catalog_id: String,
+    label: String,
+    icon_id: String,
+    machines: Vec<WorkshopMachine>,
+}
+impl ContributedMachineCatalog {
+    /// 🧩️ Seals one contributed catalog from the identity and machine list the topic contribution decoded.
+    pub fn new(catalog_id: String, label: String, icon_id: String, machines: Vec<WorkshopMachine>) -> Self {
+        Self { catalog_id, label, icon_id, machines }
+    }
+}
+impl MachineCatalog for ContributedMachineCatalog {
+    fn catalog_id(&self) -> &str {
+        &self.catalog_id
+    }
+
+    fn label(&self) -> &str {
+        &self.label
+    }
+
+    fn icon_id(&self) -> &str {
+        &self.icon_id
+    }
+
+    fn machines(&self) -> Vec<WorkshopMachine> {
+        self.machines.clone()
+    }
+}
+//#endregion 🔧️Behavior
+//#region 🔧️Behavior
+//#region 🔖️ProcessMachinesTopicPayload
+/// 🗂️ `topic_contribution.payload` shape for the `"process.machines"` topic — the sole shape
+/// `contributed_machine_catalogs` decodes. See `TopicContribution` in
+/// `🧰️framework/🔨️modules/🛂️manifest/🦀️.rs`.
+#[derive(semio_framework_value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct ProcessMachinesTopicPayload {
+    app_id: String,
+    module_id: String,
+    label: String,
+    icon_id: String,
+    machines_json: String,
+}
+//#endregion 🔖️ProcessMachinesTopicPayload
+//#endregion 🔧️Behavior
+
+/// 📸️ The snapshot facet's schema leaves (rust, typescript, graphql, json schema, proto).
+pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto"), };

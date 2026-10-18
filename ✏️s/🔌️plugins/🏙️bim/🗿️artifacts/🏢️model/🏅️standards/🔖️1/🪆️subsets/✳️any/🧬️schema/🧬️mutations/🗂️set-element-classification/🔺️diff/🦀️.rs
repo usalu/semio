@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetElementClassification`: the code of an element or type in one classification system. A holder without classifications gets its first created, otherwise the system's code is patched in.
 //! Refused: an unknown holder, an unknown system and a blank code; a code outside the system's table is allowed (a diagnostic reports it), so tables can change without breaking the elements.
 
-use super::super::elements;
-use super::SetElementClassification;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::set_element_classification::SetElementClassification;
 use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationSet, ModelSnapshot}, diff::{ClassificationSetPatch, Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

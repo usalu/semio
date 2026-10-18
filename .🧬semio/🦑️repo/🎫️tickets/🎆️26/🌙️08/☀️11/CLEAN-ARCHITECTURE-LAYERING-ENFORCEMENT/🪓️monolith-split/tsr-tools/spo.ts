@@ -1,0 +1,35 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { readModuleTreeSource } from "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+const repoRoot = "/Users/ueli/Documents/semio";
+const shellHostRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost");
+const contractRoot = join(shellHostRoot, "👥️presence-scope");
+const A = (n: number, f: () => boolean) => { let ok = false; try { ok = f(); } catch (e) { ok = false; } console.log(ok ? "ok  " : "FAIL", n); };
+{
+  const shell = readModuleTreeSource(join(contractRoot, "../🟦️.tsx"));
+  const hostBootstrap = readFileSync(join(contractRoot, "../🪪️host-bootstrap/🟦️.tsx"), "utf8");
+  const projection = readFileSync(join(contractRoot, "🟦️.ts"), "utf8");
+  const browser = readFileSync(join(contractRoot, "🌐️browser/🟦️.tsx"), "utf8");
+  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
+  const wire = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"));
+  A(389, () => (shell.includes("scopedPresencePeersV1") && shell.includes("presencePeersByRuntimeKey")));
+  A(390, () => (shell.includes("portByRuntimeKey") && shell.includes("operationRuntimeKey") && !shell.includes("portByDocumentId")));
+  A(391, () => (shell.includes("inferencePortOwnerRef") && shell.includes("owners.length === 1")));
+  A(392, () => (shell.includes("inferencePortStatusRuntimeKeyV1(inferencePortOwnerRef.current") && hostBootstrap.includes("message.scope.spaceId !== owner.scope.spaceId") && hostBootstrap.includes("message.scope.documentId !== owner.scope.documentId")));
+  A(393, () => (shell.includes("retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey)") && worker.includes('documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...inferencePort.scope }) === runtimeKey')));
+  A(394, () => (shell.includes('from "../👥️presence-scope/🟦️.ts"')));
+  A(395, () => (!shell.includes("presencePeersJson")));
+  A(396, () => (shell.includes("entry.plugin.bindDocumentPort(entry.session.instanceId") && !shell.includes("registerPluginBackboneRoute(")));
+  A(397, () => (shell.includes("documentId: entry.documentId") && shell.includes("spaceId: entry.scope.spaceId")));
+  A(398, () => (shell.includes('message: { kind: "documentBackbone", message }') && shell.includes("receiveDocumentBackbone(runtimeKey, entry, event.message)")));
+  A(399, () => (worker.includes("presenceCandidate") && worker.includes("presenceAuthority")));
+  A(400, () => (worker.includes('emitEvent(state, { kind: "presence", peers: [] })')));
+  A(401, () => (worker.includes("const scope = artifactScope(state)")));
+  A(402, () => (wire.includes("workerWireScopeV1") && wire.includes('event: { kind: "presence", peers: [] }')));
+  A(403, () => (projection.includes("message.verifiedSurfaceId !== expectedSurfaceId") && !projection.includes("peer.surface ===")));
+  A(404, () => (projection.includes('role === "owner" || role === "member"') && projection.includes('role === "viewer"')));
+  A(405, () => (browser.includes('new Worker(config.workerUrl, { type: "module" })')));
+  A(406, () => (browser.includes("new MessageChannel()") && browser.includes("for (const row of config.cases)")));
+  A(407, () => (browser.includes('kind: "close"') && browser.includes('kind: "presenceHeartbeat"')));
+  A(408, () => (browser.includes('data-shell-host="scoped-presence"')));
+}

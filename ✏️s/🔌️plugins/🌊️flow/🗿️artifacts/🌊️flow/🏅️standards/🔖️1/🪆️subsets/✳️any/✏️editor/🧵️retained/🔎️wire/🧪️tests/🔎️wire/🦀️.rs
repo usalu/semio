@@ -131,7 +131,7 @@ use semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowNode;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::{flow_scalar_command_view};
 use crate::editor::flow::*;
 use store::os_pack::record::scalar_witness::{ScalarRecordWireStep, ScalarRecordWireWitness};

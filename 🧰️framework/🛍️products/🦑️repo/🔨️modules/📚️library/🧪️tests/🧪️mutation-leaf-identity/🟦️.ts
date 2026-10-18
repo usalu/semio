@@ -3,12 +3,13 @@ import { expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join, resolve } from "node:path";
 import Ajv from "ajv";
-import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
-import { inventoryTaxonomy, type TaxonomyInventory } from "../../🧹️normalization/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
+import { type TaxonomyInventory } from "../../🧹️normalization/📜️plan-contracts/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
 const repoRoot = process.env.SEMIO_FIXTURE_REPO_ROOT ?? resolve(import.meta.dir, "../../../../../../../");
-const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧫️mutation-leaf-identity/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🧫️mutation-leaf-identity/🔣️.json"), "utf8"));
 
 const taxonomy = loadCatalogTaxonomy();
 const ajv = new Ajv({ strict: true, allErrors: true });

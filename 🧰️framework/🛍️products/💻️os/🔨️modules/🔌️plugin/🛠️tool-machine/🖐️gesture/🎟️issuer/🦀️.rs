@@ -4,7 +4,7 @@ use semio_framework_plugin_decl_views::gesture_contract::{GestureSlot, GestureSl
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retirement::RetireOwned;
-use semio_framework_value::retirement::shared::sealed::{SealedShared, SealedSharedBirth, SharedIssuer};
+use semio_framework_value::shared_issuance::{SealedShared, SealedSharedBirth, SharedIssuer};
 
 #[doc(hidden)]
 #[derive(semio_framework_value::RetireOwned)]

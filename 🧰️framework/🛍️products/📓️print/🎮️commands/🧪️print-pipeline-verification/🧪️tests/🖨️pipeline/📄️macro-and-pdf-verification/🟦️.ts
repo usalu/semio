@@ -4,7 +4,10 @@ import { loadVizCatalog, parseVizTaxonomyLeaves } from "../../../../../🔨️mo
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { classifyPackageSource, fileKindIdForSourcePath, fixedSourceDispositionDecision, implementationLeafBasenameFinding, loadCatalogTaxonomy, scopedFileKindIdForSourcePath, taxonomyFileKindIsImplementation } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { classifyPackageSource } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🏷️package-source-classification/🟦️.ts";
+import { fileKindIdForSourcePath, loadCatalogTaxonomy, scopedFileKindIdForSourcePath } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { fixedSourceDispositionDecision } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { implementationLeafBasenameFinding, taxonomyFileKindIsImplementation } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { printCompilerName, printSourceReferenceMapV1, printSourceReferenceTextV1 } from "../../../../../🔨️modules/📥️source-staging/🟦️.ts";
 import { readPrintMaterialFileV1 } from "../../../../../📦️artifacts/📥️material/📤️producer/🟦️.ts";
 import { withPublishedPrintDocumentV1, printTemplatePdfNames, publishPrintArtifact, registeredPrintTemplates } from "../../../../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";

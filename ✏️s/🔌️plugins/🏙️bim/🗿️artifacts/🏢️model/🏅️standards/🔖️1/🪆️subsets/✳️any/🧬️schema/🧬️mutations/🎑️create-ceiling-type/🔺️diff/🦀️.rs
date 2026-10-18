@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateCeilingType`: one created ceiling type entry. Every layer names an existing material and has a positive finite
 //! thickness; a ceiling type has at least one layer.
 
-use super::super::elements;
-use super::CreateCeilingType;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::CreateCeilingType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{Layer, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 

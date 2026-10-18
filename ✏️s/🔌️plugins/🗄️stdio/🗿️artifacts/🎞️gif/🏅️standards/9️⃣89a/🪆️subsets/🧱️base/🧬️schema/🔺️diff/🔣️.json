@@ -3,14 +3,307 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/diff.json",
   "title": "GifDiff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": {
-      "type": "string",
+    "width": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/u32",
       "x-semio-state": "artifact"
     },
-    "bytes": {
-      "type": "string",
+    "height": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/u32",
       "x-semio-state": "artifact"
+    },
+    "gct": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/colorTable"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "backgroundColorIndex": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/byte",
+      "x-semio-state": "artifact"
+    },
+    "pixelAspectRatio": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/byte",
+      "x-semio-state": "artifact"
+    },
+    "loopCount": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/u16"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "frames": {
+      "$ref": "#/$defs/GifFramesDiff",
+      "x-semio-state": "artifact"
+    },
+    "comments": {
+      "$ref": "#/$defs/GifCommentsDiff",
+      "x-semio-state": "artifact"
+    },
+    "appExtensions": {
+      "$ref": "#/$defs/GifAppExtensionsDiff",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "GifFrameDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "left": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/u32"
+        },
+        "top": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/u32"
+        },
+        "width": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/u32"
+        },
+        "height": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/u32"
+        },
+        "interlace": {
+          "type": "boolean"
+        },
+        "lct": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/colorTable"
+            }
+          ]
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/byte"
+          }
+        },
+        "delayCs": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/u16"
+        },
+        "disposal": {
+          "enum": [
+            "unspecified",
+            "doNotDispose",
+            "restoreToBackground",
+            "restoreToPrevious"
+          ]
+        },
+        "transparentIndex": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/byte"
+            }
+          ]
+        },
+        "userInput": {
+          "type": "boolean"
+        },
+        "plainText": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/plainText"
+            }
+          ]
+        }
+      }
+    },
+    "GifFrameModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "diff"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diff": {
+          "$ref": "#/$defs/GifFrameDiff"
+        }
+      }
+    },
+    "GifFrameAdded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "frame"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "frame": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/frame"
+        }
+      }
+    },
+    "GifFramesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifFrameModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifFrameAdded"
+          }
+        }
+      }
+    },
+    "GifCommentModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "text"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "GifCommentAdded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "text"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "text": {
+          "type": "string"
+        }
+      }
+    },
+    "GifCommentsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifCommentModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifCommentAdded"
+          }
+        }
+      }
+    },
+    "GifAppExtensionModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "extension"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extension": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/application"
+        }
+      }
+    },
+    "GifAppExtensionAdded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "extension"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "extension": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/89a/base/snapshot.json#/definitions/application"
+        }
+      }
+    },
+    "GifAppExtensionsDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifAppExtensionModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifAppExtensionAdded"
+          }
+        }
+      }
     }
   }
 }

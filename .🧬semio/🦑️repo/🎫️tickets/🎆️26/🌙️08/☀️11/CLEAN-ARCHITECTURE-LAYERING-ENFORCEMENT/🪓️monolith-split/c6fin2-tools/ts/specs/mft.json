@@ -1,0 +1,94 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+ "importers": "auto",
+ "children": [
+  {
+   "dir": "🏷️ui-contract-and-canvas-types",
+   "doc": "/** 🏷️ The semantic UI contract aliases, the framework panel tab ids and labels, the canvas pick and hover types, the named layouts and the utility category, leaf and node trees. */",
+   "lines": [
+    [
+     136,
+     373
+    ]
+   ]
+  },
+  {
+   "dir": "🎬️action-types-and-semantics",
+   "doc": "/** 🎬️ The action definition, address, invocation and argument schema types, the reference id codec, the capability and semantics types and the argument control and number facets. */",
+   "lines": [
+    [
+     377,
+     556
+    ]
+   ]
+  },
+  {
+   "dir": "📥️mutation-input-schema",
+   "doc": "/** 📥️ The mutation input schema: the resolver and error types, the input vocabulary sets, the localized text, glossary, shape and numeric transport helpers, the definitions, audit and instance entry points and the reader that turns one input schema into action argument definitions. */",
+   "lines": [
+    [
+     560,
+     1258
+    ]
+   ]
+  },
+  {
+   "dir": "🔘️definitions-action-ids-and-shell-brand",
+   "doc": "/** 🔘️ The utility, interaction, tool, tool run and command definition types, the framework-owned action ids, the dialog definition and choice and the shell brand types. */",
+   "lines": [
+    [
+     1260,
+     1407
+    ]
+   ]
+  },
+  {
+   "dir": "👁️view-state-and-public-invocation",
+   "doc": "/** 👁️ The history and host event ids, the plugin view state, the public invocation and view context capacities and the view context projections. */",
+   "lines": [
+    [
+     1410,
+     1691
+    ]
+   ]
+  },
+  {
+   "dir": "🗣️contributions-and-examples",
+   "doc": "/** 🗣️ The app labels overlay, the program and topic contributions, the space index, the manifest examples with their asset names and the plugin manifest type. */",
+   "lines": [
+    [
+     1693,
+     1869
+    ]
+   ]
+  },
+  {
+   "dir": "🔁️host-effects-choices-and-fault-notices",
+   "doc": "/** 🔁️ The host effect invocation, the artifact kind and surface app choices and the fault notice definitions with their validation and text. */",
+   "lines": [
+    [
+     1872,
+     2026
+    ],
+    [
+     2034,
+     2108
+    ]
+   ]
+  },
+  {
+   "dir": "📋️app-definition-refresh-and-context-menu",
+   "doc": "/** 📋️ The window engagement and panel tab types, the app definition types, the program hot swap event, the UI refresh request and response and the context menu request and response. */",
+   "lines": [
+    [
+     2112,
+     2298
+    ]
+   ]
+  }
+ ],
+ "allowManual": [
+  "export * from parent",
+  "hostresolvedargs"
+ ]
+}

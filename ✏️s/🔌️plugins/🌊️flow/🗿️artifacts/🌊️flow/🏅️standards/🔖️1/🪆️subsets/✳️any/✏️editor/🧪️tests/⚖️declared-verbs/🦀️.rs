@@ -134,7 +134,7 @@ use std::collections::HashMap;
 #[allow(unused_imports)]
 use std::sync::Arc;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::*;
 use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_their_declarations, declared_verb_agent_divergences, DeclaredVerbOutcome};
 

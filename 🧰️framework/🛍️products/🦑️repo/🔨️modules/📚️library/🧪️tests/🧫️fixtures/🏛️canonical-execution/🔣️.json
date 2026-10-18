@@ -9,11 +9,10 @@
         "segments": []
       },
       "expectedTarget": [
-        ".🧬semio",
-        "🦑️repo",
-        "⚡️cache",
-        "cargo",
-        "canonical-architecture"
+        "target"
+      ],
+      "expectedBuild": [
+        "target"
       ]
     },
     {
@@ -33,6 +32,9 @@
       "expectedTarget": [
         "isolated",
         "target"
+      ],
+      "expectedBuild": [
+        "shared-build"
       ]
     },
     {
@@ -52,6 +54,9 @@
       "expectedTarget": [
         "absolute",
         "target"
+      ],
+      "expectedBuild": [
+        "shared-build"
       ]
     },
     {
@@ -65,7 +70,10 @@
         "mode": "empty",
         "segments": []
       },
-      "expectedTarget": []
+      "expectedTarget": [],
+      "expectedBuild": [
+        "shared-build"
+      ]
     }
   ]
 }

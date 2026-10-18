@@ -1,4 +1,6 @@
-import { canonicalPrimaryFilenameForKind, loadTaxonomy, schemaFacetFormatEntries, type BreachRecord } from "../../../../🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { schemaFacetFormatEntries } from "../../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { type BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceText, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import type { PolicyInferenceFamilySource, PolicyInferenceSourceIssue } from "../../🧱️contract/🟦️.ts";
 import { policyInferenceSourceBreaches } from "../🚧️source-admission/🟦️.ts";

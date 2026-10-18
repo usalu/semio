@@ -44,6 +44,8 @@ semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-ply-inferences = { path = "../../../../../🧬️schema/💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-ply-mutations = { path = "../../../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

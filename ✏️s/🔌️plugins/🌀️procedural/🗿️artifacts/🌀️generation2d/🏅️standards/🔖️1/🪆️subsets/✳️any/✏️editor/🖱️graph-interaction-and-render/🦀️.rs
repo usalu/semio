@@ -1,6 +1,8 @@
 //! 🖱️ Graph interaction and window bodies of the generation2d editor: the resolved interaction marks and the single body-key render. See [`super`].
 
 use super::*;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_INTERACTION_DOMAIN;
+use semio_s_artifact_procedural_2d_model::GENERATION2D_INTERACTION_CHANNEL;
 
 //#region 🔖️GraphInteraction
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region.

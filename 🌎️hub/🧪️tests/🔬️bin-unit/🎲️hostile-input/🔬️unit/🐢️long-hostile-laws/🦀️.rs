@@ -7,7 +7,7 @@ use std::sync::Arc;
 use semio_hub_runtime::startup::{ArtifactCasMaintenanceCheckpoint, StartupCatalogControl};
 use semio_hub_artifact_creation_service::ArtifactCreationServiceV1;
 use semio_hub_directory_contract::model::{AuthSessionKind, SpaceRole};
-use semio_hub_artifact_authority::{AuthorityLimits, OperationContext};
+use semio_hub_artifact_authority::{AuthorityLimits, AuthorityOperationControl, OperationContext};
 use semio_hub_route_testkit::{DocumentOpenPlanLedgerFixture, STUDIO, announce_document_for_test, bearer_headers, client_binary, create_space_for_test, document_open_plan_test_authority, document_socket_request, issue_test_session, next_server_frame, next_server_frame_at, next_server_frame_within, publish_checkpoint_for_test, raw_http_request, run_socket_test, sample_envelope, seed_author_token, seed_genesis_document_for_test, socket_hello, spawn_restartable_server, spawn_server, test_state, upsert_member_for_test};
 use directory::os_directory::DocumentScope;
 use semio_hub_ledgers::socket_grants::{SOCKET_GRANT_BINDING_PENDING_CAPACITY, SOCKET_GRANT_LEDGER_CAPACITY, SocketAudienceV1, SocketGrantKeyV1, SocketGrantLedgerErrorV1, SocketGrantLedgerV1, SocketSubjectV1};

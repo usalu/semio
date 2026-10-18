@@ -82,7 +82,7 @@ describe("actor typegen ownership", () => {
     const nativeExporter = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor/🧪️tests/🔬️unit/🦀️.rs"), "utf8");
     expect(nativeExporter).toContain("SEMIO_TYPEGEN_OUT");
     expect(nativeExporter).toContain("include_str!(\"../../🤖️generated/🎭️actor/🟦️.ts\")");
-    for (const consumer of ["📬️mailbox/🟦️.ts", "📮️shard-client/🟦️.ts"]) expect(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor", consumer), "utf8")).toContain("../🤖️generated/🎭️actor/🟦️.ts");
+    for (const consumer of ["📬️mailbox/🟦️.ts", "📮️shard-client/📜️wire/🟦️.ts"]) expect(readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🎭️actor", consumer), "utf8")).toContain("../🤖️generated/🎭️actor/🟦️.ts");
 
   });
 });

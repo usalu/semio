@@ -6,7 +6,7 @@
   "execution": {
     "packageName": "@semio-tech/repo-lib",
     "target": "test-readme-move-source-authority",
-    "packageCommand": "nx run @semio-tech/repo-lib:test-readme-move-source-authority",
+    "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-readme-move-source-authority",
     "command": "bun ./📜️script.ts test readme-move-source-authority",
     "route": "readme-move-source-authority",
     "source": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚚️readme-move-source-authority/🟦️.ts"

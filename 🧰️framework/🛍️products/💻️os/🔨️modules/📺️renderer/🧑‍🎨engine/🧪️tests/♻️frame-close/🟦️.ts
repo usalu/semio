@@ -90,12 +90,12 @@ test("actual phase and aggregate receivers preserve the full typed close chain",
 });
 
 test("the actual StoreSync receiving boundary forwards the original caller identity authority", () => {
-  const source = read("../../🏪️store/🔄️sync/🦀️.rs");
+  const source = readTree("../../🏪️store/🔄️sync/🦀️.rs");
   const body = source.slice(source.indexOf("pub async fn receive(&mut self"), source.indexOf("pub async fn reconcile_branch"));
   expect(body.includes("identity: &mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>")).toBe(true);
   expect(body.includes("ArtifactCommand::IngestRemote { envelope }, identity")).toBe(true);
   expect(body.includes("EntityIdentityAuthority::new")).toBe(false);
-  const callers = read("../../🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs");
+  const callers = readTree("../../🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs");
   expect(callers.includes("session.receive(envelope, &mut identity).await")).toBe(true);
   expect(callers.includes("identity.pause().expect(\"original fixture receive identity receipt\")")).toBe(true);
   expect(callers.includes("original receive identity owned={observed} ceiling={CEILING}")).toBe(true);
@@ -129,7 +129,7 @@ test("the actual empty engine backing quotes and receipts its physical array rel
 test("native and browser bootstrap frame authority is explicit, finite and preserves all five neutral axes",()=>{
  const law=JSON.parse(read("🪙️authority/🖼️frame/🔣️.json")),schema=JSON.parse(read("🪙️authority/🖼️frame/🧬️schema/🔣️.json"));const ajv=authoritySchema(),validate=ajv.compile(schema);expect(validate(law)).toBe(true);for(const axis of Object.keys(law.grant)){const missing=structuredClone(law);delete missing.grant[axis];expect(validate(missing)).toBe(false);const negative=structuredClone(law);negative.grant[axis]=-1;expect(validate(negative)).toBe(false);}
  const db=new Database(":memory:");try{const expected=db.query("SELECT 1 AS maximumItems,65536 AS maximumCopyBytes,65536 AS maximumCapacityBytes,16777216 AS maximumReleaseBytes,64 AS maximumDepth").get();expect(law.grant).toEqual(expected);}finally{db.close();}
- const native=read("🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"),browser=read("🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),frame=read("🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs"),renderer=readTree("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");for(const source of [native,browser])expect(source.includes("OsHost::new(runtime, presenter, crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT)")).toBe(true);expect(frame.includes("pub(crate) fn new(retained: RetainedCloneGrant)")).toBe(true);expect(frame.includes("retained, site: \"os_renderer_frame_build\"")).toBe(true);expect(renderer.replace(/\s/g,"").includes("retained:self.retained,site:\"os_renderer.prepare.worker\"" )).toBe(true);expect(frame.replace(/\s/g,"").includes("receive_frame_outcome(&mutowner,self.retained,&mutself.retained_progress)")).toBe(true);
+ const native=read("🎯️targets/🧊️wgpu/🪟️winit-app/🦀️.rs"),browser=read("🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs"),frame=read("🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs"),renderer=readTree("🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");for(const source of [native,browser])expect(source.includes("OsHost::new(runtime, presenter, crate::frame_authority::FRAME_BOOTSTRAP_ROOT_GRANT)")).toBe(true);expect(frame.includes("pub fn new() -> Self")).toBe(true);expect(frame.replace(/\s/g,"").includes("site:\"os_renderer_frame_deadlines\"")).toBe(true);expect(renderer.replace(/\s/g,"").includes("retained:self.retained,site:\"os_renderer.prepare.worker\"" )).toBe(true);expect(frame.includes("WorkerJobSession::try_admit_owned(&mut self.original_job,&mut self.original_params,cx)")).toBe(true);expect(frame.includes("owner.take_retained_step_receipt()")).toBe(true);expect(frame.includes("receive_frame_outcome")).toBe(false);
 });
 
 test("original Scene camera storage has strict packed identities and independent SQLite ownership semantics",()=>{

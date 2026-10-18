@@ -34,6 +34,14 @@
     "🧵️instance/📥️staging/🔒️close-ladder/🦀️.rs",
     "🧵️instance/📥️staging/🚪️ingress/🦀️.rs",
     "🧵️instance/📥️staging/🪜️maintenance-ladder/🦀️.rs",
-    "🧵️instance/🔌️plugin-app-impl/🦀️.rs"
+    "🧵️instance/🔌️plugin-app-impl/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/🔒️close-terminal/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/🧾️typed-operation-results/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/🕹️ephemeral-interaction/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/📨️action-dispatch/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/🔀️transactions/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/🗃️document-load/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/🖼️render-surface/🦀️.rs",
+    "🧵️instance/🔌️plugin-app-impl/🎞️media-transfer/🦀️.rs"
   ]
 }

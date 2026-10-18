@@ -1,5 +1,5 @@
 import {isAbsolute,relative,resolve} from "node:path";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {cargoDepInfoResolvedSourcesV1,type CargoProvenanceV1} from "../../🟦️.ts";
 import sourceSchema from "../../../../📤️publication/📥️sources/🧬️schema/🔣️.json";
 import schemaDocument from "../🧬️schema/🔣️.json";

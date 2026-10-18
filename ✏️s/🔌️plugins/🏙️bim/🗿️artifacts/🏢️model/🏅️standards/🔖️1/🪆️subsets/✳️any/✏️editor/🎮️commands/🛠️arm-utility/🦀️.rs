@@ -87,6 +87,4 @@ pub fn handle<P: Armed>(_payload: &P, _doc: &ArtifactView<'_, ModelSnapshot>, _c
     Ok(emit)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

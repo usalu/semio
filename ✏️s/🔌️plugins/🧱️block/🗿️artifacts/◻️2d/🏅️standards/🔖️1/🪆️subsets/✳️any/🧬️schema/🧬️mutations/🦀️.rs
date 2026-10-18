@@ -16,6 +16,25 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_block_2d_diff::Block2dDiff;
 use semio_s_artifact_block_2d_model::Block2dSnapshot;
 use protocol::Mutation;
+use semio_s_artifact_block_2d_mut_node_kind::rename_node_kind::RenameNodeKind;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_label::ChangeNodeKindLabel;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_variant::ChangeNodeKindVariant;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_description::ChangeNodeKindDescription;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_icon::ChangeNodeKindIcon;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_unit::ChangeNodeKindUnit;
+use semio_s_artifact_block_2d_mut_node_kind::update_presentation::UpdatePresentation;
+use semio_s_artifact_block_2d_mut_handles::change_handle_kind_default_wire_kind::ChangeHandleKindDefaultWireKind;
+use semio_s_artifact_block_2d_mut_handles::create_handle::CreateHandle;
+use semio_s_artifact_block_2d_mut_handles::delete_handle::DeleteHandle;
+use semio_s_artifact_block_2d_mut_handles::move_handle::MoveHandle;
+use semio_s_artifact_block_2d_mut_handles::change_handle_handle_kind::ChangeHandleHandleKind;
+use semio_s_artifact_block_2d_mut_meta::add_attribute::AddAttribute;
+use semio_s_artifact_block_2d_mut_meta::remove_attribute::RemoveAttribute;
+use semio_s_artifact_block_2d_mut_meta::add_author::AddAuthor;
+use semio_s_artifact_block_2d_mut_meta::remove_author::RemoveAuthor;
+use semio_s_artifact_block_2d_mut_meta::move_camera2d::MoveCamera2d;
+use semio_s_artifact_block_2d_mut_meta::scale_camera2d::ScaleCamera2d;
+use semio_s_artifact_block_2d_mut_meta::change_meta_description::ChangeMetaDescription;
 
 //#region 🔖️Store
 pub type Block2dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Block2dSnapshot, Block2dMutation>;

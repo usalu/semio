@@ -1,8 +1,34 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Profile};
+use semio_framework_2d::regions::Region;
+use semio_framework_geometry::loops;
+use semio_framework_geometry::Point;
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{extents_of, placed};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, depth_of, point, seg};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, CurtainWall, Slab, Stair, Wall};
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::Vertex as Corner;
+use crate::standards::v1::subsets::any::schema::inferences::bodies::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Vertex};
+use semio_framework_test_fixtures::fixture_text;
 
 fn bodies(snapshot: &ModelSnapshot, storey: &str, levels: &BTreeMap<String, StoreyLevel>) -> Vec<Body> {
     let (layouts, runs) = (compute_wall_layout(snapshot), compute_stair_runs(snapshot));
@@ -11,10 +37,10 @@ fn bodies(snapshot: &ModelSnapshot, storey: &str, levels: &BTreeMap<String, Stor
 use crate::standards::v1::subsets::any::schema::snapshot::{Slope, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json"));
 
 fn house() -> ModelSnapshot {
-    from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")
+    from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("house decodes")
 }
 
 fn close(left: f64, right: f64) -> bool {

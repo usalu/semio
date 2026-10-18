@@ -2,7 +2,8 @@
 //! areas, volumes, conditions and set points, every surface by its `CADObjectId` with type, adjacent spaces, orientation, size, polygon area, construction U-value and openings, the constructions with their layers, the window types, and the polygon area per surface type.
 //! 📎 https://www.gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html
 
-use super::{ConstructionRow, OpeningRow, Plan, SpaceRow, SurfaceRow};
+use crate::standards::v1::subsets::any::io::export::gbxml::{zones, spaces, material, constructions, surfaces};
+use crate::standards::v1::subsets::any::io::export::gbxml::{ConstructionRow, OpeningRow, Plan, SpaceRow, SurfaceRow};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
@@ -185,6 +186,4 @@ pub fn table_json(plan: &Plan, model: &ModelSnapshot) -> String {
     semio_framework_pack_json::to_json_string(&table)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -3,7 +3,8 @@
 //! The tree is the typed SVG model of the `s.stdio.svg` artifact and the text is written by the XML writer of `s.stdio.xml`, both behind the SVG export's `codec`.
 //! 📎 https://www.w3.org/TR/SVG11/masking.html#ClippingPaths
 
-use super::ink::{sheet_marks, Anchor, Mark, TitleLabels};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
 use crate::standards::v1::subsets::any::io::export::svg::codec::{attr, document_text, element, text, CommonAttrs, SvgElement, ViewBox};
 use crate::standards::v1::subsets::any::io::export::svg::drawing::{view_layers, xml_id};
 use crate::standards::v1::subsets::any::io::export::svg::path::{snap, Frame};
@@ -49,7 +50,7 @@ fn mark_element(mark: &Mark) -> SvgElement {
     }
 }
 
-fn group(class: &str, children: Vec<SvgElement>) -> SvgElement {
+pub fn group(class: &str, children: Vec<SvgElement>) -> SvgElement {
     SvgElement::Group { common: CommonAttrs::new().with_class(class), children }
 }
 
@@ -136,6 +137,4 @@ pub fn sheet_svg(model: &ModelSnapshot, layout: &SheetLayout, drawings: &BTreeMa
     document_text(&root)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

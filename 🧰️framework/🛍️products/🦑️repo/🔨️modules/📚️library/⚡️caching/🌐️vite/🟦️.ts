@@ -30,8 +30,10 @@ import {readNativeCallerAuthorityV1} from "../📦️artifacts/📋️native-orc
 function requireViteBuildIntentV1(invocation:ScriptInvocation,mode:BuildMode,workspace?:string):string{const authority=readNativeCallerAuthorityV1(invocation.capabilities);if(mode!==authority.original.buildMode||workspace!==undefined&&resolve(workspace)!==authority.repositoryRoot)throw Error("Vite intent must match its Original mode and workspace");return authority.repositoryRoot;}
 
 export {viteCacheDirectory} from "./📂️paths/🟦️.ts";
+import {readViteConfigLoaderV1,type ViteConfigLoaderV1} from "./🎛️loader/🟦️.ts";
 
 export type ViteArtifactBuild = {
+  readonly configLoader?: ViteConfigLoaderV1;
   readonly invocation: ScriptInvocation;
   readonly control: CompilerAdmissionControl;
   readonly artifactInputs?: readonly RepositoryArtifactRequestV1[];
@@ -61,7 +63,7 @@ export async function buildViteArtifact(options: ViteArtifactBuild): Promise<str
       requireNativeStoragePathV1(store.root,directory);await store.recheck();const cli = join(dirname(require.resolve("vite/package.json")), "bin/vite.js");
       console.log(`Bundling ${options.owner}`);
       try {
-        await runOwnedCommand(process.execPath, [cli, "build", "--mode", mode, "--minify", mode === "release" ? "esbuild" : "false", ...(mode === "prototype" ? ["--sourcemap"] : []), "--config", options.config, "--configLoader", "runner", "--outDir", temporary, "--emptyOutDir", ...(options.args ?? [])], options.root, `vite:${options.owner}`, compilerAdmissionBudgetV1(control), { env: { ...buildModeEnvironment(mode, compilerEnvironment), SEMIO_VITE_CACHE_DIRECTORY: directory }, signal: control.signal });
+        await runOwnedCommand(process.execPath, [cli, "build", "--mode", mode, "--minify", mode === "release" ? "esbuild" : "false", ...(mode === "prototype" ? ["--sourcemap"] : []), "--config", options.config, "--configLoader", readViteConfigLoaderV1(options.configLoader), "--outDir", temporary, "--emptyOutDir", ...(options.args ?? [])], options.root, `vite:${options.owner}`, compilerAdmissionBudgetV1(control), { env: { ...buildModeEnvironment(mode, compilerEnvironment), SEMIO_VITE_CACHE_DIRECTORY: directory }, signal: control.signal });
       } catch (error) { control.signal.throwIfAborted(); throw new Error(`Vite build failed for ${options.owner}`, { cause: error }); }
       const files = await collectArtifactFiles(temporary, control.signal);let bytes=0;for(const path of files.values()){requireNativeStoragePathV1(store.root,path);bytes+=(await lstat(path)).size;}if(files.size>storageSchema.definitions.Protocol.const.maximumOutputFiles||bytes>storageSchema.definitions.Protocol.const.maximumOutputBytes)throw Error("Vite deliverable exceeds finite output boundary");await store.recheck();
       await withRepositoryArtifactDestinationV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:control,directory:layout.output},destination=>stageRepositoryArtifacts(destination,options.owner,files));
@@ -77,7 +79,7 @@ export type ViteService = {
   readonly artifactInputs?: readonly RepositoryArtifactRequestV1[];
   readonly root: string;
   readonly config: string;
-  readonly configLoader?: "runner" | "native";
+  readonly configLoader?: ViteConfigLoaderV1;
   readonly host: string;
   readonly port: number;
   readonly signal: AbortSignal;
@@ -87,14 +89,14 @@ export type ViteService = {
 };
 
 /** 🖥️ Describes one isolated compiler process without mutating another live service's environment. */
-export interface ViteCommandServiceV1{readonly runtimeChannels:readonly ViteRuntimeChannelV1[];readonly invocation:ScriptInvocation;readonly control:CompilerAdmissionControl;readonly root:string;readonly config:string;readonly mode:BuildMode;readonly host:string;readonly port:number;readonly signal:AbortSignal;readonly environment:Readonly<Record<string,string|undefined>>;readonly artifactInputs?:readonly RepositoryArtifactRequestV1[];readonly strictPort?:boolean}
+export interface ViteCommandServiceV1{readonly runtimeChannels:readonly ViteRuntimeChannelV1[];readonly invocation:ScriptInvocation;readonly control:CompilerAdmissionControl;readonly root:string;readonly config:string;readonly mode:BuildMode;readonly host:string;readonly port:number;readonly signal:AbortSignal;readonly environment:Readonly<Record<string,string|undefined>>;readonly artifactInputs?:readonly RepositoryArtifactRequestV1[];readonly strictPort?:boolean;readonly configLoader?:ViteConfigLoaderV1}
 
 /** 🧵️ Holds paid compiler, exact input readers and bounded cache until its isolated Vite child joins. */
 export async function serveViteCommandV1(options:ViteCommandServiceV1):Promise<void>{
  requireIssuedResourceControlInvocationV1(options.control,options.invocation);const invocation=options.invocation,signal=options.signal,phase=createRequestedIssuedResourceControlV1(options.control,0,signal),mode=options.mode,root=options.root,config=options.config,host=options.host,port=options.port,strictPort=options.strictPort!==false,workspace=requireViteBuildIntentV1(invocation,mode),authority=readNativeCallerAuthorityV1(invocation.capabilities);if(!Number.isSafeInteger(port)||port<1||port>65535||!host||host.length>253||host.includes("\0"))throw Error("Explicit Vite command listener required");const owner="vite-command-service:"+root,artifactInputs=readViteArtifactInputsV1(options.artifactInputs??[]),runtimeChannels=readViteRuntimeChannelsV1(options.runtimeChannels),projection=projectViteCommandEnvironmentV1({version:1,mode,platform:process.platform,layers:[{...process.env},{...options.environment}]}),environment=projection.environment;
  return withRepositoryCacheStoreV1(workspace,"dependencies",invocation,phase,(_dependencies,dependencyPhase)=>withViteStorageV1(workspace,mode,owner,invocation,dependencyPhase,(store,layout,_temporary,storePhase)=>withViteArtifactInputsV1({workspace,invocation,store,control:storePhase,requests:artifactInputs},async control=>{
   const require=createRequire(join(workspace,"package.json")),cli=join(dirname(require.resolve("vite/package.json")),"bin/vite.js"),state={root:layout.state,owner,compiler:`vite:${require("vite/package.json").version}:bun:${process.versions.bun}`,configuration:JSON.stringify([config,readFileSync(config,"utf8"),projection.digest]),mode};
-  await withCompilerState({capacity:{kind:"whole-host"},...state,environment,control,storage:store.storage,storageControl:store.control,files:["deps/_metadata.json"]},async(directory,compilerEnvironment,control)=>{requireNativeStoragePathV1(store.root,directory);const child=viteCommandChildEnvironmentV1({version:1,mode,platform:process.platform,directory,environment:compilerEnvironment});requireNativeStoragePathV1(store.root,child.temporary);await store.recheck();await mkdir(child.temporary,{recursive:true});requireNativeStoragePathV1(store.root,child.temporary);await store.recheck();await runOwnedCommand(process.execPath,[cli,"--mode",mode,"--config",config,"--configLoader","runner","--host",host,"--port",String(port),...(strictPort?["--strictPort"]:[]),"--clearScreen","false"],root,owner,compilerAdmissionBudgetV1(control),{env:scriptResourceProcessEnvironmentV1(control,{...child.environment,...viteRuntimeEnvironmentV1(runtimeChannels)}),signal:control.signal,output:authority.transport,onProgress:async()=>{await control.publish({resource:owner,mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}});await store.recheck();});
+  await withCompilerState({capacity:{kind:"whole-host"},...state,environment,control,storage:store.storage,storageControl:store.control,files:["deps/_metadata.json"]},async(directory,compilerEnvironment,control)=>{requireNativeStoragePathV1(store.root,directory);const child=viteCommandChildEnvironmentV1({version:1,mode,platform:process.platform,directory,environment:compilerEnvironment});requireNativeStoragePathV1(store.root,child.temporary);await store.recheck();await mkdir(child.temporary,{recursive:true});requireNativeStoragePathV1(store.root,child.temporary);await store.recheck();await runOwnedCommand(process.execPath,[cli,"--mode",mode,"--config",config,"--configLoader",readViteConfigLoaderV1(options.configLoader),"--host",host,"--port",String(port),...(strictPort?["--strictPort"]:[]),"--clearScreen","false"],root,owner,compilerAdmissionBudgetV1(control),{env:scriptResourceProcessEnvironmentV1(control,{...child.environment,...viteRuntimeEnvironmentV1(runtimeChannels)}),signal:control.signal,output:authority.transport,onProgress:async()=>{await control.publish({resource:owner,mode:"exclusive",elapsedMs:0});await control.yieldContinuation();}});await store.recheck();});
  })));
 }
 

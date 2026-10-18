@@ -3,7 +3,7 @@ import { expect, test } from "bun:test";
 
 test("Select All resolves document topology without a prior pick", async () => {
   const manifest = await Bun.file(new URL("../../../🛂️manifest/🦀️.rs", import.meta.url)).text();
-  const source = await Bun.file(new URL("../../../🦀️.rs", import.meta.url)).text();
+  const source = await Bun.file(new URL("../../../🖥️play-app/🦀️.rs", import.meta.url)).text();
   expect(manifest.includes("hierarchy: HierarchyProvider::Topology")).toBe(true);
   expect(source.includes("fn interaction_topology(")).toBe(true);
 });

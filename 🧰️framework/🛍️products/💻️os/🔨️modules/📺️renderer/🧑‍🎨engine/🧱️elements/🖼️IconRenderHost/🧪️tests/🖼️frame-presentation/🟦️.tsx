@@ -14,9 +14,6 @@ import fixture from "../🧫️fixtures/🖼️frame-presentation/🔣️.json";
 
 afterEach(cleanup);
 
-it("validates the neutral icon frame cases", () => {
-});
-
 it("measures actual IconRenderHost frame, content and footer in Chromium", async () => {
   await uiI18n.changeLanguage("en");
   const restore = configureHostPorts({ iconRender: { render: async () => ({ dataUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='256' height='128'/%3E" }) } });
@@ -116,7 +113,7 @@ it("measures actual IconRenderHost frame, content and footer in Chromium", async
 }, 90_000);
 
 it("renders the production World mask and scene clear without painting outside the Icon viewport", async () => {
-  const path = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs");
+  const path = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
   const shader = readFileSync(path, "utf8").match(/pub const WORLD3D_POSTPROCESS_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
   const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
   try {
@@ -194,7 +191,7 @@ it("renders the production World mask and scene clear without painting outside t
 
 
 it("renders the production UI shader with the same ellipse badge clipping as Chromium", async () => {
-  const path = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎨️shaders/🦀️.rs");
+  const path = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/🦀️.rs");
   const shader = readFileSync(path, "utf8").match(/pub const UI_SHADER: &str = r#"([\s\S]*?)"#;/)![1];
   const browser = await chromium.launch({ headless: true, args: ["--enable-unsafe-webgpu", "--use-angle=swiftshader"] });
   try {

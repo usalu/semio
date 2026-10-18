@@ -1,13 +1,13 @@
 {
   "rustSource": "🎯️targets/🧊️wgpu/🌐️browser-worker/🦀️.rs",
   "workerSource": "🎯️targets/🧊️wgpu/🎞️frame-worker/🟦️.ts",
-  "handleType": "BrowserRendererWorkerHandle",
+  "originalSource": "🎯️targets/🧊️wgpu/🎞️frame-worker/🎟️original/🟦️.ts",
   "widenedIntegerType": "u64",
   "javascriptCarrier": "bigint",
   "lowering": "BigInt",
   "exports": [
-    { "jsName": "enqueueBatch", "rustFn": "enqueue_batch", "widenedParameters": ["generation"] },
-    { "jsName": "tick", "rustFn": "tick", "widenedParameters": ["_sequence", "generation"] }
+    { "jsName": "enqueueBatch", "rustFn": "enqueue_batch", "widenedParameters": ["generation"], "declaration": { "source": "workerSource", "holder": "type BrowserRendererWorkerHandle" }, "call": { "source": "workerSource", "receiver": "runtime!", "loweredArguments": 1 } },
+    { "jsName": "tick", "rustFn": "tick", "widenedParameters": ["_sequence", "generation", "operation", "business_generation", "epoch", "fuel", "deadline_us"], "declaration": { "source": "originalSource", "holder": "interface OriginalBrowserFrameNative" }, "call": { "source": "workerSource", "receiver": "originalFrameSource!", "loweredArguments": 2 } }
   ],
   "firstBatch": { "sequence": 1, "generation": 2 },
   "faultCode": "frame-runtime-fault",

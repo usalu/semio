@@ -3,7 +3,9 @@
 import Ajv from "ajv";
 import { strict as assert } from "node:assert";
 import picomatch from "picomatch";
-import { mutationDomainOwnersProblems, mutationOwnerIdentity, loadCatalogTaxonomy } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { mutationDomainOwnersProblems } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/👥️mutation-owner-rules/🟦️.ts";
+import { mutationOwnerIdentity } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { sourceAuthorityDomainsFixtureUrl } from "@semio-tech/framework-replication/testing/fixtures";
 
 type LayoutCase = { readonly name: string; readonly accepted: boolean; readonly relativeSource?: string };

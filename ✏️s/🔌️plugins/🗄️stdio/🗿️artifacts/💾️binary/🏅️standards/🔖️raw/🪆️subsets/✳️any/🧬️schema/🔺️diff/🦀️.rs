@@ -236,9 +236,9 @@ pub fn absorb_splices(d1: &[ByteSplice], d2: &[ByteSplice]) -> Vec<ByteSplice> {
 /// zero-length no-op splice) -- single source of truth shared by `diff_codec_text_binary_
 /// roundtrip_law` below AND the new `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests in `⚙️engine/🦀️.rs`, per CLAUDE.md (no duplicated literal case lists).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<BinaryDiff> {
+pub fn demo_diff_cases() -> Vec<BinaryDiff> {
     vec![
         BinaryDiff::default(),
         BinaryDiff { splices: vec![ByteSplice { offset: 1, remove_len: 2, insert: vec![9, 9, 9] }] },

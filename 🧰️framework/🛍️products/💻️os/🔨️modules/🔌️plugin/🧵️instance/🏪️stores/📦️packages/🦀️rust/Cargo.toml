@@ -41,6 +41,7 @@ semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust"
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-composition-admission = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-native-decode = { path = "../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }

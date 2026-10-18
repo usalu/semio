@@ -3,8 +3,9 @@
 //! writes the turn between the two directions, quantised to 15 degrees while shift is held. Both show the plan outline of what moves as a ghost; openings follow their host by
 //! inference, so they are never part of the set.
 
-use super::plane::{angle, dist, flatten, point2, quantised, rotate_about, same, translate, P};
-use super::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::editor::bim::gestures::session::Modifiers;
+use crate::editor::bim::gestures::plane::{angle, dist, flatten, point2, quantised, rotate_about, same, translate, P};
+use crate::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;
@@ -216,6 +217,4 @@ impl Tool for Transform {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

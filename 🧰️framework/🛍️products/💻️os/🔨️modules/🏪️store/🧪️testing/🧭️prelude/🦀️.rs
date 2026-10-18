@@ -12,7 +12,8 @@ pub use semio_framework_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, A
 pub use semio_framework_os_vcs::{Alternative, apply_mutation, ArtifactHistoryLedger, ArtifactVcs, Author, Change, Checkpoint, Identified as _, Patchable as _, VcsError};
 pub use std::sync::{Arc, Mutex};
 pub use store_schema::{ArtifactBackboneRef, ArtifactCommand, ArtifactCursor, ArtifactCursorOwners, ArtifactEnvelope, ArtifactEnvelopeOwners, ArtifactProjectionCacheMode, ArtifactProjectionCause, ArtifactProjectionResult, HistoryLane, ReplayTurnBudget, StaleArtifactProjection, SupersedeInput};
-pub use semio_framework_os_store_child::{artifact_child_from_record, artifact_child_spec, artifact_child_to_record, ArtifactChild, ArtifactChildMaterializationError, ChildRef, owner_ref_from_record, owner_ref_spec, owner_ref_to_record};
+pub use semio_framework_os_store_child::{artifact_child_from_record, artifact_child_spec, artifact_child_to_record, ArtifactChild, ArtifactChildMaterializationError, ChildRef};
+pub use semio_framework_os_store_envelope::owner::{owner_ref_from_record, owner_ref_spec, owner_ref_to_record};
 pub use serialization::{ArtifactCodec, ArtifactNativeSnapshotIdentity, ArtifactPackFiles, ArtifactSqliteSnapshotCodec, ArtifactSqliteSnapshotHost, ArtifactStoreSnapshot, encode_document_pack_bytes, text_error_to_pack_error};
 pub use pack::snapshot::{ArtifactDsl, ArtifactNativeSnapshot as _, ArtifactPack};
 pub use semio_framework_os_store_one_item_batch::ephemeral_preparation::{ArtifactEphemeralPreparationTask, ArtifactEphemeralPreparationTaskStep, ArtifactEphemeralTaskPreparationFactory};

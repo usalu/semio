@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetAreaScheme`: an absolute `SetAreaScheme` restoring the base value of exactly the fields the forward really changes, none when the scheme is absent or nothing changes.
 
-use super::SetAreaScheme;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetAreaScheme, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetAreaScheme, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme>,
+{
     let Some(record) = base.area_schemes.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetAreaScheme, base: &ModelSnapshot) -> Vec<ModelMutati
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetAreaScheme(SetAreaScheme::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetAreaScheme::from_patch(payload.id.clone(), restore))]
 }

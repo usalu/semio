@@ -2,8 +2,8 @@
 //! exist, a storey constraint must name a storey of the column's building, and the resulting authored top must still lie above
 //! the base. The resolved height is inferred, never written.
 
-use super::SetColumn;
-use super::super::placement::rise;
+use crate::standards::v1::subsets::any::schema::mutations::set_column::SetColumn;
+use crate::standards::v1::subsets::any::schema::mutations::placement::rise;
 use crate::standards::v1::subsets::any::schema::{diff::{patches::ColumnPatch, Entry, ModelDiff}, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationOutcome, OutcomeCode};
 

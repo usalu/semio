@@ -30,7 +30,9 @@ serde_json = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 protocol = { path = "../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-dispatch-macros = { workspace = true }
+semio-framework-server = { workspace = true }
 
 [dev-dependencies]
 semio-hub-directory = { workspace = true, features = ["testkit"] }
 tokio = { version = "1", features = ["full", "test-util"] }
+semio-framework-server = { workspace = true, features = ["conformance"] }

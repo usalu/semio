@@ -25,19 +25,19 @@ use std::fmt::Write as _;
 /// `store::ByteReader` rather than reinventing varint encode/decode. `pub(crate)` so the mutations
 /// sibling can reuse these too.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u8>) {
+pub fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u8>) {
     for value in [
         &preamble.producer,
         &preamble.module,
@@ -61,7 +61,7 @@ pub(crate) fn enc_edm_preamble_bin(preamble: &Ifc2x3EdmPreamble, out: &mut Vec<u
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_edm_preamble_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3EdmPreamble, String> {
+pub fn dec_edm_preamble_bin(reader: &mut store::ByteReader<'_>) -> Result<Ifc2x3EdmPreamble, String> {
     Ok(Ifc2x3EdmPreamble {
         producer: read_str_bin(reader)?,
         module: read_str_bin(reader)?,
@@ -190,14 +190,14 @@ pub(crate) fn dec_part21_value_list_bin(reader: &mut store::ByteReader<'_>) -> R
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_part21_header_bin(h: &Part21Header, out: &mut Vec<u8>) {
+pub fn enc_part21_header_bin(h: &Part21Header, out: &mut Vec<u8>) {
     enc_part21_value_list_bin(&h.file_description, out);
     enc_part21_value_list_bin(&h.file_name, out);
     enc_part21_value_list_bin(&h.file_schema, out);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Header, String> {
+pub fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Header, String> {
     let file_description = dec_part21_value_list_bin(reader)?;
     let file_name = dec_part21_value_list_bin(reader)?;
     let file_schema = dec_part21_value_list_bin(reader)?;
@@ -205,7 +205,7 @@ pub(crate) fn dec_part21_header_bin(reader: &mut store::ByteReader<'_>) -> Resul
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) {
+pub fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, inst.id);
     store::pack_rt::write_varint_u64(out, inst.entities.len() as u64);
     for (name, args) in &inst.entities {
@@ -215,7 +215,7 @@ pub(crate) fn enc_part21_instance_bin(inst: &Part21Instance, out: &mut Vec<u8>) 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Instance, String> {
+pub fn dec_part21_instance_bin(reader: &mut store::ByteReader<'_>) -> Result<Part21Instance, String> {
     let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut entities = Vec::with_capacity(count as usize);

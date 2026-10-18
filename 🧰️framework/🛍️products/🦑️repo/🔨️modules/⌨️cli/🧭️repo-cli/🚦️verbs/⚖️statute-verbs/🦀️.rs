@@ -3,7 +3,8 @@
 use semio_framework_repo_cli_command_framework::{CliError, Invocation};
 use semio_framework_repo_cli_event_stream::{graphql_events, Event, Format, EXIT_OK, KIND_ERROR, KIND_RESULT, KIND_START};
 use semio_framework_repo_cli_tree_source_and_search::{text_tree_lines, StreamOptions};
-use semio_framework_repo_model::{entity, TreeNode};
+use semio_framework_repo_model::{TreeNode};
+use semio_framework_repo_model_entity::entity;
 use serde_json::{json, Map, Value as Json};
 
 pub fn analyze(invocation: &mut Invocation<'_>) -> Result<(), CliError> {

@@ -170,6 +170,11 @@
         "anthropic.claude-code"
       ],
       "settings": {
+        "git.enabled": false,
+        "git.autorefresh": false,
+        "git.autofetch": false,
+        "git.decorations.enabled": false,
+        "git.timeline.showUncommitted": false,
         "extensions.showRecommendationsOnlyOnDemand": false,
         "playwright.reuseBrowser": false,
         "playwright.showTrace": true,

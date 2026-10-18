@@ -88,12 +88,17 @@
               "TurnScheduler"
             ],
             "types": [
+              "Lane",
               "QueuedTurn",
               "TurnBudgetProvider",
               "TurnSchedulerOptions"
             ],
             "schema": null,
-            "schemaExport": null
+            "schemaExport": null,
+            "generated": "🤖️generated/🎭️actor/🟦️.ts",
+            "generatedTypes": [
+              "Lane"
+            ]
           },
           {
             "subpath": "./retained-turn",

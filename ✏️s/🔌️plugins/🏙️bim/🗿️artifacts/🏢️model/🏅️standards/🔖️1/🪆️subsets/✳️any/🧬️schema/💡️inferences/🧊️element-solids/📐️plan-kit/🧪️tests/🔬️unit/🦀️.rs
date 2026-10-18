@@ -1,11 +1,24 @@
+use crate::standards::v1::subsets::any::schema::snapshot::Layer;
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Profile, StairFlight, Vertex as PlanVertex};
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::Vertex;
+#[allow(unused_imports)]
+use semio_framework_geometry::Vec2;
 use crate::standards::v1::subsets::any::io::text::inferences::element_solids::planar_projection_json;
-use super::testing::{case, close};
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{case, close};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff}, snapshot::ModelSnapshot};
+use semio_framework_test_fixtures::fixture_text;
 
-const COLUMNS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json");
+static COLUMNS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json"));
 
 #[test]
 fn a_stack_lists_the_depths_of_every_layer_below_the_top() {
@@ -28,18 +41,18 @@ fn layer_thicknesses_clamp_negative_values_to_zero() {
     assert_eq!(layer_thicknesses(&[layer(0.1), layer(-0.3)]), vec![0.1, 0.0]);
 }
 
-const CASES: [&str; 6] = [
-    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json"),
-    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/➖️beams-profiles/🔣️.json"),
-    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/⬜️slabs-holes-slope/🔣️.json"),
-    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json"),
-    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json"),
-    include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json"),
-];
+static CASES: std::sync::LazyLock<[&str; 6]> = std::sync::LazyLock::new(|| [
+    fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏛️columns-profiles/🔣️.json"),
+    fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/➖️beams-profiles/🔣️.json"),
+    fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/⬜️slabs-holes-slope/🔣️.json"),
+    fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json"),
+    fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json"),
+    fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json"),
+]);
 
 #[semio_framework_async_macros::async_test]
 async fn the_planar_projection_is_the_table_the_third_party_case_compares() {
-    for text in CASES {
+    for text in (*CASES) {
         let case = case(text);
         let solids = compute_element_solids(&case.snapshot);
         let projection: serde_json::Value = serde_json::from_str(&planar_projection_json(&case.snapshot, &solids)).expect("the projection is JSON");
@@ -60,7 +73,7 @@ async fn the_planar_projection_is_the_table_the_third_party_case_compares() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_diff_outside_the_reads_serves_the_stored_solids_and_a_storey_edit_re_infers_them() {
-    let snapshot = case(COLUMNS).snapshot;
+    let snapshot = case((*COLUMNS)).snapshot;
     let mut session = ModelInferenceSession::new();
     let first = session.update(&snapshot, &ModelDiff::default()).element_solids.clone();
     let colour = ModelDiff::materials("m-steel", Entry::Patched(MaterialPatch { density: Some(7000.0), ..Default::default() }));

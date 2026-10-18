@@ -150,6 +150,4 @@ pub fn dependency(snapshot: &ModelSnapshot, beam: &Beam) -> DslValue {
 }
 //#endregion 🔖️Solid
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

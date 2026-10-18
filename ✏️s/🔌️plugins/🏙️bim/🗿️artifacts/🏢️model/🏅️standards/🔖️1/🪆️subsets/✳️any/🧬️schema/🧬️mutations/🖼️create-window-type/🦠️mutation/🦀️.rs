@@ -1,6 +1,6 @@
 //! 🖼️ `create-window-type` payload. Brings a new window type into the library; it needs a free id, an existing material and valid dimensions.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, WindowType}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, WindowType}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateWindowType {
     pub window_type: WindowType,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateWindowType {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateWindowType
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateWindowType> + From<crate::standards::v1::subsets::any::schema::mutations::delete_window_type::DeleteWindowType>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "window-type", kind: "create-window-type", record: "CreateWindowType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_window_type::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_window_type::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create window type \"{}\"", self.window_type.name), &format!("Fenstertyp \"{}\" anlegen", self.window_type.name))

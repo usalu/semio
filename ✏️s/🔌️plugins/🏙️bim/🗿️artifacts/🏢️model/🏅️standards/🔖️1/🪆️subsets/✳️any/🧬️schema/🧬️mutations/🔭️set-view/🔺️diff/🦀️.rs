@@ -2,7 +2,7 @@
 //! owns exactly its fields, so a plane on a plan, a camera on a section or a storey on an elevation is refused, a new storey must exist in the building of the view, the name
 //! stays unique and the numbers stay positive and finite. A patch that restates the current values is a `mutation.no-op`.
 
-use super::SetView;
+use crate::standards::v1::subsets::any::schema::mutations::set_view::SetView;
 use crate::standards::v1::subsets::any::schema::{snapshot::{view_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

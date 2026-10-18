@@ -11,7 +11,7 @@ import { existsSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { isAbsolute, join } from "node:path";
 import type { DirectoryCommand } from "@semio-tech/framework/directory/schema";
-import { runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { readHubDirectorySource } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
@@ -276,7 +276,7 @@ async function proveDirectorySpaceJourneyV1(repoRoot: string): Promise<Readonly<
   if (bindingProbe === aliasProbe || !/^[0-9a-f]{64}$/.test(bindingProbe)) throw new Error("space journey administration binding is not length-prefix aliasing-safe");
   checks += 3;
 
-  const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
+  const client = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), { crates: false });
   const hello = spaceJourneySocketHelloFrame(fixture.bindings.socketHelloSchema);
   if (!client.includes(`let schema = b"${fixture.bindings.socketHelloSchema}";`) || !client.includes("bytes.extend_from_slice(&[0, 7, 1, 1, schema.len() as u8]);")) {
     throw new Error("space journey socket hello frame is not the shared client's own tag-7 encoding");

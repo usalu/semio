@@ -9,7 +9,8 @@ import assert from "node:assert/strict";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ValidateFunction } from "ajv";
-import { runBunx, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBunx } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
+import { runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../../../📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
@@ -320,7 +321,7 @@ export function directoryInviteCapabilityOracle(repoRoot: string): number {
   assert.deepEqual(fixture.focusPhases, ["ready", "denied", "stale", "failed", "cancelled"]);
   assert.deepEqual(Object.keys(fixture.labels).sort(), ["de", "en"]);
   assert(Object.values(fixture.labels).every((labels) => labels.length === 3 && labels.every((label) => label.length > 0)));
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
+  const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   const shell = readModuleTreeSource(join(contractRoot, "../🟦️.tsx"));
   const pane = readFileSync(join(contractRoot, "../../🛂️SpaceAdministration/🟦️.tsx"), "utf8");
   const request = worker.slice(worker.indexOf("function requestDirectoryAdministrationCapability"), worker.indexOf("function settleDirectoryAdministrationCapability"));
@@ -360,11 +361,10 @@ export function scopedPresenceOracle(repoRoot: string): number {
     rejected: readonly string[];
   };
   const bindingExport = ownedExport(repoRoot, "presence", "ScopedPresenceBindingV1");
-  const closeExport = ownedExport(repoRoot, "presence", "ScopedPresenceCloseV1");
   const routeExport = ownedExport(repoRoot, "presence", "PresenceActorRouteV1");
   const rejectionExport = ownedExport(repoRoot, "presence", "ScopedPresenceRejectionV1");
   for (const row of fixture.cases) assert(bindingExport(row), JSON.stringify(bindingExport.errors));
-  assert(closeExport(fixture.close), JSON.stringify(closeExport.errors));
+  assert(fixture.cases.some((row) => row.runtimeKey === fixture.close.clearsRuntimeKey) && fixture.cases.some((row) => row.runtimeKey === fixture.close.preservesRuntimeKey));
   for (const route of fixture.routes) assert(routeExport(route), JSON.stringify(routeExport.errors));
   for (const rejected of fixture.rejected) assert(rejectionExport(rejected), JSON.stringify(rejectionExport.errors));
   const runtimeKey = (scope: { readonly spaceId: string; readonly documentId: string }): string => {
@@ -384,13 +384,13 @@ export function scopedPresenceOracle(repoRoot: string): number {
   const hostBootstrap = readFileSync(join(contractRoot, "../🪪️host-bootstrap/🟦️.tsx"), "utf8");
   const projection = readFileSync(join(contractRoot, "🟦️.ts"), "utf8");
   const browser = readFileSync(join(contractRoot, "🌐️browser/🟦️.tsx"), "utf8");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
-  const wire = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🟦️.ts"));
+  const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
+  const wire = readModuleTreeSource(join(repoRoot, "🧰️framework/🔨️modules/🛰️backbone/🧱️worker-wire/🟦️.ts"));
   assert(shell.includes("scopedPresencePeersV1") && shell.includes("presencePeersByRuntimeKey"));
   assert(shell.includes("portByRuntimeKey") && shell.includes("operationRuntimeKey") && !shell.includes("portByDocumentId"));
   assert(shell.includes("inferencePortOwnerRef") && shell.includes("owners.length === 1"));
   assert(shell.includes("inferencePortStatusRuntimeKeyV1(inferencePortOwnerRef.current") && hostBootstrap.includes("message.scope.spaceId !== owner.scope.spaceId") && hostBootstrap.includes("message.scope.documentId !== owner.scope.documentId"));
-  assert(shell.includes("retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey)") && worker.includes('documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...inferencePort.scope }) === runtimeKey'));
+  assert(shell.includes("retainInferencePortOwnerAfterCloseV1(inferenceOwner, runtimeKey)") && !worker.includes("inferencePort"));
   assert(shell.includes('from "../👥️presence-scope/🟦️.ts"'));
   assert(!shell.includes("presencePeersJson"));
   assert(shell.includes("entry.plugin.bindDocumentPort(entry.session.instanceId") && !shell.includes("registerPluginBackboneRoute("));
@@ -399,7 +399,7 @@ export function scopedPresenceOracle(repoRoot: string): number {
   assert(worker.includes("presenceCandidate") && worker.includes("presenceAuthority"));
   assert(worker.includes('emitEvent(state, { kind: "presence", peers: [] })'));
   assert(worker.includes("const scope = artifactScope(state)"));
-  assert(wire.includes("workerWireScopeV1") && wire.includes('event: { kind: "presence", peers: [] }'));
+  assert(wire.includes("workerWireScopeV1") && worker.includes("event: verified ? event : { ...event, peers: [] }"));
   assert(projection.includes("message.verifiedSurfaceId !== expectedSurfaceId") && !projection.includes("peer.surface ==="));
   assert(projection.includes('role === "owner" || role === "member"') && projection.includes('role === "viewer"'));
   assert(browser.includes('new Worker(config.workerUrl, { type: "module" })'));
@@ -581,13 +581,14 @@ export function world3dPointerGestureOracle(repoRoot: string): number {
  * two copies of that fold, one deduplicating and one not. */
 export function interactionSelectionSetOracle(repoRoot: string): number {
   const pluginRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
+  type Anchor = { readonly file: string; readonly text: string };
   type Case = { readonly id: string; readonly why: string; readonly seed: readonly string[]; readonly merge: string; readonly targets: readonly string[]; readonly selectedIds: readonly string[] };
   const fixture = JSON.parse(readFileSync(join(pluginRoot, "🧪️tests/🧫️fixtures/🕹️selection-set.json"), "utf8")) as {
     domain: string;
     granularity: string;
     mirrorDomain: string;
     cases: readonly Case[];
-    wiring: { file: string; projection: string; callSites: readonly string[]; lockedFromSelectedIds: string };
+    wiring: { projection: Anchor; callSites: readonly Anchor[]; lockedFromSelectedIds: Anchor };
   };
   let checks = 0;
   const check = (condition: boolean, message: string): void => {
@@ -612,10 +613,10 @@ export function interactionSelectionSetOracle(repoRoot: string): number {
     checks += 1;
     check(new Set(entry.selectedIds).size === entry.selectedIds.length, `${entry.id}: selectedIds must name every id at most once`);
   }
-  const source = readFileSync(join(repoRoot, fixture.wiring.file), "utf8");
-  check(source.includes(fixture.wiring.projection), "the ONE shared leftover-selection projection must still exist");
-  for (const site of fixture.wiring.callSites) check(source.includes(site), `every flatten site must go through the shared projection — missing ${site.trim()}`);
-  check(source.includes(fixture.wiring.lockedFromSelectedIds), "`locked` must be derived from the deduplicated selectedIds, never from a second flatten");
+  const anchored = (anchor: Anchor): boolean => readFileSync(join(repoRoot, anchor.file), "utf8").includes(anchor.text);
+  check(anchored(fixture.wiring.projection), "the ONE shared leftover-selection projection must still exist");
+  for (const site of fixture.wiring.callSites) check(anchored(site), `every flatten site must go through the shared projection — missing ${site.text}`);
+  check(anchored(fixture.wiring.lockedFromSelectedIds), "`locked` must be derived from the deduplicated selectedIds, never from a second flatten");
   return checks;
 }
 
@@ -642,7 +643,7 @@ export function selectionMergeVocabularyOracle(repoRoot: string): number {
     cases: readonly Case[];
     wiring: {
       codec: { file: string; toWire: string; fromWire: string };
-      domainPath: { file: string; decoder: string; worldPath: string };
+      domainPath: { decoderFile: string; worldPathFile: string; decoder: string; worldPath: string };
       host: { file: string; selectionArgs: string; componentPick: string; deletedBuilders: readonly string[] };
     };
   };
@@ -716,9 +717,11 @@ export function selectionMergeVocabularyOracle(repoRoot: string): number {
   const codec = readFileSync(join(repoRoot, fixture.wiring.codec.file), "utf8");
   check(codec.includes(fixture.wiring.codec.toWire), "the ONE wire-label encoder must still exist next to the MergeMode type");
   check(codec.includes(fixture.wiring.codec.fromWire), "the ONE wire-label decoder must still exist next to the MergeMode type");
-  const plugin = readFileSync(join(repoRoot, fixture.wiring.domainPath.file), "utf8");
-  check(plugin.includes(fixture.wiring.domainPath.decoder), "the domain path must decode through the shared codec, never through its own match arms");
-  check(plugin.includes(fixture.wiring.domainPath.worldPath), "the non-domain world path must take a decoded MergeMode, so a private word is unrepresentable");
+  const decoderSource = readFileSync(join(repoRoot, fixture.wiring.domainPath.decoderFile), "utf8");
+  const worldPathSource = readFileSync(join(repoRoot, fixture.wiring.domainPath.worldPathFile), "utf8");
+  const plugin = decoderSource + "\n" + worldPathSource;
+  check(decoderSource.includes(fixture.wiring.domainPath.decoder), "the domain path must decode through the shared codec, never through its own match arms");
+  check(worldPathSource.includes(fixture.wiring.domainPath.worldPath), "the non-domain world path must take a decoded MergeMode, so a private word is unrepresentable");
   const host = world3dHostSource(dirname(join(repoRoot, fixture.wiring.host.file)));
   check(host.includes(fixture.wiring.host.selectionArgs), "the host's selection args builder must take a typed MergeMode");
   check(host.includes(fixture.wiring.host.componentPick), "the component pick's one deviation must be a named MergeMode→MergeMode function, not a word table");

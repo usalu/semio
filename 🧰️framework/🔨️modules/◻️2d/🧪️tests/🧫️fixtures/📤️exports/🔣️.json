@@ -13,11 +13,6 @@
   },
   "modules": [
     {
-      "name": "compute",
-      "crate": "semio-framework-2d-compute",
-      "path": "🧮️compute"
-    },
-    {
       "name": "retirement",
       "crate": "semio-framework-2d-retire",
       "path": "🧹️retire"

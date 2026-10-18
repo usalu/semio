@@ -1,7 +1,7 @@
 //! 📖️ Typed reading of an IFC 2x3 Part-21 graph: id lookup, the relationship index (containment, aggregation, voids, fillings, typing, materials, property definitions,
 //! classifications), placement chains, curves, profiles and the swept body of a product.
 
-use super::frames::{bulge_of, Rigid};
+use crate::standards::v1::subsets::any::io::import::ifc::frames::{bulge_of, Rigid};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
 use std::collections::BTreeMap;
 
@@ -311,6 +311,4 @@ impl<'a> Doc<'a> {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

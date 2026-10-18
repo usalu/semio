@@ -9,16 +9,11 @@ use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 
-#[path = "🧱️codec/🦀️.rs"]
-pub mod codec;
-#[path = "🧬️document/🦀️.rs"]
-pub mod document;
-#[path = "🎨️materials/🦀️.rs"]
-pub mod materials;
-#[path = "🌳️scene/🦀️.rs"]
-pub mod scene;
-#[path = "📏️projection/🦀️.rs"]
-pub mod projection;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::codec;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gltf::document;
+pub use semio_s_artifact_bim_model_tests_5::standards::v1::subsets::any::io::export::gltf::materials;
+pub use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::export::gltf::scene;
+pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::projection;
 
 /// 🪪️ The glTF 2.0 dialect this leaf writes.
 pub const GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId::ANY };
@@ -56,9 +51,6 @@ impl Serializer<ModelSnapshot> for ModelIntoGlb {
 //#endregion 🔖️Serializer
 
 #[cfg(any(test, feature = "testkit"))]
-#[path = "🧪️tests/🧰️testkit/🦀️.rs"]
-pub mod testkit;
+pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::gltf::testkit;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

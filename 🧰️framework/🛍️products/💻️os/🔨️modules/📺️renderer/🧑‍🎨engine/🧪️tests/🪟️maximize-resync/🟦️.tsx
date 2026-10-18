@@ -48,9 +48,6 @@ for (const row of fixture.ingressCases) it(`React Mode reconciles ${row.id}`, ()
   expect([...container.querySelectorAll('[data-stack-path]')].map(stack => stack.getAttribute("data-stack-path"))).toEqual(row.stackPaths);
 });
 
-it("validates the shared maximize resynchronization contract", () => {
-});
-
 for (const row of fixture.cases) it(`React Mode replays ${row.id}`, () => {
   const extraId = "extraId" in row ? row.extraId : undefined;
   const templateId = "templateId" in row ? row.templateId : undefined;

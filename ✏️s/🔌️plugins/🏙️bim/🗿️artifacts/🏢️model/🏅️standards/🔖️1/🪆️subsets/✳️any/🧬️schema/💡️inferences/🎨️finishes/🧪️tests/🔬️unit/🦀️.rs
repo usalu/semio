@@ -1,5 +1,5 @@
-use super::{FinishSurface, area_of, finish_rows, on_boundary, rings_of, table_json};
-use crate::standards::v1::subsets::any::schema::quantities::ElementQuantity;
+use crate::standards::v1::subsets::any::schema::inferences::finishes::{FinishSurface, area_of, finish_rows, on_boundary, rings_of, table_json};
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Vertex};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
@@ -7,11 +7,12 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{CeilingPatch, SpacePatch}, Entry, ModelDiff};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const ROOMS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏡️rooms/📸️snapshot/🔣️.json");
-const ROOMS_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏡️rooms/💡️inference/🎨️finishes/🔣️.json");
-const ONE_ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏠️one-room/📸️snapshot/🔣️.json");
-const ONE_ROOM_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏠️one-room/💡️inference/🎨️finishes/🔣️.json");
+static ROOMS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏡️rooms/📸️snapshot/🔣️.json"));
+static ROOMS_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏡️rooms/💡️inference/🎨️finishes/🔣️.json"));
+static ONE_ROOM: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏠️one-room/📸️snapshot/🔣️.json"));
+static ONE_ROOM_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🎨️finishes/🏠️one-room/💡️inference/🎨️finishes/🔣️.json"));
 
 fn load(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the fixture decodes")
@@ -48,7 +49,7 @@ fn disagreements(expected: &serde_json::Value, actual: &serde_json::Value, path:
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_tables() {
-    for (snapshot, table) in [(ROOMS, ROOMS_TABLE), (ONE_ROOM, ONE_ROOM_TABLE)] {
+    for (snapshot, table) in [((*ROOMS), (*ROOMS_TABLE)), ((*ONE_ROOM), (*ONE_ROOM_TABLE))] {
         let produced: serde_json::Value = serde_json::from_str(&table_json(&infer(&load(snapshot)).quantities)).expect("JSON table");
         let expected: serde_json::Value = serde_json::from_str(table).expect("JSON table");
         let problems = disagreements(&expected, &produced, "");
@@ -132,7 +133,7 @@ fn facing_the_room(snapshot: &ModelSnapshot, inferred: &ModelInference, space: &
 
 #[semio_framework_async_macros::async_test]
 async fn the_wall_finish_of_a_closed_room_is_the_room_facing_area_of_its_wall_solids() {
-    let snapshot = load(ONE_ROOM);
+    let snapshot = load((*ONE_ROOM));
     let inferred = infer(&snapshot);
     let finish = area(&inferred, "sp-room", FinishSurface::Wall);
     let solids = facing_the_room(&snapshot, &inferred, "sp-room");
@@ -142,7 +143,7 @@ async fn the_wall_finish_of_a_closed_room_is_the_room_facing_area_of_its_wall_so
 
 #[semio_framework_async_macros::async_test]
 async fn a_door_between_two_rooms_is_subtracted_from_both() {
-    let mut snapshot = load(ROOMS);
+    let mut snapshot = load((*ROOMS));
     let with = infer(&snapshot);
     snapshot.openings.remove("o-door-part");
     let without = infer(&snapshot);
@@ -155,7 +156,7 @@ async fn a_door_between_two_rooms_is_subtracted_from_both() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_island_counts_both_of_its_faces_in_the_perimeter_and_the_openings_on_it() {
-    let snapshot = load(ROOMS);
+    let snapshot = load((*ROOMS));
     let inferred = infer(&snapshot);
     let room = &inferred.spaces["sp-east"];
     assert_eq!(room.holes.len(), 1, "the island wall is a hole of the room");
@@ -165,7 +166,7 @@ async fn an_island_counts_both_of_its_faces_in_the_perimeter_and_the_openings_on
 
 #[semio_framework_async_macros::async_test]
 async fn an_unfinished_surface_keeps_its_area_with_an_empty_material() {
-    let inferred = infer(&load(ROOMS));
+    let inferred = infer(&load((*ROOMS)));
     let rows = &quantity(&inferred, "sp-east").finishes;
     assert_eq!(rows.iter().map(|row| (row.surface, row.material.as_str())).collect::<Vec<_>>(), vec![(FinishSurface::Floor, "m-wood"), (FinishSurface::Wall, "m-paint"), (FinishSurface::Ceiling, "")]);
     assert!(rows[2].area > 0.0);
@@ -176,15 +177,15 @@ async fn an_unfinished_surface_keeps_its_area_with_an_empty_material() {
 
 #[semio_framework_async_macros::async_test]
 async fn an_unresolved_room_has_no_finish_rows() {
-    let inferred = infer(&load(ROOMS));
+    let inferred = infer(&load((*ROOMS)));
     assert!(!inferred.quantities.elements.contains_key("sp-out"), "the open space has no take-off row");
-    let snapshot = load(ROOMS);
+    let snapshot = load((*ROOMS));
     assert!(finish_rows(&snapshot, &snapshot.spaces["sp-out"], &inferred.spaces["sp-out"], &[]).is_empty());
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_opening_the_wall_solid_does_not_cut_is_not_subtracted() {
-    let mut snapshot = load(ONE_ROOM);
+    let mut snapshot = load((*ONE_ROOM));
     let before = area(&infer(&snapshot), "sp-room", FinishSurface::Wall);
     snapshot.openings.get_mut("o-win-south").expect("the window").offset = 0.5;
     let inferred = infer(&snapshot);
@@ -195,7 +196,7 @@ async fn an_opening_the_wall_solid_does_not_cut_is_not_subtracted() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_ceiling_is_the_soffit_of_the_slab_that_closes_the_room() {
-    let mut snapshot = load(ROOMS);
+    let mut snapshot = load((*ROOMS));
     snapshot.ceilings.clear();
     let inferred = infer(&snapshot);
     let net = quantity(&inferred, "sp-east").net_area;
@@ -209,7 +210,7 @@ async fn the_ceiling_is_the_soffit_of_the_slab_that_closes_the_room() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_ceiling_under_a_hung_ceiling_is_the_covered_floor_over_the_slope_of_the_ceiling_plus_the_rest_under_the_soffit() {
-    let snapshot = load(ROOMS);
+    let snapshot = load((*ROOMS));
     let inferred = infer(&snapshot);
     assert_eq!(inferred.spaces["sp-west"].ceiling, "ce-living");
     let (covered, tilt) = (2.85 * 5.7, 0.05f64.cos());
@@ -224,7 +225,7 @@ async fn the_ceiling_under_a_hung_ceiling_is_the_covered_floor_over_the_slope_of
 
 #[semio_framework_async_macros::async_test]
 async fn without_authored_ceilings_the_finish_falls_back_to_the_soffit() {
-    let mut snapshot = load(ROOMS);
+    let mut snapshot = load((*ROOMS));
     snapshot.ceilings.clear();
     let inferred = infer(&snapshot);
     assert_eq!(inferred.spaces["sp-west"].ceiling, "");
@@ -234,7 +235,7 @@ async fn without_authored_ceilings_the_finish_falls_back_to_the_soffit() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_ceiling_that_does_not_reach_the_room_leaves_the_soffit_ceiling() {
-    let mut snapshot = load(ROOMS);
+    let mut snapshot = load((*ROOMS));
     let kitchen = snapshot.ceilings.get_mut("ce-kitchen").expect("the kitchen ceiling");
     let corner = |x: f64, y: f64| Vertex { point: crate::standards::v1::subsets::any::schema::snapshot::Point2 { x, y }, bulge: 0.0 };
     kitchen.boundary = vec![corner(4.2, 0.2), corner(5.0, 0.2), corner(5.0, 0.8), corner(4.2, 0.8)];
@@ -246,7 +247,7 @@ async fn a_ceiling_that_does_not_reach_the_room_leaves_the_soffit_ceiling() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_ceiling_edit_re_infers_only_the_take_off_of_the_spaces_it_hangs_over() {
-    let snapshot = load(ROOMS);
+    let snapshot = load((*ROOMS));
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let diff = ModelDiff::ceilings("ce-kitchen", Entry::Patched(CeilingPatch { holes: Some(Vec::new()), ..Default::default() }));
@@ -262,7 +263,7 @@ async fn a_ceiling_edit_re_infers_only_the_take_off_of_the_spaces_it_hangs_over(
 
 #[semio_framework_async_macros::async_test]
 async fn a_finish_edit_re_infers_only_the_take_off_of_its_space() {
-    let snapshot = load(ROOMS);
+    let snapshot = load((*ROOMS));
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let diff = ModelDiff::spaces("sp-west", Entry::Patched(SpacePatch { wall_finish: Some(Assigned::new(Some("m-wood".into()))), ..Default::default() }));
@@ -279,7 +280,7 @@ async fn a_finish_edit_re_infers_only_the_take_off_of_its_space() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_finishes_are_deterministic_and_empty_by_default() {
-    let snapshot = load(ROOMS);
+    let snapshot = load((*ROOMS));
     assert_eq!(infer(&snapshot).quantities, infer(&snapshot).quantities);
     assert_eq!(table_json(&infer(&ModelSnapshot::default()).quantities), "{}");
 }

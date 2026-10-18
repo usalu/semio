@@ -136,13 +136,13 @@ pub fn dec_semio_value_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioVa
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_semio_value_node_bin(node: &SemioValueNode, out: &mut Vec<u8>) {
+pub fn enc_semio_value_node_bin(node: &SemioValueNode, out: &mut Vec<u8>) {
     write_str_lp(out, &node.id.value);
     enc_semio_value_bin(&node.value, out);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_semio_value_node_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueNode, String> {
+pub fn dec_semio_value_node_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValueNode, String> {
     let id = ValueId::new(read_str_lp(reader)?);
     let value = dec_semio_value_bin(reader)?;
     Ok(SemioValueNode { id, value })

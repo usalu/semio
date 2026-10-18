@@ -1,8 +1,8 @@
-use crate::tui::ansi::{setup_sequence, teardown_sequence, AnsiParser, ClickCounter, CursorEmitter};
-use crate::tui::engine::Tui;
-use crate::tui::event::Event;
-use crate::tui::geometry::Size;
-use crate::tui::theme::Theme;
+use semio_framework_ui_tui_terminal::ansi::{setup_sequence, teardown_sequence, AnsiParser, ClickCounter, CursorEmitter};
+use semio_framework_ui_tui_engine::Tui;
+use semio_framework_ui_tui_core::event::Event;
+use semio_framework_ui_tui_core::geometry::Size;
+use semio_framework_ui_tui_core::theme::Theme;
 use ui_styling::appearance::AppearanceName;
 
 /// 🏃️ A pure bytes-in/string-out host: feed terminal input, get an ANSI patch back.
@@ -53,7 +53,7 @@ impl WasmHost {
 }
 
 /// 🌉️ `target_arch = "wasm32"` is true for `wasm32-wasip2` too; this is a browser-only xterm.js bridge around the pure `WasmHost` renderer, so it excludes the WASI component target.
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "tui-bindgen"))]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "bindgen"))]
 mod bindgen_host {
     use super::WasmHost;
     use wasm_bindgen::prelude::*;
@@ -94,5 +94,5 @@ mod bindgen_host {
         }
     }
 }
-#[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "tui-bindgen"))]
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2"), feature = "bindgen"))]
 pub use bindgen_host::TuiHost;

@@ -10,7 +10,7 @@ extern crate semio_framework_value_derive as value_derive;
 
 //#region 🪢️Mounts
 #[path = "../🔣️json/🦀️.rs"]
-pub(crate) mod json_native;
+pub mod json_native;
 #[path = "🧵️serializers/🗿️artifacts/🧩️puzzle/🦀️.rs"]
 pub mod puzzle_catalog;
 #[path = "."]

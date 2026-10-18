@@ -45,23 +45,24 @@ pub fn bytes_in(manifest_dir: &str, relative: impl AsRef<Path>) -> &'static [u8]
     }
 }
 
-/// 🏠️ Nearest ancestor of `manifest_dir` that holds `nx.json`, the repository root.
+/// 🏠️ Nearest ancestor of `manifest_dir` that is the declared package workspace with build authority, the repository root.
 ///
 /// # Panics
-/// When no ancestor holds `nx.json`.
+/// When no ancestor is a workspace root, or a `package.json` beside a build marker is malformed.
 #[must_use]
 #[track_caller]
 pub fn repo_root_in(manifest_dir: &str) -> PathBuf {
-    match Path::new(manifest_dir).ancestors().find(|candidate| candidate.join("nx.json").is_file()) {
-        Some(root) => root.to_path_buf(),
-        None => panic!("repository root: no ancestor of CARGO_MANIFEST_DIR '{manifest_dir}' holds nx.json"),
+    match semio_framework_process_routing_workspace::find_workspace_root(Path::new(manifest_dir)) {
+        Ok(Some(root)) => root,
+        Ok(None) => panic!("repository root: no ancestor of CARGO_MANIFEST_DIR '{manifest_dir}' is a workspace root"),
+        Err(error) => panic!("repository root: {error} (below CARGO_MANIFEST_DIR '{manifest_dir}')"),
     }
 }
 
 /// 📚️ Bytes of `relative` below the repository root above `manifest_dir`, read once per process and shared by every later call.
 ///
 /// # Panics
-/// When no ancestor holds `nx.json`, or the file is missing or unreadable.
+/// When no ancestor is a workspace root, or the file is missing or unreadable.
 #[must_use]
 #[track_caller]
 pub fn repo_bytes_in(manifest_dir: &str, relative: impl AsRef<Path>) -> &'static [u8] {
@@ -83,7 +84,7 @@ pub fn repo_bytes_in(manifest_dir: &str, relative: impl AsRef<Path>) -> &'static
 /// 📚️ UTF-8 text of `relative` below the repository root above `manifest_dir`, read once per process and shared by every later call.
 ///
 /// # Panics
-/// When no ancestor holds `nx.json`, or the file is missing, unreadable or not UTF-8.
+/// When no ancestor is a workspace root, or the file is missing, unreadable or not UTF-8.
 #[must_use]
 #[track_caller]
 pub fn repo_text_in(manifest_dir: &str, relative: impl AsRef<Path>) -> &'static str {
@@ -135,7 +136,7 @@ macro_rules! fixture_bytes {
     };
 }
 
-/// 🏠️ Repository root above the calling crate, found by its `nx.json`.
+/// 🏠️ Repository root above the calling crate, found by its declared package workspace.
 #[macro_export]
 macro_rules! repo_root {
     () => {

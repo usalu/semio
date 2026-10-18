@@ -594,7 +594,7 @@ impl ArtifactEditor for TsvEditor {
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
-        _engines: &semio_framework_2d::compute::EngineHandles,
+        _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
             TsvEditorCommand::EditSnapshot { event } => <Self as semio_s_artifact_stdio_contract::editing::SnapshotEditingEditor>::snapshot_edit_emit(event, doc.snapshot),

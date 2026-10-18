@@ -545,7 +545,7 @@
         },
         "variant": {
           "type": "string",
-          "pattern": "^[a-z][a-z0-9-]*$"
+          "pattern": "^([a-z][a-z0-9-]*)?$"
         },
         "renderer": {
           "enum": [
@@ -555,7 +555,7 @@
         },
         "profile": {
           "enum": [
-            "dev",
+            "prototype",
             "release"
           ]
         },
@@ -591,6 +591,9 @@
             }
           },
           "then": {
+            "properties": {
+              "compositionConfigPath": {}
+            },
             "required": [
               "compositionConfigPath"
             ]

@@ -1,6 +1,6 @@
 //! 📔️ `set-viewport` payload. Sparsely changes a viewport: its sheet, its view, the position of its window on the paper, its scale (an assigned null never clears it), its crop (an assigned null clears it) and its label (an assigned null returns to the name of the view).
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ViewportPatch}, snapshot::{Point2, ViewCrop}};
 
@@ -35,13 +35,16 @@ impl SetViewport {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetViewport {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetViewport
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetViewport>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "viewport", kind: "set-viewport", record: "SetViewport" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_viewport::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_viewport::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change viewport \"{}\"", self.id), &format!("Ansichtsfenster \"{}\" ändern", self.id))

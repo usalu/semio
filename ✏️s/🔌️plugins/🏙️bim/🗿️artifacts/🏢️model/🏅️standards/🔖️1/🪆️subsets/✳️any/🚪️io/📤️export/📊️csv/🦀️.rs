@@ -13,8 +13,7 @@ use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 
-#[path = "🧱️codec/🦀️.rs"]
-pub mod codec;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::csv::codec;
 
 /// 🪪️ The RFC 4180 dialect this leaf writes.
 pub const CSV_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.csv", standard: StandardId("rfc4180"), subset: SubsetId::ANY };
@@ -132,6 +131,4 @@ impl Serializer<ModelSnapshot> for ModelIntoCsv {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

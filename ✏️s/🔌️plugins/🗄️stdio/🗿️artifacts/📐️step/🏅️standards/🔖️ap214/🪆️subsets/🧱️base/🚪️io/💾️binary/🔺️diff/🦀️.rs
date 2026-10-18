@@ -28,13 +28,13 @@ use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepTypedValue,
 /// than duplicating them a second time in that file (same intra-artifact-reuse split the TEXT
 /// codec primitives above use).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_bin(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_bin(out: &mut Vec<u8>, s: &str) {
     store::pack_rt::write_varint_u64(out, s.len() as u64);
     out.extend_from_slice(s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_bin(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     String::from_utf8(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec()).map_err(|e| e.to_string())
 }
@@ -91,7 +91,7 @@ pub(crate) fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Ve
 /// only the DECLARATIVE description, never hand-written Rust, which recurses here exactly like
 /// `enc_value`'s own text twin does two regions up.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
+pub fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
     match v {
         StepValue::Unset => out.push(0),
         StepValue::Derived => out.push(1),
@@ -131,7 +131,7 @@ pub(crate) fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, String> {
+pub fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(StepValue::Unset),
@@ -173,7 +173,7 @@ pub(crate) fn dec_complex_bin(reader: &mut store::ByteReader<'_>) -> Result<Step
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
+pub fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, e.id);
     write_str_bin(out, &e.name);
     store::pack_rt::write_varint_u64(out, e.args.len() as u64);
@@ -187,7 +187,7 @@ pub(crate) fn enc_entity_bin(e: &StepEntity, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntity, String> {
+pub fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepEntity, String> {
     let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let name = read_str_bin(reader)?;
     let args_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -198,20 +198,20 @@ pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<StepE
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_file_description_bin(d: &StepFileDescription, out: &mut Vec<u8>) {
+pub fn enc_file_description_bin(d: &StepFileDescription, out: &mut Vec<u8>) {
     write_str_list_bin(out, &d.description);
     write_str_bin(out, &d.implementation_level);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_file_description_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileDescription, String> {
+pub fn dec_file_description_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileDescription, String> {
     let description = read_str_list_bin(reader)?;
     let implementation_level = read_str_bin(reader)?;
     Ok(StepFileDescription { description, implementation_level })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
+pub fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
     write_str_bin(out, &f.name);
     write_str_bin(out, &f.timestamp);
     write_str_list_bin(out, &f.author);
@@ -222,7 +222,7 @@ pub(crate) fn enc_file_name_bin(f: &StepFileName, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileName, String> {
+pub fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileName, String> {
     Ok(StepFileName {
         name: read_str_bin(reader)?,
         timestamp: read_str_bin(reader)?,
@@ -235,12 +235,12 @@ pub(crate) fn dec_file_name_bin(reader: &mut store::ByteReader<'_>) -> Result<St
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_file_schema_bin(s: &StepFileSchema, out: &mut Vec<u8>) {
+pub fn enc_file_schema_bin(s: &StepFileSchema, out: &mut Vec<u8>) {
     write_str_list_bin(out, &s.schemas);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileSchema, String> {
+pub fn dec_file_schema_bin(reader: &mut store::ByteReader<'_>) -> Result<StepFileSchema, String> {
     Ok(StepFileSchema { schemas: read_str_list_bin(reader)? })
 }
 

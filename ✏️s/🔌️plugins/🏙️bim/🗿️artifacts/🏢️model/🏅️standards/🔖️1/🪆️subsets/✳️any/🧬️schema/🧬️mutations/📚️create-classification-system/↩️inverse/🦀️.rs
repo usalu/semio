@@ -1,13 +1,16 @@
 //! ↩️ Inverse of `CreateClassificationSystem`: the concrete `DeleteClassificationSystem` of the id it created, none when the id was already taken.
 
-use super::super::delete_classification_system::DeleteClassificationSystem;
-use super::super::elements;
-use super::CreateClassificationSystem;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_classification_system::DeleteClassificationSystem;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_classification_system::CreateClassificationSystem;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &CreateClassificationSystem, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &CreateClassificationSystem, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_classification_system::DeleteClassificationSystem>,
+{
     if elements::taken(base, &payload.id).is_some() || payload.id == "entry" {
         return Vec::new();
     }
-    vec![ModelMutation::DeleteClassificationSystem(DeleteClassificationSystem { id: payload.id.clone() })]
+    vec![Op::from(DeleteClassificationSystem { id: payload.id.clone() })]
 }

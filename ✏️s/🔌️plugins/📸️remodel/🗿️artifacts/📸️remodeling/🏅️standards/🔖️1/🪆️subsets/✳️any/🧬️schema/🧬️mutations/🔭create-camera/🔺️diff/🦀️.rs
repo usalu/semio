@@ -4,6 +4,7 @@
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingRow;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::create_camera_calibration::component::CreateCameraCalibration;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateCameraCalibration, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

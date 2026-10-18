@@ -1,4 +1,26 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::{snapshot::Axis, snapshot::ModelSnapshot, mutations::ModelMutation};
+use crate::editor::bim::gestures::session::Step;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::session::{length_label, Pointer, Tool, ToolContext, PICK_PIXELS};
+#[allow(unused_imports)]
+use crate::editor::bim::marks::{Mark, Preview, Style};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::kind_holding;
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::plan;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::placement::{placement_issue, width_of};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{snapshot::Vertex, inferences::ModelInference};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::editor::bim::gestures::select::*;
 use crate::editor::bim::gestures::session::{Modifiers, Pick, Surface, ToolEvent};
 use crate::editor::bim::marks::Shape;
 use crate::editor::bim::fixture::{room, Rig};

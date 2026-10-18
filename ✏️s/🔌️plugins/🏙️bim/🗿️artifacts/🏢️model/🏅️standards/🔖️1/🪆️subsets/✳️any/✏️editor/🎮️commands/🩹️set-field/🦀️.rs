@@ -36,6 +36,4 @@ pub fn handle(payload: &SetField, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &
     Ok(Emit::mutations(mutations))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

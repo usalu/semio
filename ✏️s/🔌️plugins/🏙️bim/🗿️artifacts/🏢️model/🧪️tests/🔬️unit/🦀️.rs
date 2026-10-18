@@ -2,11 +2,12 @@ use super::*;
 use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::text::snapshot as text;
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
 
 fn house() -> ModelSnapshot {
-    from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")
+    from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("house decodes")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -23,7 +24,7 @@ async fn the_definition_assembles() {
 #[semio_framework_async_macros::async_test]
 async fn the_committed_house_is_canonical_json() {
     let reencoded: serde_json::Value = serde_json::from_str(&to_json_string(&house())).expect("JSON");
-    let committed: serde_json::Value = serde_json::from_str(HOUSE).expect("JSON");
+    let committed: serde_json::Value = serde_json::from_str((*HOUSE)).expect("JSON");
     let numbers = |value: serde_json::Value| value.to_string().replace(".0,", ",").replace(".0}", "}").replace(".0]", "]");
     assert_eq!(reencoded.as_object().expect("object").keys().count(), 26, "schema, project and the 24 collections");
     for (key, value) in committed.as_object().expect("object") {

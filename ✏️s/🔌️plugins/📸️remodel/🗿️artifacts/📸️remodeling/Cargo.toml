@@ -181,6 +181,9 @@ package = "semio-framework-pack"
 [workspace.dependencies.semio-framework-2d]
 path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-2d-compute]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-async]
 path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"
 

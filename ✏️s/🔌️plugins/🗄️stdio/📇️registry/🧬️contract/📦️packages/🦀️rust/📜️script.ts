@@ -5,7 +5,7 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 import { runContributionChecks } from "../../🧪️tests/📇️contributions/🟦️.ts";
 import { runDefinitionHierarchyChecks } from "../../🧪️tests/🪜️definition-hierarchy/🟦️.ts";
 import {runOriginalCopyCloseChecks} from "../../✏️editing/♻️close/🧪️tests/🟦️.ts";
-import {runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import {runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1} from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import {configuredExactCargoLawPolicyV1} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
 import {BundleScript} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 

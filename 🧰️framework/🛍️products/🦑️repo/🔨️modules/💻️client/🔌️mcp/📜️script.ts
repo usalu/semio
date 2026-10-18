@@ -8,7 +8,10 @@ import { buildBudgetMs } from "../../../../../🔨️modules/🏃️process/📦
  * Go projection rather than calling `go` on the tree directly. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { goCoverageArgs, goLevelTestArgs, resolveMcpBin, runCanonicalGoBuild, runCanonicalGoTests } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { goCoverageArgs } from "../../📚️library/🧪️testing/📊️coverage/🟦️.ts";
+import { goLevelTestArgs } from "../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
+import { resolveMcpBin } from "../../📚️library/🚨️policy/🖥️cli/🟦️.ts";
+import { runCanonicalGoBuild, runCanonicalGoTests } from "../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

@@ -4,9 +4,10 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Adapters
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import {
   UI_AVAILABLE_HEIGHT,
   UI_MOBILE_MAX_WIDTH_PX,
@@ -24,18 +25,12 @@ import {
 /** 🗂️ The repo root, walked up from the runner's cwd — `import.meta.url` is a vite `/@fs` URL under this
  * suite's transform, so it cannot be turned into a path here. */
 function repoRoot(): string {
-  let at = process.cwd();
-  while (!existsSync(resolve(at, "nx.json"))) {
-    const up = dirname(at);
-    if (up === at) throw new Error("🗂️ no nx.json above the test runner's cwd");
-    at = up;
-  }
-  return at;
+  return findWorkspaceRoot(process.cwd());
 }
 
 const DOCK_WGPU_SOURCE = resolve(repoRoot(), "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs");
 const CSS_PATH = '🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css';
-const HOST_PATH = '🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts';
+const HOST_PATH = '🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚀️boot-html/🟦️.ts';
 
 //#region 📱️Policy
 describe("📱️ breakpoint policy", () => {

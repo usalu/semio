@@ -2,8 +2,9 @@
 //! empty. The geometry is the framework's: [`extrude_loops`] for extrusions and cuboids, [`sweep_profile`] for sweeps along a plan path, [`revolve_profile`] for revolutions, all within the chord
 //! tolerance of the element solids. A solid lives in the family frame (metres, `z` up); its offset moves it.
 
-use super::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
-use super::FamilySolidMesh;
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind};
+use crate::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilySolidMesh;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBounds, SolidPoint, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, FamilySolid, ModelSnapshot, ParametricProfile, SolidAxis, SolidShape};
 use semio_framework_expression::{evaluate, parse, Kind, Value};
@@ -224,6 +225,4 @@ pub fn evaluate_solid(id: &str, solid: &FamilySolid, env: &BTreeMap<String, Valu
     (Evaluated { mesh: mesh_of(&solid.name, material, visible, &placed), section, offset: moved }, cx.issues)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -5,7 +5,8 @@ use semio_framework_repo_cli_event_stream::Format;
 use semio_framework_repo_codebase::Codebase;
 use semio_framework_repo_graphql::RepoContext;
 use semio_framework_repo_identity::{emoji_text, entity as identity_entity, flat};
-use semio_framework_repo_model::{entity, TreeFilter, TreeNode, TreeNodeKind};
+use semio_framework_repo_model::{TreeFilter, TreeNode, TreeNodeKind};
+use semio_framework_repo_model_entity::entity;
 use serde_json::{Map, Value as Json};
 use std::collections::BTreeMap;
 

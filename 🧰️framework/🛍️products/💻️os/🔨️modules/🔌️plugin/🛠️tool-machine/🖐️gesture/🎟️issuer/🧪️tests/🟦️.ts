@@ -5,6 +5,7 @@ import {resolve} from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🔣️.json";
 import {gestureIssuanceReady} from "../🟦️.ts";
+import {pluginSubtreeText} from "../../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 const oracle=new Ajv().compile(schema);
 const cancellationOracle=new Ajv().compile(schema.definitions.cancellationIntent);
 test("original gesture admission matches neutral grant oracle",()=>{for(const row of fixture.cases){expect(oracle(row)?"admitted":"pending",row.id).toBe(row.expected);expect(gestureIssuanceReady(row),row.id).toBe(oracle(row));}});
@@ -15,8 +16,8 @@ test("cancellation intent preserves pending and already settled originals",()=>{
  for(const row of fixture.cancellationCases){expect(cancellationOracle(row),row.id).toBe(true);expect(row.expectedSettled,row.id).toBe(true);}
 });
 test("mounted gesture keeps actual issuer and separately funded maintenance",()=>{
- const machine=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8");
- const plugin=readFileSync(resolve(import.meta.dir,"../../../../🦀️.rs"),"utf8");
+ const machine=pluginSubtreeText("🛠️tool-machine")+pluginSubtreeText("🧵️instance")+pluginSubtreeText("📜️declaration","🛠️tool-machine");
+ const plugin=pluginSubtreeText("📜️declaration","👷️job");
  const fields=readFileSync(resolve(import.meta.dir,"../../../../📜️declaration/🧩️app/🛬️lifted/📸️fields/🦀️.rs"),"utf8");
  for(const token of["GestureCapture","GestureOperation","gesture_retirement_demand","gesture_retirement_step(grant)","request_gesture_cancellation","begin_gesture_retirement"])expect(machine.includes(token),token).toBe(true);
  for(const token of["gesture_operations.remove","Arc::new(GestureSlot"])expect(machine.includes(token),token).toBe(false);

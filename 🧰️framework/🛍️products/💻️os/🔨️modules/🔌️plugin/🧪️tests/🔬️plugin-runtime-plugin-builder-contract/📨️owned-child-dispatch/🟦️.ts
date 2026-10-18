@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { applyPatch } from "fast-json-patch";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
+import {pluginFamilyText, pluginSubtreeText} from "../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 
 test("direct original owned child dispatch uses the mounted publication authority", async () => {
   for (const row of fixture.cases) {
@@ -12,9 +13,9 @@ test("direct original owned child dispatch uses the mounted publication authorit
     expect(applyPatch(structuredClone(before), operations, true).newDocument).toEqual({ parent: { label: row.parentLabel }, child: { count: row.childCount, label: row.childLabel } });
     expect(row.members).toBe(1 + Number(row.parentTouched));
   }
-  const source = await Bun.file(new URL("../../../🦀️.rs", import.meta.url)).text();
-  expect(source.includes("self.mount_original_emit_publication(verb, emit, meta, None).await")).toBe(true);
-  const owner = await Bun.file(new URL("../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs", import.meta.url)).text();
+  const source = pluginSubtreeText("🧵️instance");
+  expect(source.includes("self.mount_original_emit_publication(verb, emit, meta, None, cx).await")).toBe(true);
+  const owner = pluginSubtreeText("🧵️instance", "📨️dispatch");
   expect(owner.includes("fn mount_original_emit_publication")).toBe(true);
 });
 
@@ -26,11 +27,11 @@ test("original completed output is retained before fallible mounted capture", as
     expect(actual).toEqual(expected);
     expect(JSON.parse(JSON.stringify(actual)).retained).toEqual(original);
   }
-  const owner = await Bun.file(new URL("../../../🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs", import.meta.url)).text();
-  const body = owner.slice(owner.indexOf("async fn mount_original_emit_publication"), owner.indexOf("fn advance_private_child_group"));
-  const installed = body.indexOf("self.tool_operations.insert_admitted");
+  const owner = pluginSubtreeText("🧵️instance", "📨️dispatch");
+  const bodyStart = owner.indexOf("async fn mount_original_reserved_owners"), body = owner.slice(bodyStart, bodyStart + 6000);
+  const installed = body.indexOf("tool_operations.insert_admitted");
   expect(installed).toBeGreaterThan(0);
-  expect(body.indexOf("self.qualified_tool_proof(verb)")).toBeGreaterThan(installed);
-  expect(body.indexOf("self.window_config_store.capture")).toBeGreaterThan(installed);
+  expect(body.indexOf("self.tools.qualified_tool_proof(&*self.stores, verb)")).toBeGreaterThan(installed);
+  expect(body.indexOf("window_config_store.capture")).toBeGreaterThan(installed);
   expect(body.includes("mounted.terminal_fault")).toBe(true);
 });

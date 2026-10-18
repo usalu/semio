@@ -55,7 +55,8 @@ import * as Owner49 from "../../📇️canonical-bootstrap-folder-mirror/🟦️
 import * as Owner50 from "../../../../🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts";
 import * as Owner51 from "../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import * as Owner52 from "../../../../🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
-import * as External01 from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { cargoProfileDir } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import * as External02 from "../../../../🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
 import * as External03 from "../../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import * as External04 from "../../../♻️activation/🟦️.ts";
@@ -66,6 +67,15 @@ import * as External08 from "../../../../🔌️plugin/📇️registry/🔎️di
 import * as External09 from "../../../../🔌️plugin/📇️registry/🎮️playground/🧭️session/🟦️.ts";
 import * as External10 from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import * as External11 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
+import * as External17 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
+import * as External18 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🔤️guestslim-fonts/🟦️.ts";
+import * as External19 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
+import * as External20 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
+import * as External21 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
+import * as External22 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🪶️wasm-opt/🟦️.ts";
+import * as External23 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts";
+import * as External24 from "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
+import * as External25 from "../../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import * as External12 from "../../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 import * as External13 from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import * as External14 from "../../../🚚️distribution/🟦️.ts";
@@ -79,7 +89,7 @@ export type TestSource = { readonly directory: string; readonly url: string };
  * `buildPluginCatalog` is pinned for the same reason: `📇️registry/🟦️.ts` exports a zero-argument
  * projection builder under that same name and spreads later, so only the pin reaches the
  * `📇️registry/🔄️refresh` catalog BUILD these cases drive. */
-export const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...Owner50, ...Owner51, ...Owner52, ...External01, ...External02, ...External03, ...External04, ...External06, ...External16, ...External07, ...External08, ...External09, ...External10, ...External11, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
+export const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...Owner50, ...Owner51, ...Owner52, ...{ cargoProfileDir, getWorkspaceRoot }, ...External02, ...External03, ...External04, ...External06, ...External16, ...External07, ...External08, ...External09, ...External10, ...External11, ...External17, ...External18, ...External19, ...External20, ...External21, ...External22, ...External23, ...External24, ...External25, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
 
 export type TestDependencies = typeof testDependencies;
 

@@ -3,7 +3,7 @@
 //! (positive) bulge is the counter-clockwise arc of the sheet, which SVG calls sweep-flag 0 because its positive angle direction runs clockwise on a y-down canvas.
 //! 📎 https://www.w3.org/TR/SVG11/paths.html#PathDataEllipticalArcCommands
 
-use super::codec::PathCommand;
+use crate::standards::v1::subsets::any::io::export::svg::codec::PathCommand;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanVertex;
 
 /// 📏️ Paper millimetres per model metre at the drawing scale `1:scale`.
@@ -45,11 +45,11 @@ pub fn points(vertices: &[PlanVertex], frame: &Frame) -> Vec<(f64, f64)> {
     vertices.iter().map(|vertex| frame.point(vertex.x, vertex.y)).collect()
 }
 
-fn radius(chord: f64, bulge: f64) -> f64 {
+pub fn radius(chord: f64, bulge: f64) -> f64 {
     (chord * (1.0 + bulge * bulge) / (4.0 * bulge.abs()) * 1e6).round() / 1e6
 }
 
-fn arc(from: (f64, f64), to: (f64, f64), bulge: f64) -> PathCommand {
+pub fn arc(from: (f64, f64), to: (f64, f64), bulge: f64) -> PathCommand {
     let radius = radius(((to.0 - from.0).powi(2) + (to.1 - from.1).powi(2)).sqrt(), bulge);
     PathCommand::Arc { rx: radius, ry: radius, x_axis_rotation: 0.0, large_arc: bulge.abs() > 1.0, sweep: bulge < 0.0, x: to.0, y: to.1, relative: false }
 }
@@ -91,6 +91,4 @@ pub fn path_length(points: &[(f64, f64)], closed: bool) -> f64 {
     (0..segments).map(|index| ((points[(index + 1) % points.len()].0 - points[index].0).powi(2) + (points[(index + 1) % points.len()].1 - points[index].1).powi(2)).sqrt()).sum()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

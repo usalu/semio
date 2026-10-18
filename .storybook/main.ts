@@ -10,12 +10,15 @@ import { viteCacheDirectory } from "../🧰️framework/🛍️products/🦑️r
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
+import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
 
 import type { StorybookConfig } from "@storybook/react-vite";
-import { semioAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioAssetsVitePlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+import { createWorkspaceViteResolveConfig, findWorkspacePackages } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundFlowWasmDevStubPlugin } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
 import { hostBuildPlugins, uiTailwindBuildPlugins } from "../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildExactAliasEntries, buildScopeWatchIgnores, type StoryScope } from "./📖️stories/🧭️coordination/🟦️.ts";
 import { repositoryCachePartitionRootDataV1 } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
@@ -80,9 +83,9 @@ const config: StorybookConfig = {
   // (`/plugin-modules/<pluginId>/<wasmOut>.js`). Without it every `framework/os` plugin story renders
   // the shell's "plugin artifact missing" panel instead of booting. These are build OUTPUTS produced
   // by `dev`'s materialize step, not sources — storybook only serves whatever is already on disk and
-  // never triggers a cargo build itself. The runtime asset channels (compiler fonts, label face, icon pack)
+  // never triggers a cargo build itself, and a directory that is not built yet is left out (a missing static directory aborts the whole Storybook build). The runtime asset channels (compiler fonts, label face, icon pack)
   // serve every wasm session story the fonts and icons Canvas no longer embeds.
-  staticDirs: [{ from: builtPluginModulesRootIn(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)), to: "/plugin-modules" }, ...RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => ({ from: resolve(repoRootPath, directory), to: route }))],
+  staticDirs: [{ from: builtPluginModulesRootIn(repoRootPath, readBuildMode(process.env.SEMIO_BUILD_MODE)), to: "/plugin-modules" }, ...RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => ({ from: resolve(repoRootPath, directory), to: route }))].filter(({ from }) => existsSync(from)),
   addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),

@@ -1,55 +1,15 @@
-import { expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { countStrayDevToolZombies, dashboardDaemonPid, isDevLeftoverRow, listDevLeftoverRows, planStrayProcessRemovals, strayProcessExecutableName } from "../../🔨️modules/📚️library/🧼️workspace-cleanup/🧟️stray-processes/🟦️.ts";
-
-const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🧼️workspace-cleanup-stray-processes/🔣️.json"), "utf8"));
-
-test("dev leftover command markers catch cursor-agent workers", () => {
-  expect(isDevLeftoverRow({
-    name: "cursor-agent",
-    stat: "S",
-    command: "/bin/cursor-agent worker start --worker-dir /Users/dev/Documents/semio",
-  })).toBe(true);
-});
-
-test("manually opened zsh terminal is never a dev leftover by name alone", () => {
-  expect(isDevLeftoverRow({ name: "zsh", stat: "S", command: "-zsh" })).toBe(false);
-  expect(isDevLeftoverRow({ name: "caffeinate", stat: "S", command: "caffeinate -dimsu" })).toBe(false);
-});
-
-test("stray process executable names match ps command basenames", () => {
-  expect(strayProcessExecutableName("/usr/local/bin/bun run dev")).toBe("bun");
-  expect(strayProcessExecutableName("<defunct>")).toBe("<defunct>");
-  expect(strayProcessExecutableName("/path/to/esbuild --bundle")).toBe("esbuild");
-});
-
-test("stray process plan matches fixture oracle", () => {
-  for (const row of vector.cases) {
-    expect(planStrayProcessRemovals(row.rows, vector.selfPid, row.daemonPids ?? []), row.id).toEqual(row.expected);
-  }
-});
-
-test("the recorded dashboard daemon pid is read from daemon.pid and ignored when absent or invalid", () => {
-  const directory = mkdtempSync(join(tmpdir(), "stray-dashboard-"));
-  try {
-    expect(dashboardDaemonPid(directory)).toBeUndefined();
-    writeFileSync(join(directory, "daemon.pid"), "24408\n");
-    expect(dashboardDaemonPid(directory)).toBe(24408);
-    writeFileSync(join(directory, "daemon.pid"), "not a pid\n");
-    expect(dashboardDaemonPid(directory)).toBeUndefined();
-  } finally { rmSync(directory, { recursive: true, force: true }); }
-});
-
-test("dashboard processes stay out of the leftover audit", () => {
-  const ide = vector.cases.find((row: { id: string }) => row.id === "dashboard-daemon-and-task-tree-protected-by-recorded-pid");
-  expect(listDevLeftoverRows(ide.rows, vector.selfPid, ide.daemonPids).map((row) => row.pid)).toEqual([1200]);
-});
-
-test("stray dev-tool zombie counter ignores IDE-hosted defunct rows", () => {
-  const ideCase = vector.cases.find((row: { id: string }) => row.id === "defunct-under-ide-node-not-stray");
-  expect(countStrayDevToolZombies(ideCase.rows)).toBe(0);
-  const bunCase = vector.cases.find((row: { id: string }) => row.id === "defunct-zombie-under-bun-parent");
-  expect(countStrayDevToolZombies(bunCase.rows)).toBe(1);
-});
+import{expect,test}from"bun:test";
+import{readFileSync,existsSync}from"node:fs";
+import{join,resolve}from"node:path";
+import{Database}from"bun:sqlite";
+import Ajv from"ajv";
+import ts from"typescript";
+import fixture from"../🧫️fixtures/🧼️workspace-cleanup-stray-processes/🔣️.json"with{type:"json"};
+import{validateJsonSchemaSubset}from"../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+const root=process.cwd(),command=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts"),source=readFileSync(command,"utf8"),tree=ts.createSourceFile(command,source,ts.ScriptTarget.Latest,true);
+function declaration(name:string):string{const node=tree.statements.find(row=>(ts.isFunctionDeclaration(row)||ts.isClassDeclaration(row))&&row.name?.text===name);if(!node)throw Error("Actual cleanup owner declaration required: "+name);return node.getText(tree).replace(/^export /u,"");}
+function decoder():((segments:readonly string[])=>Readonly<{mode:string;dry:boolean;arguments:readonly string[]}>){const code=ts.transpileModule(declaration("readWorkspaceCleanupEntryV1"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;return new Function(code+";return readWorkspaceCleanupEntryV1;")();}
+test("workspace process observations cannot supply termination authority",()=>{expect(new Ajv({strict:true}).validate(fixture.schema,fixture.data)).toBe(true);expect(validateJsonSchemaSubset(fixture.schema,fixture.data)).toEqual([]);const db=new Database(":memory:");try{db.exec("create table observations(pid integer,ppid integer,name text,command text,state text,actual_owned integer check(actual_owned=0))");for(const row of fixture.data.cases){db.exec("delete from observations");for(const process of row.rows)db.query("insert into observations values(?,?,?,?,?,0)").run(process.pid,process.ppid,process.name,process.command,process.stat);expect(db.query("select pid from observations where actual_owned=1 order by pid").all(),row.id).toEqual(row.expectedSignals);}}finally{db.close();}});
+test("workspace cleanup entry is closed before effects",()=>{const read=decoder(),db=new Database(":memory:");try{for(const row of fixture.data.entryCases){let accepted=true,value:ReturnType<typeof read>|undefined;try{value=read(row.arguments);}catch{accepted=false;}expect(accepted,JSON.stringify(row.arguments)).toBe(row.admit);const oracle=db.query("select ? mode,? dry").get(row.mode,row.dry===null?null:row.dry?1:0)as{mode:string|null;dry:number|null};if(accepted){expect(value!.mode).toBe(oracle.mode!);expect(value!.dry).toBe(oracle.dry===1);expect(Object.isFrozen(value)).toBe(true);expect(Object.isFrozen(value!.arguments)).toBe(true);}}}finally{db.close();}});
+test("actual workspace cleanup never sweeps processes in normal or dry mode",()=>{let read:ReturnType<typeof decoder>;try{read=decoder();}catch{read=()=>({mode:"baseline",dry:false,arguments:[]});}const effects:string[]=[],empty={removals:[],skippedProtected:[]},bindings={Script:class{root=root;},readWorkspaceCleanupEntryV1:read,console:{log:()=>{}},join,relative:()=>"",resolve,coverageDir:()=>"absent",existsSync:()=>false,rmSync:()=>effects.push("remove"),loadCatalogTaxonomy:()=>({testDomainPath:"tests"}),runCmd:()=>effects.push("test"),runCmdStatus:()=>0,orchestratorBudgetOpts:()=>({}),repoCacheDirectory:()=>"unused",runTaxonomyCliWorkflow:()=>effects.push("taxonomy"),cleanProtectedPrefixes:()=>[],cleanCollectEmptyFolderRemovals:()=>[],cleanCollectMarkerOnlyFolderRemovals:()=>[],cleanProjectRemovals:()=>[],CLEAN_PROTECTION_VIEW:{},cleanRemovePath:()=>{effects.push("remove");return true;},runWorkspaceClean:()=>{effects.push("workspace");return empty;},processTableSnapshot:()=>{effects.push("inventory");return[];},ACTIVE_SEMIO_TECH_BUILD:/never/u,cleanKillStrayProcesses:()=>{effects.push("process-sweep");return[];}},code=ts.transpileModule(declaration("CleanScript"),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,Owner=new Function(...Object.keys(bindings),code+";return CleanScript;")(...Object.values(bindings));for(const row of fixture.data.entryCases){effects.length=0;const instance=new Owner();instance.runCachePrune=()=>effects.push("cache-prune");let accepted=true;try{instance.run(row.arguments);}catch{accepted=false;}expect(accepted,JSON.stringify(row.arguments)).toBe(row.admit);expect(effects).not.toContain("process-sweep");expect(effects).not.toContain("inventory");if(!row.admit)expect(effects).toEqual([]);}});
+test("workspace cleanup has no process signal implementation or authored launcher",()=>{const retired=join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🧟️stray-processes/🟦️.ts");expect(existsSync(retired)).toBe(false);expect(source).not.toContain("cleanKillStrayProcesses");expect(source).not.toContain("runKillStrayProcesses");expect(readFileSync(join(root,".agents/skills/clean/SKILL.md"),"utf8")).not.toContain("clean stray-processes");expect(readFileSync(join(root,".vscode/launch.json"),"utf8")).not.toContain("stray-processes");});

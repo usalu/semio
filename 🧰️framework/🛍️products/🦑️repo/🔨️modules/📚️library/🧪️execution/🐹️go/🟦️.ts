@@ -1,7 +1,8 @@
 import { lstatSync, mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { canonicalGoPlan, runCanonicalGoTests, runRepositoryTestCommand } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { canonicalGoPlan, runCanonicalGoTests } from "../../🧪️testing/🐹️go-plan/🟦️.ts";
+import { runRepositoryTestCommand } from "../../🧪️testing/🎛️repository-command/🟦️.ts";
 
 export type GoInputSelectionOperations = Readonly<{
   realpath(path: string): string;

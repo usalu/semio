@@ -1,23 +1,27 @@
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import * as discovery from "../../🔍️discovery/🟦️.ts";
-import * as normalization from "../../🧹️normalization/🟦️.ts";
+import { loadCatalogTaxonomy, validateTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { validateHistoricalDocumentEvidencePopulations } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
+import { createTaxonomyPathMatcher } from "../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";
+import { historicalDocumentEvidence as exportedHistoricalDocumentEvidence } from "../../🧹️normalization/🔗️reference-inventory/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
+import { planTaxonomy } from "../../🧹️normalization/🧠️planning/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
-const historicalDocumentEvidence = Reflect.get(normalization, "historicalDocumentEvidence") as (path: string, taxonomy: unknown, repoRoot: string) => boolean;
+const historicalDocumentEvidence = exportedHistoricalDocumentEvidence as (path: string, taxonomy: unknown, repoRoot: string) => boolean;
 
 test("historicalDocumentEvidence and its schema are exported, registered and self-valid", () => {
   expect(typeof historicalDocumentEvidence).toBe("function");
-  const schema = discovery.loadCatalogTaxonomy();
+  const schema = loadCatalogTaxonomy();
   expect(Object.keys(schema.historicalDocumentEvidencePopulations)).toEqual(["ticket-report", "ticket-workspace", "cursor-plan-snapshot", "dev-prompt-log"]);
   expect(schema.referenceClosure.historicalDocumentEvidence).toBe("ticket-report-workspace-cursor-plan-snapshot-and-dev-prompt-log-whole-document-excluded");
-  expect(discovery.validateTaxonomy(schema)).toEqual([]);
+  expect(validateTaxonomy(schema)).toEqual([]);
 });
 
 test("validateHistoricalDocumentEvidencePopulations rejects every declared mutation and accepts the real registration", () => {
-  const base = discovery.loadCatalogTaxonomy().historicalDocumentEvidencePopulations;
-  expect(discovery.validateHistoricalDocumentEvidencePopulations(structuredClone(base))).toEqual([]);
+  const base = loadCatalogTaxonomy().historicalDocumentEvidencePopulations;
+  expect(validateHistoricalDocumentEvidencePopulations(structuredClone(base))).toEqual([]);
   const mutations: ((value: Record<string, any>) => void)[] = [
     (value) => { delete value["cursor-plan-snapshot"]; },
     (value) => { delete value["ticket-workspace"]; },
@@ -38,12 +42,12 @@ test("validateHistoricalDocumentEvidencePopulations rejects every declared mutat
   for (const mutate of mutations) {
     const clone = structuredClone(base);
     mutate(clone);
-    expect(discovery.validateHistoricalDocumentEvidencePopulations(clone).length, JSON.stringify(clone)).toBeGreaterThan(0);
+    expect(validateHistoricalDocumentEvidencePopulations(clone).length, JSON.stringify(clone)).toBeGreaterThan(0);
   }
 });
 
 test("historicalDocumentEvidence matches the exact bounded population against the real repository, regardless of owning-ticket status, and never overrides a real machine-read contract", () => {
-  const taxonomy = { discoverySchema: discovery.loadCatalogTaxonomy(), pathMatcher: discovery.createTaxonomyPathMatcher() };
+  const taxonomy = { discoverySchema: loadCatalogTaxonomy(), pathMatcher: createTaxonomyPathMatcher() };
   const cases: readonly (readonly [string, boolean, string])[] = [
     [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/📓️w2-schema-api.md", true, "closed ticket, slugged 📓️ report"],
     [".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️goal-session-status.md", true, "the active (open) ticket's own report is exempt too — kind, not lifecycle, is the discriminator"],
@@ -66,11 +70,11 @@ test("historicalDocumentEvidence matches the exact bounded population against th
 });
 
 test("the ticket-report leaf pattern requires a non-empty slug; the ticket-workspace directory pattern admits a ticket-root descendant at any nesting depth", () => {
-  const populations = discovery.loadCatalogTaxonomy().historicalDocumentEvidencePopulations;
+  const populations = loadCatalogTaxonomy().historicalDocumentEvidencePopulations;
   const reportLeaf = new RegExp(populations["ticket-report"]!.leafPattern, "u");
   expect(reportLeaf.test("📓️.md")).toBe(false);
   expect(reportLeaf.test("📓️report.md")).toBe(true);
-  const taxonomy = { discoverySchema: discovery.loadCatalogTaxonomy(), pathMatcher: discovery.createTaxonomyPathMatcher() };
+  const taxonomy = { discoverySchema: loadCatalogTaxonomy(), pathMatcher: createTaxonomyPathMatcher() };
   const matches = (p: string) => taxonomy.pathMatcher.matches(p, populations["ticket-workspace"]!.directoryPattern);
   expect(matches(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/terra-number-deasync.py")).toBe(true);
   expect(matches(".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME/nested/terra-number-deasync.py")).toBe(true);
@@ -107,7 +111,7 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
   const embeddedReport = `${closedTicketDir}/embedded-pkg/📓️note.md`;
   const schemaPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
 
-  const schema = structuredClone(discovery.loadCatalogTaxonomy()) as Record<string, any>;
+  const schema = structuredClone(loadCatalogTaxonomy()) as Record<string, any>;
   delete schema.generatorContracts["plugin-registry"].inputDiscovery;
   put(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
   put(source, "pub fn value() -> u32 { 7 }\n");
@@ -131,7 +135,7 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
   git("-c", "user.name=Histref Fixture", "-c", "user.email=fixture@invalid.example", "-c", "commit.gpgsign=false", "commit", "-qm", "Histref fixture");
   const baselineCommit = git("rev-parse", "HEAD");
 
-  const plan = normalization.planTaxonomy(normalization.inventoryTaxonomy({ repoRoot, scope, workers: 1 }), { baselineCommit, excludedTreeDigests: [] });
+  const plan = planTaxonomy(inventoryTaxonomy({ repoRoot, scope, workers: 1 }), { baselineCommit, excludedTreeDigests: [] });
 
   expect(plan.moves.map((move) => [move.sourcePath, move.destinationPath])).toEqual([[source, final]]);
   expect(plan.regenerations).toEqual([]);
@@ -161,14 +165,14 @@ test("ticket narrative, evidence and scratch never block a move, a production fi
 }, 20_000);
 
 test("the exemption is driven entirely by the schema population, not hardcoded: an empty population map reproduces the pre-change blocked state for the exact same paths", () => {
-  const taxonomy = { discoverySchema: { historicalDocumentEvidencePopulations: {}, fixedFilenameContracts: {} }, pathMatcher: discovery.createTaxonomyPathMatcher() };
+  const taxonomy = { discoverySchema: { historicalDocumentEvidencePopulations: {}, fixedFilenameContracts: {} }, pathMatcher: createTaxonomyPathMatcher() };
   const openReportPath = ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION/📓️goal-session-status.md";
   const cursorPlanPath = ".cursor/plans/2d_references_on_grid_ff798114.plan.md";
   const promptLogPath = ".🧬semio/🦑️repo/💬️prompts/🐙️ueli.md";
   expect(historicalDocumentEvidence(openReportPath, taxonomy, root), "before: no population means even a ticket report is a live reference").toBe(false);
   expect(historicalDocumentEvidence(cursorPlanPath, taxonomy, root), "before: no population means a Cursor plan snapshot is a live reference too").toBe(false);
   expect(historicalDocumentEvidence(promptLogPath, taxonomy, root), "before: no population means a prompt-log transcript is a live reference too").toBe(false);
-  const real = { discoverySchema: discovery.loadCatalogTaxonomy(), pathMatcher: discovery.createTaxonomyPathMatcher() };
+  const real = { discoverySchema: loadCatalogTaxonomy(), pathMatcher: createTaxonomyPathMatcher() };
   expect(historicalDocumentEvidence(openReportPath, real, root), "after: the real registration exempts it").toBe(true);
   expect(historicalDocumentEvidence(cursorPlanPath, real, root), "after: the real registration exempts it").toBe(true);
   expect(historicalDocumentEvidence(promptLogPath, real, root), "after: the real registration exempts it").toBe(true);
@@ -184,8 +188,8 @@ function looseFixture() {
 }
 
 test("dev-prompt-log honors both existing negatives: a fixedFilenameContracts match under 💬️prompts/ is never exempted, and neither is a path inside a hypothetical package embedded directly under it", () => {
-  const real = discovery.loadCatalogTaxonomy();
-  const pathMatcher = discovery.createTaxonomyPathMatcher();
+  const real = loadCatalogTaxonomy();
+  const pathMatcher = createTaxonomyPathMatcher();
 
   // Negative 1: a synthetic fixedFilenameContracts rule matching an .md leaf under 💬️prompts/ must still block — the guard reads the schema generically, so this proves the mechanism without depending on any real contract happening to be markdown-shaped today.
   const withMdContract = { discoverySchema: { ...real, fixedFilenameContracts: { ...real.fixedFilenameContracts, "fixture-prompt-manifest": { pathPattern: "**/.🧬semio/🦑️repo/💬️prompts/🐙️ueli.md", scope: { kind: "single-file" }, grammar: "fixed-filename-v1" } } }, pathMatcher };

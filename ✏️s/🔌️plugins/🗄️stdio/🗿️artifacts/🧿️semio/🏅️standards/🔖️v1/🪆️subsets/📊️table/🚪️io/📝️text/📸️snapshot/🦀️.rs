@@ -33,7 +33,7 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_cell_kind(k: SemioTableCellKind) -> char {
+pub fn enc_cell_kind(k: SemioTableCellKind) -> char {
     match k {
         SemioTableCellKind::Null => 'n',
         SemioTableCellKind::Bool => 'b',
@@ -45,7 +45,7 @@ pub(crate) fn enc_cell_kind(k: SemioTableCellKind) -> char {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_cell_kind(s: &str) -> Result<SemioTableCellKind, String> {
+pub fn dec_cell_kind(s: &str) -> Result<SemioTableCellKind, String> {
     match s {
         "n" => Ok(SemioTableCellKind::Null),
         "b" => Ok(SemioTableCellKind::Bool),
@@ -70,12 +70,12 @@ pub(crate) fn dec_column(s: &str) -> Result<SemioTableColumn, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_row(r: &SemioTableRow) -> String {
+pub fn enc_row(r: &SemioTableRow) -> String {
     enc_list(&r.cells, enc_semio_value)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_row(s: &str) -> Result<SemioTableRow, String> {
+pub fn dec_row(s: &str) -> Result<SemioTableRow, String> {
     Ok(SemioTableRow { cells: dec_list(s, dec_semio_value)? })
 }
 

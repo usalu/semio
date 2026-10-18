@@ -17,17 +17,17 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Floor_plan>.
 
-use super::super::curtain_layout::CurtainLayout;
-use super::super::opening_frames::OpeningFrame;
-use super::super::annotation_layout::StoreyAnnotations;
-use super::super::spaces::StoreyRooms;
-use super::super::components::ComponentValue;
-use super::super::mep::MepValue;
-use super::super::ramp_runs::RampRun;
-use super::super::stair_runs::StairRun;
-use super::super::storey_levels::StoreyLevel;
-use super::super::wall_layout::WallLayout;
-use super::super::element_solids::{dep_object, dep_records, dep_types, dep_value};
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, DEFAULT_CUT_HEIGHT};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops::Vertex as Corner;
@@ -332,7 +332,7 @@ fn extend(bounds: &mut Option<[f64; 4]>, point: Point) {
     *bounds = Some([x0.min(point.x), y0.min(point.y), x1.max(point.x), y1.max(point.y)]);
 }
 
-fn measure(bounds: &mut Option<[f64; 4]>, vertices: &[PlanVertex], closed: bool) {
+pub fn measure(bounds: &mut Option<[f64; 4]>, vertices: &[PlanVertex], closed: bool) {
     let count = vertices.len();
     let spans = if closed { count } else { count.saturating_sub(1) };
     for index in 0..spans {
@@ -465,6 +465,4 @@ pub const READS: &[&str] = &[
 ];
 //#endregion 🔖️Dependency
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

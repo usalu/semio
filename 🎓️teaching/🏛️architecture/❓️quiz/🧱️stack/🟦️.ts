@@ -299,7 +299,7 @@ class SupervisedProctor {
   private async watch(): Promise<void> {
     let directories: string[];
     try {
-      directories = await proctorSourceDirectories(this.repoRoot, this.env);
+      directories = await proctorSourceDirectories(this.repoRoot, { signal: this.signal });
     } catch (error) {
       announce(`not following the proctor's sources: ${error instanceof Error ? error.message : String(error)}`);
       directories = [];

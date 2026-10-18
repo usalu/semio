@@ -8,8 +8,8 @@
 //!
 //! Related: accessibility ramps rise at most 1:12, <https://en.wikipedia.org/wiki/Wheelchair_ramp>.
 
-use super::super::element_solids::plan_kit::point;
-use super::super::storey_levels::{vertical_of, StoreyLevel};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::point;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
 use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::bulge::{corner_join, BulgeSeg};
@@ -252,6 +252,4 @@ impl RampStrip {
 }
 //#endregion 🔖️Strip
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

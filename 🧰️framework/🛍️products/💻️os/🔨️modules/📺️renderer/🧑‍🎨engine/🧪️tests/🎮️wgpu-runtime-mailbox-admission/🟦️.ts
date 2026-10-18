@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(here, "../../🧫️fixtures/🎮️wgpu-runtime-mailbox-admission/🔣️.json");
+const fixturePath = resolve(here, "../🧫️fixtures/🎮️wgpu-runtime-mailbox-admission/🔣️.json");
 
 type Completion = { key: string | null; revision: number; requiresInteraction: boolean; restoresInteraction: boolean };
 type Step = Record<string, unknown>;

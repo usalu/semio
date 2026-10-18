@@ -110,7 +110,7 @@ use semio_framework_plugin::ToolJobFactory;
 #[allow(unused_imports)]
 use semio_framework_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::architect::*;
 use crate::editor::architect::modes::edit::windows::register::config::*;
 use crate::editor::architect::modes::edit::windows::{adjacency, graph, report};

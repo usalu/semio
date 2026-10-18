@@ -7,7 +7,9 @@
     "graph",
     "watch",
     "tasks",
-    "bail"
+    "bail",
+    "booleans",
+    "lists"
   ],
   "properties": {
     "version": {
@@ -114,6 +116,88 @@
           },
           "expected": {
             "type": "boolean"
+          }
+        }
+      }
+    },
+    "booleans": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "args",
+          "field",
+          "flag",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "field": {
+            "enum": [
+              "skipCache",
+              "skipRemoteCache",
+              "excludeDependencies",
+              "verbose",
+              "bail"
+            ]
+          },
+          "flag": {
+            "type": "string"
+          },
+          "environment": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "lists": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "args",
+          "names",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "names": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }

@@ -20,7 +20,7 @@ pub struct Puzzle2dMoveNodeCandidateState {
     plan: Option<Puzzle2dMoveNodePlan>,
     candidate: Option<Puzzle2dSnapshot>,
     candidate_close: Option<ControlledRetirement<Puzzle2dSnapshot>>,
-    phase: u8,
+    pub phase: u8,
     closing: bool,
 }
 

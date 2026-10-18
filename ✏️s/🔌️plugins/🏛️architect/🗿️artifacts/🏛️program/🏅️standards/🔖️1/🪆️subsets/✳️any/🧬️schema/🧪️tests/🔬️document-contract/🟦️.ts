@@ -104,9 +104,9 @@ export function testProgramDocumentContract(): void {
     assert.deepEqual(parseProgramDiff(canonicalDiff), canonicalDiff, `${path}: diff parser`);
     assert.deepEqual(Object.keys(value), expectedDiffFields, `${path}: exact diff fields`);
     for (const field of ["knowledge", "benchmarks"]) if (value[field] !== null) {
-      assert.deepEqual(Object.keys(value[field]), ["added", "removed", "patched", "reordered"], `${path}.${field}: identified row delta`);
-      for (const added of value[field].added) assert.equal(typeof added.id, "string", `${path}.${field}: admitted row identity`);
-      for (const patched of value[field].patched) assert.equal(typeof patched.id, "string", `${path}.${field}: patched row identity`);
+      assert.deepEqual(Object.keys(value[field]), ["removed", "inserted", "moved", "modified"], `${path}.${field}: identified row delta`);
+      for (const inserted of value[field].inserted) assert.equal(typeof inserted.row.id, "string", `${path}.${field}: admitted row identity`);
+      for (const modified of value[field].modified) assert.equal(typeof modified.id, "string", `${path}.${field}: patched row identity`);
     }
   }
 

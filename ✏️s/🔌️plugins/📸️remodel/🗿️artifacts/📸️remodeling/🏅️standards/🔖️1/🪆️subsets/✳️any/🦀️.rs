@@ -9,6 +9,7 @@
 //! surface's `App`, which the old `PluginBuilder::.crate::editor::remodeling::<E>(AppDefinition)` call had no field for.
 
 use semio_s_artifact_remodel_remodeling_io::standards::v1::subsets::any::io;
+use io::{binary, text};
 use semio_s_artifact_remodel_remodeling_schema::standards::v1::subsets::any::schema;
 use semio_s_artifact_remodel_remodeling_viewer::viewer::remodeling as viewer;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};

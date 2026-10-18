@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `DeleteRailing`: the railing leaves in one sparse diff together with its properties and classifications (see the shared cascade).
 //! The outcome carries a cascade note when more than the railing leaves.
 
-use super::super::cascade;
-use super::DeleteRailing;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_railing::DeleteRailing;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -1,7 +1,7 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
 import schema from "../🧬️schema/🔣️.json";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import {executeCargoRequestV1,readCargoExecutionContractV1,selectCargoExecutionOperationV1,type CargoExecutionRequestV1,type CargoExecutionDeclarationV1} from "../🟦️.ts";
 import type {ScriptInvocation} from "../../../../🧭️routing/📥️invocation/🟦️.ts";
 import {mkdirSync,mkdtempSync,writeFileSync,existsSync} from "node:fs";

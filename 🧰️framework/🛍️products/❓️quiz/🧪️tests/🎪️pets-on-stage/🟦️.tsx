@@ -2,7 +2,7 @@
 import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import uniq from "lodash/uniq";
 import { type ReactElement } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { decodeQueryEnvelope, encodeQueryResult, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import { type Menagerie } from "@semio-tech/pets";
 import type { Query } from "@semio-tech/quiz";
@@ -190,6 +190,10 @@ describe("🐾️ pet companions", () => {
   });
 
   describe("the client", () => {
+    beforeAll(async () => {
+      await import("@semio-tech/pets-react");
+    }, 120_000);
+
     const client = (storage: ReturnType<ReturnType<typeof memoryStorageOrigin>["tab"]>, pets?: QuizPetsSource): ReactElement => (
       <QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => catalogProctor()} storage={storage} languages={["en"]} timing={TIMING} pets={pets} />
     );

@@ -13,7 +13,7 @@ type Fixture = Readonly<{
 
 const fixtureRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🧫️fixtures/🖥️os-source-topology/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🧪️tests/🧫️fixtures/🖥️os-source-topology/🔣️.json"), "utf8")) as Fixture;
 
 const expectedBasename: Readonly<Record<string, string>> = {
   javascript: "🟨️.js",

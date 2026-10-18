@@ -8,7 +8,7 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../.
 import {requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1} from "../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {observePhysicalFileV1,readPhysicalFileV1,type FileObservationControlV1} from "@semio-tech/framework/filesystem/observation";
+import {observePhysicalFileV1,readPhysicalFileV1,type FileObservationControlV1} from "../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts";
 import {withArtifactDescriptorSlotV1} from "../../../../📤️publication/📥️sources/🟦️.ts";
 import sourceSchema from "../../../../📤️publication/📥️sources/🧬️schema/🔣️.json";
 const limits=Object.freeze({...sourceSchema.properties}),maximumBytes=limits.maximumBytes.const,maximumFiles=limits.maximumFiles.const,maximumIndexBytes=limits.maximumManifestBytes.const,maximumPending=limits.maximumPendingOperations.const;

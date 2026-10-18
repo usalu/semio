@@ -9,7 +9,7 @@
 //!
 //! Related: Blondel's rule `2R + T`, <https://en.wikipedia.org/wiki/Stairs#Rise_and_run>.
 
-use super::super::storey_levels::{vertical_of, StoreyLevel};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Stair, StairFlight, Turn};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 #[cfg(test)] use std::collections::BTreeMap;
@@ -119,7 +119,7 @@ pub fn tread_for(riser_height: f64, min_tread: f64) -> f64 {
     (BLONDEL_TARGET - 2.0 * riser_height).max(min_tread).max(0.0)
 }
 
-fn flight(first_riser: u32, risers: u32, start: Point2, direction: f64, tread: f64, riser_height: f64, base_z: f64) -> StairFlightRun {
+pub fn flight(first_riser: u32, risers: u32, start: Point2, direction: f64, tread: f64, riser_height: f64, base_z: f64) -> StairFlightRun {
     let treads = risers.saturating_sub(1);
     StairFlightRun { first_riser, risers, treads, start, direction, tread, base_z: base_z + f64::from(first_riser - 1) * riser_height, length: f64::from(treads) * tread, winder: None }
 }
@@ -207,6 +207,4 @@ pub fn dependency(stair: &Stair) -> semio_framework_value::DslValue {
 }
 //#endregion 🔖️Geometry
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

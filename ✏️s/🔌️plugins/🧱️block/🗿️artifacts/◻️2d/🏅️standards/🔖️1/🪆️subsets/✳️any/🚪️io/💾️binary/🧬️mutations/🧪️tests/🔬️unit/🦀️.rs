@@ -2,6 +2,7 @@
 use crate::binary::mutations::*;
 use semio_s_artifact_block_2d_model::{BLOCK_2D_SCHEMA, Block2dSnapshot};
 use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
+use semio_s_artifact_block_2d_mut_node_kind::rename_node_kind::rename_node_kind;
 
 #[semio_framework_async_macros::async_test]
 async fn block2d_document_vcs_replays_granular_operations() {

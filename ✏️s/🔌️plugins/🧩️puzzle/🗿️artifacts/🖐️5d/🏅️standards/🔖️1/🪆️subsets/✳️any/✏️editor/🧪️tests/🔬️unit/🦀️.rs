@@ -146,7 +146,7 @@ use semio_framework_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use semio_framework_value::{FromValue, ToValue};
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::session::*;
 #[allow(unused_imports)]

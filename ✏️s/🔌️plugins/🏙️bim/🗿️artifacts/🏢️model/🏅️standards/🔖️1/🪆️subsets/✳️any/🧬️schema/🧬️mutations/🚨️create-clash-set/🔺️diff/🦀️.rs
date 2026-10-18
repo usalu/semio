@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateClashSet`: one created clash set entry. The id must be free across every collection, then the clash set must be writable (see `clash_set_problem`).
 
-use super::super::elements;
-use super::CreateClashSet;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_clash_set::CreateClashSet;
 use crate::standards::v1::subsets::any::schema::{snapshot::{clash_set_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

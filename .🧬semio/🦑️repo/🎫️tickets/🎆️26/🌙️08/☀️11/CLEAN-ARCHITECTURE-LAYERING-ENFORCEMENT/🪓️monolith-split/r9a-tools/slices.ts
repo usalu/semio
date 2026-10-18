@@ -49,6 +49,7 @@ console.log("slices", rows.length);
 for (const r of rows.slice(0, 40)) console.log(r.files, r.decls, r.attach.slice(0, 3).join(" + ").slice(-120));
 const only = process.env.TRACE_FILTER;
 for (const t of traces) if (!only || t.includes(only)) console.log("trace", t.slice(0, 400));
+if (process.env.FIND_DECL) { for (const slice of built.slices) if (slice.decls.some((d) => d.id.endsWith(process.env.FIND_DECL!))) console.log("FOUND", slice.attach.map((d) => d.id).join(" + "), "| decls", slice.decls.length, slice.decls.slice(0, 6).map((d) => d.id.split("::").slice(-3).join("::")).join(", ")); process.exit(0); }
 const pick = process.env.SLICE;
 const biggest = pick ? built.slices.find((s) => s.attach.some((d) => d.eff.join("::") === pick))!  : built.slices.map((slice) => ({ slice, files: new Set(slice.decls.filter((d) => d.file).map((d) => d.file)).size })).sort((a, b) => b.files - a.files)[Number(process.env.NTH ?? 0)]!.slice;
 const dist = new Map<string, { files: Set<string>; test: number }>();

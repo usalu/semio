@@ -2,12 +2,12 @@
 //! wired as a crate-root sibling module of `crate::tui::widget`
 //! (see that mod's `pub use crate::tui::log::{LogScroll, LogState};`).
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::event::{Key, KeyEvent, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::rows::paint_scroll_bar;
-use crate::tui::text::{elide, Elision};
-use crate::tui::theme::{Role, Surface, Theme};
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::rows::paint_scroll_bar;
+use semio_framework_ui_tui_core::text::{elide, Elision};
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
 use std::cell::Cell as Shared;
 use std::collections::VecDeque;
 

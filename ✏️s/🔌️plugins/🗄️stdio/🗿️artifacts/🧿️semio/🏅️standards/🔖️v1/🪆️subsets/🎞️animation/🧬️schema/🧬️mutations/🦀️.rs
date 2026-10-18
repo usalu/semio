@@ -124,7 +124,7 @@ pub fn fixture() -> SemioAnimationSnapshot {
 
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
     let base = fixture();
     use SemioAnimationMutation::*;
     vec![

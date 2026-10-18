@@ -263,17 +263,17 @@ pub enum DocumentOpenPlanStateV1 {
 
 #[derive(Clone, Debug)]
 pub(crate) struct DocumentOpenPlanRecordV1 {
-    pub(crate) receipt_digest: [u8; 32],
-    pub(crate) issued_at_ms: u64,
+    pub receipt_digest: [u8; 32],
+    pub issued_at_ms: u64,
     pub(crate) expires_at_ms: u64,
-    pub(crate) state: DocumentOpenPlanStateV1,
+    pub state: DocumentOpenPlanStateV1,
     pub(crate) authority: DocumentOpenPlanAuthorityV1,
-    pub(crate) socket_grant_selector: Option<String>,
+    pub socket_grant_selector: Option<String>,
 }
 
 #[derive(Default)]
 pub(crate) struct DocumentOpenPlanLedgerInnerV1 {
-    pub(crate) records: BTreeMap<[u8; 32], DocumentOpenPlanRecordV1>,
+    pub records: BTreeMap<[u8; 32], DocumentOpenPlanRecordV1>,
     issued_by_binding: BTreeMap<SocketBindingKeyV1, BTreeSet<[u8; 32]>>,
     issued_by_binding_scope: BTreeMap<(SocketBindingKeyV1, String, String), [u8; 32]>,
 }
@@ -348,7 +348,7 @@ impl DocumentOpenPlanLedgerV1 {
         Ok(public)
     }
 
-    pub(crate) fn authority_for_authenticated_exchange(&self, receipt: &str, scope: &DocumentScope, subject: &SocketSubjectV1, now_ms: u64) -> Result<DocumentOpenPlanAuthorityV1, DocumentOpenPlanErrorCodeV1> {
+    pub fn authority_for_authenticated_exchange(&self, receipt: &str, scope: &DocumentScope, subject: &SocketSubjectV1, now_ms: u64) -> Result<DocumentOpenPlanAuthorityV1, DocumentOpenPlanErrorCodeV1> {
         let capability = DocumentOpenPlanCapabilityV1::parse(receipt)?;
         let digest = capability.digest();
         let mut inner = self.inner.lock().map_err(|_| DocumentOpenPlanErrorCodeV1::DeadlineExceeded)?;

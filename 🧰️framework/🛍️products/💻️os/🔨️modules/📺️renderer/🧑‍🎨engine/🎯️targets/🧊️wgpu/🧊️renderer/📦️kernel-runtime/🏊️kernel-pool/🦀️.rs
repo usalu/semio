@@ -830,7 +830,7 @@ impl KernelPoolState {
             let extension_hash = PackageHash(*semio_framework_hash::hash(extension_bytes).as_bytes());
             let extension_package_ref = PackageRef { package: extension.package.clone(), hash: extension_hash };
             let extension_compiled = self.guest_runtime.compile(&extension_package_ref, extension_bytes).await;
-            let _ = extension_bytes_owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = semio_framework_os_renderer_wgpu_host_base::close_renderer_io_payload(&mut extension_bytes_owner);
             let extension_compiled = match extension_compiled {
                 Ok(handle) => handle,
                 Err(error) => {

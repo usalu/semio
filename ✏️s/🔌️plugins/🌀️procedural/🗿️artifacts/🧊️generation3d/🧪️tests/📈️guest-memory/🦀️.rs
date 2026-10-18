@@ -108,7 +108,7 @@ fn staged_actor_component() -> Option<std::path::PathBuf> {
     if let Some(component) = std::env::var_os("SEMIO_POLL_TURN_LEAK_COMPONENT") {
         return Some(std::path::PathBuf::from(component));
     }
-    let staged = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|path| path.join("nx.json").is_file())?.join("🌎️hub/🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_procedural_component.wasm");
+    let staged = semio_framework_test_fixtures::repo_root!().join("🌎️hub/🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_procedural_component.wasm");
     staged.exists().then_some(staged)
 }
 

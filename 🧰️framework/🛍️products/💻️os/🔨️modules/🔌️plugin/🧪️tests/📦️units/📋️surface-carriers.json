@@ -130,17 +130,17 @@
     },
     {
       "name": "a_command_page_that_is_not_the_next_one_is_refused_by_its_order",
-      "sha256": "5bf0e12eea3936fbc4469eef0219e5278ca673016bf3e3f444fd9c8f03ad1c87",
+      "sha256": "e56b9729052f8cd129c59521c1a4339e6dd6c81cc5232fe7a33ca66c229bb1f3",
       "assertions": 3,
       "law": true,
-      "bytes": 3730
+      "bytes": 3733
     },
     {
       "name": "a_command_reaches_both_ephemeral_lanes_without_touching_history",
-      "sha256": "29e4ff30ec00477a4e91e34c8ed7c4edc668e8da9617470d05f37296c7ef5a99",
+      "sha256": "b2ebbb1e9888a5e329aa8372c62da152b4e5ca9e9402ca5a8ceb4689578bef64",
       "assertions": 15,
       "law": true,
-      "bytes": 4728
+      "bytes": 4731
     },
     {
       "name": "a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched",
@@ -165,10 +165,10 @@
     },
     {
       "name": "a_composed_document_crosses_a_media_edge_with_its_children",
-      "sha256": "a05f72371af24fc4b0603326cc9ebdcf920c679193fa9e576c5d149be0739313",
+      "sha256": "a087294000b1c8f2ffe8ba351ff2d6fd5bdcf51ac6186e0da7264ce16e166f96",
       "assertions": 4,
       "law": true,
-      "bytes": 5329
+      "bytes": 5332
     },
     {
       "name": "a_composed_documents_child_heads_answer_each_owned_childs_current_head_snapshot",
@@ -326,10 +326,10 @@
     },
     {
       "name": "a_whole_document_media_import_is_a_stepped_archive_load_and_never_folds_inside_the_call",
-      "sha256": "6df2527fd9cb79d6ca3c4c3bdfc6779191b086b895b5518ea44f1af7f9a0a75a",
+      "sha256": "0098e77bdb33563db1b3588bba84e3d980ec7ed513b6563b9fed5a20bbb5b0d0",
       "assertions": 9,
       "law": true,
-      "bytes": 6185
+      "bytes": 6188
     },
     {
       "name": "accept_field_token",
@@ -459,10 +459,10 @@
     },
     {
       "name": "app_owned_request_context_identity_matches_language_neutral_oracle_and_rejects_every_root_drift",
-      "sha256": "9be5bf22157698f4d1d163ee70f9d7e7d3df53401bc61ce21133426190a47027",
+      "sha256": "e15ac0958855ee288caca173c689f2d0cdcfe478263d4a4e24397baeee719031",
       "assertions": 10,
       "law": true,
-      "bytes": 2955
+      "bytes": 2958
     },
     {
       "name": "apply_test_mutations",
@@ -1026,10 +1026,10 @@
     },
     {
       "name": "concurrent_typed_operations_hand_every_presentable_page_to_one_turn",
-      "sha256": "4cbb92bfd29c827d26cba03580d7242f249bee1768a64177dfa65c31b45a1419",
+      "sha256": "ff90782eda0fbd2cb945728050d779a1f69f0f449b7f6cc5bc481cbabb352fd6",
       "assertions": 5,
       "law": true,
-      "bytes": 5616
+      "bytes": 5619
     },
     {
       "name": "consecutive_config_only_view_dispatches_add_no_history_rows",
@@ -1061,10 +1061,10 @@
     },
     {
       "name": "context_menu_wire_requires_and_forwards_canonical_view_state",
-      "sha256": "0b4aa1b5dfaa1f62e40fce6e510eede299e6b841fdf6bfadc100ca3cb5f6fbd3",
+      "sha256": "d4134feef6b501940dab326edd1afc1f8282388678f7c98bbc84d83a2c281dc9",
       "assertions": 7,
       "law": true,
-      "bytes": 1534
+      "bytes": 1537
     },
     {
       "name": "continuation_unit_is_ready_on_first_poll",
@@ -1572,21 +1572,21 @@
     },
     {
       "name": "handle",
-      "sha256": "626ea84528c31b460a0fe2d5c6d69921437b10f655f7387890d69d77b5396725",
+      "sha256": "d4e49c2c29a8244a3c8f343c9674993c595b8c9aff41cd97b263c7aa28b1cde9",
       "assertions": 0,
       "law": false,
       "bytes": 491
     },
     {
       "name": "handle",
-      "sha256": "6c3e38f63435a944e862fbd4ec8cd93decc6ab231a0241eb87b4f38275904123",
+      "sha256": "99ede880c4ad23a31335f729912246ba85f2a39fe31c92be80eb7298b1c0f252",
       "assertions": 0,
       "law": false,
       "bytes": 439
     },
     {
       "name": "handle",
-      "sha256": "b3843dc77818d14c21828511ed17c781504a1e89b3963eb381b6852463719386",
+      "sha256": "3cc2c31b44029728652ea73012f89dab454efcfb87f5e2e4ec789287e1da72cb",
       "assertions": 0,
       "law": false,
       "bytes": 476
@@ -1642,10 +1642,10 @@
     },
     {
       "name": "history_window_fixture",
-      "sha256": "6a69dd5c2cd22560099010cde8abbd1b715b1cac40d51177c6f2562956d369c1",
+      "sha256": "7ab833f03152d12c15feb6871cd4ed8364efb0e095350f65a349afc6a7b38633",
       "assertions": 0,
       "law": false,
-      "bytes": 160
+      "bytes": 163
     },
     {
       "name": "history_window_log",
@@ -1733,7 +1733,7 @@
     },
     {
       "name": "instance_source",
-      "sha256": "bde393a32835c7f757206952efbc7d416ecf5fe3b7b4b3d18e750188ffb6b814",
+      "sha256": "8eb289d5f81d57830aad2ed2ea621b5c5317d7a40ffd5f724f80b9c73132bfdd",
       "assertions": 0,
       "law": false,
       "bytes": 250
@@ -1824,10 +1824,10 @@
     },
     {
       "name": "interaction_select_speaks_exactly_the_schema_merge_vocabulary",
-      "sha256": "a849046269485f5ec0281dbcea51f9d3c5c0154542cf07a74efb5ce417550244",
+      "sha256": "ce03156f1ffedf5e0c60e290ae825d9d9bad04381a76147fd1737ffa86cf6d79",
       "assertions": 3,
       "law": true,
-      "bytes": 3683
+      "bytes": 3686
     },
     {
       "name": "interaction_target_args",
@@ -1964,10 +1964,10 @@
     },
     {
       "name": "leftover_interaction_view_selected_ids_are_a_set_for_every_merge",
-      "sha256": "3f7a5b634b4a6251765461a65027d4d48c17803dfd4b41159bd1a18b6893a145",
+      "sha256": "e3d8b25c3bc6c7dac16a28d29735514bad19d84f73f051cc3f08581c3c674334",
       "assertions": 5,
       "law": true,
-      "bytes": 4331
+      "bytes": 4334
     },
     {
       "name": "manifest_command_dispatch_validates_structural_app_ownership",
@@ -2377,10 +2377,10 @@
     },
     {
       "name": "original_reserved_job_currency_law_retains_spare_backing_until_exact_release",
-      "sha256": "1afa0642637cbd74179e89453f48055c13561a5809d8eebd9fddadff85ad0644",
+      "sha256": "130c80a243d8f2589218008da49e04764557ebac13fd67310e394ca799e43f91",
       "assertions": 26,
       "law": true,
-      "bytes": 3795
+      "bytes": 3798
     },
     {
       "name": "owned_mutation_batch_birth_bytes",
@@ -2475,10 +2475,10 @@
     },
     {
       "name": "plugin_builder_wires_app_factory_for_create_app",
-      "sha256": "8771afc8f6b41fb65d0667070f267f341d67580d76a9399b98b5dbfa8d133e74",
+      "sha256": "1a3356fffd0b5213581f4c98301e5d0f8adfe32e4e8378f987c28d3e0a0f7e1a",
       "assertions": 8,
       "law": true,
-      "bytes": 3392
+      "bytes": 3395
     },
     {
       "name": "plugin_command_handler_is_program_owned_across_app_instances",
@@ -2608,10 +2608,10 @@
     },
     {
       "name": "reserved_undo_browser_note_without_inverse_is_not_an_undo_target",
-      "sha256": "c3232118a1e9ed47cce06fdedc58c027568438523bc025fccf9fbf7ef84504c9",
+      "sha256": "03fd7aa8cb94f01cad66e0a7be0a0aa6a7088123a6c421c57f6a0e8daab96dad",
       "assertions": 12,
       "law": true,
-      "bytes": 4789
+      "bytes": 4792
     },
     {
       "name": "reserved_undo_first_turn_admits_spawn_job_and_drive_commits_history_route",
@@ -2650,10 +2650,10 @@
     },
     {
       "name": "reserved_undo_replay_shell_command_survives_wire_roundtrip",
-      "sha256": "44429d88f32aef8f0cbf5d83ce5d6c5159874dc49b07f6bfb9f9a1ee59b7b82e",
+      "sha256": "edf227f847abcf8d38083e17fc585e88c92eb729a38692920884a84e85e4a440",
       "assertions": 1,
       "law": true,
-      "bytes": 1278
+      "bytes": 1281
     },
     {
       "name": "reserved_undo_steps_over_undeclared_chrome_and_pops_the_document_edit",
@@ -2678,17 +2678,17 @@
     },
     {
       "name": "retained_command_child_emit_prepublication_close_and_rejected_handoff_are_bounded",
-      "sha256": "76af1caa4fcea2cab35dea44667d7c3ac3205a130080ad8011da1219e2d7dbc6",
+      "sha256": "b70a87ba57a08b48c2dd3c5384174753e781b4a2f0a8f02b74a7438908ae9073",
       "assertions": 16,
       "law": true,
-      "bytes": 8664
+      "bytes": 8667
     },
     {
       "name": "retained_command_download_seam_keeps_original_chunks_and_bounded_cancel_owner",
-      "sha256": "feac8f06eb04af55c6a827caf7b05eda8833e31c541324aa78af5acc051a6d91",
+      "sha256": "cb7bb05e14a5f5e70ce001a3358b4795ee467b1ea450372b12b85e66c778eb2d",
       "assertions": 17,
       "law": true,
-      "bytes": 8858
+      "bytes": 8861
     },
     {
       "name": "retained_factory_proof_requires_the_exact_registered_runtime_authority",
@@ -2741,10 +2741,10 @@
     },
     {
       "name": "retained_operation_continues_after_command_admission_until_publication_and_retirement",
-      "sha256": "6a3d86b9f677faff1f9b503b802ec55a3a5541a782622af5e4e8f5126364d30b",
+      "sha256": "56ded0e9271fa60ddcc253c45f9c8c20449cf264833623524c45724f8cdf7f3e",
       "assertions": 9,
       "law": true,
-      "bytes": 7134
+      "bytes": 7137
     },
     {
       "name": "retained_presence_fills_presence_store_and_peer_marks_and_drops_left_peers",
@@ -2972,10 +2972,10 @@
     },
     {
       "name": "step",
-      "sha256": "7b0a25d0228e88fb746c197f668efdecc8ca4f33606e25074af8f41eb650296e",
+      "sha256": "b5aebeb67712e92d477f41bbab66c022a53c97a188eb152b17abcf8e22bb187e",
       "assertions": 4,
       "law": false,
-      "bytes": 1698
+      "bytes": 1701
     },
     {
       "name": "step",
@@ -3007,24 +3007,24 @@
     },
     {
       "name": "surface_context_presence_targets_each_concrete_surface",
-      "sha256": "31c52bae56a1a5966b8d895c1b5f89cf4b75f060eb4cd65732a8d1a3f9b1f00f",
+      "sha256": "8cc567de7315caafa2297bed06e1990b2d5c5ff2b3be09a25028420c7c5b63fe",
       "assertions": 2,
       "law": true,
-      "bytes": 3729
+      "bytes": 3732
     },
     {
       "name": "surface_context_reaches_real_app_render_and_rejects_hidden_surfaces",
-      "sha256": "4b36faccc721ee2bf0fbd401a8c4268afd5b1217723c75c9290242b227b62ec3",
+      "sha256": "c7067caecd25eb421b411db55644f395847f137d15e08a81b0a4c069839d7707",
       "assertions": 7,
       "law": true,
-      "bytes": 3863
+      "bytes": 3866
     },
     {
       "name": "surface_context_refresh_projects_panels_from_focused_window_state",
-      "sha256": "448a822be4bbcdc31e3a3b939dfb7972188048145d6e09af3aa0b903758261c6",
+      "sha256": "163c1a6d43f9997678a246514bd2bf43a2db00dfbbb9f073cc3365f1c45a9656",
       "assertions": 3,
       "law": true,
-      "bytes": 2864
+      "bytes": 2867
     },
     {
       "name": "synthetic_play_app",
@@ -3042,10 +3042,10 @@
     },
     {
       "name": "task_admission_defers_the_user_factory_until_actor_execution",
-      "sha256": "6afffcf5a81c0200e41bb421be0c3d202649e53c93d223351216637bf0b8454b",
+      "sha256": "8110d0cf93109a04583074bfe6f3b203e003c672079313dc8581ae14c2a2bb34",
       "assertions": 4,
       "law": true,
-      "bytes": 1756
+      "bytes": 1759
     },
     {
       "name": "terminal_frame_release_bytes",

@@ -46,7 +46,7 @@ function gumballVisible(window: InteractionWindow, selectedIds: readonly string[
  * alone (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, gaps #3/#5/#7/#8/#10). */
 export function testGeneration3dGenerateModeInteractionContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../../🧫️fixtures/🎛️generate-mode-interactions.json`, "utf8")) as GenerateInteractionsFixture;
+  const fixture = JSON.parse(readFileSync(`${here}/../../../🧪️tests/🧫️fixtures/🎛️generate-mode-interactions.json`, "utf8")) as GenerateInteractionsFixture;
   assert.equal(fixture.format, "semio.generation3d.generate-mode-interactions");
   assert.equal(fixture.version, 1);
 

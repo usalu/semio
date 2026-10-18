@@ -70,6 +70,4 @@ pub fn emit(x: &mut Export<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -137,7 +137,9 @@ describe("wgpu raster operation witness lifecycle", () => {
 
   it("feeds the engine surface's raster through the same candidate the frame minted", () => {
     const canvas = source("engineCanvasSource");
-    expect(canvas).toContain("gpu.reserve_engine_texture(key, build.width, build.height,1, identity, candidate_generation, expected)");
+    const gpuCanvas = readModuleTreeSource(resolve(engineRoot, "../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🎬️canvas/🦀️.rs"));
+    expect(canvas).toContain("gpu.begin_engine_raster(key, build.width, build.height, identity, candidate_generation, expected)");
+    expect(gpuCanvas).toContain("self.reserve_engine_texture(key,width,height,1,identity,candidate,expected)");
     expect(canvas).toContain('return Err("engine raster operation authority was stale before realization".to_string());');
   });
 

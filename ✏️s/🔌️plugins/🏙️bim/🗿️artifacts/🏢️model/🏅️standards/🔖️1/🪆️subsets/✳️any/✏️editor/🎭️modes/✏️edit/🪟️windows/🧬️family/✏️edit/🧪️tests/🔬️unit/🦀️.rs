@@ -1,11 +1,27 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::set_family::SetFamily;
+use crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter;
+use crate::standards::v1::subsets::any::schema::{snapshot::FamilyCategory, snapshot::ModelSnapshot, snapshot::ParameterKind, snapshot::SolidAxis, snapshot::SolidShape, mutations::ModelMutation};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::formula;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, ExprPoint3, FamilySolid, ParametricProfile};
+use crate::editor::bim::modes::edit::windows::family::edit::*;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const TABLE: &str = include_str!("../../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
+static TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json"));
 
 fn model() -> ModelSnapshot {
-    from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes")
+    from_json_str((*TABLE), JsonMemberPolicy::Reject).expect("the table decodes")
 }
 
 fn edit(part: &str, op: &str, key: &str, value: &str) -> Edit {

@@ -3,7 +3,8 @@ import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, sy
 import { dirname, relative, resolve } from "node:path";
 import Ajv, { type AnySchema } from "ajv";
 import ts from "typescript";
-import { canonicalPrimaryFilenameForKind, loadTaxonomy, schemaFacetFormatEntries, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { schemaFacetFormatEntries } from "../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
 import type { PolicySourceOperations } from "../../🔍️discovery/📖️source-access/🟦️.ts";
 
 /** 🧱️ One extracted owner module: its path, the semantic context that names it, and the declarations it owns. */
@@ -282,5 +283,5 @@ test("retains native source data and registers one Bun and Nx route", () => {
   const project = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/📋️project.json"), "utf8"));
   const packageJson = JSON.parse(readFileSync(resolve(libraryRoot, "📦️packages/🟦️typescript/package.json"), "utf8"));
   expect(project.targets[fixture.route.target]?.options?.command).toBe(fixture.route.command);
-  expect(packageJson.scripts[fixture.route.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.route.target}`);
+  expect(packageJson.scripts[fixture.route.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.route.target}`);
 });

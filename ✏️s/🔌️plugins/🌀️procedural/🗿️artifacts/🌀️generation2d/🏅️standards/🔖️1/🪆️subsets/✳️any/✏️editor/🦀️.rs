@@ -121,7 +121,7 @@ use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalTarget;
 use semio_s_artifact_procedural_2d_preview_eval::PreviewEvalWindow;
 use semio_s_artifact_procedural_2d_editor_commands::flow_eval_tick::generation2d_preview_target;
 use semio_s_artifact_procedural_2d_editor_commands::flow_eval_tick::generation2d_preview_windows;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 #[path = "🛰️owner-and-io/🦀️.rs"]
 mod owner_and_io;

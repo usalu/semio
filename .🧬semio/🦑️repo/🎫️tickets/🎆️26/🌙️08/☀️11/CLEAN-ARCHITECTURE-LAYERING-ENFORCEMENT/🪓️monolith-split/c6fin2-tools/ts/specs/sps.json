@@ -1,0 +1,20 @@
+{
+ "file": "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts",
+ "importers": [],
+ "children": [
+  {"dir": "🧮️component-constants", "doc": "/** 🧮️ The hub stdio package identities, the component manifest, wasm and descriptor names and the shipped artifact, io, deadline and function bounds. */",
+   "names": ["PACKAGE_NAME", "PLUGIN_ID", "ARTIFACT_OWNER", "COMPONENT_PACKAGE", "COMPONENT_MANIFEST", "WASM_OUT", "DESCRIPTOR_PACK", "DESCRIPTOR_JSON", "ARTIFACT_MAX_BYTES", "IO_CHUNK_BYTES", "CATALOG_DEADLINE_MS", "COMPONENT_FUNCTION_MAX", "COMPONENT_PROFILE"]},
+  {"dir": "🧾️catalog-artifact-io", "doc": "/** 🧾️ The catalog artifact io of the hub stdio package: the scope export compiler, the controlled and bounded readers, the release component preparation, the synced writes, the commit marker, the descriptor pair and the wasm core inspection with its independent oracles. */",
+   "names": ["compileStdioScopeExport", "CatalogControl", "assertControlled", "CatalogExecution", "catalogControlV1", "runControlled", "assertRegularBounded", "assertContainedBounded", "prepareReleaseComponent", "copyCatalogArtifact", "writeSyncedNew", "componentPackageId", "publishCatalogCommitMarker", "atomicDescriptorPair", "webSha256", "WasmCoreStructure", "readWasmU32", "inspectWasmCoreStructure", "assertComponentizableCore", "verifyIndependentOracles", "pathIsWithin"]},
+  {"dir": "🔬️catalog-contract-and-flow-decode", "doc": "/** 🔬️ The catalog root contract tests and the flow retained decode script of the hub stdio package. */",
+   "names": ["runCatalogRootContractTests", "FlowRetainedDecodeScript"]},
+  {"dir": "🗺️stdio-text-walk-and-surfaces", "doc": "/** 🗺️ The stdio text walk, the dwg artifact ownership check and the home io surface script of the hub stdio package. */",
+   "names": ["stdioWalkText", "readScannedText", "runDwgArtifactOwnership", "HomeIoSurfaceFixture", "cargoTomlFiles", "HomeIoSurfaceScript"]},
+  {"dir": "📚️editor-catalog-and-command-scripts", "doc": "/** 📚️ The editor catalog contract, the stdio package manifests and the mutation inventory, composition, test, editor component check and bench scripts of the hub stdio package. */",
+   "names": ["testEditorCatalogContract", "stdioPackageManifests", "stdioPackageEditorFormats", "StdioPackageManifest", "MutationInventoryScript", "CompositionScript", "TestScript", "EditorComponentCheckScript", "BenchScript"]},
+  {"dir": "🏗️catalog-root-script", "doc": "/** 🏗️ The catalog root script of the hub stdio package with its fresh root and cargo environment helpers. */",
+   "names": ["requireEmptyFreshRoot", "catalogCargoEnvironment", "CatalogRootScript"]},
+  {"dir": "🪢️native-codec-and-sqlite-scripts", "doc": "/** 🪢️ The native codec projection script and the snapshot sqlite test script of the hub stdio package. */",
+   "names": ["NativeCodecProjectionScript", "SnapshotSqliteTestScript"]}
+ ]
+}

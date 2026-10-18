@@ -124,6 +124,4 @@ pub fn offset_in(host: &Frame, host_corner: P3, polygon: &[P3]) -> ([f64; 2], Re
     ([round9(dot(offset, host.right)), round9(dot(offset, host.up))], rect)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

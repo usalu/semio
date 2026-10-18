@@ -1,5 +1,8 @@
-use super::*;
-use crate::primitives::make_box;
+use semio_framework_3d_brep_construction::sew::*;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_construction::primitives::make_box;
 use semio_framework_3d_brep_curve::Curve3;
 
 #[semio_framework_async_macros::async_test]

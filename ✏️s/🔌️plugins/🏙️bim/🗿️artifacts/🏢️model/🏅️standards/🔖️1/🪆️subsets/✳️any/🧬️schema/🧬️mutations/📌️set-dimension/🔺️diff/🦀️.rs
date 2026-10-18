@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetDimension`: a sparse dimension patch of exactly the provided fields that differ. The record that results must break none of the create rules: the storey and the style must exist, there are at least two anchors that name existing elements or finite points, the direction and offset are finite and a lock is a positive length.
 //! Providing only equal values, or no field, is a no-op.
 
-use super::super::annotating;
-use super::SetDimension;
+use crate::standards::v1::subsets::any::schema::mutations::annotating;
+use crate::standards::v1::subsets::any::schema::mutations::set_dimension::SetDimension;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -34,17 +34,17 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
@@ -67,7 +67,7 @@ pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -90,7 +90,7 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
@@ -159,18 +159,18 @@ pub(crate) fn dec_inline(s: &str) -> Result<MdInline, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_inline_list(list: &[MdInline]) -> String {
+pub fn enc_inline_list(list: &[MdInline]) -> String {
     format!("[{}]", list.iter().map(enc_inline).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_inline_list(s: &str) -> Result<Vec<MdInline>, String> {
+pub fn dec_inline_list(s: &str) -> Result<Vec<MdInline>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_inline).collect()
 }
 
 /// 🧱 `MdBlock`, tag range J-P (see file doc comment) — order matches its declaration.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block(b: &MdBlock) -> String {
+pub fn enc_block(b: &MdBlock) -> String {
     match b {
         MdBlock::Heading { level, inlines } => format!("J[{},{}]", level, enc_inline_list(inlines)),
         MdBlock::Paragraph { inlines } => format!("K[{}]", enc_inline_list(inlines)),
@@ -183,7 +183,7 @@ pub(crate) fn enc_block(b: &MdBlock) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block(s: &str) -> Result<MdBlock, String> {
+pub fn dec_block(s: &str) -> Result<MdBlock, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -211,12 +211,12 @@ pub(crate) fn dec_block(s: &str) -> Result<MdBlock, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block_list(list: &[MdBlock]) -> String {
+pub fn enc_block_list(list: &[MdBlock]) -> String {
     format!("[{}]", list.iter().map(enc_block).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block_list(s: &str) -> Result<Vec<MdBlock>, String> {
+pub fn dec_block_list(s: &str) -> Result<Vec<MdBlock>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_block).collect()
 }
 

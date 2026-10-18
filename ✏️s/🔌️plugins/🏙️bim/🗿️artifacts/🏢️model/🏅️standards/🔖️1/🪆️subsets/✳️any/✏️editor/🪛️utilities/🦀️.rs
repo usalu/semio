@@ -123,6 +123,4 @@ pub fn draws(utility: &str) -> bool {
 }
 //#endregion 🔖️Projection
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,23 +1,85 @@
-use super::compute::{take_computed, take_hashed};
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::sync::Arc;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::{take_computed, take_hashed};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2, Wall}, diff::{Entry, patches::{MaterialPatch, StoreyPatch, WallPatch}, ModelDiff}};
 use protocol::{Inference, InferredField};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
-const FULL: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
-const JOINS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
+static FULL: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json"));
+static JOINS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json"));
 
 fn decode(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the snapshot decodes")
 }
 
 fn full() -> ModelSnapshot {
-    decode(FULL)
+    decode((*FULL))
 }
 
 fn house() -> ModelSnapshot {
-    decode(HOUSE)
+    decode((*HOUSE))
 }
 
 fn line(from: (f64, f64), to: (f64, f64)) -> Axis {
@@ -55,7 +117,7 @@ fn rooms_grid(rows: usize, columns: usize) -> ModelSnapshot {
 
 #[test]
 fn the_plan_is_topological_for_every_selection_and_names_only_planned_parents() {
-    for snapshot in [full(), decode(JOINS)] {
+    for snapshot in [full(), decode((*JOINS))] {
         for wanted in [kinds::ALL, kinds::LEVELS, kinds::LAYOUTS, kinds::FRAMES, kinds::SOLIDS, kinds::ROOMS, kinds::PLANS, kinds::QUANTITIES, kinds::DIAGNOSTICS, kinds::RUNS, kinds::CURTAINS] {
             let steps = plan::build(&snapshot, kinds::closure(wanted));
             let position: BTreeMap<&ModelNode, usize> = steps.iter().enumerate().map(|(index, step)| (&step.key, index)).collect();
@@ -88,7 +150,7 @@ fn the_graph_is_deterministic_and_the_empty_model_infers_the_default() {
 
 #[test]
 fn every_projection_is_cache_transparent_warm_equals_cold_equals_uncached() {
-    for snapshot in [full(), decode(JOINS)] {
+    for snapshot in [full(), decode((*JOINS))] {
         let uncached = ModelInference::infer(&snapshot).expect("infers");
         let mut session = ModelInferenceSession::new();
         let cold = session.refresh(&snapshot).clone();
@@ -116,8 +178,8 @@ fn every_projection_is_cache_transparent_warm_equals_cold_equals_uncached() {
 
 #[test]
 fn the_thin_projections_equal_the_whole_inference() {
-    use super::super::super::{curtain_layout, diagnostics, element_solids, opening_frames, plan_linework, quantities, spaces, stair_runs, storey_levels, wall_layout};
-    for snapshot in [full(), decode(JOINS)] {
+    use crate::standards::v1::subsets::any::schema::inferences::{curtain_layout, diagnostics, element_solids, opening_frames, plan_linework, quantities, spaces, stair_runs, storey_levels, wall_layout};
+    for snapshot in [full(), decode((*JOINS))] {
         let whole = ModelInference::infer(&snapshot).expect("infers");
         assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&snapshot), whole.storey_levels);
         assert_eq!(crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout(&snapshot), whole.wall_layout);

@@ -2,7 +2,7 @@
 //! override addresses never changes (delete and create to address another cell).
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::panel_flaw;
-use super::SetCurtainPanelOverride;
+use crate::standards::v1::subsets::any::schema::mutations::set_curtain_panel_override::SetCurtainPanelOverride;
 use crate::standards::v1::subsets::any::schema::{diff::{patches::CurtainPanelOverridePatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

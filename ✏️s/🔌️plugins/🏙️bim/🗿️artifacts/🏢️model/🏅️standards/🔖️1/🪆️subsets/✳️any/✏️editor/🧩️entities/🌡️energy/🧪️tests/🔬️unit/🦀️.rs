@@ -1,5 +1,5 @@
 use crate::editor::bim::entities::{kind_of, FieldRow};
-use super::{EnvelopeFacts, facts, summary};
+use crate::editor::bim::entities::energy::{EnvelopeFacts, facts, summary};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnergyScope, EnergyTotals, EnvelopeSpace, SurfaceKind};
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
@@ -126,7 +126,7 @@ async fn the_facts_add_up_the_exterior_envelope_and_the_glazing_share_of_the_fac
     assert_eq!(facts.envelope_area, 37.0, "exterior wall, window and the ground floor; the neighbour and the adiabatic ceiling do not count");
     assert_eq!(facts.glazing_area, 5.0);
     assert!((facts.glazing_ratio - 0.2).abs() < 1e-12, "5 of the 25 square metres of exterior facade");
-    assert_eq!(super::facts(&EnvelopeSpace::default()), EnvelopeFacts::default());
+    assert_eq!(crate::editor::bim::entities::energy::facts(&EnvelopeSpace::default()), EnvelopeFacts::default());
 }
 
 #[semio_framework_async_macros::async_test]

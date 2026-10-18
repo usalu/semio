@@ -1,13 +1,25 @@
 //! 🧪️ The rules: the corridor width of a room, who a rule measures, who violates it and what a member the model cannot measure does.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, Rule, RuleKind};
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus, StoreyRooms};
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use crate::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::rule_results::*;
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, RuleScope, RuleSeverity};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json"));
 
 fn house() -> ModelSnapshot {
-    from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("the committed house decodes")
+    from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("the committed house decodes")
 }
 
 fn rule(kind: RuleKind, limit: f64) -> Rule {

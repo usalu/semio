@@ -1,0 +1,51 @@
+{
+ "name": "fb",
+ "crates": [
+  "semio-framework-3d-brep-engine",
+  "semio-framework-3d-brep-kernel-contract",
+  "semio-framework-3d-brep-mesh-io",
+  "semio-framework-3d-brep-shape-value",
+  "semio-framework-3d-brep-engine-tests",
+  "semio-framework-3d-brep-vector",
+  "semio-framework-3d-brep-tolerance",
+  "semio-framework-3d-brep-polynomial",
+  "semio-framework-3d-brep-surface",
+  "semio-framework-3d-brep-curve",
+  "semio-framework-3d-brep-representation",
+  "semio-framework-3d-brep-queries",
+  "semio-framework-3d-brep-analysis",
+  "semio-framework-3d-brep-intersect",
+  "semio-framework-3d-brep-tessellation",
+  "semio-framework-3d-brep-validation",
+  "semio-framework-3d-brep-construction",
+  "semio-framework-3d-brep-boolean",
+  "semio-framework-3d-brep-sweep",
+  "semio-framework-3d-brep-offset",
+  "semio-framework-3d-testing-support",
+  "semio-framework-mesh-component-references"
+ ],
+ "base": {
+  "rev": "b84bf526c7ba26f99c4054b47da1c1a4d5064e3d",
+  "crates": [
+   "semio-framework-3d-brep-engine",
+   "semio-framework-3d-brep-vector",
+   "semio-framework-3d-brep-tolerance",
+   "semio-framework-3d-brep-polynomial",
+   "semio-framework-3d-brep-surface",
+   "semio-framework-3d-brep-curve",
+   "semio-framework-3d-brep-representation",
+   "semio-framework-3d-brep-queries",
+   "semio-framework-3d-brep-analysis",
+   "semio-framework-3d-brep-intersect",
+   "semio-framework-3d-brep-tessellation",
+   "semio-framework-3d-brep-validation",
+   "semio-framework-3d-brep-construction",
+   "semio-framework-3d-brep-boolean",
+   "semio-framework-3d-brep-sweep",
+   "semio-framework-3d-brep-offset",
+   "semio-framework-3d-testing-support",
+   "semio-framework-mesh-component-references"
+  ]
+ },
+ "note": "FB carve: engine split into kernel-contract, mesh-io, shape-value and the black-box tests crate"
+}

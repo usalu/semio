@@ -4,7 +4,6 @@ use semio_framework_plugin_interpreter_runtime::OwnedRuntime;
 use semio_framework_plugin_guest_contract::TurnFault;
 use semio_framework::kernel::{Budget,Event,TurnResult,TurnStatus};
 use semio_framework_actor::ActorId as RuntimeActorId;
-use semio_framework_test_fixtures::manifest_dir;
 use std::path::PathBuf;
 const NOTE_EDITOR_APP:&str="s.note.note@1/*#editor";
 const NOTE_DOCUMENT_SCHEMA:&str="note.document";
@@ -12,7 +11,7 @@ const NOTE_ARTIFACT_KIND:&str="s.note.note";
 const MINTED_DOCUMENT_ID:&str="artifact-0123456789abcdef0123456789abcdef";
 const OPEN_WALL_BUDGET:std::time::Duration=std::time::Duration::from_secs(120);
 fn plugin_wasm(_file:&str)->PathBuf{
-    let root=manifest_dir!().ancestors().find(|path|path.join("nx.json").is_file()).unwrap().to_path_buf();
+    let root=semio_framework_test_fixtures::repo_root!();
     let path=root.join("🌎️hub/🧩️compositions/🗒️note/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_note_component.wasm");
     assert!(path.is_file(),"Note component producer prerequisite is required");path
 }

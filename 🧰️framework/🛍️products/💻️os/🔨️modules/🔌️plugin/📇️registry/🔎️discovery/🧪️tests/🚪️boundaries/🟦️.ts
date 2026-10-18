@@ -5,8 +5,9 @@ import Ajv from "ajv";
 import ts from "typescript";
 import {parseTomlStringArray,requiredRegistryEntryV1,tomlBlocksAfterHeader} from "../../🟦️.ts";
 import {parseTomlInlineNumberArray} from "../../../🎮️playground/🔎️discovery/🟦️.ts";
-import {declaredComponentKind} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import {goProfileToLcov,parseTsImportSpecs} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts";
+import { declaredComponentKind } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
+import { goProfileToLcov } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🗄️lcov/🟦️.ts";
+import { parseTsImportSpecs } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🚨️policy/🛡️dependency-boundary/🟦️.ts";
 import corpus from "./🔣️.json" with {type:"json"};
 
 test("neutral registry canonical metadata arrays and table boundaries agree with independent TOML",()=>{

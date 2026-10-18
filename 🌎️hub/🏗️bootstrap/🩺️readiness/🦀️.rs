@@ -97,15 +97,15 @@ pub struct HubClosedReadinessGateV1 {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HubAuthenticationReadinessV1 {
     pub(crate) kind: &'static str,
-    pub(crate) bootstrap_ready: bool,
-    pub(crate) public_session_issuance: bool,
+    pub bootstrap_ready: bool,
+    pub public_session_issuance: bool,
 }
 
 #[derive(Clone, Serialize)]
 pub(crate) struct HubComponentReadinessV1 {
-    pub(crate) ready: bool,
+    pub ready: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) reason: Option<&'static str>,
+    pub reason: Option<&'static str>,
 }
 
 impl HubComponentReadinessV1 {
@@ -120,7 +120,7 @@ impl HubComponentReadinessV1 {
 pub(crate) struct HubArtifactCasSweeperReadinessV1 {
     pub(crate) ready: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) reason: Option<&'static str>,
+    pub reason: Option<&'static str>,
     pub(crate) execute: bool,
     default_mode: &'static str,
 }
@@ -128,12 +128,12 @@ pub(crate) struct HubArtifactCasSweeperReadinessV1 {
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HubFeatureReadinessV1 {
-    pub(crate) open_plan: bool,
-    pub(crate) open_plan_exchange: bool,
+    pub open_plan: bool,
+    pub open_plan_exchange: bool,
     pub(crate) rebootstrap: bool,
-    pub(crate) mcp_workspace: bool,
+    pub mcp_workspace: bool,
     inference_services: Vec<HubInferenceServiceReadinessV1>,
-    pub(crate) checkpoint_policy: HubCheckpointPolicyV1,
+    pub checkpoint_policy: HubCheckpointPolicyV1,
 }
 
 /// 📌️ `features.checkpointPolicy` (`LocalBootstrapReadinessV1`): the hub checks a document in by itself once the edits,

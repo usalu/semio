@@ -11,6 +11,8 @@ use std::sync::Arc;
 
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor,shared::SharedControlledRetirement};
 use semio_framework_pixels::retirement::RasterLease;
+use crate::preparation::OwnedTable;
+use crate::preparation::OwnedSet;
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentTraceLimits{pub max_pixels:usize,pub max_admitted_pixels:usize,pub max_source_bytes:usize,pub max_edges:usize,pub max_segments:usize,pub max_retained_segments:usize,pub max_work:u64}
 #[derive(Clone,Debug)]
@@ -25,7 +27,7 @@ impl RetireOwned for TraceMask{fn retirement(self)->Box<dyn RetirementCursor>{Bo
 /// ⏱️ Move shared luma owners into the real trace job and publish complete native pixel paths privately.
 pub struct DocumentTraceJob{
  input:DocumentTraceInput,phase:&'static str,assets:usize,nodes:usize,resolved:usize,admitted_images:usize,pixels:usize,source_bytes:usize,segments:usize,work:u64,at:usize,pixel:usize,publish_at:usize,
- catalog:OwnedTable<String,usize>,ids:OwnedSet<String>,masks:OwnedTable<String,(u32,u32,TraceMask)>,source:String,
+ pub catalog:OwnedTable<String,usize>,ids:OwnedSet<String>,masks:OwnedTable<String,(u32,u32,TraceMask)>,source:String,
  image:Option<RasterLease>,mask:Vec<u8>,tracer:Option<BitmapTraceJob<TraceMask>>,trace:Option<BitmapTraceProgress>,raw:Vec<PathSegment>,candidate:Vec<DrawingSegment>,
  output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,closing_tracer:Option<BitmapTraceRetirement<TraceMask>>,cleanup_slot:u8,retired_tracers:Vec<BitmapTraceRetirement<TraceMask>>,retired_sources:Vec<String>,retired_masks:Vec<TraceMask>,
 }

@@ -1160,7 +1160,7 @@ impl AppPresenter {
     /// 🌍️ Plan section 5.3, inversion I3: the world3d dynamic-resource close step needs the presenter's GPU and the mailbox's runtime, so it lives with the presenter and borrows the mailbox.
     pub fn close_world3d_dynamic_step(&mut self,mailbox:&AppMailbox,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> {
         if cx.retirement_should_yield(){return Ok(false)}
-        if !mailbox.close_renderer_asset_step() {
+        if !mailbox.close_renderer_asset_step(cx)? {
             return Ok(false);
         }
         let Ok(mut runtime) = mailbox.try_lock() else {

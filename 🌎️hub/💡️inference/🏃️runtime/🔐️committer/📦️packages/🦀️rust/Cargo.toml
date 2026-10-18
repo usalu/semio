@@ -33,5 +33,6 @@ semio-hub-inference-binding = { workspace = true }
 protocol = { path = "../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+pack = { workspace = true }
 
 [dev-dependencies]

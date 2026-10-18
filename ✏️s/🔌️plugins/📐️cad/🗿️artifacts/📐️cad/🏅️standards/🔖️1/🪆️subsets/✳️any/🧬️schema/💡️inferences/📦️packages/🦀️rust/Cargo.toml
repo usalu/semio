@@ -22,6 +22,7 @@ semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-graph-dsl = { workspace = true }
 semio-framework-graph-manifest = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-registry = { workspace = true }

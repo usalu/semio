@@ -49,9 +49,23 @@
   ],
   "wiring": {
     "why": "Source-level anchors the Node twin re-checks, so the two flatten sites can never drift back apart into one deduping and one not — which is exactly how the live defect was introduced.",
-    "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
-    "projection": "pub(crate) fn leftover_selected_ids_of(state: &protocol::InteractionState) -> Vec<String> {",
-    "callSites": ["            leftover_selected_ids_of(self.state)", "            let selected_ids = leftover_selected_ids_of(state);"],
-    "lockedFromSelectedIds": "            let locked: Vec<(String, DslValue)> = selected_ids.iter().map(|id| (id.clone(), DslValue::Bool(false))).collect();"
+    "projection": {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧭️topology/🦀️.rs",
+      "text": "pub fn leftover_selected_ids_of(state: &protocol::InteractionState) -> Vec<String> {"
+    },
+    "callSites": [
+      {
+        "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🦀️.rs",
+        "text": "leftover_selected_ids_of(self.state)"
+      },
+      {
+        "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📥️staging/🧭️interaction/🦀️.rs",
+        "text": "let selected_ids = leftover_selected_ids_of(state);"
+      }
+    ],
+    "lockedFromSelectedIds": {
+      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📥️staging/🧭️interaction/🦀️.rs",
+      "text": "let locked: Vec<(String, DslValue)> = selected_ids.iter().map(|id| (id.clone(), DslValue::Bool(false))).collect();"
+    }
   }
 }

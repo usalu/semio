@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-command = { path = "../../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow-model = { path = "../../../🧱️model/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

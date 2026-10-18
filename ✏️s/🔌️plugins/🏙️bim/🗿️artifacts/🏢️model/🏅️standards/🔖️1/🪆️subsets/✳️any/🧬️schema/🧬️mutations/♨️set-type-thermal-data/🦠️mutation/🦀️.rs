@@ -1,6 +1,6 @@
 //! ♨️ `set-type-thermal-data` payload. Sparsely sets the thermal data of a window type (U-value of the whole window, g-value of the glazing, frame fraction), of a curtain wall type (the same three for the whole facade) or of a door type (U-value); an assigned null clears a field. The envelope U-values and solar gains are inferred from them.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{CurtainWallTypePatch, DoorTypePatch, WindowTypePatch}};
 
@@ -34,13 +34,16 @@ impl SetTypeThermalData {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetTypeThermalData {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetTypeThermalData
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetTypeThermalData>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "type-thermal-data", kind: "set-type-thermal-data", record: "SetTypeThermalData" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_type_thermal_data::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_type_thermal_data::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set thermal data of type \"{}\"", self.id), &format!("Thermische Daten des Typs \"{}\" setzen", self.id))

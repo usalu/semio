@@ -1,4 +1,19 @@
-use super::*;
+use crate::editor::bim::marks::Style;
+use semio_framework_plugin::DslValue;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::P;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::select;
+#[allow(unused_imports)]
+use crate::editor::bim::marks::Shape;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
+#[allow(unused_imports)]
+use std::f64::consts::TAU;
+use crate::editor::bim::gestures::overlay::{marker};
+use crate::editor::bim::gestures::overlay::*;
 use crate::editor::bim::marks::{Mark, Preview};
 use crate::editor::bim::gestures::snap::{SnapHit, SnapKind};
 

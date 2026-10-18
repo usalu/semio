@@ -3,8 +3,8 @@
 //! exists, a top storey of the same building); providing only equal values is a no-op. Whole-list ruling: the path is ONE centre line, the geometry of the
 //! ramp, so a provided path replaces the path as one field. The slope the ramp ends up with is inferred and checked by diagnostics, never refused here.
 
-use super::super::placement::{ramp_issue, refuse_stair};
-use super::SetRamp;
+use crate::standards::v1::subsets::any::schema::mutations::placement::{ramp_issue, refuse_stair};
+use crate::standards::v1::subsets::any::schema::mutations::set_ramp::SetRamp;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

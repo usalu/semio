@@ -2,7 +2,9 @@ import { describe, expect, test } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
-import { generatorContractIdsForOutputPath, getWorkspaceRoot, implementationLeafBasenameFinding, loadCatalogTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { generatorContractIdsForOutputPath, loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
+import { implementationLeafBasenameFinding } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 
 type NativePackage = { readonly root: string; readonly metadataPath: string; readonly sourceReference: string };
 type SourceCase = { readonly contractId: string; readonly previousPath: string; readonly supersededPaths?: readonly string[]; readonly canonicalPath: string; readonly fileKindId: string; readonly semanticOwnerKindId: string; readonly inclusion: "ignored" | "tracked"; readonly nativePackage?: NativePackage };

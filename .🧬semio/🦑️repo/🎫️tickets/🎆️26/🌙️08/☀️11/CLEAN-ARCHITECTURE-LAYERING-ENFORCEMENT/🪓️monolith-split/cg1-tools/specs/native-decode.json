@@ -1,0 +1,15 @@
+{
+ "pkg": "semio-framework-job-native-decode",
+ "id": "job-native-decode",
+ "dir": "🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode",
+ "parent": "semio-framework-job",
+ "parent_node": "🧰️framework/🔨️modules/🧵️job",
+ "route_index": 20,
+ "route_after": "semio-framework-io-sqlite-snapshot-tests",
+ "desc": "Native decode source of the job protocol: a paid original source lends actual native decode imports and receives the concrete producer's effects",
+ "deps": [
+  "semio-framework-job = { workspace = true }",
+  "semio-framework-value = { workspace = true }"
+ ],
+ "dev": []
+}

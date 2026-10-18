@@ -427,9 +427,9 @@ impl DiffAlgebra<TsvSnapshot> for TsvDiff {
 //#region 🧪️Tests
 /// 🧪️ Representative `TsvDiff` cases built declaratively (empty diff, the trailing-newline flag and a removed, a modified and an added row) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
 /// conformance-law tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<TsvDiff> {
+pub fn demo_diff_cases() -> Vec<TsvDiff> {
     let rows = TsvRowsDiff {
         removed: vec![2],
         modified: vec![TsvRowModified { index: 1, diff: TsvRowDiff { fields: Some(vec![None, Some("Oak, tricky [value]".into())]) } }],

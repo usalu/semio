@@ -854,49 +854,78 @@
       "allocated": false,
       "canonical": false,
       "pending": false,
-      "operation": "publish"
+      "operation": "publish",
+      "role": "namespace"
     },
     {
       "allocated": false,
       "canonical": false,
       "pending": true,
-      "operation": "publish"
+      "operation": "publish",
+      "role": "namespace"
     },
     {
       "allocated": false,
       "canonical": true,
       "pending": false,
-      "operation": "retire-empty-image"
+      "operation": "retire-empty-image",
+      "role": "namespace"
     },
     {
       "allocated": false,
       "canonical": true,
       "pending": true,
-      "operation": "publish"
+      "operation": "publish",
+      "role": "namespace"
     },
     {
       "allocated": true,
       "canonical": false,
       "pending": false,
-      "operation": "retire-artifact"
+      "operation": "retire-artifact",
+      "role": "namespace"
     },
     {
       "allocated": true,
       "canonical": false,
       "pending": true,
-      "operation": "retire-artifact"
+      "operation": "retire-artifact",
+      "role": "namespace"
     },
     {
       "allocated": true,
       "canonical": true,
       "pending": false,
-      "operation": "retire-artifact"
+      "operation": "retire-artifact",
+      "role": "namespace"
     },
     {
       "allocated": true,
       "canonical": true,
       "pending": true,
-      "operation": "retire-artifact"
+      "operation": "retire-artifact",
+      "role": "namespace"
+    },
+    {
+      "allocated": false,
+      "canonical": true,
+      "pending": false,
+      "operation": "retain-inactive",
+      "role": "leases"
+    },
+    {
+      "allocated": false,
+      "canonical": true,
+      "pending": true,
+      "operation": "publish",
+      "role": "leases"
+    },
+    {
+      "allocated": false,
+      "canonical": false,
+      "pending": false,
+      "operation": "publish",
+      "role": "leases"
     }
   ],
   "serviceRosters": [

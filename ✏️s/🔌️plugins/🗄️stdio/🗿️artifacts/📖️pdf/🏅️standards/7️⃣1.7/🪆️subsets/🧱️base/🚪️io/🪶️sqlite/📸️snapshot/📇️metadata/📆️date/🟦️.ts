@@ -1,5 +1,5 @@
 /** 📆️ Handwritten complete native date scalars and document info ownership. */
-import type { PdfDate,PdfInfo } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfDate, PdfInfo } from "../../../../../🧬️schema/📸️snapshot/📇️metadata/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber } from "../../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { artifactSqliteInteger } from "@semio-tech/framework/io/sqlite-snapshot/artifact";

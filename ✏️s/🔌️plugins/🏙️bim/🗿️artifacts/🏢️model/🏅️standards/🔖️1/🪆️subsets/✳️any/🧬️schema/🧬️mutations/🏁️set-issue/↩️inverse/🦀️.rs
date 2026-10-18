@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetIssue`: an absolute `SetIssue` restoring the base value of exactly the fields the forward really changes, none when the issue is absent or nothing changes.
 
-use super::SetIssue;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_issue::SetIssue;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetIssue, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetIssue, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_issue::SetIssue>,
+{
     let Some(record) = base.issues.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetIssue, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetIssue(SetIssue::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetIssue::from_patch(payload.id.clone(), restore))]
 }

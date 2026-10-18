@@ -1,0 +1,32 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-plugin-interpreter"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Repository-owned WebAssembly core interpreter: instruction-fuelled, cancellable, checkpointed core execution with no JIT"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-interpreter"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-actor = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+# 🐎️ The independent execution oracle of the interpreter's laws (`🧪️tests/🔬️unit`): the same Wasmtime the plugin host links, never a
+# dependency of the crate itself.
+semio-framework-test-fixtures = { path = "../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
+semio-framework-trace = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }

@@ -1,0 +1,507 @@
+// #region 🧲️Header
+
+// 2026 Ueli Saluz <ueli@semio-tech.com>
+
+// 🥅️goals carries the goal mutations of the repository context.
+
+// #endregion 🧲️Header
+
+package graphql
+
+import (
+	json "encoding/json"
+	fmt "fmt"
+	os "os"
+	exec "os/exec"
+	filepath "path/filepath"
+	strings "strings"
+
+	contributorspkg "github.com/usalu/semio/repo/contributors"
+	events "github.com/usalu/semio/repo/events"
+	goalspkg "github.com/usalu/semio/repo/goals"
+	model "github.com/usalu/semio/repo/model"
+	providers "github.com/usalu/semio/repo/providers"
+	workspace "github.com/usalu/semio/repo/workspace"
+)
+
+// #region 🥅️Goals
+
+// 🆕️GoalCreate MUST return a non-nil error when the operation fails.
+// ◽GoalCreate performs the goal create operation on the repo context.
+func (c *RepoContext) GoalCreate(input model.GoalCreateInput) (*model.Goal, error) {
+
+	if input.Title == "" {
+		return nil, fmt.Errorf("missing title")
+	}
+	if input.Description == "" {
+		return nil, fmt.Errorf("missing description")
+	}
+	if input.Prompt == "" {
+		return nil, fmt.Errorf("missing prompt")
+	}
+	if input.DueDate == "" {
+		return nil, fmt.Errorf("missing due date")
+	}
+	if input.LLM == "" {
+		return nil, fmt.Errorf("missing llm")
+	}
+	if input.Client == "" {
+		return nil, fmt.Errorf("missing client")
+	}
+
+	llmSlug, err := model.ResolveAllowedLLM(input.LLM)
+	if err != nil {
+		return nil, err
+	}
+	var effortSlug string
+	if input.Effort != "" {
+		effortSlug, err = model.ResolveAllowedEffort(input.Effort)
+		if err != nil {
+			return nil, err
+		}
+	}
+	uiSlug, err := model.ResolveAllowedClient(input.Client)
+	if err != nil {
+		return nil, err
+	}
+
+	slug := workspace.Slugify(input.Title)
+	id := slug
+	if input.Parent != "" {
+		id = input.Parent + "/" + slug
+	}
+
+	dir := workspace.GetRepoGoalsDir()
+	path := filepath.Join(dir, filepath.FromSlash(id), "🎯️goal.json")
+	if workspace.FileExists(path) {
+		return nil, fmt.Errorf("goal with id %s already exists", id)
+	}
+
+	goal := model.Goal{
+		ID:          id,
+		Title:       input.Title,
+		Parent:      input.Parent,
+		Description: input.Description,
+		Prompt:      input.Prompt,
+		Status:      "open",
+		Dates:       model.GoalDates{Due: input.DueDate},
+		Client:      uiSlug,
+		LLM:         llmSlug,
+		Effort:      effortSlug,
+	}
+
+	if !input.NoManagement {
+		if goalspkg.IsRootGoal(goal.ID) {
+			if input.Milestone != "" {
+				goal.Management = &model.GoalManagementData{Milestone: input.Milestone}
+			} else {
+				milestoneNumber, err := c.managementProvider.CreateMilestone(input.Title, input.Description)
+				if err != nil {
+					return nil, err
+				}
+				if input.DueDate != "" {
+					_ = c.managementProvider.UpdateMilestone(milestoneNumber, "", "", "", input.DueDate)
+				}
+				repoUrl, _ := getGhRepoUrl()
+				goal.Management = &model.GoalManagementData{
+					Milestone: fmt.Sprintf("%s/milestone/%d", repoUrl, milestoneNumber),
+				}
+			}
+		} else if goalspkg.IsFirstGenGoal(goal.ID) {
+			milestone, _ := goalspkg.GetRootGoalMilestone(id)
+			issueURL, err := c.managementProvider.CreateGoalIssue(input.Title, input.Description, milestone)
+			if err != nil {
+				return nil, err
+			}
+			goal.Management = &model.GoalManagementData{Issue: issueURL}
+		} else {
+			issueURL, err := c.managementProvider.CreateGoalIssue(input.Title, input.Description, nil)
+			if err != nil {
+				return nil, err
+			}
+			goal.Management = &model.GoalManagementData{Issue: issueURL}
+			parentID := goalspkg.GetParentGoalID(id)
+			parentGoal, parentErr := goalspkg.ReadGoal(parentID)
+			if parentErr == nil && parentGoal.Management != nil && parentGoal.Management.Issue != "" {
+				if err := c.managementProvider.AddSubIssue(parentGoal.Management.Issue, issueURL); err != nil {
+					workspace.WriteWarningf("Failed to link sub-issue to parent goal %s: %v", parentID, err)
+				}
+			}
+		}
+	}
+
+	if err := goalspkg.SaveGoal(goal); err != nil {
+		return nil, err
+	}
+	events.Emit(events.EventGoalOpenEnded, "repo-cli", events.GoalOpenPayload{
+		GoalPayload: events.GoalPayload{ID: goal.ID},
+		Title:       goal.Title, Description: goal.Description, LLM: llmSlug, Effort: effortSlug, Parent: goal.Parent, Author: contributorspkg.GetGitAuthorAlias(),
+	})
+	return &goal, nil
+}
+
+// 🌐️getGhRepoUrl holds the data fields for a getGhRepoUrl record.
+func getGhRepoUrl() (string, error) {
+	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+// 🔁️UpdateGoalTitle MUST apply the update and return an error if the target is missing.
+// ❓️UpdateGoalTitle modifies an existing goal title entry.
+func UpdateGoalTitle(goal *model.Goal, title string) error {
+	title = strings.TrimSpace(title)
+	if title == "" {
+		return fmt.Errorf("goal title is required")
+	}
+	newSlug := workspace.Slugify(title)
+	if title == newSlug {
+		return fmt.Errorf("goal title must be titleized (e.g. \"Some Title on Something\") and NOT an all-caps slug")
+	}
+	if title == strings.ToLower(newSlug) {
+		return fmt.Errorf("goal title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
+	}
+
+	var newID string
+	if goal.Parent != "" {
+		newID = goal.Parent + "/" + newSlug
+	} else {
+		newID = newSlug
+	}
+
+	if newID != goal.ID {
+		dir := workspace.GetRepoGoalsDir()
+		oldPath := filepath.Join(dir, filepath.FromSlash(goal.ID))
+		newPath := filepath.Join(dir, filepath.FromSlash(newID))
+		if workspace.FileExists(newPath) {
+			return fmt.Errorf("goal folder already exists: %s", newPath)
+		}
+		if err := os.Rename(oldPath, newPath); err != nil {
+			return err
+		}
+		goal.ID = newID
+	}
+	goal.Title = title
+	return nil
+}
+
+// ♻️GoalChange MUST return a non-nil error when the operation fails.
+// 📐️GoalChange performs the goal change operation on the repo context.
+func (c *RepoContext) GoalChange(input model.GoalChangeInput) (*model.Goal, error) {
+	dir := workspace.GetRepoGoalsDir()
+	path := filepath.Join(dir, input.ID, "🎯️goal.json")
+	content, err := workspace.ReadTextFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var goal model.Goal
+	if err := json.Unmarshal([]byte(content), &goal); err != nil {
+		return nil, err
+	}
+	goal.ID = input.ID
+
+	if input.Title != nil {
+		if err := UpdateGoalTitle(&goal, *input.Title); err != nil {
+			return nil, err
+		}
+	}
+	if input.Description != nil {
+		goal.Description = *input.Description
+	}
+	if input.DueDate != nil {
+		goal.Dates.Due = *input.DueDate
+	}
+	if input.LLM != nil {
+		llmSlug, err := model.ResolveAllowedLLM(*input.LLM)
+		if err != nil {
+			return nil, err
+		}
+		goal.LLM = llmSlug
+	}
+	if input.Effort != nil {
+		effortSlug, err := model.ResolveAllowedEffort(*input.Effort)
+		if err != nil {
+			return nil, err
+		}
+		goal.Effort = effortSlug
+	}
+	if input.Parent != nil {
+		goal.Parent = *input.Parent
+
+		slug := goal.ID
+		if idx := strings.LastIndex(goal.ID, "/"); idx != -1 {
+			slug = goal.ID[idx+1:]
+		}
+
+		var newID string
+		if goal.Parent != "" {
+			newID = goal.Parent + "/" + slug
+		} else {
+			newID = slug
+		}
+
+		if newID != goal.ID {
+			oldPath := filepath.Join(dir, filepath.FromSlash(goal.ID))
+			newPath := filepath.Join(dir, filepath.FromSlash(newID))
+
+			if workspace.FileExists(newPath) {
+				return nil, fmt.Errorf("goal folder already exists: %s", newPath)
+			}
+
+			if err := os.MkdirAll(filepath.Dir(newPath), 0755); err != nil {
+				return nil, err
+			}
+
+			if err := os.Rename(oldPath, newPath); err != nil {
+				return nil, err
+			}
+			goal.ID = newID
+		}
+	}
+
+	if goal.Management != nil && !input.NoManagement {
+		if goalspkg.IsRootGoal(goal.ID) && goal.Management.Milestone != "" {
+			number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
+			if err == nil {
+				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, goal.Status, goal.Dates.Due); err != nil {
+					return nil, err
+				}
+			}
+		} else if !goalspkg.IsRootGoal(goal.ID) && goal.Management.Issue != "" {
+			if err := c.managementProvider.UpdateGoalIssue(goal.Management.Issue, goal.Title, goal.Description); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if err := goalspkg.SaveGoal(goal); err != nil {
+		return nil, err
+	}
+	events.Emit(events.EventGoalChangeEnded, "repo-cli", events.GoalChangePayload{
+		GoalPayload: events.GoalPayload{ID: goal.ID},
+		Title:       input.Title, Description: input.Description, LLM: input.LLM, Effort: input.Effort, Parent: input.Parent, Author: contributorspkg.GetGitAuthorAlias(),
+	})
+	return &goal, nil
+}
+
+// 📪️GoalClose MUST return a non-nil error when the operation fails.
+// 🏁️GoalClose performs the goal close operation on the repo context.
+func (c *RepoContext) GoalClose(input model.GoalCloseInput) (*model.Goal, error) {
+	dir := workspace.GetRepoGoalsDir()
+	path := filepath.Join(dir, input.ID, "🎯️goal.json")
+	content, err := workspace.ReadTextFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var goal model.Goal
+	if err := json.Unmarshal([]byte(content), &goal); err != nil {
+		return nil, err
+	}
+	goal.ID = input.ID
+
+	if goal.Status == "closed" {
+		return nil, fmt.Errorf("goal is already closed")
+	}
+
+	goal.Status = "closed"
+	goal.Summary = input.Summary
+
+	if goal.Management != nil && !input.NoManagement {
+		if goalspkg.IsRootGoal(goal.ID) && goal.Management.Milestone != "" {
+			number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
+			if err == nil {
+				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, "closed", ""); err != nil {
+					return nil, err
+				}
+			}
+		} else if !goalspkg.IsRootGoal(goal.ID) && goal.Management.Issue != "" {
+			if err := c.managementProvider.CloseIssue(goal.Management.Issue); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if err := goalspkg.SaveGoal(goal); err != nil {
+		return nil, err
+	}
+	events.Emit(events.EventGoalCloseEnded, "repo-cli", events.GoalClosePayload{
+		GoalPayload: events.GoalPayload{ID: goal.ID},
+		Summary:     goal.Summary, Author: contributorspkg.GetGitAuthorAlias(),
+	})
+	return &goal, nil
+}
+
+// 🔓️GoalReopen MUST return a non-nil error when the operation fails.
+// 🔄️GoalReopen performs the goal reopen operation on the repo context.
+func (c *RepoContext) GoalReopen(input model.GoalReopenInput) (*model.Goal, error) {
+	dir := workspace.GetRepoGoalsDir()
+	path := filepath.Join(dir, input.ID, "🎯️goal.json")
+	content, err := workspace.ReadTextFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var goal model.Goal
+	if err := json.Unmarshal([]byte(content), &goal); err != nil {
+		return nil, err
+	}
+	goal.ID = input.ID
+
+	if goal.Status == "open" {
+		return nil, fmt.Errorf("goal is already open")
+	}
+
+	goal.Status = "open"
+
+	if input.Title != nil {
+		if err := UpdateGoalTitle(&goal, *input.Title); err != nil {
+			return nil, err
+		}
+	}
+	if input.Description != nil {
+		goal.Description = *input.Description
+	}
+	if input.DueDate != nil {
+		goal.Dates.Due = *input.DueDate
+	}
+	if input.Parent != nil {
+		goal.Parent = *input.Parent
+	}
+	goal.Prompt = input.Prompt
+	goal.LLM = input.LLM
+	goal.Client = input.Client
+	if input.Effort != "" {
+		effortSlug, err := model.ResolveAllowedEffort(input.Effort)
+		if err != nil {
+			return nil, err
+		}
+		goal.Effort = effortSlug
+	}
+
+	if goal.Management != nil && !input.NoManagement {
+		if goalspkg.IsRootGoal(goal.ID) && goal.Management.Milestone != "" {
+			number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
+			if err == nil {
+				if err := c.managementProvider.UpdateMilestone(number, goal.Title, goal.Description, "open", goal.Dates.Due); err != nil {
+					return nil, err
+				}
+			}
+		} else if !goalspkg.IsRootGoal(goal.ID) && goal.Management.Issue != "" {
+			if err := c.managementProvider.ReopenIssue(goal.Management.Issue); err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	if err := goalspkg.SaveGoal(goal); err != nil {
+		return nil, err
+	}
+	events.Emit(events.EventGoalReopenEnded, "repo-cli", events.GoalReopenPayload{
+		GoalPayload: events.GoalPayload{ID: goal.ID},
+		Prompt:      input.Prompt, Client: input.Client, LLM: input.LLM, Effort: goal.Effort, Author: contributorspkg.GetGitAuthorAlias(),
+	})
+	return &goal, nil
+}
+
+// 🗑️GoalDelete MUST return a non-nil error when the operation fails.
+// ◼GoalDelete performs the goal delete operation on the repo context.
+func (c *RepoContext) GoalDelete(input model.GoalDeleteInput) (bool, error) {
+	dir := workspace.GetRepoGoalsDir()
+	path := filepath.Join(dir, input.ID, "🎯️goal.json")
+	content, err := workspace.ReadTextFile(path)
+	if err != nil {
+		return false, err
+	}
+	var goal model.Goal
+	if err := json.Unmarshal([]byte(content), &goal); err != nil {
+		return false, err
+	}
+
+	if !input.NoManagement && goal.Management != nil {
+		if goalspkg.IsRootGoal(goal.ID) && goal.Management.Milestone != "" {
+			number, err := model.ParseMilestoneNumber(goal.Management.Milestone)
+			if err == nil {
+				if err := c.managementProvider.DeleteMilestone(number); err != nil {
+					return false, err
+				}
+			}
+		} else if !goalspkg.IsRootGoal(goal.ID) && goal.Management.Issue != "" {
+			parts := strings.Split(goal.Management.Issue, "/")
+			number := parts[len(parts)-1]
+			if err := c.managementProvider.DeleteIssue(number); err != nil {
+				return false, err
+			}
+		}
+	}
+
+	if err := os.RemoveAll(filepath.Dir(path)); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func updateGoalMilestone(goal *model.Goal, number int) (int, error) {
+	repoUrl, err := getGhRepoUrl()
+	if err != nil {
+		return number, err
+	}
+	if goal.Management == nil {
+		goal.Management = &model.GoalManagementData{}
+	}
+	milestoneUrl := fmt.Sprintf("%s/milestone/%d", repoUrl, number)
+	if goal.Management.Milestone != milestoneUrl {
+		goal.Management.Milestone = milestoneUrl
+		if err := goalspkg.SaveGoal(*goal); err != nil {
+			return number, err
+		}
+	}
+	return number, nil
+}
+
+// ◻ensureGoalMilestone holds the data fields for a ensureGoalMilestone record.
+func ensureGoalMilestone(goal *model.Goal) (*providers.ManagementMilestone, error) {
+	if goal == nil {
+		return nil, nil
+	}
+	if strings.TrimSpace(goal.Title) == "" {
+		return nil, nil
+	}
+	if !goalspkg.IsRootGoal(goal.ID) {
+		return nil, nil
+	}
+	if goal.Management != nil && goal.Management.Milestone != "" {
+		if n, err := model.ParseMilestoneNumber(goal.Management.Milestone); err == nil && n > 0 {
+			if milestone, err := providers.GetManagementProvider().GetMilestone(n); err == nil {
+				return milestone, nil
+			}
+		}
+	}
+	found, err := providers.GetManagementProvider().FindMilestoneByTitle(goal.Title)
+	if err != nil {
+		return nil, err
+	}
+	if found != nil {
+		if _, err := updateGoalMilestone(goal, found.Number); err != nil {
+			return nil, err
+		}
+		return found, nil
+	}
+	n, err := providers.GetManagementProvider().CreateMilestone(goal.Title, goal.Description)
+	if err != nil {
+		return nil, err
+	}
+	if goal.Dates.Due != "" {
+		_ = providers.GetManagementProvider().UpdateMilestone(n, "", "", "", goal.Dates.Due)
+	}
+	if _, err := updateGoalMilestone(goal, n); err != nil {
+		return nil, err
+	}
+	milestone, err := providers.GetManagementProvider().GetMilestone(n)
+	if err != nil {
+		return &providers.ManagementMilestone{Number: n, Title: goal.Title, Description: goal.Description}, nil
+	}
+	return milestone, nil
+}
+
+// #endregion 🥅️Goals

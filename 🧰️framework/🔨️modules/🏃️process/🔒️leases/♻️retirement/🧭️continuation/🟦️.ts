@@ -2,8 +2,8 @@
 import{types}from"node:util";
 import{compileJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/🟦️.ts";
 import type{ResourceLeaseDatabaseV1}from"../🟦️.ts";
-import authority from"../../🧬️schema/📜️ticket.json";
-import schema from"./🧬️schema/🔣️.json";
+import authority from"../../🧬️schema/📜️ticket.json"with{type:"json"};
+import schema from"./🧬️schema/🔣️.json" with{type:"json"};
 const policy=Object.freeze({...schema.definitions.Policy.const,slots:Object.freeze({...schema.definitions.Policy.const.slots})}),nameContract=compileJsonSchemaSubset(schema.definitions.Name,schema),retirement=authority.definitions.RetirementPolicy.properties,retention=authority.definitions.ClaimRetentionPolicy.properties;
 /** 🧭️ Bounds two ordinary coordination watermarks without granting deletion or Native authority. */
 export const resourceLeaseContinuationPolicyV1=policy;

@@ -395,8 +395,8 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         Ok(kind)
     }
 
-    fn pump_asset_decode_session_step(&self, closing: bool) -> Option<RendererAssetDecodeTurnKind> {
-        let Ok(mut slot) = self.0.asset_decode_session.try_lock() else { return Some(RendererAssetDecodeTurnKind::Pending) };
+    fn pump_asset_decode_session_step(&self, closing: bool, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<RendererAssetDecodeTurnKind>, semio_framework_job::OriginalTurnFailure> {
+        let Ok(mut slot) = self.0.asset_decode_session.try_lock() else { return Ok(Some(RendererAssetDecodeTurnKind::Pending)) };
         if let Some(active) = slot.as_mut() {
             let cancelled = if let Some(surface_token) = active.surface_token {
                 self.try_lock()
@@ -409,7 +409,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             if closing || cancelled {
                 active.cancel();
             }
-            let wake = active.pump_one();
+            let wake = active.pump_one(cx)?;
             let mut kind = RendererAssetDecodeTurnKind::Pending;
             if let Some(boundary) = active.take_boundary() {
                 match self.restore_asset_decode_boundary(boundary) {
@@ -423,36 +423,57 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             if active.terminal_is_empty() {
                 *slot = None;
             }
-            return Some(kind);
+            return Ok(Some(kind));
         }
         if closing {
-            return None;
+            return Ok(None);
         }
-        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return Some(RendererAssetDecodeTurnKind::Pending) };
-        let probe = probe_slot.as_ref()?;
+        let Ok(mut probe_slot) = self.0.asset_probe.try_lock() else { return Ok(Some(RendererAssetDecodeTurnKind::Pending)) };
+        let Some(probe) = probe_slot.as_ref() else { return Ok(None) };
         if matches!(probe.phase, RendererAssetProbePhase::Ready | RendererAssetProbePhase::Closing) {
-            return None;
+            return Ok(None);
         }
         #[cfg(not(target_arch = "wasm32"))]
         let wake = match self.0.waker.try_lock() {
             Ok(wake) => wake.clone(),
-            Err(_) => return Some(RendererAssetDecodeTurnKind::Pending),
+            Err(_) => return Ok(Some(RendererAssetDecodeTurnKind::Pending)),
         };
         #[cfg(target_arch = "wasm32")]
         let wake = None;
-        let Some(probe) = probe_slot.take() else { return Some(RendererAssetDecodeTurnKind::Pending) };
-        let active = RendererAssetDecodeSession::new(probe, wake);
+        let Some(probe) = probe_slot.take() else { return Ok(Some(RendererAssetDecodeTurnKind::Pending)) };
+        let invocation = match RendererAssetDecodeInvocation::admit(cx) {
+            Ok(Some(invocation)) => invocation,
+            Ok(None) => {
+                *probe_slot = Some(probe);
+                return Ok(Some(RendererAssetDecodeTurnKind::Pending));
+            }
+            Err(failure) => {
+                *probe_slot = Some(probe);
+                return Err(failure);
+            }
+        };
+        let active = RendererAssetDecodeSession::new(probe, wake, invocation);
         active.wake();
         *slot = Some(active);
-        Some(RendererAssetDecodeTurnKind::Pending)
+        Ok(Some(RendererAssetDecodeTurnKind::Pending))
+    }
+
+    /// 🕐️ The answer for a turn whose owner could not yet fund its original authority: pending, with nothing consumed.
+    pub fn asset_decode_deferred_turn(&self) -> RendererAssetDecodeTurn {
+        RendererAssetDecodeTurn { kind: RendererAssetDecodeTurnKind::Pending, pending: true, detail: None }
+    }
+
+    /// ♻️ Closes the live decoder session under the original authority it was admitted with; true once none remains.
+    pub fn close_asset_decode_session_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        Ok(self.pump_asset_decode_session_step(true, cx)?.is_none())
     }
 
     /// 🧵️ Advances the private asset owner independently of frame construction and presentation.
-    pub fn asset_decode_step(&self) -> RendererAssetDecodeTurn {
+    pub fn asset_decode_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<RendererAssetDecodeTurn, semio_framework_job::OriginalTurnFailure> {
         if semio_framework_os_renderer_wgpu_icon_host::icon_export::asset::retire_cancelled_step() {
-            return RendererAssetDecodeTurn { kind: RendererAssetDecodeTurnKind::Pending, pending: true, detail: None };
+            return Ok(self.asset_decode_deferred_turn());
         }
-        let session = self.pump_asset_decode_session_step(false);
+        let session = self.pump_asset_decode_session_step(false, cx)?;
         let kind = session.unwrap_or_else(|| if retire_cancelled_renderer_asset_step() { RendererAssetDecodeTurnKind::Pending } else { self.pump_renderer_asset_decode_step() });
         #[cfg(not(target_arch = "wasm32"))]
         if session.is_none() && !matches!(kind, RendererAssetDecodeTurnKind::Idle | RendererAssetDecodeTurnKind::Fault) {
@@ -462,11 +483,11 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
                 }
             }
         }
-        RendererAssetDecodeTurn {
+        Ok(RendererAssetDecodeTurn {
             kind,
             pending: kind != RendererAssetDecodeTurnKind::Fault && (kind == RendererAssetDecodeTurnKind::Pending || self.has_pending_asset_decode()),
             detail: (kind == RendererAssetDecodeTurnKind::Fault).then_some("asset decoder failed; see the retained runtime fault"),
-        }
+        })
     }
 
     fn pump_renderer_asset_decode_step(&self) -> RendererAssetDecodeTurnKind {
@@ -781,31 +802,31 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
         infinite_world::world::close_world3d_asset_step(&mut state.assets)
     }
 
-    pub fn close_renderer_asset_step(&self) -> bool {
-        if self.pump_asset_decode_session_step(true).is_some() {
-            return false;
+    pub fn close_renderer_asset_step(&self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if self.pump_asset_decode_session_step(true, cx)?.is_some() {
+            return Ok(false);
         }
         #[cfg(not(target_arch = "wasm32"))]
         self.0.native_asset_http_cancel.cancel_now();
         #[cfg(not(target_arch = "wasm32"))]
         if !matches!(self.cancel_native_asset_transport_step(None, None), NativeAssetTransportCloseStep::Terminal) {
-            return false;
+            return Ok(false);
         }
         #[cfg(not(target_arch = "wasm32"))]
         if !self.close_native_reference_decode_step(None) {
-            return false;
+            return Ok(false);
         }
         if !self.close_renderer_asset_probe_step() {
-            return false;
+            return Ok(false);
         }
         if self.0.native_asset_fetching.load(Ordering::Acquire) {
             let _ = close_renderer_asset_step();
-            return false;
+            return Ok(false);
         }
         if self.pump_native_asset_handoff_step(true).is_some() {
-            return false;
+            return Ok(false);
         }
-        close_renderer_asset_step()
+        Ok(close_renderer_asset_step())
     }
 
     pub fn renderer_asset_current(&self, fetch: &RendererAssetFetchOwner) -> Option<bool> {
@@ -1050,7 +1071,7 @@ impl<R: MailboxRuntime> RuntimeMailbox<R> {
             handoff.seal = false;
         }
         if let Some(payload) = handoff.payload.as_mut() {
-            let _ = payload.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+            let _ = payload.close_step(semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 });
             if payload.terminal_is_empty() {
                 handoff.payload = None;
             }

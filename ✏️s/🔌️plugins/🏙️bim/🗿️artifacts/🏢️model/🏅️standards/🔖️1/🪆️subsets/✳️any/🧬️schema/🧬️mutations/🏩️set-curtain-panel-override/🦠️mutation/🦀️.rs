@@ -1,6 +1,6 @@
 //! 🏩️ `set-curtain-panel-override` payload. Changes the panel of an existing override; the cell it addresses stays the same (to address another cell, delete the override and create it again).
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, ModelSnapshot}, diff::ModelDiff};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct SetCurtainPanelOverride {
     pub panel: CurtainPanel,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetCurtainPanelOverride {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetCurtainPanelOverride
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetCurtainPanelOverride>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "curtain-panel-override", kind: "set-curtain-panel-override", record: "SetCurtainPanelOverride" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_curtain_panel_override::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_curtain_panel_override::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change the panel of override \"{}\"", self.id), &format!("Füllung der Abweichung \"{}\" ändern", self.id))

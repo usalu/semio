@@ -1,10 +1,12 @@
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{density};
 use crate::standards::v1::subsets::any::io::text::inferences::quantities::table_json;
-use super::{ElementQuantity, ModelQuantities, QuantityKind, group_volumes, solid_rows, upward_area};
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, ModelQuantities, QuantityKind, group_volumes, solid_rows, upward_area};
 use crate::standards::v1::subsets::any::schema::snapshot::{Layer, ModelSnapshot, OpeningKind, Ramp, Slab, Vertex};
 use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, BeamType, Building, Column, ColumnType, DoorLeaves, DoorType, LayerFunction, LocationLine, Material, MaterialCategory, Opening, Phase, Point2, Profile, Railing, Rgb, Site, SlabType, Slope, SpaceBoundary, Stair, StairFlight, Storey, Swing, Wall, WallType, WindowType};
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_quantities;
+use semio_framework_test_fixtures::fixture_text;
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() <= 1e-9 * right.abs().max(1.0)
@@ -220,20 +222,20 @@ async fn group_volumes_split_a_solid_by_material() {
     assert!(upward_area(solid, 0) > 0.0);
 }
 
-const BUILDING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json");
-const BUILDING_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/💡️inference/🧮️quantities/🔣️.json");
+static BUILDING: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json"));
+static BUILDING_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/💡️inference/🧮️quantities/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_table() {
-    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(BUILDING, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the building model decodes");
+    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*BUILDING), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the building model decodes");
     let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems(BUILDING_TABLE, &table_json(&snapshot, &inferred.quantities));
+    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*BUILDING_TABLE), &table_json(&snapshot, &inferred.quantities));
     assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn openings_stairs_curtain_walls_and_roofs_agree_with_their_solids() {
-    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(BUILDING, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the building model decodes");
+    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*BUILDING), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the building model decodes");
     let inferred = crate::standards::v1::subsets::any::schema::inferences::ModelInference::infer(&snapshot).expect("infers");
     for (id, element) in &inferred.quantities.elements {
         if let Some(solid) = inferred.element_solids.get(id) {

@@ -102,7 +102,7 @@ async fn check_in_fixture(label: &str) -> CheckInFixture {
 /// addressed to the hub's document key.
 #[cfg(feature = "integration-fixtures")]
 async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<MutationEnvelope> {
-    use directory::os_store::{store_schema::ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
+    use directory::os_store::{store_schema::ArtifactCommand, ArtifactStore};
     use semio_s_artifact_gis_gismap::mutations::create_position::CreatePosition;
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, MapFeature};
     let parsed = directory::os_store::text_format::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr).await.expect("genesis pair parses");
@@ -118,12 +118,10 @@ async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<Mutat
         }
     }
     let events = store.event_log();
-    loop {
-        match store.close_owned_step(1, directory::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("editor store closes") {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { .. } => {}
-            SnapshotRetirementStep::Blocked => panic!("editor store close blocked"),
-        }
+    while !store.close_owned_terminal_is_empty() {
+        let demand = store.close_owned_demands(0).expect("the store quotes its next close turn");
+        let grant = directory::os_store::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        store.close_owned_step(grant).expect("editor store closes");
     }
     drop(store);
     applied.expect("editor edits apply");

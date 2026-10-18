@@ -1,7 +1,6 @@
 //! 👁️ Lift file: 2 item(s), about 9 lines, of `📜️declaration/👁️view/🦀️.rs` that belong to crate `operation` (WP1).
 //!
 //! WP2 owns the source file and cuts the items here (ArtifactOperationProgress, CANCEL_TYPED_OPERATION_ACTION_ID); WP1 wires this file with one `mod` line in the crate root. Until `operation` exists, the source module re-exports the items with `pub use`.
-use semio_framework_ui_contract::*;
 use semio_framework_ui_locale::LocalizedLabel;
 
 #[derive(Clone, Debug)]

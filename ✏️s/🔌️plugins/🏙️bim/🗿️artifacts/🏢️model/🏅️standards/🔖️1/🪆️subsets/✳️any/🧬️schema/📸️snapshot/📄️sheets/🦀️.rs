@@ -2,9 +2,9 @@
 //! written. Pure, total and read-only: a refusal names the field below the record and carries the message.
 //! 📎 https://en.wikipedia.org/wiki/ISO_216
 
-use super::values::{IsoSize, Orientation, Paper, Point2, ViewCrop, ViewKind};
-use super::ModelSnapshot;
-use super::entities::{Sheet, SheetRevision, Viewport};
+use crate::standards::v1::subsets::any::schema::snapshot::values::{IsoSize, Orientation, Paper, Point2, ViewCrop, ViewKind};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::entities::{Sheet, SheetRevision, Viewport};
 
 //#region 🔖️Defaults
 /// 📏️ The smallest scale denominator a viewport accepts (1:1).
@@ -185,6 +185,4 @@ pub fn viewports_of<'a>(base: &'a ModelSnapshot, sheet: &str) -> Vec<(&'a String
     base.viewports.iter().filter(|(_, row)| row.sheet == sheet).collect()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

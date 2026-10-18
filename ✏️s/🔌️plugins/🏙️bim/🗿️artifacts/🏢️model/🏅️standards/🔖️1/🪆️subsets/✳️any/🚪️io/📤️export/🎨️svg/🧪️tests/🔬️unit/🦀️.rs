@@ -1,4 +1,17 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_framework::io_schema::IoPayload;
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+#[allow(unused_imports)]
+use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+use crate::standards::v1::subsets::any::io::export::svg::*;
 use crate::standards::v1::subsets::any::io::binary::snapshot as pack;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags, HOUSE_DIR};
 use crate::standards::v1::subsets::any::io::io;

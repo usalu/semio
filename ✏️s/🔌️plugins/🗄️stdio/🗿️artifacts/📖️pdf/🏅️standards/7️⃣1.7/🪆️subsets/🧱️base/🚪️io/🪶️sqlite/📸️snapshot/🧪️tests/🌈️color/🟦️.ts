@@ -2,7 +2,8 @@ import { pdfFunctionFromNativeJson,pdfColorFromNativeJson } from "../../../../�
 /** 🌈️ All authored function and color variants, exact IEEE words and independent SQL queries. */
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import type { PdfFunction, PdfColorSpace, Binary64 } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfFunction, PdfColorSpace } from "../../../../../🧬️schema/📸️snapshot/🌈️color/🟦️.ts";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import { parsePdfFunction, parsePdfColorSpace } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { pdfFunctionToSqliteDatabase, pdfFunctionFromSqliteDatabase, pdfColorSpaceToSqliteDatabase, pdfColorSpaceFromSqliteDatabase } from "../../🌈️color/🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";

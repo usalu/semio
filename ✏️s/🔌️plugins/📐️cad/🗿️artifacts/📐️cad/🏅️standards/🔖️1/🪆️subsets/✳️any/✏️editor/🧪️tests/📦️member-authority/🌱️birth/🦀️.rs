@@ -2,7 +2,7 @@
 fn cad_imported_geometry_catalog_virtual_birth_matches_original_system_allocations() {
     use semio_framework_os_kernel::{os_store::document_store_owners::MemberStoreOwner, SnapshotRetirementStep};
     use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation};
-    use crate::standards::v1::subsets::any::io::sqlite::snapshot::tests::backing_observer::measure;
+    use semio_framework_io_sqlite_snapshot_testing_backing::measure;
     macro_rules! catalog {
         ($snapshot:ty,$mutation:ty,$kind:literal) => {{
             let (birth,query_heap)=measure(|| <$snapshot as MemberStoreOwner<$mutation>>::member_store_owners_birth_bytes());

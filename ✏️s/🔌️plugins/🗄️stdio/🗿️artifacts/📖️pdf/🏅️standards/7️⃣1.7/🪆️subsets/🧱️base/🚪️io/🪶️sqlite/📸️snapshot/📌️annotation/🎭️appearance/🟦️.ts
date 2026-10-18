@@ -1,5 +1,5 @@
 /** 🎭️ Handwritten annotation appearance ownership and complete border geometry. */
-import type { PdfAppearanceEntry,PdfAppearance,PdfBorderStyle } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfAppearanceEntry, PdfAppearance, PdfBorderStyle } from "../../../../../🧬️schema/📸️snapshot/📌️annotation/🟦️.ts";
 import { PdfProjection,PdfReader,pdfBoolean,type Binary64 } from "../../🧩️entity/🟦️.ts";
 import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 

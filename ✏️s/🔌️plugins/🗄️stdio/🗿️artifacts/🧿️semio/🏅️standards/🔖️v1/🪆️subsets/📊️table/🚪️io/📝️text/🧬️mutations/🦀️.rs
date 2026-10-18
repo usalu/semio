@@ -121,9 +121,9 @@ impl protocol::OpText for SemioTableMutation {
 //#region 🔖️DemoCases
 /// 🌱 One representative value per variant — single source of truth for `ops_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️.rs` and this file's own round-trip test.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioTableMutation> {
     use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableCellKind;
     use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
     use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;

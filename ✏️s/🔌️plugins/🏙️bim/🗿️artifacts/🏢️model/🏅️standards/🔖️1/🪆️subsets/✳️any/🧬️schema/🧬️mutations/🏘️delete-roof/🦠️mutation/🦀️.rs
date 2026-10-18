@@ -1,6 +1,6 @@
 //! 🏘️ `delete-roof` payload. Removes a roof together with its properties and classifications.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -10,13 +10,16 @@ pub struct DeleteRoof {
     pub id: String,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for DeleteRoof {
+impl<Op> MutationKind<ModelSnapshot, Op> for DeleteRoof
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteRoof> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "roof", kind: "delete-roof", record: "DeleteRoof" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::delete_roof::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_roof::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete roof \"{}\"", self.id), &format!("Dach \"{}\" löschen", self.id))

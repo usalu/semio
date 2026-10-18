@@ -5,7 +5,7 @@ use semio_framework_value::ValueError;
 use semio_framework_dsl_record::RecordSpecProducer;
 
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
-pub(crate) fn link_pin_spec() -> semio_framework_dsl_record::RecordSpec {
+pub fn link_pin_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(
         None,
         semio_framework_dsl_record::RecordLayout::Inline,
@@ -19,7 +19,7 @@ pub(crate) fn link_pin_spec() -> semio_framework_dsl_record::RecordSpec {
     )
 }
 
-pub(crate) fn link_pin_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
+pub fn link_pin_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(5)?;
         let mut fields = control.allocate_vec(5)?;
@@ -37,11 +37,11 @@ pub(crate) fn link_pin_spec_controlled<C: semio_framework_dsl_record::NativeSche
     })
 }
 
-pub(crate) fn link_pin_spec_producer() -> RecordSpecProducer {
+pub fn link_pin_spec_producer() -> RecordSpecProducer {
     RecordSpecProducer { ordinary: link_pin_spec, decoding: |control| link_pin_spec_controlled(control), encoding: |control| link_pin_spec_controlled(control) }
 }
 
-pub(crate) fn link_pin_to_record(pin: &LinkPin) -> semio_framework_dsl_record::RecordValue {
+pub fn link_pin_to_record(pin: &LinkPin) -> semio_framework_dsl_record::RecordValue {
     let mut record = semio_framework_dsl_record::RecordValue::default();
     match pin {
         LinkPin::Head => {
@@ -61,7 +61,7 @@ pub(crate) fn link_pin_to_record(pin: &LinkPin) -> semio_framework_dsl_record::R
     record
 }
 
-pub(crate) fn link_pin_to_record_controlled(pin: &LinkPin, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
+pub fn link_pin_to_record_controlled(pin: &LinkPin, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
     
     control.scoped_depth(64, |control| {
         control.scoped_stage(|control| {
@@ -99,7 +99,7 @@ pub(crate) fn link_pin_to_record_controlled(pin: &LinkPin, control: &mut semio_f
     })
 }
 
-pub(crate) fn validate_link_pin_record(record: &semio_framework_dsl_record::RecordValue) -> Result<u32, String> {
+pub fn validate_link_pin_record(record: &semio_framework_dsl_record::RecordValue) -> Result<u32, String> {
     let Some(semio_framework_dsl_record::FieldValue::Enum(ordinal)) = record.get(0) else {
         return Err("expected link pin kind Enum".into());
     };
@@ -118,7 +118,7 @@ pub(crate) fn validate_link_pin_record(record: &semio_framework_dsl_record::Reco
     Ok(*ordinal)
 }
 
-pub(crate) fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<LinkPin, ValueError> {
+pub fn link_pin_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<LinkPin, ValueError> {
     control.scoped_stage(|control| {
         control.checkpoint()?;
         let ordinal = validate_link_pin_record(record).map_err(|message| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, message))?;
@@ -159,7 +159,7 @@ pub(crate) fn link_pin_from_record_controlled(record: &semio_framework_dsl_recor
     })
 }
 
-pub(crate) fn link_pin_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<LinkPin, String> {
+pub fn link_pin_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<LinkPin, String> {
     validate_link_pin_record(record)?;
     let ordinal = match record.get(0) {
         Some(semio_framework_dsl_record::FieldValue::Enum(n)) => *n,
@@ -194,7 +194,7 @@ pub(crate) fn link_pin_from_record(record: &semio_framework_dsl_record::RecordVa
 }
 
 // 🚫️async: E4 fn-pointer slot — value stored in `Shape::Record(fn() -> RecordSpec)`
-pub(crate) fn link_pin_borrowed_spec()->semio_framework_dsl_record::BorrowedRecordSpec{
+pub fn link_pin_borrowed_spec()->semio_framework_dsl_record::BorrowedRecordSpec{
  use semio_framework_dsl_record::{BorrowedFieldSpec as F,BorrowedShape as H};
  const fn optional(mut field:F)->F{field.optional=true;field}
  static KINDS:[(&str,u32);3]=[("head",0),("checkpoint",1),("snapshot",2)];
@@ -202,7 +202,7 @@ pub(crate) fn link_pin_borrowed_spec()->semio_framework_dsl_record::BorrowedReco
  semio_framework_dsl_record::BorrowedRecordSpec{keyword:None,layout:semio_framework_dsl_record::RecordLayout::Inline,fields:&FIELDS}
 }
 
-pub(crate) fn artifact_link_spec() -> semio_framework_dsl_record::RecordSpec {
+pub fn artifact_link_spec() -> semio_framework_dsl_record::RecordSpec {
     semio_framework_dsl_record::RecordSpec::new(
         None,
         semio_framework_dsl_record::RecordLayout::Inline,
@@ -214,7 +214,7 @@ pub(crate) fn artifact_link_spec() -> semio_framework_dsl_record::RecordSpec {
     )
 }
 
-pub(crate) fn artifact_link_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
+pub fn artifact_link_spec_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::RecordSpec, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(3)?;
         let mut fields = control.allocate_vec(3)?;
@@ -227,11 +227,11 @@ pub(crate) fn artifact_link_spec_controlled<C: semio_framework_dsl_record::Nativ
     })
 }
 
-pub(crate) fn artifact_link_spec_producer() -> RecordSpecProducer {
+pub fn artifact_link_spec_producer() -> RecordSpecProducer {
     RecordSpecProducer { ordinary: artifact_link_spec, decoding: |control| artifact_link_spec_controlled(control), encoding: |control| artifact_link_spec_controlled(control) }
 }
 
-pub(crate) fn artifact_link_to_record(link: &ArtifactLink) -> semio_framework_dsl_record::RecordValue {
+pub fn artifact_link_to_record(link: &ArtifactLink) -> semio_framework_dsl_record::RecordValue {
     let mut record = semio_framework_dsl_record::RecordValue::default();
     record.fields.insert(0, <semio_framework_artifact_reference::ArtifactRef as semio_framework_dsl_record::DslField>::to_value(&link.target));
     record.fields.insert(1, semio_framework_dsl_record::FieldValue::Record(link_pin_to_record(&link.pin)));
@@ -239,7 +239,7 @@ pub(crate) fn artifact_link_to_record(link: &ArtifactLink) -> semio_framework_ds
     record
 }
 
-pub(crate) fn artifact_link_to_record_controlled(link: &ArtifactLink, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
+pub fn artifact_link_to_record_controlled(link: &ArtifactLink, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::RecordValue, ValueError> {
     use semio_framework_dsl_record::DslField;
     control.scoped_depth(64, |control| {
         control.scoped_stage(|control| {
@@ -256,7 +256,7 @@ pub(crate) fn artifact_link_to_record_controlled(link: &ArtifactLink, control: &
     })
 }
 
-pub(crate) fn artifact_link_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<ArtifactLink, String> {
+pub fn artifact_link_from_record(record: &semio_framework_dsl_record::RecordValue) -> Result<ArtifactLink, String> {
     if record.fields.len() != 3 || record.fields.keys().any(|id| *id > 2) {
         return Err("artifact link requires its three declared fields".into());
     }
@@ -272,7 +272,7 @@ pub(crate) fn artifact_link_from_record(record: &semio_framework_dsl_record::Rec
     Ok(ArtifactLink { target, pin, role })
 }
 
-pub(crate) fn artifact_link_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactLink, ValueError> {
+pub fn artifact_link_from_record_controlled(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactLink, ValueError> {
     control.scoped_stage(|control| {
         control.begin_stage(3)?;
         if record.fields.len() != 3 || record.fields.keys().any(|id| *id > 2) {

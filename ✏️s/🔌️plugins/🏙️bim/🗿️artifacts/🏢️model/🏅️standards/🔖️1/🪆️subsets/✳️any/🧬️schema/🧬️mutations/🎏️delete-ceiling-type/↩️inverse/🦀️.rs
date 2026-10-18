@@ -1,8 +1,8 @@
 //! ↩️ Inverse of `DeleteCeilingType`: the setters of the properties and classifications of the type, then the concrete `CreateCeilingType` carrying the full removed record, none when the ceiling type was absent.
 
-use super::super::create_ceiling_type::CreateCeilingType;
-use super::super::cascade;
-use super::DeleteCeilingType;
+use crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::CreateCeilingType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::DeleteCeilingType;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteCeilingType, base: &ModelSnapshot) -> Vec<Op>

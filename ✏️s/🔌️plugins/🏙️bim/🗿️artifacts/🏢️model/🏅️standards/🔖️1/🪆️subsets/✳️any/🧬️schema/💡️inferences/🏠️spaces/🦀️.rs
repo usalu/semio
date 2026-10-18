@@ -9,13 +9,13 @@
 //!
 //! Related: shapely `polygonize` is the third-party oracle, <https://shapely.readthedocs.io/en/stable/manual.html#shapely.ops.polygonize>.
 
-use super::super::curtain_layout::DEFAULT_MULLION_DEPTH;
-use super::super::element_solids::ceilings;
-use super::super::element_solids::columns::profile_loop;
-use super::super::element_solids::plan_kit::{depth_of, seg};
-use super::super::element_solids::{dep_object, dep_value, Anonymous};
-use super::super::storey_levels::StoreyLevel;
-use super::super::wall_layout::WallLayout;
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{depth_of, seg};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, SpaceBoundary, Vertex};
 use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
 use semio_framework_2d::regions::{offset_regions, region_boolean, OffsetJoin, Region};
@@ -82,11 +82,11 @@ fn flat(vertices: &[loops::Vertex]) -> Vec<Vec2> {
     loops::flatten(vertices, FLATTEN_TOLERANCE).iter().map(|point| [point.x, point.y]).collect()
 }
 
-fn plan_loop(vertices: &[Vertex]) -> Vec<loops::Vertex> {
+pub fn plan_loop(vertices: &[Vertex]) -> Vec<loops::Vertex> {
     vertices.iter().map(|vertex| loops::Vertex::new(Point::new(vertex.point.x, vertex.point.y), vertex.bulge)).collect()
 }
 
-fn corners(ring: &[Vec2]) -> Vec<Vertex> {
+pub fn corners(ring: &[Vec2]) -> Vec<Vertex> {
     ring.iter().map(|point| Vertex { point: Point2 { x: point[0], y: point[1] }, bulge: 0.0 }).collect()
 }
 
@@ -339,6 +339,4 @@ pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
 }
 //#endregion 🔖️Dependency
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

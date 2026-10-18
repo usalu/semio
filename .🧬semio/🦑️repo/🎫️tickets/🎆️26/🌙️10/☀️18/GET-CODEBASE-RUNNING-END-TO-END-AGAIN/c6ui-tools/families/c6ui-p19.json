@@ -1,0 +1,31 @@
+{
+ "name": "c6ui-p19",
+ "crates": [
+  "semio-framework-ui",
+  "semio-framework-ui-action",
+  "semio-framework-ui-scene-modelling",
+  "semio-framework-ui-text",
+  "semio-framework-ui-host",
+  "semio-framework-ui-contract-components",
+  "semio-framework-ui-contract-typegen"
+ ],
+ "features": {
+  "semio-framework-ui": [
+   "tui",
+   "tui-terminal"
+  ]
+ },
+ "base": {
+  "rev": "HEAD",
+  "crates": [
+   "semio-framework-ui",
+   "semio-framework-ui-action",
+   "semio-framework-ui-scene-modelling",
+   "semio-framework-ui-text",
+   "semio-framework-ui-host",
+   "semio-framework-ui-contract-components",
+   "semio-framework-ui-contract-typegen"
+  ]
+ },
+ "note": "P19"
+}

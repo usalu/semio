@@ -1,4 +1,15 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::{intersect, BulgeSeg, Extent};
+#[allow(unused_imports)]
+use std::f64::consts::FRAC_PI_4;
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::gestures::snap::*;
 use crate::editor::bim::fixture::room;
 use crate::standards::v1::subsets::any::schema::snapshot::{GridLine, Point2};
 

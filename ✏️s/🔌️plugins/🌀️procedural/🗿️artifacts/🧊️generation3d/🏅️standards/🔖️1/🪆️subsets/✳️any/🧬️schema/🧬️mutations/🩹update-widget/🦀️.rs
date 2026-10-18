@@ -15,7 +15,7 @@ pub struct UpdateWidget {
 }
 
 /// 🔗️ Variable renames preserve attached channel identities in sparse diffs and retained replay.
-pub(crate) fn variable_synapses(previous: &Widget, next: &Widget, synapses: &[semio_framework_artifact_flow_flow::SynapseSpec]) -> Vec<(usize, semio_framework_artifact_flow_flow::SynapseSpec)> {
+pub fn variable_synapses(previous: &Widget, next: &Widget, synapses: &[semio_framework_artifact_flow_flow::SynapseSpec]) -> Vec<(usize, semio_framework_artifact_flow_flow::SynapseSpec)> {
     let (Widget::Variable { id, name: old, schema: old_schema }, Widget::Variable { name, schema, .. }) = (previous, next) else { return Vec::new(); };
     let old = semio_framework_artifact_flow_flow::variable_io_ports(old, old_schema).0[0].id.clone();
     let next = semio_framework_artifact_flow_flow::variable_io_ports(name, schema).0[0].id.clone();

@@ -7,11 +7,11 @@ import {decodeBmpSnapshot,encodeBmpSnapshot} from "../../../💾️binary/📸�
 import {bmpSnapshotToSqliteDatabase,bmpSnapshotFromSqliteDatabase,BMP_SQLITE_SCHEMA} from "../🟦️.ts";
 import {defaultBmpSnapshot,parseBmpSnapshot,type BmpSnapshot} from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase} from "@semio-tech/framework";
-async function source(file:string):Promise<BmpSnapshot>{return decodeBmpSnapshot(new Uint8Array(await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority"+file,import.meta.url)).arrayBuffer()));}
+async function source(file:string):Promise<BmpSnapshot>{return decodeBmpSnapshot(new Uint8Array(await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/"+file,import.meta.url)).arrayBuffer()));}
 test("BMP native profiles preserve precise samples and unknown metadata through direct owned SQL",async()=>{
  expect(BMP_SQLITE_SCHEMA).toBe(await Bun.file(new URL("../🗄️.sql",import.meta.url)).text());
  for(const entry of corpus.accepted){const snapshot=await source(entry.file),relational=await bmpSnapshotToSqliteDatabase(snapshot),db=Database.deserialize(await exportSqliteDatabase(relational));try{expect(db.query("PRAGMA foreign_key_check").all()).toEqual([]);expect(db.query("SELECT width,height,row_order,profile FROM bmp_image").get()).toEqual({width:entry.width,height:entry.height,row_order:entry.topDown?"topDown":"bottomUp",profile:entry.profile});expect(db.query("SELECT COUNT(*) AS count FROM sqlite_schema WHERE type='table'").get()).toEqual({count:6});expect(await bmpSnapshotFromSqliteDatabase(await importSqliteDatabase(db.serialize()))).toEqual(snapshot);expect(await decodeBmpSnapshot(await encodeBmpSnapshot(snapshot))).toEqual(snapshot);}finally{db.close();}}
- for(const entry of corpus.rejected){const raw=new Uint8Array(await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority"+entry.file,import.meta.url)).arrayBuffer());await expect(decodeBmpSnapshot(raw)).rejects.toThrow();}
+ for(const entry of corpus.rejected){const raw=new Uint8Array(await Bun.file(new URL("../../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/"+entry.file,import.meta.url)).arrayBuffer());await expect(decodeBmpSnapshot(raw)).rejects.toThrow();}
 });
 test("BMP independently edited cells update exact logical components and retain reserved data",async()=>{
  const snapshot=await source("direct-rgb24-padding-gap-trailer.bmp"),db=Database.deserialize(await exportSqliteDatabase(await bmpSnapshotToSqliteDatabase(snapshot)));

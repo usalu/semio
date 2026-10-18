@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative set-element-workset diff.
-use super::SetElementWorkset;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::mutations::set_element_workset::SetElementWorkset;
+use crate::standards::v1::subsets::any::schema::{diff::{ElementMembershipPatch, Entry, ModelDiff}, snapshot::{ElementMembership, ModelSnapshot}};
 use crate::standards::v1::subsets::any::schema::authored::option_rules;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetElementWorkset, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

@@ -7,13 +7,14 @@ import { basename, dirname, posix, resolve } from "node:path";
 import picomatch from "picomatch";
 import ts from "typescript";
 import { normalizeRelative, utf8Compare } from "../../🧹️normalization/🛣️path/🟦️.ts";
-import { createTaxonomyPathMatcher } from "../../🔍️discovery/🟦️.ts";
+import { createTaxonomyPathMatcher } from "../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";
+import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Fixture = { schemaVersion: number; utf8Order: { left: string; right: string; sign: number }[]; literalLeafPaths: string[]; markdownReferenceDefinitions: { content: string; values: string[] }[] };
 const library = resolve(import.meta.dir, "../..");
 const fixture = JSON.parse(readFileSync(resolve(library, "🧪️tests/🧫️fixtures/⏱️taxonomy-scaling-laws/🔣️.json"), "utf8")) as Fixture;
 const taxonomy = JSON.parse(readFileSync(resolve(library, "🔣️taxonomy.json"), "utf8")) as { fixedFilenameContracts: Record<string, { pathPattern: string }>; fixedDirectoryContracts: Record<string, { pathPattern: string }> };
-const syntax = ts.createSourceFile("normalization.ts", readFileSync(resolve(library, "🧹️normalization/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+const syntax = ts.createSourceFile("normalization.ts", normalizationEngineDeclarations(resolve(library, "🧹️normalization")), ts.ScriptTarget.Latest, true);
 
 /** 🧬️ Compiles the named production declarations (functions and module constants) of the normalizer into one callable closure. */
 function production<T>(names: readonly string[], entry: string): T {
@@ -59,7 +60,7 @@ test("the fixed-contract literal leaf never excludes a contract the glob oracle 
 });
 
 test("link reference definitions are found in one linear pass exactly as the original regex finds them", () => {
-  const scan = production<(content: string) => { value: string; start: number; end: number; structuredLocation: string }[]>(["markdownReferenceDefinitionTokens", "MARKDOWN_WHITESPACE_RUN", "MARKDOWN_TEXT_RUN", "MARKDOWN_LINE_TERMINATOR", "lineLocation", "indexedLineContent", "indexedLineStarts", "regexTokens"], "{ scan: markdownReferenceDefinitionTokens, original: (content) => regexTokens(content, 'markdown', 'markdown-link', [/^\\s*\\[[^\\]]+\\]:\\s*(\\S+)/gmu]) }") as unknown as { scan: (content: string) => unknown[]; original: (content: string) => unknown[] };
+  const scan = production<(content: string) => { value: string; start: number; end: number; structuredLocation: string }[]>(["markdownReferenceDefinitionTokens", "MARKDOWN_WHITESPACE_RUN", "MARKDOWN_TEXT_RUN", "MARKDOWN_LINE_TERMINATOR", "requireTaxonomyValue", "lineLocation", "indexedLineContent", "indexedLineStarts", "regexTokens"], "{ scan: markdownReferenceDefinitionTokens, original: (content) => regexTokens(content, 'markdown', 'markdown-link', [/^\\s*\\[[^\\]]+\\]:\\s*(\\S+)/gmu]) }") as unknown as { scan: (content: string) => unknown[]; original: (content: string) => unknown[] };
   for (const row of fixture.markdownReferenceDefinitions) {
     expect((scan.scan(row.content) as { value: string }[]).map((token) => token.value), JSON.stringify(row.content)).toEqual(row.values);
     expect([...row.content.matchAll(/^\s*\[[^\]]+\]:\s*(\S+)/gmu)].map((match) => match[1])).toEqual(row.values);

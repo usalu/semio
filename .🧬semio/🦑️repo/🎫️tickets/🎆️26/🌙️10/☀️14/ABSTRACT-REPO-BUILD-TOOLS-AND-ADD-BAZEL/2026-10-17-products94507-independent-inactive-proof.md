@@ -1,0 +1,7 @@
+# Retained Inactive Leases94507: Independent Actual Proof
+
+Saved log/terminal/exact command93132 pass sequential nofollow descriptor/name seven-fact SHA checks; receipt `🗑️generated/products94507-independent-success-hold.json`. Exact input SHA05ddfec18e79aed98b29a8f4130a1903e86d7b5cc61d2d19107ff52c47d0a2b6 matches settlement. Actual terminal0/null in7,222.469916ms, acquired=true and inactive-application-preserved.
+
+Receipt retains filesystem66,060,288/maximumphysical67,108,864, backing16777257:90923 and underlying16777257:90922. Witness16files/7directories/4,273,886B, journalnull, unchanged applicationSHAf8b212f718722fa96a3101f5167c20caeda6b0b1657f2b80ca1964542d11cdec and strictDarwin UUIDAF756A76-BB36-4D7E-854C-6F3DEE8CCFEC. Service file/count changes are not interpreted as application changes or inferred authorship. Successful fixed Core return includes its separately qualified exact parent association-removal/retained custody proof; no extra live kernel read was performed here.
+
+This establishes actual retained inactive publication of the selected nested Leases image after full preserved application witnesses. Payload/backing/receipt/journal and charge remain retained, not deleted or allocation-retired. The enclosing Products parent still requires its own direct canonical whole publication; planner completion is not asserted. No Native/protected reads were performed by this audit.

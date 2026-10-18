@@ -2,7 +2,8 @@
 //! together with the map from view metres to paper millimetres. All in millimetres from the top left corner of the sheet, x to the right and y downward.
 //! 📎 https://en.wikipedia.org/wiki/Technical_drawing#Sheet_sizes_and_frame
 
-use super::{PaperRect, PlacedViewport, ViewMap};
+use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, ViewMap};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use crate::standards::v1::subsets::any::schema::snapshot::{View, Viewport};
 
@@ -55,6 +56,4 @@ pub fn place(id: &str, viewport: &Viewport, view: &View, drawing: Option<&ViewLi
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

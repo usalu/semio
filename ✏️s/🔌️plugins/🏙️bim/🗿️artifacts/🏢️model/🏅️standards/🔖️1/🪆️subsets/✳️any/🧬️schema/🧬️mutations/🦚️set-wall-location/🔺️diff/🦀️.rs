@@ -1,6 +1,6 @@
 //! 🔺️ Diff constructor for `SetWallLocation`: a one-field wall patch. The offset curves of the wall faces are inferred from it.
 
-use super::SetWallLocation;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_location::SetWallLocation;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

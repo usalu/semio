@@ -2,7 +2,7 @@
 /** 🏃️ Shared playbook artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { BundleScript } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 /** 📖️ Runs the actual selected child producer over the portable shared form law. */
 class FlowFormsScript extends BundleScript {
  async run(args:string[]):Promise<void>{

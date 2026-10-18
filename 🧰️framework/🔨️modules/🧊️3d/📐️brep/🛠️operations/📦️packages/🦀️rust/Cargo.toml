@@ -15,6 +15,9 @@ role = "framework"
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-3d-brep-vector.workspace = true
 semio-framework-3d-brep-tolerance.workspace = true

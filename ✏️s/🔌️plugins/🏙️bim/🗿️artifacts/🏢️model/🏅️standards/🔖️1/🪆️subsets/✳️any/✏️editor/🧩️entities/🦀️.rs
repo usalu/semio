@@ -7,43 +7,8 @@ use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot,
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 use semio_framework_ui_locale::LabelText;
 
-//#region 🔖️Types
-pub type LabelOf = fn(&BimLabels) -> LabelText;
-
-/// 🧾️ One authored parameter of an entity: how it reads off the snapshot and, when a `set-*` mutation exists for it, how an edited value becomes that mutation.
-pub struct FieldRow {
-    pub key: &'static str,
-    pub label: LabelOf,
-    pub input: InputKind,
-    pub read: fn(&ModelSnapshot, &str) -> Option<String>,
-    pub write: Option<fn(&ModelSnapshot, &str, &str) -> Option<ModelMutation>>,
-    pub choices: Option<fn(&ModelSnapshot, &BimLabels) -> Vec<(String, String)>>,
-}
-
-/// 💡️ One inferred, read-only value of an entity.
-pub struct InferredRow {
-    pub key: &'static str,
-    pub label: LabelOf,
-    pub read: fn(&ModelSnapshot, &ModelInference, &str) -> Option<String>,
-}
-
-/// 🧱️ One entity kind of the snapshot.
-pub struct EntityKind {
-    pub kind: &'static str,
-    pub icon: &'static str,
-    pub library: bool,
-    pub label: LabelOf,
-    pub group: LabelOf,
-    pub ids: fn(&ModelSnapshot) -> Vec<String>,
-    pub name: fn(&ModelSnapshot, &str) -> Option<String>,
-    pub parent: fn(&ModelSnapshot, &str) -> Option<String>,
-    pub delete: Option<fn(&str) -> ModelMutation>,
-    pub rename: Option<fn(&ModelSnapshot, &str, &str) -> Option<ModelMutation>>,
-    pub create: Option<fn(&ModelSnapshot, &str, &str, &str) -> Result<ModelMutation, &'static str>>,
-    pub fields: &'static [FieldRow],
-    pub inferred: &'static [InferredRow],
-}
-//#endregion 🔖️Types
+pub use semio_s_artifact_bim_model_viewer::editor::bim::entities::row_types;
+pub use row_types::*;
 
 //#region 🔖️Helpers
 use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{Baluster, DoorLeaves, EndJoin, Infill, Layer, LayerFunction, LocationLine, MaterialCategory, Phase, Point2, Profile, Rgb, RiserKind, RoofShape, SpaceBoundary, StairFlight, StairStringer, StringerKind, Swing, Vertex}};
@@ -51,8 +16,7 @@ use semio_framework_plugin::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
-#[path = "🔤️field-codecs/🦀️.rs"]
-pub mod field_codecs;
+pub use semio_s_artifact_bim_model_authored::editor::bim::entities::field_codecs;
 pub use field_codecs::*;
 
 macro_rules! set {
@@ -149,8 +113,7 @@ pub mod coordination;
 #[path = "🔲️ceilings/🦀️.rs"]
 pub mod ceilings;
 
-#[path = "🕰️phasing/🦀️.rs"]
-pub mod phasing;
+pub use semio_s_artifact_bim_model_viewer::editor::bim::entities::phasing;
 
 #[path = "🛝️ramps/🦀️.rs"]
 pub mod ramps;
@@ -161,8 +124,7 @@ pub mod wall_sweeps;
 #[path = "🏷️psets/🦀️.rs"]
 pub mod psets;
 
-#[path = "🏗️frame/🦀️.rs"]
-pub mod frame;
+pub use semio_s_artifact_bim_model_viewer::editor::bim::entities::frame;
 
 #[path = "🧬️families/🦀️.rs"]
 pub mod families;
@@ -183,8 +145,7 @@ pub mod options;
 pub mod field_tables;
 pub use field_tables::*;
 
-#[path = "➕️create-rows/🦀️.rs"]
-pub mod create_rows;
+pub use semio_s_artifact_bim_model_viewer::editor::bim::entities::create_rows;
 pub use create_rows::*;
 
 #[path = "🗂️entity-table/🦀️.rs"]
@@ -196,9 +157,7 @@ mod project_and_lookup;
 pub use project_and_lookup::*;
 
 #[path = "🧾️properties/🦀️.rs"]
-mod properties;
+pub mod properties;
 pub use properties::*;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

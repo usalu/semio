@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/os/plugin/component-instantiation/fixture/v1",
+  "title": "Explicit component factory instantiation corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "component",
+    "calls",
+    "expected"
+  ],
+  "properties": {
+    "component": {
+      "type": "string",
+      "minLength": 1
+    },
+    "calls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "instance",
+          "delta"
+        ],
+        "properties": {
+          "instance": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "delta": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "moduleImportInstances",
+        "instantiated",
+        "results",
+        "memory",
+        "distinctMemories",
+        "factoryHasNoModuleInstanceRoots",
+        "automaticHasModuleInstanceRoots"
+      ],
+      "properties": {
+        "moduleImportInstances": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "instantiated": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "memory": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "distinctMemories": {
+          "type": "boolean"
+        },
+        "factoryHasNoModuleInstanceRoots": {
+          "type": "boolean"
+        },
+        "automaticHasModuleInstanceRoots": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

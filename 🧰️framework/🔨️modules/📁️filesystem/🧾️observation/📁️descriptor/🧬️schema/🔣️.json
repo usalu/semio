@@ -3126,6 +3126,1298 @@
           "const": false
         }
       }
+    },
+    "RelativeFilePublicationProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "conditional-ordinary-file-publication",
+        "maximumFileBytes": 8388608,
+        "maximumChunkBytes": 65536,
+        "maximumExpectations": 32,
+        "maximumPublicationsPerFrame": 1,
+        "receiver": "original-root-frame-only",
+        "expected": [
+          "missing",
+          "file"
+        ],
+        "sourceLinks": 1,
+        "readAttempts": "captured-byte-count-plus-one",
+        "progressAttempts": 64,
+        "staging": "exclusive-same-parent-basename-no-longer-than-target",
+        "prior": "exact-seven-fields-and-complete-sha256",
+        "publication": "absent-no-replace-or-retaining-exchange",
+        "retained": "exact-displaced-inode-and-sha256-no-unlink-no-rollback",
+        "authority": "ordinary-filesystem-only",
+        "windows": "pre-effect-refusal-until-atomic-preserving-owner-qualified",
+        "finalFence": "resource-free-descriptor-relative-nofollow-seven-fields-after-all-file-directory-and-publication-library-closes",
+        "linuxStatx": {
+          "symbol": "statx",
+          "bytes": 256,
+          "flags": 2304,
+          "requiredMask": 967,
+          "mask": 0,
+          "links": 16,
+          "mode": 28,
+          "inode": 32,
+          "size": 40,
+          "ctime": 96,
+          "mtime": 112,
+          "deviceMajor": 136,
+          "deviceMinor": 140,
+          "timestampNanoseconds": 8
+        }
+      }
+    },
+    "RelativeFilePublicationCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "before",
+        "prior",
+        "bytes",
+        "maximumBytes",
+        "effect",
+        "captureAccepted",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "before": {
+          "enum": [
+            "missing",
+            "file",
+            "link",
+            "directory",
+            "hardlink"
+          ]
+        },
+        "prior": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "bytes": {
+          "type": "string"
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8388608
+        },
+        "effect": {
+          "enum": [
+            "none",
+            "copied",
+            "foreign",
+            "changed",
+            "parent",
+            "expected-proxy",
+            "bytes-proxy",
+            "cancel"
+          ]
+        },
+        "captureAccepted": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeFilePublicationCases": {
+      "const": [
+        {
+          "id": "missing",
+          "before": "missing",
+          "prior": null,
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "none",
+          "captureAccepted": true,
+          "accepted": true
+        },
+        {
+          "id": "missing-empty",
+          "before": "missing",
+          "prior": null,
+          "bytes": "",
+          "maximumBytes": 64,
+          "effect": "none",
+          "captureAccepted": true,
+          "accepted": true
+        },
+        {
+          "id": "replace",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "none",
+          "captureAccepted": true,
+          "accepted": true
+        },
+        {
+          "id": "replace-unicode",
+          "before": "file",
+          "prior": "héllo",
+          "bytes": "界🌍",
+          "maximumBytes": 64,
+          "effect": "none",
+          "captureAccepted": true,
+          "accepted": true
+        },
+        {
+          "id": "replace-empty",
+          "before": "file",
+          "prior": "",
+          "bytes": "",
+          "maximumBytes": 64,
+          "effect": "none",
+          "captureAccepted": true,
+          "accepted": true
+        },
+        {
+          "id": "link",
+          "before": "link",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "none",
+          "captureAccepted": false,
+          "accepted": false
+        },
+        {
+          "id": "directory",
+          "before": "directory",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "none",
+          "captureAccepted": false,
+          "accepted": false
+        },
+        {
+          "id": "hardlink",
+          "before": "hardlink",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "none",
+          "captureAccepted": false,
+          "accepted": false
+        },
+        {
+          "id": "prior-bound",
+          "before": "file",
+          "prior": "old-long",
+          "bytes": "new",
+          "maximumBytes": 2,
+          "effect": "none",
+          "captureAccepted": false,
+          "accepted": false
+        },
+        {
+          "id": "new-bound",
+          "before": "file",
+          "prior": "",
+          "bytes": "new",
+          "maximumBytes": 2,
+          "effect": "none",
+          "captureAccepted": true,
+          "accepted": false
+        },
+        {
+          "id": "copied",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "copied",
+          "captureAccepted": true,
+          "accepted": false
+        },
+        {
+          "id": "foreign",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "foreign",
+          "captureAccepted": true,
+          "accepted": false
+        },
+        {
+          "id": "changed",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "changed",
+          "captureAccepted": true,
+          "accepted": false
+        },
+        {
+          "id": "parent",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "parent",
+          "captureAccepted": true,
+          "accepted": false
+        },
+        {
+          "id": "expected-proxy",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "expected-proxy",
+          "captureAccepted": true,
+          "accepted": false
+        },
+        {
+          "id": "bytes-proxy",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "bytes-proxy",
+          "captureAccepted": true,
+          "accepted": false
+        },
+        {
+          "id": "cancel",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 64,
+          "effect": "cancel",
+          "captureAccepted": true,
+          "accepted": false
+        },
+        {
+          "id": "invalid-bound",
+          "before": "file",
+          "prior": "old",
+          "bytes": "new",
+          "maximumBytes": 0,
+          "effect": "none",
+          "captureAccepted": false,
+          "accepted": false
+        }
+      ]
+    },
+    "RelativeFilePublicationExpectation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "identity",
+        "sha256",
+        "maximumBytes"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "kind": {
+          "enum": [
+            "missing",
+            "file"
+          ]
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ReadIdentity"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8388608
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "missing"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "identity": {
+                "type": "null"
+              },
+              "sha256": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "identity": {
+                "$ref": "#/definitions/ReadIdentity"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RelativePublishedFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "identity",
+        "sha256",
+        "parent",
+        "retained",
+        "authority"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 255,
+          "pattern": "^[^/\\\\\\u0000]+$"
+        },
+        "identity": {
+          "$ref": "#/definitions/ReadIdentity"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "parent": {
+          "$ref": "#/definitions/ReadIdentity"
+        },
+        "authority": {
+          "const": false
+        },
+        "retained": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "name",
+                "identity",
+                "sha256"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 255,
+                  "pattern": "^[^/\\\\\\u0000]+$"
+                },
+                "identity": {
+                  "$ref": "#/definitions/ReadIdentity"
+                },
+                "sha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "RelativeFilePublicationFaultCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted",
+        "transitioned",
+        "unresolved",
+        "primary",
+        "drained"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "file",
+            "missing",
+            "empty",
+            "partial-read",
+            "partial-write",
+            "bytes-getters",
+            "mutate-caller",
+            "maximum-bytes",
+            "short-name",
+            "unawaited",
+            "concurrent",
+            "stage-write-zero",
+            "read-zero",
+            "read-overflow",
+            "shared-bytes",
+            "detached-bytes",
+            "capture-capacity",
+            "parallel-capacity",
+            "cross-capacity",
+            "nested-root",
+            "path-bound",
+            "oversized-bytes",
+            "rename-status",
+            "stage-sync",
+            "parent-pre-sync",
+            "rename-frozen",
+            "stage-write-undefined",
+            "stage-write-frozen",
+            "rename-unknown",
+            "late-prior",
+            "late-new",
+            "late-retained",
+            "late-roster",
+            "final-parent-sync-retained",
+            "file-close-retained",
+            "library-close-retained",
+            "file-close-new",
+            "library-close-new",
+            "file-close-roster",
+            "library-close-roster",
+            "spent",
+            "parent-final-sync",
+            "cancel-after-exchange",
+            "cancel-after-stage",
+            "file-close-failure",
+            "library-close-failure",
+            "undefined-close",
+            "frozen-close",
+            "undefined-pending",
+            "frozen-pending",
+            "directory-close-retained",
+            "directory-close-new",
+            "entry-close-retained",
+            "entry-close-new"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "transitioned": {
+          "type": "boolean"
+        },
+        "unresolved": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "primary": {
+          "enum": [
+            "none",
+            "marker",
+            "undefined",
+            "close"
+          ]
+        },
+        "drained": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeFilePublicationFaultCases": {
+      "const": [
+        {
+          "effect": "file",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "missing",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "empty",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "partial-read",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "partial-write",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "bytes-getters",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "mutate-caller",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "maximum-bytes",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "short-name",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "unawaited",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": true
+        },
+        {
+          "effect": "concurrent",
+          "accepted": true,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "stage-write-zero",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "read-zero",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "read-overflow",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "shared-bytes",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "detached-bytes",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "capture-capacity",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "parallel-capacity",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "cross-capacity",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "nested-root",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "path-bound",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "oversized-bytes",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "rename-status",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "stage-sync",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "marker",
+          "drained": false
+        },
+        {
+          "effect": "parent-pre-sync",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "marker",
+          "drained": false
+        },
+        {
+          "effect": "rename-frozen",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "marker",
+          "drained": false
+        },
+        {
+          "effect": "stage-write-undefined",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "undefined",
+          "drained": false
+        },
+        {
+          "effect": "stage-write-frozen",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "marker",
+          "drained": false
+        },
+        {
+          "effect": "rename-unknown",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "late-prior",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "late-new",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "late-retained",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "late-roster",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "final-parent-sync-retained",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "file-close-retained",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "library-close-retained",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "file-close-new",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "library-close-new",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "file-close-roster",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "library-close-roster",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "spent",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "parent-final-sync",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "marker",
+          "drained": false
+        },
+        {
+          "effect": "cancel-after-exchange",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "marker",
+          "drained": false
+        },
+        {
+          "effect": "cancel-after-stage",
+          "accepted": false,
+          "transitioned": false,
+          "unresolved": 0,
+          "primary": "marker",
+          "drained": false
+        },
+        {
+          "effect": "file-close-failure",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 1,
+          "primary": "close",
+          "drained": false
+        },
+        {
+          "effect": "library-close-failure",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 1,
+          "primary": "close",
+          "drained": false
+        },
+        {
+          "effect": "undefined-close",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 1,
+          "primary": "undefined",
+          "drained": false
+        },
+        {
+          "effect": "frozen-close",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 1,
+          "primary": "marker",
+          "drained": false
+        },
+        {
+          "effect": "undefined-pending",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "undefined",
+          "drained": true
+        },
+        {
+          "effect": "frozen-pending",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "marker",
+          "drained": true
+        },
+        {
+          "effect": "directory-close-retained",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "directory-close-new",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "entry-close-retained",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        },
+        {
+          "effect": "entry-close-new",
+          "accepted": false,
+          "transitioned": true,
+          "unresolved": 0,
+          "primary": "none",
+          "drained": false
+        }
+      ]
+    },
+    "RelativeFilePublicationLinuxStatxCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "byteLength",
+        "mask",
+        "mode",
+        "links",
+        "deviceMajor",
+        "deviceMinor",
+        "inode",
+        "size",
+        "ctimeSeconds",
+        "ctimeNanoseconds",
+        "mtimeSeconds",
+        "mtimeNanoseconds",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "mask": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "mode": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "links": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "deviceMajor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "deviceMinor": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "inode": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "size": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "ctimeSeconds": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "ctimeNanoseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "mtimeSeconds": {
+          "type": "string",
+          "pattern": "^-?(0|[1-9][0-9]*)$"
+        },
+        "mtimeNanoseconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RelativeFilePublicationLinuxStatxCases": {
+      "const": [
+        {
+          "id": "ordinary",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": true
+        },
+        {
+          "id": "zero",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 0,
+          "deviceMinor": 0,
+          "inode": "1",
+          "size": "0",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": true
+        },
+        {
+          "id": "wide-device",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 1048575,
+          "deviceMinor": 1048575,
+          "inode": "18446744073709551615",
+          "size": "8388608",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": true
+        },
+        {
+          "id": "negative-time",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "-1",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "-2",
+          "mtimeNanoseconds": 987654321,
+          "accepted": true
+        },
+        {
+          "id": "extra-mask",
+          "byteLength": 256,
+          "mask": 4095,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": true
+        },
+        {
+          "id": "short",
+          "byteLength": 255,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        },
+        {
+          "id": "long",
+          "byteLength": 257,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        },
+        {
+          "id": "missing-fields",
+          "byteLength": 256,
+          "mask": 775,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        },
+        {
+          "id": "link",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 41471,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        },
+        {
+          "id": "directory",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 16877,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        },
+        {
+          "id": "hardlink",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 2,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        },
+        {
+          "id": "unlinked",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 0,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        },
+        {
+          "id": "oversized",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "8388609",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        },
+        {
+          "id": "mtime-nanoseconds",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 123456789,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 1000000000,
+          "accepted": false
+        },
+        {
+          "id": "ctime-nanoseconds",
+          "byteLength": 256,
+          "mask": 967,
+          "mode": 33188,
+          "links": 1,
+          "deviceMajor": 8,
+          "deviceMinor": 1,
+          "inode": "9007199254740993",
+          "size": "23",
+          "ctimeSeconds": "1792270000",
+          "ctimeNanoseconds": 1000000000,
+          "mtimeSeconds": "1792269999",
+          "mtimeNanoseconds": 987654321,
+          "accepted": false
+        }
+      ]
     }
   },
   "$ref": "#/definitions/Protocol"

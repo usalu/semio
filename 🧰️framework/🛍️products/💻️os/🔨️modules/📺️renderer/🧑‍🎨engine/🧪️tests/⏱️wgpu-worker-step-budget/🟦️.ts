@@ -472,11 +472,11 @@ describe("wgpu frame-Worker step budget", () => {
       expect(owners).toEqual(fixture.callbackOwners);
       expect(outcomes).toEqual(fixture.frameOutcomes);
     }
-    const source = readFileSync(BROWSER_WORKER_RS, "utf8");
-    const start = source.indexOf("let continue_frame =");
-    const continuation = source.slice(start, source.indexOf("encode_tick_timed(", start));
-    expect(continuation).toMatch(/let continue_frame = !host\.presenter\.awaiting_runtime\(\)\s*&&\s*\(host\.take_cursor_wake_directive\(\)\.is_some\(\)/);
-    expect(continuation.trim()).toMatch(/\|\| host\.presenter\.has_pending_presentation\(\)\);$/);
+    const source = readFileSync(BROWSER_WORKER_RS, "utf8").replace(/\s+/gu, "");
+    const start = source.indexOf("letcontinue_frame=");
+    const continuation = source.slice(start, source.indexOf("letoutput=BrowserTickOutput{", start));
+    expect(continuation).toMatch(/^letcontinue_frame=!host\.presenter\.awaiting_runtime\(\)&&\(host\.runtime\.has_pending_text_work\(\)\|\|/u);
+    expect(continuation).toMatch(/\|\|host\.presenter\.has_pending_presentation\(\)\);$/u);
   });
 
   it("matches Chromium task delivery for parked presenter completion and reentrant wake", async () => {
@@ -541,13 +541,14 @@ describe("wgpu frame-Worker step budget", () => {
     expect(turnSource).not.toContain("return result.requestFrame");
     expect(workerSource).toContain('new WorkerTurnTaskQueue()');
     expect(workerSource).not.toContain('new FrameTurnScheduler((callback) => setTimeout(callback, 0)');
-    const browserWorkerSource = readFileSync(BROWSER_WORKER_RS, "utf8");
-    const continuationSource = browserWorkerSource.slice(browserWorkerSource.indexOf("let continue_frame ="), browserWorkerSource.indexOf("encode_tick_timed(", browserWorkerSource.indexOf("let continue_frame =")));
+    const browserWorkerSource = readFileSync(BROWSER_WORKER_RS, "utf8").replace(/\s+/gu, "");
+    const continuationStart = browserWorkerSource.indexOf("letcontinue_frame=");
+    const continuationSource = browserWorkerSource.slice(continuationStart, browserWorkerSource.indexOf("letoutput=BrowserTickOutput{", continuationStart));
     expect(continuationSource).toContain("host.frame_build.has_live_session()");
     expect(continuationSource).not.toContain("next_deadline");
     expect(continuationSource).not.toContain("hub_status_pending");
-    expect(browserWorkerSource).toContain("request_frame: continue_frame,");
-    expect(browserWorkerSource).toContain("next_deadline_delay_ms: host.scheduler.next_deadline()");
+    expect(browserWorkerSource).toContain("request_frame:continue_frame,");
+    expect(browserWorkerSource).toContain("next_deadline_delay_ms:host.scheduler.next_deadline()");
     expect(turnSource).toContain("nextDeadlineDelayMs: result.nextDeadlineDelayMs");
     const rendererSource = readModuleTreeSource(RENDERER_RS);
     const textContinuationAt = rendererSource.lastIndexOf("fn has_pending_text_work");
@@ -604,14 +605,14 @@ describe("wgpu frame-Worker step budget", () => {
     const handler = worker.slice(worker.indexOf('ownedStep("frame-ingress"'), worker.indexOf("function runFrameTurn"));
     expect(handler).toContain('post({ kind: "batch-accepted"');
     expect(handler).toContain("frameTurns?.request()");
-    expect(handler).not.toContain("runtime!.tick(");
-    expect(worker.slice(worker.indexOf("function runFrameTurn"), worker.indexOf("function answerIntrospection"))).toContain("runtime!.tick(");
+    expect(handler).not.toContain("originalFrameSource!.tick(");
+    expect(worker.slice(worker.indexOf("function runFrameTurn"), worker.indexOf("function answerIntrospection"))).toContain("originalFrameSource!.tick(");
     const frameJob = readFileSync(FRAME_JOB_RS, "utf8");
-    const wasmOwner = frameJob.slice(frameJob.indexOf('#[cfg(target_arch = "wasm32")]\n    pub(crate) fn poll_runtime_and_resubmit'), frameJob.indexOf("    /// 🧵️ Whether a frame build is admitted right now"));
-    expect(wasmOwner).toContain("try_step_on_worker");
-    expect(wasmOwner).not.toContain("try_step_on_caller");
-    expect(wasmOwner).not.toContain("BROWSER_FRAME_BUILD_DRIVE_US");
-    expect(wasmOwner).not.toContain("loop {");
+    const originalOwner = frameJob.slice(frameJob.indexOf("pub fn poll_runtime_on_original_caller"), frameJob.indexOf("    /// ♻️ Returns pending admission and checked-out custody"));
+    expect(originalOwner).toContain("try_step_on_original_caller");
+    expect(originalOwner).not.toContain("try_step_on_caller");
+    expect(originalOwner).not.toContain("BROWSER_FRAME_BUILD_DRIVE_US");
+    expect(originalOwner).not.toContain("loop {");
   });
 
   it("pins the Worker ceiling and the attribution law it shares with the UI isolate and the guest", () => {

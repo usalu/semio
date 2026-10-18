@@ -2,6 +2,42 @@ use serde_json::Value;
 use crate::apply_puzzle3d_mutation;
 
 use super::*;
+use semio_s_artifact_puzzle_3d_mutations_object::delete_object::mutation::delete_object;
+use semio_s_artifact_puzzle_3d_mutations_pose::move_object::mutation::move_object;
+use semio_s_artifact_puzzle_3d_mutations_object::create_object::mutation::create_object;
+use semio_s_artifact_puzzle_3d_mutations_pose::rotate_object::mutation::rotate_object;
+use semio_s_artifact_puzzle_3d_mutations_pose::scale_object::mutation::scale_object;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_mesh::mutation::change_object_mesh;
+use semio_s_artifact_puzzle_3d_mutations_object::edit_object_label::mutation::edit_object_label;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_kind::mutation::change_object_kind;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_anchor::mutation::change_object_anchor;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_hidden::mutation::change_object_hidden;
+use semio_s_artifact_puzzle_3d_mutations_object::change_object_locked::mutation::change_object_locked;
+use semio_s_artifact_puzzle_3d_mutations_vortex::add_object_vortex::mutation::add_object_vortex;
+use semio_s_artifact_puzzle_3d_mutations_vortex::remove_object_vortex::mutation::remove_object_vortex;
+use semio_s_artifact_puzzle_3d_mutations_vortex::replace_object_vortex::mutation::replace_object_vortex;
+use semio_s_artifact_puzzle_3d_mutations_vortex::connect_vortices::mutation::connect_vortices;
+use semio_s_artifact_puzzle_3d_mutations_vortex::disconnect_vortices::mutation::disconnect_vortices;
+use semio_s_artifact_puzzle_3d_mutations_vortex::replace_attraction_geometry::mutation::replace_attraction_geometry;
+use semio_s_artifact_puzzle_3d_mutations_volume::create_target_volume::mutation::create_target_volume;
+use semio_s_artifact_puzzle_3d_mutations_volume::move_target_volume::mutation::move_target_volume;
+use semio_s_artifact_puzzle_3d_mutations_volume::rotate_target_volume::mutation::rotate_target_volume;
+use semio_s_artifact_puzzle_3d_mutations_volume::scale_target_volume::mutation::scale_target_volume;
+use semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_hidden::mutation::change_target_volume_hidden;
+use semio_s_artifact_puzzle_3d_mutations_volume::change_target_volume_locked::mutation::change_target_volume_locked;
+use semio_s_artifact_puzzle_3d_mutations_volume::delete_target_volume::mutation::delete_target_volume;
+use semio_s_artifact_puzzle_3d_mutations_reference::create_reference::mutation::create_reference;
+use semio_s_artifact_puzzle_3d_mutations_reference::move_reference::mutation::move_reference;
+use semio_s_artifact_puzzle_3d_mutations_reference::resize_reference::mutation::resize_reference;
+use semio_s_artifact_puzzle_3d_mutations_reference::replace_reference_source::mutation::replace_reference_source;
+use semio_s_artifact_puzzle_3d_mutations_reference::change_reference_hidden::mutation::change_reference_hidden;
+use semio_s_artifact_puzzle_3d_mutations_reference::change_reference_locked::mutation::change_reference_locked;
+use semio_s_artifact_puzzle_3d_mutations_reference::delete_reference::mutation::delete_reference;
+use semio_s_artifact_puzzle_3d_mutations_catalog::change_domain::mutation::change_domain;
+use semio_s_artifact_puzzle_3d_mutations_catalog::connect_kind_compatibility::mutation::connect_kind_compatibility;
+use semio_s_artifact_puzzle_3d_mutations_catalog::disconnect_kind_compatibility::mutation::disconnect_kind_compatibility;
+use semio_s_artifact_puzzle_3d_mutations_catalog::replace_kind_catalogs::mutation::replace_kind_catalogs;
+use semio_s_artifact_puzzle_3d_mutations_selection::drag_selection::mutation::drag_selection;
 
 #[test]
 fn puzzle3d_delta_ops_round_trip_and_stay_granular() {

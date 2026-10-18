@@ -4,8 +4,7 @@
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
-#[path = "💠️values/🦀️.rs"]
-pub mod values;
+pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values;
 
 #[path = "🧱️entities/🦀️.rs"]
 pub mod entities;
@@ -21,28 +20,24 @@ pub use validity::*;
 #[path = "🕰️phases/🦀️.rs"]
 pub mod phases;
 
-#[path = "🧮️phases-values/🦀️.rs"]
-pub mod phases_values;
+
 
 #[path = "📋️schedule-kit/🦀️.rs"]
 pub mod schedule_kit;
 
-#[path = "🔩️schedule-kit-values/🦀️.rs"]
-pub mod schedule_kit_values;
+
 
 #[path = "⚓️anchors/🦀️.rs"]
 pub mod anchors;
 
-#[path = "🧲️anchors-values/🦀️.rs"]
-pub mod anchors_values;
+
 
 pub use anchors::*;
 
 #[path = "🏷️property-kit/🦀️.rs"]
 pub mod property_kit;
 
-#[path = "🪛️property-kit-values/🦀️.rs"]
-pub mod property_kit_values;
+pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::property_kit_values;
 pub use property_kit_values::*;
 
 pub use property_kit::*;
@@ -50,16 +45,14 @@ pub use property_kit::*;
 #[path = "🖼️views/🦀️.rs"]
 pub mod views;
 
-#[path = "🧷️views-values/🦀️.rs"]
-pub mod views_values;
+
 
 pub use views::*;
 
 #[path = "📄️sheets/🦀️.rs"]
 pub mod sheets;
 
-#[path = "🔧️sheets-values/🦀️.rs"]
-pub mod sheets_values;
+pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::sheets_values;
 pub use sheets_values::*;
 
 pub use sheets::*;
@@ -72,8 +65,7 @@ pub use conditions::*;
 #[path = "🤝️coordination/🦀️.rs"]
 pub mod coordination;
 
-#[path = "⚙️coordination-values/🦀️.rs"]
-pub mod coordination_values;
+pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::coordination_values;
 pub use coordination_values::*;
 
 pub use coordination::*;

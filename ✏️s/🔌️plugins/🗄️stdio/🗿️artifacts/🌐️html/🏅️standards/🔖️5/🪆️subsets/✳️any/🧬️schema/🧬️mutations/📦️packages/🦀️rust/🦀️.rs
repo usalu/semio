@@ -8,10 +8,6 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
-#[cfg(test)]
-pub use standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
-#[cfg(test)]
-pub use semio_s_artifact_stdio_contract::apply_mutation;
 pub use crate::editor::html::artifact_items::{STDIO_HTML_DOCUMENT_SCHEMA};
 pub use crate::editor::html::artifact_items_3::{ARTIFACT_DEFINITION_SCHEMA};
 pub use crate::editor::html::artifact_items_4::{formats};
@@ -37,22 +33,16 @@ pub mod standards {
                     }
                     #[path = "."]
                     pub mod text {
-                        pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot;
                         #[path = "../../../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
                         pub mod mutations;
-                        pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::diff;
                     }
                 }
                 #[path = "."]
                 pub mod schema {
-                    pub use semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::schema::*;
-                    pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot;
                     #[path = "."]
                     pub mod inferences {
-                        pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::inferences::*;
                         #[path = "."]
                         pub mod outline {
-                            pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::inferences::outline::*;
                             #[cfg(test)]
                             //#region 🧪️Tests
                             #[path = "../../../💡️inferences/🧾outline/🧪️tests/🔬️unit/🦀️.rs"]
@@ -65,7 +55,6 @@ pub mod standards {
                     }
                     #[path = "."]
                     pub mod diff {
-                        pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff::*;
                         #[cfg(test)]
                         #[path = "../../../🔺️diff/🧪️tests/🔬️handcrafted-diff-codec/🦀️.rs"]
                         mod handcrafted_diff_codec_tests;
@@ -81,7 +70,6 @@ pub mod standards {
         }
     }
 }
-pub use semio_s_artifact_stdio_html_inferences::examples;
 #[path = "."]
 pub mod editor {
     #[path = "."]
@@ -100,10 +88,8 @@ pub mod editor {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::*;
                         #[cfg(test)]
                         #[path = "../../../../✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         mod tests;
@@ -129,10 +115,8 @@ pub mod viewer {
                 pub use component::*;
                 #[path = "."]
                 pub mod windows {
-                    pub use semio_s_artifact_stdio_html_inferences::viewer::html::modes::view::windows::*;
                     #[path = "."]
                     pub mod main {
-                        pub use semio_s_artifact_stdio_html_inferences::viewer::html::modes::view::windows::main::*;
                         #[cfg(test)]
                         #[path = "../../../../👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs"]
                         mod tests;

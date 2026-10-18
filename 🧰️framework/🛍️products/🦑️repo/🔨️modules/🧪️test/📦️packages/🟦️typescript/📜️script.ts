@@ -4,7 +4,8 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 /** 🧭️ `@semio-tech/repo-test` router: `bun ./📜️script.ts <lint|test [level]>`. */
 import { join } from "node:path";
 import { repoTestArtifactEnvironment } from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
-import { runBunx, runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBunx } from "../../../📚️library/🏃️process/🍞️bun/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

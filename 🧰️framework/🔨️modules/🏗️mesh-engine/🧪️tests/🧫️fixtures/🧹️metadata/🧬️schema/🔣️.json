@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/mesh-engine/tests/metadata/schema.json",
+  "title": "MeshMetadataFixture",
+  "description": "🧹️ Closed independent shape of the attributed mesh metadata fixture: geometry buffers plus authored attribute, material and texture publications.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "copyBytes", "releaseProbeBytes", "repeatedRefusals", "mesh"],
+  "properties": {
+    "version": { "const": 1 },
+    "copyBytes": { "type": "integer", "minimum": 0 },
+    "releaseProbeBytes": { "type": "integer", "minimum": 0 },
+    "repeatedRefusals": { "type": "integer", "minimum": 0 },
+    "mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["positions", "normals", "colors", "indices", "attributes", "materials", "textures"],
+      "properties": {
+        "positions": { "type": "array", "items": { "type": "number" } },
+        "normals": { "type": "array", "items": { "type": "number" } },
+        "colors": { "type": "array", "items": { "type": "number" } },
+        "indices": { "type": "array", "items": { "type": "integer", "minimum": 0 } },
+        "attributes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["domain", "semantic", "interpolation", "values"],
+            "properties": {
+              "domain": { "type": "string", "minLength": 1 },
+              "semantic": { "type": "string", "minLength": 1 },
+              "interpolation": { "type": "string", "minLength": 1 },
+              "values": { "type": "array", "items": { "type": "object" } }
+            }
+          }
+        },
+        "materials": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name"],
+            "properties": { "name": { "type": "string", "minLength": 1 } }
+          }
+        },
+        "textures": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["mime", "bytes"],
+            "properties": {
+              "mime": { "type": "string", "minLength": 1 },
+              "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

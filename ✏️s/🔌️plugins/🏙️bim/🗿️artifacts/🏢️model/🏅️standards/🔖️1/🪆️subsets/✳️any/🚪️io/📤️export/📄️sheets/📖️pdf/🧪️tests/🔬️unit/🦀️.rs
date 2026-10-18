@@ -1,13 +1,34 @@
 //! 🧪️ The PDF of the sheet set read back by the PDF artifact: one page per sheet at the size of its paper in points, the clip of every viewport, the text of the title block and the captions, a deterministic file.
 
-use super::super::testkit::{house_with_sheets, inferred, labels};
-use super::*;
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfOp;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::drawing::lines_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, paint_rank, style_class, LABEL_SIZE, STROKE_WIDTHS, TAG_SIZE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanText, PlanVertex};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::{DocumentStream, EncodeOptions, PdfTextLayout};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfFont, PdfInfo, PdfLineCap, PdfLineJoin, PdfPage, PdfSnapshot, PdfTextString};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred, labels};
+use crate::standards::v1::subsets::any::io::export::sheets::pdf::*;
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
 
 fn written() -> (Vec<u8>, crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot, crate::standards::v1::subsets::any::schema::inferences::ModelInference) {
     let model = house_with_sheets();
     let inferred = inferred(&model);
-    (super::super::sheets_pdf(&model, &inferred, None, &labels()).expect("the set writes"), model, inferred)
+    (crate::standards::v1::subsets::any::io::export::sheets::sheets_pdf(&model, &inferred, None, &labels()).expect("the set writes"), model, inferred)
 }
 
 fn points(millimetres: f64) -> f64 {
@@ -43,7 +64,7 @@ fn every_page_prints_the_title_block_the_captions_and_the_revision_table_as_text
 fn every_viewport_clips_to_its_window_and_paints_a_drawing() {
     let (bytes, model, _) = written();
     let document = decode_pdf(&bytes).expect("the file reads back");
-    for (page, sheet) in document.pages.iter().zip(super::super::ordered(&model)) {
+    for (page, sheet) in document.pages.iter().zip(crate::standards::v1::subsets::any::io::export::sheets::ordered(&model)) {
         let viewports = model.viewports.values().filter(|viewport| viewport.sheet == sheet).count();
         let clips = page.content.iter().filter(|op| matches!(op, PdfOp::Clip)).count();
         let strokes = page.content.iter().filter(|op| matches!(op, PdfOp::Stroke | PdfOp::FillStrokeEvenOdd)).count();
@@ -67,8 +88,8 @@ fn text_is_cut_down_to_what_winansi_can_show() {
 #[test]
 fn the_pages_stream_in_the_order_they_are_given() {
     let (_, model, inferred) = written();
-    let layouts = super::super::layouts(&model, &inferred, None);
-    let drawings = super::super::drawings(&inferred);
+    let layouts = crate::standards::v1::subsets::any::io::export::sheets::layouts(&model, &inferred, None);
+    let drawings = crate::standards::v1::subsets::any::io::export::sheets::drawings(&inferred);
     let mut pdf = SheetsPdf::begin("Streamed", layouts.len()).expect("begin");
     for layout in layouts.iter().rev() {
         pdf.page(layout, &drawings, &labels()).expect("a page");

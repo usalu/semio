@@ -3,7 +3,8 @@ import { pdfFontFromNativeJson } from "../../../../📝️text/📸️snapshot/�
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { PDF17_SQLITE_SCHEMA as publicSchema } from "@semio-tech/stdio-pdf";
-import type { PdfFont, PdfFontDescriptor, PdfFontProgram, PdfSimpleEncoding, PdfToUnicode, PdfCMap, PdfCidFont, PdfCidToGid, Binary64 } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfFont, PdfFontDescriptor, PdfFontProgram, PdfSimpleEncoding, PdfToUnicode, PdfCMap, PdfCidFont, PdfCidToGid } from "../../../../../🧬️schema/📸️snapshot/🔤️font/🟦️.ts";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import { PdfProjection, PdfReader, type SqliteDatabase } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { pdfFontNumberColumns, writePdfFontDescriptor, readPdfFontDescriptor, writePdfFontProgram, readPdfFontProgram, writePdfEncoding, readPdfEncoding, writePdfToUnicode, readPdfToUnicode, writePdfCMap, readPdfCMap, writePdfCidFont, readPdfCidFont, writePdfFont, readPdfFont } from "../../🔤️font/🟦️.ts";

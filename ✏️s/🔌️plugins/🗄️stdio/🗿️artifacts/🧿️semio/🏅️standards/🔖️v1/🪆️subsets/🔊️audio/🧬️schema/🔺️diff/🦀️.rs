@@ -355,9 +355,9 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioAudioDiff` cases built declaratively (empty/no-op, every scalar with both collection triples) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioAudioDiff> {
+pub fn demo_diff_cases() -> Vec<SemioAudioDiff> {
     vec![
         SemioAudioDiff::default(),
         SemioAudioDiff {

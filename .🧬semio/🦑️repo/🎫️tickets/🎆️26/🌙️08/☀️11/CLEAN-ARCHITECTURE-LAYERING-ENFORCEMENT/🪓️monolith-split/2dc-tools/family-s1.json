@@ -1,0 +1,14 @@
+{
+ "name": "2dcs1",
+ "crates": [
+  "semio-framework-2d",
+  "semio-framework-2d-compute",
+  "semio-s-artifact-puzzle-3d-editor",
+  "semio-hub-space-app",
+  "semio-framework-plugin-decl-app",
+  "semio-framework-os-flow-drawing",
+  "semio-s-artifact-cad-cad",
+  "semio-framework-plugin-tests-17"
+ ],
+ "note": "2D-COMPUTE-REPOINT sample"
+}

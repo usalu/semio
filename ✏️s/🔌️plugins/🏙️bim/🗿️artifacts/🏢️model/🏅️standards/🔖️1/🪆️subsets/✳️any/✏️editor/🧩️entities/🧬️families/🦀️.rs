@@ -1,7 +1,8 @@
 //! 🧬️ The family rows of the entity table: how a family (a library entry) and a family solid read off the snapshot, how an edited value becomes a `set-family` or `set-family-solid` mutation, what a new
 //! family and a new solid are, and the category picker of the properties panel. What a family shows (its volume, its issues) is read off the `families` inference; parameters are rows of the family window.
 
-use super::{partial, Created, FieldRow, InferredRow};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::editor::bim::entities::{partial, Created, FieldRow, InferredRow};
 use crate::editor::bim::modes::edit::windows::family::edit::{apply, category_of, Edit, CATEGORIES};
 use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
 use crate::editor::bim::terminology::BimLabels;
@@ -76,6 +77,4 @@ pub fn create_family_solid(snapshot: &ModelSnapshot, id: &str, parent: &str, nam
 }
 //#endregion 🔖️Create
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,0 +1,2404 @@
+//! 🔌️ Directory hub client (ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS,
+//! contract §C2/§C6) — the Rust twin of lane 1-C's TypeScript `DirectoryClient`, talking the SAME
+//! frozen hub HTTP/WS surface: `POST /directory/commands`, `GET /directory/spaces[/{id}]`,
+//! `GET /directory/events`, `GET /directory/socket/v1`, and `GET /auth/sessions/me`.
+//! No concrete HTTP/WS client type ever appears in a public signature here (CLAUDE.md: external
+//! libraries sit behind our own interface) — `DirectoryTransport`/`DirectoryWsConnection` are the
+//! seam, mirroring `🎒️pack/🌐️http`'s `RangeTransport` and this crate's own `🏪️store/🔄️sync`
+//! (native `tokio-tungstenite`, browser `web_sys`) pattern.
+//! `🪪️identity/🦀️.rs` (sibling module) layers the mint-or-restore session helper on top.
+//!
+//! 🌀️ ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME, packet terra-directory-and-run:
+//! every request-issuing method now takes an `OperationContext` (`semio-framework-async` —
+//! cancellation/deadline/trace/capability), checked up front so an already-cancelled caller never
+//! reaches the transport. The native transport (`🔖️Native` below) is rebuilt on
+//! `semio-framework-os-services`'s `HttpPool`/`ComputePool` — the per-call blocking-`ureq`-on-a-
+//! dedicated-thread pattern and the ad hoc private tokio runtime this crate's own native `open_ws`
+//! used to need are RETIRED, not wrapped: tokio stays confined to `semio-framework-os-services`
+//! (this crate names it nowhere), and every native HTTP call is now admitted onto that crate's
+//! bounded `ComputePool` semaphore instead of an unbounded `std::thread::spawn` per call.
+
+use super::schema::{
+    lease_fields_from_plan_v1, same_lease_fields_v1, DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryEvent, DirectoryEventPageV1, DirectorySessionAuthorityV1,
+    DirectorySpaceAdministrationCapabilitiesV1, DirectorySpaceAdministrationDocumentWindowV1, DirectorySpaceAdministrationInviteWindowV1, DirectorySpaceAdministrationMemberWindowV1, DirectorySpaceAdministrationPageV1, DirectorySpaceListEntryV1,
+    DirectorySpaceRole, DirectoryStreamMessage, DocumentBrowserActorSourceV1, DocumentExecutionTargetComponentV1, DocumentExecutionTargetDescriptorV1, DocumentExecutionTargetLeaseFieldsV1, DocumentOpenArtifactV1, DocumentOpenBrowserActorV1,
+    DocumentOpenCatalogV1, DocumentOpenCheckpointV1, DocumentOpenGrantV1, DocumentOpenIntentV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenPlanErrorCodeV1, DocumentOpenPlanV1, DocumentOpenRendererTargetV1,
+    DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentPlanSocketGrantIntentV1, DocumentScope, DocumentView, MemberSpaceViewV1, DIRECTORY_COMMAND_RECEIPT_MAX_BYTES, DIRECTORY_EVENT_PAGE_MAX_BYTES, DIRECTORY_SESSION_AUTHORITY_MAX_BYTES,
+    DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES, DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_OPEN_MAX_SAFE_INTEGER,
+};
+use semio_framework_value::DslValue;
+use semio_framework_value::FromValue;
+use semio_framework_value::ToValue;
+use semio_framework_value::ValueError;
+use semio_framework_async::OperationContext;
+use std::sync::Arc;
+
+/// 🧩 Manifest topic carrying owner-authored document HTTP schemas and routes.
+pub const DOCUMENT_HTTP_PORT_TOPIC: &str = "semio.os.document-http-port/v1";
+pub const DOCUMENT_HTTP_REQUEST_MAX_BYTES: usize = 64 * 1024;
+pub const DOCUMENT_HTTP_RESPONSE_MAX_BYTES: usize = 64 * 1024;
+
+/// 🎯 One finite owner-authored service step over the installed document HTTP declaration.
+pub enum InstalledServiceTurnV1 {
+    Idle,
+    WaitUntil(u64),
+    Call { action: String, payload: DslValue },
+    Terminal,
+}
+
+/// 🧩 Owner behavior receives opaque declared answers while the host retains transport authority.
+pub trait InstalledServiceDriverV1: Send {
+    fn intend(&mut self, action: &str, payload: DslValue) -> Result<(), DocumentHttpPortCodeV1>;
+    fn turn(&mut self, now_ms: u64) -> InstalledServiceTurnV1;
+    fn complete(&mut self, action: &str, request: &DslValue, result: Result<DslValue, DocumentHttpPortCodeV1>);
+    fn status(&self) -> DslValue;
+    fn terminal(&self) -> bool;
+}
+
+/// 📦 Explicit native composition supplied by the executable that installs the owner.
+#[derive(Clone, Copy)]
+pub struct InstalledServiceContributionV1 {
+    pub owner: &'static str,
+    pub service_id: &'static str,
+    pub create: fn(DocumentScope, bool) -> Box<dyn InstalledServiceDriverV1>,
+}
+
+/// 📣 Neutral ephemeral status; its payload remains owned by the installed service.
+#[derive(Clone, Debug, PartialEq)]
+pub struct InstalledServiceStatusV1 {
+    pub owner: String,
+    pub service_id: String,
+    pub payload: DslValue,
+}
+
+/// 🛡 Closed transport outcomes without server body disclosure.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DocumentHttpPortCodeV1 {
+    Invalid, Bounds, Cancelled, Denied, Transport, NotFound, Conflict, Gone, Capacity, Unavailable,
+}
+
+impl DocumentHttpPortCodeV1 {
+    pub fn from_status(status: u16) -> Self {
+        match status { 400 => Self::Invalid, 429 => Self::Capacity, 401 | 403 => Self::Denied, 404 => Self::NotFound, 409 => Self::Conflict, 410 => Self::Gone, 413 => Self::Bounds, 503 => Self::Unavailable, _ => Self::Transport }
+    }
+}
+
+/// 📜 Closed owner declaration transported by the existing plugin manifest contribution.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentHttpPortDeclarationV1 {
+    pub schema: String,
+    pub owner: String,
+    pub service_id: String,
+    pub operations: Vec<DocumentHttpOperationV1>,
+}
+
+/// 📖 One named operation and its published request/response schemas.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentHttpOperationV1 {
+    pub action: String,
+    pub method: String,
+    pub route: Vec<String>,
+    pub send_body: bool,
+    pub cursor_field: Option<String>,
+    pub request_max_bytes: usize,
+    pub response_max_bytes: usize,
+    pub input_schema: String,
+    pub output_schema: String,
+}
+
+/// 📦 An admitted request; path segments are encoded independently inside the exact document scope.
+pub struct DocumentHttpRequestV1 {
+    pub method: HttpMethod,
+    pub segments: Vec<String>,
+    pub after: Option<u64>,
+    pub body: Option<Vec<u8>>,
+    pub request_max_bytes: usize,
+    pub response_max_bytes: usize,
+}
+
+//#region 🔖️Transport
+/// 📨️ One HTTP verb `DirectoryClient` issues against the hub REST surface: queries are `GET`,
+/// commands are `POST`. The hub has no resource-deletion verb (CQRS, never CRUD).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum HttpMethod {
+    Get,
+    Post,
+}
+
+/// 📬️ A transport-agnostic HTTP response: status code plus raw body bytes.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct HttpResponse {
+    pub status: u16,
+    pub body: Vec<u8>,
+}
+
+/// ⚠️ A transport-layer failure (connection refused, DNS, closed socket, …) — distinct from an
+/// HTTP error status (that decodes to `DirectoryClientError::Http`/`Unauthorized`) or a JSON
+/// decode failure (`DirectoryClientError::Decode`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum TransportError {
+    Io(String),
+    /// 🛑️ The `OperationContext` handed to this call was already cancelled, or was cancelled
+    /// before the call finished — a transport checks this itself (rather than relying solely on
+    /// the caller's own pre-check) so an in-flight call started just before cancellation still
+    /// surfaces it instead of returning a stale success.
+    Cancelled,
+    /// ⏰️ `ctx.deadline_ms` elapsed before this call could complete.
+    DeadlineExceeded,
+    /// 💰️ The transport's per-package byte budget is spent until its next refill turn: nothing is wrong with the hub, and
+    /// the same request succeeds once the budget refills, so a caller waits instead of reporting a fault.
+    BudgetExhausted,
+}
+
+impl std::fmt::Display for TransportError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Io(detail) => write!(formatter, "transport io: {detail}"),
+            Self::Cancelled => formatter.write_str("cancelled"),
+            Self::DeadlineExceeded => formatter.write_str("deadline exceeded"),
+            Self::BudgetExhausted => formatter.write_str("network byte budget exhausted until its next refill"),
+        }
+    }
+}
+
+impl std::error::Error for TransportError {}
+
+/// 🧵️ Native transports cross worker turns; browser transports remain local to the wasm event loop.
+#[cfg(not(target_arch = "wasm32"))]
+pub trait DirectoryTransportPlatform: Send + Sync {}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: Send + Sync> DirectoryTransportPlatform for T {}
+
+#[cfg(target_arch = "wasm32")]
+pub trait DirectoryTransportPlatform {}
+
+#[cfg(target_arch = "wasm32")]
+impl<T> DirectoryTransportPlatform for T {}
+
+/// 🧵️ Native connections move between finite worker turns; browser sockets remain event-loop local.
+#[cfg(not(target_arch = "wasm32"))]
+pub trait DirectoryConnectionPlatform: Send {}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: Send> DirectoryConnectionPlatform for T {}
+
+#[cfg(target_arch = "wasm32")]
+pub trait DirectoryConnectionPlatform {}
+
+#[cfg(target_arch = "wasm32")]
+impl<T> DirectoryConnectionPlatform for T {}
+
+/// 🔌️ The injection seam: no concrete HTTP client type may appear in any public signature
+/// outside an implementor of this trait. Native `ureq`, browser `web_sys::fetch`, or a test
+/// double all implement this identically. Native transports are `Send + Sync` and native HTTP
+/// futures are `Send`; wasm uses a platform-local marker because `JsValue` handles cannot move.
+/// `ctx` (ticket 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME) carries cancellation/deadline/
+/// trace/capability through to whichever concrete transport is wired — a native call routes it
+/// into `semio-framework-os-services`'s `HttpPool`/`ComputePool` (see `🔖️Native` below), so the
+/// SAME `OperationContext` that gates `SpaceRunner::compute_node`'s `exchange` calls
+/// (`🏃️run/🦀️.rs`) also gates a directory request, rather than each path inventing its
+/// own bolted-on cancellation.
+// 🔀️ dedyn-fw-os-misc, O1/R11(b): `DirectoryTransport` is already generic (never `dyn`, see
+// `DirectoryClient<T: DirectoryTransport>` below) — `open_ws` is a trait method that RETURNS a
+// runtime-chosen `DirectoryWsConnection` implementation, so the associated type `Ws` pushes that
+// choice to the implementor exactly per the `ResourceResolver` precedent, replacing
+// `Box<dyn DirectoryWsConnection>`.
+pub trait DirectoryTransport: DirectoryTransportPlatform {
+    type Ws: DirectoryWsConnection;
+    async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>;
+    /// 🪢️ One GET that names the exact media type it accepts — a binary route such as the canonical checkpoint
+    /// pair, whose hub refuses any other `Accept` — answered with the raw body bytes.
+    async fn get_accepting(&self, ctx: &OperationContext, url: &str, bearer: Option<&str>, accept: &str) -> Result<HttpResponse, TransportError>;
+    fn issue_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, body: &[u8], timeout_ms: u64) -> Result<HttpResponse, TransportError>;
+    fn open_ws(&self, ctx: &OperationContext, url: &str, protocols: &[String], timeout_ms: u64) -> Result<Self::Ws, TransportError>;
+}
+
+/// 🔌️ One open `/directory/socket/v1` connection. Sequential by construction (`DirectoryStream` never
+/// calls `send_text`/`try_recv_text` concurrently), so a single stream/sink object suffices — no
+/// split halves needed the way `🏪️store/🔄️sync`'s bidirectional relay requires.
+pub trait DirectoryWsConnection: DirectoryConnectionPlatform {
+    fn send_text(&mut self, text: String) -> Result<(), TransportError>;
+    fn send_binary(&mut self, bytes: Vec<u8>) -> Result<(), TransportError>;
+    /// 📭️ Nonblocking receive: `Pending` yields the worker immediately; `Closed` reconnects.
+    fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError>;
+    fn close(&mut self);
+}
+
+/// 📬️ One nonblocking WebSocket receive observation.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum DirectoryWsPoll {
+    Text(String),
+    Pending,
+    Closed(Option<u16>),
+}
+//#endregion 🔖️Transport
+
+//#region 🔖️Errors
+#[derive(Debug)]
+pub enum DirectoryClientError {
+    Transport(TransportError),
+    Decode(String),
+    Unauthorized,
+    Http {
+        status: u16,
+        body: String,
+    },
+    /// 🛑️ `ctx.cancel` was already cancelled BEFORE this call ever reached the transport — checked
+    /// in `DirectoryClient::request_json`/`DirectoryStream::recv` up front, so a cancelled caller
+    /// never even builds a request. `TransportError::Cancelled` (via the `Transport` variant above)
+    /// is the other half: cancelled WHILE the transport call was in flight.
+    Cancelled,
+}
+
+impl std::fmt::Display for DirectoryClientError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Transport(error) => std::fmt::Display::fmt(error, formatter),
+            Self::Decode(error) => write!(formatter, "decode: {error}"),
+            Self::Unauthorized => formatter.write_str("unauthorized"),
+            Self::Http { status, body } => write!(formatter, "http {status}: {body}"),
+            Self::Cancelled => formatter.write_str("cancelled"),
+        }
+    }
+}
+
+impl std::error::Error for DirectoryClientError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            Self::Transport(error) => Some(error),
+            _ => None,
+        }
+    }
+}
+
+impl From<TransportError> for DirectoryClientError {
+    fn from(error: TransportError) -> Self {
+        Self::Transport(error)
+    }
+}
+
+impl From<ValueError> for DirectoryClientError {
+    fn from(error: ValueError) -> Self {
+        Self::Decode(error.to_string())
+    }
+}
+//#endregion 🔖️Errors
+
+//#region 🔖️Wire
+/// 📮️ One canonical `POST /directory/commands` completion, preserving the exact response bytes the
+/// receipt digest covers. The public command boundary is closed: no `DslValue` and no open
+/// `unknown` crosses it.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CanonicalDirectoryCommandReceiptV1 {
+    pub canonical_json: String,
+    pub receipt: DirectoryCommandReceiptV1,
+}
+
+/// 🪪️ `GET /auth/sessions/me`'s exact server-bound public authority.
+pub type SessionView = DirectorySessionAuthorityV1;
+
+/// 🎫️ `POST /auth/sessions`'s body. Wire is snake_case (`token`, `user_id`), NOT this contract's
+/// general camelCase convention: this route predates the wave (`🌎️hub/📦️bin.rs`'s
+/// `CreateAuthSessionResponse` has no `rename_all`) and §C2 marks it "unchanged" — the client
+/// matches the ACTUAL wire, not the convention.
+#[derive(Clone, Debug, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+pub struct SessionMintResponse {
+    pub token: String,
+    pub user_id: String,
+}
+
+/// 🏛️ One administration page plus the exact response bytes its receipt covers.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CanonicalDirectorySpaceAdministrationPageV1 {
+    canonical_json: String,
+    page: DirectorySpaceAdministrationPageV1,
+}
+
+impl CanonicalDirectorySpaceAdministrationPageV1 {
+    pub fn canonical_json(&self) -> &str {
+        &self.canonical_json
+    }
+    pub fn page(&self) -> &DirectorySpaceAdministrationPageV1 {
+        &self.page
+    }
+    pub fn receipt_sha256(&self) -> &str {
+        self.page.receipt_sha256()
+    }
+}
+
+/// 📄️ Immutable original page bytes plus only the authenticated header needed for ACK ordering.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CanonicalDirectoryEventPageV1 {
+    canonical_json: String,
+    session_binding_sha256: String,
+    authorization_generation: u64,
+    after_seq_exclusive: u64,
+    through_seq_inclusive: u64,
+    has_more: bool,
+    receipt_sha256: String,
+}
+
+impl CanonicalDirectoryEventPageV1 {
+    /// 🧪️ Builds a page from explicit header values so ordering laws can present pages the authenticated decoder never produced.
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn from_header_parts(canonical_json: String, session_binding_sha256: String, authorization_generation: u64, after_seq_exclusive: u64, through_seq_inclusive: u64, has_more: bool, receipt_sha256: String) -> Self {
+        Self { canonical_json, session_binding_sha256, authorization_generation, after_seq_exclusive, through_seq_inclusive, has_more, receipt_sha256 }
+    }
+
+    pub fn canonical_json(&self) -> &str {
+        &self.canonical_json
+    }
+    pub fn session_binding_sha256(&self) -> &str {
+        &self.session_binding_sha256
+    }
+    pub fn authorization_generation(&self) -> u64 {
+        self.authorization_generation
+    }
+    pub fn after_seq_exclusive(&self) -> u64 {
+        self.after_seq_exclusive
+    }
+    pub fn through_seq_inclusive(&self) -> u64 {
+        self.through_seq_inclusive
+    }
+    pub fn has_more(&self) -> bool {
+        self.has_more
+    }
+    pub fn receipt_sha256(&self) -> &str {
+        &self.receipt_sha256
+    }
+
+    /// ✅️ Captures the exact non-secret header a retained Home action must acknowledge.
+    pub fn acknowledgement(&self, bootstrap_epoch: u64) -> DirectoryEventPageAckV1 {
+        DirectoryEventPageAckV1 {
+            bootstrap_epoch,
+            session_binding_sha256: self.session_binding_sha256.clone(),
+            authorization_generation: self.authorization_generation,
+            through_seq_inclusive: self.through_seq_inclusive,
+            receipt_sha256: self.receipt_sha256.clone(),
+        }
+    }
+}
+
+/// 🧾️ Exact retained-Home acknowledgement for one still-owned directory page.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DirectoryEventPageAckV1 {
+    pub bootstrap_epoch: u64,
+    pub session_binding_sha256: String,
+    pub authorization_generation: u64,
+    pub through_seq_inclusive: u64,
+    pub receipt_sha256: String,
+}
+
+/// 🚦️ Next I/O boundary after one accepted page acknowledgement.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DirectoryBootstrapTransition {
+    Fetch { after: u64 },
+    Live { since: u64 },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DirectoryBootstrapPhase {
+    Fetching,
+    AwaitingAck,
+    Live,
+    Closed,
+}
+
+/// 🧭️ Sole native-shell owner of the fetch → retained Home ACK → live cursor.
+pub struct DirectoryEventPageBootstrapV1 {
+    bootstrap_epoch: u64,
+    acknowledged_through: u64,
+    pending: Option<CanonicalDirectoryEventPageV1>,
+    phase: DirectoryBootstrapPhase,
+}
+
+impl DirectoryEventPageBootstrapV1 {
+    pub fn new(bootstrap_epoch: u64, after: u64) -> Result<Self, DirectoryClientError> {
+        if bootstrap_epoch > DOCUMENT_OPEN_MAX_SAFE_INTEGER || after > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+            return Err(DirectoryClientError::Decode("directory bootstrap owner is not wire-safe".into()));
+        }
+        Ok(Self { bootstrap_epoch, acknowledged_through: after, pending: None, phase: DirectoryBootstrapPhase::Fetching })
+    }
+
+    pub fn bootstrap_epoch(&self) -> u64 {
+        self.bootstrap_epoch
+    }
+
+    pub fn after(&self) -> u64 {
+        self.acknowledged_through
+    }
+
+    pub fn present(&mut self, page: CanonicalDirectoryEventPageV1) -> Result<DirectoryEventPageAckV1, DirectoryClientError> {
+        if self.phase != DirectoryBootstrapPhase::Fetching || page.after_seq_exclusive != self.acknowledged_through || page.through_seq_inclusive < self.acknowledged_through {
+            return Err(DirectoryClientError::Decode("directory bootstrap page ordering mismatch".into()));
+        }
+        let acknowledgement = page.acknowledgement(self.bootstrap_epoch);
+        self.pending = Some(page);
+        self.phase = DirectoryBootstrapPhase::AwaitingAck;
+        Ok(acknowledgement)
+    }
+
+    pub fn acknowledge(&mut self, acknowledgement: &DirectoryEventPageAckV1) -> Result<DirectoryBootstrapTransition, DirectoryClientError> {
+        let page = self.pending.as_ref().ok_or_else(|| DirectoryClientError::Decode("directory bootstrap has no pending page".into()))?;
+        if self.phase != DirectoryBootstrapPhase::AwaitingAck
+            || acknowledgement.bootstrap_epoch != self.bootstrap_epoch
+            || acknowledgement.session_binding_sha256 != page.session_binding_sha256
+            || acknowledgement.authorization_generation != page.authorization_generation
+            || acknowledgement.through_seq_inclusive != page.through_seq_inclusive
+            || acknowledgement.receipt_sha256 != page.receipt_sha256
+        {
+            return Err(DirectoryClientError::Decode("directory bootstrap acknowledgement mismatch".into()));
+        }
+        self.acknowledged_through = page.through_seq_inclusive;
+        let has_more = page.has_more;
+        self.pending = None;
+        self.phase = if has_more { DirectoryBootstrapPhase::Fetching } else { DirectoryBootstrapPhase::Live };
+        Ok(if has_more { DirectoryBootstrapTransition::Fetch { after: self.acknowledged_through } } else { DirectoryBootstrapTransition::Live { since: self.acknowledged_through } })
+    }
+
+    pub fn reject(&mut self, bootstrap_epoch: u64, receipt_sha256: &str) -> Result<u64, DirectoryClientError> {
+        let page = self.pending.as_ref().ok_or_else(|| DirectoryClientError::Decode("directory bootstrap has no pending page".into()))?;
+        if self.phase != DirectoryBootstrapPhase::AwaitingAck || bootstrap_epoch != self.bootstrap_epoch || receipt_sha256 != page.receipt_sha256 {
+            return Err(DirectoryClientError::Decode("directory bootstrap rejection mismatch".into()));
+        }
+        self.pending = None;
+        self.phase = DirectoryBootstrapPhase::Fetching;
+        Ok(self.acknowledged_through)
+    }
+
+    pub fn wake(&mut self, rebootstrap: bool) -> Option<u64> {
+        if self.phase != DirectoryBootstrapPhase::Live {
+            return None;
+        }
+        if rebootstrap {
+            self.acknowledged_through = 0;
+        }
+        self.phase = DirectoryBootstrapPhase::Fetching;
+        Some(self.acknowledged_through)
+    }
+
+    pub fn close(&mut self) {
+        self.pending = None;
+        self.phase = DirectoryBootstrapPhase::Closed;
+    }
+}
+
+#[derive(semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", retire_with = "std::mem::drop")]
+pub struct SocketGrantReceiptV1 {
+    pub schema: String,
+    pub protocol: String,
+    pub grant: String,
+    pub actor_id: String,
+    pub expires_at_ms: i64,
+}
+
+impl Drop for SocketGrantReceiptV1 {
+    fn drop(&mut self) {
+        wipe_string(&mut self.grant);
+    }
+}
+
+/// 📝️ The answer to a document open-plan exchange (`os.directory#/$defs/DocumentSocketGrantReceiptV1`):
+/// the actor the next `semio.session.v1` upgrade of the same credential is admitted as, and until
+/// when. It carries no secret — the upgrade presents the credential itself.
+#[derive(semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentSocketGrantReceiptV1 {
+    pub schema: String,
+    pub protocol: String,
+    pub actor_id: String,
+    pub expires_at_ms: i64,
+}
+
+/// 🔐 Receipt-free server-selected authority retained by a native document connection.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct DocumentSocketAuthorityV1 {
+    #[doc(hidden)] pub admitted_lease: Option<DocumentExecutionTargetLeaseFieldsV1>,
+    pub hub_origin: String,
+    pub expires_at_unix_ms: u64,
+    pub scope: DocumentScope,
+    pub descriptor_digest_v1: String,
+    pub catalog: DocumentOpenCatalogV1,
+    pub package: DocumentOpenPackageV1,
+    pub artifact: DocumentOpenArtifactV1,
+    pub parent_dialect: DocumentOpenParentDialectV1,
+    pub pack_schema_hash: [u8; 32],
+    pub surface: DocumentOpenSurfaceV1,
+    pub browser_actor: DocumentOpenBrowserActorV1,
+    pub grant: DocumentOpenGrantV1,
+    pub checkpoint: DocumentOpenCheckpointV1,
+    pub revalidation: DocumentOpenRevalidationV1,
+}
+
+impl DocumentSocketAuthorityV1 {
+    /// 🏗️ Builds receipt-free authority only from a valid plan and its exact local codec/lease expectation.
+    pub fn from_plan(hub_origin: String, plan: &DocumentOpenPlanV1, expectation: &DocumentSocketExpectationV1, now_ms: u64) -> Result<Self, DocumentOpenPlanErrorCodeV1> {
+        plan.validate(now_ms)?;
+        let pack_schema_hash = decode_lower_hex_32(&plan.artifact.pack_schema_hash).ok_or(DocumentOpenPlanErrorCodeV1::Denied)?;
+        if expectation.artifact_schema != plan.artifact.schema
+            || pack_schema_hash != expectation.pack_schema_hash
+            || expectation.requested_surface_id.as_ref().is_some_and(|surface| surface != &plan.surface.surface_id)
+            || expectation.lease.as_ref().is_some_and(|lease| !lease_fields_from_plan_v1(plan, lease.component.byte_length, lease.descriptor.byte_length, lease.browser_actor.byte_length()).is_ok_and(|fields| same_lease_fields_v1(&fields, lease)))
+        {
+            return Err(DocumentOpenPlanErrorCodeV1::Denied);
+        }
+        Ok(Self {
+            admitted_lease: expectation.lease.clone(),
+            hub_origin,
+            expires_at_unix_ms: plan.expires_at_unix_ms,
+            scope: plan.scope.clone(),
+            descriptor_digest_v1: plan.descriptor_digest_v1.clone(),
+            catalog: plan.catalog.clone(),
+            package: plan.package.clone(),
+            artifact: plan.artifact.clone(),
+            parent_dialect: plan.parent_dialect.clone(),
+            pack_schema_hash,
+            surface: plan.surface.clone(),
+            browser_actor: plan.browser_actor.clone(),
+            grant: plan.grant,
+            checkpoint: plan.checkpoint.clone(),
+            revalidation: plan.revalidation,
+        })
+    }
+
+    /// 🧾 Receipt-free plan projection at independently retained byte lengths.
+    pub fn lease_fields(&self, component_byte_length: u64, descriptor_byte_length: u64, browser_actor_byte_length: Option<u64>) -> Result<DocumentExecutionTargetLeaseFieldsV1, DocumentOpenPlanErrorCodeV1> {
+        let fields = DocumentExecutionTargetLeaseFieldsV1 {
+            schema: "semio.os.document-execution-target-lease/v1".to_string(),
+            version: 1,
+            scope: self.scope.clone(),
+            descriptor_digest_v1: self.descriptor_digest_v1.clone(),
+            catalog: self.catalog.clone(),
+            package: self.package.clone(),
+            component: DocumentExecutionTargetComponentV1 { sha256: self.package.component_sha256.clone(), blake3: self.package.component_blake3.clone(), byte_length: component_byte_length },
+            descriptor: DocumentExecutionTargetDescriptorV1 { sha256: self.package.descriptor_byte_sha256.clone(), byte_length: descriptor_byte_length },
+            browser_actor: self
+                .browser_actor
+                .to_lease(DocumentBrowserActorSourceV1 { component_sha256: &self.package.component_sha256, descriptor_byte_sha256: &self.package.descriptor_byte_sha256 }, self.surface.renderer_target.as_str(), browser_actor_byte_length)
+                .map_err(|_| DocumentOpenPlanErrorCodeV1::Denied)?,
+            artifact: self.artifact.clone(),
+            parent_dialect: self.parent_dialect.clone(),
+            surface: self.surface.clone(),
+            grant: self.grant,
+            checkpoint: self.checkpoint.clone(),
+            revalidation: self.revalidation,
+        };
+        fields.validate()?;
+        Ok(fields)
+    }
+
+    /// ⚖️ The one shared full-field lease relation, replacing every partial surface predicate: it
+    /// compares both scope ids, the descriptor digest, catalog generation, all three package
+    /// digests, both byte lengths, artifact, parent dialect, every surface field, every grant bit,
+    /// the checkpoint and every revalidation generation.
+    pub fn matches_lease_fields(&self, expected: &DocumentExecutionTargetLeaseFieldsV1) -> bool {
+        self.admitted_lease.as_ref().is_some_and(|admitted| {
+            same_lease_fields_v1(admitted, expected) && self.lease_fields(admitted.component.byte_length, admitted.descriptor.byte_length, admitted.browser_actor.byte_length()).is_ok_and(|fields| same_lease_fields_v1(&fields, expected))
+        })
+    }
+}
+
+/// 🎫 One exchanged document socket grant and its receipt-free open authority.
+pub struct DocumentSocketAdmissionV1 {
+    pub socket: DocumentSocketGrantReceiptV1,
+    pub authority: DocumentSocketAuthorityV1,
+}
+
+/// 🧬 Local codec expectation plus the complete verified execution-target lease a server-authoritative
+/// open plan must satisfy. There is no partial surface expectation: a locally installed target is
+/// compared through the one shared full-field relation or not at all.
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct DocumentSocketExpectationV1 {
+    pub artifact_schema: String,
+    pub pack_schema_hash: [u8; 32],
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub requested_surface_id: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub lease: Option<DocumentExecutionTargetLeaseFieldsV1>,
+}
+
+/// 🎫 The one document-socket admission seam both document actors dial through: the open-plan
+/// exchange (`POST …/open-plan`) followed by the plan-bound socket grant (`POST …/socket-grants`).
+/// The semantics are one body ([`DirectoryClient`]'s `document_admission_*` legs); only the I/O shape is
+/// per target: the native actor runs the blocking admission as one `Lane::Io` job, while a browser
+/// isolate may not block, so there the same admission is a future on the isolate's own executor.
+pub trait HubSocketGrantSource: Send + Sync {
+    #[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
+    fn admit_document_socket(&self, ctx: &OperationContext, space_id: &str, document_id: &str, expectation: &DocumentSocketExpectationV1, client_instance_id: &str, timeout_ms: u64) -> Result<DocumentSocketAdmissionV1, DirectoryClientError>;
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+    fn admit_document_socket<'a>(&'a self, ctx: &'a OperationContext, space_id: &'a str, document_id: &'a str, expectation: &'a DocumentSocketExpectationV1, client_instance_id: &'a str, timeout_ms: u64) -> DocumentSocketAdmissionFuture<'a>;
+}
+
+/// ⏳ The browser admission's shape: a future polled by the isolate's executor, never blocked on.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub type DocumentSocketAdmissionFuture<'a> = std::pin::Pin<Box<dyn std::future::Future<Output = Result<DocumentSocketAdmissionV1, DirectoryClientError>> + 'a>>;
+//#endregion 🔖️Wire
+
+/// 🔤️ Wire bytes → `FromValue` type, via `pack::json` rather than `serde_json` — the one decode
+/// choke point every `request_json` response body passes through.
+fn decode_json_bytes<R: FromValue>(bytes: &[u8]) -> Result<R, DirectoryClientError> {
+    let text = std::str::from_utf8(bytes).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
+    semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(DirectoryClientError::from)
+}
+
+fn wipe_string(value: &mut String) -> usize {
+    let len = value.len();
+    unsafe { value.as_mut_vec().fill(0) };
+    len
+}
+
+struct WipeDocumentPlanSocketGrantIntent(DocumentPlanSocketGrantIntentV1);
+
+impl Drop for WipeDocumentPlanSocketGrantIntent {
+    fn drop(&mut self) {
+        wipe_string(&mut self.0.plan_receipt);
+    }
+}
+
+fn lower_hex(bytes: &[u8]) -> bool {
+    bytes.iter().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(byte))
+}
+
+fn valid_socket_grant(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    bytes.len() == 107 && bytes.get(..10) == Some(b"socket.v1.".as_slice()) && bytes.get(10..42).is_some_and(lower_hex) && bytes.get(42) == Some(&b'.') && bytes.get(43..107).is_some_and(lower_hex)
+}
+
+fn valid_socket_actor(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    bytes.len() == 71 && bytes.get(..7) == Some(b"hub.v1.".as_slice()) && bytes.get(7..71).is_some_and(lower_hex)
+}
+
+/// 🔡️ Decodes one 64-digit lower-hex digest (a pack schema hash on the wire) into its 32 bytes.
+pub fn decode_lower_hex_32(value: &str) -> Option<[u8; 32]> {
+    if value.len() != 64 || !lower_hex(value.as_bytes()) {
+        return None;
+    }
+    let digit = |byte| match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        _ => None,
+    };
+    let mut decoded = [0u8; 32];
+    for (index, pair) in value.as_bytes().as_chunks::<2>().0.iter().enumerate() {
+        decoded[index] = digit(pair[0])? << 4 | digit(pair[1])?;
+    }
+    Some(decoded)
+}
+
+/// 🔗 UTF-8 byte percent-encoding shared by protected HTTP scope and document WebSocket URLs.
+pub fn encode_url_component(value: &str) -> String {
+    let mut encoded = String::with_capacity(value.len());
+    for byte in value.bytes() {
+        if byte.is_ascii_alphanumeric() || matches!(byte, b'-' | b'_' | b'.' | b'~') {
+            encoded.push(char::from(byte));
+        } else {
+            encoded.push_str(&format!("%{byte:02X}"));
+        }
+    }
+    encoded
+}
+
+#[doc(hidden)] pub const DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES: usize = 64 * 1024;
+const DIRECTORY_SCOPE_ID_MAX_BYTES: usize = 4 * 1024;
+
+#[cfg(not(target_arch = "wasm32"))]
+fn emit_socket_grant_probe(path: &str, grant: &str) {
+    if std::env::var("SEMIO_DIRECT_CHILD_PROBE").ok().as_deref() != Some("1") {
+        return;
+    }
+    let digest = semio_framework_hash::Sha256::digest(&grant.as_bytes()[10..42]);
+    eprintln!("[semio-directory-client] socket-grant-selector-digest {path} {}", digest.iter().map(|byte| format!("{byte:02x}")).collect::<String>());
+}
+
+#[cfg(target_arch = "wasm32")]
+fn emit_socket_grant_probe(_path: &str, _grant: &str) {}
+
+/// 🔢 Direct-child probe: the process-local ordinal of every document socket grant exchanged, so a
+/// harness can prove a reconnect ran a fresh open-plan exchange.
+#[cfg(not(target_arch = "wasm32"))]
+fn emit_document_socket_grant_probe(path: &str) {
+    static EXCHANGES: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    if std::env::var("SEMIO_DIRECT_CHILD_PROBE").ok().as_deref() != Some("1") {
+        return;
+    }
+    eprintln!("[semio-directory-client] document-socket-grant {path} {}", EXCHANGES.fetch_add(1, std::sync::atomic::Ordering::Relaxed) + 1);
+}
+
+#[cfg(target_arch = "wasm32")]
+fn emit_document_socket_grant_probe(_path: &str) {}
+
+#[cfg(not(all(target_arch = "wasm32", not(target_env = "p2"))))]
+#[doc(hidden)] pub fn wall_now_ms() -> i64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |duration| i64::try_from(duration.as_millis()).unwrap_or(i64::MAX))
+}
+
+/// ⏱️ Browser: `std`'s `SystemTime::now()` PANICS on `wasm32-unknown-unknown` (no implementation,
+/// not an error), so every expiry comparison on this target reads `Date.now()` instead.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+fn wall_now_ms() -> i64 {
+    let millis = js_sys::Date::now();
+    if millis.is_finite() && millis > 0.0 {
+        millis as i64
+    } else {
+        0
+    }
+}
+
+fn directory_socket_hello_v1() -> Vec<u8> {
+    let schema = b"semio.directory.events/v1";
+    let mut bytes = Vec::with_capacity(5 + schema.len() + 34);
+    bytes.extend_from_slice(&[0, 7, 1, 1, schema.len() as u8]);
+    bytes.extend_from_slice(schema);
+    bytes.extend_from_slice(&[0; 32]);
+    bytes.extend_from_slice(&[0, 0]);
+    bytes
+}
+
+//#region 🔖️Client
+/// 📇️ Talks the hub's directory REST/WS surface over an injected `DirectoryTransport`. Holds the
+/// protected local credential and socket-grant authority without serializing either into bindings.
+pub struct LocalHubCredential {
+    hub_origin: String,
+    capability: Box<[u8]>,
+}
+
+struct WipeBytes<'a> {
+    #[doc(hidden)] pub bytes: Vec<u8>,
+    observer: Option<&'a std::sync::atomic::AtomicUsize>,
+}
+
+struct WipeSecretText(String);
+
+impl Drop for WipeSecretText {
+    fn drop(&mut self) {
+        wipe_string(&mut self.0);
+    }
+}
+
+impl Drop for WipeBytes<'_> {
+    fn drop(&mut self) {
+        let len = self.bytes.len();
+        self.bytes.fill(0);
+        if let Some(observer) = self.observer {
+            observer.fetch_add(self.bytes.iter().filter(|byte| **byte == 0).count().min(len), std::sync::atomic::Ordering::SeqCst);
+        }
+    }
+}
+
+#[doc(hidden)] pub fn read_local_hub_credential_frame<'a, R: std::io::Read>(pipe: &mut R, observer: Option<&'a std::sync::atomic::AtomicUsize>) -> Result<WipeBytes<'a>, DirectoryClientError> {
+    let mut length = [0u8; 4];
+    pipe.read_exact(&mut length).map_err(|_| DirectoryClientError::Unauthorized)?;
+    let length = u32::from_be_bytes(length) as usize;
+    if length == 0 || length > 16 * 1024 {
+        return Err(DirectoryClientError::Unauthorized);
+    }
+    let mut bytes = WipeBytes { bytes: vec![0u8; length], observer };
+    pipe.read_exact(&mut bytes.bytes).map_err(|_| DirectoryClientError::Unauthorized)?;
+    let mut trailing = WipeBytes { bytes: vec![0u8; 1], observer };
+    if pipe.read(&mut trailing.bytes).map_err(|_| DirectoryClientError::Unauthorized)? != 0 {
+        return Err(DirectoryClientError::Unauthorized);
+    }
+    Ok(bytes)
+}
+
+struct WipeDslValue<'a> {
+    value: DslValue,
+    observer: Option<&'a std::sync::atomic::AtomicUsize>,
+}
+
+impl Drop for WipeDslValue<'_> {
+    fn drop(&mut self) {
+        let wiped = wipe_dsl_value(&mut self.value);
+        if let Some(observer) = self.observer {
+            observer.fetch_add(wiped, std::sync::atomic::Ordering::SeqCst);
+        }
+    }
+}
+
+#[doc(hidden)] pub fn wipe_dsl_value(value: &mut DslValue) -> usize {
+    match value {
+        DslValue::String(value) => wipe_string(value),
+        DslValue::Bytes(value) => {
+            let len = value.len();
+            value.fill(0);
+            len
+        }
+        DslValue::Array(values) => values.iter_mut().map(wipe_dsl_value).sum(),
+        DslValue::Object(entries) => entries.iter_mut().map(|(key, value)| wipe_string(key) + wipe_dsl_value(value)).sum(),
+        DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => 0,
+    }
+}
+
+#[doc(hidden)] pub fn decode_local_hub_credential(bytes: &[u8], expected_class: &str, observer: Option<&std::sync::atomic::AtomicUsize>) -> Result<LocalHubCredential, DirectoryClientError> {
+    let mut decoded = WipeDslValue { value: decode_json_bytes::<DslValue>(bytes)?, observer };
+    let field = |name: &str| decoded.value.get(name).and_then(|value| value.as_str()).ok_or(DirectoryClientError::Unauthorized);
+    let schema = field("schema")?;
+    let client_class = field("clientClass")?;
+    let hub_origin = field("hubOrigin")?;
+    let capability = field("capability")?;
+    let expires_at_ms = decoded.value.get("expiresAtMs").and_then(|value| value.as_i64()).ok_or(DirectoryClientError::Unauthorized)?;
+    if schema != "semio.local.consumer-credential/v1"
+        || client_class != expected_class
+        || !hub_origin.strip_prefix("http://127.0.0.1:").is_some_and(|port| port.parse::<u16>().is_ok())
+        || expires_at_ms <= wall_now_ms()
+        || !valid_session_capability(capability)
+    {
+        return Err(DirectoryClientError::Unauthorized);
+    }
+    let hub_origin = hub_origin.to_string();
+    let DslValue::Object(entries) = &mut decoded.value else { return Err(DirectoryClientError::Unauthorized) };
+    let capability = entries
+        .iter_mut()
+        .find_map(|(key, value)| (key == "capability").then_some(value))
+        .and_then(|value| match value {
+            DslValue::String(value) => Some(std::mem::take(value).into_bytes().into_boxed_slice()),
+            _ => None,
+        })
+        .ok_or(DirectoryClientError::Unauthorized)?;
+    Ok(LocalHubCredential { hub_origin, capability })
+}
+
+impl std::fmt::Debug for LocalHubCredential {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_struct("LocalHubCredential").field("hub_origin", &self.hub_origin).field("capability", &"<redacted>").finish()
+    }
+}
+
+impl Drop for LocalHubCredential {
+    fn drop(&mut self) {
+        self.capability.fill(0);
+    }
+}
+
+impl LocalHubCredential {
+    /// 🎫️ Seals a capability returned by the public session-mint route. The token stays in
+    /// this non-serializable, zeroing owner and can only be consumed through [`DirectoryClient`].
+    pub fn from_minted_session(hub_origin: &str, capability: &str) -> Result<Self, DirectoryClientError> {
+        let absolute = hub_origin.strip_prefix("https://").or_else(|| hub_origin.strip_prefix("http://")).is_some_and(|authority| !authority.is_empty() && !authority.chars().any(|character| matches!(character, '/' | '?' | '#' | '@')));
+        let browser_proxy = hub_origin.starts_with('/') && !hub_origin.starts_with("//") && !hub_origin.chars().any(|character| character.is_control() || matches!(character, '?' | '#'));
+        if !(absolute || browser_proxy) || !valid_session_capability(capability) {
+            return Err(DirectoryClientError::Unauthorized);
+        }
+        Ok(Self { hub_origin: hub_origin.trim_end_matches('/').to_string(), capability: capability.as_bytes().into() })
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn read_inherited(expected_class: &str) -> Result<Self, DirectoryClientError> {
+        #[cfg(unix)]
+        let mut pipe = {
+            use std::os::fd::FromRawFd;
+            unsafe extern "C" {
+                fn fcntl(fd: i32, command: i32, ...) -> i32;
+            }
+            const F_GETFD: i32 = 1;
+            const F_SETFD: i32 = 2;
+            const FD_CLOEXEC: i32 = 1;
+            let flags = unsafe { fcntl(3, F_GETFD) };
+            if flags < 0 || unsafe { fcntl(3, F_SETFD, flags | FD_CLOEXEC) } < 0 {
+                return Err(DirectoryClientError::Unauthorized);
+            }
+            unsafe { std::fs::File::from_raw_fd(3) }
+        };
+        #[cfg(windows)]
+        let mut pipe = inherited_windows_file()?;
+        let bytes = read_local_hub_credential_frame(&mut pipe, None)?;
+        decode_local_hub_credential(&bytes.bytes, expected_class, None)
+    }
+
+    /// 🤖️ Adopts a session capability this process obtained over the network rather than from the
+    /// inherited fd-3 pipe — the shape `semio-os-mcp --hub` needs after exchanging an agent
+    /// delegation at `POST /auth/agent-sessions`. The capability is held under exactly the same
+    /// redacting `Debug`, constant-time comparison and zero-on-drop discipline as an inherited one;
+    /// what it deliberately does NOT do is pin `hub_origin` to loopback, because an agent session
+    /// is issued by whichever hub the delegation names and the caller has already run that origin
+    /// through `validate_hub_origin`.
+    pub fn adopt_session_capability(hub_origin: &str, capability: &str) -> Result<Self, DirectoryClientError> {
+        if hub_origin.is_empty() || !valid_session_capability(capability) {
+            return Err(DirectoryClientError::Unauthorized);
+        }
+        Ok(Self { hub_origin: hub_origin.to_string(), capability: capability.as_bytes().into() })
+    }
+
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    #[doc(hidden)] pub fn test(hub_origin: &str, capability: &str) -> Self {
+        Self { hub_origin: hub_origin.to_string(), capability: capability.as_bytes().into() }
+    }
+
+    #[doc(hidden)] pub fn capability(&self) -> Result<&str, DirectoryClientError> {
+        std::str::from_utf8(&self.capability).map_err(|_| DirectoryClientError::Unauthorized)
+    }
+
+    pub fn hub_origin(&self) -> &str {
+        &self.hub_origin
+    }
+
+    pub fn authorizes_capability(&self, candidate: &str) -> bool {
+        if candidate.len() != self.capability.len() {
+            return false;
+        }
+        candidate.as_bytes().iter().zip(self.capability.iter()).fold(0u8, |difference, (left, right)| difference | (left ^ right)) == 0
+    }
+
+    pub fn authorizes_bearer_header(&self, header: &str) -> bool {
+        header.strip_prefix("Bearer ").is_some_and(|candidate| self.authorizes_capability(candidate))
+    }
+}
+
+fn valid_session_capability(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    bytes.len() == 108 && bytes.get(..11) == Some(b"session.v1.".as_slice()) && bytes.get(11..43).is_some_and(lower_hex) && bytes.get(43) == Some(&b'.') && bytes.get(44..108).is_some_and(lower_hex)
+}
+
+#[cfg(windows)]
+fn inherited_windows_file() -> Result<std::fs::File, DirectoryClientError> {
+    use std::ffi::c_void;
+    use std::os::windows::io::FromRawHandle;
+    type Handle = *mut c_void;
+    unsafe extern "C" {
+        fn _get_osfhandle(fd: i32) -> isize;
+        fn _close(fd: i32) -> i32;
+        fn GetCurrentProcess() -> Handle;
+        fn DuplicateHandle(source_process: Handle, source: Handle, target_process: Handle, target: *mut Handle, access: u32, inherit: i32, options: u32) -> i32;
+        fn CloseHandle(handle: Handle) -> i32;
+    }
+    let source = unsafe { _get_osfhandle(3) };
+    if source == -1 {
+        return Err(DirectoryClientError::Unauthorized);
+    }
+    let process = unsafe { GetCurrentProcess() };
+    let mut duplicate: Handle = std::ptr::null_mut();
+    let duplicated = unsafe { DuplicateHandle(process, source as Handle, process, &mut duplicate, 0, 0, 2) } != 0 && !duplicate.is_null();
+    let closed = unsafe { _close(3) } == 0;
+    if !duplicated || !closed {
+        if duplicated {
+            unsafe { CloseHandle(duplicate) };
+        }
+        return Err(DirectoryClientError::Unauthorized);
+    }
+    Ok(unsafe { std::fs::File::from_raw_handle(duplicate) })
+}
+
+pub struct DirectoryClient<T: DirectoryTransport> {
+    transport: T,
+    base_url: String,
+    credential: Option<Arc<LocalHubCredential>>,
+}
+
+/// 🧾️ The first bytes of an execution-target refusal body — the hub's closed error code, never document
+/// data — so a shell can say why a route refused instead of only its status.
+fn execution_target_refusal(body: &[u8]) -> String {
+    String::from_utf8_lossy(&body[..body.len().min(256)]).into_owned()
+}
+
+impl<T: DirectoryTransport> DirectoryClient<T> {
+    pub fn new(transport: T, base_url: impl Into<String>) -> Self {
+        Self { transport, base_url: base_url.into(), credential: None }
+    }
+
+    pub fn authenticated(transport: T, credential: Arc<LocalHubCredential>) -> Self {
+        Self { transport, base_url: credential.hub_origin.clone(), credential: Some(credential) }
+    }
+
+    pub fn base_url(&self) -> &str {
+        &self.base_url
+    }
+
+    fn url(&self, path: &str) -> String {
+        format!("{}{}", self.base_url.trim_end_matches('/'), path)
+    }
+
+    /// 🛑️ Checked BEFORE every call reaches `self.transport` — an already-cancelled `ctx` never
+    /// builds a request at all (`TransportError::Cancelled`, via the SAME transport call, is the
+    /// other half: cancelled WHILE the call was in flight — see that variant's own doc).
+    async fn request_json<R: FromValue>(&self, ctx: &OperationContext, method: HttpMethod, path: &str, body: Option<Vec<u8>>) -> Result<R, DirectoryClientError> {
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let response = self.transport.http(ctx, method, &self.url(path), bearer, body).await?;
+        match response.status {
+            200..=299 => Ok(decode_json_bytes(&response.body)?),
+            401 => Err(DirectoryClientError::Unauthorized),
+            status => Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+    }
+
+    /// 🛡️ Bounded request/response variant used by the closed command boundary: it caps raw bytes
+    /// BEFORE decoding and maps every failure into a closed code, never a raw server body.
+    async fn request_bytes_limited(&self, ctx: &OperationContext, method: HttpMethod, path: &str, body: Option<Vec<u8>>, response_max_bytes: usize) -> Result<Vec<u8>, DirectoryCommandErrorCodeV1> {
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryCommandErrorCodeV1::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose().map_err(|_| DirectoryCommandErrorCodeV1::Unauthorized)?;
+        let response = match self.transport.http(ctx, method, &self.url(path), bearer, body).await {
+            Ok(response) => response,
+            Err(TransportError::Cancelled) => return Err(DirectoryCommandErrorCodeV1::Cancelled),
+            Err(_) => return Err(DirectoryCommandErrorCodeV1::Transport),
+        };
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryCommandErrorCodeV1::Cancelled);
+        }
+        if !(200..=299).contains(&response.status) {
+            return Err(DirectoryCommandErrorCodeV1::from_status(response.status));
+        }
+        if response.body.len() > response_max_bytes {
+            return Err(DirectoryCommandErrorCodeV1::TooLarge);
+        }
+        Ok(response.body)
+    }
+
+    pub async fn spaces(&self, ctx: &OperationContext) -> Result<Vec<DirectorySpaceListEntryV1>, DirectoryClientError> {
+        let spaces: Vec<DirectorySpaceListEntryV1> = self.request_json(ctx, HttpMethod::Get, "/directory/spaces", None).await?;
+        if spaces.iter().all(DirectorySpaceListEntryV1::validate) {
+            Ok(spaces)
+        } else {
+            Err(DirectoryClientError::Decode("directory space list access discriminator mismatch".into()))
+        }
+    }
+
+    /// 🏛️ Fetches one bounded canonical administration page for exactly one space. `cursor`
+    /// advances precisely the window it was issued for; every other window restarts at its head.
+    pub async fn space_administration_page(&self, ctx: &OperationContext, id: &str, cursor: Option<&str>) -> Result<CanonicalDirectorySpaceAdministrationPageV1, DirectoryClientError> {
+        if let Some(cursor) = cursor {
+            if cursor.is_empty() || cursor.len() > DIRECTORY_SPACE_ADMINISTRATION_CURSOR_MAX_BYTES || !cursor.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'-' | b'_')) {
+                return Err(DirectoryClientError::Decode("directory space administration cursor is not opaque-safe".into()));
+            }
+        }
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = match cursor {
+            Some(cursor) => format!("/directory/spaces/{id}?cursor={cursor}"),
+            None => format!("/directory/spaces/{id}"),
+        };
+        let response = self.transport.http(ctx, HttpMethod::Get, &self.url(&path), bearer, None).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => return Err(DirectoryClientError::Unauthorized),
+            200..=299 => {}
+            status => return Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+        if response.body.len() > DIRECTORY_SPACE_ADMINISTRATION_PAGE_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("directory space administration page response exceeded 48 KiB".into()));
+        }
+        let canonical_json = String::from_utf8(response.body).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
+        let page = DirectorySpaceAdministrationPageV1::parse_canonical_json(&canonical_json).map_err(|_| DirectoryClientError::Decode("directory space administration page response is not canonical".into()))?;
+        if page.space_id() != id {
+            return Err(DirectoryClientError::Decode("directory space administration page space mismatch".into()));
+        }
+        Ok(CanonicalDirectorySpaceAdministrationPageV1 { canonical_json, page })
+    }
+
+    pub async fn events(&self, ctx: &OperationContext, since: u64) -> Result<Vec<DirectoryEvent>, DirectoryClientError> {
+        self.request_json(ctx, HttpMethod::Get, &format!("/directory/events?since={since}"), None).await
+    }
+
+    /// 📄️ Fetches one bounded canonical page while preserving the exact response bytes for Home.
+    pub async fn event_page(&self, ctx: &OperationContext, after: u64) -> Result<CanonicalDirectoryEventPageV1, DirectoryClientError> {
+        if after > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+            return Err(DirectoryClientError::Decode("directory event page after frontier is not wire-safe".into()));
+        }
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = format!("/directory/event-page/v1?after={after}");
+        let response = self.transport.http(ctx, HttpMethod::Get, &self.url(&path), bearer, None).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => return Err(DirectoryClientError::Unauthorized),
+            200..=299 => {}
+            status => return Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+        if response.body.len() > DIRECTORY_EVENT_PAGE_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("directory event page response exceeded 64 KiB".into()));
+        }
+        let canonical_json = String::from_utf8(response.body).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
+        let page = DirectoryEventPageV1::parse_canonical_json(&canonical_json).map_err(|_| DirectoryClientError::Decode("directory event page response is not canonical".into()))?;
+        if page.after_seq_exclusive != after {
+            return Err(DirectoryClientError::Decode("directory event page response frontier mismatch".into()));
+        }
+        Ok(CanonicalDirectoryEventPageV1 {
+            canonical_json,
+            session_binding_sha256: page.session_binding_sha256,
+            authorization_generation: page.authorization_generation,
+            after_seq_exclusive: page.after_seq_exclusive,
+            through_seq_inclusive: page.through_seq_inclusive,
+            has_more: page.has_more,
+            receipt_sha256: page.receipt_sha256,
+        })
+    }
+
+    pub async fn me(&self, ctx: &OperationContext) -> Result<SessionView, DirectoryClientError> {
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let response = self.transport.http(ctx, HttpMethod::Get, &self.url("/auth/sessions/me"), bearer, None).await?;
+        match response.status {
+            401 => return Err(DirectoryClientError::Unauthorized),
+            200..=299 => {}
+            status => return Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+        if response.body.len() > DIRECTORY_SESSION_AUTHORITY_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("directory session authority response exceeded 2 KiB".into()));
+        }
+        let source = String::from_utf8(response.body).map_err(|error| DirectoryClientError::Decode(error.to_string()))?;
+        DirectorySessionAuthorityV1::parse_canonical_json(&source).ok_or_else(|| DirectoryClientError::Decode("directory session authority response is not canonical".into()))
+    }
+
+    /// 🚪️ Sends the `POST /auth/sessions/me/sign-out` command for the held session (or the browser
+    /// cookie session when this client has no bearer). A successful empty `204` is accepted without
+    /// attempting JSON decoding.
+    pub async fn sign_out(&self, ctx: &OperationContext) -> Result<(), DirectoryClientError> {
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url("/auth/sessions/me/sign-out"), bearer, Some(Vec::new())).await?;
+        match response.status {
+            200 | 204 | 401 => Ok(()),
+            status => Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+    }
+
+    /// 🎟️ Redeems one bounded invitation capability through the authenticated client. The
+    /// capability is path-safe by admission and never appears in a query string.
+    pub async fn redeem_invite(&self, ctx: &OperationContext, capability: &str) -> Result<(), DirectoryClientError> {
+        if capability.is_empty() || capability.len() > 256 || !capability.bytes().all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'~' | b'-')) {
+            return Err(DirectoryClientError::Decode("directory invitation capability is invalid".into()));
+        }
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&format!("/directory/invites/{capability}/redeem")), bearer, Some(Vec::new())).await?;
+        match response.status {
+            200 | 204 => Ok(()),
+            401 => Err(DirectoryClientError::Unauthorized),
+            status => Err(DirectoryClientError::Http { status, body: String::from_utf8_lossy(&response.body).into_owned() }),
+        }
+    }
+
+    /// 🪪️ Fetches the authenticated server-selected execution-target manifest for one exact
+    /// document scope. The caller supplies only structural intent; package, descriptor and component
+    /// identities all come back from the protected Hub route.
+    pub async fn document_execution_target_manifest(&self, ctx: &OperationContext, intent: &DocumentOpenIntentV1) -> Result<DocumentExecutionTargetLeaseFieldsV1, DirectoryClientError> {
+        intent.validate().map_err(|_| DirectoryClientError::Decode("document execution-target intent is invalid".into()))?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = format!("/spaces/{}/documents/{}/execution-target/manifest", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(semio_framework_pack_json::to_json_string(intent).into_bytes())).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => return Err(DirectoryClientError::Unauthorized),
+            200..=299 => {}
+            status => return Err(DirectoryClientError::Http { status, body: execution_target_refusal(&response.body) }),
+        }
+        if response.body.len() > 64 * 1024 {
+            return Err(DirectoryClientError::Decode("document execution-target manifest exceeded its fixed byte limit".into()));
+        }
+        let manifest: DocumentExecutionTargetLeaseFieldsV1 = decode_json_bytes(&response.body)?;
+        manifest.validate().map_err(|_| DirectoryClientError::Decode("document execution-target manifest is invalid".into()))?;
+        Ok(manifest)
+    }
+
+    /// 🧩️ Fetches the exact authorized COMPONENT bytes for the same protected structural intent —
+    /// the plugin wasm the Hub itself selected for this document. It is the third leg of the same
+    /// chain the browser shell already walks (`open-plan` → `execution-target/{manifest, component,
+    /// descriptor}` → `socket-grants` → the document socket); before this method existed, a
+    /// `--hub`-bound native client had manifest and descriptor and no way to obtain the component,
+    /// so it could only run a plugin it found on a local disk — which a hub-bound agent has none of
+    /// (measured 2026-09-21: every `action_prepare` from the MCP gateway answered `repo root not
+    /// found`). Bounded by the same fixed component ceiling the Hub's own route enforces; the
+    /// declared length and SHA-256 stay the caller's comparison input, exactly as for the descriptor.
+    pub async fn document_execution_target_component(&self, ctx: &OperationContext, intent: &DocumentOpenIntentV1) -> Result<Vec<u8>, DirectoryClientError> {
+        intent.validate().map_err(|_| DirectoryClientError::Decode("document execution-target intent is invalid".into()))?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = format!("/spaces/{}/documents/{}/execution-target/component", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(semio_framework_pack_json::to_json_string(intent).into_bytes())).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => Err(DirectoryClientError::Unauthorized),
+            200..=299 if response.body.len() <= DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES as usize => Ok(response.body),
+            200..=299 => Err(DirectoryClientError::Decode("document execution-target component exceeded its fixed byte limit".into())),
+            status => Err(DirectoryClientError::Http { status, body: execution_target_refusal(&response.body) }),
+        }
+    }
+
+    /// 📖 Fetches exact descriptor bytes for the same protected structural intent. Raw bytes are
+    /// bounded before return; their declared length and SHA-256 remain the caller's comparison input.
+    pub async fn document_execution_target_descriptor(&self, ctx: &OperationContext, intent: &DocumentOpenIntentV1) -> Result<Vec<u8>, DirectoryClientError> {
+        intent.validate().map_err(|_| DirectoryClientError::Decode("document execution-target intent is invalid".into()))?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose()?;
+        let path = format!("/spaces/{}/documents/{}/execution-target/descriptor", encode_url_component(&intent.scope.space_id), encode_url_component(&intent.scope.document_id),);
+        let response = self.transport.http(ctx, HttpMethod::Post, &self.url(&path), bearer, Some(semio_framework_pack_json::to_json_string(intent).into_bytes())).await?;
+        if ctx.cancel.is_cancelled().await {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        match response.status {
+            401 => Err(DirectoryClientError::Unauthorized),
+            200..=299 if response.body.len() <= DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES as usize => Ok(response.body),
+            200..=299 => Err(DirectoryClientError::Decode("document execution-target descriptor exceeded its fixed byte limit".into())),
+            status => Err(DirectoryClientError::Http { status, body: execution_target_refusal(&response.body) }),
+        }
+    }
+
+    /// 🧾️ Posts one sealed V1 request and parses only a raw-byte-capped canonical receipt bound to
+    /// it. Every non-2xx becomes a closed {@link DirectoryCommandErrorCodeV1}; the response body is
+    /// never decoded into a UI-facing error. `ctx.cancel` cancels the HTTP wait only — a command
+    /// already past its server linearization point stays committed and the operation is indeterminate.
+    pub async fn command(&self, ctx: &OperationContext, request: &DirectoryCommandRequestV1) -> Result<CanonicalDirectoryCommandReceiptV1, DirectoryCommandErrorCodeV1> {
+        request.validate()?;
+        let body = request.canonical_json().into_bytes();
+        let response = self.request_bytes_limited(ctx, HttpMethod::Post, "/directory/commands", Some(body), DIRECTORY_COMMAND_RECEIPT_MAX_BYTES).await?;
+        let canonical_json = String::from_utf8(response).map_err(|_| DirectoryCommandErrorCodeV1::Invalid)?;
+        let receipt = DirectoryCommandReceiptV1::parse_canonical_json(&canonical_json, request)?;
+        Ok(CanonicalDirectoryCommandReceiptV1 { canonical_json, receipt })
+    }
+
+    /// 📡 Executes one owner-prepared bounded document call and returns only its validated reply.
+    pub async fn document_http_call<R>(&self, ctx: &OperationContext, scope: &DocumentScope, request: &DocumentHttpRequestV1, decode: impl FnOnce(&[u8]) -> Result<R, DocumentHttpPortCodeV1>) -> Result<R, DocumentHttpPortCodeV1> {
+        if scope.space_id.is_empty() || scope.document_id.is_empty() || scope.space_id.len() > 256 || scope.document_id.len() > 256 || request.segments.is_empty() || request.segments.len() > 8 || request.segments.iter().any(|part| part.is_empty() || part.len() > 256 || matches!(part.as_str(), "." | "..")) {
+            return Err(DocumentHttpPortCodeV1::Invalid);
+        }
+        if request.request_max_bytes == 0 || request.request_max_bytes > DOCUMENT_HTTP_REQUEST_MAX_BYTES || request.response_max_bytes == 0 || request.response_max_bytes > DOCUMENT_HTTP_RESPONSE_MAX_BYTES || request.body.as_ref().is_some_and(|bytes| bytes.len() > request.request_max_bytes) || request.after.is_some_and(|after| after > DOCUMENT_OPEN_MAX_SAFE_INTEGER) {
+            return Err(DocumentHttpPortCodeV1::Bounds);
+        }
+        if ctx.cancel.is_cancelled().await {
+            return Err(DocumentHttpPortCodeV1::Cancelled);
+        }
+        let bearer = self.credential.as_ref().map(|credential| credential.capability()).transpose().map_err(|_| DocumentHttpPortCodeV1::Denied)?;
+        let suffix = request.segments.iter().map(|part| encode_url_component(part)).collect::<Vec<_>>().join("/");
+        let mut path = format!("/spaces/{}/documents/{}/{suffix}", encode_url_component(&scope.space_id), encode_url_component(&scope.document_id));
+        if let Some(after) = request.after {
+            path.push_str(&format!("?after={after}"));
+        }
+        let response = match self.transport.http(ctx, request.method, &self.url(&path), bearer, request.body.clone()).await {
+            Ok(response) => response,
+            Err(TransportError::Cancelled) => return Err(DocumentHttpPortCodeV1::Cancelled),
+            Err(_) => return Err(DocumentHttpPortCodeV1::Transport),
+        };
+        if ctx.cancel.is_cancelled().await {
+            return Err(DocumentHttpPortCodeV1::Cancelled);
+        }
+        if !(200..=299).contains(&response.status) {
+            return Err(DocumentHttpPortCodeV1::from_status(response.status));
+        }
+        if response.body.len() > request.response_max_bytes {
+            return Err(DocumentHttpPortCodeV1::Bounds);
+        }
+        decode(&response.body)
+    }
+
+
+    pub fn stream(self: &Arc<Self>, since: u64) -> DirectoryStream<T>
+    where
+        T: Clone,
+    {
+        DirectoryStream::new(self.clone(), None, since, true)
+    }
+
+    /// 📌️ Creates a global wakeup stream whose reconnect cursor advances only by explicit page ACK.
+    pub fn stream_acknowledged(self: &Arc<Self>, since: u64) -> Result<DirectoryStream<T>, DirectoryClientError>
+    where
+        T: Clone,
+    {
+        if since > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+            return Err(DirectoryClientError::Decode("directory stream acknowledged frontier is not wire-safe".into()));
+        }
+        Ok(DirectoryStream::new(self.clone(), None, since, false))
+    }
+
+    /// 🎯️ Creates one exact scope-bound stream whose membership revocation is terminal.
+    pub fn stream_scoped(self: &Arc<Self>, scope: DocumentScope, since: u64) -> DirectoryStream<T>
+    where
+        T: Clone,
+    {
+        DirectoryStream::new(self.clone(), Some(scope), since, true)
+    }
+
+    pub fn open_stream_ws(&self, ctx: &OperationContext, since: u64, timeout_ms: u64) -> Result<T::Ws, DirectoryClientError> {
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let mut receipt = self.issue_socket_grant(ctx, "/directory/socket-grants", b"", timeout_ms)?;
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let url = directory_ws_url(&self.base_url, since);
+        let mut protocols = vec![std::mem::take(&mut receipt.protocol), std::mem::take(&mut receipt.grant)];
+        let connection = self.transport.open_ws(ctx, &url, &protocols, timeout_ms);
+        wipe_string(&mut protocols[1]);
+        let mut connection = connection?;
+        if ctx.cancel.is_cancelled_now() {
+            connection.close();
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if let Err(error) = connection.send_binary(directory_socket_hello_v1()) {
+            connection.close();
+            return Err(error.into());
+        }
+        if ctx.cancel.is_cancelled_now() {
+            connection.close();
+            return Err(DirectoryClientError::Cancelled);
+        }
+        Ok(connection)
+    }
+
+    /// 🎯️ Issues and consumes one membership-bound grant for an exact document scope.
+    pub fn open_scoped_stream_ws(&self, ctx: &OperationContext, scope: &DocumentScope, since: u64, timeout_ms: u64) -> Result<T::Ws, DirectoryClientError> {
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if scope.space_id.is_empty() || scope.document_id.is_empty() || scope.space_id.len() > DIRECTORY_SCOPE_ID_MAX_BYTES || scope.document_id.len() > DIRECTORY_SCOPE_ID_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("directory stream scope invalid".into()));
+        }
+        let prefix = format!("/directory/spaces/{}/documents/{}", encode_url_component(&scope.space_id), encode_url_component(&scope.document_id),);
+        let mut receipt = self.issue_socket_grant(ctx, &format!("{prefix}/socket-grants"), b"", timeout_ms)?;
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let url = directory_scoped_ws_url(&self.base_url, scope, since);
+        let mut protocols = vec![std::mem::take(&mut receipt.protocol), std::mem::take(&mut receipt.grant)];
+        let connection = self.transport.open_ws(ctx, &url, &protocols, timeout_ms);
+        wipe_string(&mut protocols[1]);
+        let mut connection = connection?;
+        if ctx.cancel.is_cancelled_now() {
+            connection.close();
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if let Err(error) = connection.send_binary(directory_socket_hello_v1()) {
+            connection.close();
+            return Err(error.into());
+        }
+        Ok(connection)
+    }
+
+    /// 🛡️ The exact url and bearer of one protected admission POST: a path under the credential's own
+    /// origin only, so a caller can never aim the capability at a foreign host.
+    fn protected_post_target(&self, ctx: &OperationContext, path: &str) -> Result<(String, &str), DirectoryClientError> {
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let credential = self.credential.as_ref().ok_or(DirectoryClientError::Unauthorized)?;
+        let origin = credential.hub_origin().trim_end_matches('/');
+        if self.base_url.trim_end_matches('/') != origin || !path.starts_with('/') || path.starts_with("//") {
+            return Err(DirectoryClientError::Unauthorized);
+        }
+        Ok((format!("{origin}{path}"), credential.capability()?))
+    }
+
+    fn protected_post(&self, ctx: &OperationContext, path: &str, body: &[u8], timeout_ms: u64) -> Result<WipeBytes<'static>, DirectoryClientError> {
+        let (url, bearer) = self.protected_post_target(ctx, path)?;
+        let response = self.transport.issue_socket_grant(ctx, &url, bearer, body, timeout_ms.clamp(1, 5_000))?;
+        Self::protected_post_answer(ctx, response)
+    }
+
+    /// 🌐️ The browser twin of [`Self::protected_post`]: the same target and answer checks around the
+    /// transport's own asynchronous `http` hop, because a browser isolate cannot block on a grant.
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+    async fn protected_post_async(&self, ctx: &OperationContext, path: &str, body: &[u8]) -> Result<WipeBytes<'static>, DirectoryClientError> {
+        let (url, bearer) = self.protected_post_target(ctx, path)?;
+        let response = self.transport.http(ctx, HttpMethod::Post, &url, Some(bearer), Some(body.to_vec())).await?;
+        Self::protected_post_answer(ctx, response)
+    }
+
+    /// 🧾️ Bounds and classifies one protected admission answer without ever surfacing its body.
+    fn protected_post_answer(ctx: &OperationContext, response: HttpResponse) -> Result<WipeBytes<'static>, DirectoryClientError> {
+        let response_body = WipeBytes { bytes: response.body, observer: None };
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if response_body.bytes.len() > DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES {
+            return Err(DirectoryClientError::Decode("protected document admission response exceeded 64 KiB".into()));
+        }
+        if response.status == 401 {
+            return Err(DirectoryClientError::Unauthorized);
+        }
+        if !(200..=299).contains(&response.status) {
+            return Err(DirectoryClientError::Http { status: response.status, body: "protected document admission rejected".into() });
+        }
+        Ok(response_body)
+    }
+
+    fn issue_socket_grant(&self, ctx: &OperationContext, path: &str, body: &[u8], timeout_ms: u64) -> Result<SocketGrantReceiptV1, DirectoryClientError> {
+        let response_body = self.protected_post(ctx, path, body, timeout_ms)?;
+        let receipt: SocketGrantReceiptV1 = decode_json_bytes(&response_body.bytes).map_err(|_| DirectoryClientError::Decode("socket grant receipt invalid".into()))?;
+        if receipt.schema != "semio.hub.socket-grant/v1" || receipt.protocol != "semio.socket.v1" || !valid_socket_grant(&receipt.grant) || !valid_socket_actor(&receipt.actor_id) || receipt.expires_at_ms <= wall_now_ms() {
+            return Err(DirectoryClientError::Decode("socket grant receipt binding invalid".into()));
+        }
+        emit_socket_grant_probe(path, &receipt.grant);
+        Ok(receipt)
+    }
+
+    /// 🎫 Admission leg one: the validated open intent, its scope and the document route it posts under.
+    fn document_admission_intent(space_id: &str, document_id: &str, expectation: &DocumentSocketExpectationV1, client_instance_id: &str) -> Result<(DocumentScope, String, Vec<u8>), DirectoryClientError> {
+        let scope = DocumentScope::new(space_id, document_id);
+        let intent = DocumentOpenIntentV1 { schema: "semio.hub.document-open-intent/v1".into(), version: 1, scope: scope.clone(), requested_surface_id: expectation.requested_surface_id.clone(), client_instance_id: client_instance_id.to_string() };
+        if intent.validate().is_err() || expectation.artifact_schema.is_empty() {
+            return Err(DirectoryClientError::Decode("document open intent invalid".into()));
+        }
+        let prefix = format!("/spaces/{}/documents/{}", encode_url_component(space_id), encode_url_component(document_id));
+        Ok((scope, prefix, semio_framework_pack_json::to_json_string(&intent).into_bytes()))
+    }
+
+    /// 🧾 Admission leg two: binds the answered plan to the local expectation, derives the receipt-free
+    /// authority and seals the plan-receipt exchange that buys the socket grant.
+    fn document_admission_exchange(&self, ctx: &OperationContext, plan_body: &[u8], scope: &DocumentScope, expectation: &DocumentSocketExpectationV1) -> Result<(DocumentSocketAuthorityV1, WipeBytes<'static>), DirectoryClientError> {
+        let mut plan: DocumentOpenPlanV1 = decode_json_bytes(plan_body).map_err(|_| DirectoryClientError::Decode("document open plan response invalid".into()))?;
+        let now_ms = u64::try_from(wall_now_ms()).map_err(|_| DirectoryClientError::Decode("document open clock invalid".into()))?;
+        let pack_schema_hash = decode_lower_hex_32(&plan.artifact.pack_schema_hash);
+        let surface_matches = expectation
+            .lease
+            .as_ref()
+            .is_none_or(|expected| lease_fields_from_plan_v1(&plan, expected.component.byte_length, expected.descriptor.byte_length, expected.browser_actor.byte_length()).is_ok_and(|fields| same_lease_fields_v1(&fields, expected)))
+            && expectation.requested_surface_id.as_ref().is_none_or(|surface| plan.surface.surface_id == *surface);
+        if plan.validate(now_ms).is_err() || plan.scope != *scope || plan.artifact.schema != expectation.artifact_schema || pack_schema_hash != Some(expectation.pack_schema_hash) || !surface_matches {
+            wipe_string(&mut plan.receipt);
+            return Err(DirectoryClientError::Decode("document open plan binding invalid".into()));
+        }
+        if ctx.cancel.is_cancelled_now() {
+            wipe_string(&mut plan.receipt);
+            return Err(DirectoryClientError::Cancelled);
+        }
+        let credential_origin = self.credential.as_ref().ok_or(DirectoryClientError::Unauthorized)?.hub_origin().trim_end_matches('/');
+        let authority = DocumentSocketAuthorityV1::from_plan(credential_origin.to_string(), &plan, expectation, now_ms).map_err(|_| DirectoryClientError::Decode("document open authority invalid".into()))?;
+        let exchange = WipeDocumentPlanSocketGrantIntent(DocumentPlanSocketGrantIntentV1 { schema: "semio.hub.document-plan-socket-grant-intent/v1".into(), version: 1, plan_receipt: std::mem::take(&mut plan.receipt) });
+        Ok((authority, WipeBytes { bytes: semio_framework_pack_json::to_json_string(&exchange.0).into_bytes(), observer: None }))
+    }
+
+    /// 🎟 Admission leg three: the grant receipt, bound to `semio.session.v1` and a hub socket actor,
+    /// joined with the authority that is still unexpired and uncancelled at this instant.
+    fn document_admission_finish(ctx: &OperationContext, path: &str, grant_body: &[u8], authority: DocumentSocketAuthorityV1) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
+        let socket: DocumentSocketGrantReceiptV1 = decode_json_bytes(grant_body).map_err(|_| DirectoryClientError::Decode("document socket grant receipt invalid".into()))?;
+        if socket.schema != "semio.hub.document-socket-grant/v1" || socket.protocol != "semio.session.v1" || !valid_socket_actor(&socket.actor_id) || socket.expires_at_ms <= wall_now_ms() {
+            return Err(DirectoryClientError::Decode("document socket grant receipt binding invalid".into()));
+        }
+        emit_document_socket_grant_probe(path);
+        if ctx.cancel.is_cancelled_now() {
+            return Err(DirectoryClientError::Cancelled);
+        }
+        if authority.expires_at_unix_ms <= u64::try_from(wall_now_ms()).map_err(|_| DirectoryClientError::Decode("document open clock invalid".into()))? {
+            return Err(DirectoryClientError::Decode("document open authority expired".into()));
+        }
+        Ok(DocumentSocketAdmissionV1 { socket, authority })
+    }
+
+    /// 🌐️ The browser admission: the same three legs as the native one, each protected POST awaited on
+    /// the transport's asynchronous `http` hop.
+    #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+    async fn admit_document_socket_async(&self, ctx: &OperationContext, space_id: &str, document_id: &str, expectation: &DocumentSocketExpectationV1, client_instance_id: &str) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
+        let (scope, prefix, intent_body) = Self::document_admission_intent(space_id, document_id, expectation, client_instance_id)?;
+        let plan_body = self.protected_post_async(ctx, &format!("{prefix}/open-plan"), &intent_body).await?;
+        let (authority, exchange_body) = self.document_admission_exchange(ctx, &plan_body.bytes, &scope, expectation)?;
+        let path = format!("{prefix}/socket-grants");
+        let grant_body = self.protected_post_async(ctx, &path, &exchange_body.bytes).await?;
+        Self::document_admission_finish(ctx, &path, &grant_body.bytes, authority)
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClient<T> {
+    fn admit_document_socket(&self, ctx: &OperationContext, space_id: &str, document_id: &str, expectation: &DocumentSocketExpectationV1, client_instance_id: &str, timeout_ms: u64) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
+        let (scope, prefix, intent_body) = Self::document_admission_intent(space_id, document_id, expectation, client_instance_id)?;
+        let plan_body = self.protected_post(ctx, &format!("{prefix}/open-plan"), &intent_body, timeout_ms)?;
+        let (authority, exchange_body) = self.document_admission_exchange(ctx, &plan_body.bytes, &scope, expectation)?;
+        let path = format!("{prefix}/socket-grants");
+        let grant_body = self.protected_post(ctx, &path, &exchange_body.bytes, timeout_ms)?;
+        Self::document_admission_finish(ctx, &path, &grant_body.bytes, authority)
+    }
+}
+
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+impl<T: DirectoryTransport + Send + Sync> HubSocketGrantSource for DirectoryClient<T> {
+    fn admit_document_socket<'a>(&'a self, ctx: &'a OperationContext, space_id: &'a str, document_id: &'a str, expectation: &'a DocumentSocketExpectationV1, client_instance_id: &'a str, _timeout_ms: u64) -> DocumentSocketAdmissionFuture<'a> {
+        Box::pin(self.admit_document_socket_async(ctx, space_id, document_id, expectation, client_instance_id))
+    }
+}
+//#endregion 🔖️Client
+
+//#region 🔖️Stream
+/// ⏱️ Reconnect backoff floor/ceiling — same constants `🏪️store/👷️worker/🟦️.ts`'s
+/// `HUB_RECONNECT_MIN_MS`/`HUB_RECONNECT_MAX_MS` already use for the document WS.
+pub const HUB_RECONNECT_MIN_MS: u64 = 500;
+pub const HUB_RECONNECT_MAX_MS: u64 = 30_000;
+
+/// 🔗️ `remote://host:port` / `http(s)://…` → `ws(s)://host:port/directory/socket/v1?since=`
+/// (contract §C2). Pure and independently testable, mirroring `🏪️store/🔄️sync`'s `hub_ws_url`.
+pub fn directory_ws_url(base_url: &str, since: u64) -> String {
+    let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
+    let authority = base_url.split_once("://").map_or(base_url, |(_, rest)| rest).split('/').next().unwrap_or(base_url);
+    let scheme = if secure { "wss" } else { "ws" };
+    format!("{scheme}://{authority}/directory/socket/v1?since={since}")
+}
+
+/// 🎯️ Builds the exact URL paired with one scope-bound directory grant.
+pub fn directory_scoped_ws_url(base_url: &str, scope: &DocumentScope, since: u64) -> String {
+    let secure = base_url.starts_with("https://") || base_url.starts_with("wss://");
+    let authority = base_url.split_once("://").map_or(base_url, |(_, rest)| rest).split('/').next().unwrap_or(base_url);
+    let scheme = if secure { "wss" } else { "ws" };
+    format!("{scheme}://{authority}/directory/spaces/{}/documents/{}/socket/v1?since={since}", encode_url_component(&scope.space_id), encode_url_component(&scope.document_id),)
+}
+
+/// ⏱️ Doubling backoff capped at `HUB_RECONNECT_MAX_MS`, floored at `HUB_RECONNECT_MIN_MS`.
+pub fn next_backoff_ms(current_ms: u64) -> u64 {
+    current_ms.saturating_mul(2).clamp(HUB_RECONNECT_MIN_MS, HUB_RECONNECT_MAX_MS)
+}
+
+/// 📡️ One finite stream turn. `Dial` is executed separately on `Lane::Io`; `ReconnectAt` is armed
+/// on the shared `TimerWheel`; `Idle` yields immediately instead of parking a worker on a socket.
+pub enum DirectoryStreamTurn<T: DirectoryTransport> {
+    Dial { client: Arc<DirectoryClient<T>>, since: u64 },
+    DialScoped { client: Arc<DirectoryClient<T>>, scope: DocumentScope, since: u64 },
+    Message(DirectoryStreamMessage),
+    ReconnectAt(u64),
+    Idle,
+    Revoked(DocumentScope),
+    Closed,
+}
+
+/// 🔁️ `GET /directory/socket/v1?since=` with auto-reconnect that resumes from the last `seq`/`headSeq`
+/// this stream has observed — never re-subscribes from the caller's original `since` after a
+/// drop, so the hub replays only the gap.
+pub struct DirectoryStream<T: DirectoryTransport> {
+    client: Arc<DirectoryClient<T>>,
+    scope: Option<DocumentScope>,
+    since: u64,
+    track_observed_frontier: bool,
+    connection: Option<T::Ws>,
+    backoff_ms: u64,
+    reconnect_at_ms: Option<u64>,
+    dialing: bool,
+    closed: bool,
+}
+
+impl<T: DirectoryTransport + Clone> DirectoryStream<T> {
+    fn new(client: Arc<DirectoryClient<T>>, scope: Option<DocumentScope>, since: u64, track_observed_frontier: bool) -> Self {
+        Self { client, scope, since, track_observed_frontier, connection: None, backoff_ms: HUB_RECONNECT_MIN_MS, reconnect_at_ms: None, dialing: false, closed: false }
+    }
+
+    pub fn since(&self) -> u64 {
+        self.since
+    }
+
+    /// 📌️ Advances the durable reconnect frontier after an exact Home page acknowledgement.
+    pub fn acknowledge(&mut self, through: u64) -> Result<(), DirectoryClientError> {
+        if self.track_observed_frontier || through < self.since || through > DOCUMENT_OPEN_MAX_SAFE_INTEGER {
+            return Err(DirectoryClientError::Decode("directory stream acknowledgement frontier invalid".into()));
+        }
+        self.since = through;
+        Ok(())
+    }
+
+    pub fn close(&mut self) {
+        self.closed = true;
+        if let Some(mut connection) = self.connection.take() {
+            connection.close();
+        }
+    }
+
+    /// 🔄️ Applies a completed I/O-lane dial without reading from the socket in the same turn.
+    pub fn complete_dial(&mut self, now_ms: u64, result: Result<T::Ws, TransportError>) -> DirectoryStreamTurn<T> {
+        self.dialing = false;
+        if self.closed {
+            if let Ok(mut connection) = result {
+                connection.close();
+            }
+            return DirectoryStreamTurn::Closed;
+        }
+        match result {
+            Ok(connection) => {
+                self.connection = Some(connection);
+                self.backoff_ms = HUB_RECONNECT_MIN_MS;
+                self.reconnect_at_ms = None;
+                DirectoryStreamTurn::Idle
+            }
+            Err(_) => self.reconnecting(now_ms),
+        }
+    }
+
+    /// 🔁️ Performs bounded, nonblocking protocol work only; at most eight invalid/control frames
+    /// are skipped before yielding so malformed traffic cannot monopolize a worker turn.
+    pub fn turn(&mut self, ctx: &OperationContext, now_ms: u64) -> DirectoryStreamTurn<T> {
+        if self.closed || ctx.cancel.is_cancelled_now() {
+            self.close();
+            return DirectoryStreamTurn::Closed;
+        }
+        if self.dialing {
+            return DirectoryStreamTurn::Idle;
+        }
+        if let Some(reconnect_at_ms) = self.reconnect_at_ms {
+            if now_ms < reconnect_at_ms {
+                return DirectoryStreamTurn::ReconnectAt(reconnect_at_ms);
+            }
+            self.reconnect_at_ms = None;
+        }
+        if self.connection.is_none() {
+            self.dialing = true;
+            return match &self.scope {
+                Some(scope) => DirectoryStreamTurn::DialScoped { client: self.client.clone(), scope: scope.clone(), since: self.since },
+                None => DirectoryStreamTurn::Dial { client: self.client.clone(), since: self.since },
+            };
+        }
+        for _ in 0..8 {
+            let Some(connection) = self.connection.as_mut() else { return self.reconnecting(now_ms) };
+            match connection.try_recv_text() {
+                Ok(DirectoryWsPoll::Text(text)) => {
+                    if let Ok(message) = semio_framework_pack_json::from_json_str::<DirectoryStreamMessage>(&text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
+                        self.track(&message);
+                        return DirectoryStreamTurn::Message(message);
+                    }
+                }
+                Ok(DirectoryWsPoll::Pending) => return DirectoryStreamTurn::Idle,
+                Ok(DirectoryWsPoll::Closed(Some(4401))) => {
+                    self.connection = None;
+                    self.closed = true;
+                    return self.scope.clone().map_or(DirectoryStreamTurn::Closed, DirectoryStreamTurn::Revoked);
+                }
+                Ok(DirectoryWsPoll::Closed(_)) | Err(_) => {
+                    self.connection = None;
+                    return self.reconnecting(now_ms);
+                }
+            }
+        }
+        DirectoryStreamTurn::Idle
+    }
+
+    fn reconnecting(&mut self, now_ms: u64) -> DirectoryStreamTurn<T> {
+        let reconnect_at_ms = now_ms.saturating_add(self.backoff_ms);
+        self.reconnect_at_ms = Some(reconnect_at_ms);
+        self.backoff_ms = next_backoff_ms(self.backoff_ms);
+        DirectoryStreamTurn::ReconnectAt(reconnect_at_ms)
+    }
+
+    #[doc(hidden)] pub fn track(&mut self, message: &DirectoryStreamMessage) {
+        if !self.track_observed_frontier {
+            return;
+        }
+        match message {
+            DirectoryStreamMessage::Event { event } => self.since = self.since.max(event.seq),
+            DirectoryStreamMessage::Heartbeat { head_seq } => self.since = self.since.max(*head_seq),
+            DirectoryStreamMessage::Connection { .. } | DirectoryStreamMessage::Presence { .. } | DirectoryStreamMessage::RebootstrapRequired { .. } | DirectoryStreamMessage::AccessChanged { .. } => {}
+        }
+    }
+}
+
+//#endregion 🔖️Stream
+
+//#region 🔖️Native
+/// 🐎️ Native transport: HTTP routes through `semio-framework-os-services`'s `HttpPool`/
+/// `ComputePool` (this crate's EXISTING optional `ureq` dep supplies the ONE blocking call
+/// `HttpPool` admits onto its bounded pool — no per-call `std::thread::spawn` and no private
+/// tokio runtime built by this crate), `tokio-tungstenite` for WS (this crate's EXISTING `sync`
+/// feature, which already wires it up for `🏪️store/🔄️sync`'s native actor). Both features are
+/// required together because a real client needs both halves; either alone would leave the other
+/// method type unusable.
+#[cfg(all(feature = "ureq", feature = "sync", not(target_arch = "wasm32")))]
+pub mod native {
+    use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, LocalHubCredential, TransportError};
+    use semio_framework_actor::{ActorId, PackageId};
+    use semio_framework_async::{HostAsyncRuntime, HostFuture, OperationContext, ScopeHandle};
+    use semio_framework_os_services::{
+        AsyncHttpTransport, ComputeError, ComputePool, HttpBody, HttpBodyCancellationHandle, HttpPool, HttpPoolError, HttpRequest as PoolHttpRequest, HttpResponseHead, HttpTransportStart, HttpTransportTerminalGuard, TokioHostRuntime,
+        HTTP_BUCKET_REFILL_INTERVAL_MS,
+    };
+    use std::io::Read;
+    use std::net::{TcpStream, ToSocketAddrs};
+    use std::sync::{Arc, Mutex};
+    use std::time::Duration;
+    use tokio_tungstenite::tungstenite::{self, client::IntoClientRequest, stream::MaybeTlsStream, Message};
+
+    const UREQ_HTTP_URL_BYTES: usize = 2_048;
+    const UREQ_HTTP_HEADER_ITEMS: usize = 64;
+    const UREQ_HTTP_HEADER_BYTES: usize = 16 * 1024;
+    const UREQ_HTTP_REQUEST_BODY_BYTES: usize = 16 * 1024 * 1024;
+    const UREQ_HTTP_BODY_PAGE_BYTES: usize = 16 * 1024;
+    #[doc(hidden)] pub const UREQ_HTTP_READ_TIMEOUT_MS: u64 = 15_000;
+    const UREQ_HTTP_CONNECT_TIMEOUT_MS: u64 = 15_000;
+    /// ⏱️ The overall bound of a request whose caller named no deadline: long enough for a loaded hub's slowest
+    /// answer and a 64 MiB execution-target body, finite so the blocking IO thread it occupies is freed.
+    pub const UREQ_HTTP_UNBOUNDED_REQUEST_MS: u64 = 120_000;
+
+    /// ⏱️ One request's ureq overall timeout: what is left of the caller's deadline (at least 1 ms), else
+    /// [`UREQ_HTTP_UNBOUNDED_REQUEST_MS`]. `now_ms` is the runtime clock `ComputePool::run_io` compares the
+    /// deadline against, so the transport never cuts a request the caller still waits for.
+    pub fn ureq_request_budget_ms(deadline_ms: Option<u64>, now_ms: u64) -> u64 {
+        deadline_ms.map_or(UREQ_HTTP_UNBOUNDED_REQUEST_MS, |deadline| deadline.saturating_sub(now_ms).max(1))
+    }
+
+    #[doc(hidden)] pub type UreqBodyReader = Box<dyn Read + Send + Sync + 'static>;
+
+    pub struct UreqStreamingHttpTransport {
+        agent: ureq::Agent,
+        #[doc(hidden)] pub compute: Arc<ComputePool>,
+        #[doc(hidden)] pub runtime: Arc<TokioHostRuntime>,
+        #[doc(hidden)] pub scope: ScopeHandle,
+    }
+
+    impl UreqStreamingHttpTransport {
+        pub fn new(compute: Arc<ComputePool>, runtime: Arc<TokioHostRuntime>, scope: ScopeHandle) -> Self {
+            Self { agent: ureq::AgentBuilder::new().timeout_connect(Duration::from_millis(UREQ_HTTP_CONNECT_TIMEOUT_MS)).build(), compute, runtime, scope }
+        }
+    }
+
+    #[doc(hidden)] pub struct UreqStreamingHttpBody {
+        reader: Arc<Mutex<Option<UreqBodyReader>>>,
+        cancellation: HttpBodyCancellationHandle,
+        compute: Arc<ComputePool>,
+        runtime: Arc<TokioHostRuntime>,
+        scope: ScopeHandle,
+        ctx: OperationContext,
+    }
+
+    impl UreqStreamingHttpBody {
+        /// 🌊️ Wraps one owned response reader with the cancellation, compute lane and operation context of its stream.
+        #[doc(hidden)] pub fn new(reader: Arc<Mutex<Option<UreqBodyReader>>>, cancellation: HttpBodyCancellationHandle, compute: Arc<ComputePool>, runtime: Arc<TokioHostRuntime>, scope: ScopeHandle, ctx: OperationContext) -> Self {
+            Self { reader, cancellation, compute, runtime, scope, ctx }
+        }
+    }
+
+    impl HttpBody for UreqStreamingHttpBody {
+        fn cancellation_handle(&self) -> HttpBodyCancellationHandle {
+            self.cancellation.clone()
+        }
+
+        fn next_chunk(&mut self, terminal: HttpTransportTerminalGuard) -> HostFuture<Result<Option<Vec<u8>>, HttpPoolError>> {
+            if self.ctx.cancel.is_cancelled_now() {
+                return Box::pin(async move {
+                    let _terminal = terminal;
+                    Err(HttpPoolError::Transport("ureq HTTP body cancelled".into()))
+                });
+            }
+            let reader = self.reader.clone();
+            let compute = self.compute.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            let ctx = self.ctx.clone();
+            Box::pin(async move {
+                compute
+                    .run_io(runtime.as_ref(), &scope, ctx, move || {
+                        let _terminal = terminal;
+                        ureq_stream_read_page(&reader)
+                    })
+                    .await
+                    .map_err(HttpPoolError::Compute)?
+            })
+        }
+    }
+
+    impl AsyncHttpTransport for UreqStreamingHttpTransport {
+        fn begin(&self, ctx: &OperationContext, request: PoolHttpRequest) -> HttpTransportStart {
+            let cancellation = HttpBodyCancellationHandle::read_deadline(UREQ_HTTP_READ_TIMEOUT_MS);
+            let body_cancellation = cancellation.clone();
+            let cancelled = ctx.cancel.is_cancelled_now();
+            let agent = self.agent.clone();
+            let compute = self.compute.clone();
+            let runtime = self.runtime.clone();
+            let scope = self.scope.clone();
+            let connect_compute = compute.clone();
+            let connect_runtime = runtime.clone();
+            let connect_scope = scope.clone();
+            let connect_ctx = ctx.clone();
+            let body_ctx = ctx.clone();
+            let (terminal, terminal_guard) = semio_framework_os_services::HttpTransportTerminalHandle::pair();
+            let response = Box::pin(async move {
+                if cancelled {
+                    drop(terminal_guard);
+                    return Err(HttpPoolError::Transport("ureq HTTP request cancelled".into()));
+                }
+                let budget_ms = ureq_request_budget_ms(connect_ctx.deadline_ms, connect_runtime.now_ms().await);
+                let (head, reader) = connect_compute
+                    .run_io(connect_runtime.as_ref(), &connect_scope, connect_ctx, move || {
+                        let _terminal = terminal_guard;
+                        ureq_stream_start(&agent, request, Duration::from_millis(budget_ms))
+                    })
+                    .await
+                    .map_err(HttpPoolError::Compute)??;
+                let body: Box<dyn HttpBody> = Box::new(UreqStreamingHttpBody::new(Arc::new(Mutex::new(Some(reader))), cancellation, compute, runtime, scope, body_ctx));
+                Ok((head, body))
+            });
+            HttpTransportStart::new(body_cancellation, terminal, response)
+        }
+    }
+
+    fn ureq_stream_start(agent: &ureq::Agent, request: PoolHttpRequest, budget: Duration) -> Result<(HttpResponseHead, UreqBodyReader), HttpPoolError> {
+        if request.url.len() > UREQ_HTTP_URL_BYTES || request.headers.len() > UREQ_HTTP_HEADER_ITEMS || request.body.len() > UREQ_HTTP_REQUEST_BODY_BYTES {
+            return Err(HttpPoolError::Transport("ureq HTTP request exceeded fixed credits".into()));
+        }
+        let mut header_bytes = 0usize;
+        for (name, value) in &request.headers {
+            if name.bytes().any(|byte| byte <= b' ' || byte == b':') || value.bytes().any(|byte| byte == b'\r' || byte == b'\n') {
+                return Err(HttpPoolError::Transport("ureq HTTP request contained invalid header bytes".into()));
+            }
+            header_bytes = header_bytes
+                .checked_add(name.len())
+                .and_then(|total| total.checked_add(value.len()))
+                .and_then(|total| total.checked_add(4))
+                .filter(|total| *total <= UREQ_HTTP_HEADER_BYTES)
+                .ok_or_else(|| HttpPoolError::Transport("ureq HTTP request headers exceeded fixed credits".into()))?;
+        }
+        let _ = header_bytes;
+        let response = {
+            let mut builder = match request.method.as_str() {
+                "GET" => agent.get(&request.url),
+                "POST" => agent.post(&request.url),
+                other => return Err(HttpPoolError::Transport(format!("ureq HTTP transport does not admit method {other}"))),
+            };
+            builder = builder.timeout(budget);
+            for (name, value) in &request.headers {
+                builder = builder.set(name, value);
+            }
+            let outcome = if request.body.is_empty() { builder.call() } else { builder.set("Content-Type", "application/json").send_bytes(&request.body) };
+            match outcome {
+                Ok(response) => response,
+                Err(ureq::Error::Status(_, response)) => response,
+                Err(error) => return Err(HttpPoolError::Transport(error.to_string())),
+            }
+        };
+        let status = response.status();
+        let mut headers = Vec::with_capacity(4);
+        let mut response_header_bytes = 0usize;
+        for name in ["Content-Length", "Content-Type", "ETag", "Last-Modified"] {
+            if let Some(value) = response.header(name) {
+                response_header_bytes = response_header_bytes
+                    .checked_add(name.len())
+                    .and_then(|total| total.checked_add(value.len()))
+                    .filter(|total| *total <= UREQ_HTTP_HEADER_BYTES)
+                    .ok_or_else(|| HttpPoolError::Transport("ureq HTTP response headers exceeded fixed credits".into()))?;
+                headers.push((name.to_string(), value.to_string()));
+            }
+        }
+        Ok((HttpResponseHead { status, headers }, response.into_reader()))
+    }
+
+    #[doc(hidden)] pub fn ureq_stream_read_page(reader: &Arc<Mutex<Option<UreqBodyReader>>>) -> Result<Option<Vec<u8>>, HttpPoolError> {
+        let mut slot = reader.lock().map_err(|_| HttpPoolError::Transport("ureq HTTP body lock poisoned".into()))?;
+        let body = slot.as_mut().ok_or_else(|| HttpPoolError::Transport("ureq HTTP body reached terminal ownership".into()))?;
+        let mut page = vec![0u8; UREQ_HTTP_BODY_PAGE_BYTES];
+        let count = body.read(&mut page).map_err(|error| HttpPoolError::Transport(error.to_string()))?;
+        if count == 0 {
+            slot.take();
+            return Ok(None);
+        }
+        page.truncate(count);
+        Ok(Some(page))
+    }
+
+    async fn http_method_str(method: HttpMethod) -> &'static str {
+        match method {
+            HttpMethod::Get => "GET",
+            HttpMethod::Post => "POST",
+        }
+    }
+
+    type TungsteniteStream = tungstenite::WebSocket<MaybeTlsStream<TcpStream>>;
+
+    pub struct TungsteniteConnection(TungsteniteStream);
+
+    /// 📬️ One nonblocking receive that KEEPS binary frames, unlike
+    /// [`DirectoryWsConnection::try_recv_text`], which skips them because the directory endpoint's
+    /// own wire is text JSON. Ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W15e: the MCP agent
+    /// bridge's whole wire is binary (`🌉️mcp/🧵️bridge`'s length-prefixed frames), so a consumer that
+    /// dropped `Message::Binary` would see an eternally silent socket.
+    #[derive(Clone, Debug, PartialEq, Eq)]
+    pub enum NativeWsPoll {
+        Text(String),
+        Binary(Vec<u8>),
+        Pending,
+        Closed(Option<u16>),
+    }
+
+    impl TungsteniteConnection {
+        /// 📬️ Bounded nonblocking receive: at most eight control frames are skipped before yielding,
+        /// the same ceiling `try_recv_text` uses, so malformed traffic cannot monopolize a turn.
+        pub fn try_recv_any(&mut self) -> Result<NativeWsPoll, TransportError> {
+            for _ in 0..8 {
+                match self.0.read() {
+                    Ok(Message::Text(text)) => return Ok(NativeWsPoll::Text(text.to_string())),
+                    Ok(Message::Binary(bytes)) => return Ok(NativeWsPoll::Binary(bytes.to_vec())),
+                    Ok(Message::Close(frame)) => return Ok(NativeWsPoll::Closed(frame.map(|frame| u16::from(frame.code)))),
+                    Ok(Message::Ping(_) | Message::Pong(_) | Message::Frame(_)) => {}
+                    Err(tungstenite::Error::Io(error)) if error.kind() == std::io::ErrorKind::WouldBlock => return Ok(NativeWsPoll::Pending),
+                    Err(tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed) => return Ok(NativeWsPoll::Closed(None)),
+                    Err(error) => return Err(TransportError::Io(error.to_string())),
+                }
+            }
+            Ok(NativeWsPoll::Pending)
+        }
+    }
+
+    impl DirectoryWsConnection for TungsteniteConnection {
+        fn send_text(&mut self, text: String) -> Result<(), TransportError> {
+            self.0.send(Message::Text(text.into())).map_err(|error| TransportError::Io(error.to_string()))
+        }
+
+        fn send_binary(&mut self, bytes: Vec<u8>) -> Result<(), TransportError> {
+            self.0.send(Message::Binary(bytes.into())).map_err(|error| TransportError::Io(error.to_string()))
+        }
+
+        fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> {
+            for _ in 0..8 {
+                match self.0.read() {
+                    Ok(Message::Text(text)) => return Ok(DirectoryWsPoll::Text(text.to_string())),
+                    Ok(Message::Close(frame)) => return Ok(DirectoryWsPoll::Closed(frame.map(|frame| u16::from(frame.code)))),
+                    Ok(Message::Ping(_) | Message::Pong(_) | Message::Binary(_) | Message::Frame(_)) => {}
+                    Err(tungstenite::Error::Io(error)) if error.kind() == std::io::ErrorKind::WouldBlock => return Ok(DirectoryWsPoll::Pending),
+                    Err(tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed) => return Ok(DirectoryWsPoll::Closed(None)),
+                    Err(error) => return Err(TransportError::Io(error.to_string())),
+                }
+            }
+            Ok(DirectoryWsPoll::Pending)
+        }
+
+        fn close(&mut self) {
+            let _ = self.0.close(None);
+        }
+    }
+
+    /// 🚀️ A `DirectoryTransport` for the wgpu native host and native tests. `runtime`/`scope`/
+    /// `http_pool` are INJECTED, never constructed by this crate — `TokioHostRuntime` stays
+    /// confined to `semio-framework-os-services` (this crate names no tokio type anywhere; see the
+    /// packet report's `## tokio-containment evidence`), and one `HttpPool` belongs to the WHOLE
+    /// host process (its byte budget/outstanding cap are per-package/per-actor accounting,
+    /// meaningless re-created fresh per client). The ideal caller is whoever already owns the host
+    /// process's single `TokioHostRuntime`/`HttpPool` — seeded via `with_new_http_pool` below if a
+    /// caller has a runtime/scope/`ComputePool` but wants its own pool. `Clone` (every field is
+    /// itself cheap to clone — `Arc`/`ScopeHandle`/`PackageId`/`Copy` `ActorId`) so a host that
+    /// wants several `DirectoryClient`s sharing the SAME pool/quota bucket can build one transport
+    /// once and `.clone()` it per client, rather than re-deriving the pool per client.
+    pub struct NativeDirectoryTransport<R: HostAsyncRuntime> {
+        runtime: Arc<R>,
+        scope: ScopeHandle,
+        http_pool: Arc<HttpPool>,
+        package: PackageId,
+        actor: ActorId,
+    }
+
+    impl<R: HostAsyncRuntime> Clone for NativeDirectoryTransport<R> {
+        fn clone(&self) -> Self {
+            Self { runtime: Arc::clone(&self.runtime), scope: self.scope.clone(), http_pool: Arc::clone(&self.http_pool), package: self.package.clone(), actor: self.actor }
+        }
+    }
+
+    impl<R: HostAsyncRuntime> NativeDirectoryTransport<R> {
+        pub async fn new(runtime: Arc<R>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
+            Self::new_now(runtime, scope, http_pool, package, actor)
+        }
+
+        pub fn new_now(runtime: Arc<R>, scope: ScopeHandle, http_pool: Arc<HttpPool>, package: PackageId, actor: ActorId) -> Self {
+            Self { runtime, scope, http_pool, package, actor }
+        }
+
+        /// 💰️ This transport's package byte budget right now (see [`HttpPool::package_budget_now`]).
+        pub fn network_budget(&self) -> semio_framework_os_services::HttpPackageBudget {
+            self.http_pool.package_budget_now(&self.package)
+        }
+
+        /// 🛡️ Starts one protected bounded binary GET without exposing bearer text to the caller.
+        pub async fn fetch_protected_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, url: &str, accept: &str) -> Result<(HttpResponseHead, semio_framework_os_services::HttpPoolBody), TransportError>
+        where
+            R: 'static,
+        {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let origin = credential.hub_origin().trim_end_matches('/');
+            if !url.strip_prefix(origin).is_some_and(|path| path.starts_with('/') && !path.starts_with("//")) || !matches!(accept, "application/vnd.semio.canonical-checkpoint-pair.v1") {
+                return Err(TransportError::Io("protected binary request authority mismatch".into()));
+            }
+            let bearer = credential.capability().map_err(|_| TransportError::Io("protected binary credential was invalid".into()))?;
+            let request = PoolHttpRequest { method: "GET".to_string(), url: url.to_string(), headers: vec![("Authorization".to_string(), format!("Bearer {bearer}")), ("Accept".to_string(), accept.to_string())], body: Vec::new() };
+            self.http_pool.fetch(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await.map_err(|error| pool_stream_error(ctx, error))
+        }
+
+        /// 🧩️ Starts one protected execution-target COMPONENT stream for `intent`: the plugin wasm the hub selected for that
+        /// document, handed over chunk by chunk as it arrives, so a caller reports its progress, verifies it against the lease
+        /// and keeps it. A component is an immutable, catalog-verified, content-addressed asset, so it belongs on a transport of
+        /// its own whose bytes the per-minute budget of the directory's API requests never meters (the semio MCP gateway's
+        /// asset transport); the route is built from the intent and the credential's own origin, never from a caller's URL.
+        pub async fn execution_target_component_stream(&self, ctx: &OperationContext, credential: &LocalHubCredential, intent: &super::DocumentOpenIntentV1) -> Result<(HttpResponseHead, semio_framework_os_services::HttpPoolBody), TransportError>
+        where
+            R: 'static,
+        {
+            intent.validate().map_err(|_| TransportError::Io("document execution-target intent is invalid".into()))?;
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let bearer = credential.capability().map_err(|_| TransportError::Io("protected asset credential was invalid".into()))?;
+            let url = format!(
+                "{}/spaces/{}/documents/{}/execution-target/component",
+                credential.hub_origin().trim_end_matches('/'),
+                super::encode_url_component(&intent.scope.space_id),
+                super::encode_url_component(&intent.scope.document_id)
+            );
+            let request = PoolHttpRequest { method: "POST".to_string(), url, headers: vec![("Authorization".to_string(), format!("Bearer {bearer}"))], body: semio_framework_pack_json::to_json_string(intent).into_bytes() };
+            self.http_pool.fetch(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await.map_err(|error| pool_stream_error(ctx, error))
+        }
+    }
+
+    /// 🚦️ A pooled stream's start failure on the transport's closed errors.
+    fn pool_stream_error(ctx: &OperationContext, error: HttpPoolError) -> TransportError {
+        match error {
+            HttpPoolError::Compute(ComputeError::DeadlineExceeded) => TransportError::DeadlineExceeded,
+            HttpPoolError::ByteBudgetExhausted { .. } => TransportError::BudgetExhausted,
+            _ if ctx.cancel.is_cancelled_now() => TransportError::Cancelled,
+            other => TransportError::Io(other.to_string()),
+        }
+    }
+
+    //#region 💡️Inference
+    impl<R: HostAsyncRuntime> NativeDirectoryTransport<R> {
+        /// 🛡️ Issues one protected bounded JSON request without ever exposing bearer text to the
+        /// caller — the small-body twin of [`NativeDirectoryTransport::fetch_protected_stream`], for
+        /// hub routes whose request and response are closed JSON documents rather than a stream.
+        /// The URL must be an exact path under the credential's own origin, so a caller can never
+        /// redirect a protected credential at a foreign host.
+        pub async fn request_protected_json(&self, ctx: &OperationContext, credential: &LocalHubCredential, method: HttpMethod, url: &str, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError>
+        where
+            R: 'static,
+        {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let origin = credential.hub_origin().trim_end_matches('/');
+            if !url.strip_prefix(origin).is_some_and(|path| path.starts_with('/') && !path.starts_with("//")) {
+                return Err(TransportError::Io("protected json request authority mismatch".into()));
+            }
+            let bearer = credential.capability().map_err(|_| TransportError::Io("protected json credential was invalid".into()))?;
+            self.http(ctx, method, url, Some(bearer), body).await
+        }
+    }
+    //#endregion 💡️Inference
+
+    impl NativeDirectoryTransport<TokioHostRuntime> {
+        pub async fn with_new_http_pool(runtime: Arc<TokioHostRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
+            Self::with_new_http_pool_now(runtime, scope, compute, bytes_per_minute_cap, outstanding_cap, package, actor)
+        }
+
+        /// 🔁️ A transport over its own fresh [`HttpPool`] whose per-package byte budget refills every
+        /// [`HTTP_BUCKET_REFILL_INTERVAL_MS`] on the runtime's worker pool. Without that driver the "per minute"
+        /// budget was a lifetime one: a long-lived client (the semio MCP gateway, a wgpu shell's directory
+        /// client) that had moved `bytes_per_minute_cap` bytes answered every later request with an exhausted
+        /// budget, forever (ticket 26/09/23, session 14b).
+        pub fn with_new_http_pool_now(runtime: Arc<TokioHostRuntime>, scope: ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, package: PackageId, actor: ActorId) -> Self {
+            let http_pool = refilled_http_pool(&runtime, &scope, compute, bytes_per_minute_cap, outstanding_cap, HTTP_BUCKET_REFILL_INTERVAL_MS);
+            Self::new_now(runtime, scope, http_pool, package, actor)
+        }
+    }
+
+    /// 🚰️ One fresh [`HttpPool`] over the ureq streaming transport whose refill driver already runs on
+    /// `runtime`'s worker pool every `refill_interval_ms`.
+    #[doc(hidden)] pub fn refilled_http_pool(runtime: &Arc<TokioHostRuntime>, scope: &ScopeHandle, compute: Arc<ComputePool>, bytes_per_minute_cap: u64, outstanding_cap: u32, refill_interval_ms: u64) -> Arc<HttpPool> {
+        let transport: Arc<dyn AsyncHttpTransport> = Arc::new(UreqStreamingHttpTransport::new(compute, runtime.clone(), scope.clone()));
+        let http_pool = Arc::new(HttpPool::new_with_async_transport_now(transport, bytes_per_minute_cap, outstanding_cap));
+        http_pool.spawn_refill_driver(runtime.worker_pool(), refill_interval_ms);
+        http_pool
+    }
+
+    impl<R: HostAsyncRuntime + 'static> NativeDirectoryTransport<R> {
+        /// 🌊️ One request through the pooled HTTP lane, its pool failures mapped onto the transport's closed errors.
+        async fn pool_request(&self, ctx: &OperationContext, request: PoolHttpRequest) -> Result<HttpResponse, TransportError> {
+            match self.http_pool.request(self.runtime.as_ref(), &self.scope, ctx.clone(), self.package.clone(), self.actor, request).await {
+                Ok(response) => Ok(HttpResponse { status: response.status, body: response.body }),
+                Err(error) => {
+                    let cancelled = matches!(error, HttpPoolError::Compute(ComputeError::WorkerLost)) && ctx.cancel.is_cancelled().await;
+                    Err(match error {
+                        HttpPoolError::Compute(ComputeError::DeadlineExceeded) => TransportError::DeadlineExceeded,
+                        HttpPoolError::ByteBudgetExhausted { .. } => TransportError::BudgetExhausted,
+                        _ if cancelled => TransportError::Cancelled,
+                        other => TransportError::Io(other.to_string()),
+                    })
+                }
+            }
+        }
+    }
+
+    impl<R: HostAsyncRuntime + 'static> DirectoryTransport for NativeDirectoryTransport<R> {
+        type Ws = TungsteniteConnection;
+        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let mut headers = Vec::new();
+            if let Some(token) = bearer {
+                headers.push(("Authorization".to_string(), format!("Bearer {token}")));
+            }
+            let request = PoolHttpRequest { method: http_method_str(method).await.to_string(), url: url.to_string(), headers, body: body.unwrap_or_default() };
+            self.pool_request(ctx, request).await
+        }
+
+        async fn get_accepting(&self, ctx: &OperationContext, url: &str, bearer: Option<&str>, accept: &str) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let mut headers = vec![("Accept".to_string(), accept.to_string())];
+            if let Some(token) = bearer {
+                headers.push(("Authorization".to_string(), format!("Bearer {token}")));
+            }
+            self.pool_request(ctx, PoolHttpRequest { method: "GET".to_string(), url: url.to_string(), headers, body: Vec::new() }).await
+        }
+
+        fn issue_socket_grant(&self, ctx: &OperationContext, url: &str, bearer: &str, body: &[u8], timeout_ms: u64) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled_now() {
+                return Err(TransportError::Cancelled);
+            }
+            let timeout = Duration::from_millis(timeout_ms.max(1));
+            let agent = ureq::AgentBuilder::new().timeout_connect(timeout).timeout_read(timeout).timeout_write(timeout).build();
+            let authorization = super::WipeSecretText(format!("Bearer {bearer}"));
+            let response = match agent.post(url).set("Authorization", &authorization.0).set("Content-Type", "application/json").send_bytes(body) {
+                Ok(response) => response,
+                Err(ureq::Error::Status(_, response)) => response,
+                Err(error) => return Err(TransportError::Io(error.to_string())),
+            };
+            let status = response.status();
+            let mut body = Vec::new();
+            response.into_reader().take((super::DOCUMENT_ADMISSION_RESPONSE_MAX_BYTES + 1) as u64).read_to_end(&mut body).map_err(|error| TransportError::Io(error.to_string()))?;
+            Ok(HttpResponse { status, body })
+        }
+
+        fn open_ws(&self, ctx: &OperationContext, url: &str, protocols: &[String], timeout_ms: u64) -> Result<Self::Ws, TransportError> {
+            if protocols.len() != 2 || protocols[0] != "semio.socket.v1" || !super::valid_socket_grant(&protocols[1]) {
+                return Err(TransportError::Io("directory websocket protocol offer invalid".into()));
+            }
+            open_client_ws(ctx, url, protocols, timeout_ms, Some("semio.socket.v1"))
+        }
+    }
+
+    /// 🔌️ ONE native websocket dial, with the directory's own grant policy lifted OUT of it (ticket
+    /// 26/09/17/WGPU-RENDERER-REACT-PARITY packet W15e). The directory transport keeps its
+    /// `semio.socket.v1` + grant assertion above and calls this; the wgpu shell's MCP agent bridge
+    /// calls it with `semio.mcp.bridge.v1` + its supervisor's admission proof.
+    ///
+    /// ⚖️ Extracted rather than duplicated: the non-blocking-socket setup, the per-address connect
+    /// timeout and the TLS-stream arms are the parts a second caller would get subtly wrong, and a
+    /// second copy of them is exactly the kind of drift the directory lane already paid for once.
+    /// `expect_protocol` is the subprotocol the server MUST have negotiated — `None` accepts whatever
+    /// it answered, for an endpoint that negotiates none.
+    pub fn open_client_ws(ctx: &OperationContext, url: &str, protocols: &[String], timeout_ms: u64, expect_protocol: Option<&str>) -> Result<TungsteniteConnection, TransportError> {
+        if ctx.cancel.is_cancelled_now() {
+            return Err(TransportError::Cancelled);
+        }
+        let mut request = url.into_client_request().map_err(|error| TransportError::Io(error.to_string()))?;
+        if !protocols.is_empty() {
+            request.headers_mut().insert("Sec-WebSocket-Protocol", protocols.join(", ").parse().map_err(|_| TransportError::Io("websocket protocol header invalid".into()))?);
+        }
+        let host = request.uri().host().ok_or_else(|| TransportError::Io("websocket URL has no host".to_string()))?.to_string();
+        let port = request.uri().port_u16().unwrap_or_else(|| if request.uri().scheme_str() == Some("wss") { 443 } else { 80 });
+        let timeout = Duration::from_millis(timeout_ms.max(1));
+        let addresses = (host.as_str(), port).to_socket_addrs().map_err(|error| TransportError::Io(error.to_string()))?;
+        let mut tcp = None;
+        for address in addresses {
+            if ctx.cancel.is_cancelled_now() {
+                return Err(TransportError::Cancelled);
+            }
+            if let Ok(stream) = TcpStream::connect_timeout(&address, timeout) {
+                tcp = Some(stream);
+                break;
+            }
+        }
+        let tcp = tcp.ok_or_else(|| TransportError::Io(format!("unable to connect to {host}:{port}")))?;
+        tcp.set_read_timeout(Some(timeout)).map_err(|error| TransportError::Io(error.to_string()))?;
+        tcp.set_write_timeout(Some(timeout)).map_err(|error| TransportError::Io(error.to_string()))?;
+        let (mut socket, response) = tungstenite::client_tls(request, tcp).map_err(|error| TransportError::Io(error.to_string()))?;
+        if let Some(expected) = expect_protocol {
+            if response.headers().get("Sec-WebSocket-Protocol").and_then(|value| value.to_str().ok()) != Some(expected) {
+                return Err(TransportError::Io("websocket protocol negotiation invalid".into()));
+            }
+        }
+        match socket.get_mut() {
+            MaybeTlsStream::Plain(stream) => stream.set_nonblocking(true).map_err(|error| TransportError::Io(error.to_string()))?,
+            MaybeTlsStream::Rustls(stream) => stream.sock.set_nonblocking(true).map_err(|error| TransportError::Io(error.to_string()))?,
+            _ => return Err(TransportError::Io("nonblocking TLS sockets are not enabled".to_string())),
+        }
+        Ok(TungsteniteConnection(socket))
+    }
+}
+
+/// 🌉️ Browser wgpu build seam: `web_sys::WebSocket`/`fetch` transport, kept coherent with
+/// `🏪️store/🔄️sync`'s own `wasm_actor` precedent (event-callback bridged into an `async`-shaped
+/// interface via an unbounded channel) so a future in-wasm host can link this client. NOT the
+/// production browser path today — the React shell uses lane 1-C's TypeScript `DirectoryClient`
+/// (`🏪️store/🔄️sync`'s own module doc: "The production browser shell instead uses a TS twin").
+// 🌉️ `target_arch = "wasm32"` is TRUE for `wasm32-wasip2` too, and this bridge is browser-only,
+// so it is narrowed to exclude the WASI component target.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+pub mod browser {
+    use super::{DirectoryTransport, DirectoryWsConnection, DirectoryWsPoll, HttpMethod, HttpResponse, TransportError};
+    use semio_framework_async::browser::JsFuture;
+    use semio_framework_async::OperationContext;
+    use wasm_bindgen::prelude::*;
+    use wasm_bindgen::JsCast;
+    use web_sys::{BinaryType, CloseEvent, MessageEvent, RequestInit, Response, WebSocket};
+
+    enum BrowserDirectoryFrame {
+        Text(String),
+        Closed(Option<u16>),
+    }
+
+    #[derive(Clone)]
+    pub struct BrowserDirectoryTransport;
+
+    impl Default for BrowserDirectoryTransport {
+        fn default() -> Self {
+            Self
+        }
+    }
+
+    impl DirectoryTransport for BrowserDirectoryTransport {
+        type Ws = BrowserWsConnection;
+        async fn http(&self, ctx: &OperationContext, method: HttpMethod, url: &str, bearer: Option<&str>, body: Option<Vec<u8>>) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let window = web_sys::window().ok_or_else(|| TransportError::Io("no window".to_string()))?;
+            let init = RequestInit::new();
+            init.set_method(match method {
+                HttpMethod::Get => "GET",
+                HttpMethod::Post => "POST",
+            });
+            if let Some(bytes) = &body {
+                let array = js_sys::Uint8Array::from(bytes.as_slice());
+                init.set_body(&array);
+            }
+            let request = web_sys::Request::new_with_str_and_init(url, &init).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            if let Some(token) = bearer {
+                request.headers().set("Authorization", &format!("Bearer {token}")).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            }
+            let response_value = JsFuture::from(window.fetch_with_request(&request)).await.map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            let response: Response = response_value.dyn_into().map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            let status = response.status();
+            let array_buffer = JsFuture::from(response.array_buffer().map_err(|error| TransportError::Io(format!("{error:?}")))?).await.map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            let bytes = js_sys::Uint8Array::new(&array_buffer).to_vec();
+            Ok(HttpResponse { status, body: bytes })
+        }
+
+        async fn get_accepting(&self, ctx: &OperationContext, url: &str, bearer: Option<&str>, accept: &str) -> Result<HttpResponse, TransportError> {
+            if ctx.cancel.is_cancelled().await {
+                return Err(TransportError::Cancelled);
+            }
+            let window = web_sys::window().ok_or_else(|| TransportError::Io("no window".to_string()))?;
+            let init = RequestInit::new();
+            init.set_method("GET");
+            let request = web_sys::Request::new_with_str_and_init(url, &init).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            request.headers().set("Accept", accept).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            if let Some(token) = bearer {
+                request.headers().set("Authorization", &format!("Bearer {token}")).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            }
+            let response: Response = JsFuture::from(window.fetch_with_request(&request)).await.map_err(|error| TransportError::Io(format!("{error:?}")))?.dyn_into().map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            let status = response.status();
+            let array_buffer = JsFuture::from(response.array_buffer().map_err(|error| TransportError::Io(format!("{error:?}")))?).await.map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            Ok(HttpResponse { status, body: js_sys::Uint8Array::new(&array_buffer).to_vec() })
+        }
+
+        fn issue_socket_grant(&self, _ctx: &OperationContext, _url: &str, _bearer: &str, _body: &[u8], _timeout_ms: u64) -> Result<HttpResponse, TransportError> {
+            Err(TransportError::Io("browser directory socket issuance requires the TypeScript credential relay".into()))
+        }
+
+        fn open_ws(&self, ctx: &OperationContext, url: &str, protocols: &[String], _timeout_ms: u64) -> Result<Self::Ws, TransportError> {
+            if ctx.cancel.is_cancelled_now() {
+                return Err(TransportError::Cancelled);
+            }
+            let protocol_values = js_sys::Array::new();
+            for protocol in protocols {
+                protocol_values.push(&JsValue::from_str(protocol));
+            }
+            let socket = WebSocket::new_with_str_sequence(url, &protocol_values).map_err(|error| TransportError::Io(format!("{error:?}")))?;
+            socket.set_binary_type(BinaryType::Blob);
+            let (incoming_tx, incoming_rx) = tokio::sync::mpsc::unbounded_channel::<BrowserDirectoryFrame>();
+            let message_tx = incoming_tx.clone();
+            let onmessage = Closure::wrap(Box::new(move |event: MessageEvent| {
+                if let Some(text) = event.data().as_string() {
+                    let _ = message_tx.send(BrowserDirectoryFrame::Text(text));
+                }
+            }) as Box<dyn FnMut(MessageEvent)>);
+            let onclose = Closure::wrap(Box::new(move |event: CloseEvent| {
+                let _ = incoming_tx.send(BrowserDirectoryFrame::Closed(Some(event.code())));
+            }) as Box<dyn FnMut(CloseEvent)>);
+            socket.set_onmessage(Some(onmessage.as_ref().unchecked_ref()));
+            socket.set_onclose(Some(onclose.as_ref().unchecked_ref()));
+            Ok(BrowserWsConnection { socket, _onmessage: onmessage, _onclose: onclose, incoming_rx })
+        }
+    }
+
+    pub struct BrowserWsConnection {
+        socket: WebSocket,
+        _onmessage: Closure<dyn FnMut(MessageEvent)>,
+        _onclose: Closure<dyn FnMut(CloseEvent)>,
+        incoming_rx: tokio::sync::mpsc::UnboundedReceiver<BrowserDirectoryFrame>,
+    }
+
+    impl DirectoryWsConnection for BrowserWsConnection {
+        fn send_text(&mut self, text: String) -> Result<(), TransportError> {
+            self.socket.send_with_str(&text).map_err(|error| TransportError::Io(format!("{error:?}")))
+        }
+
+        fn send_binary(&mut self, bytes: Vec<u8>) -> Result<(), TransportError> {
+            self.socket.send_with_u8_array(&bytes).map_err(|error| TransportError::Io(format!("{error:?}")))
+        }
+
+        fn try_recv_text(&mut self) -> Result<DirectoryWsPoll, TransportError> {
+            match self.incoming_rx.try_recv() {
+                Ok(BrowserDirectoryFrame::Text(text)) => Ok(DirectoryWsPoll::Text(text)),
+                Ok(BrowserDirectoryFrame::Closed(code)) => Ok(DirectoryWsPoll::Closed(code)),
+                Err(tokio::sync::mpsc::error::TryRecvError::Empty) => Ok(DirectoryWsPoll::Pending),
+                Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => Ok(DirectoryWsPoll::Closed(None)),
+            }
+        }
+
+        fn close(&mut self) {
+            let _ = self.socket.close();
+        }
+    }
+}
+//#endregion 🔖️Native
+
+//#region 🌱️SpaceArtifactCreation
+#[path = "🌱️space-artifact-creation/🦀️.rs"]
+mod space_artifact_creation;
+
+#[path = "📌️document-check-in/🦀️.rs"]
+mod document_check_in;
+
+#[path = "🪢️canonical-checkpoint-pair/🦀️.rs"]
+mod canonical_checkpoint_pair;
+pub use canonical_checkpoint_pair::{canonical_checkpoint_pair_path, CANONICAL_CHECKPOINT_PAIR_TRANSIENT_ATTEMPTS, CANONICAL_CHECKPOINT_PAIR_TRANSIENT_STATUSES};
+//#endregion 🌱️SpaceArtifactCreation
+
+//#region 🤖️AgentDelegations
+#[path = "🤖️agent-delegations/🦀️.rs"]
+pub mod agent_delegations;
+//#endregion 🤖️AgentDelegations
+
+//#region 🧩️ExecutionTargetModule
+#[path = "🧩️execution-target-module/🦀️.rs"]
+mod execution_target_module;
+pub use execution_target_module::*;
+//#endregion 🧩️ExecutionTargetModule
+
+#[path = "🌐️document-http/🦀️.rs"]
+pub mod document_http;

@@ -907,10 +907,10 @@ pub struct RasterSyncCache {
  * viewport/theme keys the host is sized and coloured by — the wgpu twin of `TextEditorHost`'s
  * `sceneRef`. */
 #[derive(Default)]
-struct EditorSyncCache {
-    pub(super) scene_json: Option<String>,
-    pub(super) theme_json: Option<String>,
-    pub(super) size_key: Option<String>,
+pub struct EditorSyncCache {
+    pub scene_json: Option<String>,
+    pub theme_json: Option<String>,
+    pub size_key: Option<String>,
 }
 
 fn raster_sync_terminal(cache: &RasterSyncCache) -> bool {
@@ -1208,17 +1208,17 @@ pub struct TextEditorDeliveryState {
     pub pending_echoes: VecDeque<String>,
     acknowledged: Option<String>,
     pub read_only: bool,
-    selection_undeclared: bool,
-    pub(super) explicit_dirty: bool,
-    pub(super) explicit_base: Option<String>,
-    pub(super) explicit_changes: Option<String>,
-    pub(super) explicit_conflict: bool,
-    pub(super) explicit_past: VecDeque<String>,
-    pub(super) explicit_future: VecDeque<String>,
-    pub(super) explicit_snapshot: Option<String>,
-    pub(super) explicit_publication: Option<TextEditorDraftPublication>,
-    pub(super) explicit_active: Option<std::num::NonZeroU64>,
-    pub(super) explicit_error: Option<String>,
+    pub selection_undeclared: bool,
+    pub explicit_dirty: bool,
+    pub explicit_base: Option<String>,
+    pub explicit_changes: Option<String>,
+    pub explicit_conflict: bool,
+    pub explicit_past: VecDeque<String>,
+    pub explicit_future: VecDeque<String>,
+    pub explicit_snapshot: Option<String>,
+    pub explicit_publication: Option<TextEditorDraftPublication>,
+    pub explicit_active: Option<std::num::NonZeroU64>,
+    pub explicit_error: Option<String>,
     pub typing: Option<TextEditorTypingRun>,
     pub typing_end: Option<TextEditorTypingEnd>,
 }
@@ -1250,7 +1250,7 @@ impl TextEditorDeliveryState {
 
     /// 🏁️ Marks the open typing run (or the one its in-flight keystroke opens) to end for `end` once nothing is in flight;
     /// `false` when the editor neither types nor has a delivery in flight.
-    fn end_typing(&mut self, end: TextEditorTypingEnd) -> bool {
+    pub fn end_typing(&mut self, end: TextEditorTypingEnd) -> bool {
         let typing = self.typing.is_some() || self.active.is_some() || self.latest.is_some() || self.publication.is_some();
         if typing {
             self.typing_end = Some(end);

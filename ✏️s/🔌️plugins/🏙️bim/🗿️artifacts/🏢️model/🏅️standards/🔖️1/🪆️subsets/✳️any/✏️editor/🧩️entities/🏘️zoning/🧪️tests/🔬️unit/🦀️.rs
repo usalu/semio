@@ -1,15 +1,16 @@
 use crate::editor::bim::entities::{kind_of, kind_holding, ENTITIES};
-use super::{available_usages, available_zones, create_area_scheme, create_zone, write_scheme_zones};
+use crate::editor::bim::entities::zoning::{available_usages, available_zones, create_area_scheme, create_zone, write_scheme_zones};
 use crate::editor::bim::entities::FieldRow;
 use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, ModelSnapshot};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::editor::bim::terminology::BimLabels;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const ZONING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json");
+static ZONING: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json"));
 
 fn zoning() -> ModelSnapshot {
-    from_json_str(ZONING, JsonMemberPolicy::Reject).expect("the fixture decodes")
+    from_json_str((*ZONING), JsonMemberPolicy::Reject).expect("the fixture decodes")
 }
 
 fn field(kind: &str, key: &str) -> &'static FieldRow {

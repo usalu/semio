@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { existsSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import glob from "fast-glob";
+import { fixtureFacadeTargets } from "@semio-tech/framework/test/source-text";
 import { testBuiltTreeRetirementFixture } from "../../🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 
 import { fixedListStorageSelfTests } from "../../🧬️contract/🧪️tests/🔬️fixed-list-storage/🟦️.ts";
@@ -18,6 +19,8 @@ test("UI testing example folders belong beneath actual tests folders", () => {
   expect(actual).toEqual(oracle);
   expect(actual.length).toBeGreaterThan(400);
   for (const file of actual) {
+    const targets = fixtureFacadeTargets(file);
+    if (targets !== undefined && targets.every(target => parts(realpathSync(target)).includes("🧪️tests"))) continue;
     const path = parts(realpathSync(file));
     expect(path.indexOf("🧪️tests")).toBeGreaterThan(-1);
     expect(path.indexOf("🧪️tests")).toBeLessThan(path.indexOf("🧫️fixtures"));

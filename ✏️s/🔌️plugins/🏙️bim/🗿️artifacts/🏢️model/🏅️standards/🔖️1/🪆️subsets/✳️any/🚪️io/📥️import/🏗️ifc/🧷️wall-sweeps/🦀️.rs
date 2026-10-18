@@ -2,10 +2,10 @@
 //! restored exactly from the set. A member of another file has no authored record and is reported by the unsupported-class note.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcmember.htm>
 
-use super::data::{label, number};
-use super::reader::{text, Doc};
-use super::spatial::set_of;
-use super::Import;
+use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number};
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::set_of;
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
 use crate::standards::v1::subsets::any::schema::snapshot::{Profile, WallSide, WallSweep};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -39,6 +39,4 @@ pub fn read(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,4 +1,4 @@
-use super::{COMPONENT_INFERRED, COMPONENT_OVERRIDE_INFERRED, create_component, degrees_text, family_choices, host_choices, matching, placeable, system_choices, system_of, wall_mounted};
+use crate::editor::bim::entities::components::{COMPONENT_INFERRED, COMPONENT_OVERRIDE_INFERRED, create_component, degrees_text, family_choices, host_choices, matching, placeable, system_choices, system_of, wall_mounted};
 use crate::editor::bim::entities::InferredRow;
 use crate::standards::v1::subsets::any::schema::diff::Assigned;
 use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, MepSystem, ModelSnapshot, Point2};

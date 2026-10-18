@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/📖️read/🟦️.ts",
+  "consumer": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📜️history/🟦️.ts",
+  "forbidden": [
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📦️units/🏗️compiler/🔏️code/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts"
+  ],
+  "sourceSha256": "97dea75590ff2c25c9fd816ffbf87cfaa23f6dc83bcdd08831ba24b31a91be3e",
+  "sourceDigest": "535cbde4e49398d1acdafbe5d8b4e8c8d2722f6dee8ed9442d8f5053c32d1a58",
+  "maximumFiles": 256,
+  "maximumBytes": 16777216
+}

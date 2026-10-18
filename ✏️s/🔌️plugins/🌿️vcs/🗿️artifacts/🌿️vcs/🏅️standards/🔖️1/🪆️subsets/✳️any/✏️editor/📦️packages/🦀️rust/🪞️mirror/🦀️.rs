@@ -104,9 +104,6 @@ pub mod editor {
             #[path = "../../../🎮️commands/📝️text-edit/🦀️.rs"]
             pub mod text_edit;
 
-        #[cfg(test)]
-        #[path = "../../../🎮️commands/🧪️tests/🔬️unit/🦀️.rs"]
-        mod leaf_tests;
         }
         #[path = "."]
         pub mod modes {
@@ -122,9 +119,6 @@ pub mod editor {
                     #[path = "."]
                     pub mod history {
                         pub use semio_s_artifact_vcs_vcs_viewer::editor::vcs::modes::edit::windows::history::*;
-                        #[cfg(test)]
-                        #[path = "../../../🎭️modes/✏️edit/🪟️windows/📜️history/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                     }
                 }
             }

@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `DeleteSheet`: the sheet leaves in one sparse diff together with its viewports, its revision rows, its properties and classifications (see the shared cascade). The outcome carries a cascade note when more than the
 //! sheet leaves.
 
-use super::super::cascade;
-use super::DeleteSheet;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_sheet::DeleteSheet;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

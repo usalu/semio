@@ -38,6 +38,7 @@ semio-framework-os-renderer-wgpu-icon-host = { path = "../../../💠️icon-host
 semio-framework-os-renderer-wgpu-mailbox-core = { path = "../../../📬️mailbox-core/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️program-bridge/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-scene-canvas2d = { path = "../../../🎨️scene-canvas2d/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-actions = { path = "../../../🔀️shell-actions/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-pointer = { path = "../../../🖐️shell-pointer/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-view-chrome = { path = "../../../🍱️shell-view-chrome/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-ui-engine-focus = { path = "../../../👆️ui-engine-focus/📦️packages/🦀️rust" }

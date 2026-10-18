@@ -1,11 +1,11 @@
 import{lstat,open}from"node:fs/promises";
 import{constants}from"node:fs";
 import{dirname,resolve,relative,isAbsolute,sep}from"node:path";
-import{withArtifactDescriptorV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{withArtifactDescriptorV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl}from"../../../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import publicSchema from"./🧬️schema.json";
+import publicSchema from"./🧬️schema.json" with{type:"json"};
 const schema=JSON.parse(JSON.stringify(publicSchema))as typeof publicSchema;
 /** 📋️ Reads a closed retained-volume mapping before any system effect. */
 export function readNativeMetadataMappingV1(text:string):Readonly<Record<string,unknown>>{if(Buffer.byteLength(text)>schema.definitions.Protocol.const.maximumBytes)throw Error("Bounded Native metadata mapping required");const value:unknown=JSON.parse(text);if(validateJsonSchemaSubset(schema.definitions.Mapping,value,schema).length)throw Error("Closed Native metadata mapping required");return Object.freeze({...value as Record<string,unknown>});}

@@ -1,11 +1,11 @@
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
-/** 🏁️ Completes the default production graph after Nx has built or restored its deliverables. */
+/** 🏁️ Completes the default production graph after the build tool has built or restored its deliverables. */
 class CompleteScript extends Script {
   run(args: string[]): void {
     if (args.length) throw new Error("Select a build-<variant>-react-release target to build a specific production variant");
-    console.log("Nx production build complete: s/react/release");
+    console.log("Production build complete: s/react/release");
   }
 }
 

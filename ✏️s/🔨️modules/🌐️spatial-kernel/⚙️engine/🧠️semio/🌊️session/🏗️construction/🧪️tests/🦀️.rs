@@ -6,7 +6,7 @@ use semio_framework_value::{RetainedCloneGrant as Grant,RetainedCloneProgress as
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,(heap.requested_bytes,heap.released_bytes))}
 fn clock()->Option<u64>{Some(1000)}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
 fn stock(law:&serde_json::Value)->Grant{let row=&law["stock"];Grant{maximum_items:row["items"].as_u64().unwrap()as usize,maximum_copy_bytes:row["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:row["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:row["release"].as_u64().unwrap()as usize,maximum_depth:row["depth"].as_u64().unwrap()as usize}}
 fn original_caller(law:&serde_json::Value)->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(944),Generation(31),stock(law),clock,law["deadline"].as_u64().unwrap(),law["fuel"].as_u64().unwrap())}
 fn capture_close(capture:&mut SessionCapture,caller:&mut OriginalJobFixtureCaller,policy:Grant){

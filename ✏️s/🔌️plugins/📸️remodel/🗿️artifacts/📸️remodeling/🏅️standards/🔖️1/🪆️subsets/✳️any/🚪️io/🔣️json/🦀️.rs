@@ -76,5 +76,5 @@ fn tracks(value:&mut DslValue,decode:bool)->Result<(),String>{rows(value,track,d
 fn qc(value:&mut DslValue,decode:bool)->Result<(),String>{field(value,"reprojectionRmsPx",float64,decode)?;field(value,"gcpCheckpointRmse",float64,decode)?;field(value,"watertight",watertight,decode)?;field(value,"meanTrackLength",float32,decode)?;field(value,"registeredFrameRatio",float32,decode)?;field(value,"denseCoverageRatio",float32,decode)}
 fn results(value:&mut DslValue,decode:bool)->Result<(),String>{field(value,"sparse",sparse,decode)?;field(value,"dense",dense,decode)?;field(value,"mesh",mesh,decode)?;field(value,"trajectory",trajectory,decode)?;field(value,"tracks",tracks,decode)?;field(value,"qc",qc,decode)}
 
-pub(crate) fn convert(mut value:DslValue,decode:bool)->Result<DslValue,String>{field(&mut value,"streams",streams,decode)?;field(&mut value,"calibration",calibration,decode)?;field(&mut value,"params",params,decode)?;field(&mut value,"gcps",gcps,decode)?;field(&mut value,"results",results,decode)?;Ok(value)}
+pub fn convert(mut value:DslValue,decode:bool)->Result<DslValue,String>{field(&mut value,"streams",streams,decode)?;field(&mut value,"calibration",calibration,decode)?;field(&mut value,"params",params,decode)?;field(&mut value,"gcps",gcps,decode)?;field(&mut value,"results",results,decode)?;Ok(value)}
 

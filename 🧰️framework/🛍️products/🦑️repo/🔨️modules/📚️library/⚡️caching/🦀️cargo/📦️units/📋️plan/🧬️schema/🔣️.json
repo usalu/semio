@@ -3,6 +3,17 @@
   "$id": "https://semio.tech/schema/rust-unit-plan-v1",
   "$ref": "#/definitions/Plan",
   "definitions": {
+    "ArtifactBindings": {
+      "type": "array", "maxItems": 4096,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["unit", "semanticDigest", "artifactDigest"],
+        "properties": {
+          "unit": {"type": "string", "pattern": "^[a-z][a-z0-9_-]{0,79}$"},
+          "semanticDigest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+          "artifactDigest": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+        }
+      }
+    },
     "Policy": {
       "const": {
         "maximumBytes": 16777216,

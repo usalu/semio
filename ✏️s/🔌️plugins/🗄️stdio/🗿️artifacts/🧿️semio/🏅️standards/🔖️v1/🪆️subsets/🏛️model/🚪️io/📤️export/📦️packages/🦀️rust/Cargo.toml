@@ -21,6 +21,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-ifc-4-model = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-model = { workspace = true }
 # 🧩️ Capability Dependencies

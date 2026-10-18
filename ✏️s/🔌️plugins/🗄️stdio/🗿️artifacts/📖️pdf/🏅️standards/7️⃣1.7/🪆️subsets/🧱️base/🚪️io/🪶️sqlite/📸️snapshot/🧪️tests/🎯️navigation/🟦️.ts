@@ -2,8 +2,8 @@ import { pdfDestinationFromNativeJson,pdfActionFromNativeJson,pdfOutlineFromNati
 /** 🎯️ Independent SQLite queries validate every destination/action and containment order. */
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
-import type { PdfAction } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { parsePdfDestination,parsePdfAction,parsePdfOutlineItem } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfAction } from "../../../../../🧬️schema/📸️snapshot/🎯️navigation/🟦️.ts";
+import { parsePdfDestination, parsePdfAction, parsePdfOutlineItem } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection,PdfReader } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { writePdfDestination,readPdfDestination,writePdfAction,readPdfAction,pdfNavigationNumberColumns } from "../../🎯️navigation/🟦️.ts";

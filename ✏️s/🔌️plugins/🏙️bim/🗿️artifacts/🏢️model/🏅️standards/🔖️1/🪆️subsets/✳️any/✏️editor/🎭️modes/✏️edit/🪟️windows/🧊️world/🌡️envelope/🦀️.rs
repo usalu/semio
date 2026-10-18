@@ -3,7 +3,7 @@
 //! of the pick and the accessible alternative of the overlay. In U-value mode and with one placement the framework heatmap paints the same scale and draws its on-screen legend; in every case the legend is also the title of the
 //! annotation layer and the text of the overlay toggle. The overlay instances carry no interaction id: they are looked at, never picked.
 
-use super::config::BimWorldWindowConfig;
+use crate::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
 use crate::editor::bim::terminology::BimLabels;
 use crate::render::envelope::{self, Mode, Part};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
@@ -106,7 +106,7 @@ fn array(values: &[f64]) -> DslValue {
     DslValue::Array(values.iter().map(|value| DslValue::float(*value)).collect())
 }
 
-fn instance(id: &str, placement: crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement, mode: Mode) -> DslValue {
+pub fn instance(id: &str, placement: crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement, mode: Mode) -> DslValue {
     let (sin, cos) = (placement.rotation * 0.5).sin_cos();
     let label = both(|labels, german| legend_text(labels, german, mode));
     DslValue::object([
@@ -121,7 +121,7 @@ fn instance(id: &str, placement: crate::standards::v1::subsets::any::schema::inf
     ])
 }
 
-fn marker(part: &Part<'_>) -> World3dAnnotation {
+pub fn marker(part: &Part<'_>) -> World3dAnnotation {
     let text = both(|labels, german| surface_text(labels, german, part.surface));
     World3dAnnotation::marker(part.surface.id.clone(), envelope::to_world(part.placement, envelope::centre(part.surface)), text)
 }
@@ -154,6 +154,4 @@ pub fn overlay(snapshot: &ModelSnapshot, inference: &ModelInference, config: &Bi
 }
 //#endregion 🔖️Scene
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

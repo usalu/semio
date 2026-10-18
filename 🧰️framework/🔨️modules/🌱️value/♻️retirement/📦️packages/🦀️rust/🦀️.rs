@@ -28,5 +28,3 @@ pub use tickets::{factory_ticket_demands,close_factory_ticket};
 
 #[cfg(test)]
 pub use semio_framework_value_factory::{FactoryPayloadRetirement,FactoryRetirement,FactoryAuthority,FactoryChildTickets,FactoryChildSlot,FactoryRetirementTicket,FactoryRetirementAdmissionError,FactoryOwnedRetirement,factory_arc_birth_bytes,factory_retirement_frame_bytes,factory_constructor_birth_bytes};
-#[cfg(test)]
-pub use semio_framework_value_derive::FactoryPayloadRetirement;

@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetView`: an absolute `SetView` restoring the base value of exactly the fields the forward really changes, none when the view is absent or nothing changes.
 
-use super::SetView;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_view::SetView;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetView, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetView, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_view::SetView>,
+{
     let Some(record) = base.views.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetView, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetView(SetView::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetView::from_patch(payload.id.clone(), restore))]
 }

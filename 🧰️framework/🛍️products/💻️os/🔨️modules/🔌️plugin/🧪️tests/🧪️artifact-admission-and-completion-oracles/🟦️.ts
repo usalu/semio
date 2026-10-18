@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 type ArtifactAdmissionFixtureV1 = Readonly<{
   schema: string;
@@ -69,7 +70,7 @@ export function completionRejectionOracle(repoRoot?: string): number {
     for (const rows of [law.callers, law.reservedCallers]) {
       assert.equal(new Set(rows.map(row => row.family)).size, rows.length);
       for (const row of rows) {
-        const source:string = readFileSync(resolve(repoRoot, row.source), "utf8");
+        const source:string = readModuleTreeSource(resolve(repoRoot, row.source));
         const region:string|undefined = source.split(row.sourceStart, 2)[1]?.split(row.sourceEnd, 1)[0];
         assert(region !== undefined, `${row.family} current producer region is absent`);
         const guard = region.indexOf(row.terminalGuard), prepare = region.indexOf(row.completion), retain = region.indexOf(row.retainedOwner, prepare), close = region.indexOf(row.incrementalClose, retain);
@@ -80,7 +81,7 @@ export function completionRejectionOracle(repoRoot?: string): number {
         for (const owner of row.retainedPhysicalOwners) assert(region.includes(owner), `${row.family} lost original owner ${owner}`);
         assert.equal(region.includes(row.legacyLossToken), false, `${row.family} uses a lossy completion handoff`);
         for (const binding of row.bindings) {
-          const caller = readFileSync(resolve(repoRoot, binding.source), "utf8");
+          const caller = readModuleTreeSource(resolve(repoRoot, binding.source));
           for (const token of binding.tokens) assert(caller.includes(token), `${row.family} no longer delegates through ${binding.source}: ${token}`);
         }
       }

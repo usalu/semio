@@ -6,7 +6,9 @@ import { buildBudgetMs } from "../../../../../../../🔨️modules/🏃️proces
 /** 🧭️ `@semio-tech/repo-coordinator-go` router: `bun ./📜️script.ts build|test|dev`. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { goCoverageArgs, goLevelTestArgs, runCanonicalGoBuild, runRepositoryTestCommand } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { goCoverageArgs } from "../../../../📚️library/🧪️testing/📊️coverage/🟦️.ts";
+import { goLevelTestArgs } from "../../../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
+import { runCanonicalGoBuild, runCanonicalGoTests } from "../../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { daemonBudgetMs } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -38,11 +40,11 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    await runRepositoryTestCommand("go", ["test", "...", ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, PACKAGE_DIR), ...rest], { cwd: PACKAGE_DIR, env: coordinatorGoEnvironment(this.repoRoot) });
+    await runCanonicalGoTests(PACKAGE_DIR, [...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, PACKAGE_DIR), ...rest], { env: coordinatorGoEnvironment(this.repoRoot) });
   }
 }
 
-/** ▶️ Serves the coordinator artifact completed by the owning Nx build dependency. */
+/** ▶️ Serves the coordinator artifact completed by the owning build dependency. */
 class DevScript extends BundleScript {
   async run(): Promise<void> {
     const binary = coordinatorBinaryPath(this.repoRoot);

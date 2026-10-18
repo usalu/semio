@@ -3,7 +3,7 @@
 import { runArtifactRustPackageMain } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import {runArtifactRustTests} from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import {BundleScript} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {runRepositoryTestCommand} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts";
+import {runRepositoryTestCommand} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
 import {runRepositoryCommand} from "../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import {resolve} from "node:path";
 /** 🪶️ Runs the authored Run ownership laws through the existing task budgets. */

@@ -1265,7 +1265,6 @@ name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d-booleans",
- "semio-framework-2d-compute",
  "semio-framework-2d-engine",
  "semio-framework-2d-path-flatten",
  "semio-framework-2d-path-stroke",
@@ -3581,7 +3580,7 @@ name = "semio-framework-plugin-decl-app"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-composition-admission",
@@ -3668,7 +3667,7 @@ name = "semio-framework-plugin-decl-surface"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-composition-admission",
@@ -4602,7 +4601,7 @@ name = "semio-framework-plugin-testing-laws"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-composition-admission",
  "semio-framework-diagnostic",
@@ -5933,7 +5932,7 @@ name = "semio-s-artifact-trinity-jack-executor"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-action-bus",
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-reference",
@@ -6080,7 +6079,7 @@ name = "semio-s-artifact-trinity-jack-jack"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-action-bus",
  "semio-framework-artifact-flow-flow",
  "semio-framework-artifact-reference",

@@ -60,24 +60,23 @@ test("both actual providers select the lower reader without sibling or higher as
 test("the entire retained mutation source and original reader callers preserve exact fresh bytes", () => {
   const dxf = contract.originals.find(({ path }) => path === contract.functions[0]!.source)!;
   const source = read(dxf.path);
-  expect(source).toContain("mod reference_support");
+  expect(source).toContain(`use ${contract.library}::reference_support;`);
   expect(source).not.toContain("pub fn project_dxf_r12");
-  expect(inspectRustCompileReferences(source).some(({ path }) => path.endsWith("🧰️support/🦀️.rs"))).toBe(true);
-  expect(JSON.parse(read(`${contract.owner}/🧫️fixtures/🖊️semantic/🔣️.json`))).toEqual(contract.cases);
+  expect(inspectRustCompileReferences(source).some(({ path }) => path.endsWith("🧰️support/🦀️.rs"))).toBe(false);
+  expect(JSON.parse(read(`${contract.owner}/🧪️tests/🧫️fixtures/🖊️semantic/🔣️.json`))).toEqual(contract.cases);
 
 });
 
 test("the actual private shared helpers and public byte boundary carry no foreign types", () => {
   const support = read(`${contract.owner}/🧰️support/🦀️.rs`);
-  for (const name of ["load", "point_json", "obj"]) expect(support).toContain(`pub(super) fn ${name}`);
-  expect(support).not.toMatch(/pub (?:fn|struct|enum|type|use)/u);
+  expect([...support.matchAll(/^pub (?:fn|struct|enum|type|use) (\w+)/gmu)].map((match) => match[1]).sort()).toEqual(["load", "obj", "point_json"]);
+  expect(support).not.toMatch(/pub\((?:super|crate)\)/u);
   const source = read(`${contract.owner}/🦀️.rs`);
   expect(source).toContain("pub use reader::project_dxf_r12;");
   expect(source).toContain("pub fn project_dxf_r12(bytes: &[u8]) -> Result<Json, String>");
   expect(source).not.toContain("pub fn project_dxf_r12(_bytes: &[u8])");
-  const mounts = contract.originals.filter(({ path }) => path === contract.functions[0]!.source).flatMap(({ path }) => inspectRustCompileReferences(read(path)).filter((row) => row.path.includes("🧰️support")).map((row) => resolve(root, path, "..", row.path)));
-  expect(mounts).toEqual([resolve(root, contract.owner, "🧰️support/🦀️.rs")]);
-  expect(inspectRustCompileReferences(source).filter(({ path }) => path.includes("🧰️support")).map(({ path }) => resolve(root, contract.owner, path))).toEqual(mounts);
+  expect(inspectRustCompileReferences(source).filter(({ path }) => path.includes("🧰️support")).map(({ path }) => resolve(root, contract.owner, path))).toEqual([resolve(root, contract.owner, "🧰️support/🦀️.rs")]);
+  expect(source).toContain("pub mod reference_support;");
 });
 
 

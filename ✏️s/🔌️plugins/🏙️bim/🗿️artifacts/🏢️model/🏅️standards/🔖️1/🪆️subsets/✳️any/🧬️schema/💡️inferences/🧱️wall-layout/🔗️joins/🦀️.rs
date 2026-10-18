@@ -5,7 +5,7 @@
 //! end that lies on the axis interior of another wall butts against that wall's near face (T join); two axes that cross in both
 //! interiors form an X join, which trims nothing. The functions are pure geometry over bands and never read the snapshot.
 
-use super::{JoinEnd, JoinKind, WallJoin};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{JoinEnd, JoinKind, WallJoin};
 use crate::standards::v1::subsets::any::schema::snapshot::{EndJoin, Point2};
 use semio_framework_geometry::bulge::{bulge_from_sweep, intersect, nearest_intersection, BulgeSeg, Extent};
 use semio_framework_geometry::triangulation::triangulate;

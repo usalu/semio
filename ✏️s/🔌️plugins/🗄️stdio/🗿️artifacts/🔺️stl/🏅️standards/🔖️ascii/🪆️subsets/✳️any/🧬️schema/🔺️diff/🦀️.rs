@@ -503,9 +503,9 @@ pub fn diff_set_triangle_vertices(index: usize, vertices: [[f64; 3]; 3]) -> StlD
 /// grammar. Shared by this file's own `⚙️engine::conformance_laws`'s `diff_grammar_conformance_law`/
 /// `protocol_walk_law` AND `🧬️mutations::component`'s `diff_codec_text_binary_roundtrip_law` (same
 /// reuse pattern `binary`'s own `demo_diff_cases` establishes).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<StlDiff> {
+pub fn demo_diff_cases() -> Vec<StlDiff> {
     vec![
         StlDiff::default(),
         StlDiff {

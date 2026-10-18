@@ -1,5 +1,5 @@
 //! 🔺️ Sparse declarative delete-support diff; no derived state is evaluated.
-use super::DeleteSupport;
+use crate::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &DeleteSupport, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

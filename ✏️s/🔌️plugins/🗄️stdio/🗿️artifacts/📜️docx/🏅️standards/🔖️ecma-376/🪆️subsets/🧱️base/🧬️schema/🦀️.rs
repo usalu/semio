@@ -124,7 +124,7 @@ pub mod vocabulary;
 pub mod refusal;
 
 #[path="🏷️namespaces/🦀️.rs"]
-pub(crate) mod namespaces;
+pub mod namespaces;
 
 #[path="🏗️construction/🦀️.rs"]
 pub mod construction;

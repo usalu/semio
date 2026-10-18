@@ -7,7 +7,7 @@
 //! symmetric is `mutation.no-op`.
 
 use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
-use super::MirrorElements;
+use crate::standards::v1::subsets::any::schema::mutations::mirror_elements::MirrorElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

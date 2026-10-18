@@ -35,6 +35,7 @@ semio-s-artifact-puzzle-3d-editor-transform = { workspace = true }
 semio-s-artifact-puzzle-3d-editor-window = { workspace = true }
 semio-s-artifact-puzzle-3d-model = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations = { workspace = true }
+semio-s-artifact-puzzle-3d-mutations-object = { path = "../../../../../🧬️schema/🧬️mutations/🧊️object/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d-mutations-vortex = { workspace = true }
 semio-s-artifact-puzzle-3d-precompute = { workspace = true }
 semio-s-artifact-puzzle-3d-retained-document = { workspace = true }

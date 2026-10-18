@@ -1,9 +1,40 @@
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, SpaceBoundary, Vertex};
+use semio_framework_geometry::loops;
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{depth_of, seg};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
+#[allow(unused_imports)]
+use semio_framework_2d::regions::{offset_regions, region_boolean, OffsetJoin, Region};
+#[allow(unused_imports)]
+use semio_framework_2d::Vec2;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::band_loop;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::spaces::{plan_loop, corners};
 use crate::standards::v1::subsets::any::io::text::inferences::spaces::table_json;
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::spaces::*;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Building, Column, ColumnType, Layer, LayerFunction, LocationLine, Material, MaterialCategory, Phase, Profile, Rgb, Site, Slab, SlabType, Space, Storey, TopConstraint, Wall, WallType}, diff::{Entry, ModelDiff, patches::WallPatch}};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{compute, kinds, plan, ModelInferenceSession, ModelNode};
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_spaces;
+use semio_framework_test_fixtures::fixture_text;
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() <= 1e-9 * right.abs().max(1.0)
@@ -220,13 +251,13 @@ async fn the_model_inference_carries_the_rooms() {
     assert!(compute_spaces(&ModelSnapshot::default()).is_empty(), "default");
 }
 
-const ROOMS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🏡️rooms/📸️snapshot/🔣️.json");
-const ROOMS_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🏡️rooms/💡️inference/🏠️spaces/🔣️.json");
+static ROOMS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🏡️rooms/📸️snapshot/🔣️.json"));
+static ROOMS_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🏡️rooms/💡️inference/🏠️spaces/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_table() {
-    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(ROOMS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the rooms model decodes");
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems(ROOMS_TABLE, &table_json(&compute_spaces(&snapshot)));
+    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*ROOMS), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the rooms model decodes");
+    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*ROOMS_TABLE), &table_json(&compute_spaces(&snapshot)));
     assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
 }
 
@@ -322,14 +353,14 @@ async fn editing_a_ceiling_changes_the_clear_height_through_the_session_and_a_re
     assert!(close(deeper["sp"].clear_height, 3.0 - 0.6 - 0.2), "the layers of the type are read as well");
 }
 
-const HUNG_EDIT: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/📸️snapshot/🔣️.json");
-const HUNG_EDIT_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/💡️inference/🏠️spaces/🔣️.json");
+static HUNG_EDIT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/📸️snapshot/🔣️.json"));
+static HUNG_EDIT_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛋️spaces/🔲️hung-edit/💡️inference/🏠️spaces/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_oracle_table_of_the_rooms_after_the_ceiling_edits() {
-    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(HUNG_EDIT, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the edited rooms model decodes");
+    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*HUNG_EDIT), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the edited rooms model decodes");
     let found = compute_spaces(&snapshot);
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems(HUNG_EDIT_TABLE, &table_json(&found));
+    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*HUNG_EDIT_TABLE), &table_json(&found));
     assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
     assert_eq!((found["sp-living"].ceiling.as_str(), found["sp-kitchen"].ceiling.as_str()), ("ce-bulkhead", ""), "the lowest ceiling over the seed governs, a hole over the seed removes the kitchen ceiling");
     assert!(close(found["sp-living"].clear_height, 3.0 - 1.25) && close(found["sp-kitchen"].clear_height, 3.0));

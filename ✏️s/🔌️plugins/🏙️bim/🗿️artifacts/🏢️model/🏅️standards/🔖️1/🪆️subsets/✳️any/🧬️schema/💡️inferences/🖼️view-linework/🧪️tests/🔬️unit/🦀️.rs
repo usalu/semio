@@ -1,8 +1,8 @@
-use super::frame::Frame;
-use super::hidden_lines::{bodies, faces, feature_edges, pieces};
-use super::{ViewLinework, hidden_lines};
-use crate::standards::v1::subsets::any::schema::element_solids::ElementSolid;
-use crate::standards::v1::subsets::any::schema::plan_linework::{PlanKind, PlanStyle};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::{bodies, faces, feature_edges, pieces};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::{ViewLinework, hidden_lines};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
 use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, View, ViewKind};
 use semio_framework_2d::regions::Region;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, SolidFamily};

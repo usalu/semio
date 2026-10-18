@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetTextNote`: a sparse text note patch of exactly the provided fields that differ. The record that results must break none of the create rules: the storey and the style must exist, the position and rotation are finite and the text is not blank.
 //! Providing only equal values, or no field, is a no-op.
 
-use super::super::annotating;
-use super::SetTextNote;
+use crate::standards::v1::subsets::any::schema::mutations::annotating;
+use crate::standards::v1::subsets::any::schema::mutations::set_text_note::SetTextNote;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

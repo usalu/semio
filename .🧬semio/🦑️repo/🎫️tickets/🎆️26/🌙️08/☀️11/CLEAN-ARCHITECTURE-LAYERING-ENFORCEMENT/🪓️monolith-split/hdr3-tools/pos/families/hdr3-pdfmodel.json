@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-pdfmodel",
+ "crates": ["semio-s-artifact-stdio-pdf-model", "semio-s-artifact-stdio-pdf-model-profiles", "semio-s-artifact-stdio-pdf"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-s-artifact-stdio-pdf-model", "semio-s-artifact-stdio-pdf"]},
+ "note": "HDR-3: pdf model profile mirrors peeled"
+}

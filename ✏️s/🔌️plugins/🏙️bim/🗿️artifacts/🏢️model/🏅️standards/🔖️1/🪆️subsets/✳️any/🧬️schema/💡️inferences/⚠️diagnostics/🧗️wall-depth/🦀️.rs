@@ -1,7 +1,7 @@
 //! 🧗️ Findings of the wall depth package, per storey: an attach that loops, covers only part of the wall axis or lifts the top to the base, a sweep that reaches above the lowest point of the top of its wall or is interrupted over its whole
 //! length, and a reveal that sets the frame of an opening back by more than the wall leaves room for. A missing attach target or host is a dangling reference, reported by `references`.
 
-use super::{Diagnostic, DiagnosticCode, Inputs};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Inputs};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_value, walls, wall_sweeps};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachState;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
@@ -74,6 +74,4 @@ pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> DslValue {
     dep_object([("sweeps", dep_records(snapshot.wall_sweeps.iter().filter(|(_, row)| walls_of(&row.host)))), ("frame_depths", DslValue::object(depths))])
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

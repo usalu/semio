@@ -148,7 +148,7 @@ impl Default for SemioAnimationSnapshot {
 /// `🎒️.pack.semio` and for the conformance-law tests in `🎹️composer/🦀️.rs`.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_animation_snapshot() -> SemioAnimationSnapshot {
+pub fn demo_animation_snapshot() -> SemioAnimationSnapshot {
     SemioAnimationSnapshot {
         schema: STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA.into(),
         timelines: vec![AnimTimeline {

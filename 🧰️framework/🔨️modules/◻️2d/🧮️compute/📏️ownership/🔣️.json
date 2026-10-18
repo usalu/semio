@@ -1,13 +1,11 @@
 {
   "version": 1,
-  "ownerManifest": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml",
-  "ownerRoot": "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/🦀️.rs",
+  "ownerManifest": "🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust/Cargo.toml",
+  "ownerRoot": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
   "declarationSource": "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
-  "modulePath": [
-    "compute"
-  ],
-  "externName": "semio_framework_2d",
-  "packageName": "semio-framework-2d",
+  "modulePath": [],
+  "externName": "semio_framework_2d_compute",
+  "packageName": "semio-framework-2d-compute",
   "symbols": [
     "EngineKey",
     "EngineHandle",

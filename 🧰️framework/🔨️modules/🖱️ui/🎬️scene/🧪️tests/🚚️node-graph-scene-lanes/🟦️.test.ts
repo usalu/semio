@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 import fixture from "../🧫️fixtures/🚚️node-graph-scene-lanes/🔣️.json";
-import { NODE_GRAPH_SCENE_LANES, nodeGraphSceneFromLanes } from "../../🟦️.ts";
+import { NODE_GRAPH_SCENE_LANES, nodeGraphSceneFromLanes } from "../../🕸️node-graph/🟦️.ts";
 
 test("node graph lanes match their language-neutral schema", () => {
   expect(NODE_GRAPH_SCENE_LANES).toEqual<typeof fixture.lanes>(fixture.lanes);
@@ -32,5 +32,5 @@ test("every node graph field restores from its declared carrier", () => {
     if (lane.optional) delete spine[lane.field];
     else spine[lane.field] = [];
   }
-  expect(nodeGraphSceneFromLanes(spine as unknown as import("../../🟦️.ts").NodeGraphScene, texts)).toEqual(fixture.sample);
+  expect(nodeGraphSceneFromLanes(spine as unknown as import("../../🕸️node-graph/🟦️.ts").NodeGraphScene, texts)).toEqual(fixture.sample);
 });

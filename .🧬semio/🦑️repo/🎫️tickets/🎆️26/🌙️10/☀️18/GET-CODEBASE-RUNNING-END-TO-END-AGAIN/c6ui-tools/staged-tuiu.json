@@ -1,0 +1,14 @@
+{
+ "tag": "tuiu",
+ "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "🪟️tui-layout-and-window-laws",
+  "📊️tui-table-diff-parser-and-theme-laws",
+  "📐️tui-geometry-text-cell-and-ansi-laws",
+  "📟️tui-vt-scene-and-layout-laws",
+  "⌨️tui-widget-key-handling-laws",
+  "🎨️tui-widget-paint-and-window-silhouette-laws",
+  "🚦️tui-chrome-engine-wasm-clipboard-and-pty-laws"
+ ]
+}

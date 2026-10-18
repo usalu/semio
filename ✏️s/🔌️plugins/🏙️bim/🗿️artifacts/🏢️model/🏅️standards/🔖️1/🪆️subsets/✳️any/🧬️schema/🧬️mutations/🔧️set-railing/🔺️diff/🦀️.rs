@@ -3,8 +3,8 @@
 //! height and post spacing are positive, the rail and post sections, the baluster row and the infill must be sound, the material must exist; providing only equal values is a no-op.
 //! Whole-list ruling: the path is ONE polyline, the geometry of the railing, so a provided path replaces the path as one field.
 
-use super::super::placement::{host_issue, refuse_stair};
-use super::SetRailing;
+use crate::standards::v1::subsets::any::schema::mutations::placement::{host_issue, refuse_stair};
+use crate::standards::v1::subsets::any::schema::mutations::set_railing::SetRailing;
 use crate::standards::v1::subsets::any::schema::{snapshot::{railing_construction_problem, ModelSnapshot, Point2}, diff::{Entry, ModelDiff, Patch, patches::RailingPatch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

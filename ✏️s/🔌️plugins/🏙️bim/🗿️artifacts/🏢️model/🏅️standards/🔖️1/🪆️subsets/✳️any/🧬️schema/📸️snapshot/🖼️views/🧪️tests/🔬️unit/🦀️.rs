@@ -1,4 +1,11 @@
-use super::*;
+use std::f64::consts::FRAC_PI_2;
+use crate::standards::v1::subsets::any::schema::snapshot::values::{Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::entities::View;
+use crate::standards::v1::subsets::any::schema::snapshot::validity::DEFAULT_CUT_HEIGHT;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::values::DetailLevel;
+use crate::standards::v1::subsets::any::schema::snapshot::views::*;
 use crate::standards::v1::subsets::any::schema::snapshot::{Building, Storey};
 
 fn base() -> ModelSnapshot {

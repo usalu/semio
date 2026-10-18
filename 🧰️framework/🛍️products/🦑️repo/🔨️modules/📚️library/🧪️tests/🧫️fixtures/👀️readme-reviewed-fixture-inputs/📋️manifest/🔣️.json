@@ -42,8 +42,8 @@
         "pointer": "/revisions/testing-readme-protocol-v2-reviewed/expectationsPath"
       },
       "preimage": {
-        "sha256": "e821d6835b7bc0054ae7d0d3c4e7907692263b7ad947c3d7230a4c848c730320",
-        "size": 12355,
+        "sha256": "3546b7f7a1bb19c79a30f7cb8378d611d20fddd52c077571248d6f3607ea4942",
+        "size": 12357,
         "mode": 420
       }
     }

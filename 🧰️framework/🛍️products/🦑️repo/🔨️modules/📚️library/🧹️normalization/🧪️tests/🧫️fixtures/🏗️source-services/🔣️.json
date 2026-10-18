@@ -14,10 +14,46 @@
       "dependencies": []
     },
     {
+      "path": "🔣️taxonomy/📐️kind-specs/🟦️.ts",
+      "dependencies": []
+    },
+    {
+      "path": "🔣️taxonomy/🗃️owned-file-projection/🟦️.ts",
+      "dependencies": []
+    },
+    {
+      "path": "🔣️taxonomy/🧭️path-projection/🟦️.ts",
+      "dependencies": []
+    },
+    {
+      "path": "🔣️taxonomy/🌳️descendants/🟦️.ts",
+      "dependencies": []
+    },
+    {
+      "path": "🔣️taxonomy/🏭️generators-packages/🟦️.ts",
+      "dependencies": []
+    },
+    {
+      "path": "🔣️taxonomy/📚️loaded/🟦️.ts",
+      "dependencies": [
+        "🔣️taxonomy/🌳️descendants/🟦️.ts",
+        "🔣️taxonomy/🏭️generators-packages/🟦️.ts",
+        "🔣️taxonomy/📐️kind-specs/🟦️.ts",
+        "🔣️taxonomy/🗃️owned-file-projection/🟦️.ts",
+        "🔣️taxonomy/🧭️path-projection/🟦️.ts"
+      ]
+    },
+    {
       "path": "🔣️taxonomy/🟦️.ts",
       "dependencies": [
-        "🛣️path/🟦️.ts",
-        "📁️input/🟦️.ts"
+        "📁️input/🟦️.ts",
+        "🔣️taxonomy/🌳️descendants/🟦️.ts",
+        "🔣️taxonomy/🏭️generators-packages/🟦️.ts",
+        "🔣️taxonomy/📐️kind-specs/🟦️.ts",
+        "🔣️taxonomy/📚️loaded/🟦️.ts",
+        "🔣️taxonomy/🗃️owned-file-projection/🟦️.ts",
+        "🔣️taxonomy/🧭️path-projection/🟦️.ts",
+        "🛣️path/🟦️.ts"
       ]
     },
     {
@@ -29,11 +65,12 @@
     {
       "path": "🚪️source-admission/📁️io/🟦️.ts",
       "dependencies": [
-        "🛣️path/🟦️.ts",
-        "📁️input/🟦️.ts",
         "🏃️operation/🟦️.ts",
+        "📁️input/🟦️.ts",
+        "🔣️taxonomy/📚️loaded/🟦️.ts",
         "🔣️taxonomy/🟦️.ts",
-        "🚪️source-admission/🟦️.ts"
+        "🚪️source-admission/🟦️.ts",
+        "🛣️path/🟦️.ts"
       ]
     }
   ],

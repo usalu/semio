@@ -20,8 +20,7 @@ use semio_s_artifact_puzzle_3d_mutations::Puzzle3dMutation;
 use semio_s_artifact_puzzle_3d_model::snapshot::Puzzle3dSnapshot;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::kernel::Effect;
-use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
-use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::{ArtifactInstanceOperationOwnerHandle, EditorApp};
 use semio_framework_plugin::Emit;
 use semio_framework_plugin::SET_ACTIVE_TOOL_ACTION_ID;
 use semio_framework_plugin::SET_ACTIVE_UTILITY_ACTION_ID;
@@ -374,6 +373,7 @@ pub fn puzzle3d_handle_action<A: Puzzle3dEditor>(
 use semio_framework_plugin::InteractionVerb;
 use semio_framework_plugin::FRAMEWORK_HISTORY_BODY_KEY;
 use semio_s_artifact_puzzle_3d_editor_modes::windows::main::puzzle3d_viewport_scope;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 /// 🐢️ Fill/distribution slider gestures refresh the world body, fill-tool measures and utility-option
 /// window measures — never the full shell chrome.

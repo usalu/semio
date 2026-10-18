@@ -19577,5 +19577,307 @@
       "effect": "unexpected-text",
       "accepted": false
     }
-  ]
+  ],
+  "retainedInactiveBase": {
+    "name": "current Products namespace publication",
+    "root": "/workspace",
+    "intent": {
+      "version": 1,
+      "purpose": "current-recomputable-domain-maintenance",
+      "selection": {
+        "kind": "products-graph-fixture",
+        "fixtureName": "gf-Fk58e1",
+        "producerLogSha256": "ef015073a6a66b034a9d1cab63b6e81398bf9685ecae2c308b4ea7247b598f5c",
+        "namespaces": []
+      }
+    },
+    "observation": {
+      "version": 1,
+      "operation": "retain-inactive",
+      "directory": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l",
+      "host": {
+        "directory": "/workspace/.cache/b/p",
+        "root": "/workspace/.cache/b/p/m",
+        "backing": {
+          "identity": "source-products",
+          "root": "/workspace/.cache/b/p/m",
+          "maximumPhysicalBytes": 25769803776
+        },
+        "policy": {
+          "version": 1,
+          "root": "/workspace/.cache/b/p/m",
+          "leaseDirectory": "/workspace/.cache/b/l/m/data",
+          "capacityBytes": 25769803776,
+          "maximumWorkspaceBytes": 25768755200,
+          "maximumArtifactBytes": 25768755200
+        },
+        "journal": {
+          "version": 1,
+          "backing": {
+            "identity": "source-products",
+            "root": "/workspace/.cache/b/p/m",
+            "maximumPhysicalBytes": 25769803776
+          },
+          "state": {
+            "version": 1,
+            "sequence": 0,
+            "allocations": []
+          },
+          "journalSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "journalBytes": 0,
+          "presence": "present"
+        },
+        "associations": [
+          {
+            "root": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/m",
+            "image": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/fixed.dmg",
+            "backingIdentity": "[1,12,66060288,66060288]",
+            "kernelIdentity": "source-kernel-12"
+          }
+        ]
+      },
+      "images": [
+        {
+          "directory": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l",
+          "root": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/m",
+          "backing": {
+            "identity": "source-leases",
+            "root": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/m",
+            "maximumPhysicalBytes": 67108864
+          },
+          "policy": {
+            "version": 1,
+            "root": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/m",
+            "leaseDirectory": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/c",
+            "capacityBytes": 67108864,
+            "maximumWorkspaceBytes": 66060288,
+            "maximumArtifactBytes": 66060288
+          },
+          "journal": {
+            "version": 1,
+            "presence": "absent",
+            "backing": {
+              "identity": "source-leases",
+              "root": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/m",
+              "maximumPhysicalBytes": 67108864
+            }
+          },
+          "associations": [],
+          "association": {
+            "root": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/m",
+            "image": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/fixed.dmg",
+            "backingIdentity": "[1,12,66060288,66060288]",
+            "kernelIdentity": "source-kernel-12"
+          },
+          "current": {
+            "version": 1,
+            "purpose": "mounted-parent-maintenance",
+            "wait": false,
+            "receiptSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+            "directory": {
+              "dev": 1,
+              "ino": 112,
+              "mode": 16877
+            },
+            "backing": {
+              "dev": 1,
+              "ino": 12,
+              "size": 66060288,
+              "allocatedBytes": 66060288
+            },
+            "root": {
+              "dev": 20,
+              "ino": 212,
+              "mode": 16877
+            }
+          }
+        }
+      ],
+      "descriptors": [],
+      "fixture": {
+        "directory": "/workspace/.cache/b/p/m/gf-Fk58e1",
+        "before": {
+          "dev": "1",
+          "ino": "2",
+          "mode": 16877,
+          "nlink": 2,
+          "size": 512,
+          "mtimeNs": "3",
+          "ctimeNs": "4"
+        },
+        "after": {
+          "dev": "1",
+          "ino": "2",
+          "mode": 16877,
+          "nlink": 2,
+          "size": 512,
+          "mtimeNs": "3",
+          "ctimeNs": "4"
+        },
+        "entries": [
+          {
+            "path": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache",
+            "kind": "directory"
+          },
+          {
+            "path": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b",
+            "kind": "directory"
+          },
+          {
+            "path": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/c",
+            "kind": "directory"
+          },
+          {
+            "path": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/g",
+            "kind": "directory"
+          },
+          {
+            "path": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l",
+            "kind": "directory"
+          }
+        ]
+      },
+      "producer": {
+        "path": "/workspace/ticket/producer.log",
+        "text": "[DEBUG] Fixed UDRW image {\"root\":\"/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m\"}\n[DEBUG] Fixed UDRW image {\"root\":\"/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l/m\"}\n[DEBUG] Fixed UDRW image {\"root\":\"/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m\"}\n[DEBUG] Fixed UDRW image {\"root\":\"/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/g/m/nx/cache/m/nx/graphs/aaaaaaaaaaaaaaaaaaaa/e6aa667cc7136b983d69/native/m\"}\n",
+        "before": {
+          "dev": "1",
+          "ino": "2",
+          "mode": 33188,
+          "nlink": 1,
+          "size": 415,
+          "mtimeNs": "3",
+          "ctimeNs": "4"
+        },
+        "after": {
+          "dev": "1",
+          "ino": "2",
+          "mode": 33188,
+          "nlink": 1,
+          "size": 415,
+          "mtimeNs": "3",
+          "ctimeNs": "4"
+        }
+      }
+    },
+    "accepted": true,
+    "ledgerOwner": null
+  },
+  "retainedInactiveCommand": {
+    "version": 1,
+    "intent": {
+      "version": 1,
+      "purpose": "current-recomputable-domain-maintenance",
+      "selection": {
+        "kind": "products-graph-fixture",
+        "fixtureName": "gf-Fk58e1",
+        "producerLogSha256": "ef015073a6a66b034a9d1cab63b6e81398bf9685ecae2c308b4ea7247b598f5c",
+        "namespaces": []
+      }
+    },
+    "operation": "retain-inactive",
+    "directory": "/workspace/.cache/b/p/m/gf-Fk58e1/.cache/b/l",
+    "parent": {
+      "version": 1,
+      "purpose": "mounted-parent-maintenance",
+      "wait": false,
+      "receiptSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "directory": {
+        "dev": 1,
+        "ino": 110,
+        "mode": 16877
+      },
+      "backing": {
+        "dev": 1,
+        "ino": 10,
+        "size": 33554432,
+        "allocatedBytes": 33554432
+      },
+      "root": {
+        "dev": 20,
+        "ino": 210,
+        "mode": 16877
+      }
+    },
+    "producerLogPath": "/workspace/ticket/producer.log"
+  },
+  "retainedInactiveCases": [
+    {
+      "effect": "complete",
+      "accepted": true
+    },
+    {
+      "effect": "zero-journal",
+      "accepted": true
+    },
+    {
+      "effect": "namespace-command",
+      "accepted": false
+    },
+    {
+      "effect": "pool-command",
+      "accepted": false
+    },
+    {
+      "effect": "foreign-directory",
+      "accepted": false
+    },
+    {
+      "effect": "producer-missing",
+      "accepted": false
+    },
+    {
+      "effect": "producer-sha",
+      "accepted": false
+    },
+    {
+      "effect": "fixture-unknown",
+      "accepted": false
+    },
+    {
+      "effect": "child-descendant",
+      "accepted": false
+    },
+    {
+      "effect": "foreign-kernel",
+      "accepted": false
+    },
+    {
+      "effect": "extra-input",
+      "accepted": false
+    },
+    {
+      "effect": "stream-purpose",
+      "accepted": false
+    }
+  ],
+  "retainedInactiveCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "accepted"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "complete",
+          "zero-journal",
+          "namespace-command",
+          "pool-command",
+          "foreign-directory",
+          "producer-missing",
+          "producer-sha",
+          "fixture-unknown",
+          "child-descendant",
+          "foreign-kernel",
+          "extra-input",
+          "stream-purpose"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  }
 }

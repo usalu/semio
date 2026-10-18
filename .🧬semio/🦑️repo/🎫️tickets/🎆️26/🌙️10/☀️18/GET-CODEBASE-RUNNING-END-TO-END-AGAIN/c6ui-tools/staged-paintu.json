@@ -1,0 +1,14 @@
+{
+ "tag": "paintu",
+ "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🦀️.rs",
+ "root": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-paint-unit/🦀️.rs",
+ "folders": [
+  "🧱️paint-fixtures-and-loading-border-laws",
+  "🎚️number-stepper-slider-and-field-paint-laws",
+  "🔽️select-popup-drop-and-drag-paint-laws",
+  "✍️input-caret-and-focus-ring-paint-laws",
+  "🧵️retained-paint-grant-laws",
+  "📶️progress-and-image-paint-laws",
+  "🦴️skeleton-celebrate-and-chrome-paint-laws"
+ ]
+}

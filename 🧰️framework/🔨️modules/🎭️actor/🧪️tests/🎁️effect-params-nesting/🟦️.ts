@@ -2,7 +2,7 @@
  * own `…-params` record, and unwraps a WIT `option<T>` before touching it.
  *
  * The neutral oracle is `🧫️fixtures/🎁️effect-params-nesting/🔣️.json`; its schema half is the WIT
- * itself (`🔌️plugin/🧬️schema/📜️.wit`), which the fixture names and this law re-reads, so a record
+ * itself (`🔌️plugin/🧬️schema/📜️effects.wit`), which the fixture names and this law re-reads, so a record
  * that gains or loses the `params` extraction cannot drift past both. */
 type TestSource = { readonly url: string };
 

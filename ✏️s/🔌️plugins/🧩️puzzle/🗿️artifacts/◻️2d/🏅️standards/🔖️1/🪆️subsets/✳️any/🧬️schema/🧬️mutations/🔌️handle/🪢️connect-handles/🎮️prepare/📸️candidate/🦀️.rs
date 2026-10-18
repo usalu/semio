@@ -22,11 +22,11 @@ pub struct Puzzle2dConnectHandlesCandidateState {
     edge_assembly: Puzzle2dPreparationChild<Puzzle2dConnectEdgeCursor>,
     plan: Option<Puzzle2dConnectHandlesPlan>,
     candidate: Option<Puzzle2dSnapshot>,
-    pending: Option<Puzzle2dEdge>,
+    pub pending: Option<Puzzle2dEdge>,
     insertion: Option<PagedListEditCursor>,
     candidate_close: Option<ControlledRetirement<Puzzle2dSnapshot>>,
     pending_close: Option<ControlledRetirement<Puzzle2dEdge>>,
-    phase: u8,
+    pub phase: u8,
     closing: bool,
 }
 

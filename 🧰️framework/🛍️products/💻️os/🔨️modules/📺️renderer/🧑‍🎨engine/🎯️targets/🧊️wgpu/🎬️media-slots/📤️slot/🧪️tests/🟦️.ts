@@ -4,7 +4,7 @@ import{readFileSync}from"node:fs";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import schema from"../🧬️schema/🔣️.json";
-import law from"./🧫️fixtures/🔣️.json";
+import law from"../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🎬️media-slots/📤️slot/🔣️.json";
 test("original slot canonical identity and same retained output have independent token oracle",()=>{
  expect(new Ajv({strict:true,strictTuples:false}).compile(schema)(law)).toBe(true);
  const db=new Database(":memory:");try{for(const row of law.cases){const wire=JSON.stringify(row.identity);expect(createHash("sha256").update(wire).digest("hex")).toBe(row.token);expect(db.query("SELECT json_array_length(?) AS arity, json_extract(?, '$[1]') AS node").get(wire,wire)).toEqual({arity:8,node:row.identity[1]});}}finally{db.close()}

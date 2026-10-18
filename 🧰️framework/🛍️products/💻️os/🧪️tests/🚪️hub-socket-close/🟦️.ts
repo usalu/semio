@@ -5,7 +5,7 @@
  * (ticket 26/09/23 S15, catalog B2 gis sweep: `Failed to execute 'close' on 'WebSocket' … 1008 is neither`). jsdom's WebSocket,
  * which implements the WHATWG close() steps, is the independent oracle for every declared code and for the admissibility rule. */
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { fileURLToPath } from "node:url";
 import { BROWSER_HUB_SOCKET_CLOSE_V1, browserSocketCloseCodeAdmissibleV1, closeHubSocketV1, type BrowserHubSocketCloseReasonV1 } from "@semio-tech/framework/directory/client/socket-close";
 
@@ -26,7 +26,7 @@ const oracleCloses = (window: OracleWindow, code: number, reason: string): boole
     return false;
   }
 };
-const source = (path: string) => readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8");
+const source = (path: string) => readModuleTreeSource(fileURLToPath(new URL(path, import.meta.url)));
 const BROWSER_SOCKET_SOURCES = ["../../🔨️modules/🏪️store/👷️worker/🟦️.ts", "../../🟦️.ts"];
 
 describe("🚪️ the browser's own hub socket closes", () => {

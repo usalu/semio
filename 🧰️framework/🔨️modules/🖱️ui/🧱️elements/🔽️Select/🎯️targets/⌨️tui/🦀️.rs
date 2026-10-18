@@ -1,12 +1,13 @@
 //! 🔎️ tui key-handling, pointer and paint functions for the Select element — a cycler over its options, wired as a
 //! crate-root sibling module of `crate::tui::widget` (see that mod's `use crate::tui::select::{select_on_key, paint_select};`).
 
-use crate::tui::cell::CellBuffer;
-use crate::tui::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::text::{elide, Elision};
-use crate::tui::theme::{Glyph, Role, Surface, Theme};
-use crate::tui::widget::{SelectState, WidgetSignal};
+use semio_framework_ui_tui_core::cell::CellBuffer;
+use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::text::{elide, Elision};
+use semio_framework_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use crate::widget::SelectState;
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 
 fn move_to(s: &mut SelectState, index: usize) -> Option<WidgetSignal> {
     let index = index.min(s.options.len().saturating_sub(1));

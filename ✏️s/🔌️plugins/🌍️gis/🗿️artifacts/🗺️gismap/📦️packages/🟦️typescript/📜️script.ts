@@ -7,7 +7,8 @@ import { resolveTestLevel } from "../../../../../../../🧰️framework/📦️p
 /** 🌍 GIS Map inference, history and acknowledged-view conformance command owner. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { getWorkspaceRoot, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import {resolve} from "node:path";
@@ -215,7 +216,7 @@ async function proveGisMapApprovalHistory(repoRoot: string): Promise<Record<stri
   };
   if (!deepEqual(routes, fixture.ordinaryHistory)) throw new Error("Shell history arbitration disagrees with the neutral corpus");
 
-  const worker = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts"), "utf8") + readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
+  const worker = readModuleTreeSource(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/👷️worker/🟦️.ts"), "utf8") + readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   const shell = readModuleTreeSource(join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📺️renderer", "🧑‍🎨engine", "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes('owner.abort.abort(new Error("gis map approval undo owner rebootstrap"));')
@@ -468,7 +469,7 @@ async function proveGisMapPeerRebootstrap(repoRoot: string): Promise<number> {
   });
   const expected = fixture.clients.map((client: { clientInstanceId: string }) => ({ phase: "live", currentPair: fixture.published.aggregateSha256, uiOwner: client.clientInstanceId, frontier: fixture.published.frontier, scene: fixture.published.scene }));
   if (!deepEqual(observed, expected) || !deepEqual(observed[0]?.frontier, observed[1]?.frontier) || !deepEqual(observed[0]?.scene, observed[1]?.scene)) throw new Error("GIS Map peer rebootstrap model diverged");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
+  const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   const shell = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes("control.space_id !== binding.spaceId || control.document_id !== state.config.documentId") &&
@@ -523,7 +524,7 @@ async function proveMountedGisMapProbe(repoRoot: string): Promise<number> {
     regionIds: fixture.source.regions.map((region: { id: string }) => region.id).sort(),
   };
   if (!deepEqual(observed, fixture.expected)) throw new Error("mounted GIS Map independent projection differs from the corpus");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
+  const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   const shell = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🪟️presentation/🟦️.tsx"), "utf8") + readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));
   const conforms = (candidateWorker: string, candidateShell: string): boolean =>
     candidateWorker.includes('kind: "browser-actor-ui-mounted"')
@@ -592,7 +593,7 @@ class TileCheckScript extends BundleScript {
     const { proveGisMapTilesV1 } = await import("../../🗺️tiles/🧪️tests/🟦️.ts");
     console.log(`gis-map-tiles: laws=${await proveGisMapTilesV1(root)} passed`);
     if (args.includes("--native")) {
-      const { runRepositoryExactCargoLaws } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+      const { runRepositoryExactCargoLaws } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts");
       await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation:configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1() },cwd: this.repoRoot,groups: [{ package: "semio-s-artifact-gis-gismap", target: { kind: "lib" }, laws: ["tile_coordinates::tests::portable_tile_coordinates_and_ranges_match_json_and_geo_oracles"] }],progress: event => console.log(`gis-map-tiles ${event.stage} ${event.law ?? ""}`)});
     }
   }

@@ -21,7 +21,7 @@ const VALIDATE: &str = concat!(
 );
 
 fn subset_path(relative: &str) -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any").join(relative)
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🪆️subsets/✳️any").join(relative)
 }
 
 fn venv_python() -> Option<PathBuf> {

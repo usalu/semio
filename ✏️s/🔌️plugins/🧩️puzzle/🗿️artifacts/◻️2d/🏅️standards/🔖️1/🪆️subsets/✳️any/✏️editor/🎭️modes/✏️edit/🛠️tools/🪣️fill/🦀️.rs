@@ -10,6 +10,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ToolDefinition;
 use semio_framework_plugin::WindowMeasure;
 use semio_framework_tool_run::{JobKindId, ToolRunCounterDefinition, ToolRunDefinition, ToolRunReasonDefinition, ToolRunRebasePolicy, ToolRunReconfigurePolicy, ToolRunSettingsReads, ToolRunStageDefinition, ToolRunTraceKind};
+use semio_s_artifact_puzzle_2d::editor::puzzle2d::modes::edit::options::brush::puzzle2d_distribution_measures;
 
 //#region 🔖️Constants
 pub const TOOL_ID: &str = "fill";

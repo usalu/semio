@@ -17,9 +17,6 @@ const fixture = JSON.parse(readFileSync(resolve(uiRoot, "🧪️tests/🧫️fix
 afterEach(cleanup);
 
 describe("📂️ retained Section disclosure contract", () => {
-  test("the language-neutral fixture satisfies its schema", () => {
-  });
-
   test("React removes closed content from layout, interaction, and accessibility until activation", () => {
     const { container } = render(
       <Collapsible defaultOpen={fixture.section.defaultOpen}>

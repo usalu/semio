@@ -5,6 +5,7 @@ import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/
 import type {RepositoryArtifactRequestV1} from "../../📦️artifacts/👓️reading/🟦️.ts";
 import {playPollingEnv} from "../../../🏃️process/🌿️environment/🟦️.ts";
 import {isDevPortInUse,devServerUrl,devServerPlayEntry,describeDevPortOccupant,canReuseDevPort,resolveDevPort} from "../../../🌐️network/🔌️ports/🟦️.ts";
+import type {ViteConfigLoaderV1} from "../🎛️loader/🟦️.ts";
 import {resolve} from "node:path";
 /** ▶️Vite dev via `bunx` with an explicitly owned configuration source. */
 export async function runViteBunxDev(
@@ -15,6 +16,7 @@ export async function runViteBunxDev(
   opts: {
     runtimeChannels:readonly ViteRuntimeChannelV1[];
     config: string;
+    configLoader?: ViteConfigLoaderV1;
     artifactInputs?: readonly RepositoryArtifactRequestV1[];
     portEnv?: string;
     defaultPort?: string;
@@ -67,6 +69,6 @@ export async function runViteBunxDev(
     if(flag==="--host")selectedHost=value;else selectedPort=Number(value);
   }
   const {serveViteCommandV1}=await import("../🟦️.ts");
-  await serveViteCommandV1({runtimeChannels,invocation,control,root:bundleRoot,config:resolve(bundleRoot,opts.config),mode:readBuildMode(spawnEnv.SEMIO_BUILD_MODE),host:selectedHost,port:selectedPort,strictPort,environment:spawnEnv,artifactInputs:opts.artifactInputs,signal:invocation.control.signal});
+  await serveViteCommandV1({runtimeChannels,invocation,control,root:bundleRoot,config:resolve(bundleRoot,opts.config),configLoader:opts.configLoader,mode:readBuildMode(spawnEnv.SEMIO_BUILD_MODE),host:selectedHost,port:selectedPort,strictPort,environment:spawnEnv,artifactInputs:opts.artifactInputs,signal:invocation.control.signal});
 }
 

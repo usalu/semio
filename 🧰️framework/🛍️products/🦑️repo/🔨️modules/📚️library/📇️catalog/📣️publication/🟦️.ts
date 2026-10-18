@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { lstatSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import type { DiscoveredPackage, RegistryCatalogInputView } from "../../🔍️discovery/🟦️.ts";
+import type { DiscoveredPackage } from "../../🔍️discovery/🪧️owner-markers/🟦️.ts";
+import type { RegistryCatalogInputView } from "../../🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { jsonDocumentDuplicateKeys } from "../../🧬️schema/🔣️json-document/🟦️.ts";
 import manifestSchema from "./🧬️schema/🔣️.json";

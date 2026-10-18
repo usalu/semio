@@ -4,7 +4,7 @@ import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪�
 import { workerLawFakesV1, bytesFromHex, fixtureConfig, fixtureRequiredFrontier, sampleEnvelope } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
-type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
+type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
 type ServerFrame = import("@semio-tech/framework-replication").ServerFrame;
 type WireFrontierSummary = import("@semio-tech/framework-replication").WireFrontierSummary;

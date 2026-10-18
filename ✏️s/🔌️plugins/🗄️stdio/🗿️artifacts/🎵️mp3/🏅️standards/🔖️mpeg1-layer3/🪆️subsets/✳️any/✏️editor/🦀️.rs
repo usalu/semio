@@ -9,7 +9,7 @@ use crate::standards::mpeg1_layer3::subsets::any::schema::mutations::{Mp3Mutatio
 
 use crate::standards::mpeg1_layer3::subsets::any::schema::snapshot::Mp3Snapshot;
 use crate::{MP3_DIALECT, STDIO_MP3_DOCUMENT_SCHEMA};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;

@@ -1,10 +1,11 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 
 interface Field { readonly id: number; readonly key: string; readonly optional: boolean; readonly labels: readonly { readonly label: string; readonly ordinal: number }[] }
 interface Case { readonly factory: string; readonly owner: string; readonly fields: readonly Field[] }
 const fixture: { readonly cases: readonly Case[]; readonly genericWitnesses: readonly unknown[] } = JSON.parse(readFileSync(new URL("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🎛️metadata/🔣️.json", import.meta.url), "utf8"));
-const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
+const snapshotRoot = new URL("../../", import.meta.url);
+const source = readdirSync(snapshotRoot, { recursive: true }).map(String).filter(path => path.endsWith("🦀️.rs") && !path.includes("🧪️tests")).sort().map(path => readFileSync(new URL(path, snapshotRoot), "utf8")).join("\n");
 
 test("independent closed metadata descriptors retain all eleven record contracts", () => {
   expect(new Set(fixture.cases.map(row => row.factory)).size).toBe(11);

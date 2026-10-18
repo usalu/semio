@@ -59,7 +59,7 @@ describe("retained browser clock deadlines", () => {
   });
 
   it("revokes animation and expired control timers while a presenter checkout waits for handback", () => {
-    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🧵️frame-turn-scheduling/🔣️.json"), "utf8"));
     vi.useFakeTimers();
     vi.setSystemTime(0);
     const context = harness();

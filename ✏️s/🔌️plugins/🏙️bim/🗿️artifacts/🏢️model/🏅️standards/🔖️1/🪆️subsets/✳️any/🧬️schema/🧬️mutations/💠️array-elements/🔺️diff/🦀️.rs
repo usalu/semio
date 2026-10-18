@@ -5,7 +5,7 @@
 //! a blank prefix, a minted id that is taken and any refusal of the copy itself.
 
 use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
-use super::ArrayElements;
+use crate::standards::v1::subsets::any::schema::mutations::array_elements::ArrayElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -34,7 +34,7 @@
       "inputs": [
         "sharedGlobals",
         "{projectRoot}/🛂️descriptor/**/*",
-        "{projectRoot}/../🧬️schema/📜️.wit",
+        "{projectRoot}/../🧬️schema/**/*.wit",
         "{projectRoot}/📜️script.ts"
       ],
       "outputs": []

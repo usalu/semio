@@ -1,0 +1,19 @@
+{
+ "pkg": "semio-framework-job-unit-tests",
+ "id": "job-unit-tests",
+ "dir": "🧰️framework/🔨️modules/🧵️job/🧪️tests/🔬️unit",
+ "parent": "semio-framework-job",
+ "parent_node": "🧰️framework/🔨️modules/🧵️job",
+ "route_index": 21,
+ "route_after": "semio-framework-job-native-decode",
+ "workspace_dep": false,
+ "desc": "Companion white-box laws of the job core: retained payload ownership and payload retirement over the private operation ledger",
+ "deps": [],
+ "dev": [
+  "semio-framework-job = { workspace = true, features = [\"testkit\"] }",
+  "semio-framework-trace = { workspace = true }",
+  "semio-framework-value = { workspace = true }",
+  "serde_json = { workspace = true }",
+  {"name": "semio-framework-test-fixtures", "path": "🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader"}
+ ]
+}

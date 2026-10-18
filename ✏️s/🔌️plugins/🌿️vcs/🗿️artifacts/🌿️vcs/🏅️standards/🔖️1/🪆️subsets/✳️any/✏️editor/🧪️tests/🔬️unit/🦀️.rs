@@ -1,10 +1,10 @@
-use crate::editor::vcs::commands::edit as edit_command;
-use crate::editor::vcs::commands::example::set_active_example;
-use crate::{editor::vcs::commands::change_counter, editor::vcs::commands::change_notes, editor::vcs::commands::change_status, editor::vcs::commands::canvas_pointer_down, editor::vcs::commands::canvas_pointer_move, editor::vcs::commands::canvas_pointer_up, editor::vcs::commands::canvas_wheel, editor::vcs::commands::increment_counter, editor::vcs::commands::no_operation, editor::vcs::commands::rename_vcs, editor::vcs::commands::text_edit};
-use crate::{editor::vcs::config::VcsDemoConfig, editor::vcs::config::VcsDemoConfigMutation};
-use crate::editor::vcs::modes::edit;
-use crate::{editor::vcs::modes::edit::windows::editor, editor::vcs::modes::edit::windows::history};
-use crate::{op::VcsDemoMutation, VcsSnapshot};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::edit as edit_command;
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::example::set_active_example;
+use semio_s_artifact_vcs_vcs_editor::{editor::vcs::commands::change_counter, editor::vcs::commands::change_notes, editor::vcs::commands::change_status, editor::vcs::commands::canvas_pointer_down, editor::vcs::commands::canvas_pointer_move, editor::vcs::commands::canvas_pointer_up, editor::vcs::commands::canvas_wheel, editor::vcs::commands::increment_counter, editor::vcs::commands::no_operation, editor::vcs::commands::rename_vcs, editor::vcs::commands::text_edit};
+use semio_s_artifact_vcs_vcs_editor::{editor::vcs::config::VcsDemoConfig, editor::vcs::config::VcsDemoConfigMutation};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::modes::edit;
+use semio_s_artifact_vcs_vcs_editor::{editor::vcs::modes::edit::windows::editor, editor::vcs::modes::edit::windows::history};
+use semio_s_artifact_vcs_vcs_editor::{op::VcsDemoMutation, VcsSnapshot};
 use semio_framework::ToolExecutionContract;
 use semio_framework_plugin::retained_command::ArtifactCommandWork;
 use semio_framework_plugin::ArtifactToolPublicationLane;
@@ -53,7 +53,7 @@ pub(crate) mod context {
         semio_framework_plugin::App { definition: create_vcs_app(), examples: Vec::new() }
     }
 
-    semio_framework_plugin::history_edit_acceptance_law!("vcs", VcsPlayApp, vcs_app_manifest_for_tests, "../..");
+    semio_framework_plugin::history_edit_acceptance_law!("vcs", VcsPlayApp, vcs_app_manifest_for_tests, "../../../..");
     
     /// 🧪️ A pre-seeded app instance. It carries the real `AppActionRegistry`, exactly like
     /// `app_with_registry()`: since the framework joins `EditorApp<VcsPlayApp>`'s
@@ -353,16 +353,16 @@ pub(crate) mod context {
     }
 }
 
-use crate::editor::vcs::*;
-use crate::editor::vcs::unit_tests::context::{action_args, app, dispatch, no_args, seeded_envelope, settle_action, settle_reserved};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::*;
+use crate::unit_tests::context::{action_args, app, dispatch, no_args, seeded_envelope, settle_action, settle_reserved};
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::PluginApp;
 use serde_json::{from_str as parse, Value};
 use store::HistoryColumn;
 
-static RETAINED_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
-static RETAINED_EDIT_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/✍️retained-edit-limits/🔣️.json"));
-static RETAINED_ROUTES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../🧪️tests/🧫️fixtures/🛣️retained-command-routes.json"));
+static RETAINED_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧫️fixtures/🧫️retained-command-limits/🔣️.json"));
+static RETAINED_EDIT_LIMITS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧫️fixtures/✍️retained-edit-limits/🔣️.json"));
+static RETAINED_ROUTES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| runtime_fixture_text("../../../🧫️fixtures/🛣️retained-command-routes.json"));
 
 //#region 🔖️CommandSurface
 /// 🏷️ Every declared manifest action id must be reachable as exactly one command row, and every row's
@@ -424,7 +424,7 @@ pub(crate) fn every_command() -> Vec<VcsCommand> {
         VcsCommand::CanvasPointerMove(canvas_pointer_move::CanvasPointerMove { samples: vec![[1.0, 2.0], [3.0, 4.0]] }),
         VcsCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }),
         VcsCommand::CanvasWheel(canvas_wheel::CanvasWheel {}),
-        VcsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::demo::ID.into() }),
+        VcsCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: semio_s_artifact_vcs_vcs_editor::examples::demo::ID.into() }),
     ]
 }
 
@@ -481,8 +481,8 @@ fn one_item_store_preparation_rejects_non_document_lanes() {
     use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
     let artifact = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::os_store::store_schema::HistoryLane::Document);
     let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::os_store::store_schema::HistoryLane::Document);
-    assert!(artifact.preflight(&crate::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Document).is_ok());
-    assert!(artifact.preflight(&crate::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Interaction).is_err());
+    assert!(artifact.preflight(&semio_s_artifact_vcs_vcs_editor::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Document).is_ok());
+    assert!(artifact.preflight(&semio_s_artifact_vcs_vcs_editor::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Interaction).is_err());
     let mutation = VcsDemoConfigMutation::Noop;
     assert!(config.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok());
     assert!(config.preflight(&mutation, store::os_store::store_schema::HistoryLane::Interaction).is_err());
@@ -503,7 +503,7 @@ fn action_bridge_covers_all_vcs_owned_commands_and_rejects_unknown_actions() {
         ("canvasPointerMove", semio_framework_value::DslValue::Object(vec![("samples".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::float(1.0), semio_framework_value::DslValue::float(2.0)])]))])),
         ("canvasPointerUp", semio_framework_value::DslValue::Object(vec![("cancelled".into(), semio_framework_value::DslValue::Bool(false))])),
         ("canvasWheel", no_args()),
-        ("setActiveExample", action_args([("exampleId", crate::examples::demo::ID.to_string())])),
+        ("setActiveExample", action_args([("exampleId", semio_s_artifact_vcs_vcs_editor::examples::demo::ID.to_string())])),
     ];
     // 🏷️ "all vcs owned commands" is the enum's own roster, never a hand-copied subset.
     let mut bridged: Vec<&str> = rows.iter().map(|(id, _)| *id).collect();
@@ -595,7 +595,7 @@ fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
     work.next = Some(VcsSnapshot { tags: vec!["retire".into()], ..VcsPlayApp::initial_snapshot() });
     work.current_tags.insert("current".into());
     work.next_tags.insert("next".into());
-    work.mutations.push(crate::mutations::add_tag("mutation".into()));
+    work.mutations.push(semio_s_artifact_vcs_vcs_editor::mutations::add_tag("mutation".into()));
     work.begin_close();
     let mut turns = 0;
     while !work.terminal_is_empty() {
@@ -699,7 +699,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
 /// every other node's tests use.
 #[semio_framework_async_macros::async_test]
 async fn registry_enforced_app_dispatches_a_declared_action() {
-    use crate::editor::vcs::unit_tests::context::app_with_registry;
+    use crate::unit_tests::context::app_with_registry;
     let mut instance = app_with_registry().await;
     let before = instance.snapshot().expect("materialize snapshot").counter;
     dispatch(&mut instance, VcsCommand::IncrementCounter(increment_counter::IncrementCounter {})).await;
@@ -807,12 +807,12 @@ async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
 #[semio_framework_async_macros::async_test]
 async fn the_one_item_preflight_declares_room_for_a_point_inverse() {
     let factory = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::os_store::store_schema::HistoryLane::Document);
-    let footprint = store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Document)
+    let footprint = store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &semio_s_artifact_vcs_vcs_editor::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Document)
         .expect("the document lane admits its own counter mutation");
     assert_eq!(footprint.work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert!(footprint.is_admissible());
     assert!(
-        store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Interaction).is_err(),
+        store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &semio_s_artifact_vcs_vcs_editor::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Interaction).is_err(),
         "the declared lane is part of the envelope the factory admits"
     );
 }

@@ -77,7 +77,7 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
@@ -85,7 +85,7 @@ pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> S
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -95,7 +95,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_colorspace(c: SemioColorspace) -> char {
+pub fn enc_colorspace(c: SemioColorspace) -> char {
     match c {
         SemioColorspace::Rgb => 'r',
         SemioColorspace::Rgba => 'a',
@@ -106,7 +106,7 @@ pub(crate) fn enc_colorspace(c: SemioColorspace) -> char {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
+pub fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
     match s {
         "r" => Ok(SemioColorspace::Rgb),
         "a" => Ok(SemioColorspace::Rgba),
@@ -118,24 +118,24 @@ pub(crate) fn dec_colorspace(s: &str) -> Result<SemioColorspace, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_frame(f: &SemioImageFrame) -> String {
+pub fn enc_frame(f: &SemioImageFrame) -> String {
     format!("[{},{}]", f.delay_ms, hex_encode(&f.rgba8))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_frame(s: &str) -> Result<SemioImageFrame, String> {
+pub fn dec_frame(s: &str) -> Result<SemioImageFrame, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [delay, rgba] = parts.as_slice() else { return Err(format!("frame: expected 2 fields, got {}", parts.len())) };
     Ok(SemioImageFrame { delay_ms: parse_u32(delay)?, rgba8: hex_decode(rgba)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_metadata_entry(e: &SemioImageMetadataEntry) -> String {
+pub fn enc_metadata_entry(e: &SemioImageMetadataEntry) -> String {
     format!("[{},{}]", enc_str(&e.key), enc_str(&e.value))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_metadata_entry(s: &str) -> Result<SemioImageMetadataEntry, String> {
+pub fn dec_metadata_entry(s: &str) -> Result<SemioImageMetadataEntry, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("metadata entry: expected 2 fields, got {}", parts.len())) };
     Ok(SemioImageMetadataEntry { key: dec_str(key)?, value: dec_str(value)? })

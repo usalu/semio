@@ -168,6 +168,4 @@ pub fn apply(snapshot: &ModelSnapshot, family: &str, edit: &Edit, fresh: &str) -
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

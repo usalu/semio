@@ -1,4 +1,10 @@
-use super::*;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::typed_to_svg_document;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_to_text_checked;
+use crate::standards::v1::subsets::any::io::export::svg::codec::*;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::tags;
 
 fn root(children: Vec<SvgElement>) -> SvgElement {

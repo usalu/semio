@@ -4,6 +4,7 @@ import { Database } from "bun:sqlite";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import * as sqliteOwner from "../🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../../../🧬️schema/📸️snapshot/🔣️.json";
 import { parsePlaygroundDiff } from "../../../../🧬️schema/🔺️diff/🟦️.ts";
@@ -24,7 +25,7 @@ type Capability = {
   playgroundSnapshotToSqliteDatabase(value: snapshot.PlaygroundSnapshot, options?: ArtifactSqliteOptions): Promise<SqliteDatabase>;
   playgroundSnapshotFromSqliteDatabase(value: SqliteDatabase, options?: ArtifactSqliteOptions): Promise<snapshot.PlaygroundSnapshot>;
 };
-const capability = snapshot as unknown as Capability;
+const capability = sqliteOwner as unknown as Capability;
 
 for (const [name, parse] of [["Snapshot", parsePlaygroundSnapshotText], ["Diff", parsePlaygroundDiffText], ["Inference", parsePlaygroundInferenceText], ["Mutation", parsePlaygroundMutationsText]] as const) test("Playground " + name + " text parser owns literal strings", () => {
   const check = new Ajv().compile({ type: "string" });
@@ -46,8 +47,8 @@ test("Playground inference depth values follow independent integer semantics", (
 });
 
 test("Playground actual Snapshot owns both semantic SQLite directions", () => {
-  expect(Object.hasOwn(snapshot, "playgroundSnapshotToSqliteDatabase")).toBe(true);
-  expect(Object.hasOwn(snapshot, "playgroundSnapshotFromSqliteDatabase")).toBe(true);
+  expect(Object.hasOwn(sqliteOwner, "playgroundSnapshotToSqliteDatabase")).toBe(true);
+  expect(Object.hasOwn(sqliteOwner, "playgroundSnapshotFromSqliteDatabase")).toBe(true);
 });
 
 for (const { name, ...value } of fixture.nativeCases) test("Playground literal persisted schema " + name, () => {

@@ -40,6 +40,4 @@ pub fn arc_cubics(from: Point, to: Point, bulge: f64) -> Vec<Cubic> {
         .collect()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

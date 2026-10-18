@@ -2,11 +2,13 @@
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
+import { repoTestArtifactEnvironment } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 
 const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 // #endregion 🔌️Adapters
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
+const repoRoot = resolve(root, "../../../../..");
 
 /** 🧪️ Vitest for `@semio-tech/framework-os` (inline `import.meta.vitest`). */
 export default defineConfig({
@@ -18,6 +20,7 @@ export default defineConfig({
     root: testRoot,
     name: "@semio-tech/framework-os",
     environment: "node",
+    env: { SEMIO_TEST_ARTIFACT_DIR: repoTestArtifactEnvironment(repoRoot, "os").SEMIO_TEST_ARTIFACT_DIR! },
     // 🩹️ Never list one file in both `include` and `includeSource`: vitest would collect it twice and report
     // double the real test count. In-source files go to `includeSource`/`coverage.include` only; a suite that
     // imports its module and registers itself is an `include` entry.

@@ -1,11 +1,65 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use schema::ArtifactSchema;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ModelQuantities;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyTotals, EnvelopeSpace};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets::ClashSetResult;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+use crate::standards::v1::subsets::any::schema::inferences::*;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
 
 fn house() -> ModelSnapshot {
-    from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")
+    from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("house decodes")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -27,11 +81,11 @@ async fn infers_a_level_per_storey_and_a_layout_per_wall() {
     assert_eq!(inferred.wall_layout.keys().collect::<Vec<_>>(), snapshot.walls.keys().collect::<Vec<_>>());
 }
 
-const LEVELS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/💡️inference/🪜️storey-levels/🔣️.json");
-const LAYOUTS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/💡️inference/🧱️wall-layout/🔣️.json");
+static LEVELS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/💡️inference/🪜️storey-levels/🔣️.json"));
+static LAYOUTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/💡️inference/🧱️wall-layout/🔣️.json"));
 
-const JOINS_SNAPSHOT: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
-const JOINS_LAYOUTS: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/💡️inference/🧱️wall-layout/🔣️.json");
+static JOINS_SNAPSHOT: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json"));
+static JOINS_LAYOUTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/💡️inference/🧱️wall-layout/🔣️.json"));
 
 fn disagreements(expected: &serde_json::Value, actual: &serde_json::Value, path: &str) -> Vec<String> {
     use serde_json::Value;
@@ -63,10 +117,10 @@ async fn the_subject_reproduces_the_third_party_oracle_tables() {
     let produced = |text: String| serde_json::from_str::<serde_json::Value>(&text).expect("JSON table");
     let model = house();
     let inferred = ModelInference::infer(&model).expect("infers");
-    agrees(&table(LEVELS), &produced(semio_framework_pack_json::to_json_string(&inferred.storey_levels)));
-    agrees(&table(LAYOUTS), &produced(semio_framework_pack_json::to_json_string(&inferred.wall_layout)));
-    let joins: ModelSnapshot = from_json_str(JOINS_SNAPSHOT, JsonMemberPolicy::Reject).expect("the joins snapshot decodes");
-    agrees(&table(JOINS_LAYOUTS), &produced(semio_framework_pack_json::to_json_string(&ModelInference::infer(&joins).expect("infers").wall_layout)));
+    agrees(&table((*LEVELS)), &produced(semio_framework_pack_json::to_json_string(&inferred.storey_levels)));
+    agrees(&table((*LAYOUTS)), &produced(semio_framework_pack_json::to_json_string(&inferred.wall_layout)));
+    let joins: ModelSnapshot = from_json_str((*JOINS_SNAPSHOT), JsonMemberPolicy::Reject).expect("the joins snapshot decodes");
+    agrees(&table((*JOINS_LAYOUTS)), &produced(semio_framework_pack_json::to_json_string(&ModelInference::infer(&joins).expect("infers").wall_layout)));
 }
 
 #[semio_framework_async_macros::async_test]

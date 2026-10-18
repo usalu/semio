@@ -1,6 +1,6 @@
 //! 🗾️ `create-zone` payload. Brings a new zone into the model: a named group of spaces with a purpose and an occupancy density; the spaces join it through `set-space`.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Zone}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Zone}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateZone {
     pub zone: Zone,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateZone {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateZone
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateZone> + From<crate::standards::v1::subsets::any::schema::mutations::delete_zone::DeleteZone>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "zone", kind: "create-zone", record: "CreateZone" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_zone::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_zone::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create zone \"{}\"", self.zone.name), &format!("Zone \"{}\" anlegen", self.zone.name))

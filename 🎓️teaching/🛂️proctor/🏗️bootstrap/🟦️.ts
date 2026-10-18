@@ -23,6 +23,7 @@ import { constants } from "node:os";
 import { basename, dirname, join, resolve, sep } from "node:path";
 import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { startNativeProgress } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+import { cargoPackageClosure, type ManifestClosureOptions } from "./🕸️manifest-closure/🟦️.ts";
 
 /** 📦️ The crate that holds the binary. */
 export const PROCTOR_PACKAGE = "teaching-proctor";
@@ -217,13 +218,32 @@ export function proctorExecutable(messages: string): string | undefined {
   return undefined;
 }
 
-/** 🏗️ Build the binary and return the path Cargo uplifted it to: diagnostics go to the terminal, a progress line follows
+/** 🏗️ The repository's build entry, relative to the repository root: `bun <entry> repo cargo …` is `bun repo cargo …`. */
+export const REPOSITORY_BUILD_ENTRY = ["🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "📚️library", "🏗️build", "📜️script.ts"] as const;
+
+/** 🚪️ The sanctioned launch of the proctor build: the repository's issued Cargo launcher in the shared store, run in the
+ * teaching workspace. `.cargo/config.toml` refuses a bare `cargo` (its compiler is the launcher-only ingress), so every
+ * build goes through the launcher, which selects the `prototype` configuration for Cargo's `dev` build and `release` for
+ * the deployed one and sets `SEMIO_BUILD_MODE` to match, as the launcher refuses a mode that disagrees with it.
+ * @see ../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🚪️launcher/🟦️.ts */
+export function proctorBuildLaunch(repoRoot: string, env: NodeJS.ProcessEnv = process.env, profile: "dev" | "release" = "dev"): { command: string; args: string[]; cwd: string; env: NodeJS.ProcessEnv } {
+  const configuration = profile === "release" ? "release" : "prototype";
+  return {
+    command: process.execPath,
+    args: [join(repoRoot, ...REPOSITORY_BUILD_ENTRY), "repo", "cargo", "--store=shared", `--configuration=${configuration}`, "--", "build", "--locked", "--package", PROCTOR_PACKAGE, "--bin", "proctor", "--message-format=json-render-diagnostics"],
+    cwd: join(repoRoot, TEACHING_WORKSPACE),
+    env: { ...env, SEMIO_BUILD_MODE: configuration },
+  };
+}
+
+/** 🏗️ Build the binary through {@link proctorBuildLaunch} and return the path Cargo uplifted it to: diagnostics go to the terminal, a progress line follows
  * every ten seconds (a first build takes minutes), and an aborted `signal` ends the whole cargo tree. `profile` is
  * Cargo's `dev` build (what the dev launcher runs) or its `release` build (what is deployed and what capacity is
  * measured on). */
 export async function buildProctor(repoRoot: string, env: NodeJS.ProcessEnv = process.env, signal?: AbortSignal, profile: "dev" | "release" = "dev"): Promise<string> {
   if (signal?.aborted) throw new Error(`cargo build of ${PROCTOR_PACKAGE} cancelled`);
-  const child = spawn("cargo", ["build", "--package", PROCTOR_PACKAGE, "--bin", "proctor", ...(profile === "release" ? ["--release"] : []), "--message-format=json-render-diagnostics"], { cwd: join(repoRoot, TEACHING_WORKSPACE), env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", windowsHide: true });
+  const launch = proctorBuildLaunch(repoRoot, env, profile);
+  const child = spawn(launch.command, launch.args, { cwd: launch.cwd, env: launch.env, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32", windowsHide: true });
   let messages = "";
   child.stdout!.setEncoding("utf8").on("data", (chunk: string) => (messages += chunk));
   child.stderr!.pipe(process.stderr, { end: false });
@@ -246,20 +266,6 @@ export async function buildProctor(repoRoot: string, env: NodeJS.ProcessEnv = pr
   return executable;
 }
 
-/** 📦️ One package as `cargo metadata` describes it. */
-interface CargoPackage {
-  readonly id: string;
-  readonly name: string;
-  readonly source: string | null;
-  readonly manifest_path: string;
-}
-
-/** 🕸️ What `cargo metadata` says of a workspace: its packages and their resolved dependencies, by kind. */
-interface CargoMetadata {
-  readonly packages: readonly CargoPackage[];
-  readonly resolve: { readonly nodes: readonly { readonly id: string; readonly deps: readonly { readonly pkg: string; readonly dep_kinds: readonly { readonly kind: string | null }[] }[] }[] };
-}
-
 /** 🗂️ The directory a package's sources live in: the owner whose `📦️packages/<language>` folder holds the manifest
  * (the repository's taxonomy keeps sources beside the owner, not beside the manifest), else the manifest's own. */
 function packageRoot(manifest: string): string {
@@ -268,29 +274,12 @@ function packageRoot(manifest: string): string {
 }
 
 /** 🗂️ The directories the `proctor` binary is built from: the root of every package of this repository it depends on
- * to build (as `cargo metadata` resolves the teaching workspace offline), a directory inside another left out. */
-export async function proctorSourceDirectories(repoRoot: string, env: NodeJS.ProcessEnv = process.env): Promise<string[]> {
-  const child = spawn("cargo", ["metadata", "--format-version", "1", "--offline"], { cwd: join(repoRoot, TEACHING_WORKSPACE), env, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
-  let output = "";
-  let failure = "";
-  child.stdout!.setEncoding("utf8").on("data", (chunk: string) => (output += chunk));
-  child.stderr!.setEncoding("utf8").on("data", (chunk: string) => (failure += chunk));
-  const status = await new Promise<number | string>((accept) => {
-    child.once("error", (error) => accept(error.message));
-    child.once("close", (code, ended) => accept(code ?? ended ?? 1));
-  });
-  if (status !== 0) throw new Error(`cargo metadata of ${TEACHING_WORKSPACE} failed (${status}): ${failure.trim().split(/\r?\n/u).at(-1) ?? ""}`);
-  const metadata = JSON.parse(output) as CargoMetadata;
-  const packages = new Map(metadata.packages.map((cargoPackage) => [cargoPackage.id, cargoPackage]));
-  const nodes = new Map(metadata.resolve.nodes.map((node) => [node.id, node]));
-  const pending = metadata.packages.filter((cargoPackage) => cargoPackage.name === PROCTOR_PACKAGE).map((cargoPackage) => cargoPackage.id);
-  const reached = new Set<string>();
-  for (let id = pending.pop(); id !== undefined; id = pending.pop()) {
-    if (reached.has(id)) continue;
-    reached.add(id);
-    for (const dep of nodes.get(id)?.deps ?? []) if (dep.dep_kinds.some((kind) => kind.kind !== "dev")) pending.push(dep.pkg);
-  }
-  const roots = [...reached].flatMap((id) => (packages.get(id)?.source === null ? [packageRoot(packages.get(id)!.manifest_path)] : [])).sort();
+ * to build (as the teaching workspace's manifests resolve, read with the repository's Cargo TOML parser), a directory
+ * inside another left out. A `signal` stops the reading; `onManifest` follows it.
+ * @see ./🕸️manifest-closure/🟦️.ts — the resolution */
+export async function proctorSourceDirectories(repoRoot: string, options: ManifestClosureOptions = {}): Promise<string[]> {
+  const crates = await cargoPackageClosure(join(repoRoot, TEACHING_WORKSPACE, "Cargo.toml"), PROCTOR_PACKAGE, options);
+  const roots = crates.map((crate) => packageRoot(crate.manifest)).sort();
   return roots.filter((root, index) => !roots.slice(0, index).some((outer) => root.startsWith(`${outer}${sep}`) || root === outer));
 }
 

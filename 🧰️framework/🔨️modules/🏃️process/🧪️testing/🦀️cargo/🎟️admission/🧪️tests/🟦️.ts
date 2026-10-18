@@ -2,7 +2,7 @@ import {test,expect} from "bun:test";
 import {mkdtempSync,readdirSync} from "node:fs";
 import {join} from "node:path";
 import Ajv from "ajv";
-import fixture from "../🧫️fixtures/🔣️.json";
+import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";
 import {runCargoTestsV1,runCargoLintV1,type CargoTestPolicyV1} from "../../🟦️.ts";
 const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original test artifacts required");

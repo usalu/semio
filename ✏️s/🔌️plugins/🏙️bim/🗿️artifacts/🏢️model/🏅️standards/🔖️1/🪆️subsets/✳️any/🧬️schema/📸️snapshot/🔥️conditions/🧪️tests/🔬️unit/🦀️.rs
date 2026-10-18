@@ -1,6 +1,9 @@
 //! 🧪️ The thermal-data rules: set point and flow limits of the conditions of a space, the ranges of the thermal data of a window or door type.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::entities::{DoorType, SpaceConditions, WindowType};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::entities::CurtainWallType;
+use crate::standards::v1::subsets::any::schema::snapshot::conditions::*;
 
 fn window() -> WindowType {
     WindowType { name: "Triple".into(), width: 1.2, height: 1.2, sill: 0.9, frame_width: 0.06, frame_depth: 0.08, panes: 3, material: "m-wood".into(), u_value: Some(0.9), g_value: Some(0.5), frame_fraction: Some(0.25) }

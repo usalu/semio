@@ -8,7 +8,7 @@
 //! An engine fault never shows as an empty model: a read keeps the last complete inference and adds the finding [`DiagnosticCode::InferenceFault`], which the diagnostics panel and the problem counters show in English and German
 //! ([`shown`]); the calls whose caller can refuse (`try_*`, exports, jobs) hand the fault over as a value.
 
-use super::{kinds, ModelInferenceSession, RunProgress, SessionRun, UpdateReport};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelInferenceSession, RunProgress, SessionRun, UpdateReport};
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticCode, DiagnosticIndex};
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, snapshot::ModelSnapshot};
@@ -27,7 +27,7 @@ pub const DOCUMENT: &str = "bim.model-graph";
 pub const PROBE: &str = "bim.model-graph.probe";
 
 /// 🧠️ Lends the session `name` of `handle` to `act`, creating it on first use. An instance whose close ladder already dropped its sessions serves `act` a throwaway session instead.
-fn lend_handle<R>(handle: &ArtifactInstanceOperationOwnerHandle, name: &'static str, act: impl FnOnce(&mut ModelInferenceSession) -> R) -> R {
+pub fn lend_handle<R>(handle: &ArtifactInstanceOperationOwnerHandle, name: &'static str, act: impl FnOnce(&mut ModelInferenceSession) -> R) -> R {
     let mut act = Some(act);
     match handle.with_inference_session_cold(name, ModelInferenceSession::default, |session| Ok(act.take().map(|act| act(session)))) {
         Ok(Some(out)) => out,
@@ -195,6 +195,4 @@ impl Analysis {
 }
 //#endregion 🔖️Analysis
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

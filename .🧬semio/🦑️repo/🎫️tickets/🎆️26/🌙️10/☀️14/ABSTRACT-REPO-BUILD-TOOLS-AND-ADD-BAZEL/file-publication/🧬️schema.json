@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Modes": {
+      "const": [
+        "--source",
+        "--strict",
+        "--regression"
+      ]
+    },
+    "SourcePatterns": {
+      "const": [
+        "^neutral\\ Core\\ directory\\-relative\\ file\\ publication\\ actual\\ close\\ faults\\ limits\\ and\\ drainage$",
+        "^neutral\\ Core\\ directory\\-relative\\ file\\ publication\\ Windows\\ purpose\\ refuses\\ before\\ effects$",
+        "^neutral\\ Core\\ directory\\-relative\\ file\\ publication\\ actual\\ POSIX\\ transitions\\ retain\\ prior\\ bytes$",
+        "^neutral\\ Core\\ directory\\-relative\\ file\\ publication\\ defining\\ methods\\ exist$",
+        "^neutral Core directory-relative file publication Linux statx decoder matches Python struct$"
+      ]
+    },
+    "RegressionPatterns": {
+      "const": [
+        "^neutral\\ Core\\ directory\\-relative\\ creation\\ defining\\ methods\\ exist$",
+        "^neutral\\ Core\\ directory\\-relative\\ creation\\ distinct\\ close\\ retains\\ exact\\ arbitrary\\ first\\ primary$",
+        "^neutral\\ Core\\ directory\\-relative\\ creation\\ exact\\ private\\ modes\\ reject\\ all\\ special\\ bits$",
+        "^neutral\\ Core\\ directory\\-relative\\ creation\\ actual\\ POSIX\\ owners\\ retain\\ exclusive\\ close\\ and\\ drain\\ laws$",
+        "^neutral\\ Core\\ directory\\-relative\\ binding\\ defining\\ methods\\ exist$",
+        "^neutral\\ Core\\ directory\\-relative\\ binding\\ actual\\ POSIX\\ missing\\ and\\ symbolic\\ transitions\\ stay\\ conditional$",
+        "^neutral\\ Core\\ directory\\-relative\\ preservation\\ defining\\ methods\\ exist$",
+        "^neutral\\ Core\\ directory\\-relative\\ preservation\\ actual\\ POSIX\\ inode\\ survives\\ exchange$",
+        "^neutral\\ Core\\ directory\\-relative\\ preservation\\ actual\\ POSIX\\ portability\\ custody\\ and\\ syscall\\ failures$",
+        "^neutral\\ Core\\ directory\\-relative\\ preservation\\ Windows\\ purpose\\ refuses\\ before\\ effects$",
+        "^neutral\\ Core\\ directory\\-relative\\ retention\\ defining\\ methods\\ exist$",
+        "^neutral\\ Core\\ directory\\-relative\\ retention\\ actual\\ POSIX\\ portability\\ custody\\ and\\ syscall\\ failures$",
+        "^neutral\\ Core\\ directory\\-relative\\ retention\\ Windows\\ purpose\\ refuses\\ before\\ effects$"
+      ]
+    },
+    "SourceHarnessMilliseconds": {
+      "const": 60000
+    }
+  }
+}

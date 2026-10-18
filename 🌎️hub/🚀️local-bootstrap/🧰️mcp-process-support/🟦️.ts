@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import { requireMcpBinary } from "@semio-tech/framework-os-mcp";
 import { cargoTargetDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { deliverCredentialEnvelopeToChild } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
 import { LOCAL_READINESS_STALL_BOUND_MS, type LocalHubRun } from "../🏃️execution/🟦️.ts";
 
@@ -156,7 +156,7 @@ export async function waitForJsonRpcResponse(child: ChildProcess, chunks: readon
  * admin_dir` (§C0 `OS_HUB_ADMIN_DIR`, else the compile-time default) is read at hub STARTUP, not
  * build time, so this is a runtime prerequisite, not a Cargo `build.rs` concern. Zero-touch/
  * cross-platform: `bun repo run os-hub-admin:build` is the same command every OS/devcontainer already
- * runs for every other nx target here. */
+ * runs for every other build target here. */
 export function buildAdminSpa(repoRoot: string): void {
   runCmd("bun", ["repo", "run", "os-hub-admin:build"], { cwd: repoRoot, ...orchestratorBudgetOpts() });
 }

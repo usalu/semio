@@ -44,3 +44,4 @@ semio-hub-inference-binding = { workspace = true }
 semio-framework-artifact-reference = { path = "../../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-plugin = { workspace = true }
+pack = { workspace = true }

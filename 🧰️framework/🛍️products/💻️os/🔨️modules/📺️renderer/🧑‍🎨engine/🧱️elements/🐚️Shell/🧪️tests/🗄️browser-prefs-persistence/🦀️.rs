@@ -57,6 +57,7 @@ fn react_declared_storage_keys() -> std::collections::BTreeSet<String> {
     let files = [
         "🧰️framework/🔨️modules/🖥️platform/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx",
+        "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🔑️chrome-prefs/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌓️appearance/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts",
         "🧰️framework/🔨️modules/🖱️ui/🔨️modules/💾️keybinding-persistence/🟦️.ts",

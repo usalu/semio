@@ -1,5 +1,31 @@
-use super::testkit::{document, document_in, house, psets, quantity, rows, string, tags};
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_s_artifact_stdio_contract::part21::Part21Document;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+#[allow(unused_imports)]
+use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_contract::part21::Part21Header;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::context::{BuildingRef, Export, Staged, StoreyRef};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{opt_text, rf, unset, Ifc, V};
+use crate::standards::v1::subsets::any::io::export::ifc::testkit::{document, document_in, house, psets, quantity, rows, string, tags};
+use crate::standards::v1::subsets::any::io::export::ifc::*;
 use crate::standards::v1::subsets::any::io::import::ifc::{import_ifc2x3, import_ifc4};
 use protocol::Inference;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
@@ -109,18 +135,18 @@ fn door_and_window_types_replace_the_styles_and_carry_the_operation_and_partitio
     assert_eq!(document.by_type("IFCWINDOWTYPE").count(), model.window_types.len());
     for (id, kind) in &model.door_types {
         let (_, args) = rows(&document, "IFCDOORTYPE").into_iter().find(|(_, args)| string(args, 7).as_deref() == Some(id.as_str())).expect("the door type");
-        assert_eq!(args[10].as_enum(), Some(super::data::door_operation(kind)), "{id}");
+        assert_eq!(args[10].as_enum(), Some(crate::standards::v1::subsets::any::io::export::ifc::data::door_operation(kind)), "{id}");
         assert_eq!(args[9].as_enum(), Some("DOOR"));
     }
     for (id, kind) in &model.window_types {
         let (_, args) = rows(&document, "IFCWINDOWTYPE").into_iter().find(|(_, args)| string(args, 7).as_deref() == Some(id.as_str())).expect("the window type");
-        assert_eq!(args[10].as_enum(), Some(super::data::window_partitioning(kind.panes)), "{id}");
+        assert_eq!(args[10].as_enum(), Some(crate::standards::v1::subsets::any::io::export::ifc::data::window_partitioning(kind.panes)), "{id}");
     }
     for (_, args) in rows(&document, "IFCDOOR") {
         let tag = string(args, 7).expect("a tag");
         let opening = &model.openings[&tag];
         let crate::standards::v1::subsets::any::schema::snapshot::OpeningKind::Door { door_type } = &opening.kind else { panic!("a door") };
-        assert_eq!(args[11].as_enum(), Some(super::data::door_operation(&model.door_types[door_type])), "{tag}: the occurrence repeats the operation of its type");
+        assert_eq!(args[11].as_enum(), Some(crate::standards::v1::subsets::any::io::export::ifc::data::door_operation(&model.door_types[door_type])), "{tag}: the occurrence repeats the operation of its type");
     }
 }
 
@@ -258,9 +284,9 @@ fn tags_survive_in_both_schemas() {
 }
 
 //#region 🔖️Fixtures
-const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures");
+const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures");
 
-const ASSETS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets");
+const ASSETS: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🖼️assets");
 
 fn decoded(file: &str) -> crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot {
     let text = std::fs::read_to_string(file).unwrap_or_else(|error| panic!("{file}: {error}"));

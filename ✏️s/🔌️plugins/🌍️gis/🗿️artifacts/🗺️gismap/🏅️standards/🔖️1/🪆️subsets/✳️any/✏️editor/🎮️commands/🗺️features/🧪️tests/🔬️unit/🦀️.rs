@@ -1,21 +1,21 @@
-use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use crate::{GisMapSnapshot, MapFeature};
+use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use semio_s_artifact_gis_gismap_gis2d::{GisMapSnapshot, MapFeature};
 use semio_framework_value::DslValue;
 use serde_json::json;
 #[allow(unused_imports)]
-use crate::{mutations::create_position, mutations::create_region, mutations::create_route, mutations::delete_position, mutations::delete_region, mutations::delete_route, mutations::remove_position_property, mutations::remove_region_property, mutations::remove_route_property, mutations::replace_position_data, mutations::set_position_property, mutations::set_region_property, mutations::set_route_property};
+use semio_s_artifact_gis_gismap_gis2d::{mutations::create_position, mutations::create_region, mutations::create_route, mutations::delete_position, mutations::delete_region, mutations::delete_route, mutations::remove_position_property, mutations::remove_region_property, mutations::remove_route_property, mutations::replace_position_data, mutations::set_position_property, mutations::set_region_property, mutations::set_route_property};
 #[allow(unused_imports)]
-use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_document_from_descriptor_json;
+use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::gis_map_document_from_descriptor_json;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
 #[allow(unused_imports)]
 use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)]
 use serde_json::Value;
-use crate::editor::gis2d::commands::features::{property_edit_operations, collection_patch_operations};
-use crate::editor::gis2d::commands::features::*;
-use crate::editor::gis2d::unit_tests::context::{app, assert_two_instances_converge, close, dispatch};
-use crate::editor::gis2d::Gis2dCommand;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::features::{property_edit_operations, collection_patch_operations};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::features::*;
+use crate::unit_tests::context::{app, assert_two_instances_converge, close, dispatch};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dCommand;
 
 const ROUTE_A: &str = "bg_holz_fassade_botanique:bw_institut_botanique_ulg:0";
 const ROUTE_B: &str = "bg_stahl_mehrere_lycee_profiles_canopy:bw_lycee_block_3000:0";

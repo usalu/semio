@@ -216,7 +216,6 @@ mod tests;
 
 
 
-use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 
 /// ▶️ Applies one mutation to a projection through the central applier (`vcs::apply_mutation`): the step of the editor tools' charts and of the mutation tests.

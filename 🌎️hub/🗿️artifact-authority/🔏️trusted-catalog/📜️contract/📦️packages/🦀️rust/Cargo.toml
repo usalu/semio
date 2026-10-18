@@ -35,6 +35,7 @@ semio-framework-hash = { path = "../../../../../../🧰️framework/🔨️modul
 semio-framework-schema-registry = { workspace = true }
 semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }
 directory = { path = "../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-hub-artifact-authority = { workspace = true, features = ["testkit"] }

@@ -15,10 +15,9 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures
   nestedFiles: string[];
   execution: { target: string; command: string; cache: boolean };
 };
-const discoverySource = readFileSync(join(repoRoot, library, "🔍️discovery/🟦️.ts"), "utf8");
-const discovery = ts.createSourceFile("discovery.ts", discoverySource, ts.ScriptTarget.Latest, true);
+const discoveryOwners = ["📇️registry-catalog-inputs", "🔐️taxonomy-authority"].map((owner) => ts.createSourceFile(owner, readFileSync(join(repoRoot, library, "🔍️discovery", owner, "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true));
 const declaration = (name: string): ts.FunctionDeclaration => {
-  const rows = discovery.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name);
+  const rows = discoveryOwners.flatMap((owner) => owner.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name));
   if (rows.length !== 1) throw new Error(`Expected exactly one ${name} implementation`);
   return rows[0]!;
 };
@@ -47,7 +46,7 @@ function virtualFilesystem(root: string, files: Record<string, string>) {
 }
 
 test("registry catalog gitlink boundaries parses only stage-zero 160000 index rows, NFC-normalized and cached", () => {
-  const code = declaration("registryCatalogGitlinkBoundaries").getText(discovery);
+  const code = declaration("registryCatalogGitlinkBoundaries").getText();
   const decomposedPath = "\u267b\ufe0fmit-bestand/re\u0301sistance";
   const rows = [
     "100644 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0\t🔣️top-level.json",
@@ -72,7 +71,7 @@ test("registry catalog gitlink boundaries parses only stage-zero 160000 index ro
 });
 
 test("registry catalog input view treats a gitlink boundary as a terminal leaf", () => {
-  const code = declaration("registryCatalogInputView").getText(discovery).replace(/^export /u, "");
+  const code = declaration("registryCatalogInputView").getText().replace(/^export /u, "");
   const root = join(repoRoot, vector.virtualRoot);
   const files: Record<string, string> = { [vector.ancestorFile]: "{}", [vector.siblingFile]: "{}" };
   for (const path of vector.nestedFiles) files[path] = "{}";

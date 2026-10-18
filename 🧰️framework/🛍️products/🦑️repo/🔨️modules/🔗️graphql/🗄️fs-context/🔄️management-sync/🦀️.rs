@@ -10,7 +10,7 @@ pub(super) fn section_record(id: String, name: &str, path: &str, file: &str) -> 
 }
 
 /// 🏷️ Removes every technology label an issue carries that the catalog no longer declares.
-fn prune_labels(provider: &ManagementProviders, issue: &str, labels: &[ManagementLabel], valid: &[String]) {
+pub(super) fn prune_labels(provider: &ManagementProviders, issue: &str, labels: &[ManagementLabel], valid: &[String]) {
     let stale: Vec<String> = labels.iter().map(|label| label.name.clone()).filter(|name| name.starts_with('@') && !valid.contains(name)).collect();
     if stale.is_empty() {
         return;
@@ -37,7 +37,7 @@ impl FsRepoContext {
         }
     }
 
-    fn sync_goal(&self, provider: &ManagementProviders, goal: &mut Goal) {
+    pub(super) fn sync_goal(&self, provider: &ManagementProviders, goal: &mut Goal) {
         if semio_framework_repo_goals::is_root_goal(&goal.id) {
             if let Some(management) = goal.management.as_mut().filter(|management| !management.issue.is_empty()) {
                 println!("Migrating root goal {}: removing issue reference", goal.id);

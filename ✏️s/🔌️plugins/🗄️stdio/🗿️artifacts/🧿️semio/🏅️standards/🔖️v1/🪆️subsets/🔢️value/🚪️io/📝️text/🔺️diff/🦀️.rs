@@ -49,12 +49,12 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_value_id(id: &ValueId) -> String {
+pub fn enc_value_id(id: &ValueId) -> String {
     enc_str(&id.value)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_value_id(s: &str) -> Result<ValueId, String> {
+pub fn dec_value_id(s: &str) -> Result<ValueId, String> {
     Ok(ValueId::new(dec_str(s)?))
 }
 

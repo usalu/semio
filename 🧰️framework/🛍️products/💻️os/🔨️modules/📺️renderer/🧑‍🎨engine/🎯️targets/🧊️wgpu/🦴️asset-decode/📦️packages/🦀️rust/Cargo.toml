@@ -32,7 +32,6 @@ semio-framework-job-worker-authority = { path = "../../../../../../../../../../�
 semio-framework-pixels = { path = "../../../../../../../../../../🔨️modules/🔲️pixels/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
-ui_contract = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 ui_wgpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📦️packages/🦀️rust", features = ["wgpu-engine"], package = "semio-framework-ui" }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]

@@ -30,7 +30,7 @@ use semio_framework_plugin::NoTransientMutation;
 // `ViewEmit` are — closed by W0-F).
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{ArtifactViewer, ViewEmit, Viewer};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

@@ -94,6 +94,4 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
 }
 //#endregion 🔖️Render
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

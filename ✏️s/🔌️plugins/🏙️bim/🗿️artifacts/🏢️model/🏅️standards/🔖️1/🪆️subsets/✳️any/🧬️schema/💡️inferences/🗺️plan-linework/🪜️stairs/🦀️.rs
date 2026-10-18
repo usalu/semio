@@ -1,7 +1,7 @@
 //! 🪜️ Stairs in the plan: flight and landing outlines, one riser line per riser (projection below the cut, dashed above it), the cut line
 //! where the plane passes through a riser, and the up arrow along the walking line.
 
-use super::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, PlanVertex, Sheet};
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::bodies::rectangle as footprint;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::point;
 use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairRun, StairWinder};

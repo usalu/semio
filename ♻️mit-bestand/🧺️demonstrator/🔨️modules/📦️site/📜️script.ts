@@ -9,7 +9,7 @@ import { BundleScript, ScriptRouter } from "../../../../🧰️framework/🔨️
 import { buildViteArtifact } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { prefetchDemonstratorMapTiles } from "./🗺️map-tiles/🟦️.ts";
 
-/** 🎪️ Publishes the Demonstrator using prerequisites selected by the outer Nx graph. */
+/** 🎪️ Publishes the Demonstrator using prerequisites selected by the outer build graph. */
 class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("The Demonstrator build accepts no compiler arguments");

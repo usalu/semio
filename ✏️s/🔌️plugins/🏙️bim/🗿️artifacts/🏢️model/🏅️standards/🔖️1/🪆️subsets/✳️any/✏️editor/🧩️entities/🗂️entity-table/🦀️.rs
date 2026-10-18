@@ -1,6 +1,6 @@
 //! 🗂️ Entity table of the BIM entity table: the one static table of every entity kind. See [`super`].
 
-use super::*;
+use crate::editor::bim::entities::*;
 
 //#region 🔖️Table
 /// 🧩️ Every entity kind, structure first (site to space), then the library (materials and types). A new mutation kind is one row.

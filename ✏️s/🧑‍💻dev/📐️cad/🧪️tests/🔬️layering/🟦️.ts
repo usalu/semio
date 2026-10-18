@@ -28,7 +28,7 @@ function imports(source: string): string[] {
 
 describe("spatial and CAD ownership", () => {
   it("answers contribution vectors with zero, independent, and removed owners", async () => {
-    const fixture = JSON.parse(await readFile(resolve(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧫️fixtures/🔌️contributions/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(await readFile(resolve(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📐️geometry/🧪️tests/🧫️fixtures/🔌️contributions/🔣️.json"), "utf8"));
     const contributions = new Map<string, Record<string, unknown>>();
     const removals = new Map<string, () => void>();
     const events: string[][] = [];
@@ -59,7 +59,7 @@ describe("spatial and CAD ownership", () => {
     }
   });
   it("answers removable command vectors and restores independent owners", async () => {
-    const fixture = JSON.parse(await readFile(resolve(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🧫️fixtures/🔌️commands/🔣️.json"), "utf8"));
+    const fixture = JSON.parse(await readFile(resolve(root, "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🗺️spatial/🧪️tests/🧫️fixtures/🔌️commands/🔣️.json"), "utf8"));
     const contributions = new Map<string, { owner: string }>();
     const removals = new Map<string, () => void>();
     const kernel = new core.SemioBrepKernel();

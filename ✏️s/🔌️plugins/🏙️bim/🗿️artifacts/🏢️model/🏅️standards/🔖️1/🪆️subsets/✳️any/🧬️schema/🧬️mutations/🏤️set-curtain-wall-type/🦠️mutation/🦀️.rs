@@ -1,6 +1,6 @@
 //! 🏤️ `set-curtain-wall-type` payload. Patches exactly the provided fields of a curtain wall type: name, grid rules, mullion sections, default panel and materials; every curtain wall of the type follows by inference.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainGrid, CurtainPanel, ModelSnapshot, Profile}, diff::{patches::CurtainWallTypePatch, ModelDiff}, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainGrid, CurtainPanel, ModelSnapshot, Profile}, diff::{patches::CurtainWallTypePatch, ModelDiff}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -38,13 +38,16 @@ impl SetCurtainWallType {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetCurtainWallType {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetCurtainWallType
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetCurtainWallType>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "curtain-wall-type", kind: "set-curtain-wall-type", record: "SetCurtainWallType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit curtain wall type \"{}\"", self.id), &format!("Fassadentyp \"{}\" ändern", self.id))

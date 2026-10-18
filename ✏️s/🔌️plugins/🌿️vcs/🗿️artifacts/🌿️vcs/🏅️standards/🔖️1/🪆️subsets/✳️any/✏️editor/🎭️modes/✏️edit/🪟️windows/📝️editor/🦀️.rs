@@ -105,8 +105,3 @@ pub fn render(projection: &VcsSnapshot, labels: &VcsPlayLabels) -> UiAssemblyRes
 }
 //#endregion 🔖️Render
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

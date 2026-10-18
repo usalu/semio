@@ -1,4 +1,9 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Profile};
+use semio_framework_geometry::bulge::BulgeSeg;
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_geometry::loops;
+use crate::standards::v1::subsets::any::io::export::ifc::frames::*;
 use crate::standards::v1::subsets::any::schema::snapshot::Vertex;
 
 fn corner(x: f64, y: f64) -> Vertex {

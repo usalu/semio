@@ -74,7 +74,7 @@ test("schema reader index cancels before the next source and propagates its orig
 
 
 test("defining discovery adapter reads handcrafted specimens in their original walk and refuses vanished sources", async () => {
-  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs"), { join } = await import("node:path"), discovery = await import("../../🟦️.ts");
+  const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs"), { join } = await import("node:path"), { inventorySchemaValidationReads } = await import("../../🧾️schema-scope-catalog/🟦️.ts"), { loadCatalogTaxonomy } = await import("../../🔐️taxonomy-authority/🟦️.ts");
   const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifactRoot) throw new Error("Original source inspection law requires caller-owned test output");
   mkdirSync(artifactRoot, { recursive: true });
@@ -83,7 +83,7 @@ test("defining discovery adapter reads handcrafted specimens in their original w
     writeFileSync(join(root, "a.ts"), 'import Ajv from "ajv";import schema from "./schema.json";import value from "./examples.json";new Ajv().compile(schema)(value);');
     writeFileSync(join(root, "schema.json"), '{"type":"object"}'); writeFileSync(join(root, "examples.json"), '{"value":1}');
     writeFileSync(join(root, "b.ts"), "const value = 1;"); mkdirSync(join(root, "vanished")); writeFileSync(join(root, "vanished", "c.ts"), "const value = 2;");
-    const progress: string[] = [], index = await discovery.inventorySchemaValidationReads(root, discovery.loadCatalogTaxonomy(), { onProgress: row => {
+    const progress: string[] = [], index = await inventorySchemaValidationReads(root, loadCatalogTaxonomy(), { onProgress: row => {
       progress.push(row.phase);
       if (row.phase === "walk" && row.path === "vanished") rmSync(join(root, "vanished"), { recursive: true });
       if (row.phase === "inspect" && row.completed === 0) rmSync(join(root, "b.ts"));

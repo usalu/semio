@@ -17,7 +17,7 @@ async fn compile_accepts_a_deterministic_component_and_caches_it() {
     let runtime = WasmtimeRuntime::new(SharedEngineConfig::default(),semio_framework_job::default_now_us).await.expect("engine builds");
     let package = PackageRef { package: PackageId("stdio".to_string()), hash: PackageHash([9u8; 32]) };
     let compiled = runtime.compile(&package, minimal_component_without_actor_world()).await.expect("a deterministic component compiles even though it does not export the `actor` world");
-    assert!(compiled.component.is_some());
+    assert!(compiled.has_component());
 }
 
 #[semio_framework_async_macros::async_test]

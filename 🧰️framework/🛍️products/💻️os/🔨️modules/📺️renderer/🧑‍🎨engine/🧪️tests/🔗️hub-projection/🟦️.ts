@@ -74,7 +74,7 @@ describe("🔗️ target-neutral Hub projection", () => {
   });
 
   test("the browser host publishes every document status into the bounded wgpu projection", () => {
-    const shell = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     const host = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
     const transport = readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🚚️browser-frame-transport", "🟦️.ts"), "utf8");
     const boot = (readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🚀️browser-boot", "🟦️.ts"), "utf8") + "\n" + readFileSync(join(engineRoot, "🎯️targets", "🧊️wgpu", "🌐️browser-host", "🟦️.ts"), "utf8"));

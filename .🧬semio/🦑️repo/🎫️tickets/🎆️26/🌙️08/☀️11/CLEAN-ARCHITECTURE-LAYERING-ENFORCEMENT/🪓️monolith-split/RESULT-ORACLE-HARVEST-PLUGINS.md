@@ -4,7 +4,12 @@ Executor: Sonnet 5.5, foreground, no sub-agents, no modifying git command, no ti
 
 ## 0. Verdict (kept current)
 
-IN PROGRESS. Trinity section 7 leftovers fixed and proven by the typeck oracle (lib 39 to 38 resolution/privacy rows, test 127 to 59, 0 new). Family sweep running; the per-row ledger is `ORACLE-HARVEST-PLUGINS.md` (this folder); the machine ledger is `ohp-tools/ledger.tsv`.
+IN PROGRESS (22:15). Static only: no cargo (`COMPILE ADMITTED` absent), no `bun test` (Bun segfault at start, recorded not fought).
+
+* Trinity section 7 leftovers: DONE and proven (lib 39 to 38, test 127 to 59 resolution/privacy rows, 0 new; the remaining rows are macro or rewriter artifacts, ledger).
+* Draw coordinator item: the 17 `--check-applied --test` rows are down to 1 (`fixture_text!` of a declared dependency, gate-sandbox artifact of a peer's concurrent runtime-fixture edit). 7 private host-arena items made `pub`, imports restored, 3 removed-API laws re-authored (section 5).
+* Families swept (typeck oracle lib+test): trinity, mathematical, vcs, dag, playbook, reasoning, demonstrator, shooting, animate, forms, note, space, architect, imperative, lowpoly, gis, flow, process, cad, fem, remodel, wfc, puzzle 3d/2d/5d, block 2d/3d/5d, layout, draw, energy, procedural, dev-misc, trinity-dev, 35 stdio artifact groups. Not swept (owner slice still running or BD10): pdf, bim, writer, curation/sourcing, sequence, raster.
+* Automated repair passes (`ohp-tools/fixloop.sh`: autoimport + autowiden + autotestkit, rerun until fixed point; `autodep.py` for undeclared dependencies) are still running family by family; per-family proof is in `ORACLE-HARVEST-PLUGINS.md` section 2 (regenerate with `python3 ohp-tools/mkledger.py`).
 
 ## 1. Method
 

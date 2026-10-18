@@ -2792,29 +2792,88 @@ dependencies = [
 name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
- "semio-framework-font-anta-latin-ext-regular",
- "semio-framework-font-anta-latin-regular",
- "semio-framework-font-anta-math-regular",
- "semio-framework-font-anta-symbols-regular",
- "semio-framework-font-kelly-slab-cyrillic-regular",
- "semio-framework-font-kelly-slab-latin-ext-regular",
- "semio-framework-font-kelly-slab-latin-regular",
- "semio-framework-font-noto-emoji-activities-regular",
- "semio-framework-font-noto-emoji-faces-regular",
- "semio-framework-font-noto-emoji-flags-regular",
- "semio-framework-font-noto-emoji-food-regular",
- "semio-framework-font-noto-emoji-joined-forms-regular",
- "semio-framework-font-noto-emoji-nature-regular",
- "semio-framework-font-noto-emoji-objects-regular",
- "semio-framework-font-noto-emoji-people-regular",
- "semio-framework-font-noto-emoji-regions-regular",
- "semio-framework-font-noto-emoji-supplement-regular",
- "semio-framework-font-noto-emoji-symbols-regular",
- "semio-framework-font-noto-emoji-travel-regular",
- "semio-framework-font-share-tech-mono-latin-regular",
+ "semio-framework-2d-booleans",
+ "semio-framework-2d-engine",
+ "semio-framework-2d-path-flatten",
+ "semio-framework-2d-path-stroke",
+ "semio-framework-2d-regions",
+ "semio-framework-2d-retire",
+ "semio-framework-2d-text",
+ "semio-framework-2d-trace",
+]
+
+[[package]]
+name = "semio-framework-2d-booleans"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-engine",
+ "semio-framework-2d-path-flatten",
+ "semio-framework-2d-retire",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-compute"
+version = "0.1.0"
+dependencies = [
  "semio-framework-hash",
+]
+
+[[package]]
+name = "semio-framework-2d-engine"
+version = "0.1.0"
+dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-2d-path-flatten"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-engine",
+ "semio-framework-2d-retire",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-path-stroke"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-engine",
+ "semio-framework-2d-retire",
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-regions"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-booleans",
+ "semio-framework-2d-engine",
+]
+
+[[package]]
+name = "semio-framework-2d-retire"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-text"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+]
+
+[[package]]
+name = "semio-framework-2d-trace"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d-engine",
+ "semio-framework-2d-retire",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -4957,7 +5016,7 @@ name = "semio-s-artifact-space-space-editor"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-artifact-space-collection",

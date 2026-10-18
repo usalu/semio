@@ -1,6 +1,7 @@
 //! 💞️ Create attraction work: the staged creation of one attraction, its existing attractions, the two endpoints and their compatibility, with the relocation page size.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 pub const PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT: usize = 64;
 

@@ -71,6 +71,7 @@ semio-framework-pack-json = { path = "../../../../../../../../../../🔨️modul
 semio-framework-time-travel = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-trace = { workspace = true }
+semio-framework-plugin = { path = "../../../../../../../🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-ui-layout = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-ui-runtime = { workspace = true }

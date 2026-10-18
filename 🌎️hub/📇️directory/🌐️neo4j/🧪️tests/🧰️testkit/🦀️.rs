@@ -6,9 +6,9 @@ use crate::Neo4jDirectory;
 /// graph, so each lane starts from an emptied graph and the lanes run one at a time (`directory-live-lanes neo4j` passes
 /// `--test-threads=1`) — the lanes never start a server of their own (preamble rule 22).
 pub struct Neo4jFixture {
-    pub(super) uri: String,
-    user: String,
-    password: String,
+    pub uri: String,
+    pub user: String,
+    pub password: String,
 }
 
 impl Neo4jFixture {

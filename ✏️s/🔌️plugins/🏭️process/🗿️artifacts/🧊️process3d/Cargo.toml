@@ -24,6 +24,8 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧱️reference-solids/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust",
+  "🔨️modules/🏠️host/🧰️owned/📬️publication-authority/📦️packages/🦀️rust",
+  "🔨️modules/🏠️host/🧰️owned/🧵️retained-cursors/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",
@@ -124,6 +126,9 @@ path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️regi
 [workspace.dependencies.semio-framework-2d]
 path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-2d-compute]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
 
@@ -208,6 +213,12 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🎬�
 
 [workspace.dependencies.semio-s-artifact-process-process3d-host]
 path = "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-process-process3d-host-publication-authority]
+path = "🔨️modules/🏠️host/🧰️owned/📬️publication-authority/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-process-process3d-host-retained-cursors]
+path = "🔨️modules/🏠️host/🧰️owned/🧵️retained-cursors/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-process-process3d-config]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust"

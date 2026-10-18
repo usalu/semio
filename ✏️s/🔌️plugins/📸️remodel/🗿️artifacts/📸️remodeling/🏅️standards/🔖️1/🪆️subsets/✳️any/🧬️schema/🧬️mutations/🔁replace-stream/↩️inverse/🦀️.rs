@@ -1,7 +1,8 @@
 //! ↩️ Inverse for `ReplaceStreamSource` — the OLD `source` looked up from BASE.
 //! Missing target ⇒ `Vec::new()`.
-use crate::standards::v1::subsets::any::schema::mutations::replace_stream_source::ReplaceStreamSource;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::replace_stream_source::component::ReplaceStreamSource;
+use crate::standards::v1::subsets::any::schema::mutations::replace_stream_source::component::replace_stream_source;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<ReplaceStreamSource>>(payload: &super::ReplaceStreamSource, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

@@ -80,9 +80,8 @@
     "releasedBytes": 0
   },
   "requiredReceivingPorts": [
-    "ArtifactCanonicalPreparationControl",
-    "advance_with_metadata",
-    "metadata_progress"
+    "pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant)",
+    "pub fn ownership_progress(&self)->RetainedCloneProgress"
   ],
   "forbiddenAuthority": [
     "metadata.unwrap_or",

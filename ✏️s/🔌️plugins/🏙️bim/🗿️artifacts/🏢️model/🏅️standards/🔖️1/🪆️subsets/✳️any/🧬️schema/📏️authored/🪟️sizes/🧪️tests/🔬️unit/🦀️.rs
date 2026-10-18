@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening, OpeningKind};
+use crate::standards::v1::subsets::any::schema::authored::sizes::*;
 use crate::standards::v1::subsets::any::schema::snapshot::WindowType;
 
 fn window() -> WindowType {

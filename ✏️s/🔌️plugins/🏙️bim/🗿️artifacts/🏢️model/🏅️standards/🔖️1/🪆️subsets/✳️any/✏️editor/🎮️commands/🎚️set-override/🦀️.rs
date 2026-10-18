@@ -44,6 +44,4 @@ pub fn handle(payload: &SetOverride, doc: &ArtifactView<'_, ModelSnapshot>, _cfg
     Ok(plan(doc.snapshot, payload)?.map_or_else(Emit::default, |mutation| Emit::mutations(vec![mutation])))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

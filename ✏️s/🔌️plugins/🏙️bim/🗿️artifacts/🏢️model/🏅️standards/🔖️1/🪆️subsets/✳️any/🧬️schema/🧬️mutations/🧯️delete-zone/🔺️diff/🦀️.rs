@@ -2,9 +2,9 @@
 //! cascade), and every space that belonged to it is patched to no zone, so nothing is left dangling. An area scheme that still counts the zone is
 //! refused as `mutation.target-referenced`: dropping the zone from its list would silently widen the rule to every zone.
 
-use super::super::cascade;
-use super::super::elements;
-use super::DeleteZone;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::delete_zone::DeleteZone;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, KeyedDelta, ModelDiff, patches::SpacePatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

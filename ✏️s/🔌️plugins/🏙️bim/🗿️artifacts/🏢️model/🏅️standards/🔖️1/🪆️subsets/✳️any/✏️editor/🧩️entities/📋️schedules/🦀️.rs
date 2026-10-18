@@ -1,7 +1,8 @@
 //! 📋️ The schedule rows of the entity table: how an authored schedule reads off the snapshot as text (columns `name, type, net_area*`, sort `length desc, name`, filters `length >= 6; usage empty`, grouping `storey`),
 //! how an edited text becomes a `set-schedule` mutation, and what a new schedule is: the preset a library row names (`parent` is its key), the wall schedule for any other.
 
-use super::{parse_flag, parse_text, partial, variant, Created, FieldRow};
+use crate::editor::bim::terminology::BimLabels;
+use crate::editor::bim::entities::{parse_flag, parse_text, partial, variant, Created, FieldRow};
 use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::{columns_text, filters_text, keys_text, parse_columns, parse_filters, parse_groups, parse_sorts, sorts_text};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{ModelSnapshot, Phase, ScheduleCategory}};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;

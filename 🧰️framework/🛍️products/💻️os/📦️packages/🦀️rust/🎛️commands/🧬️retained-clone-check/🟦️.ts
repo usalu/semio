@@ -6,6 +6,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 //#region 🧬️RetainedCloneFixtures
 /** 🎭️ One example payload for retained-clone choice behavior. */
@@ -192,14 +193,14 @@ export class RetainedCloneCheckScript extends BundleScript {
     assert.equal(preparationFixture.handoff.expected.sourcePreserved, true);
     assert.equal(preparationFixture.handoff.expected.closeRequiresMultipleTurns, true);
     assert.equal(preparationFixture.handoff.expected.terminalEmpty, true);
-    const storeSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs"), "utf8");
+    const storeSource = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs"));
     const handoffMethod = storeSource.slice(storeSource.indexOf("pub fn handoff_batch_publication_close("), storeSource.indexOf("pub fn maintenance_retirements_terminal_is_empty", storeSource.indexOf("pub fn handoff_batch_publication_close(")));
     assert(handoffMethod.indexOf("displaced_retirements.reserve(1)?") < handoffMethod.indexOf("publication.take()"), "Store reserves surviving close authority before taking the scheduler owner");
     assert(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️one-item-owners/📥️lifted/📬️publication/🦀️.rs"), "utf8").includes("ErasedSnapshotRetirement for ArtifactStoreBatchPublication"));
     const pluginSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
     assert(pluginSource.includes("fn handoff_mounted_durable_publication("));
     assert(pluginSource.match(/handoff_mounted_durable_publication\(/g)?.length ?? 0 >= 4, "cancel, stale and terminal-error paths transfer durable publications");
-    const toolRunSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs"), "utf8");
+    const toolRunSource = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/🦀️.rs"));
     assert(toolRunSource.includes("store.handoff_batch_publication_close(&mut owner)"), "tool-run replacement and abort transfer publications to Store maintenance");
     for (const row of preparationFixture.cases) {
       let value = row.initial;

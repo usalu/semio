@@ -4,7 +4,7 @@ import { workerLawFakesV1, FakeHubWebSocket, WORKER_LAW_CAPABILITY, WORKER_LAW_A
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
-type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
+type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts").ArtifactState;
 type BackboneWorkerRequest = import("../../🟦️.ts").BackboneWorkerRequest;
 type DocumentOpenIntentV1 = import("@semio-tech/framework/directory/schema").DocumentOpenIntentV1;
 type DocumentOpenPlanV1 = import("@semio-tech/framework/directory/schema").DocumentOpenPlanV1;

@@ -1,4 +1,4 @@
-use super::{FAMILY_INFERRED, FAMILY_SOLID_INFERRED, create_family, create_family_solid};
+use crate::editor::bim::entities::families::{FAMILY_INFERRED, FAMILY_SOLID_INFERRED, create_family, create_family_solid};
 use crate::editor::bim::entities::InferredRow;
 use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
@@ -6,11 +6,12 @@ use protocol::Inference;
 use crate::editor::bim::entities::{kind_of, kind_holding};
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
+static TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json"));
 
 fn model() -> ModelSnapshot {
-    from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes")
+    from_json_str((*TABLE), JsonMemberPolicy::Reject).expect("the table decodes")
 }
 
 fn write(kind: &str, key: &str, id: &str, value: &str) -> Option<ModelMutation> {

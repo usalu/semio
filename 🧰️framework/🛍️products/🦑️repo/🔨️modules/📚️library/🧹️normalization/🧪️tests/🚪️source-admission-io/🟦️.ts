@@ -7,7 +7,7 @@ import ts from "typescript";
 import { cloneDeep } from "lodash";
 import { resolve, relative, isAbsolute, join, sep, parse } from "node:path";
 import { verifyNoFollowDirectoryChain } from "../../📁️input/🟦️.ts";
-import { TICKET_GENERATED_OUTPUT_DIRECTORY } from "../../🟦️.ts";
+import { TICKET_GENERATED_OUTPUT_DIRECTORY } from "../../../🗂️workspaces/🧬️metadata/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Fixture

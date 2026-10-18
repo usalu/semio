@@ -14,7 +14,7 @@ import { Mode, type ModeWindowDescriptor, type WindowLayoutNode } from "@semio-t
 import { afterEach, describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import { manifestUtilitiesInitialFixture as initialUtilityCases, manifestViewContextSchema as viewContextSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
-import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {

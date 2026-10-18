@@ -1,0 +1,28 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2 → B1 world-collapse). One of `world actor`'s two
+/// imports (the other is `host-async`) — these three side-effect-free/idempotent calls are the only
+/// ones a guest may call SYNCHRONOUSLY; every stateful host operation goes through `host-async`'s
+/// awaitable imports instead (design-abi.md §1's original poll/effect/event round trip is now the
+/// pattern `reactor::poll` uses INTERNALLY when it awaits a `host-async` import mid-turn, not a
+/// separate calling convention). Keeping THESE three sync is what lets a pooled multi-instance
+/// actor log/clock/trace without a suspension point.
+interface pure {
+  log: func(level: string, message: string);
+  now-ms: func() -> s64;
+  /// ⏱️ Reads the actual original caller clock during a checked job loan.
+  operation-clock-us: func(clock-binding: u64) -> option<u64>;
+  trace-span: func(name: string);
+  /// 🎟️ Begins only a receiving operation already owned by the caller's original authority.
+  operation-begin: async func() -> result<u64, u32>;
+  /// 📊️ Reports real producer work through the original observer before continuing.
+  operation-progress: async func(completed: u64, total: u64, owned: u64) -> u32;
+  /// 🛂️ Requests original receiving admission before a physical guest allocation.
+  operation-allocation: async func(bytes: u64, owned: u64, next: u64, maximum: u64) -> u32;
+  /// 📐️ Closed physical allocation classes in the real borrowed return DTO.
+  enum operation-return-allocation { bytes, string-bytes, u64-list, ui-patch-list, patch-op-list, effect-list, presence-update-list, string-pair-list }
+  /// 📤️ Reserves host-native storage before canonical result lifting can allocate it.
+  operation-reserve-return: async func(kind: operation-return-allocation, count: u64) -> u32;
+  /// ⏸️ Returns the actual admitted ownership before another host phase can begin.
+  operation-finish: async func(owned: u64) -> u32;
+}

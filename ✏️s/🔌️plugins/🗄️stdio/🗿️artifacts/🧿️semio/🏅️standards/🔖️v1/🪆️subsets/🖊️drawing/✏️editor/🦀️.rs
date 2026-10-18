@@ -40,7 +40,7 @@ use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_plugin::ToolOperationSpec;
 use semio_framework_plugin::EditorApp;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Dialect

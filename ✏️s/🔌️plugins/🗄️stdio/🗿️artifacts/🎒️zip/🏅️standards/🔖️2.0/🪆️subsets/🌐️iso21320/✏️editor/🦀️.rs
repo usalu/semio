@@ -4,7 +4,7 @@ use crate::editor::zip::iso21320::modes::edit;
 use crate::editor::zip::iso21320::modes::edit::windows::main;
 use crate::schema::mutations::add_entry;
 use crate::{ZipMutation, ZipSnapshot, STDIO_ZIP_DOCUMENT_SCHEMA};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;

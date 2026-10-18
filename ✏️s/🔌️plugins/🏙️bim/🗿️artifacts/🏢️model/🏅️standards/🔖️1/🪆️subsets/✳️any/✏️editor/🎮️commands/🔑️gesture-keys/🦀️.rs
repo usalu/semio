@@ -52,6 +52,4 @@ pub fn handle<P: Keyed>(_payload: &P, doc: &ArtifactView<'_, ModelSnapshot>, _cf
     Ok(run_key(ctx, doc, P::KEY)?.unwrap_or_default())
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

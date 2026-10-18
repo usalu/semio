@@ -2,8 +2,8 @@ import { expect, test } from "bun:test";
 import { posix } from "node:path";
 import { readFileSync } from "node:fs";
 import { minimatch } from "minimatch";
-import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
-import { taxonomyClosedScope } from "../../🧹️normalization/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { taxonomyClosedScope } from "../../🧹️normalization/🌳️tree-digests/🟦️.ts";
 const examples = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔭️mutation-fixture-placement/🔣️.json", import.meta.url), "utf8")) as { cases: { scope: string; holds: string[]; expected: string; moduleDir?: string }[] };
 for (const row of examples.cases) test("mutation fixture closure: " + row.scope, () => {
   const taxonomy = loadCatalogTaxonomy();

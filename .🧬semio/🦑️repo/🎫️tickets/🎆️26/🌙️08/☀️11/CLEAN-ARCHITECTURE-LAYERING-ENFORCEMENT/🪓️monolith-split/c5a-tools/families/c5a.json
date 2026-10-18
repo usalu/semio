@@ -1,0 +1,11 @@
+{
+ "name": "c5a",
+ "crates": [
+  "semio-framework-plugin-time-travel",
+  "semio-framework-plugin-time-travel-turns",
+  "semio-framework-plugin-tool-run",
+  "semio-framework-plugin-tool-run-turns",
+  "semio-framework-plugin-reactor-turn"
+ ],
+ "note": "CENSUS5-A package 3: the five plugin crates whose lib roots are split into path modules"
+}

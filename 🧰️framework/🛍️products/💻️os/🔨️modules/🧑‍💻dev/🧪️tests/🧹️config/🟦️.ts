@@ -65,7 +65,7 @@ describe("executable source transformation", () => {
 
 const packageDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(packageDir, "../../../../../../..");
-const contract = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtures/⚙️config-graph.json"), "utf8")) as {
+const contract = JSON.parse(readFileSync(join(packageDir, "../../🧪️tests/🧫️fixtures/⚙️config-graph.json"), "utf8")) as {
   readonly entry: string;
   readonly deny: readonly string[];
   readonly require: readonly string[];
@@ -146,7 +146,7 @@ describe("vite config module graph", () => {
   });
 });
 
-const watchPolicy = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtures/👁️watch-policy.json"), "utf8")) as {
+const watchPolicy = JSON.parse(readFileSync(join(packageDir, "../../🧪️tests/🧫️fixtures/👁️watch-policy.json"), "utf8")) as {
   readonly unwatchedSegments: readonly string[];
   readonly unwatchedGlobs: readonly string[];
   readonly unwatchedPaths: readonly string[];
@@ -425,7 +425,7 @@ describe("dev server transform freshness", () => {
   });
 });
 
-const browserContract = JSON.parse(readFileSync(join(packageDir, "../../🧫️fixtures/🌐️browser-graph.json"), "utf8")) as {
+const browserContract = JSON.parse(readFileSync(join(packageDir, "../../🧪️tests/🧫️fixtures/🌐️browser-graph.json"), "utf8")) as {
   readonly entry: string;
   readonly configPath: string;
   readonly resolveExtensions: readonly string[];

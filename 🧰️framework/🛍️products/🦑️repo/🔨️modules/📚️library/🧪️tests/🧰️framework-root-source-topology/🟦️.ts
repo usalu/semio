@@ -3,7 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
-import { classifyPackageSource, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { classifyPackageSource } from "../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
+import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 type Move = Readonly<{ source: string; owner: string; kind: "rust" | "typescript"; anchor: string; consumer: string }>;
 type NodePackage = Readonly<{ manifest: string; entry: string; name: string; maximumEntryLines: number; testOwner: string; vitestConfig: string }>;
@@ -16,7 +17,7 @@ type Fixture = Readonly<{
 
 const fixtureRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🧫️fixtures/🧰️framework-root-source-topology/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🧪️tests/🧫️fixtures/🧰️framework-root-source-topology/🔣️.json"), "utf8")) as Fixture;
 
 const basenames = { rust: "🦀️.rs", typescript: "🟦️.ts" } as const;
 

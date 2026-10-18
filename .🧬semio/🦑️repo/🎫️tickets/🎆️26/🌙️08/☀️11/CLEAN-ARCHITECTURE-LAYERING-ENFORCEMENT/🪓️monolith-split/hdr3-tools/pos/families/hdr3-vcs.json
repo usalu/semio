@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-vcs",
+ "crates": ["semio-s-artifact-vcs-vcs-editor", "semio-s-artifact-vcs-vcs-editor-unit-tests"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-s-artifact-vcs-vcs-editor"]},
+ "note": "HDR-3: vcs editor unit tests to a companion"
+}

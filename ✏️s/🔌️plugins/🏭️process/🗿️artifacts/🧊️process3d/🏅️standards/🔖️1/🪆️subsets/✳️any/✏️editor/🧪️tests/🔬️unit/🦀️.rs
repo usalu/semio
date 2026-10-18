@@ -67,7 +67,7 @@ use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use camera::set_camera;
 use contribution::set_contributions;
 use cursor::{set_cursor, step_cursor, step_cursor_back, step_cursor_forward};

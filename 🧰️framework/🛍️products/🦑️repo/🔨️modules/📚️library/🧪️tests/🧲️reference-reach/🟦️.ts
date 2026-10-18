@@ -7,12 +7,13 @@ import { readFileSync } from "node:fs";
 import { basename, dirname, posix, resolve } from "node:path";
 import ts from "typescript";
 import { normalizeRelative } from "../../🧹️normalization/🛣️path/🟦️.ts";
+import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Token = { adapter: string; structuredLocation: string; start: number; end: number; value: string; targetValues?: string[]; physicalTargets?: string[] };
 type Index = { exact: Set<string> };
 const library = resolve(import.meta.dir, "../..");
 const fixture = JSON.parse(readFileSync(resolve(library, "🧪️tests/🧫️fixtures/🧲️reference-reach/🔣️.json"), "utf8")) as { schemaVersion: number; repositoryPaths: string[]; tokenValues: string[]; referencingPaths: string[]; movedTargetSets: string[][] };
-const syntax = ts.createSourceFile("normalization.ts", readFileSync(resolve(library, "🧹️normalization/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+const syntax = ts.createSourceFile("normalization.ts", normalizationEngineDeclarations(resolve(library, "🧹️normalization")), ts.ScriptTarget.Latest, true);
 
 /** 🧬️ Compiles the named production declarations of the normalizer into one closure over the injected dependencies. */
 function production<T>(names: readonly string[], entry: string, dependencies: Record<string, unknown>): T {

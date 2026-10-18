@@ -1,0 +1,9 @@
+{"owner": "semio-framework-3d-brep-construction", "suffix": "unit-tests", "kind": "framework",
+ "new_root": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧪️tests/🔬️unit/🦀️.rs",
+ "moves": [
+  {"mount_file": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🦀️.rs", "module_path": "primitives", "mount_name": "tests"},
+  {"mount_file": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🦀️.rs", "module_path": "primitives", "mount_name": "topology_seed_tests"},
+  {"mount_file": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🦀️.rs", "module_path": "primitives", "mount_name": "topology_reachability_tests"},
+  {"mount_file": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧱️primitives/🦀️.rs", "module_path": "primitives", "mount_name": "topology_compaction_tests"},
+  {"mount_file": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🧵️sew/🦀️.rs", "module_path": "sew", "mount_name": "heal_tests"}
+ ]}

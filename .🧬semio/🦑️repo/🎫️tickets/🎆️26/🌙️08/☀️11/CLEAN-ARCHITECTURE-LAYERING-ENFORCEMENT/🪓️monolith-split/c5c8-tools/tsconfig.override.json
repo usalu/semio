@@ -1,0 +1,3103 @@
+{
+ "compilerOptions": {
+  "baseUrl": "/",
+  "paths": {
+   "@semio-tech/energy-js": [
+    "/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/STDIO-ARTIFACTS-AND-IO/w2-scaffold/./📦️index.ts"
+   ],
+   "@semio-tech/mit-bestand-praesentation-projektetage": [
+    "/Users/ueli/Documents/semio/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/mit-bestand-praesentation-projektetage/spec": [
+    "/Users/ueli/Documents/semio/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript/./🔖️spec.ts"
+   ],
+   "@semio-tech/writer-writer": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/mathematical-equation": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/wfc-js/sqlite/bitmap": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript/./🪶️sqlite/🎨️bitmap/🟦️.ts"
+   ],
+   "@semio-tech/wfc-js/sqlite/bitmap/testing": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript/./🪶️sqlite/🎨️bitmap/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/wfc-2d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/wfc-grid2d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/wfc-bitmap": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/wfc-3d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/wfc-grid3d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/procedural-js/foundation/generation/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/./🫀️foundation/🧬️generation/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/procedural-js/foundation/generation/schema/snapshot/admission": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/./🫀️foundation/🧬️generation/🧬️schema/📸️snapshot/🛡️admission/🟦️.ts"
+   ],
+   "@semio-tech/procedural-js/foundation/generation/sqlite": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/./🫀️foundation/🧬️generation/🪶️sqlite/🟦️.ts"
+   ],
+   "@semio-tech/procedural-js/foundation/generation/sqlite/testing/fixtures": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/./🫀️foundation/🧬️generation/🪶️sqlite/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/procedural-js/foundation/generation/sqlite/testing/support": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript/./🫀️foundation/🧬️generation/🪶️sqlite/🧪️testing/🧰️support/🟦️.ts"
+   ],
+   "@semio-tech/procedural-generation2d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/procedural-generation3d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/procedural-generation3d/1/subsets/any/schema/mutations/create-widget/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🟦️typescript/./🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-widget/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/procedural-generation3d/standards/1/subsets/any/schema/mutations/move-nodes/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️move-nodes/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/procedural-generation3d/standards/1/subsets/any/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/flow-flow": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/gis-gisterrain": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/gis-gismap-js": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/gis-gismap-js/inference/client": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./💡️inference/🔌️client/🟦️.ts"
+   ],
+   "@semio-tech/gis-gismap-js/inference/client/io": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./💡️inference/🔌️client/🚪️io/🟦️.ts"
+   ],
+   "@semio-tech/gis-gismap-js/inference/mcp/testing/oracle": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./💡️inference/🌉️mcp/🧪️testing/🔬️oracle/🟦️.ts"
+   ],
+   "@semio-tech/gis-gismap-js/inference/presentation": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./💡️inference/🪟️presentation/🟦️.ts"
+   ],
+   "@semio-tech/gis-gismap-js/inference/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./💡️inference/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/gis-gismap-js/inference/worker": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./💡️inference/👷️worker/🟦️.ts"
+   ],
+   "@semio-tech/gis-gismap-js/testing/map-create-region-group": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./🧪️testing/🧩️map-create-region-group/🟦️.ts"
+   ],
+   "@semio-tech/gis-gismap-js/tiles": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/📦️packages/🟦️typescript/./🗺️tiles/🟦️.ts"
+   ],
+   "@semio-tech/demonstrator-js": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/demonstrator-playground": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎪️demonstrator/🗿️artifacts/🎪️playground/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/sequence-sequence": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/fem-js/engine/app-surface/schema/result-mode": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/./⚙️engine/🖥️app-surface/🧬️schema/👁️result-mode/🟦️.ts"
+   ],
+   "@semio-tech/fem-js/engine/app-surface/schema/results-animation": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/./⚙️engine/🖥️app-surface/🧬️schema/🔣️results-animation/🟦️.ts"
+   ],
+   "@semio-tech/fem-js/testing/fixtures/child-outcomes": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🧒️child-outcomes/🟦️.ts"
+   ],
+   "@semio-tech/fem-js/testing/fixtures/mounted-close": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🧹️mounted-close/🟦️.ts"
+   ],
+   "@semio-tech/fem-js/testing/fixtures/visual-close-grants": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/💳️visual-close-grants/🟦️.ts"
+   ],
+   "@semio-tech/fem-js/testing/tool-job-fem-live-visual-publication": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/./🧪️testing/🔬️tool-job-fem-live-visual-publication/🟦️.ts"
+   ],
+   "@semio-tech/fem-js/testing/tool-job-fem-numerical-microcursor": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/📦️packages/🟦️typescript/./🧪️testing/🔬️tool-job-fem-numerical-microcursor/🟦️.ts"
+   ],
+   "@semio-tech/fem-2d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/fem-2d/standards/1/subsets/any/editor/testing/window-config-contract": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️testing/🪟️window-config-contract/🟦️.ts"
+   ],
+   "@semio-tech/fem-2d/standards/1/subsets/any/assets/demo": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/🌐️any/🖼️assets/🎬️demo/🟦️.ts"
+   ],
+   "@semio-tech/fem-3d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/fem-3d/standards/1/subsets/any/editor/testing/window-config-contract": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🧪️testing/🪟️window-config-contract/🟦️.ts"
+   ],
+   "@semio-tech/fem-3d/standards/1/subsets/any/assets/demo": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/🌐️any/🖼️assets/🎬️demo/🟦️.ts"
+   ],
+   "@semio-tech/lowpoly-lowpoly": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/reasoning-wires": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/forms-js": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/layout-layout-ts/standards/1/subsets/any/io/sqlite/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/layout-layout-ts/standards/1/subsets/any/io/text/diff/native-json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🔺️diff/🪪️native-json/🟦️.ts"
+   ],
+   "@semio-tech/layout-layout-ts/standards/1/subsets/any/io/text/snapshot/native-json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts"
+   ],
+   "@semio-tech/layout-layout-ts/standards/1/subsets/any/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/layout-layout-ts/standards/1/subsets/any/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/layout-layout-ts/standards/1/subsets/any/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/layout-layout-ts/standards/1/subsets/any/testing/fixtures/contract/document": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️testing/🧫️fixtures/🔬️contract/🪪️document/🟦️.ts"
+   ],
+   "@semio-tech/cad-engine-ts/brepjs": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/⚙️engine/📦️packages/🟦️typescript/./🧱️brepjs/🟦️.ts"
+   ],
+   "@semio-tech/cad-engine-ts/kernel": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/⚙️engine/📦️packages/🟦️typescript/./🫀️kernel/🟦️.ts"
+   ],
+   "@semio-tech/cad-engine-ts/registry": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/⚙️engine/📦️packages/🟦️typescript/./📔️registry/🟦️.ts"
+   ],
+   "@semio-tech/cad-cad-ts/standards/1/subsets/any/editor/engine/actions": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️actions/🟦️.ts"
+   ],
+   "@semio-tech/cad-cad-ts/standards/1/subsets/any/editor/engine/runtime": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🏃️runtime/🟦️.ts"
+   ],
+   "@semio-tech/cad-cad-ts/standards/1/subsets/any/editor/engine/stately": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎰️stately/🟦️.ts"
+   ],
+   "@semio-tech/cad-js-module-aec-building-structure": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/cad-js-module-aec-building": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/cad-js-module-spatial-shape": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/cad-js-module-aec-building-energy": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/norm-js/registry/contract": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/./📇️registry/🧬️contract/🟦️.ts"
+   ],
+   "@semio-tech/norm-js/testing/document-contract": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript/./🧪️testing/🪪️document-contract/🟦️.ts"
+   ],
+   "@semio-tech/norm-en1990": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚖️en1990/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-din18599": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/⚡️din18599/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1997": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌍️en1997/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-din16798": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🌬️din16798/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1991": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏋️en1991/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1992": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏛️en1992/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-vdi3805": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-iso16757": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1993": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🔩️en1993/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1994": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧩️en1994/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-din4108": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🧱️din4108/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1996": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪨️en1996/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1995": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪵️en1995/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1999": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/norm-en1998": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📕️norm/🗿️artifacts/🫨️en1998/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/playbook-playbook": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/imperative-procedure": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/energy-js/extensions/epw/testing/unit": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/📦️packages/🟦️typescript/./🧩️extensions/🌦️epw/🧪️testing/🔬️unit/🟦️.ts"
+   ],
+   "@semio-tech/energy-model": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/trinity-jack-lsp-worker": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/trinity-jack-lsp": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/📦️packages/🦀️rust/./pkg/trinity_jack_lsp.js"
+   ],
+   "@semio-tech/trinity-rewriting": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/trinity-rewriting/source": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/📦️packages/🟦️typescript/./📥️source/🟦️.ts"
+   ],
+   "@semio-tech/trinity-jack": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/trinity-jack/source": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/./📥️source/🟦️.ts"
+   ],
+   "@semio-tech/trinity-jack/standards/1/subsets/any/io/sqlite/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/trinity-jack/standards/1/subsets/any/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/trinity-jack/standards/1/subsets/any/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/trinity-jack/subsets/any/io/export/serializers/artifacts/json/rfc8259/any": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/./🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts"
+   ],
+   "@semio-tech/trinity-jack/subsets/any/io/import/deserializers/artifacts/json/rfc8259/any": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/🔌️jack/📦️packages/🟦️typescript/./🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts"
+   ],
+   "@semio-tech/dag-dag": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🕸️dag/🗿️artifacts/🕸️dag/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/raster-js/artifacts/raster/standards/1/subsets/any/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/./🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/raster-js/artifacts/raster/standards/1/subsets/any/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/./🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/raster-js/artifacts/raster/standards/1/subsets/any/testing/fixtures/contract/decoded-image": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🖨️raster/📦️packages/🟦️typescript/./🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️testing/🧫️fixtures/🔬️contract/🖼️decoded-image/🟦️.ts"
+   ],
+   "@semio-tech/stdio-registry-ts/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/📦️packages/🟦️typescript/./🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-registry-ts/contract/part21/testing/fixtures/sqlite-cohort": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/📇️registry/📦️packages/🟦️typescript/./🧬️contract/📐️part21/🧪️testing/🧫️fixtures/🚦️sqlite-cohort/🟦️.ts"
+   ],
+   "@semio-tech/stdio-las": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-html": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-epw": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-zip": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-zip/opc": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/./📦️opc/🟦️.ts"
+   ],
+   "@semio-tech/stdio-zip/opc/native/testing/fixtures": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/./📦️opc/🧩️native/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/stdio-zip/opc/retained": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/./📦️opc/🧬️retained/🟦️.ts"
+   ],
+   "@semio-tech/stdio-zip/opc/sqlite": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🟦️typescript/./📦️opc/🪶️sqlite/🟦️.ts"
+   ],
+   "@semio-tech/stdio-gif": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-mp4": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-svg": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-mp3": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-ifc": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-bcf": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-binary": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-binary/standards/raw/subsets/any/io/sqlite/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/📦️packages/🟦️typescript/./🏅️standards/🔖️raw/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-inventory-ts": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📇️inventory/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/stdio-csv": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-step": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-tsv": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-xlsx": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-xlsx/ecma-376/subsets/strict/schema/mutations/insert-vml-part/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/./🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/✒️insert-vml-part/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xlsx/standards/ecma-376/subsets/base/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xlsx/standards/ecma-376/subsets/base/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xlsx/standards/ecma-376/subsets/strict/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xlsx/standards/ecma-376/subsets/strict/schema/mutations/insert-vml-part": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/✒️insert-vml-part/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xlsx/standards/ecma-376/subsets/transitional/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pdf": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-docx": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-docx/standards/ecma-376/subsets/base/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-docx/standards/ecma-376/subsets/base/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/stdio-docx/standards/ecma-376/subsets/base/schema/mutations": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🟦️.ts"
+   ],
+   "@semio-tech/stdio-docx/standards/ecma-376/subsets/strict/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/📏️strict/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-docx/standards/ecma-376/subsets/transitional/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🔄️transitional/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-md": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-xml": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-xml/source": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/./📥️source/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xml/standards/1.0/subsets/base/io/sqlite/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/./🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xml/standards/1.0/subsets/base/io/text/snapshot/json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/./🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/./🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/stdio-xml/standards/1.0/subsets/base/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🟦️typescript/./🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-png": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-jpg": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-jpg/io/binary/snapshot/decoded-components/testing/fixtures/owned-exact-components": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/./🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🧪️testing/🧫️fixtures/🧮️owned-exact-components/🟦️.ts"
+   ],
+   "@semio-tech/stdio-jpg/jfif-1.01/subsets/document/io/binary/snapshot/decoded-components": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🟦️typescript/./🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/🧮️decoded-components/🟦️.ts"
+   ],
+   "@semio-tech/stdio-avi": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-pptx": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-pptx/ecma-376/subsets/strict/schema/mutations/insert-vml-part/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/🖼️insert-vml-part/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pptx/standards/ecma-376/subsets/base/io/text/snapshot/json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pptx/standards/ecma-376/subsets/base/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pptx/standards/ecma-376/subsets/base/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pptx/standards/ecma-376/subsets/base/schema/mutations": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pptx/standards/ecma-376/subsets/base/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pptx/standards/ecma-376/subsets/strict/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pptx/standards/ecma-376/subsets/strict/schema/mutations/insert-vml-part": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict/🧬️schema/🧬️mutations/🖼️insert-vml-part/🟦️.ts"
+   ],
+   "@semio-tech/stdio-pptx/standards/ecma-376/subsets/transitional/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📦️packages/🟦️typescript/./🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/stdio-wav": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-txt": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-txt/standards/utf-8/subsets/any/io/sqlite/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📦️packages/🟦️typescript/./🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-stl": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-dwg": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-dxf": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-tiff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-deflate": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-deflate/standards/rfc1950/subsets/any/io/binary/snapshot/compression": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📦️packages/🟦️typescript/./🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/🗜️compression/🟦️.ts"
+   ],
+   "@semio-tech/stdio-obj": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-obj/standards/3.0/subsets/geometry/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🟦️typescript/./🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-gltf": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-gltf/standards/2.0/subsets/any/io/text/snapshot/json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/./🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts"
+   ],
+   "@semio-tech/stdio-gltf/standards/2.0/subsets/any/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🟦️typescript/./🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-ply": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-ply/standards/1.0/subsets/any/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🟦️typescript/./🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-json/standards/rfc8259/subsets/base/io/sqlite/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/./🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-json/standards/rfc8259/subsets/base/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🟦️typescript/./🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-semio": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/stdio-semio/source": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/./📥️source/🟦️.ts"
+   ],
+   "@semio-tech/stdio-semio/standards/v1/subsets/drawing/io/sqlite/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-semio/standards/v1/subsets/drawing/io/text/snapshot/native-json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts"
+   ],
+   "@semio-tech/stdio-semio/standards/v1/subsets/drawing/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/./🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-semio/standards/v1/subsets/graph/io/sqlite/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/./🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-semio/standards/v1/subsets/graph/io/text/snapshot/json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/./🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts"
+   ],
+   "@semio-tech/stdio-semio/standards/v1/subsets/image/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🟦️typescript/./🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/stdio-bmp": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/note-note-js/standards/1/subsets/any/schema/testing/document": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️testing/🪪️document/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-5d-react": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript/./🟦️.tsx"
+   ],
+   "@semio-tech/puzzle-js/artifacts/5d/standards/1/subsets/any/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/./🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-js/testing/compose5d-preparetopologymodel": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/./🧪️testing/🧪️compose5d-preparetopologymodel/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-js/testing/interactivity-puzzle-fill-p4e": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/./🧪️testing/🔬️interactivity-puzzle-fill-p4e/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-js/testing/interactivity-puzzle-fill-run-job": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/./🧪️testing/🔬️interactivity-puzzle-fill-run-job/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-js/testing/interactivity-puzzle-fill-trace": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/./🧪️testing/🔬️interactivity-puzzle-fill-trace/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-js/testing/tool-job-puzzle-reserved-routes": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/📦️packages/🟦️typescript/./🧪️testing/🔬️tool-job-puzzle-reserved-routes/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-2d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/puzzle-2d/standards/1/subsets/any/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-3d-ts/standards/1/subsets/any/schema/diff": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts"
+   ],
+   "@semio-tech/block-js": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/block-js/schema/document-fields": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/./🧬️schema/🧱️document-fields/🟦️.ts"
+   ],
+   "@semio-tech/block-js/schema/document-fields/io/json": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/./🧬️schema/🧱️document-fields/🚪️io/🔣️json/🟦️.ts"
+   ],
+   "@semio-tech/block-js/schema/document-fields/scalar": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/./🧬️schema/🧱️document-fields/📐️scalar/🟦️.ts"
+   ],
+   "@semio-tech/block-js/schema/document-fields/sqlite": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/📦️packages/🟦️typescript/./🧬️schema/🧱️document-fields/🪶️sqlite/🟦️.ts"
+   ],
+   "@semio-tech/block-2d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/block-2d/1/subsets/any/io/import/deserializers/artifacts/txt/utf-8/any": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🔖️1/🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔤️txt/🔖️utf-8/✳️any/🟦️.ts"
+   ],
+   "@semio-tech/block-2d/standards/1/subsets/any/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/block-2d/standards/1/subsets/any/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/block-2d/subsets/any/io/export/serializers/artifacts/json/rfc8259/any": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🪆️subsets/✳️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts"
+   ],
+   "@semio-tech/block-2d/subsets/any/io/import/deserializers/artifacts/json/rfc8259/any": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./🪆️subsets/✳️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🟦️.ts"
+   ],
+   "@semio-tech/block-2d/examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🟦️.ts"
+   ],
+   "@semio-tech/block-2d/examples/hexagonal-cut-concrete-forest-right/assets/hexagonal-cut-concrete-forest": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/📦️packages/🟦️typescript/./📚️examples/➡️hexagonal-cut-concrete-forest-right/🖼️assets/➡️hexagonal-cut-concrete-forest/🟦️.ts"
+   ],
+   "@semio-tech/block-5d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/block-5d/examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🟦️typescript/./📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🟦️.ts"
+   ],
+   "@semio-tech/block-5d/examples/nakagin-capsule/assets/nakagin-capsule": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/📦️packages/🟦️typescript/./📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🟦️.ts"
+   ],
+   "@semio-tech/block-3d": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/block-3d/standards/1/subsets/any/schema": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/block-3d/standards/1/subsets/any/schema/snapshot": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/block-3d/examples/hexagonal-cut-concrete-forest-left/assets/hexagonal-cut-concrete-forest": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest/🟦️.ts"
+   ],
+   "@semio-tech/block-3d/examples/nakagin-capsule/assets/nakagin-capsule": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript/./📚️examples/🏢️nakagin-capsule/🖼️assets/🏢️nakagin-capsule/🟦️.ts"
+   ],
+   "@semio-tech/space-home": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/space-space": [
+    "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/definition-catalog": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/📥️definition-catalog/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/definition-ownership": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🧭️definition-ownership/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/expressions": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🧮️expressions/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/interaction-spec": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🎰️interaction-spec/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/model": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🧊️model/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/model-space": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🌌️model-space/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/paths": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🗺️paths/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/primitive-document": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🧾️primitive-document/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/selection": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🪪️selection/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/selection-operations": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🧷️selection-operations/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/stats": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/📊️stats/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/transformation-apply": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🔁️transformation-apply/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/transformation-spec": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🔄️transformation-spec/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/geometry/typology": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./📐️geometry/🎨️typology/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/preview": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧮️preview/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/preview/aabb": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧮️preview/📦️aabb/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/preview/anchor-placement": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧮️preview/⚓️anchor-placement/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/preview/brep-records": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧮️preview/🔷️brep-records/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/preview/curve-sampling": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧮️preview/🌀️curve-sampling/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/preview/face-geometry": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧮️preview/🔺️face-geometry/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/preview/preview-params": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧮️preview/🎚️preview-params/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/preview/vec3": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧮️preview/📏️vec3/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/semio": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🧠️semio/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-ts/spatial": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/📦️packages/🟦️typescript/./🗺️spatial/🟦️.ts"
+   ],
+   "@semio-tech/s-spatial-kernel-semio-session-ts": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/s-fem-engine-ts/analyses/testing/merge-refusal": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/📦️packages/🟦️typescript/./🧮️analyses/🧪️testing/🔀️merge-refusal/🟦️.ts"
+   ],
+   "@semio-tech/s-fem-engine-ts/analyses/testing/step-grant": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/📦️packages/🟦️typescript/./🧮️analyses/🧪️testing/⛽️step-grant/🟦️.ts"
+   ],
+   "@semio-tech/s-fem-engine-ts/elements3d/testing/mounted-stiffness": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/📦️packages/🟦️typescript/./🧱️elements3d/🧪️testing/🧱️mounted-stiffness/🟦️.ts"
+   ],
+   "@semio-tech/s-fem-engine-ts/mesh/testing/edge-authority": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/📦️packages/🟦️typescript/./🕸️mesh/🧪️testing/🕸️edge-authority/🟦️.ts"
+   ],
+   "@semio-tech/s-fem-engine-ts/sparse/testing/paged-csr": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/📦️packages/🟦️typescript/./🔢️sparse/🧪️testing/📚️paged-csr/🟦️.ts"
+   ],
+   "@semio-tech/s-fem-engine-ts/sparse/testing/publication-grant": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/📦️packages/🟦️typescript/./🔢️sparse/🧪️testing/⛽️publication-grant/🟦️.ts"
+   ],
+   "@semio-tech/s-fem-engine-ts/sparse/testing/scalar-owners": [
+    "/Users/ueli/Documents/semio/✏️s/🔨️modules/🏗️fem/⚙️engine/📦️packages/🟦️typescript/./🔢️sparse/🧪️testing/🔢️scalar-owners/🟦️.ts"
+   ],
+   "@semio-tech/s-fem-composition-tests/stories/coordination": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🏗️fem/📦️packages/🟦️typescript/./📖️stories/🧭️coordination/🟦️.ts"
+   ],
+   "@semio-tech/cad-js": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/cad-js/testing/spatial-kernel/brepjs": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/./🧪️testing/🔮️spatial-kernel/🧱️brepjs/🟦️.ts"
+   ],
+   "@semio-tech/stdio-js": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🗄️stdio/📦️packages/🟦️typescript/./dist/🟦️.js"
+   ],
+   "@semio-tech/s-dev-catalog-ts": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/s-dev-catalog-ts/browser-host": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./🌐️browser-host/🟦️.ts"
+   ],
+   "@semio-tech/s-dev-catalog-ts/browser-host/staging": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./🌐️browser-host/🏗️staging/🟦️.ts"
+   ],
+   "@semio-tech/s-dev-catalog-ts/builder": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./🏗️builder/🟦️.ts"
+   ],
+   "@semio-tech/s-dev-catalog-ts/generated": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./🤖️generated/🟦️.ts"
+   ],
+   "@semio-tech/s-dev-catalog-ts/generated/playgrounds": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./🤖️generated/🎮️playgrounds/🟦️.ts"
+   ],
+   "@semio-tech/s-dev-catalog-ts/generated/plugins": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./🤖️generated/🧩️plugins/🟦️.ts"
+   ],
+   "@semio-tech/s-dev-catalog-ts/publication": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./📣️publication/🟦️.ts"
+   ],
+   "@semio-tech/s-dev-catalog-ts/session": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧩️catalog/📦️packages/🟦️typescript/./🎮️session/🟦️.ts"
+   ],
+   "@semio-tech/s-dev-block-ts/stories/coordination": [
+    "/Users/ueli/Documents/semio/✏️s/🧑‍💻dev/🧱️block/📦️packages/🟦️typescript/./📖️stories/🧭️coordination/🟦️.ts"
+   ],
+   "@semio-tech/puzzle-wasm": [
+    "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/./pkg/semio_puzzle.js"
+   ],
+   "@semio-tech/puzzle-wasm/semio_puzzle.js": [
+    "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/./pkg/semio_puzzle.js"
+   ],
+   "@semio-tech/puzzle-wasm/semio_puzzle_bg.wasm": [
+    "/Users/ueli/Documents/semio/🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/./pkg/semio_puzzle_bg.wasm"
+   ],
+   "@semio-tech/framework": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework/process/routing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🧭️routing/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🎛️execution/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/budget": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/⏱️budget/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/test-budget": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🧪️testing/🎚️budget/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/test-execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🧪️testing/🎛️execution/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/vitest": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🧪️testing/🧪️vitest/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/cargo-test": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🧪️testing/🦀️cargo/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/cargo-laws": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🧪️testing/🦀️laws/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/artifact-files": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📦️artifacts/🗂️files/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/artifact-publication": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📦️artifacts/📤️publication/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/native-build": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📦️artifacts/🏗️native-build/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/wasm-build": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📦️artifacts/🕸️wasm-build/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/leases": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🔒️leases/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/context": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📋️context/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/command": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🎛️command/🟦️.ts"
+   ],
+   "@semio-tech/framework/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/filesystem": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📁️filesystem/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/build-mode": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🏗️build/🎚️mode/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/compiler-capacity": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🏗️build/🎟️capacity/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/native-receipt": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/native-release": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/native-cache": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/go-build": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/📦️artifacts/🐹️go-build/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/compiler-state": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🏗️build/🗃️state/🟦️.ts"
+   ],
+   "@semio-tech/framework/process/typescript-check": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏃️process/🏗️build/🟦️typescript/🟦️.ts"
+   ],
+   "@semio-tech/framework/mesh/polygon": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🥽️mesh/🥽️polygon/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/ordered/numeric": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🗂️ordered/🔢️numeric/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/refusal": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/⚠️refusal/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/ieee754": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🔢️ieee754/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/booleans": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🔀️booleans/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/booleans/paths": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🔀️booleans/🛤️paths/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/booleans/paths/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🔀️booleans/🛤️paths/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/booleans/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🔀️booleans/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/compute/testing/consumer": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🧮️compute/🧪️testing/📍️consumer/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/compute/testing/consumer/execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/compute/testing/consumer/host": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️host/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/path/flatten": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🛤️path/📏️flatten/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/path/flatten/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🛤️path/📏️flatten/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/path/stroke": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🛤️path/🖊️stroke/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/retire": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🧹️retire/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/retire/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🧹️retire/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/text": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/📝️text/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/text/font": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/📝️text/🔤️font/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/text/font/catalog": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/📝️text/🔤️font/📇️catalog/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/text/font/run": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/📝️text/🔤️font/🧵️run/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/text/font/shape/unicode": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/trace": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🔍️trace/🟦️.ts"
+   ],
+   "@semio-tech/framework/2d/trace/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./◻️2d/🔍️trace/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/3d": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧊️3d/🟦️.ts"
+   ],
+   "@semio-tech/framework/action-bus/wire-retirement/testing/wire-retirement": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎯️action-bus/🧹️wire-retirement/🧪️testing/🔬️wire-retirement/🟦️.ts"
+   ],
+   "@semio-tech/framework/canvas/runtime-assets": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖼️canvas/🔌️runtime-assets/🟦️.ts"
+   ],
+   "@semio-tech/framework/compiler/syntax/module-tree": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts"
+   ],
+   "@semio-tech/framework/compiler/syntax/rust": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📚️compiler/📖️syntax/🦀️rust/🟦️.ts"
+   ],
+   "@semio-tech/framework/document/check-in": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📄️document/📌️check-in/🟦️.ts"
+   ],
+   "@semio-tech/framework/document/scope": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📄️document/🪪️scope/🟦️.ts"
+   ],
+   "@semio-tech/framework/graph/manifest/execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🕸️graph/🛂️manifest/🏃️execution/🟦️.ts"
+   ],
+   "@semio-tech/framework/graph/manifest/value": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🕸️graph/🛂️manifest/🌱️value/🟦️.ts"
+   ],
+   "@semio-tech/framework/graph/manifest/value/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🕸️graph/🛂️manifest/🌱️value/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/hash": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔏️hash/🟦️.ts"
+   ],
+   "@semio-tech/framework/identity/grapheme": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🪪️identity/🧩️grapheme/🟦️.ts"
+   ],
+   "@semio-tech/framework/inference/service": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./💡️inference/🔌️service/🟦️.ts"
+   ],
+   "@semio-tech/framework/inference/service/io": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./💡️inference/🔌️service/🚪️io/🟦️.ts"
+   ],
+   "@semio-tech/framework/inference/service/worker-host": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./💡️inference/🔌️service/🛂️worker-host/🟦️.ts"
+   ],
+   "@semio-tech/framework/interaction": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🕹️interaction/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/base64": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🔤️base64/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/ports": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🔌️ports/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/artifact": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/artifact/keys": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🧩️artifact/🔤️keys/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/ieee754": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/ieee754/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/refusal/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/⚠️refusal/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/schema/relational": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🧬️schema/🏛️relational/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/testing/mutable-copy": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🧪️testing/🔓️mutable-copy/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🪶️sqlite-snapshot/🧪️testing/🔮️semantic-extent/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/text/artifact-reference/binding/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/📝️text/🗿️artifact-reference/🪆️binding/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/text/ieee754": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/📝️text/🔢️ieee754/🟦️.ts"
+   ],
+   "@semio-tech/framework/job/reconcile/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧵️job/🔎️reconcile/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/kernel": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎠️kernel/🟦️.ts"
+   ],
+   "@semio-tech/framework/kernel/clipboard": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎠️kernel/📋️clipboard/🟦️.ts"
+   ],
+   "@semio-tech/framework/kernel/clipboard/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎠️kernel/📋️clipboard/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/machine": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔄️machine/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/media": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🎞️media/🟦️.ts"
+   ],
+   "@semio-tech/framework/mesh-engine/schema/polygon": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏗️mesh-engine/🧬️schema/🥽️polygon/🟦️.ts"
+   ],
+   "@semio-tech/framework/pack/value/testing/preflight/pack": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎒️pack/🌱️value/🧪️testing/🫳️preflight/🔮️pack/🟦️.ts"
+   ],
+   "@semio-tech/framework/pack/value/scalar-witness/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎒️pack/🌱️value/🔎️scalar-witness/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework/packs": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎁️packs/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/compositing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🧩️compositing/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/compositing/frames": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🧩️compositing/📐️frames/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/compositing/layers": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🧩️compositing/🗂️layers/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/coverage": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🖊️coverage/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/editing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/✍️editing/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/image/decode": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🖼️image/📥️decode/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/image/decode/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🖼️image/📥️decode/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/png/encode": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/📷️png/✍️encode/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/sampling/affine": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🎨️sampling/↗️affine/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/sampling/affine/testing/oracles": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🎨️sampling/↗️affine/🧪️testing/🔭️oracles/🟦️.ts"
+   ],
+   "@semio-tech/framework/pixels/selection": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔲️pixels/🎯️selection/🟦️.ts"
+   ],
+   "@semio-tech/framework/replication": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📡️replication/🟦️.ts"
+   ],
+   "@semio-tech/framework/replication/mutation/map/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📡️replication/🎮️mutation/🗂️map/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/schema/artifact-reference": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧬️schema/🗿️artifact-reference/🟦️.ts"
+   ],
+   "@semio-tech/framework/schema/oracles/document": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧬️schema/🔮️oracles/🪪️document/🟦️.ts"
+   ],
+   "@semio-tech/framework/schema/oracles/validator": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧬️schema/🔮️oracles/✅️validator/🟦️.ts"
+   ],
+   "@semio-tech/framework/schema/record": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧬️schema/🧾️record/🟦️.ts"
+   ],
+   "@semio-tech/framework/schema/record/testing/unit": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧬️schema/🧾️record/🧪️testing/🔬️unit/🟦️.ts"
+   ],
+   "@semio-tech/framework/surface/paint/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🗺️surface/🎨️paint/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework/test/adapter": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧪️test/🔌️adapter/🟦️.ts"
+   ],
+   "@semio-tech/framework/test/gherkin": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧪️test/🥒️gherkin/🟦️.ts"
+   ],
+   "@semio-tech/framework/test/source-text": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧪️test/📖️source-text/🟦️.ts"
+   ],
+   "@semio-tech/framework/test/mutation/inventory/execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧪️test/🎮️mutation/🏭️inventory/🏃️execution/🟦️.ts"
+   ],
+   "@semio-tech/framework/tool-machine/schema/node-graph-edit-rows": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛠️tool-machine/🧬️schema/🔣️node-graph-edit-rows/🟦️.ts"
+   ],
+   "@semio-tech/framework/ui/scene": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖱️ui/🎬️scene/🟦️.ts"
+   ],
+   "@semio-tech/framework/ui/scene/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖱️ui/🎬️scene/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework/ui/styling": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖱️ui/🎨️styling/🟦️.ts"
+   ],
+   "@semio-tech/framework/ui/targets/react": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖱️ui/🎯️targets/⚛️react/🟦️.ts"
+   ],
+   "@semio-tech/framework/ui/targets/react/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖱️ui/🎯️targets/⚛️react/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework/ui/viewport/2d/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖱️ui/🪟️viewport/◻️2d/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/ui/viewport/3d/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖱️ui/🪟️viewport/🧊️3d/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/decode": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🛬️decode/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/dictionary": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🧾️dictionary/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/dictionary/native-json": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🧾️dictionary/🪪️native-json/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/retained-clone/contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🧬️retained-clone/🧬️contract/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/retained-clone/wire": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🧬️retained-clone/🌐️wire/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/retained-clone/wire/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🧬️retained-clone/🌐️wire/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/retirement/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/♻️retirement/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/schema/intrinsic": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🧬️schema/🌳️intrinsic/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/schema/intrinsic/json": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🧬️schema/🌳️intrinsic/🔣️json/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/text": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/📝️text/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/type": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/🏷️type/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/aria-oracle": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/♿️aria-oracle/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/band": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🎗️band/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/chrome": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🧱️chrome/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/console": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🎧️console/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/copy": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🌍️copy/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/editor": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🖊️editor/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/history": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/📜️history/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/history-session": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🧵️history-session/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/page": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/📄️page/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/replay-arm": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🔁️replay-arm/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/report": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🧾️report/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/reprojection": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🔄️reprojection/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/scenario": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🧩️scenario/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/state": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🧠️state/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel/testing/wgpu-mirror": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🧪️testing/🧊️wgpu-mirror/🟦️.ts"
+   ],
+   "@semio-tech/framework/assets": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖼️assets/🟦️.ts"
+   ],
+   "@semio-tech/framework/canvas/react-renderer": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖼️canvas/🎨️react-renderer/🟦️.ts"
+   ],
+   "@semio-tech/framework/trace": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏱️trace/🟦️.ts"
+   ],
+   "@semio-tech/framework/tool-machine": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛠️tool-machine/🟦️.ts"
+   ],
+   "@semio-tech/framework/value/resident": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌱️value/💾️resident/🟦️.ts"
+   ],
+   "@semio-tech/framework/async/continuation": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏳️async/🪃️continuation/🟦️.ts"
+   ],
+   "@semio-tech/framework/tool-run": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏯️tool-run/🟦️.ts"
+   ],
+   "@semio-tech/framework/assets/mesh": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖼️assets/🥽️mesh/🟦️.ts"
+   ],
+   "@semio-tech/framework/raster/video": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖌️raster/🎥️video/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/stream-mux": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🔀️stream-mux/🟦️.ts"
+   ],
+   "@semio-tech/framework/time-travel": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏪️time-travel/🟦️.ts"
+   ],
+   "@semio-tech/framework/wire-contracts": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🪢️wire-contracts/🟦️.ts"
+   ],
+   "@semio-tech/framework/app-channel": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧾️app-channel/🟦️.ts"
+   ],
+   "@semio-tech/framework/browser-bundle/action-handoff": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌐️browser-bundle/🎯️action-handoff/🟦️.ts"
+   ],
+   "@semio-tech/framework/browser-bundle/action-handoff/requests": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌐️browser-bundle/🎯️action-handoff/📮️requests/🟦️.ts"
+   ],
+   "@semio-tech/framework/browser-bundle/action-handoff/publication": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌐️browser-bundle/🎯️action-handoff/📤️publication/🟦️.ts"
+   ],
+   "@semio-tech/framework/browser-bundle/patch-handoff": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌐️browser-bundle/🩹️patch-handoff/🟦️.ts"
+   ],
+   "@semio-tech/framework/browser-bundle/child/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/inference/opening": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./💡️inference/🚪️opening/🟦️.ts"
+   ],
+   "@semio-tech/framework/assets/published-page": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖼️assets/🌐️published-page/🟦️.ts"
+   ],
+   "@semio-tech/framework/backbone": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛰️backbone/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/schema/session-authority-v1": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🧬️schema/🪪️session-authority-v1/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/io/text": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🚪️io/📝️text/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/sign-in": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🔐️sign-in/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/spaces": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🏘️spaces/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/first-run": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🎓️first-run/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/delegations": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🤖️delegations/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/local-session": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🎫️local-session/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/session-refresh": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🪪️session-refresh/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/session-refresh/session-port": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🪪️session-refresh/🪪️session-port/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory-client": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📞️directory-client/🟦️.ts"
+   ],
+   "@semio-tech/framework/backbone/binding": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛰️backbone/🔗️binding/🟦️.ts"
+   ],
+   "@semio-tech/framework/mcp/bridge": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🤖️mcp/🧵️bridge/🟦️.ts"
+   ],
+   "@semio-tech/framework/mcp/channel": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🤖️mcp/🐚️channel/🟦️.ts"
+   ],
+   "@semio-tech/framework/infinite/board/schema/dag-input": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./♾️infinite/🎲️board/🧬️schema/🎯️dag-input/🟦️.ts"
+   ],
+   "@semio-tech/framework/infinite/board/io/text/dag-input": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/🟦️.ts"
+   ],
+   "@semio-tech/framework/canvas/renderer-resident": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖼️canvas/💾️renderer-resident/🟦️.ts"
+   ],
+   "@semio-tech/framework/canvas/renderer-work": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖼️canvas/🧵️renderer-work/🟦️.ts"
+   ],
+   "@semio-tech/framework/config/mutations": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎚️config/🧬️schema/🧬️mutations/🟦️.ts"
+   ],
+   "@semio-tech/framework/backbone/config-lane": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛰️backbone/🪪️config-lane/🟦️.ts"
+   ],
+   "@semio-tech/framework/plugin-module": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔌️plugin-module/🟦️.ts"
+   ],
+   "@semio-tech/framework/plugin-module/hub-source/resolution": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔌️plugin-module/🌎️hub-source/🔍️resolution/🟦️.ts"
+   ],
+   "@semio-tech/framework/abi/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌉️abi/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/browser-bundle/action-handoff/command": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌐️browser-bundle/🎯️action-handoff/🎛️command/🟦️.ts"
+   ],
+   "@semio-tech/framework/browser-bundle/action-handoff/intent": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌐️browser-bundle/🎯️action-handoff/🧭️intent/🟦️.ts"
+   ],
+   "@semio-tech/framework/browser-bundle/view-context": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🌐️browser-bundle/🪟️view-context/🟦️.ts"
+   ],
+   "@semio-tech/framework/component-receipt": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🏷️component-receipt/🟦️.ts"
+   ],
+   "@semio-tech/framework/config/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎚️config/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/config/schema/mutations/identity-config-mutation": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎚️config/🧬️schema/🧬️mutations/🆔️identity-config-mutation/🟦️.ts"
+   ],
+   "@semio-tech/framework/config/schema/mutations/ui-preferences": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎚️config/🧬️schema/🧬️mutations/🎨️ui-preferences/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/client/socket-close": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🔌️client/🚪️socket-close/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/io/text/session-authority-v1": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🟦️.ts"
+   ],
+   "@semio-tech/framework/directory/schema/browser-actor": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts"
+   ],
+   "@semio-tech/framework/filesystem/observation": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📁️filesystem/🧾️observation/🟦️.ts"
+   ],
+   "@semio-tech/framework/filesystem/observation/current": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📁️filesystem/🧾️observation/📁️current/🟦️.ts"
+   ],
+   "@semio-tech/framework/filesystem/observation/descriptor": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts"
+   ],
+   "@semio-tech/framework/filesystem/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📁️filesystem/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/identity/installation": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🪪️identity/📁️installation/🟦️.ts"
+   ],
+   "@semio-tech/framework/identity/path": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🪪️identity/🛣️path/🟦️.ts"
+   ],
+   "@semio-tech/framework/inference/service/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./💡️inference/🔌️service/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework/infinite/board/io/text/dag-input/selection": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./♾️infinite/🎲️board/🚪️io/📝️text/🎯️dag-input/📤️selection/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/binary/source": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🔢️binary/📥️source/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/fetch-timeout": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🌐️fetch-timeout/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/testing/fixtures/ownership": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🧪️testing/🧫️fixtures/🏛️ownership/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/testing/fixtures/refusal": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🧪️testing/🧫️fixtures/⚠️refusal/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/testing/fixtures/refusal/stress": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🧪️testing/🧫️fixtures/⚠️refusal/🧵️stress/🟦️.ts"
+   ],
+   "@semio-tech/framework/io/testing/fixtures/refusal/wire": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🚪️io/🧪️testing/🧫️fixtures/⚠️refusal/🔁️wire/🟦️.ts"
+   ],
+   "@semio-tech/framework/job/failure": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧵️job/⚠️failure/🟦️.ts"
+   ],
+   "@semio-tech/framework/job/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧵️job/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/generated/ui-axes": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🤖️generated/🎚️ui-axes/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/testing/fixtures/shell-footer": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🧪️testing/🧫️fixtures/🏛️shell-footer/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/testing/fixtures/ui-refresh-section": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🧪️testing/🧫️fixtures/🔬️ui-refresh-section/🟦️.ts"
+   ],
+   "@semio-tech/framework/plugin-module/hub-source/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔌️plugin-module/🌎️hub-source/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/products/repo/modules/native/bootstrap/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/products/repo/modules/server/library/authentication": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔐️authentication/🟦️.ts"
+   ],
+   "@semio-tech/framework/products/repo/modules/server/library/event": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/📡️event/🟦️.ts"
+   ],
+   "@semio-tech/framework/products/repo/modules/server/library/persistence": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🗄️persistence/🟦️.ts"
+   ],
+   "@semio-tech/framework/products/repo/modules/server/library/source-index": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library/🔎️source-index/🟦️.ts"
+   ],
+   "@semio-tech/framework/raster/video/svg-export": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖌️raster/🎥️video/🖋️svg-export/🟦️.ts"
+   ],
+   "@semio-tech/framework/raster/video/svg-export/browser": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖌️raster/🎥️video/🖋️svg-export/🌐️browser/🟦️.ts"
+   ],
+   "@semio-tech/framework/test/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧪️test/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/trace/memory": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏱️trace/🧮️memory/🟦️.ts"
+   ],
+   "@semio-tech/framework/transient": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🫧️transient/🟦️.ts"
+   ],
+   "@semio-tech/framework/action-argument-resolution/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧩️action-argument-resolution/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/filesystem/observation/journal": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📁️filesystem/🧾️observation/📥️journal/🟦️.ts"
+   ],
+   "@semio-tech/framework/filesystem/observation/journal/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./📁️filesystem/🧾️observation/📥️journal/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/identity/installation/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🪪️identity/📁️installation/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework/identity/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🪪️identity/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/interaction/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🕹️interaction/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/job/budget/testing/tool-job-microsecond-budget": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🧵️job/⏱️budget/🧪️testing/🔬️tool-job-microsecond-budget/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/testing/window-view-context": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🧪️testing/🔬️window-view-context/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/utilities/initial": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🪛️utilities/🌅️initial/🟦️.ts"
+   ],
+   "@semio-tech/framework/manifest/view-context/testing/resolved-host-context": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛂️manifest/🪟️view-context/🧪️testing/🪟️resolved-host-context/🟦️.ts"
+   ],
+   "@semio-tech/framework/onboarding/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🎓️onboarding/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/products/repo/modules/dashboard/installation": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️installation/🟦️.ts"
+   ],
+   "@semio-tech/framework/raster/video/testing/unit": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🖌️raster/🎥️video/🧪️testing/🔬️unit/🟦️.ts"
+   ],
+   "@semio-tech/framework/trace/clock/testing/tool-job-telemetry-contention": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏱️trace/⏱️clock/🧪️testing/🔬️tool-job-telemetry-contention/🟦️.ts"
+   ],
+   "@semio-tech/framework/trace/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./⏱️trace/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework/plugin-module/hub-source/port": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🔌️plugin-module/🌎️hub-source/🪝️host-port/🟦️.ts"
+   ],
+   "@semio-tech/framework/plugin-catalog": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🗂️plugin-catalog/🟦️.ts"
+   ],
+   "@semio-tech/framework/shell": [
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/./🐚️shell/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/actions": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🕹️actions/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/arguments": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🧭️arguments/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/aria-oracle": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/♿️aria-oracle/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/band": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🎗️band/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/chrome": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🧱️chrome/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/console": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🎧️console/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/copy": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🌍️copy/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/editor": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🖊️editor/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/history": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/📜️history/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/history-session": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🧵️history-session/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/page": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/📄️page/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/replay-arm": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🔁️replay-arm/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/report": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🧾️report/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/reprojection": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🔄️reprojection/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/scenario": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🧩️scenario/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/state": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🧠️state/🟦️.ts"
+   ],
+   "@semio-tech/framework-time-travel-ts/testing/wgpu-mirror": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏪️time-travel/📦️packages/🟦️typescript/./🧪️testing/🧊️wgpu-mirror/🟦️.ts"
+   ],
+   "@semio-tech/framework-tool-run-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-tool-run-ts/actions": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🟦️typescript/./🕹️actions/🟦️.ts"
+   ],
+   "@semio-tech/framework-tool-run-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-async": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-async/continuation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/./🪃️continuation/🟦️.ts"
+   ],
+   "@semio-tech/framework-async/event-wait": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/./🔔️event-wait/🟦️.ts"
+   ],
+   "@semio-tech/framework-async/jittered-backoff": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/./🔁️jittered-backoff/🟦️.ts"
+   ],
+   "@semio-tech/framework-async/latest-wins": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/./🥇️latest-wins/🟦️.ts"
+   ],
+   "@semio-tech/framework-async/lease-pool": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⏳️async/📦️packages/🟦️typescript/./🎟️lease-pool/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/booleans": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🔀️booleans/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/booleans/paths": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🔀️booleans/🛤️paths/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/booleans/paths/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🔀️booleans/🛤️paths/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/booleans/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🔀️booleans/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/path/flatten": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🛤️path/📏️flatten/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/path/flatten/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🛤️path/📏️flatten/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/path/stroke": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🛤️path/🖊️stroke/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/retire": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🧹️retire/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/retire/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🧹️retire/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/text": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./📝️text/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/text/font": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./📝️text/🔤️font/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/text/font/catalog": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./📝️text/🔤️font/📇️catalog/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/text/font/run": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./📝️text/🔤️font/🧵️run/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/text/font/shape/unicode": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./📝️text/🔤️font/🧵️shape/🌐️unicode/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/trace": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🔍️trace/🟦️.ts"
+   ],
+   "@semio-tech/framework-2d-js/trace/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/📦️packages/🟦️typescript/./🔍️trace/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/2d-compute/testing/consumer": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/🧮️compute/./🧪️testing/📍️consumer/🟦️.ts"
+   ],
+   "@semio-tech/2d-compute/testing/consumer/host": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/🧮️compute/./🧪️testing/📍️consumer/🏃️host/🟦️.ts"
+   ],
+   "@semio-tech/compute-ownership-runner": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️testing/📍️consumer/🏃️execution/./🟦️.ts"
+   ],
+   "@semio-tech/framework-diagnostic-ts/controlled": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/./🎛️controlled/🟦️.ts"
+   ],
+   "@semio-tech/framework-diagnostic-ts/retained": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/./🧾️retained/🟦️.ts"
+   ],
+   "@semio-tech/framework-diagnostic-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-diagnostic-ts/text-error": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🟦️typescript/./🚧️text-error/🟦️.ts"
+   ],
+   "@semio-tech/framework-editor-rs": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/./pkg/framework_editor.js"
+   ],
+   "@semio-tech/framework-editor-rs/pkg/framework_editor.js": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/✍️editor/📦️packages/🦀️rust/./pkg/framework_editor.js"
+   ],
+   "@semio-tech/value-ts/ordered/numeric": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🗂️ordered/🔢️numeric/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/refusal": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./⚠️refusal/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/ieee754": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🔢️ieee754/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/decode": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🛬️decode/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/dictionary": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧾️dictionary/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/dictionary/native-json": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧾️dictionary/🪪️native-json/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/ordered/numeric/scratch": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🗂️ordered/🔢️numeric/🧮️scratch/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/ordered/numeric/scratch/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🗂️ordered/🔢️numeric/🧮️scratch/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/ordered/numeric/scratch/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🗂️ordered/🔢️numeric/🧮️scratch/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/ordered/retirement/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🗂️ordered/♻️retirement/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/ordered/testing/source-contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🗂️ordered/🧪️testing/🧪️source-contract/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/refusal/codec": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./⚠️refusal/🔁️codec/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/refusal/codec/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./⚠️refusal/🔁️codec/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/refusal/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./⚠️refusal/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/refusal/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./⚠️refusal/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/resident": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./💾️resident/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/resident/admission": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./💾️resident/📨️admission/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/resident/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./💾️resident/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/resident/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./💾️resident/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/retained-clone/contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧬️retained-clone/🧬️contract/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/retained-clone/contract/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧬️retained-clone/🧬️contract/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/retained-clone/wire": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧬️retained-clone/🌐️wire/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/retained-clone/wire/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧬️retained-clone/🌐️wire/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/retirement/contract/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./♻️retirement/🧬️contract/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/retirement/factory/boxed": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./♻️retirement/🏭️factory/📦️boxed/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/schema/intrinsic": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧬️schema/🌳️intrinsic/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/schema/intrinsic/json": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧬️schema/🌳️intrinsic/🔣️json/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/testing/json-projection": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧪️testing/🔣️json-projection/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/text": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./📝️text/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/type": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🏷️type/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/value-ts/retirement/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🌱️value/📦️packages/🟦️typescript/./♻️retirement/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-error-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-error-ts/testing/fixtures/cause/codec": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/⚠️error/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🧭️cause/📡️codec/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-record-ts/scalar-witness/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/./🔎️scalar-witness/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-record-ts/script": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/./📜️script.ts"
+   ],
+   "@semio-tech/framework-pack-record-ts/testing/fixtures/intrinsic-media": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🎞️intrinsic-media/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-record-ts/testing/fixtures/wire-materialization": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🧮️wire-materialization/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-record-ts/testing/preflight/pack": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🌱️value/📦️packages/🟦️typescript/./🧪️testing/🫳️preflight/🔮️pack/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-ts/format/testing/oracles/leb": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🟦️typescript/./📐️format/🧪️testing/🔮️oracles/🔢️leb/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/pack-json-decode-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/pack-json-decode-ts/testing/invocation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️decode/📦️packages/🟦️typescript/./🧪️testing/📥️invocation/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-json-ts/members": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/./🧩️members/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-json-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-pack-json-ts/testing/fixtures/borrowed-retirement": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🎟️borrowed-retirement/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/clipboard": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./📋️clipboard/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/clipboard/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./📋️clipboard/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/effect": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./⚡️effect/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/merge-outcome": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./🔄️merge-outcome/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/notice-labels": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./🏷️notice-labels/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/package-assets": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./📦️package-assets/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/plugin-source": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./🔌️plugin-source/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/return/content/input": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./📤️return/📦️content/📥️input/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/spawned-job": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./🛠️spawned-job/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/turn-outcome-broadcast": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./📡️turn-outcome-broadcast/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/ui-dirty-scope": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./🎯️ui-dirty-scope/🟦️.ts"
+   ],
+   "@semio-tech/framework-kernel/video-render-program": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/./🎥️video-render-program/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/page": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./📃️page/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/lifetime": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🚪️lifetime/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/lifetime/patch": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🚪️lifetime/🩹️patch/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/retained-turn": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🎟️retained-turn/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/codec": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🧬️codec/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/liveness": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🫀️liveness/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/cold-pair": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./📥️cold-pair/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/retained-turn/bootstrap": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🎟️retained-turn/🏛️bootstrap/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/retained-turn/bootstrap/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🎟️retained-turn/🏛️bootstrap/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/shard-client": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./📮️shard-client/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/turn-scheduler": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🧵️turn-scheduler/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor/wire-turn": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🟦️typescript/./🖼️wire-turn/🟦️.ts"
+   ],
+   "@semio-tech/framework-actor-rs": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/./pkg/framework_actor.js"
+   ],
+   "@semio-tech/framework-actor-rs/framework_actor.js": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/./pkg/framework_actor.js"
+   ],
+   "@semio-tech/framework-actor-rs/framework_actor_bg.wasm": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust/./pkg/framework_actor_bg.wasm"
+   ],
+   "@semio-tech/process/routing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧭️routing/🟦️.ts"
+   ],
+   "@semio-tech/process/execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🎛️execution/🟦️.ts"
+   ],
+   "@semio-tech/process/budget": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./⏱️budget/🟦️.ts"
+   ],
+   "@semio-tech/process/test-budget": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🎚️budget/🟦️.ts"
+   ],
+   "@semio-tech/process/test-execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🎛️execution/🟦️.ts"
+   ],
+   "@semio-tech/process/vitest": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🧪️vitest/🟦️.ts"
+   ],
+   "@semio-tech/process/cargo-test": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🦀️cargo/🟦️.ts"
+   ],
+   "@semio-tech/process/cargo-laws": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🦀️laws/🟦️.ts"
+   ],
+   "@semio-tech/process/cargo-execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🦀️execution/🟦️.ts"
+   ],
+   "@semio-tech/process/artifact-files": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🗂️files/🟦️.ts"
+   ],
+   "@semio-tech/process/artifact-publication": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/📤️publication/🟦️.ts"
+   ],
+   "@semio-tech/process/native-build": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🟦️.ts"
+   ],
+   "@semio-tech/process/wasm-build": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🕸️wasm-build/🟦️.ts"
+   ],
+   "@semio-tech/process/leases": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🔒️leases/🟦️.ts"
+   ],
+   "@semio-tech/process/context": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📋️context/🟦️.ts"
+   ],
+   "@semio-tech/process/command": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🎛️command/🟦️.ts"
+   ],
+   "@semio-tech/process/build-mode": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🏗️build/🎚️mode/🟦️.ts"
+   ],
+   "@semio-tech/process/compiler-capacity": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🏗️build/🎟️capacity/🟦️.ts"
+   ],
+   "@semio-tech/process/native-receipt": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts"
+   ],
+   "@semio-tech/process/native-release": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"
+   ],
+   "@semio-tech/process/native-cache": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts"
+   ],
+   "@semio-tech/process/go-build": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🐹️go-build/🟦️.ts"
+   ],
+   "@semio-tech/process/compiler-state": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🏗️build/🗃️state/🟦️.ts"
+   ],
+   "@semio-tech/process/typescript-check": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🏗️build/🟦️typescript/🟦️.ts"
+   ],
+   "@semio-tech/process/native-plan": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🧩️component-pass/📋️contract/🟦️.ts"
+   ],
+   "@semio-tech/process/context-contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📋️context/📋️contract/🟦️.ts"
+   ],
+   "@semio-tech/process/vitest-contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🧪️vitest/📋️contract/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/archive": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🗃️archive/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/checksum/crc32": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🔢️checksum/🔁️crc32/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/capture/contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/📥️capture/📋️contract/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/lease": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/published": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/📤️published/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/receipt/retention/inventory": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️inventory/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/receipt/retention/reading": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📥️reading/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/receipt/retention/reference": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/receipt/retention/reference/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/📋️reference/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/receipt/retention/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🧾️receipt/📦️retention/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/source": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/📥️source/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/source/admission": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/source/admission/read": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/storage": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/💾️storage/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/storage/image": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/💾️storage/🍎️image/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/storage/platform/contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/storage/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/native-build/units/capture": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts"
+   ],
+   "@semio-tech/process/artifacts/publication/sources/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./📦️artifacts/📤️publication/📥️sources/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/process/owned-execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🎛️owned-execution/🟦️.ts"
+   ],
+   "@semio-tech/process/owned-execution/capture": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🎛️owned-execution/📥️capture/🟦️.ts"
+   ],
+   "@semio-tech/process/owned-execution/capture/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🎛️owned-execution/📥️capture/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/process/owned-execution/outcome": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🎛️owned-execution/📪️outcome/🟦️.ts"
+   ],
+   "@semio-tech/process/owned-execution/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🎛️owned-execution/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/process/routing/invocation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧭️routing/📥️invocation/🟦️.ts"
+   ],
+   "@semio-tech/process/routing/invocation/process": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧭️routing/📥️invocation/🏃️process/🟦️.ts"
+   ],
+   "@semio-tech/process/routing/invocation/process/json": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts"
+   ],
+   "@semio-tech/process/testing/cargo/exact": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🦀️cargo/🎯️exact/🟦️.ts"
+   ],
+   "@semio-tech/process/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/process/build/capacity/scope/consumption": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🏗️build/🎟️capacity/🪆️scope/🤲️consumption/🟦️.ts"
+   ],
+   "@semio-tech/process/build/capacity/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/./🏗️build/🎟️capacity/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-mesh-engine-ts/polygon": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🟦️typescript/./🥽️polygon/🟦️.ts"
+   ],
+   "@semio-tech/framework-mesh-engine-ts/schema/polygon": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🟦️typescript/./🧬️schema/🥽️polygon/🟦️.ts"
+   ],
+   "@semio-tech/framework-mesh-engine-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/compiler-syntax-ecma-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🟨️ecma/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/compiler-syntax-rust-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-compiler-ts/syntax/module-tree": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🟦️typescript/./📖️syntax/🌳️module-tree/🟦️.ts"
+   ],
+   "@semio-tech/framework-compiler-ts/world": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📚️compiler/📦️packages/🟦️typescript/./🌍️world/🟦️.ts"
+   ],
+   "@semio-tech/framework-replication": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-replication/apply-refusal/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/./🚧️apply-refusal/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-replication/apply-refusal/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/./🚧️apply-refusal/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-replication/mutation/map/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/./🎮️mutation/🗂️map/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-replication/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-replication/wire/command/ingress/ownership/testing/consumer": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/./📡️wire/🎮️command/📥️ingress/🏛️ownership/🧪️testing/🧩️consumer/🟦️.ts"
+   ],
+   "@semio-tech/framework-replication/wire/local-interaction": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/./📡️wire/🏠️local-interaction/🟦️.ts"
+   ],
+   "@semio-tech/framework-replication/wire/local-interaction/transport": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/📡️replication/📦️packages/🟦️typescript/./📡️wire/🏠️local-interaction/📡️transport/🟦️.ts"
+   ],
+   "@semio-tech/machine": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔄️machine/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/compositing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🧩️compositing/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/compositing/frames": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🧩️compositing/📐️frames/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/compositing/layers": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🧩️compositing/🗂️layers/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/coverage": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🖊️coverage/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/editing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./✍️editing/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/image/decode": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🖼️image/📥️decode/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/image/decode/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🖼️image/📥️decode/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/png/encode": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./📷️png/✍️encode/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/sampling/affine": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🎨️sampling/↗️affine/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/sampling/affine/testing/oracles": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🎨️sampling/↗️affine/🧪️testing/🔭️oracles/🟦️.ts"
+   ],
+   "@semio-tech/framework-pixels-ts/selection": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🔲️pixels/📦️packages/🟦️typescript/./🎯️selection/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/🖌️ui.css": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🖌️ui.css"
+   ],
+   "@semio-tech/ui-styling/🎨️palette.css": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🎨️palette.css"
+   ],
+   "@semio-tech/ui-styling/tokens": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🔤️tokens/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/builder/vite": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🏗️builder/🌐️vite/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/builder/vite/mode": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🏗️builder/🌐️vite/🎚️mode/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/builder/vite/wasm/delivery": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🏗️builder/🌐️vite/🕸️wasm/📦️delivery/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/mixing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🌗️mixing/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/verification/testing/color-oracle": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🛡️verification/🧪️testing/⚖️color-oracle/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/builder/python/contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🏗️builder/🐍️python/📋️contract/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/theme": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🌓️theme/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/theme/model": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🌓️theme/🏛️model/🟦️.ts"
+   ],
+   "@semio-tech/ui-styling/verification": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/./🛡️verification/🟦️.ts"
+   ],
+   "@semio-tech/ui-react": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🟦️.tsx"
+   ],
+   "@semio-tech/ui-react/runtime": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🟦️.tsx"
+   ],
+   "@semio-tech/ui-react/i18n": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🌐️i18n.ts"
+   ],
+   "@semio-tech/ui-react/chrome": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🪟️chrome.ts"
+   ],
+   "@semio-tech/ui-react/test": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/ui-react/🧵️.css": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🧵️.css"
+   ],
+   "@semio-tech/ui-react/🌐️globals-ui.css": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🌐️globals-ui.css"
+   ],
+   "@semio-tech/ui-react/🌓️theme.css": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🌓️theme.css"
+   ],
+   "@semio-tech/ui-react/postcss.config": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🟦️.mts"
+   ],
+   "@semio-tech/ui-react/appearance": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🌓️appearance/🟦️.ts"
+   ],
+   "@semio-tech/ui-react/build-tooling": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🛠️build-tooling/🟦️.ts"
+   ],
+   "@semio-tech/ui-react/source": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/./📥️source/🟦️.ts"
+   ],
+   "@semio-tech/framework-ui-viewport-ts/2d/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript/./◻️2d/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-ui-viewport-ts/3d/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript/./🧊️3d/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-ui-viewport-ts/testing/fixtures/poses": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖱️ui/🪟️viewport/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🪟️poses/🟦️.ts"
+   ],
+   "@semio-tech/assets": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/assets/icons/builder/projection": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🔣️icons/🏗️builder/📽️projection/🟦️.ts"
+   ],
+   "@semio-tech/assets/mesh": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🥽️mesh/🟦️.ts"
+   ],
+   "@semio-tech/assets/mesh/catalog": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🥽️mesh/📇️catalog/🟦️.ts"
+   ],
+   "@semio-tech/assets/published-page": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🌐️published-page/🟦️.ts"
+   ],
+   "@semio-tech/assets/resolver/delivery": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🔍️resolver/🌐️delivery/🟦️.ts"
+   ],
+   "@semio-tech/assets/resolver/dispatch": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🔍️resolver/🧭️dispatch/🟦️.ts"
+   ],
+   "@semio-tech/assets/tile-proxy": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🗺️tile-proxy/🟦️.ts"
+   ],
+   "@semio-tech/assets/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/assets/metabolism/representation/capsules/j/capsule-j": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🌱️metabolism/🎨️representation/💊️capsules/🪝️j/🧊️capsule-j/🟦️.ts"
+   ],
+   "@semio-tech/assets/fonts/anta/latin/regular/outline": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline/🟦️.ts"
+   ],
+   "@semio-tech/assets/fonts/anta/latin-ext/regular/outline": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🔤️fonts/🚀️anta/➕️latin-ext/📖️regular/🔤️outline/🟦️.ts"
+   ],
+   "@semio-tech/assets/fonts/anta/math/regular/outline": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🔤️fonts/🚀️anta/🧮️math/📖️regular/🔤️outline/🟦️.ts"
+   ],
+   "@semio-tech/assets/fonts/anta/symbols/regular/outline": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./🔤️fonts/🚀️anta/🔣️symbols/📖️regular/🔤️outline/🟦️.ts"
+   ],
+   "@semio-tech/assets/cursor/default/light": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript/./👆️cursor/🖱️default/☀️light/🟦️.ts"
+   ],
+   "@semio-tech/canvas-react-renderer": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript/./🟦️.tsx"
+   ],
+   "@semio-tech/framework-canvas-ts/fonts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/./🔤️fonts/🟦️.ts"
+   ],
+   "@semio-tech/framework-canvas-ts/fonts/publication": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/./🔤️fonts/📦️publication/🟦️.ts"
+   ],
+   "@semio-tech/framework-canvas-ts/renderer-resident": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/./💾️renderer-resident/🟦️.ts"
+   ],
+   "@semio-tech/framework-canvas-ts/renderer-work": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/./🧵️renderer-work/🟦️.ts"
+   ],
+   "@semio-tech/framework-canvas-ts/runtime-assets": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/./🔌️runtime-assets/🟦️.ts"
+   ],
+   "@semio-tech/framework-canvas-ts/runtime-assets/staging": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/./🔌️runtime-assets/🚚️staging/🟦️.ts"
+   ],
+   "@semio-tech/framework-canvas-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-canvas-ts/testing/fixtures/demand-frames": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🪶️demand-frames/🟦️.ts"
+   ],
+   "@semio-tech/framework-deflate-ts/decode": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗜️deflate/📦️packages/🟦️typescript/./📥️decode/🟦️.ts"
+   ],
+   "@semio-tech/framework-dsl-ts/testing/fixtures/binding/shared-utf8": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗣️dsl/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🪆️binding/📝️shared-utf8/🟦️.ts"
+   ],
+   "@semio-tech/framework-dsl-record-ts/binding/ownership/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🟦️typescript/./🪆️binding/🏛️ownership/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework-surface-ts/node-graph/scene/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🟦️typescript/./🕸️node-graph/📡️scene/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-surface-ts/node-graph/scene/testing/fixtures/body": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🟦️typescript/./🕸️node-graph/📡️scene/🧪️testing/🧫️fixtures/📦️body/🟦️.ts"
+   ],
+   "@semio-tech/framework-surface-ts/paint/testing/fixtures/protection": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🟦️typescript/./🎨️paint/🧪️testing/🧫️fixtures/🔒️protection/🟦️.ts"
+   ],
+   "@semio-tech/framework-surface-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-surface-rs": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/./🕸️bindings/framework_surface.js"
+   ],
+   "@semio-tech/framework-surface-rs/🕸️bindings/framework_surface.js": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust/./🕸️bindings/framework_surface.js"
+   ],
+   "@semio-tech/framework-io-base64-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-io-base64-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-io-schema-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🧬️schema/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/artifact": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🧩️artifact/🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/artifact/keys": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🧩️artifact/🔤️keys/🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/ieee754": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🔢️ieee754/🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/ieee754/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🔢️ieee754/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/refusal/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./⚠️refusal/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/schema/relational": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🧬️schema/🏛️relational/🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/testing/mutable-copy": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🧪️testing/🔓️mutable-copy/🟦️.ts"
+   ],
+   "@semio-tech/framework-sqlite-snapshot-ts/testing/semantic-extent": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🟦️typescript/./🧪️testing/🔮️semantic-extent/🟦️.ts"
+   ],
+   "@semio-tech/framework-tool-machine-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-tool-machine-ts/schema/node-graph-edit-rows": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🟦️typescript/./🧬️schema/🔣️node-graph-edit-rows/🟦️.ts"
+   ],
+   "@semio-tech/framework-tool-machine-ts/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-3d-js": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-3d-js/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧊️3d/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/schema-validator-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/schema-validator-ts/format-policy": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/./🏷️format-policy/🟦️.ts"
+   ],
+   "@semio-tech/schema-validator-ts/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/./🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/schema-ts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/schema-ts/artifact-reference": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/./🗿️artifact-reference/🟦️.ts"
+   ],
+   "@semio-tech/schema-ts/entity-kinds/source": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/./🏷️entity-kinds/📥️source/🟦️.ts"
+   ],
+   "@semio-tech/schema-ts/generated/entity-kinds": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/./🤖️generated/🏷️entity-kinds/🟦️.ts"
+   ],
+   "@semio-tech/schema-ts/oracles/document": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/./🔮️oracles/🪪️document/🟦️.ts"
+   ],
+   "@semio-tech/schema-ts/oracles/validator": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/./🔮️oracles/✅️validator/🟦️.ts"
+   ],
+   "@semio-tech/schema-ts/record": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/./🧾️record/🟦️.ts"
+   ],
+   "@semio-tech/schema-ts/record/testing/unit": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🟦️typescript/./🧾️record/🧪️testing/🔬️unit/🟦️.ts"
+   ],
+   "@semio-tech/framework-schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust/./📜️script.ts"
+   ],
+   "@semio-tech/quiz-react": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🟦️.tsx"
+   ],
+   "@semio-tech/quiz-react/🎨️.css": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🎨️.css"
+   ],
+   "@semio-tech/quiz-react/stylesheet": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🎨️stylesheet/🟦️.ts"
+   ],
+   "@semio-tech/quiz": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/presentation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/presentation-react": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/./🟦️.tsx"
+   ],
+   "@semio-tech/presentation-react/🎨️.css": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/./🎨️.css"
+   ],
+   "@semio-tech/pets-react": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🟦️.tsx"
+   ],
+   "@semio-tech/pets-react/🎨️.css": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🎨️.css"
+   ],
+   "@semio-tech/pets-react/builder/vite": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🏗️builder/🌐️vite/🟦️.ts"
+   ],
+   "@semio-tech/pets": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/pets/modules/attention": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/./🔨️modules/👀️attention/🟦️.ts"
+   ],
+   "@semio-tech/pets/modules/draft": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/./🔨️modules/📝️draft/🟦️.ts"
+   ],
+   "@semio-tech/pets/modules/locomotion/constants": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/./🔨️modules/🚶️locomotion/📐️constants/🟦️.ts"
+   ],
+   "@semio-tech/pets/modules/projection": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/./🔨️modules/🎥️projection/🟦️.ts"
+   ],
+   "@semio-tech/pets/modules/spacing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/./🔨️modules/📏️spacing/🟦️.ts"
+   ],
+   "@semio-tech/pets/testing/fixtures/schema-conformance": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🧬️schema-conformance/🟦️.ts"
+   ],
+   "@semio-tech/framework-os": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/io/binary/descriptor-digest": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🚪️io/🧱️binary/🔐️descriptor-digest/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/io/text/document-check-in-v1": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🚪️io/📝️text/📌️document-check-in-v1/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/io/text/space-artifact-creation-v1": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🚪️io/📝️text/🌱️space-artifact-creation-v1/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/local-session/broker": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🎫️local-session/🗄️broker/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/local-session/broker/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/local-session/broker/testing/contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🎫️local-session/🗄️broker/🧪️testing/🔬️contract/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/schema/document-open": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🧬️schema/🔏️document-open/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🧬️schema/🌱️space-artifact-creation-v1/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/directory/testkit/client-probe": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📇️directory/🧪️testkit/📡️client-probe/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/geometry/testing/ownership": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🌐️geometry/🧪️testing/♻️ownership/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/host/retirement/testing/host-source": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️testing/🎟️host-source/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/host/retirement/testing/source-contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🖥️host/🧹️retirement/🧪️testing/🧪️source-contract/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/registry/testing/manifest-admission": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/📔️registry/🧪️testing/🪪️manifest-admission/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/testing/browser-declaration": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🧪️testing/🌐️browser-declaration/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/vcs/retirement/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🌿️vcs/♻️retirement/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/browser/ownership/testing/browser-ownership": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🌐️browser/🏷️ownership/🧪️testing/🏷️browser-ownership/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/browser/publication": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/browser/publication/contract": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🌐️browser/📦️publication/📋️contract/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/testing/open-ownership": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🔓️open-ownership/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/testing/retained-grant": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🎟️retained-grant/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/testing/retained-receipt": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🎟️retained-receipt/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/infinite/board/ports/directed/dag/retirement/testing/source": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧹️retirement/🧪️testing/🎟️source/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/infinite/fonts/reading": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/♾️infinite/🔤️fonts/👓️reading/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/infinite/fonts/reading/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/♾️infinite/🔤️fonts/👓️reading/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/infinite/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/♾️infinite/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/blob/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/📦️blob/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/child/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🪆️child/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/link/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🔗️link/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/worker": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/👷️worker/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/worker/visible-surfaces": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/👷️worker/🪟️visible-surfaces/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/stories/coordination": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./📖️stories/🧭️coordination/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/testing/config": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🧪️testing/🎚️config/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/testing/fetch-stub": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🧪️testing/🌐️fetch-stub/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/testing/scale/projection": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🧪️testing/⚖️scale/📽️projection/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/testing/scale/publication": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🧪️testing/⚖️scale/📤️publication/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/testing/scale/testing/fixtures/registry": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🧪️testing/⚖️scale/🧪️testing/🧫️fixtures/📇️registry/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/testing/worker-law-fakes": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🧪️testing/🧰️worker-law-fakes/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/artifacts/flow/retained/copy/testing/flow-selected-copy": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/📑️copy/🧪️testing/🔬️flow-selected-copy/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/artifacts/flow/retained/testing/flow-typed-retirement": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/🧵️retained/🧪️testing/🔬️flow-typed-retirement/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/io/bindings/catalog": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🚪️io/🪪️bindings/🏛️catalog/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/io/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🚪️io/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/playbook/artifacts/playbook/generation/testing/procedural-generation-root": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/🧬️generation/🧪️testing/🔬️procedural-generation-root/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/canonical-edit/testing/store-canonical-edit-sealer": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🧵️canonical-edit/🧪️testing/🔬️store-canonical-edit-sealer/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/command/receiving/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/📬️command/🛬️receiving/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/composition/closure/testing/unit": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🧩️composition/🌳️closure/🧪️testing/🔬️unit/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/initialization/owners/member/source": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/initialization/owners/member/source/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🏗️initialization/🏠️owners/🏭️member/📥️source/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/read/projection/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🔗️read/🪞️projection/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/testing/artifact-addressing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🧪️testing/🪪️artifact-addressing/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/store/testing/snapshot-read-retirement": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🏪️store/🧪️testing/♻️snapshot-read-retirement/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/vcs/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌿️vcs/🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/testing/fixtures/channel/document-archive": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/📡️channel/🗃️document-archive/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/infinite/assets/abbau-aufbau-masterarbeit-grundriss": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/♾️infinite/🖼️assets/🏘️abbau-aufbau-masterarbeit-grundriss/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/infinite/assets/rathaus-ahlen-grundriss": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/♾️infinite/🖼️assets/🏛️rathaus-ahlen-grundriss/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/testing/host": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🖥️host/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/testing/draw-list": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🎬️draw-list/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/testing/consumed-browser-clock": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🧪️testing/⏱️consumed-browser-clock/🟦️.ts"
+   ],
+   "@semio-tech/framework-os/modules/flow/wasm/testing/schema-oracle": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/./🔨️modules/🌊️flow/🕸️wasm/🧪️testing/🧬️schema-oracle/🟦️.ts"
+   ],
+   "@semio-tech/infinite-world-r3f": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/📦️packages/🟦️typescript/./🟦️.tsx"
+   ],
+   "@semio-tech/framework-os-mcp": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-os-mcp/inference/testing/inference-service-law": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/./💡️inference/🧪️testing/💼️inference-service-law/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-mcp/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/./🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-mcp/schema-validation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/./🧬️schema-validation/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-mcp/stdio/session/data": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/./📡️stdio/🎫️session/📋️data/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-mcp/stdio/session/published": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/./📡️stdio/🎫️session/📦️published/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-mcp/testing/config": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/./🧪️testing/🎚️config/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-mcp/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/flow-core-build": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust/./🟦️.ts"
+   ],
+   "@semio-tech/flow-core": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/./flow_core.js"
+   ],
+   "@semio-tech/flow-core/🌐️flow-browser.js": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/./🌐️browser/🟨️.js"
+   ],
+   "@semio-tech/flow-core/🖥️flow-host.js": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/🕸️bindings/./🖥️host/🟨️.js"
+   ],
+   "@semio-tech/framework-renderer-react": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/./🟦️.tsx"
+   ],
+   "@semio-tech/framework-renderer-wgpu": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🟦️typescript/./📚️library/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-node-graph-rs": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/./🟦️.ts"
+   ],
+   "@semio-tech/framework-os-node-graph-rs/framework_os_node_graph.js": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust/./🕸️bindings/framework_os_node_graph.js"
+   ],
+   "@semio-tech/plugin-extension-store": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/./📥️installation/🟦️.ts"
+   ],
+   "@semio-tech/plugin-registry": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/./📜️script.ts"
+   ],
+   "@semio-tech/plugin-registry/catalog": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/./🟦️.ts"
+   ],
+   "@semio-tech/plugin-window-kits/text": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/./📝️text/🟦️.ts"
+   ],
+   "@semio-tech/plugin-window-kits/table": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/./📊️table/🟦️.ts"
+   ],
+   "@semio-tech/plugin-window-kits/tree": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/./🌳️tree/🟦️.ts"
+   ],
+   "@semio-tech/plugin-window-kits/image": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/./🖼️image/🟦️.ts"
+   ],
+   "@semio-tech/plugin-window-kits/mesh": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/./🧊️mesh/🟦️.ts"
+   ],
+   "@semio-tech/plugin-window-kits/document": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/./📃️document/🟦️.ts"
+   ],
+   "@semio-tech/plugin-window-kits/media": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/./🎬️media/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-shell": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/activation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./♻️activation/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/activation/readiness": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./♻️activation/🩺️readiness/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/builder/vite": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🏗️builder/🌐️vite/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/builder/vite/artifacts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🏗️builder/🌐️vite/📥️artifacts/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/builder/vite/artifacts/engines": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🏗️builder/🌐️vite/📥️artifacts/🕸️engines/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/engine/publication": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./⚙️engine/📤️publication/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/engine/selection": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./⚙️engine/🧭️selection/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/local-hub/execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🚀️local-hub/🏃️execution/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/local-hub/session/data": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🚀️local-hub/🎫️session/📋️data/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/local-hub/session/io": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🚀️local-hub/🎫️session/📥️io/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/parity/execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./⚖️parity/🏃️execution/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/playground-session/execution": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🎮️playground-session/🏃️execution/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/playground-session/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🎮️playground-session/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/testing/program-matrix": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🧪️testing/🧮️program-matrix/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/testing/studio": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🧪️testing/🎬️studio/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/verification/publication": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🔎️verification/🧾️publication/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/vite-plugins": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🔌️vite-plugins/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/boot-query": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🔗️boot-query/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/distribution/components/testing/production-browser-artifacts": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🚚️distribution/🔌️components/🧪️testing/🌐️production-browser-artifacts/🟦️.ts"
+   ],
+   "@semio-tech/framework-os-dev/testing/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/./🧪️testing/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/neural-engine-ts/projection/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🟦️typescript/./📤️projection/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/neural-engine-ts/projection/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🟦️typescript/./📤️projection/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/neural-engine-ts/registry/admission/fixtures": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🟦️typescript/./📔️registry/🏗️admission/🧫️fixtures/🟦️.ts"
+   ],
+   "@semio-tech/neural-engine-ts/registry/admission/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🟦️typescript/./📔️registry/🏗️admission/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/print/artifacts/material/producer": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./📦️artifacts/📥️material/📤️producer/🟦️.ts"
+   ],
+   "@semio-tech/print/artifacts/operation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./📦️artifacts/🎛️operation/🟦️.ts"
+   ],
+   "@semio-tech/print/io/text/inferences/latex": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🚪️io/📝️text/💡️inferences/🖋️latex/🟦️.ts"
+   ],
+   "@semio-tech/print/modules/host/inferences": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🔨️modules/🏠️host/💡️inferences/🟦️.ts"
+   ],
+   "@semio-tech/print/modules/print-design-token-paints": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🔨️modules/🎨print-design-token-paints/🟦️.ts"
+   ],
+   "@semio-tech/print/modules/print-design-token-paints/resolution": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🔨️modules/🎨print-design-token-paints/🧮️resolution/🟦️.ts"
+   ],
+   "@semio-tech/print/modules/print-font-catalog/metrics": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🔨️modules/🔤print-font-catalog/📏️metrics/🟦️.ts"
+   ],
+   "@semio-tech/print/modules/print-font-catalog/metrics/testing": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🔨️modules/🔤print-font-catalog/📏️metrics/🧪️testing/🟦️.ts"
+   ],
+   "@semio-tech/print/modules/tectonic-template-compilation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🔨️modules/🖨️tectonic-template-compilation/🟦️.ts"
+   ],
+   "@semio-tech/print/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/print/schema/diff": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧬️schema/🔀️diff/🟦️.ts"
+   ],
+   "@semio-tech/print/schema/mutations": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧬️schema/🧬️mutations/🟦️.ts"
+   ],
+   "@semio-tech/print/schema/snapshot": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧬️schema/📸️snapshot/🟦️.ts"
+   ],
+   "@semio-tech/print/schema/snapshot/chart": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧬️schema/📸️snapshot/📊️chart/🟦️.ts"
+   ],
+   "@semio-tech/print/schema/snapshot/chart/color": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧬️schema/📸️snapshot/📊️chart/🎨️color/🟦️.ts"
+   ],
+   "@semio-tech/print/testing/authored-color-scales": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧪️testing/🎨️authored-color-scales/🟦️.ts"
+   ],
+   "@semio-tech/print/testing/chart-inference-result": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧪️testing/📜️chart-inference-result/🟦️.ts"
+   ],
+   "@semio-tech/print/testing/chart-mutations": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧪️testing/🧬️chart-mutations/🟦️.ts"
+   ],
+   "@semio-tech/print/testing/chart-specification": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧪️testing/📜️chart-specification/🟦️.ts"
+   ],
+   "@semio-tech/print/testing/inferred-layer-pipeline": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧪️testing/🧮️inferred-layer-pipeline/🟦️.ts"
+   ],
+   "@semio-tech/print/testing/render-scene": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧪️testing/🎬️render-scene/🟦️.ts"
+   ],
+   "@semio-tech/print/testing/render-scene/legend": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/./🧪️testing/🎬️render-scene/🧭️legend/🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference/coordinate": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./🧭coordinate/🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference/mark": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./✒️mark/🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference/probes": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./🔬️probes/🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference/render": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./🖼️render/🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference/scale": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./📐scale/🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference/script": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./📜️script.ts"
+   ],
+   "@semio-tech/print-viz-inference/theme": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./🎨theme/🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference/transform": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./🧮transform/🟦️.ts"
+   ],
+   "@semio-tech/print-viz-inference/validation": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript/./✅️validation/🟦️.ts"
+   ],
+   "@semio-tech/framework-server": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/repo-lib": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/repo-lib/package.json": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/./package.json"
+   ],
+   "@semio-tech/repo-coordinator/ports": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript/./🔌️ports/🟦️.ts"
+   ],
+   "@semio-tech/repo-test": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🟦️.ts"
+   ],
+   "@semio-tech/repo-test/acceptance/orchestration": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🎯️acceptance/📋️orchestration/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/adapter-context": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🔌️adapter-context/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/case-discovery": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🧭️case-discovery/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/contributions": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🤝️contributions/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/execution-plan": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🎬️execution-plan/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/host": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🖥️host/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/host/materialization": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🖥️host/🏗️materialization/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/storage": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./💾️storage/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/dependencies/testing/inputs": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🕸️dependencies/🧪️testing/🦀️inputs/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/inventory/schema": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🏭️inventory/🧬️schema/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/schema/orchestration/mutation-caps": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🧬️schema/📋️orchestration/🐘️mutation-caps/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/taxonomy": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🗂️taxonomy/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/test-layout": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🗺️test-layout/🟦️.ts"
+   ],
+   "@semio-tech/repo-test/dependencies": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/./🕸️dependencies/🟦️.ts"
+   ],
+   "ajv": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/ajv"
+   ],
+   "web-tree-sitter": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/web-tree-sitter"
+   ],
+   "smol-toml": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/smol-toml"
+   ],
+   "decimal.js": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/decimal.js"
+   ],
+   "fast-deep-equal": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/fast-deep-equal"
+   ],
+   "ajv/dist/2020": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/ajv/dist/2020.js"
+   ],
+   "ajv/dist/2020.js": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/ajv/dist/2020.js"
+   ],
+   "web-tree-sitter/tree-sitter.wasm": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/web-tree-sitter/tree-sitter.wasm"
+   ],
+   "tree-sitter-wasms": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/tree-sitter-wasms/package.json"
+   ],
+   "tree-sitter-wasms/package.json": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/tree-sitter-wasms/package.json"
+   ],
+   "tree-sitter-wasms/out/tree-sitter-rust.wasm": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/tree-sitter-wasms/out/tree-sitter-rust.wasm"
+   ],
+   "typescript": [
+    "/Users/ueli/.cache/c5c8/nm/node_modules/typescript"
+   ]
+  }
+ }
+}

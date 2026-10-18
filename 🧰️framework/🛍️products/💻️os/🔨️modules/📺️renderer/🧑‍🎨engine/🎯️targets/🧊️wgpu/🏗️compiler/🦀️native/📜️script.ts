@@ -21,16 +21,16 @@ export async function buildNativeRenderer(rustPackageRoot: string, profile: stri
   await buildRepositoryCargoArtifacts(join(rustPackageRoot, "Cargo.toml"), ["-p", "semio-framework-os-renderer-wgpu", "--bin", "semio-wgpu-native", "--features", "native-bin", "--profile", buildModePolicy(mode).cargoProfile], workspace, {producer:"artifact",invocation:invocation,consume:verifyCapturedCargoArtifactsV1, network,control, output, environment: buildModeEnvironment(mode) });
 }
 
-/** 🚀️ Selects the executable materialized by the native producer or an Nx cache restoration. */
+/** 🚀️ Selects the executable materialized by the native producer or a build cache restoration. */
 export function nativeRendererBinary(rustPackageRoot: string, profile: string): string {
   const path = join(nativeRendererDirectory(rustPackageRoot, profile), `semio-wgpu-native${process.platform === "win32" ? ".exe" : ""}`);
-  if (!existsSync(path)) throw new Error(`Missing Nx native renderer artifact: ${path}`);
+  if (!existsSync(path)) throw new Error(`Missing native renderer artifact: ${path}`);
   return path;
 }
 
 class BuildScript extends BundleScript {
   async run([profile, ...args]: string[]): Promise<void> {
-    if(args.length||(profile!=="prototype"&&profile!=="release"))throw Error("Native renderer builds require the exact profile selected by Nx");
+    if(args.length||(profile!=="prototype"&&profile!=="release"))throw Error("Native renderer builds require the exact profile selected by the build tool");
     await buildNativeRenderer(this.root, profile, this.repoRoot, scriptCompilerAdmissionControlV1(this.invocation, "renderer:build", 0),repositoryCargoNetworkV1(this.invocation,this.repoRoot),this.invocation);
   }
 }

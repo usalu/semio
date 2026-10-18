@@ -12,7 +12,7 @@ fn debit(stock:&mut RetainedCloneGrant,receipt:RetainedCloneProgress,heap:semio_
 }
 #[test]
 fn original_mounted_inference_admission_retains_source_and_quotes_actual_registry_events(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for stop in [0,1,3,5,8,usize::MAX]{for body in [1,3,64]{
   let row=law["caller"]["stock"].as_array().unwrap();let source_grant=RetainedCloneGrant{maximum_items:row[0].as_u64().unwrap()as usize,maximum_copy_bytes:row[1].as_u64().unwrap()as usize,maximum_capacity_bytes:row[2].as_u64().unwrap()as usize,maximum_release_bytes:row[3].as_u64().unwrap()as usize,maximum_depth:row[4].as_u64().unwrap()as usize};
   let mut caller=OriginalJobFixtureCaller::admit(OperationId(law["caller"]["operation"].as_u64().unwrap()),Generation(law["caller"]["generation"].as_u64().unwrap()),source_grant,||Some(1),law["caller"]["deadlineUs"].as_u64().unwrap(),law["caller"]["fuel"].as_u64().unwrap());

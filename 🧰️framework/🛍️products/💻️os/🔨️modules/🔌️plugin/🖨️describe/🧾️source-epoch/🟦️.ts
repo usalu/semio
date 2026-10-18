@@ -2,7 +2,7 @@ import type {ResourceLeaseControl} from "../../../../../../🔨️modules/🏃�
 import { createHash } from "node:crypto";
 import { lstatSync } from "node:fs";
 import { isAbsolute, join, relative } from "node:path";
-import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import type { ComponentReceiptV1 } from "../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
 export type FreshComponentRequestV1 = Readonly<{
   pluginId: string;

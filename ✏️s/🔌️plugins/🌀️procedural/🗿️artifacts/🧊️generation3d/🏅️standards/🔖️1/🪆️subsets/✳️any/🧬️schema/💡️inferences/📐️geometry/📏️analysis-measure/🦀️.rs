@@ -45,7 +45,7 @@ const CLASSIFY_TOLERANCE: f64 = 1e-6;
 
 //#region 🔖️Faults
 /// 🛠️ A kernel analysis query that refused its input, as a widget fault.
-pub(crate) fn query_fault(error: KernelError) -> WidgetFault {
+pub fn query_fault(error: KernelError) -> WidgetFault {
     kernel_fault(&BrepError::Operation(error.to_string()))
 }
 
@@ -60,12 +60,12 @@ pub(crate) fn no_topology(port: &str) -> WidgetFault {
 }
 
 /// 🚫️ The job lost the state it needs; it cannot happen unless the job is stepped after it ended.
-pub(crate) fn lost_state() -> WidgetFault {
+pub fn lost_state() -> WidgetFault {
     WidgetFault::new("generation3d.geometry.pipeline", "The computation was set up without the value it needs.", "Die Berechnung wurde ohne den benötigten Wert aufgesetzt.")
 }
 
 /// 🛑️ The fault of a job that was cancelled before it finished.
-pub(crate) fn cancelled() -> WidgetFault {
+pub fn cancelled() -> WidgetFault {
     WidgetFault::new("generation3d.geometry.cancelled", "The computation was cancelled.", "Die Berechnung wurde abgebrochen.")
 }
 
@@ -148,7 +148,7 @@ impl<S: Send> WidgetJob for UnitJob<S> {
 }
 
 /// 🚀️ Starts a [`UnitJob`] over `prepared` (the state and its unit count), or answers with the fault that stopped it from being prepared.
-pub(crate) fn staged<S: Send + 'static>(kind: &Kind, prepared: Result<(S, usize), WidgetFault>, work: Work<S>, conclude: Conclude<S>) -> Box<dyn WidgetJob> {
+pub fn staged<S: Send + 'static>(kind: &Kind, prepared: Result<(S, usize), WidgetFault>, work: Work<S>, conclude: Conclude<S>) -> Box<dyn WidgetJob> {
     match prepared {
         Ok((state, total)) => Box::new(UnitJob { quality: kind.quality, state: Some(state), total, done: 0, work, conclude, finished: None }),
         Err(fault) => failed(fault, kind.quality),
@@ -158,7 +158,7 @@ pub(crate) fn staged<S: Send + 'static>(kind: &Kind, prepared: Result<(S, usize)
 
 //#region 🔖️Scope
 /// 🎯️ The analysis scope a shape value's root names; a bare curve or surface has none.
-pub(crate) fn scope_of(shape: &ShapeValue, port: &str) -> Result<ShapeScope, WidgetFault> {
+pub fn scope_of(shape: &ShapeValue, port: &str) -> Result<ShapeScope, WidgetFault> {
     match &shape.root {
         ShapeRoot::Vertex(id) => Ok(ShapeScope::vertex(*id)),
         ShapeRoot::Edge(id) => Ok(ShapeScope::edge(*id)),

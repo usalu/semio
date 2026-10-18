@@ -1,5 +1,5 @@
-use crate::editor::vcs::panels::inspection::*;
-use crate::editor::vcs::unit_tests::context::{app, render as render_body};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::panels::inspection::*;
+use crate::unit_tests::context::{app, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_labels_resolve_native_english_by_default() {

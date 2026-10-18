@@ -19,39 +19,7 @@ pub fn package_descriptor() -> Result<semio_s_artifact_norm_contract::NormArtifa
 }
 
 // #region 🔖️Types
-
-//#region 🔖️Composition
-/// 🧩️ Design §20.15 model (a): the climate is parent-owned persisted state (`Din18599Snapshot::climate`); the composed
-/// `s.stdio.semio`/`table` child (`climateTable`, twelve rows — one per calendar month — and the columns `thetaEC`/`gHWM2`)
-/// is a DERIVED content-addressed handle. `update-climate` re-mints the handle together with the climate; the runtime opens
-/// the child from the parent's own state through `genesis_child_pack` (`follow_derivable_children`). No leaf reads child
-/// content, so a decoded, reloaded or remote document folds and evaluates with its own climate.
-
-//#region 🔖️Converters
-
-/// 🔁️ Inverse of [`din18599_climate_table_from_data`] for a foreign reader of the derived child; a short or non-numeric row
-/// reads `0.0` for the missing month.
-pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
-    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
-    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
-    fn cell_f64(row: Option<&SemioTableRow>, index: usize) -> f64 {
-        match row.and_then(|row| row.cells.get(index)) {
-            Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
-            _ => 0.0,
-        }
-    }
-    let mut theta_e_c = [0.0; 12];
-    let mut g_h_w_m2 = [0.0; 12];
-    for month in 0..12 {
-        let row = table.rows.get(month);
-        theta_e_c[month] = cell_f64(row, 0);
-        g_h_w_m2[month] = cell_f64(row, 1);
-    }
-    MonthlyClimate { theta_e_c, g_h_w_m2 }
-}
-//#endregion 🔖️Converters
-
-//#endregion 🔖️Composition
+use semio_s_artifact_norm_din18599_model::Din18599Snapshot;
 
 /// 📋️ Annual energy balancing inputs stored in the persisted snapshot.
 pub type BalancingInputs = Din18599Snapshot;

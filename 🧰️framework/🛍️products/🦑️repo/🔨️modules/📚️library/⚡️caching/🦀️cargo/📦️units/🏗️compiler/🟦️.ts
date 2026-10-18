@@ -9,7 +9,8 @@ import {requireNativeStoragePathV1} from "../../../../../../../../🔨️modules
 import type {RustUnitPlanV1} from "../🟦️.ts";
 import {verifyRustUnitInputsV1,captureRustUnitReceiptV1,type RustUnitReceiptV1} from "../📤️receipt/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
-import {acquireNativeStorageV1,requireNativeStorageReservationV1,type NativeStoragePolicyV1,type NativeStoragePortV1,type NativeStorageReservationV1} from "../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{acquireNativeStorageV1,requireNativeStorageReservationV1,type NativeStoragePortV1,type NativeStorageReservationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStoragePolicyV1}from"../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 export interface RustUnitCompilerWorkspaceV1 {readonly directory:string;readonly temporary:string;readonly leaseDirectory:string}
 export interface RustUnitCompilerPortV1 {compile(plan:RustUnitPlanV1,reservation:NativeStorageReservationV1,control:ResourceLeaseControl,workspace:RustUnitCompilerWorkspaceV1):Promise<string>}
 export interface RustUnitCompilationV1 {plan:RustUnitPlanV1;directory:string;receipt:RustUnitReceiptV1;reservation:NativeStorageReservationV1;retire():Promise<void>}

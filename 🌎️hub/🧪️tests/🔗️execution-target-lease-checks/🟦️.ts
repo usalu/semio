@@ -7,11 +7,14 @@ import { join } from "node:path";
 import { decodePackValue, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, parseDocumentOpenPlanV1, parseDocumentExecutionTargetLeaseFieldsV1, leaseFieldsFromPlanV1, sameLeaseFieldsV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } from "@semio-tech/framework/directory/schema";
-import { runCargo, runCmd, runProbe, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { runProbe } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { documentOpenNeutralBrowserActor } from "../🗺️open-plan-checks/🟦️.ts";
 import { readHubBinSource, readTrustedCatalogSource } from "../../🧪️testing/📖️source-readers/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 type ExecutionTargetLeaseFixture = {
   readonly schema: string;
@@ -386,8 +389,9 @@ export async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise
 }
 
 function proveExecutionTargetLeaseSource(repoRoot: string): void {
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
-  const region = worker.slice(worker.indexOf("//#region 🪪️ExecutionTargetLease"), worker.indexOf("//#endregion 🪪️ExecutionTargetLease"));
+  const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
+  const workerRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker");
+  const region = ["🪪️execution-lease", "🧊️cold-pair", "📥️execution-target-read", "🧩️actor-wire-helpers", "🧷️actor-reservation", "🎭️actor-lifecycle"].map((child) => readFileSync(join(workerRoot, child, "🟦️.ts"), "utf8")).join("\n");
   if (region.length === 0) throw new Error("browser execution-target lease region is absent");
   for (const forbidden of ["loadPluginModule", "ActivationRegistry", "load_wasm_plugins", "attach_backbone"]) {
     if (region.includes(forbidden)) throw new Error(`browser execution-target lease region reached ${forbidden}`);
@@ -403,9 +407,9 @@ function proveExecutionTargetLeaseSource(repoRoot: string): void {
   if (!bin.includes("assets_for_current_selection(&descriptor, intent.requested_surface_id.as_deref(), writable, &generation_id)")) throw new Error("hub execution-target routes no longer resolve through the exact-selection accessor");
   const catalog = readTrustedCatalogSource(repoRoot);
   if (!catalog.includes("pub fn assets_for_current_selection(") || !catalog.includes("if current_generation != self.generation_id")) throw new Error("trusted catalog exact-selection accessor is absent or not generation-bound");
-  const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
+  const client = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), { crates: false });
   if (client.includes("matches_surface") || client.includes("DocumentSocketSurfaceExpectationV1")) throw new Error("native directory client kept a partial surface predicate");
-  const sync = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"), "utf8");
+  const sync = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs"));
   if (!sync.includes("authority.matches_lease_fields(lease)")) throw new Error("native reconnect no longer compares the complete lease fields");
   console.log("execution-target-lease-source: browser lease region=renderer-free hub routes=4 accessor=generation-bound native=full-field passed");
 }

@@ -67,7 +67,7 @@ test("surface compiler companions keep their exact paired identity in the handpi
   const output = join(sourceRoot, fixture.directoryName);
   const names = [fixture.module, fixture.types, fixture.wasm, fixture.wasmTypes];
   expect(existsSync(join(sourceRoot, "pkg"))).toBe(false);
-  expect(readdirSync(output).sort()).toEqual([...names, ".gitignore", "package.json"].sort());
+  expect(readdirSync(output).sort()).toEqual([...names, ".gitignore", ".semio-artifact.json", "package.json"].sort());
   const js = readFileSync(join(output, fixture.module), "utf8");
   expect(js).toContain(`@ts-self-types="./${fixture.types}"`);
   expect(js).toContain(`new URL('${fixture.wasm}', import.meta.url)`);
@@ -78,5 +78,5 @@ test("surface compiler companions keep their exact paired identity in the handpi
   expect(manifest.exports["."]).toBe(`./${fixture.directoryName}/${fixture.module}`);
   expect(manifest.exports[`./${fixture.directoryName}/${fixture.module}`]).toBe(manifest.exports["."]);
   const producer = readFileSync(join(sourceRoot, "📜️script.ts"), "utf8");
-  expect(producer).toContain(`outputDirectory: "${fixture.directoryName}"`);
+  expect(producer).toContain('producer:"browser-canvas"');
 }, 30_000);

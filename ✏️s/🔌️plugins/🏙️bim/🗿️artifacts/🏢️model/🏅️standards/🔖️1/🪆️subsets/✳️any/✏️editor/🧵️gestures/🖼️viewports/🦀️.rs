@@ -7,8 +7,10 @@
 //!
 //! Both read the layout of the sheet (`sheet-layout`) for the windows and show the window they would write as a ghost with its position or scale.
 
-use super::plane::{dist, point2, P};
-use super::session::{Pointer, Step, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::editor::bim::gestures::session::Modifiers;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::editor::bim::gestures::plane::{dist, point2, P};
+use crate::editor::bim::gestures::session::{Pointer, Step, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::sheets::{next_view, scale_of};
 use crate::editor::bim::modes::edit::windows::sheet;
@@ -39,7 +41,7 @@ fn snapped(point: P, fine: bool) -> P {
     [(point[0] * per_millimetre).round() / per_millimetre, (point[1] * per_millimetre).round() / per_millimetre]
 }
 
-fn layout<'a>(ctx: &'a ToolContext<'_>) -> Option<&'a SheetLayout> {
+pub fn layout<'a>(ctx: &'a ToolContext<'_>) -> Option<&'a SheetLayout> {
     let Surface::Sheet { sheet } = &ctx.surface else { return None };
     ctx.inference.sheet_layouts.get(sheet)
 }
@@ -52,7 +54,7 @@ fn shown(value: f64) -> String {
     format!("{}", (value * 10.0).round() / 10.0)
 }
 
-fn set(id: &str) -> SetViewport {
+pub fn set(id: &str) -> SetViewport {
     SetViewport { id: id.to_string(), sheet: None, view: None, position: None, scale: None, crop: None, label: None }
 }
 
@@ -214,6 +216,4 @@ impl Tool for Place {
 }
 //#endregion 🔖️Place
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

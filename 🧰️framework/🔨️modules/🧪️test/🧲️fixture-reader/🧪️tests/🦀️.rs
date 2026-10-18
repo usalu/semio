@@ -92,9 +92,10 @@ fn paths_resolve_below_the_manifest_directory_of_the_caller() {
 }
 
 #[test]
-fn the_repository_root_holds_nx_json() {
+fn the_repository_root_is_the_declared_package_workspace() {
     let root = repo_root!();
-    assert!(root.join("nx.json").is_file());
+    assert!(root.join("📋️project.json").is_file());
+    assert!(root.join("package.json").is_file());
     assert_eq!(root, repo_root_in(env!("CARGO_MANIFEST_DIR")));
     assert!(manifest_dir!().starts_with(&root));
 }
@@ -104,18 +105,18 @@ fn a_missing_repository_root_is_refused() {
     let message = refusal(|| {
         let _ = repo_root_in("/");
     });
-    assert!(message.contains("nx.json"), "{message}");
+    assert!(message.contains("workspace root"), "{message}");
 }
 
 #[test]
 fn repository_reads_equal_std_and_are_shared_between_calls() {
     let manifest = env!("CARGO_MANIFEST_DIR");
     let root = repo_root_in(manifest);
-    assert_eq!(repo_text_in(manifest, "nx.json"), std::fs::read_to_string(root.join("nx.json")).expect("reads"));
-    assert_eq!(repo_bytes_in(manifest, "nx.json"), std::fs::read(root.join("nx.json")).expect("reads").as_slice());
-    assert!(std::ptr::eq(repo_bytes_in(manifest, "nx.json"), repo_bytes_in(manifest, "nx.json")));
-    assert_eq!(repo_text!("nx.json"), repo_text_in(manifest, "nx.json"));
-    assert_eq!(repo_bytes!("nx.json"), repo_bytes_in(manifest, "nx.json"));
+    assert_eq!(repo_text_in(manifest, "package.json"), std::fs::read_to_string(root.join("package.json")).expect("reads"));
+    assert_eq!(repo_bytes_in(manifest, "package.json"), std::fs::read(root.join("package.json")).expect("reads").as_slice());
+    assert!(std::ptr::eq(repo_bytes_in(manifest, "package.json"), repo_bytes_in(manifest, "package.json")));
+    assert_eq!(repo_text!("package.json"), repo_text_in(manifest, "package.json"));
+    assert_eq!(repo_bytes!("package.json"), repo_bytes_in(manifest, "package.json"));
 }
 
 #[test]

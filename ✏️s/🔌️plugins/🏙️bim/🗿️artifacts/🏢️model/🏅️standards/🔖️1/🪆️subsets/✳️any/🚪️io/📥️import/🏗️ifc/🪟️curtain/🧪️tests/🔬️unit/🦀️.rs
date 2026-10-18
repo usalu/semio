@@ -1,4 +1,18 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::authoring_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanelOverride, CurtainWall, CurtainWallType};
+#[allow(unused_imports)]
+use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::io::import::ifc::curtain::*;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::framed;
 use crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3;
 use crate::standards::v1::subsets::any::io::import::ifc::import_ifc2x3;

@@ -1,9 +1,47 @@
 {
   "version": 1,
   "cases": [
-    {"name": "absent-root", "root": "/owned/repository", "inheritedRoot": null},
-    {"name": "foreign-root", "root": "/owned/repository", "inheritedRoot": "/foreign/repository"},
-    {"name": "windows-root", "root": "C:\\owned\\repository", "inheritedRoot": "C:\\foreign\\repository"}
+    {
+      "name": "absent-root",
+      "root": "/owned/repository",
+      "inheritedRoot": null
+    },
+    {
+      "name": "foreign-root",
+      "root": "/owned/repository",
+      "inheritedRoot": "/foreign/repository"
+    },
+    {
+      "name": "windows-root",
+      "root": "C:\\owned\\repository",
+      "inheritedRoot": "C:\\foreign\\repository"
+    }
   ],
-  "maximumChildMilliseconds": 120000
+  "maximumChildMilliseconds": 120000,
+  "deadlines": [
+    {
+      "name": "root0-finite-child",
+      "parent": null,
+      "child": 100,
+      "accepted": true
+    },
+    {
+      "name": "finite-child-refinement",
+      "parent": 100,
+      "child": 80,
+      "accepted": true
+    },
+    {
+      "name": "finite-child-renewal",
+      "parent": 100,
+      "child": 101,
+      "accepted": false
+    },
+    {
+      "name": "child-remains-bounded",
+      "parent": null,
+      "child": null,
+      "accepted": false
+    }
+  ]
 }

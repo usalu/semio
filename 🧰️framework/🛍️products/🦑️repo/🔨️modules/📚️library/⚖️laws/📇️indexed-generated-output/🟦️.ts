@@ -1,4 +1,4 @@
-import type { BreachRecord } from "../../🟦️.ts";
+import type { BreachRecord } from "../../🚨️policy/🔖️breach/🟦️.ts";
 
 const POLICY_INDEXED_GENERATED_RULES: readonly { id: string; reason: string; test: (path: string) => boolean }[] = [
   { id: "wasm-binary", reason: "WASM binaries are build output (`**/*.wasm`).", test: (path) => /\.(wasm|cwasm)$/u.test(path) },

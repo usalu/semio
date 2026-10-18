@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, relative, resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import ts from "typescript";
-import { loadCatalogTaxonomy, loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy, loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 type Fixture = Readonly<{
   schemaVersion: 1;
@@ -22,7 +22,7 @@ type Fixture = Readonly<{
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧪️tests/🧫️fixtures/🧑‍💻os-dev-composition-ownership/🔣️.json"), "utf8")) as Fixture;
 
 
 describe("OS development composition ownership", () => {
@@ -141,7 +141,7 @@ describe("OS development composition ownership", () => {
   test("registers one Bun/Nx owner route whose inputs are exactly the contract closure", () => {
     const registration = fixture.registration;
     const packageManifest = JSON.parse(readFileSync(resolve(repoRoot, registration.packagePath), "utf8")) as { scripts?: Record<string, string> };
-    expect(packageManifest.scripts?.[registration.target]).toBe(`nx run @semio-tech/repo-lib:${registration.target}`);
+    expect(packageManifest.scripts?.[registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
     expect(registration.command).toBe(`bun ${packageManifest.scripts?.[registration.target]}`);
     const project = JSON.parse(readFileSync(resolve(repoRoot, registration.projectPath), "utf8")) as { targets?: Record<string, { inputs?: string[]; options?: { command?: string } }> };
     const target = project.targets?.[registration.target];

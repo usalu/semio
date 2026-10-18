@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetViewport`: a sparse viewport patch of exactly the provided fields that differ. The viewport that results must be writable (see `viewport_problem`); a patch that restates the current values is a
 //! `mutation.no-op`.
 
-use super::SetViewport;
+use crate::standards::v1::subsets::any::schema::mutations::set_viewport::SetViewport;
 use crate::standards::v1::subsets::any::schema::{snapshot::{viewport_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

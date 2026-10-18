@@ -27,7 +27,7 @@
     "manifest": {
       "type": "string",
       "minLength": 1,
-      "const": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml"
+      "const": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/📦️packages/🦀️rust/Cargo.toml"
     },
     "bindings": {
       "type": "array",

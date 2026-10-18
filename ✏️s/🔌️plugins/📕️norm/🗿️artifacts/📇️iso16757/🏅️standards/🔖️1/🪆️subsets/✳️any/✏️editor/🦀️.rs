@@ -43,7 +43,7 @@ use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,
 // per ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W0-F gap 1) — only reachable through `app`.
 use semio_framework_plugin::app::Dialect;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 /// 🏷️ This standard's display name — the app label, its artifact-kind name and the catalogue headline.

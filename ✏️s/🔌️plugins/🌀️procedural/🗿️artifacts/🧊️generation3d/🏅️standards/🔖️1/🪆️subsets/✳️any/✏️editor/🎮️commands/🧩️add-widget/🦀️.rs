@@ -34,16 +34,16 @@ fn creation_fault(message: impl Into<String>) -> Fault {
 }
 
 /// 🧯️ The source diagnostic keeps its exact reason while the UI uses a translated notice.
-pub(crate) fn source_fault(reason:semio_framework_os_flow::FlowSourceReadFailure)->Fault{Fault::new(FaultOrigin::App,FaultCode::new("generation3d.analysis.source-unavailable"),format!("original analysis source refused: {reason:?}"))}
+pub fn source_fault(reason:semio_framework_os_flow::FlowSourceReadFailure)->Fault{Fault::new(FaultOrigin::App,FaultCode::new("generation3d.analysis.source-unavailable"),format!("original analysis source refused: {reason:?}"))}
 /// 📢️ Refreshing the selected source is an explicit action in either supported language.
-pub(crate) fn source_fault_notices()->&'static[(&'static str,semio_framework_ui_locale::LocalizedLabel)]{
+pub fn source_fault_notices()->&'static[(&'static str,semio_framework_ui_locale::LocalizedLabel)]{
  static NOTICES:std::sync::LazyLock<[(&str,semio_framework_ui_locale::LocalizedLabel);1]>=std::sync::LazyLock::new(||[("generation3d.analysis.source-unavailable",semio_framework_ui_locale::LocalizedLabel::native("The selected output changed or is unavailable. Wait for evaluation and select it again.","Die ausgewählte Ausgabe wurde geändert oder ist nicht verfügbar. Die Auswertung abwarten und erneut auswählen."))]);
  &*NOTICES
 }
 
 impl AddWidget {
     /// 🛍️ One descriptor source for catalogue activation and canvas drag.
-    pub(crate) fn from_catalogue(item: &semio_framework_os_flow::CatalogueItem) -> Self {
+    pub fn from_catalogue(item: &semio_framework_os_flow::CatalogueItem) -> Self {
         Self { kind: item.kind.clone(), neuron_kind: item.neuron_kind.clone(), format: item.format.clone(), action: item.action.clone(), x: None, y: None, source_widget:None,source_port:None,target_port:None,source_revision:None }
     }
 
@@ -61,7 +61,7 @@ impl AddWidget {
         let mut revision=[0;32];for(index,pair)in source.as_bytes().chunks_exact(2).enumerate(){let digit=|byte:u8|if byte.is_ascii_digit(){byte-b'0'}else{byte-b'a'+10};revision[index]=digit(pair[0])*16+digit(pair[1]);}Ok(revision)
     }
 
-    pub(crate) fn descriptor_fields(&self) -> Vec<(&'static str, &str)> {
+    pub fn descriptor_fields(&self) -> Vec<(&'static str, &str)> {
         let mut fields = vec![("kind", self.kind.as_str())];
         for (name, value) in [("neuronKind", &self.neuron_kind), ("format", &self.format), ("action", &self.action)] {
             if let Some(value) = value { fields.push((name, value.as_str())); }
@@ -71,7 +71,7 @@ impl AddWidget {
     }
 
     /// 🧬️ Validates the schema's discriminated fields before building the host descriptor.
-    pub(crate) fn descriptor_json(&self) -> Result<String, Fault> {
+    pub fn descriptor_json(&self) -> Result<String, Fault> {
         self.source_request()?;
         if !matches!(self.kind.as_str(), "neuron" | "inputSlider" | "inputNote" | "inputImage" | "outputPreview" | "outputExport" | "outputAction" | "variable") {
             return Err(creation_fault(format!("unknown widget kind: {}", self.kind)));
@@ -111,7 +111,7 @@ pub fn handle(payload: &AddWidget, doc: &ArtifactView<'_, Generation3dSnapshot>,
 }
 
 /// 🔗️ The original retained command lends its admitted read result into one create/connect edit.
-pub(crate) fn create_connected(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:&semio_framework_os_flow::FlowCurrentOutput<'_>)->Result<Emit<Generation3dMutation,Generation3dConfigMutation>,Fault>{create(payload,doc,Some(source))}
+pub fn create_connected(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:&semio_framework_os_flow::FlowCurrentOutput<'_>)->Result<Emit<Generation3dMutation,Generation3dConfigMutation>,Fault>{create(payload,doc,Some(source))}
 
 fn create(payload:&AddWidget,doc:&ArtifactView<'_,Generation3dSnapshot>,source:Option<&semio_framework_os_flow::FlowCurrentOutput<'_>>)->Result<Emit<Generation3dMutation,Generation3dConfigMutation>,Fault>{
     let host_snapshot = &doc.snapshot.host_snapshot;

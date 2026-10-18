@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle};
+use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+use crate::standards::v1::subsets::any::io::export::svg::style::*;
 
 const KINDS: [PlanKind; 32] = [
     PlanKind::WallCut,

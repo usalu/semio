@@ -2,10 +2,10 @@
  * @see 📜️script.ts
  */
 import { runNestedCargoPackageAdapter } from "../../📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
-import { runCmd } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../🏃️process/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkDerivedConfig, writeDerivedConfig } from "../../⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts";
-import { buildSemanticCensus, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown } from "../../🔍️discovery/🟦️.ts";
+import { buildSemanticCensus, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown } from "../../🔍️discovery/🧩️semantic-census/🟦️.ts";
 import { taxonomyTicketDirectory } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
 import { existsSync, readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";

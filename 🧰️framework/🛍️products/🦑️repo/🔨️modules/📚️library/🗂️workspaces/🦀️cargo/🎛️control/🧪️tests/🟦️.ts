@@ -4,7 +4,7 @@ import {join} from "node:path";
 import Ajv from "ajv";
 import {CargoController,type CargoControl,type CargoAccounting} from "../🟦️.ts";
 
-const owner=join(import.meta.dir,".."),fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")) as {limits:{maximumUnits:number;maximumOwnedBytes:number;maximumDepth:number};cases:{id:string;units:number;bytes:number;accepted:boolean}[]},oracle=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")));
+const owner=join(import.meta.dir,".."),fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")) as {limits:{maximumUnits:number;maximumOwnedBytes:number;maximumDepth:number};cases:{id:string;units:number;bytes:number;accepted:boolean}[]},oracle=new Ajv({strict:true}).compile(JSON.parse(readFileSync(join(owner,"🧬️schema/🔣️.json"),"utf8")));
 
 test("all original portable Cargo work and ownership vectors agree with independent schema",async()=>{
  for(const row of fixture.cases){

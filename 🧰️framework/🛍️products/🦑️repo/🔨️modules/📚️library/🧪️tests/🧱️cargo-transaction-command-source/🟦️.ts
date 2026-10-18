@@ -3,7 +3,8 @@ import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, writeFileS
 import { dirname, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { getWorkspaceRoot, loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const libraryRoot = resolve(import.meta.dir, "../..");

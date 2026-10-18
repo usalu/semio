@@ -4,7 +4,8 @@
 //!
 //! Related: ISO 6946 <https://www.iso.org/standard/65708.html>, GEG <https://www.gesetze-im-internet.de/geg/>.
 
-use super::{number, InferredRow};
+use crate::editor::bim::terminology::BimLabels;
+use crate::editor::bim::entities::{number, InferredRow};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnergyScope, EnergyTotals, EnvelopeSpace, SurfaceKind};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, SpaceConditions}};
 
@@ -98,6 +99,4 @@ pub static BUILDING_INFERRED: &[InferredRow] = &[
 ];
 //#endregion 🔖️Rows
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

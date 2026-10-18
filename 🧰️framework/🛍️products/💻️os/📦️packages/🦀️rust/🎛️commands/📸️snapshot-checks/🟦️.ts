@@ -10,7 +10,8 @@ import { readCargoTestPolicyV1 } from "../../../../../../🔨️modules/🏃️p
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { runRepositoryCargoTests, runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import type { SchemaCheck } from "../🧱️script-bases/🟦️.ts";

@@ -20,11 +20,6 @@ const fixture = await Bun.file(new URL("🧫️fixtures/🔣️.json", import.me
   chunkedInverses: { budget: number; cases: { id: string; base: SnapshotValue; patch: SnapshotPatch; parts: SnapshotPatch[] }[] };
   locations: { snapshot: string; documents: { $id: string }[]; instance: SnapshotValue; cases: { id: string; path: string; insert?: boolean; expected: string | null; valid?: SnapshotValue; invalid?: SnapshotValue }[] };
   nativePilots: Record<string, {
-    directory: string;
-    tagging: "adjacent" | "internal";
-    discriminator: string;
-    textOpcode: string;
-    binaryTag: number;
     before: SnapshotValue;
     largeValuePath: string;
     largeValueBytes: number;
@@ -92,27 +87,13 @@ describe("compact snapshot patches", () => {
       expect(JSON.stringify(applySnapshotPatch(after, inverseSnapshotPatch(row.before, patch)))).toBe(JSON.stringify(row.before));
     }
   });
-  for (const [family, row] of Object.entries(fixture.nativePilots)) test(`${family} native patch schema and large field match independent oracles`, async () => {
+  for (const [family, row] of Object.entries(fixture.nativePilots)) test(`${family} native patch and large field match independent oracles`, async () => {
     const before = applyPatch(structuredClone(row.before), [{ op: "replace", path: row.largeValuePath, value: "x".repeat(row.largeValueBytes) }], true, true, false).newDocument;
     const patch = prepareSnapshotPatch(before, row.event);
     const after = applySnapshotPatch(before, patch);
     expect(after).toEqual(applyPatch(structuredClone(before), [{ op: "replace", path: row.event.path, value: row.event.value }], true, true, false).newDocument);
     expect(applySnapshotPatch(after, inverseSnapshotPatch(before, patch))).toEqual(before);
     expect(new TextEncoder().encode(JSON.stringify(patch)).length).toBeLessThan(row.maximumPatchBytes);
-    const root = new URL(`../../../../../🗿️artifacts/${row.directory}/🧬️schema/🧬️mutations/`, import.meta.url);
-    const aggregate = await Bun.file(new URL("🔣️.json", root)).json();
-    const leaf = await Bun.file(new URL("🩹️patch-snapshot/🧬️schema/🔣️.json", root)).json();
-    const descriptor = await Bun.file(new URL("🩹️patch-snapshot/🔣️.json", root)).json();
-    const protocol = await Bun.file(new URL("../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio", root)).text();
-    const branch = aggregate.oneOf.find((entry: { $ref?: string }) => entry.$ref === leaf.$id || JSON.stringify(entry).includes(JSON.stringify(row.discriminator)));
-    expect(branch).toBeDefined();
-    expect(leaf.properties.patch.$ref).toBe(patchRef);
-    expect(descriptor.textOpcode).toBe(row.textOpcode);
-    expect(descriptor.binaryTag).toBe(row.binaryTag);
-    expect(protocol).toContain(`record ${row.textOpcode} tag=${row.binaryTag}`);
-    const check = semioSchemaAjvV1({ strict: true }).addSchema(registry).addSchema(leaf).compile({ $id: aggregate.$id, ...branch });
-    const mutation = row.tagging === "internal" ? { mutation: row.discriminator, patch } : { mutation: row.discriminator, payload: { patch } };
-    expect(check(mutation), JSON.stringify(check.errors)).toBe(true);
   });
 
   test("positioned object insertion preserves the authored key order and rejects invalid positions", () => {

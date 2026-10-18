@@ -137,6 +137,4 @@ pub fn handle(payload: &DeleteSelection, doc: &ArtifactView<'_, ModelSnapshot>, 
     Ok(emit)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

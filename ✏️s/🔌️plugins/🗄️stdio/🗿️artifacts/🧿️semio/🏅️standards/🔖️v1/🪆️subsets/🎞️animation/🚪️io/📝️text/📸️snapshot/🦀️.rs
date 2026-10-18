@@ -47,12 +47,12 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
@@ -62,7 +62,7 @@ pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
@@ -70,7 +70,7 @@ pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> S
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -122,19 +122,19 @@ pub(crate) fn dec_property(s: &str) -> Result<AnimTargetProperty, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_target(t: &AnimTarget) -> String {
+pub fn enc_target(t: &AnimTarget) -> String {
     format!("[{},{}]", enc_str(&t.node), enc_property(&t.property))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_target(s: &str) -> Result<AnimTarget, String> {
+pub fn dec_target(s: &str) -> Result<AnimTarget, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [node, prop] = parts.as_slice() else { return Err(format!("target: expected 2 fields, got {}", parts.len())) };
     Ok(AnimTarget { node: dec_str(node)?, property: dec_property(prop)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_interpolation(i: AnimInterpolation) -> char {
+pub fn enc_interpolation(i: AnimInterpolation) -> char {
     match i {
         AnimInterpolation::Linear => 'l',
         AnimInterpolation::Step => 's',
@@ -143,7 +143,7 @@ pub(crate) fn enc_interpolation(i: AnimInterpolation) -> char {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_interpolation(s: &str) -> Result<AnimInterpolation, String> {
+pub fn dec_interpolation(s: &str) -> Result<AnimInterpolation, String> {
     match s {
         "l" => Ok(AnimInterpolation::Linear),
         "s" => Ok(AnimInterpolation::Step),
@@ -177,7 +177,7 @@ pub(crate) fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_value(v: &AnimValue) -> String {
+pub fn enc_value(v: &AnimValue) -> String {
     match v {
         AnimValue::Scalar { value } => format!("S:{}",native::NativeF64(*value)),
         AnimValue::Vec3 { value } => format!("V:{}", enc_point3(value)),
@@ -187,7 +187,7 @@ pub(crate) fn enc_value(v: &AnimValue) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_value(s: &str) -> Result<AnimValue, String> {
+pub fn dec_value(s: &str) -> Result<AnimValue, String> {
     let (tag, rest) = s.split_once(':').ok_or_else(|| format!("value: bad shape {s:?}"))?;
     match tag {
         "S" => Ok(AnimValue::Scalar { value: parse_f64(rest)? }),
@@ -199,36 +199,36 @@ pub(crate) fn dec_value(s: &str) -> Result<AnimValue, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_keyframe(k: &AnimKeyframe) -> String {
+pub fn enc_keyframe(k: &AnimKeyframe) -> String {
     format!("[{},{}]", native::NativeF64(k.t), enc_value(&k.value))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_keyframe(s: &str) -> Result<AnimKeyframe, String> {
+pub fn dec_keyframe(s: &str) -> Result<AnimKeyframe, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [t, value] = parts.as_slice() else { return Err(format!("keyframe: expected 2 fields, got {}", parts.len())) };
     Ok(AnimKeyframe { t: parse_f64(t)?, value: dec_value(value)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_channel(c: &AnimChannel) -> String {
+pub fn enc_channel(c: &AnimChannel) -> String {
     format!("[{},{},{}]", enc_target(&c.target), enc_interpolation(c.interpolation), enc_list(&c.keyframes, enc_keyframe))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_channel(s: &str) -> Result<AnimChannel, String> {
+pub fn dec_channel(s: &str) -> Result<AnimChannel, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [target, interp, kfs] = parts.as_slice() else { return Err(format!("channel: expected 3 fields, got {}", parts.len())) };
     Ok(AnimChannel { target: dec_target(target)?, interpolation: dec_interpolation(interp)?, keyframes: dec_list(kfs, dec_keyframe)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_timeline(t: &AnimTimeline) -> String {
+pub fn enc_timeline(t: &AnimTimeline) -> String {
     format!("[{},{}]", encode_option(&t.name, |n: &String| enc_str(n)), enc_list(&t.channels, enc_channel))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_timeline(s: &str) -> Result<AnimTimeline, String> {
+pub fn dec_timeline(s: &str) -> Result<AnimTimeline, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, channels] = parts.as_slice() else { return Err(format!("timeline: expected 2 fields, got {}", parts.len())) };
     Ok(AnimTimeline { name: decode_option(name, dec_str)?, channels: dec_list(channels, dec_channel)? })

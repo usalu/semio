@@ -30,7 +30,7 @@ pub(crate) fn domain(port: &str, en: &str, de: &str) -> WidgetFault {
 }
 
 /// 🚫️ A value outside the range the operation accepts, attributed to its input port.
-pub(crate) fn out_of_range(port: &str, en: &str, de: &str) -> WidgetFault {
+pub fn out_of_range(port: &str, en: &str, de: &str) -> WidgetFault {
     WidgetFault::new("generation3d.geometry.math-range", en, de).at(port)
 }
 
@@ -40,7 +40,7 @@ fn division_by_zero(port: &str) -> WidgetFault {
 }
 
 /// 🛡️ The number itself, or `math-overflow` when it is infinite or not a number.
-pub(crate) fn finite(value: f64) -> Result<f64, WidgetFault> {
+pub fn finite(value: f64) -> Result<f64, WidgetFault> {
     if value.is_finite() {
         Ok(value)
     } else {

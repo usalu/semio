@@ -86,15 +86,13 @@ async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
     let mut retirement = semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::binary::mutations::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     let mut retired = false;
     for _ in 0..100_000 {
-        match retirement.close_step(1, semio_framework_os_kernel::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS envelope retirement") {
-            semio_framework_os_kernel::SnapshotRetirementStep::Complete => {
-                assert!(retirement.terminal_is_empty());
-                retired = true;
-                break;
-            }
-            semio_framework_os_kernel::SnapshotRetirementStep::Pending { .. } => {}
-            semio_framework_os_kernel::SnapshotRetirementStep::Blocked => panic!("unshared GIS fixture envelope retirement blocked"),
+        if retirement.terminal_is_empty() {
+            retired = true;
+            break;
         }
+        let demand = retirement.next_demand(semio_framework_os_kernel::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS envelope retirement quotes its next turn");
+        let grant = semio_framework_os_kernel::os_store::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        retirement.close_step(grant).expect("GIS envelope retirement");
     }
     assert!(retired, "GIS fixture envelope retires within the bounded grant");
     assert!(!files.pack.is_empty() && !files.spr.is_empty());

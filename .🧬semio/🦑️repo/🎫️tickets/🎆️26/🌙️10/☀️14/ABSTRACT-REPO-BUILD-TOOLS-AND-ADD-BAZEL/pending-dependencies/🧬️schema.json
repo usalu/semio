@@ -1,0 +1,600 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Pending Dependencies Read-Only Classification",
+  "type": "object",
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "maximumPathUnits": 256,
+        "maximumRoles": 16,
+        "maximumGenerations": 4096,
+        "maximumFileBytes": 4194304,
+        "maximumMetadataBytes": 67108864,
+        "maximumWork": 65536,
+        "chunkBytes": 65536,
+        "maximumOutputBytes": 4194304,
+        "authority": false,
+        "payloadContentsObserved": false,
+        "readyIssued": false,
+        "mutations": 0
+      }
+    },
+    "Entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "file",
+        "count"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "--source",
+            "--strict",
+            "--inspect"
+          ]
+        },
+        "file": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^native-assets-protected-[0-9]+\\.json$",
+              "maxLength": 64
+            }
+          ]
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "mode": {
+                "const": "--inspect"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "file": {
+                "type": "string"
+              },
+              "count": {
+                "const": 2
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "file": {
+                "type": "null"
+              },
+              "count": {
+                "const": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Cases": {
+      "const": [
+        {
+          "id": "ordinary",
+          "kind": "file",
+          "bytes": 17,
+          "maximum": 64,
+          "accepted": true
+        },
+        {
+          "id": "empty",
+          "kind": "file",
+          "bytes": 0,
+          "maximum": 64,
+          "accepted": true
+        },
+        {
+          "id": "exact",
+          "kind": "file",
+          "bytes": 64,
+          "maximum": 64,
+          "accepted": true
+        },
+        {
+          "id": "above",
+          "kind": "file",
+          "bytes": 65,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "missing",
+          "kind": "missing",
+          "bytes": 0,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "link",
+          "kind": "link",
+          "bytes": 17,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "hardlink",
+          "kind": "hardlink",
+          "bytes": 17,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "directory",
+          "kind": "directory",
+          "bytes": 0,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "post-close-replace",
+          "kind": "replace",
+          "bytes": 17,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "observer-undefined",
+          "kind": "undefined",
+          "bytes": 17,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "observer-frozen",
+          "kind": "frozen",
+          "bytes": 17,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "aggregate-byte-limit",
+          "kind": "byte-limit",
+          "bytes": 17,
+          "maximum": 64,
+          "accepted": false
+        },
+        {
+          "id": "aggregate-work-limit",
+          "kind": "work-limit",
+          "bytes": 17,
+          "maximum": 64,
+          "accepted": false
+        }
+      ]
+    },
+    "Disclosure": {
+      "const": {
+        "authority": false,
+        "readyIssued": false,
+        "payloadContentsObserved": false,
+        "nonreferenceProved": false,
+        "producerOwnershipProved": false,
+        "disposabilityProved": false,
+        "mutations": 0
+      }
+    },
+    "Result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "authority",
+        "readyIssued",
+        "payloadContentsObserved",
+        "nonreferenceProved",
+        "producerOwnershipProved",
+        "disposabilityProved",
+        "mutations",
+        "root",
+        "snapshotSha256",
+        "snapshot",
+        "metadataBytes",
+        "work"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "pending-dependencies-read-only-classification"
+        },
+        "authority": {
+          "const": false
+        },
+        "readyIssued": {
+          "const": false
+        },
+        "payloadContentsObserved": {
+          "const": false
+        },
+        "nonreferenceProved": {
+          "const": false
+        },
+        "producerOwnershipProved": {
+          "const": false
+        },
+        "disposabilityProved": {
+          "const": false
+        },
+        "mutations": {
+          "const": 0
+        },
+        "root": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "snapshotSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "snapshot": {
+          "$ref": "#/definitions/Snapshot"
+        },
+        "metadataBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "work": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        }
+      }
+    },
+    "Seven": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "string",
+        "maxLength": 32
+      }
+    },
+    "Directory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "identity",
+        "names"
+      ],
+      "properties": {
+        "identity": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "string",
+            "maxLength": 32
+          }
+        },
+        "names": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "File": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "identity",
+        "bytes",
+        "sha256",
+        "currentShape",
+        "generation",
+        "scope",
+        "prefixMatches"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "missing",
+            "file",
+            "directory",
+            "link",
+            "other"
+          ]
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "array",
+              "minItems": 7,
+              "maxItems": 7,
+              "items": {
+                "type": "string",
+                "maxLength": 32
+              }
+            }
+          ]
+        },
+        "bytes": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4194304
+            }
+          ]
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "currentShape": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        },
+        "generation": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "pattern": "^[a-f0-9]{64}$"
+            }
+          ]
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          ]
+        },
+        "prefixMatches": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "boolean"
+            }
+          ]
+        }
+      }
+    },
+    "Generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "identity",
+        "ready"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory",
+            "link",
+            "other"
+          ]
+        },
+        "identity": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "items": {
+            "type": "string",
+            "maxLength": 32
+          }
+        },
+        "ready": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/definitions/File"
+            }
+          ]
+        }
+      }
+    },
+    "Snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "receipt",
+        "pending",
+        "root",
+        "generations"
+      ],
+      "properties": {
+        "host": {
+          "$ref": "#/definitions/Directory"
+        },
+        "receipt": {
+          "$ref": "#/definitions/File"
+        },
+        "pending": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "directory",
+                "files"
+              ],
+              "properties": {
+                "directory": {
+                  "$ref": "#/definitions/Directory"
+                },
+                "files": {
+                  "type": "array",
+                  "maxItems": 2,
+                  "items": {
+                    "$ref": "#/definitions/File"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "root": {
+          "$ref": "#/definitions/Directory"
+        },
+        "generations": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "directory",
+                "entries"
+              ],
+              "properties": {
+                "directory": {
+                  "$ref": "#/definitions/Directory"
+                },
+                "entries": {
+                  "type": "array",
+                  "maxItems": 4096,
+                  "items": {
+                    "$ref": "#/definitions/Generation"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "ReadyCases": {
+      "const": [
+        {
+          "id": "current",
+          "effect": "current",
+          "shape": true,
+          "prefixMatches": true
+        },
+        {
+          "id": "different-prefix",
+          "effect": "different-prefix",
+          "shape": true,
+          "prefixMatches": false
+        },
+        {
+          "id": "old-version",
+          "effect": "old-version",
+          "shape": false,
+          "prefixMatches": null
+        },
+        {
+          "id": "not-json",
+          "effect": "not-json",
+          "shape": false,
+          "prefixMatches": null
+        },
+        {
+          "id": "noncanonical-bytes",
+          "effect": "noncanonical",
+          "shape": false,
+          "prefixMatches": null
+        }
+      ]
+    },
+    "InventoryCases": {
+      "const": [
+        {
+          "id": "stable",
+          "effect": "stable",
+          "accepted": true
+        },
+        {
+          "id": "missing-ready",
+          "effect": "missing-ready",
+          "accepted": true
+        },
+        {
+          "id": "generation-link",
+          "effect": "generation-link",
+          "accepted": true
+        },
+        {
+          "id": "ready-drift",
+          "effect": "ready-drift",
+          "accepted": false
+        },
+        {
+          "id": "unknown-slot",
+          "effect": "unknown-slot",
+          "accepted": false
+        }
+      ]
+    }
+  }
+}

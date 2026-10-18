@@ -2,7 +2,11 @@
 import * as React from "react";
 import { fireEvent, render } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ContextMenuController, contextMenuPathKey, contextMenuSubmenuPlacement, copyDomTextSelection, readDomTextSelection, type ContextMenuItem } from "../../🟦️.tsx";
+import { ContextMenuController } from "../../🟦️.tsx";
+import { contextMenuPathKey } from "../../🧭️navigation/🟦️.tsx";
+import { contextMenuSubmenuPlacement } from "../../🔗️fusion/🟦️.tsx";
+import { copyDomTextSelection, readDomTextSelection } from "../../📝️text-selection/🟦️.ts";
+import { type ContextMenuItem } from "../../🎨️item-render/🟦️.tsx";
 import { uiDataLabel } from "../../../🎗️UiLabel/🟦️.tsx";
 // #endregion 🔌️Adapters
 

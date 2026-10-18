@@ -3,12 +3,13 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync }
 import { spawn, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { runCanonicalGoTests, runRepositoryTestCommand } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { runCanonicalGoTests } from "../../🧪️testing/🐹️go-plan/🟦️.ts";
+import { runRepositoryTestCommand } from "../../🧪️testing/🎛️repository-command/🟦️.ts";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 const cli = join(import.meta.dir, "../../../💻️client/⌨️cli");
 const repo = findWorkspaceRoot(import.meta.dir);
-const fixture = JSON.parse(readFileSync(join(cli, "🧫️fixtures/🚦️test-dispatch/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(cli, "🧪️tests/🧫️fixtures/🚦️test-dispatch/🔣️.json"), "utf8"));
 const script = join(import.meta.dir, "../../📦️packages/🟦️typescript/📜️script.ts");
 
 let compiledRoot: string;

@@ -71,7 +71,7 @@ fn invalidate_scheduler_redraw(
 /// ([`FrameGenerationHold::Free`]) and must not move at all while a build is live
 /// ([`FrameGenerationHold::UnderLiveBuild`]).
 ///
-/// 🩸️ Every pointer move used to renumber it unconditionally. `FrameBuildHandle::poll_runtime_and_resubmit`
+/// 🩸️ Every pointer move used to renumber it unconditionally. `FrameBuildHandle::poll_runtime_on_original_caller`
 /// reads a moved generation as `frame build superseded` and CANCELS the in-flight build from phase 0
 /// — 28 supersessions per converging edit, a measured 26 % tax on a chain the input had nothing to do
 /// with (10.69 s with the pointer still against 14.51 s with it moving 5×/s, ticket
@@ -204,7 +204,7 @@ impl OsHost {
     #[cfg(target_arch = "wasm32")]
     pub fn redraw_offscreen_worker(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<crate::os_host::BrowserRedrawOutcome>,semio_framework_job::OriginalTurnFailure>{
         let _=self.scheduler.should_render(self.clock.now_seconds());
-        self.prepare_redraw();
+        self.prepare_redraw(cx)?;
         if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(None)}
         self.build_and_publish_snapshot_on_original_caller(cx)?;
         if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(None)}
@@ -224,8 +224,8 @@ impl OsHost {
     /// 6118 exactly one build ever ran (`frame build admitted generation=Generation(3)`), the next
     /// tick superseded it, and the shell produced no further frame for the rest of the session
     /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-    fn prepare_redraw(&mut self) {
-        let _ = semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::MountedSurfaceResizeLane::close_abandoned_step();
+    fn prepare_redraw(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+        let _ = semio_framework_os_renderer_wgpu_host_plumbing::surface_lane::MountedSurfaceResizeLane::close_abandoned_step(cx)?;
         if self.frame_ready {
             self.frame_ready = false;
         } else if !self.frame_build.has_live_session() {
@@ -233,7 +233,7 @@ impl OsHost {
                 self.present_fault = Some("frame generation exhausted".to_string());
             }
         }
-        self.surface_resize.drive_one();
+        self.surface_resize.drive_one(cx)?;
         if self.presenter.surface_resize_available() {
             if let Some(candidate) = self.surface_resize.take_ready() {
                 if let Err(candidate) = self.presenter.begin_surface_resize(candidate) {
@@ -244,11 +244,12 @@ impl OsHost {
         if !self.presenter.surface_resize_step() || self.surface_resize.has_work() {
             self.scheduler.invalidate(InvalidationReason::VIEWPORT);
         }
+        Ok(())
     }
 
     fn redraw_on_original_caller(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<RedrawOutcome,semio_framework_job::OriginalTurnFailure>{
         if cx.should_yield(){return Ok(RedrawOutcome{cursor:CursorRequest::Default,ime:None})}
-        self.prepare_redraw();
+        self.prepare_redraw(cx)?;
         let now = self.clock.now_seconds();
         if !self.snapshot_sink.publish_on_original_caller(cx)?{return Ok(RedrawOutcome{cursor:CursorRequest::Default,ime:None})}
         self.build_and_publish_snapshot_on_original_caller(cx)?;
@@ -270,7 +271,7 @@ impl OsHost {
     /// the browser projects the same pair through `semio_cursor_css` after this publication.
     /// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     ///
-    /// 🧵️ `poll_runtime_and_resubmit` never waits: it accepts a fresh completed frame or leaves the
+    /// 🧵️ `poll_runtime_on_original_caller` never waits: it accepts a fresh completed frame or leaves the
     /// last presentation in place, then schedules at most one worker-owned frame transaction.
     ///
     /// 🩺️ The presentation gate decides whether a frame build runs at all, and a frame build is the
@@ -287,8 +288,8 @@ impl OsHost {
     /// hide an over-ceiling submit (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
     fn pump_frame_inputs(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
         if !self.presenter.holds_presented_input_publication(){let _=self.runtime.pump_pending_applies(RUNTIME_APPLY_TICK_CREDITS,cx)?;}
-        #[cfg(not(target_arch="wasm32"))]{let _=self.runtime.pump_native_asset();let _=self.runtime.asset_decode_step();}
-        if self.advance_component_surface_close(){self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);}
+        #[cfg(not(target_arch="wasm32"))]{let _=self.runtime.pump_native_asset();let _=self.with_asset_decode_context(|runtime,asset_cx|runtime.asset_decode_step(asset_cx))?;}
+        if self.advance_component_surface_close(cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);}
         if !self.events.is_empty(){let _=self.runtime.enqueue_dispatch_on_original_caller(&mut self.events,self.frame_generation,cx)?;}Ok(())
     }
 
@@ -316,8 +317,12 @@ impl OsHost {
         if self.original_snapshot.is_some(){if !self.snapshot_sink.retain_original_publication(&mut self.original_snapshot,cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY)}return Ok(())}
         if !self.snapshot_sink.publish_on_original_caller(cx)?{self.scheduler.invalidate(InvalidationReason::RESOURCE_READY);return Ok(())}
         let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
-        match self.presenter.present_step(cx){
+        let present_deadline_us=cx.now_us().map_or(cx.deadline_us(),|now|now.saturating_add(semio_framework_job::INTERACTIVE_STEP_CEILING_US / 2));
+        let present_fuel=cx.fuel_remaining();let mut presented=None;
+        cx.with_original_work_loan(present_fuel,present_deadline_us,|present_cx|{presented=Some(self.presenter.present_step(present_cx));Ok(())})?;
+        match presented.expect("the present step ran inside its work loan"){
             Ok(semio_framework_os_renderer_wgpu_frame_presentation::AppPresentStep::Complete{generation,cursor,theme_dark,fullscreen,cursor_wake,retained_control_deadline,shell_clock_deadline,has_animated_primitives,media_slots})=>{
+                let _latency=semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyTimer::start(semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyAuthority::renderer_frame(generation.0),semio_framework_os_renderer_wgpu_host_base::frame_latency::FrameLatencyStage::SnapshotPublish,1);
                 self.original_snapshot=Some(semio_framework_os_renderer_wgpu_host_plumbing::render_snapshot::RenderSnapshot::new(0,semio_cursor_to_request(cursor),cursor,theme_dark,None).with_media_slots(media_slots));
                 cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
                 self.animation_clock.accept(has_animated_primitives);self.animation_clock.sync(&mut self.scheduler,self.clock.now_seconds());self.runtime.publish_retained_control_deadline(retained_control_deadline);self.runtime.publish_shell_clock_deadline(shell_clock_deadline);self.platform_fullscreen=fullscreen;

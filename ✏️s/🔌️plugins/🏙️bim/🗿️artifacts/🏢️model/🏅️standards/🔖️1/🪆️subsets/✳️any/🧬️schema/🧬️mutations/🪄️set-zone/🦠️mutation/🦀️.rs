@@ -1,6 +1,6 @@
 //! 🪄️ `set-zone` payload. Sets any of a zone's name, category and occupancy density; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::ZonePatch}, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::ZonePatch}, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -28,13 +28,16 @@ impl SetZone {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetZone {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetZone
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetZone>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "zone", kind: "set-zone", record: "SetZone" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_zone::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_zone::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit zone \"{}\"", self.id), &format!("Zone \"{}\" ändern", self.id))

@@ -1,4 +1,3 @@
-use semio_framework_test_fixtures::manifest_dir;
 use std::path::{Path, PathBuf};
 
 const EXAMPLES_DIR_NAME: &str = "📚️examples";
@@ -9,17 +8,9 @@ const ASSETS_DIR_NAME: &str = "🖼️assets";
 // imports); both name the same literal `🏅️standards` directory segment by construction.
 const STANDARDS_DIR: &str = "🏅️standards";
 
-/// 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json`.
+/// 🏠️ Declared package workspace above `CARGO_MANIFEST_DIR`.
 pub async fn repo_root() -> PathBuf {
-    let mut dir = manifest_dir!();
-    loop {
-        if dir.join("nx.json").is_file() {
-            return dir;
-        }
-        if !dir.pop() {
-            panic!("could not locate repo root (nx.json) ascending from {}", env!("CARGO_MANIFEST_DIR"));
-        }
-    }
+    semio_framework_test_fixtures::repo_root!()
 }
 
 async fn skip_dir_name(name: &str) -> bool {

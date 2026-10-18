@@ -3,7 +3,8 @@
 //! become cubic Béziers); the frame, captions, title block and revision table are the same marks the SVG draws. [`SheetsPdf`] writes page by page (`DocumentStream`), so an export can yield between sheets and be cancelled.
 //! 📎 https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
 
-use super::ink::{sheet_marks, Anchor, Mark, TitleLabels};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Anchor, Mark, TitleLabels};
 use crate::standards::v1::subsets::any::io::export::svg::drawing::lines_of;
 use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, paint_rank, style_class, LABEL_SIZE, STROKE_WIDTHS, TAG_SIZE};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanText, PlanVertex};
@@ -14,8 +15,7 @@ use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::{Doc
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfFont, PdfInfo, PdfLineCap, PdfLineJoin, PdfOp, PdfPage, PdfSnapshot, PdfTextString};
 use std::collections::BTreeMap;
 
-#[path = "🌀️arcs/🦀️.rs"]
-pub mod arcs;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::sheets::pdf::arcs;
 
 /// 📏️ PDF points per paper millimetre (72 points to the inch).
 pub const POINTS_PER_MM: f64 = 72.0 / 25.4;

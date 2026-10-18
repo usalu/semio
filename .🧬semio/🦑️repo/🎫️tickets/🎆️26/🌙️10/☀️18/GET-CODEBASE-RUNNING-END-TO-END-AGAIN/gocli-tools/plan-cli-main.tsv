@@ -1,0 +1,27 @@
+🐹️.go	⌨️cli is the cli domain of the semio repository tooling: the root command, its configuration and the process entry points.	364-530,638-720
+📡️engine.go	📡️engine carries the cli engine: the event stream protocol, the error codes, the engine requests and the engine dispatch.	138-358
+📤️export.go	📤️export carries the event-log export of the cli and the export command.	51-136,1125-1154
+🔐️auth_sync.go	🔐️auth_sync carries the auth and sync commands of the cli.	536-636
+🔎️search.go	🔎️search carries the entity emoji, search, list and query commands of the cli with their tree filter flags.	726-1123
+🧪️test_command.go	🧪️test_command carries the test command of the cli with its llm, effort and client flag extraction.	1160-1338
+📝️todo.go	📝️todo carries the draft and todo commands of the cli.	1340-1512
+🎫️ticket.go	🎫️ticket carries the ticket command of the cli.	1514-1942
+🎯️goal.go	🎯️goal carries the goal command of the cli.	1944-2242
+💬️interaction.go	💬️interaction carries the interaction and checkpoint commands of the cli.	2244-2359,2466-2501
+📜️statute.go	📜️statute carries the statute command of the cli.	2361-2464
+🧑️contributor.go	🧑️contributor carries the contributor and technology commands of the cli.	2503-2613
+🌊️stream.go	🌊️stream carries the stream and status flag binding of the cli and the stream options.	2802-3063
+🗂️codebase.go	🗂️codebase carries the bundle, folder, file, section, definition and mermaid commands of the cli.	2615-2800,3065-3351,3734-3767
+🚚️move.go	🚚️move carries the move, integrate, extract and rename commands of the cli.	3353-3575
+📏️loc.go	📏️loc carries the loc command of the cli.	3581-3728
+🎟️tool_ticket.go	🎟️tool_ticket carries the ticket and draft tool functions of the cli.	3865-4067
+🏹️tool_goal.go	🏹️tool_goal carries the goal and contributor tool functions of the cli.	4069-4225
+🧱️tool_codebase.go	🧱️tool_codebase carries the codebase, technology, bundle, folder, file, section and definition tool functions of the cli.	3773-3863,4227-4374
+🩺️analyze.go	🩺️analyze carries the analyze and autofix commands of the cli with the policy tool functions.	4380-4696
+🏁️benchmark.go	🏁️benchmark carries the benchmark command of the cli.	4702-4825
+🪝️hook.go	🪝️hook carries the hook, configure and micro-commit commands of the cli.	4831-4986
+🔄️update.go	🔄️update carries the dependency update command of the cli.	4992-5372
+🚩️flag.go	🚩️flag carries the flag set of the cli command framework.	5407-5687
+🕹️command.go	🕹️command carries the command tree, dispatch and positional validators of the cli command framework.	5378-5405,5689-6023
+🪞️projection.go	🪞️projection carries the projection commands, argument projection and event stream rendering of the cli.	6031-6560
+🌳️tree.go	🌳️tree carries the filesystem tree source and the tree command of the cli.	6566-6890

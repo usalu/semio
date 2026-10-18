@@ -37,6 +37,4 @@ pub fn component_solid(entry: &ComponentEntry) -> ElementSolid {
     builder.build()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

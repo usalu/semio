@@ -2030,5 +2030,132 @@
         }
       ]
     }
+    ,{
+      "name": "alternatives",
+      "documents": [
+        {
+          "name": "alternatives",
+          "seed": "",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/alternatives.json",
+            "title": "alternatives",
+            "$defs": {
+              "Choice": { "anyOf": [{ "type": "integer" }, { "type": "string", "pattern": "^[a-z]+$" }] },
+              "Untagged": {
+                "oneOf": [
+                  { "type": "object", "additionalProperties": false, "required": ["a", "c"], "properties": { "a": { "type": "string" }, "c": { "type": "integer" } } },
+                  { "type": "object", "additionalProperties": false, "required": ["b"], "properties": { "b": { "type": "boolean" } } }
+                ]
+              },
+              "Both": { "type": ["string", "integer"] },
+              "Nothing": { "type": "null" },
+              "Anything": {},
+              "AnyField": { "type": "object", "additionalProperties": false, "required": ["x"], "properties": { "x": {}, "y": { "description": "any value" } } },
+              "Pinned": { "enum": [1, 2, 4] },
+              "Mixed": { "enum": ["a", 1, true] },
+              "ConstList": { "const": ["HostOnly"] },
+              "ConstObject": { "const": { "kind": "a", "n": 1 } },
+              "Base": { "type": "object", "required": ["id"], "properties": { "id": { "type": "string" } } },
+              "Merged": { "allOf": [{ "$ref": "#/$defs/Base" }, { "type": "object", "properties": { "more": { "type": "string" } } }] },
+              "Discriminated": {
+                "type": "object",
+                "required": ["kind"],
+                "properties": { "kind": { "enum": ["a", "b"] } },
+                "oneOf": [
+                  { "properties": { "kind": { "const": "a" }, "n": { "type": "integer" } }, "required": ["kind", "n"] },
+                  { "properties": { "kind": { "const": "b" }, "s": { "type": "string" } }, "required": ["kind", "s"] }
+                ]
+              },
+              "Holder": { "type": "object", "additionalProperties": false, "required": ["inner"], "properties": { "inner": { "$ref": "#/$defs/inner" } } },
+              "inner": { "type": "object", "additionalProperties": false, "required": ["n"], "properties": { "n": { "type": "integer" } } }
+            }
+          }
+        },
+        {
+          "name": "shared",
+          "seed": "",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/shared.json",
+            "title": "Shared",
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["v"],
+            "properties": { "v": { "type": "integer" } },
+            "$defs": {
+              "Pt": { "title": "Pt", "type": "object", "additionalProperties": false, "required": ["x"], "properties": { "x": { "type": "integer" } } },
+              "box": { "type": "object", "additionalProperties": false, "required": ["p"], "properties": { "p": { "$ref": "#/$defs/Pt" } } }
+            }
+          }
+        },
+        {
+          "name": "referrer",
+          "seed": "",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/referrer.json",
+            "title": "referrer",
+            "$defs": {
+              "HolderBox": { "type": "object", "additionalProperties": false, "required": ["b"], "properties": { "b": { "$ref": "https://json.schemas.assets.semio-tech.com/s/oracle/shared.json#/$defs/box" } } },
+              "HolderRoot": { "type": "object", "additionalProperties": false, "required": ["r"], "properties": { "r": { "$ref": "https://json.schemas.assets.semio-tech.com/s/oracle/shared.json" } } }
+            }
+          }
+        }
+      ],
+      "probes": [
+        { "document": "alternatives", "export": "Choice", "valid": [1, "abc"], "invalid": [null, 1.5, "ABC", [], {}, true] },
+        { "document": "alternatives", "export": "Untagged", "valid": [{ "a": "x", "c": 1 }, { "b": true }], "invalid": [{}, { "a": "x" }, { "b": 1 }, { "a": "x", "c": 1, "b": true }, null, "a"] },
+        { "document": "alternatives", "export": "Both", "valid": ["x", 1], "invalid": [null, 1.5, true, [], {}] },
+        { "document": "alternatives", "export": "Nothing", "valid": [null], "invalid": [0, "", false, [], {}] },
+        { "document": "alternatives", "export": "Anything", "valid": [1, "a", null, true, [], { "k": 1 }], "invalid": [] },
+        { "document": "alternatives", "export": "AnyField", "valid": [{ "x": 1 }, { "x": null, "y": { "k": [1] } }], "invalid": [{}, { "y": 1 }, { "x": 1, "z": 1 }, null] },
+        { "document": "alternatives", "export": "Pinned", "valid": [1, 2, 4], "invalid": [3, "1", null, 1.5, true] },
+        { "document": "alternatives", "export": "Mixed", "valid": ["a", 1, true], "invalid": ["b", 2, false, null, "1"] },
+        { "document": "alternatives", "export": "ConstList", "valid": [["HostOnly"]], "invalid": [[], ["x"], "HostOnly", ["HostOnly", "x"], null] },
+        { "document": "alternatives", "export": "ConstObject", "valid": [{ "kind": "a", "n": 1 }], "invalid": [{ "kind": "a" }, { "kind": "a", "n": 2 }, { "kind": "a", "n": 1, "z": 1 }, {}, null] },
+        { "document": "alternatives", "export": "Merged", "valid": [{ "id": "a" }, { "id": "a", "more": "m" }], "invalid": [{}, { "id": 1 }, { "id": "a", "more": 1 }, null], "tolerated": [{ "id": "a", "extra": 1 }] },
+        { "document": "alternatives", "export": "Discriminated", "valid": [{ "kind": "a", "n": 1 }, { "kind": "b", "s": "x" }], "invalid": [{}, { "kind": "c" }, { "kind": "a" }, { "kind": "a", "n": "1" }, { "kind": "b", "s": 1 }, { "kind": "a", "s": "x" }, null], "tolerated": [{ "kind": "a", "n": 1, "extra": 1 }] },
+        { "document": "alternatives", "export": "Holder", "valid": [{ "inner": { "n": 1 } }], "invalid": [{}, { "inner": {} }, { "inner": { "n": 1.5 } }, { "inner": { "n": 1, "z": 1 } }, null] },
+        { "document": "referrer", "export": "HolderBox", "valid": [{ "b": { "p": { "x": 1 } } }], "invalid": [{}, { "b": {} }, { "b": { "p": {} } }, { "b": { "p": { "x": 1.5 } } }, { "b": { "p": { "x": 1 }, "z": 1 } }, null] },
+        { "document": "referrer", "export": "HolderRoot", "valid": [{ "r": { "v": 1 } }], "invalid": [{}, { "r": {} }, { "r": { "v": "1" } }, { "r": { "v": 1, "z": 1 } }, null] }
+      ]
+    }
+    ,{
+      "name": "null-defaults",
+      "documents": [
+        {
+          "name": "null-defaults",
+          "seed": "export interface Style {\n  readonly bold: boolean;\n  readonly font: string | null;\n  readonly size: number | null;\n  readonly pair: readonly [number, number];\n}\n",
+          "schema": {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "https://json.schemas.assets.semio-tech.com/s/oracle/null-defaults.json",
+            "title": "null-defaults",
+            "$defs": {
+              "Style": {
+                "title": "Style",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "bold": { "type": "boolean", "default": false },
+                  "font": { "anyOf": [{ "type": "string" }, { "type": "null" }], "default": null },
+                  "size": { "anyOf": [{ "type": "number", "minimum": 0 }, { "type": "null" }], "default": null },
+                  "pair": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 }, "minItems": 2, "maxItems": 2, "default": [0, 0] }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "probes": [
+        {
+          "document": "null-defaults",
+          "export": "Style",
+          "valid": [{ "bold": true, "font": "x", "size": 1, "pair": [1, 2] }, { "bold": false, "font": null, "size": null, "pair": [0, 255] }],
+          "invalid": [{ "pair": [1] }, { "pair": [-1, 0] }, { "pair": [0.5, 0] }, { "pair": [256, 0] }, { "bold": 1 }, { "size": -1 }, { "z": 1 }, null],
+          "defaulted": [{ "input": {}, "output": { "bold": false, "font": null, "size": null, "pair": [0, 0] } }, { "input": { "font": "f" }, "output": { "bold": false, "font": "f", "size": null, "pair": [0, 0] } }]
+        }
+      ]
+    }
   ]
 }

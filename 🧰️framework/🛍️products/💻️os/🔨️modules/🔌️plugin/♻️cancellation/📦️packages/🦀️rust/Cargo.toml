@@ -31,6 +31,7 @@ semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/�
 semio-framework-os-kernel = { path = "../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }

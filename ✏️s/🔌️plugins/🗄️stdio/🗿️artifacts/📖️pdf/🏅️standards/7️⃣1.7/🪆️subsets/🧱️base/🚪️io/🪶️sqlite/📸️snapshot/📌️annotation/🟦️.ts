@@ -1,5 +1,5 @@
 /** 📌️ Full annotation fields, markup indices and subtype entity ownership. */
-import type { PdfAnnotation,PdfMarkupAnnotation } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfAnnotation, PdfMarkupAnnotation } from "../../../../🧬️schema/📸️snapshot/📌️annotation/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfAnnotationKind,readPdfAnnotationKind,pdfWideCells,readPdfWide } from "./🏷️kind/🟦️.ts";

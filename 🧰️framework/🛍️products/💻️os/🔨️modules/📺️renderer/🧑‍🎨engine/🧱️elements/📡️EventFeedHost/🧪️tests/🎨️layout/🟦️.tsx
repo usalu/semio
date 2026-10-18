@@ -45,9 +45,6 @@ afterEach(() => {
 });
 
 describe("EventFeed styled layout", () => {
-  it("validates the neutral card and tone contract", () => {
-  });
-
   it("measures the actual React DOM with production CSS and Chromium", async () => {
     vi.spyOn(Date.prototype, "toLocaleTimeString").mockReturnValue("12:34");
     const view = render(

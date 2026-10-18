@@ -363,6 +363,4 @@ pub fn emit_classifications(x: &mut Export<'_>) {
 }
 //#endregion 🔖️Classifications
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

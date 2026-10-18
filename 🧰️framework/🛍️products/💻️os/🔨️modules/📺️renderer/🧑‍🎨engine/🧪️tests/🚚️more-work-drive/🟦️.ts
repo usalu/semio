@@ -16,7 +16,7 @@
  * 3. the drive's bounds are DERIVED from the wall the host granted and what one guest turn MEASURES
  *    ({@link shardTurnDriveStepsV1}), and the derivation agrees with the reactor's own contract
  *    fixture — including the coherence clause that made the old 8 ms wall hold admit no turn at all;
- * 4. the GENERATED worker (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`) contains that same
+ * 4. the GENERATED worker (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts`) contains that same
  *    loop with those same constants, its macrotask yield and its host-input counter — the twin is
  *    verified against the emitted source, not assumed;
  * 5. the generated worker no longer posts a heartbeat per turn crossing: both beats ride the reply.
@@ -32,9 +32,10 @@ import { driveShardTurnMoreWorkV1, shardTurnCarriesNothingV1, shardTurnDriveBudg
  * constants are declared rather than imported. Reading the literal straight out of the file is what
  * makes "held equal by the suite" true rather than aspirational. */
 const HERE = dirname(fileURLToPath(import.meta.url));
-const MATERIALIZATION_SOURCE = readFileSync(resolve(HERE, "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts"), "utf8");
+const CONTRACT_SOURCE = readFileSync(resolve(HERE, "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts"), "utf8");
+const WORKER_SOURCE = readFileSync(resolve(HERE, "../../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts"), "utf8");
 const declared = (name: string): number => {
-  const match = new RegExp(`export const ${name} = (\\d+);`).exec(MATERIALIZATION_SOURCE);
+  const match = new RegExp(`export const ${name} = (\\d+);`).exec(CONTRACT_SOURCE);
   if (!match) throw new Error(`materialization declares no ${name}`);
   return Number(match[1]);
 };
@@ -252,7 +253,7 @@ describe("🚚️ the drive's bounds are derived, not chosen", () => {
 });
 
 describe("🚚️ the generated shard worker", () => {
-  const source = MATERIALIZATION_SOURCE;
+  const source = WORKER_SOURCE;
 
   it("carries the drive's constants rather than literals of its own", () => {
     expect(source).toContain("const GUEST_TURN_COST_MS = ${SHARD_TURN_GUEST_COST_MS};");
@@ -271,7 +272,7 @@ describe("🚚️ the generated shard worker", () => {
     expect(source).toContain("drivePolls + 1 >= driveSteps");
     expect(source).toContain("const driveSteps = DRIVE_STEP_CEILING;");
     expect(source.indexOf('driveStopped = "budget"')).toBeLessThan(source.indexOf('driveStopped = "steps"'));
-    expect(source).toContain("hopEpochNow() >= driveDeadline");
+    expect(source).toContain("originalDriveSource.operationClockUs() >= driveDeadline");
     expect(source).toContain("hostInputSeq !== inputMark");
     expect(source).toContain("actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration");
   });

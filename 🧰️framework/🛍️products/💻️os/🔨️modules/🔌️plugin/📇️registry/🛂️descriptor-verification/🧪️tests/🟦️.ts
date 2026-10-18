@@ -23,7 +23,7 @@ describe("current package descriptor admission", () => {
   it("admits the production owner through the current canonical scope inventory", async () => {
     let root = import.meta.dir;
     while (!existsSync(join(root, "bun.lock"))) root = dirname(root);
-    const library = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"));
+    const library = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts"));
     const inventory = library.inventorySchemaScopes(root), id = "os.plugin.registry.descriptor-verification";
     const scope = inventory.catalog.scopes[id];
     expect(scope).toBeDefined();

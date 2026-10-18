@@ -1,4 +1,4 @@
-use crate::{standards::v5::subsets::any::schema::snapshot::HtmlAttr, standards::v5::subsets::any::schema::snapshot::HtmlNode, standards::v5::subsets::any::schema::snapshot::HtmlSnapshot, standards::v5::subsets::any::schema::snapshot::RawTextKind};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
 use semio_framework_os_kernel::{sqlite_snapshot::SqliteDatabase, sqlite_snapshot::SqliteSnapshotControl, sqlite_snapshot::SqliteSnapshotPhase, sqlite_snapshot::SqliteValue};
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_value::ValueError;
@@ -10,12 +10,12 @@ use std::{collections::BTreeMap, collections::BTreeSet};
 use semio_framework_value::ValueRefusalKind;
 #[allow(unused_imports)]
 use semio_framework_os_kernel::io_schema::IoError;
-use crate::standards::v5::subsets::any::io::sqlite::snapshot::{text, kind, component};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::sqlite::snapshot::{text, kind, component};
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::standards::v5::subsets::any::io::text::snapshot::{parse_html_document,write_html_document};
-use crate::standards::v5::subsets::any::io::sqlite::snapshot::*;
-use crate::standards::v5::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::{parse_html_document, write_html_document};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::sqlite::snapshot::*;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::*;
 use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshotHost};
 
 fn fixture() -> HtmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../🏅️standards/🔖️5/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🧫️fixtures/🔣️.json")).unwrap(); parse_html_document(fixture["htmlText"].as_str().unwrap()).unwrap() }

@@ -20,7 +20,7 @@ assert(canvasSource.includes("fn retire_vello_fragment"));
 assert(canvasSource.includes("Self::vector_backing_bytes(&encoding.resources.glyph_runs)"));
 assert(canvasSource.indexOf("slot.command_backing_bytes = command.retirement_backing_bytes()") < canvasSource.indexOf("slot.command = Some(ManuallyDrop::new(command))"));
 const sceneConsumers = [
-  ["iconPaintCache", await Bun.file(new URL("../../../../../♾️infinite/🎲️board/⚙️engine/🦀️.rs", import.meta.url)).text(), "retirement_scene: Cell<Option<semio_framework_canvas::OpaqueSceneRetirementToken>>", "advance_opaque_scene_retirement"],
+  ["iconPaintCache", readModuleTreeSource(new URL("../../../../../♾️infinite/🎲️board/⚙️engine/🦀️.rs", import.meta.url)), "retirement_scene: Cell<Option<semio_framework_canvas::OpaqueSceneRetirementToken>>", "advance_opaque_scene_retirement"],
   ["boardWorldCache", readModuleTreeSource(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🕹️gestures/🦀️.rs", import.meta.url)), "opaque_scene_retirement: Cell<Option<OpaqueSceneRetirementToken>>", "advance_opaque_scene_retirement"],
   ["engineCanvasPacket", await Bun.file(new URL("../../../../../📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/📦️prepared-engine-canvas/🦀️.rs", import.meta.url)).text(), "scene_retirement: ManuallyDrop<canvas::CanvasSceneRetirement>", "self.scene_retirement.close_step(&mut self.scene,grant)"],
 ] as const;
@@ -29,7 +29,7 @@ for (const [, source, retainedOwner, advance] of sceneConsumers) {
   assert(source.includes(retainedOwner));
   assert(source.includes(advance));
 }
-const boardWorldLaws = await Bun.file(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/🧪️tests/🔬️board-host/🦀️.rs", import.meta.url)).text();
+const boardWorldLaws = readModuleTreeSource(new URL("../../../../../♾️infinite/🎲️board/🔌️ports/➡️directed/➕️normal/🧭️host/🧪️tests/🔬️board-host/🦀️.rs", import.meta.url));
 const boardWorldRetirementLaw = boardWorldLaws.slice(boardWorldLaws.indexOf("fn board_world_scene_retirement_retains_exact_token_until_backing_is_released"));
 assert(boardWorldRetirementLaw.slice(0, boardWorldRetirementLaw.indexOf("#[test]")).includes("assert!(turns > 1_600)"));
 for (const grant of fixture.grants) {

@@ -138,5 +138,467 @@
     }
   ],
   "storybookStorage": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📖️storybook/💾️storage/🟦️.ts",
-  "projectOwner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts"
+  "projectOwner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🟦️typescript/🟦️.ts",
+  "recovery": {
+    "version": 1,
+    "dataOnly": true,
+    "compilerSource": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts",
+    "storageSource": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+    "function": "repositoryCompilerReservationV1",
+    "observer": "observeNativeStorageStateV1",
+    "journal": "storage-events.jsonl",
+    "capacity": 4096,
+    "cases": [
+      {
+        "name": "Empty Journal",
+        "mode": "prototype",
+        "events": [],
+        "expected": [],
+        "bytes": 0,
+        "sequence": 0
+      },
+      {
+        "name": "Reserved Prototype",
+        "mode": "prototype",
+        "events": [
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "11111111111111111111111111111111",
+              "owner": "repo:compiler:prototype",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          }
+        ],
+        "expected": [
+          "11111111111111111111111111111111"
+        ],
+        "bytes": 1024,
+        "sequence": 1
+      },
+      {
+        "name": "Interleaved Modes Prototype",
+        "mode": "prototype",
+        "events": [
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "22222222222222222222222222222222",
+              "owner": "repo:compiler:release",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "committed",
+            "id": "22222222222222222222222222222222"
+          },
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "11111111111111111111111111111111",
+              "owner": "repo:compiler:prototype",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "committed",
+            "id": "11111111111111111111111111111111"
+          }
+        ],
+        "expected": [
+          "11111111111111111111111111111111"
+        ],
+        "bytes": 2048,
+        "sequence": 4
+      },
+      {
+        "name": "Interleaved Modes Release",
+        "mode": "release",
+        "events": [
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "22222222222222222222222222222222",
+              "owner": "repo:compiler:release",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "committed",
+            "id": "22222222222222222222222222222222"
+          },
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "11111111111111111111111111111111",
+              "owner": "repo:compiler:prototype",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "committed",
+            "id": "11111111111111111111111111111111"
+          }
+        ],
+        "expected": [
+          "22222222222222222222222222222222"
+        ],
+        "bytes": 2048,
+        "sequence": 4
+      },
+      {
+        "name": "Retiring Charge Stays Accounted",
+        "mode": "prototype",
+        "events": [
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "22222222222222222222222222222222",
+              "owner": "repo:compiler:release",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "committed",
+            "id": "22222222222222222222222222222222"
+          },
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "11111111111111111111111111111111",
+              "owner": "repo:compiler:prototype",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "committed",
+            "id": "11111111111111111111111111111111"
+          },
+          {
+            "type": "retiring",
+            "id": "11111111111111111111111111111111"
+          }
+        ],
+        "expected": [
+          "11111111111111111111111111111111"
+        ],
+        "bytes": 2048,
+        "sequence": 5
+      },
+      {
+        "name": "Physically Retired Owner Leaves Other Mode",
+        "mode": "prototype",
+        "events": [
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "22222222222222222222222222222222",
+              "owner": "repo:compiler:release",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "committed",
+            "id": "22222222222222222222222222222222"
+          },
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "11111111111111111111111111111111",
+              "owner": "repo:compiler:prototype",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "committed",
+            "id": "11111111111111111111111111111111"
+          },
+          {
+            "type": "retiring",
+            "id": "11111111111111111111111111111111"
+          },
+          {
+            "type": "retired",
+            "id": "11111111111111111111111111111111"
+          }
+        ],
+        "expected": [],
+        "bytes": 1024,
+        "sequence": 6
+      },
+      {
+        "name": "Ambiguous Owner Is Not Chosen",
+        "mode": "prototype",
+        "events": [
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "11111111111111111111111111111111",
+              "owner": "repo:compiler:prototype",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          },
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "33333333333333333333333333333333",
+              "owner": "repo:compiler:prototype",
+              "kind": "compiler-workspace",
+              "bytes": 1024,
+              "phase": "reserved"
+            }
+          }
+        ],
+        "expected": [
+          "11111111111111111111111111111111",
+          "33333333333333333333333333333333"
+        ],
+        "bytes": 2048,
+        "sequence": 2
+      },
+      {
+        "name": "Checkpoint Retains All Charges",
+        "mode": "prototype",
+        "events": [
+          {
+            "type": "checkpoint",
+            "state": {
+              "version": 1,
+              "sequence": 17,
+              "allocations": [
+                {
+                  "id": "22222222222222222222222222222222",
+                  "owner": "repo:compiler:release",
+                  "kind": "compiler-workspace",
+                  "bytes": 1024,
+                  "phase": "committed"
+                },
+                {
+                  "id": "11111111111111111111111111111111",
+                  "owner": "repo:compiler:prototype",
+                  "kind": "compiler-workspace",
+                  "bytes": 1024,
+                  "phase": "retiring"
+                }
+              ]
+            }
+          },
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "44444444444444444444444444444444",
+              "owner": "repository:tools-store",
+              "kind": "artifact-publication",
+              "bytes": 512,
+              "phase": "reserved"
+            }
+          }
+        ],
+        "expected": [
+          "11111111111111111111111111111111"
+        ],
+        "bytes": 2560,
+        "sequence": 18
+      },
+      {
+        "name": "Foreign Owner Is Not Recovered",
+        "mode": "prototype",
+        "events": [
+          {
+            "type": "reserved",
+            "allocation": {
+              "id": "44444444444444444444444444444444",
+              "owner": "repository:tools-store",
+              "kind": "artifact-publication",
+              "bytes": 512,
+              "phase": "reserved"
+            }
+          }
+        ],
+        "expected": [],
+        "bytes": 512,
+        "sequence": 1
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "dataOnly": true,
+    "state": {
+      "version": 1,
+      "sequence": 3,
+      "allocations": [
+        {
+          "id": "55555555555555555555555555555555",
+          "owner": "repo:compiler:state",
+          "kind": "compiler-state",
+          "bytes": 36700160,
+          "phase": "committed",
+          "child": {
+            "version": 1,
+            "allocation": "55555555555555555555555555555555",
+            "parentIdentity": "Source DATA identity only",
+            "directory": "/repo/charged/child",
+            "filesystemBytes": 33554432,
+            "maximumPhysicalBytes": 34603008,
+            "policySha256": "6666666666666666666666666666666666666666666666666666666666666666"
+          },
+          "namespace": {
+            "directory": "/repo/charged",
+            "bytes": 65536,
+            "parent": {
+              "dev": "1",
+              "ino": "2",
+              "mode": 16832
+            },
+            "entry": {
+              "dev": "1",
+              "ino": "3",
+              "mode": 16832
+            }
+          }
+        }
+      ]
+    },
+    "mutations": {
+      "childDirectory": "/changed/child",
+      "parentInode": "4",
+      "entryInode": "5"
+    }
+  },
+  "memo": {
+    "version": 1,
+    "dataOnly": true,
+    "maximumBytes": 1048576,
+    "maximumEntries": 8,
+    "expectedColdParses": 25,
+    "expectedWarmParses": 0,
+    "peak": {
+      "capacity": 4,
+      "tooSmall": 2,
+      "events": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "77777777777777777777777777777777",
+            "owner": "memo:peak",
+            "kind": "artifact-publication",
+            "bytes": 3,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "retiring",
+          "id": "77777777777777777777777777777777"
+        },
+        {
+          "type": "retired",
+          "id": "77777777777777777777777777777777"
+        },
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "88888888888888888888888888888888",
+            "owner": "memo:tail",
+            "kind": "artifact-publication",
+            "bytes": 1,
+            "phase": "reserved"
+          }
+        }
+      ]
+    },
+    "rebudget": {
+      "capacity": 4,
+      "tooSmall": 2,
+      "events": [
+        {
+          "type": "reserved",
+          "allocation": {
+            "id": "77777777777777777777777777777777",
+            "owner": "memo:peak",
+            "kind": "artifact-publication",
+            "bytes": 3,
+            "phase": "reserved"
+          }
+        },
+        {
+          "type": "committed",
+          "id": "77777777777777777777777777777777"
+        },
+        {
+          "type": "rebudgeted",
+          "expectedSequence": 2,
+          "allocation": {
+            "id": "77777777777777777777777777777777",
+            "owner": "memo:peak",
+            "kind": "artifact-publication",
+            "bytes": 3,
+            "phase": "committed"
+          },
+          "bytes": 1
+        }
+      ]
+    },
+    "inertRefusals": [
+      "extra",
+      "proxy",
+      "accessor",
+      "version",
+      "zero-capacity",
+      "nan-capacity",
+      "unsafe-capacity",
+      "nontext",
+      "version-proxy",
+      "capacity-proxy"
+    ],
+    "unicodeOwner": "界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界界A",
+    "cancelAfterChecks": 3,
+    "reentrantEntries": 8
+  },
+  "layer": {
+    "version": 1,
+    "dataOnly": true,
+    "pureSource": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts",
+    "contractSource": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts",
+    "physicalSource": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts",
+    "maximumClosureFiles": 4,
+    "allowedBuiltins": [
+      "node:path",
+      "node:util"
+    ],
+    "runtimeExports": [
+      "nativeStorageStateV1",
+      "nativeStorageEventV1",
+      "nativeStorageUsedBytesV1",
+      "snapshotNativeStorageStateV1",
+      "createNativeStorageJournalProjectionV1"
+    ],
+    "goldenSha256": "d9443fad6e663cf40a6604df1ec046d309f57ea3c1eaa924ec6de18af08698ca",
+    "forbiddenFragments": [
+      "/🔒️leases/",
+      "/🧭️routing/",
+      "/🌐️platform/",
+      "/🧹️cleanup/"
+    ]
+  }
 }

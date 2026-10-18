@@ -36,7 +36,6 @@ semio-framework-ui-locale = { path = "../../../../../../../../../../../../🧰�
 semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
-semio-s-artifact-stdio-html-inferences = { path = "../../💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-html-snapshot = { path = "../../📸️snapshot/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 

@@ -758,7 +758,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "relative",
           "syntax": "static"
         }
@@ -778,7 +778,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "relative",
           "syntax": "type"
         }
@@ -798,7 +798,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "relative",
           "syntax": "dynamic"
         }
@@ -818,7 +818,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "relative",
           "syntax": "export"
         }
@@ -838,7 +838,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "relative",
           "syntax": "require"
         }
@@ -858,7 +858,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "relative",
           "syntax": "static"
         }
@@ -878,7 +878,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "relative",
           "syntax": "static"
         }
@@ -898,7 +898,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "package",
           "syntax": "static",
           "package": "@semio-tech/repo-lib"
@@ -919,7 +919,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "package-subpath",
           "syntax": "type",
           "package": "@semio-tech/repo-lib"
@@ -940,7 +940,7 @@
       "dependencies": [
         {
           "id": "upward",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "package",
           "syntax": "type",
           "package": "@semio-tech/repo-lib",
@@ -962,7 +962,7 @@
       "dependencies": [
         {
           "id": "external",
-          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
           "reference": "package",
           "syntax": "static",
           "package": "neutral-installed-product-vendor",
@@ -993,7 +993,7 @@
     },
     {
       "id": "product-consumes-general-module",
-      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
       "dependencies": [
         {
           "id": "downward",

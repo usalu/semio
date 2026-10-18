@@ -589,7 +589,7 @@
     },
     {
       "name": "handle",
-      "sha256": "8602d4d9bcf66dfe2b3ad22ced5cc731ab809265a8c941f43c622ac96c138b3d"
+      "sha256": "c52a8dcde7ad51fd62361edd102180814de2a09f34a643d2668d7bc6bf8db925"
     },
     {
       "name": "command_id",
@@ -677,11 +677,11 @@
     },
     {
       "name": "reduce_editor_command",
-      "sha256": "d2b4cd54ddef39b7cc16dda9e8c45ff7f423aaf704dff7263df3a91431ff1aad"
+      "sha256": "cf6831f30b8af39fac29ba360b316899063bed4ce40800293dfe5686b2508024"
     },
     {
       "name": "assert_viewer_never_mutates",
-      "sha256": "faffd1e3f7675966d1baef09845b55e6ceb0ebffeb05e191a5e0e804c2fe4d6c"
+      "sha256": "512582b6ceb79b6f5df642e3a159d3958ce2933690cf6ebe54e3d0eb7ff1aad0"
     },
     {
       "name": "assert_editor_and_viewer_share_dialect",

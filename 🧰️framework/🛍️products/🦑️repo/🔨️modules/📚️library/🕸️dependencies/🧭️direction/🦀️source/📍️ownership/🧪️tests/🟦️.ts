@@ -4,7 +4,7 @@ import {join,resolve,posix} from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import Draft7Ajv from "ajv";
 import TOML from "@iarna/toml";
-import {inspectRustModuleGraph} from "../../../../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph } from "../../../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import {rustExternProviders} from "../../🔗️binding/🟦️.ts";
 import {COMPUTE_OWNERSHIP_CONTRACT_PATH,COMPUTE_OWNERSHIP_DECLARATION_PATH,rustFamilyOwnershipActive,inspectRustFamilyOwnership,readRustFamilyOwnershipContract,type RustFamilyOwnershipProblem} from "../🟦️.ts";
 const owner=import.meta.dir;
@@ -32,6 +32,20 @@ test("closed family ownership cases and direct provider agree with independent T
 for(const row of corpus.cases)test(row.id,()=>{
  const actual=inspectRustFamilyOwnership(inputs(row));
  expect([...new Set(actual.map(problem=>problem.code))].sort(),JSON.stringify(actual)).toEqual([...row.expectedCodes].sort());
+});
+function rootDeclared(consumer:string,dependency:boolean){
+ const rootContract=readRustFamilyOwnershipContract({...contract,ownerRoot:"provider/lib.rs",declarationSource:"provider/lib.rs",modulePath:[]});
+ const sources=new Map([["provider/Cargo.toml",'[package]\nname="semio-framework-2d"\nversion="0.1.0"\nedition="2021"\n[lib]\nname="semio_framework_2d"\npath="lib.rs"'],["provider/lib.rs",declaration],["consumer/Cargo.toml",'[package]\nname="consumer"\nversion="0.1.0"\nedition="2021"\n[lib]\npath="lib.rs"\n[dependencies]\n'+(dependency?'semio-framework-2d={path="../provider"}':"")],["consumer/lib.rs",consumer]]);
+ const inventory=new Map<string,"file"|"directory"|"symlink">([[".","directory"]]);for(const path of sources.keys()){const parts=path.split("/");for(let index=1;index<parts.length;index++)inventory.set(parts.slice(0,index).join("/"),"directory");inventory.set(path,"file");}
+ const graph=inspectRustModuleGraph([...sources.keys()],path=>sources.get(path),{strictManifests:true});
+ return [...new Set(inspectRustFamilyOwnership({contract:rootContract,sources,graph,inventory}).map(problem=>problem.code))].sort();
+}
+test("a crate-root declaration with an empty module path admits only the direct root route and a direct provider",()=>{
+ expect(rootDeclared("use semio_framework_2d::EngineKey; fn take(_:EngineKey){}",true)).toEqual([]);
+ expect(rootDeclared("fn take(_:semio_framework_2d::EngineKey){}",true)).toEqual([]);
+ expect(rootDeclared("use semio_framework_2d::compute::EngineKey; fn take(_:EngineKey){}",true)).toContain("unproven-family-binding");
+ expect(rootDeclared("use semio_framework_2d::EngineKey; fn take(_:EngineKey){}",false)).toEqual(["unproven-family-provider"]);
+ expect(rootDeclared("fn take(_:EngineKey){}",true)).toEqual(["unproven-family-binding"]);
 });
 test("family inspection cancellation and closed contract rejection",()=>{
  expect(()=>inspectRustFamilyOwnership({...inputs(corpus.cases[0]!),checkCancellation:()=>{throw Error("cancelled");}})).toThrow("cancelled");

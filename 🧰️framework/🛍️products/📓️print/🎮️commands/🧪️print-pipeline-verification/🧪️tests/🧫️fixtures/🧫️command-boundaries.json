@@ -106,7 +106,7 @@
       "remove": 0,
       "id": "extra-source",
       "add": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts"
       ],
       "accepted": false
     },
@@ -124,7 +124,7 @@
       "remove": 1,
       "id": "same-count-substitution",
       "add": [
-        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts"
       ],
       "accepted": false
     }

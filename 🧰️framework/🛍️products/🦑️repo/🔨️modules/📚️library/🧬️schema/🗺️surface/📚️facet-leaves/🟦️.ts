@@ -1,4 +1,4 @@
-import { canonicalPrimaryFilenameForKind } from "../../../🔍️discovery/🟦️.ts";
+import { canonicalPrimaryFilenameForKind } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceText, type PolicySourceOperations, type PolicySourceTextResult } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyExtractGraphqlSchemaFields } from "../../🔍️field-discovery/🔗️graphql/🟦️.ts";
 import { policyExtractJsonSchemaFields } from "../../🔍️field-discovery/🔣️json-schema/🟦️.ts";
@@ -6,7 +6,7 @@ import { policyExtractProtobufSchemaFields } from "../../🔍️field-discovery/
 import { policyExtractRustSchemaFields } from "../../🔍️field-discovery/🦀️rust/🟦️.ts";
 import { policyExtractTypescriptSchemaFile } from "../../🔍️field-discovery/🟦️typescript/📂️module-resolution/🟦️.ts";
 import type { PolicySchemaLeafExtract } from "../../🔍️field-discovery/🧱️contract/🟦️.ts";
-import { loadTaxonomy } from "../../../🟦️.ts";
+import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 export type PolicyAppSchemaFacetLeaf = Readonly<{
   formatId: string;

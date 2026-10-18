@@ -8,15 +8,23 @@ import picomatch from "picomatch";
 import ts from "typescript";
 import { parseTree, type Node as JsonNode, type ParseError } from "jsonc-parser";
 import { createValidFileMatcher } from "next/dist/server/lib/find-page-file.js";
-import { createTaxonomyPathMatcher, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadCatalogTaxonomy, mutationDomainOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, semanticDirectoryKindId, semanticManifestFilenameForCollection, semanticProjectionCatalogProblems, subsetDirectoryNameForId, subsetIdForDirectoryName, validateTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { createTaxonomyPathMatcher } from "../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";
+import { fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath } from "../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { loadCatalogTaxonomy, semanticDirectoryKindId, validateTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { mutationDomainOwnersProblems, mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/👥️mutation-owner-rules/🟦️.ts";
+import { mutationOwnerIdentity, mutationOwnerRelativePath, mutationCatalogSourceOwner } from "../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
+import { semanticManifestFilenameForCollection, subsetDirectoryNameForId, subsetIdForDirectoryName, mutationPayloadSchemaRelativePath } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
+import { semanticProjectionCatalogProblems } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
 import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { leadingEmojiIdentity } from "../../../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts";
 import { inventoryTaxonomySources } from "../../🧹️normalization/🚪️source-admission/📁️io/🟦️.ts";
-import { jsonDocumentDuplicateKeys, mutationPayloadSchemaProblems, mutationPayloadSchemaDocumentProblems, mutationPayloadSchemaRelativePath, semanticExactOwnedFileCatalog } from "../../🔍️discovery/🟦️.ts";
-import { mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems } from "../../🔍️discovery/🟦️.ts";
-import type { SemanticDescendantDirectoryNode, SemanticDescendantKindFileNode, SemanticDescendantNode, SemanticExactDescendantContract } from "../../🔍️discovery/🟦️.ts";
+import { jsonDocumentDuplicateKeys } from "../../🧬️schema/🔣️json-document/🟦️.ts";
+import { mutationPayloadSchemaProblems, mutationPayloadSchemaDocumentProblems } from "../../🔍️discovery/📄️implementation-findings/🟦️.ts";
+import { semanticExactOwnedFileCatalog } from "../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
+import type { SemanticDescendantDirectoryNode, SemanticDescendantKindFileNode, SemanticDescendantNode, SemanticExactDescendantContract } from "../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
 import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 const root = import.meta.dir;
 
@@ -100,9 +108,9 @@ test("mutation vector discovery audits exact grouped owners and declared scenari
 test("normalization reads explicit catalogs and canonicalizes both mutation pair roots", () => {
   const contract = fixture.mutationCatalogSourceOwnership, sourceRoot = `${contract.source}/🧬️schema/🧬️mutations`;
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [sourceRoot]: contract.domains }, mutationCatalogSourceOwners: { [contract.catalog]: contract.source } };
-  const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
+  const source = normalizationEngineDeclarations(join(root, "../../🧹️normalization"));
   const syntax = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true);
-  const names = ["projectionCatalogVectors", "projectionCatalogEntryForSubset", "projectionCatalogsForMutationSource", "canonicalProjectedMutationOwner", "normalizeMutationCasePairs", "entrySubtree", "entrySubtreeIndexes"];
+  const names = ["requireTaxonomyValue", "projectionCatalogVectors", "projectionCatalogEntryForSubset", "projectionCatalogsForMutationSource", "canonicalProjectedMutationOwner", "normalizeMutationCasePairs", "entrySubtree", "entrySubtreeIndexes"];
   const definitions = names.map((name) => syntax.statements.find((node) => ts.isFunctionDeclaration(node) ? node.name?.text === name : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => declaration.name.getText(syntax) === name)));
   expect(definitions.every(Boolean)).toBe(true);
   const entries = new Map<string, any>(), documents = new Map<string, string>();
@@ -319,7 +327,7 @@ test("TSV mutation payload schemas resolve with camel-case language-neutral cont
   }
   const oracle = JSON.parse(readFileSync(join(dirname(dirname(mutations)), "🔮️oracles/🔣️.json"), "utf8"));
   const declared = oracle.mutationManifests.flatMap((manifest: any) => manifest.mutations).filter((mutation: any) => cases.some((row) => row.directory.endsWith(mutation.id)));
-  expect(declared.map((mutation: any) => mutation.id).sort()).toEqual(["insert-row", "remove-row", "set-cell", "set-line-ending", "set-snapshot", "set-trailing-newline"]);
+  expect(declared.map((mutation: any) => mutation.id).sort()).toEqual(["insert-row", "remove-row", "set-cell", "set-line-ending", "set-trailing-newline"]);
   expect(declared.every((mutation: any) => mutation.payloadSchema === payloadRelative)).toBe(true);
 });
 
@@ -338,7 +346,7 @@ test("payload schema authority rejects duplicate decoded JSON members", () => {
 
 test("normalization validates descriptor authority for flat and grouped owners without schema moves", () => {
   const taxonomy = loadCatalogTaxonomy(), contract = fixture.mutationPayloadOwnership;
-  const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
+  const source = normalizationEngineDeclarations(join(root, "../../🧹️normalization"));
   const definition = source.match(/^function validateMutationPayloadSchemas\([\s\S]*?^\}/mu)?.[0];
   expect(definition).toBeDefined();
   const mutationRoot = "🗿️fixture/🧬️schema/🧬️mutations";
@@ -370,7 +378,7 @@ test("normalization validates descriptor authority for flat and grouped owners w
 
 test("normalization requires one exact descriptor authority per admitted mutation owner", () => {
   const taxonomy = loadCatalogTaxonomy(), contract = fixture.mutationPayloadOwnership;
-  const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
+  const source = normalizationEngineDeclarations(join(root, "../../🧹️normalization"));
   const definition = source.match(/^function validateMutationPayloadSchemas\([\s\S]*?^\}/mu)![0];
   const mutationRoot = "🗿️fixture/🧬️schema/🧬️mutations", payloadRelative = mutationPayloadSchemaRelativePath(taxonomy);
   for (const owner of [`${mutationRoot}/🌱️create-access-rule`, `${mutationRoot}/🔑️access-rule/🌱️create`]) for (const row of contract.descriptors) {
@@ -443,7 +451,7 @@ test("domain-owned mutations keep explicit identities with short unique operatio
   const contract = fixture.mutationDomainContract;
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [contract.root]: contract.domains } };
   
-  expect(contract.domains["schemaVersion"]).toEqual(1);expect(contract.domains["gltfFixtureCoordinates"]["pathShapes"]).toEqual(["*/🧫️fixtures/*/*.gltf","*/🧫️fixtures/*/*/*.gltf"]);expect(contract.domains["assetDocumentation"]["generatorId"]).toEqual("assets-build");expect(contract.domains["assetDocumentation"]["outputPath"]).toEqual("🧰️framework/🔨️modules/🖼️assets/README.md");
+  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["gltfFixtureCoordinates"]["pathShapes"]).toEqual(["*/🧪️tests/🧫️fixtures/*/*.gltf","*/🧪️tests/🧫️fixtures/*/*/*.gltf"]);expect(fixture["assetDocumentation"]["generatorId"]).toEqual("assets-build");expect(fixture["assetDocumentation"]["outputPath"]).toEqual("🧰️framework/🔨️modules/🖼️assets/README.md");
   expect(mutationDomainOwnersProblems(taxonomy.mutationDomainOwners, fixture.genericEmojiIdentities)).toEqual([]);
   const explicit = Object.entries(contract.domains).flatMap(([domain, operations]) => Object.entries(operations as Record<string, string>).map(([operation, identity]) => ({ path: `${domain}/${operation}`, identity })));
   for (const row of contract.cases) {
@@ -477,9 +485,9 @@ test("domain-owned mutations keep explicit identities with short unique operatio
 });
 
 test("mutation projection catalog lookup uses the one canonical oracle collection", () => {
-  const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
+  const source = normalizationEngineDeclarations(join(root, "../../🧹️normalization"));
   const pick = (name: string): string | undefined => source.match(new RegExp(`^function ${name}(?:<[^>]*>)?\\([\\s\\S]*?^\\}`, "mu"))?.[0];
-  const parts = [pick("projectionCatalogEntryForSubset"), pick("entrySubtree"), source.match(/^const entrySubtreeIndexes = .*;$/mu)?.[0]];
+  const parts = [source.match(/^function requireTaxonomyValue.*$/mu)?.[0], pick("projectionCatalogEntryForSubset"), pick("entrySubtree"), source.match(/^const entrySubtreeIndexes = .*;$/mu)?.[0]];
   const definition = parts.every(Boolean) ? parts.join("\n") : undefined;
   expect(definition).toBeDefined();
   for (const compile of [
@@ -552,8 +560,8 @@ test("both mutation inventories enumerate only registered two-tier operation own
 test("normalization discovers exact domain mutation scenarios without flattening their owners", () => {
   const artifactRoot = "🗿️fixture", subsetRoot = `${artifactRoot}/🏅️standards/🔖️1/🪆️subsets/✳️any`, mutationRoot = `${subsetRoot}/🧬️schema/🧬️mutations`;
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [mutationRoot]: fixture.mutationDomainContract.domains } };
-  const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
-  const definitions = ["mutationDomainOwnerLocation", "projectionDirectorySlug", "projectionSourceAt", "canonicalProjectedMemberName", "canonicalProjectedMutationOwner", "memberNamesByFold", "memberNameFolds"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}|^const ${name} = .*;$`, "m"))![0]).join("\n");
+  const source = normalizationEngineDeclarations(join(root, "../../🧹️normalization"));
+  const definitions = ["mutationDomainOwnerLocation", "projectionDirectorySlug", "projectionSourceAt", "canonicalProjectedMemberName", "canonicalProjectedMutationOwner", "memberNamesByFold", "memberNameFolds"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}|^const ${name} = .*;$`, "m"))![0]).concat(source.match(/^function requireTaxonomyValue.*$/mu)![0]).join("\n");
   const support = { basename, dirname, subsetIdForDirectoryName, mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativePath, pathEmojiStatuteFindings, splitLeadingEmoji: leadingEmojiIdentity, emojiFold: (value: string) => value.replaceAll("\uFE0F", "") };
   const literalKinds: Record<string, string> = { "🏅️standards": "standards", "🔖️1": "standard", "🪆️subsets": "subsets", "✳️any": "subset", "🧬️schema": "schema", "🧬️mutations": "schema", "🧪️tests": "tests" };
   for (const compile of [
@@ -610,8 +618,9 @@ test("Storybook discovers only the canonical story-kind leaf", () => {
 
 test("graph manifest discovery uses its semantic filename without a package build watcher", () => {
   const source = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📥️admission/🟦️.ts"), "utf8");
-  const cargo = readFileSync(resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml"), "utf8");
-  expect(cargo).toMatch(/^build = false$/mu);
+  const packageRoot = resolve(root, "../../../../../../..", "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust");
+  const cargo = readFileSync(join(packageRoot, "Cargo.toml"), "utf8");
+  expect(/^build = false$/mu.test(cargo) || (!/^build\s*=/mu.test(cargo) && !existsSync(join(packageRoot, "build.rs")))).toBe(true);
   const syntax = ts.createSourceFile("graph-admission.ts", source, ts.ScriptTarget.Latest, true);
   let expression: string | undefined;
   function visit(node: ts.Node): void {
@@ -630,12 +639,13 @@ test("graph manifest discovery uses its semantic filename without a package buil
 
 test("normalization preserves handpicked non-implementation identities and rejects stacked names through both compilers", () => {
   const taxonomy = loadCatalogTaxonomy();
-  const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
+  const source = normalizationEngineDeclarations(join(root, "../../🧹️normalization"));
   const names = ["canonicalFile", "splitLeadingEmoji", "splitLeadingEmojiIdentity", "isEmojiGrapheme", "emojiFold"];
+  const owners = `${source}\n${readFileSync(join(root, "../../🧹️normalization/🛣️path/🟦️.ts"), "utf8")}`;
   const definitions = names.map((name) => {
-    const matches = [...source.matchAll(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, "gm"))];
+    const matches = [...owners.matchAll(new RegExp(`^(?:export )?function ${name}\\([\\s\\S]*?^}`, "gm"))];
     expect(matches, name).toHaveLength(1);
-    return matches[0]![0];
+    return matches[0]![0].replace(/^export /u, "");
   }).join("\n");
   const support = {
     basename, dirname,
@@ -723,7 +733,7 @@ test("selector-free joined identities are the only live spellings for the repair
 
 test("path emoji statutes share a language-neutral contract", () => {
   
-  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["gltfFixtureCoordinates"]["pathShapes"]).toEqual(["*/🧫️fixtures/*/*.gltf","*/🧫️fixtures/*/*/*.gltf"]);expect(fixture["assetDocumentation"]["generatorId"]).toEqual("assets-build");expect(fixture["assetDocumentation"]["outputPath"]).toEqual("🧰️framework/🔨️modules/🖼️assets/README.md");
+  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["gltfFixtureCoordinates"]["pathShapes"]).toEqual(["*/🧪️tests/🧫️fixtures/*/*.gltf","*/🧪️tests/🧫️fixtures/*/*/*.gltf"]);expect(fixture["assetDocumentation"]["generatorId"]).toEqual("assets-build");expect(fixture["assetDocumentation"]["outputPath"]).toEqual("🧰️framework/🔨️modules/🖼️assets/README.md");
   for (const scenario of fixture.cases) {
     expect(pathEmojiStatuteFindings(scenario.entries, fixture.genericEmojiIdentities)).toEqual(scenario.expected);
   }

@@ -95,7 +95,7 @@ fn fnv(bytes: &[u8], seed: u64) -> u64 {
     bytes.iter().fold(seed, |hash, byte| (hash ^ u64::from(*byte)).wrapping_mul(0x0000_0100_0000_01b3))
 }
 
-fn is_uuid(text: &str) -> bool {
+pub fn is_uuid(text: &str) -> bool {
     let parts: Vec<&str> = text.split('-').collect();
     parts.len() == 5 && parts.iter().zip([8, 4, 4, 4, 12]).all(|(part, width)| part.len() == width && part.bytes().all(|byte| byte.is_ascii_hexdigit()))
 }
@@ -325,7 +325,7 @@ fn vector(node: Option<&XmlNode>) -> Option<[f64; 3]> {
     Some([field(node, "X").parse().ok()?, field(node, "Y").parse().ok()?, field(node, "Z").parse().ok()?])
 }
 
-fn parse(bytes: &[u8]) -> Result<XmlNode, String> {
+pub fn parse(bytes: &[u8]) -> Result<XmlNode, String> {
     let text = std::str::from_utf8(bytes).map_err(|error| format!("a BCF part is not UTF-8: {error}"))?;
     xml_document_from_text(text.trim_start_matches('\u{feff}'))?.root.ok_or_else(|| "a BCF part has no root element".to_string())
 }
@@ -395,7 +395,7 @@ pub struct ImportedIssues {
     pub notes: Vec<String>,
 }
 
-fn status_of(text: &str) -> IssueStatus {
+pub fn status_of(text: &str) -> IssueStatus {
     match text.replace([' ', '-', '_'], "").to_ascii_lowercase().as_str() {
         "inprogress" | "active" | "assigned" => IssueStatus::InProgress,
         "resolved" | "fixed" => IssueStatus::Resolved,
@@ -404,7 +404,7 @@ fn status_of(text: &str) -> IssueStatus {
     }
 }
 
-fn priority_of(text: &str) -> IssuePriority {
+pub fn priority_of(text: &str) -> IssuePriority {
     match text.to_ascii_lowercase().as_str() {
         "low" | "minor" => IssuePriority::Low,
         "high" | "major" => IssuePriority::High,
@@ -590,6 +590,4 @@ impl Deserializer<ModelSnapshot> for BcfIntoModel {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

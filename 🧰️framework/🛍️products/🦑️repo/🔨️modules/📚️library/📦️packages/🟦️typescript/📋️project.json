@@ -9,7 +9,8 @@
       "{workspaceRoot}/package.json",
       "{workspaceRoot}/**/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/**/*.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts"
     ],
     "workspacePublicationSources": [
       "workspaceMembershipSources",
@@ -47,13 +48,14 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️wasm-package-wrappers/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️wasm-package-wrappers/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"
     ],
     "cargoTransactionCommandSources": [
       "sharedGlobals",
       "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
-      "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+      "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🐍️python/📜️script.ts",
@@ -73,6 +75,7 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/⚡️cache-contracts/🧾️command-inputs/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️publication/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/command-boundaries/🛂️schema/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧫️fixtures/command-boundaries/🧫️cases.json",
@@ -83,19 +86,23 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🚀️apply/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️execution/🐹️go/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️canonical-go-discovery/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/*/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️cargo-transaction-command-source/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🐹️canonical-go-discovery/🔣️.json",
@@ -103,20 +110,21 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🧱️cargo-transaction-command-source/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🐹️canonical-go-discovery/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️cargo-transaction-command-source/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🧱️cargo-transaction-command-source/🔣️.json"
     ],
     "libraryTransactionCommandSources": [
       "sharedGlobals",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🏃️shard-execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📁️run-allocation/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔄️transactions/🧪️verification/🧾️provenance/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/*/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/📒️transaction-ledger-boundaries/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🪢️transaction-harness-retention/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts"
@@ -127,7 +135,8 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/💻️client/⌨️cli/🧫️fixtures/🚦️test-dispatch/🔣️.json",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/{🪁️typecheck,🕸️dependency-lint,🗂️schema-read-inventory,🖼️repository-ui,🧱️fixture-ownership,🗺️general-execution-ownership}/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️execution/🐹️go/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🐹️canonical-go-discovery/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚦️test-dispatch/🟦️.ts",
@@ -476,6 +485,7 @@
         "{workspaceRoot}/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/*/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/**/*.ts"
       ],
       "options": {
@@ -569,7 +579,7 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/**/*.ts",
@@ -592,7 +602,7 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/{🗺️surface,🗿️artifact,📖️source-access}/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/{🔍️field-discovery,🗺️surface}/**/*.ts",
@@ -614,7 +624,7 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/{📖️source-access,🚶️file-walk,📍️source-coordinate}/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/**/*.ts",
@@ -679,7 +689,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/**/*.ts",
         "{workspaceRoot}/✏️s/🔌️plugins/**/📦️packages/🦀️rust/📜️script.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
-        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📜️script.ts"
       ],
       "options": {
@@ -704,7 +714,7 @@
         "{workspaceRoot}/✏️s/🔌️plugins/{➗️mathematical,🌍️gis,🌿️vcs}/📦️packages/*/{📜️script.ts,📋️project.json}",
         "{workspaceRoot}/✏️s/🔌️plugins/🔋️energy/🔮️oracles/📦️packages/🐍️python/{📜️script.ts,📋️project.json}",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
-        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts"
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts"
       ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
@@ -722,9 +732,9 @@
         "{workspaceRoot}/**/📜️script.ts",
         "{workspaceRoot}/**/📋️project.json",
         "{workspaceRoot}/**/🧪️tests/🎚️config/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🎚️vitest-configuration-ownership/🔣️.json",
@@ -750,19 +760,19 @@
         "{workspaceRoot}/♻️mit-bestand/🧺️demonstrator/{🏗️builder/🌐️vite/🟦️.ts,🔨️modules/{📦️site,🧩️runtime,🧪️e2e}/📜️script.ts,🔨️modules/🧪️e2e/🎚️config/🟦️.ts,📋️project.json}",
         "{workspaceRoot}/🌎️hub/🔨️modules/🛡️admin/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
-        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/{🏗️builder/🌐️vite/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts},🧫️fixtures/{⚙️config-graph.json,🔌️staging-root.json},🧪️tests/🧪️ticket-owned-browser-host-staging/🚚️vendor-transport/🟦️.ts}",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🌐️serve/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/{🌐️server/{🎚️config/🟦️.ts,📜️script.ts},📦️packages/🟦️typescript/📋️project.json}",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/{💨️tailwind/🟦️.ts,🌓️theme/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,package.json}}",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/{💨️tailwind/🟦️.ts,🌓️theme/**/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,package.json}}",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/{🧹️lint/🟦️.ts,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts,package.json}}",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.mts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/{📐️source-policy/🟨️.mjs,🕸️dependency-boundaries/🟨️.cjs}",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🧩️vscode/{🧪️tests/🎚️config/🟨️.mjs,📦️packages/🟦️typescript/{📋️project.json,📜️script.ts}}",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🎚️tool-configuration-ownership/🔣️.json",
@@ -1348,7 +1358,7 @@
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧬️schema/🛂️validation/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/📇️canonical-bootstrap-folder-mirror/🟦️.ts",
         "{workspaceRoot}/🌎️hub/📦️packages/🦀️rust/📜️script.ts",
-        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
+        "{workspaceRoot}/🌎️hub/{🧪️testing/{📜️script-sources,📖️source-readers},🎛️commands/{🚦️gate-commands,🏷️trusted-catalog,🏗️build-and-dev},🚀️local-relay/🛰️servers,🚀️local-bootstrap/🧰️mcp-process-support,🧪️tests/{🪪️check-in-process,🔐️secure-local-smoke,🌐️relay-checks,📄️browser-document-open,🛡️admin-relay-checks,🔑️directory-authority-checks,🗺️open-plan-checks,📇️native-catalog-checks,🔗️execution-target-lease-checks,👤️browser-actor-checks,💡️inference-fixtures,🌍️gis-map-fixtures,🏛️trusted-catalog-fixtures,🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures,🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures,🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures,📮️trusted-publication-fixtures,🎮️gis-map-process-support,🕹️gis-map-process,🎁️trusted-stdio-gis-bundle-check,📣️directory-live-support,📰️event-page-checks,🏠️home-browser-checks,🧾️command-receipt-checks,🎫️invite-redemption-checks,🛂️space-administration-checks,🧬️space-artifact-creation-checks,🧭️space-journey-checks},🏗️bootstrap/🧾️provenance/{🧭️bootstrap-selection,🌍️gis-browser-proof,🧮️bootstrap-claims,🗃️bootstrap-bundle,🚚️bootstrap-publication/🧱️materialized-bundle,🚚️bootstrap-publication/🗺️gis-proofs-and-staging,🚚️bootstrap-publication/🔄️rotation-and-current-pointer,🚚️bootstrap-publication/📮️receipts-and-publication-child,🚚️bootstrap-publication}}/🟦️.ts",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json",
         "{workspaceRoot}/✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎮️session/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/📜️script.ts",
@@ -1367,7 +1377,7 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust/📋️project.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏪️store/📋️project.json",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/📋️project.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts"
       ],
       "options": {
@@ -1449,7 +1459,7 @@
         "{workspaceRoot}/🧰️framework/**/Cargo.toml",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*"
@@ -1546,7 +1556,7 @@
         "{workspaceRoot}/🎓️teaching/**/Cargo.toml",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/**/*",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
@@ -1791,7 +1801,7 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts"
       ]
@@ -1808,7 +1818,7 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts"
       ]
@@ -1909,7 +1919,7 @@
       "inputs": [
         "default",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts"
       ],
       "options": {
@@ -1952,7 +1962,7 @@
       "inputs": [
         "default",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🧪️tests,🧫️fixtures,🧬️schema}/🧱️rust-source-direction/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts"
       ],
@@ -2023,7 +2033,7 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/**/*",
@@ -2044,7 +2054,7 @@
       "inputs": [
         "sharedGlobals",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🔗️binding/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧭️direction/🦀️source/📍️ownership/**/*",

@@ -2,7 +2,7 @@
 //! (the end offset is assigned: none makes the beam level again). The axis is the business of `set-beam-axis`; no elevation is written, it is inferred.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::offsets_flaw;
-use super::SetBeam;
+use crate::standards::v1::subsets::any::schema::mutations::set_beam::SetBeam;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -1,6 +1,6 @@
 //! 🧮️ The methods of the value types of the `anchors` kit; they live with the value types so the entity types and the model root stay above them.
 
-use super::values::{AnnotationAnchor, Point2};
+use crate::standards::v1::subsets::any::schema::snapshot::values::{AnnotationAnchor, Point2};
 
 impl AnnotationAnchor {
     /// 🔗️ The id of the element the anchor follows, `None` for a free point.

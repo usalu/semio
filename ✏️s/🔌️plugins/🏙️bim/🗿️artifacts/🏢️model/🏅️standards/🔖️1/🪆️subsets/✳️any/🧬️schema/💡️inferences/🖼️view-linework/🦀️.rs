@@ -12,24 +12,20 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Orthographic_projection>, <https://en.wikipedia.org/wiki/Hidden-line_removal>.
 
-use super::super::element_solids::{dep_object, dep_value, ElementSolid};
-use super::super::plan_linework::{self, Inputs as PlanInputs, PlanKind, PlanLinework, PlanStyle};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid};
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{self, Inputs as PlanInputs, PlanKind, PlanLinework, PlanStyle};
 use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, View, ViewKind};
 use semio_framework_2d::booleans::BooleanOperation;
 use semio_framework_2d::regions::{region_boolean, Region};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
 
-#[path = "✂️clip/🦀️.rs"]
-pub mod clip;
-#[path = "🪓️cut/🦀️.rs"]
-pub mod cut;
+pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::clip;
+pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::view_linework::cut;
 #[path = "🔎️filters/🦀️.rs"]
 pub mod filters;
-#[path = "📐️frame/🦀️.rs"]
-pub mod frame;
-#[path = "👁️hidden-lines/🦀️.rs"]
-pub mod hidden_lines;
+pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::view_linework::frame;
+pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines;
 #[path = "🗺️plans/🦀️.rs"]
 pub mod plans;
 #[path = "🏛️vertical/🦀️.rs"]
@@ -122,6 +118,4 @@ impl ViewLinework {
 pub const VERTICAL_METRICS: &[&str] = &["Silhouette.union_area", "SectionCut.area", "Datum.length"];
 //#endregion 🔖️Metrics
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

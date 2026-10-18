@@ -1,6 +1,6 @@
 //! 💭️ `delete-issue-comment` payload. Removes a comment of an issue, together with its properties and classifications.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -10,13 +10,16 @@ pub struct DeleteIssueComment {
     pub id: String,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for DeleteIssueComment {
+impl<Op> MutationKind<ModelSnapshot, Op> for DeleteIssueComment
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteIssueComment> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "issue-comment", kind: "delete-issue-comment", record: "DeleteIssueComment" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::delete_issue_comment::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_issue_comment::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete comment \"{}\"", self.id), &format!("Kommentar \"{}\" löschen", self.id))

@@ -1,9 +1,10 @@
-use super::{ASSET_DIR, PRIMARY_TEXT};
+use crate::examples::office::{ASSET_DIR, PRIMARY_TEXT};
 use crate::examples::checks::Asset;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind};
-const SNAPSHOT_JSON: &str = include_str!("../../../../🖼️assets/🏢️office/📸️snapshot.json");
+use semio_framework_test_fixtures::fixture_text;
+static SNAPSHOT_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🪆️subsets/✳️any/🖼️assets/🏢️office/📸️snapshot.json"));
 
-const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: SNAPSHOT_JSON };
+const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: (*SNAPSHOT_JSON) };
 
 fn walls_on(model: &ModelSnapshot, storey: &str) -> usize {
     model.walls.values().filter(|wall| wall.storey == storey).count()

@@ -1,13 +1,13 @@
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::footer::paint_footer;
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::layout::{solve_window_layout, weight_of, WindowLayout, WindowStackCorner, WINDOW_GAP};
-use crate::tui::navbar::paint_navbar;
-use crate::tui::scene::{AxisState, Node, NodeContent, NodeId, Scene};
-use crate::tui::text::{display_width, elide_end};
-use crate::tui::theme::{GlyphSet, Role, Status, Surface, Theme};
-use crate::tui::widget::WidgetSignal;
-use crate::tui::window::paint_window;
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use crate::footer::paint_footer;
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use crate::layout::{solve_window_layout, weight_of, WindowLayout, WindowStackCorner, WINDOW_GAP};
+use crate::navbar::paint_navbar;
+use crate::scene::{AxisState, Node, NodeContent, NodeId, Scene};
+use semio_framework_ui_tui_core::text::{display_width, elide_end};
+use semio_framework_ui_tui_core::theme::{GlyphSet, Role, Status, Surface, Theme};
+use semio_framework_ui_tui_core::signal::WidgetSignal;
+use crate::window::paint_window;
 
 #[derive(Clone)]
 pub struct NavItem {
@@ -296,7 +296,7 @@ pub(crate) struct WindowTab {
 
 /// 🪪 What a chip stands for.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum TabKind {
+pub enum TabKind {
     Tab,
     OverflowPrev(usize),
     OverflowNext(usize),
@@ -305,15 +305,15 @@ pub(crate) enum TabKind {
 
 /// 🔖 One corner chip with absolute glyph columns for hit-testing.
 pub(crate) struct WindowCornerTab {
-    pub(crate) x: u16,
-    pub(crate) interior: String,
-    pub(crate) interior_width: u16,
-    pub(crate) index: usize,
-    pub(crate) kind: TabKind,
+    pub x: u16,
+    pub interior: String,
+    pub interior_width: u16,
+    pub index: usize,
+    pub kind: TabKind,
     pub(crate) status: Option<Status>,
-    pub(crate) maximize_x: Option<u16>,
-    pub(crate) new_x: Option<u16>,
-    pub(crate) close_x: Option<u16>,
+    pub maximize_x: Option<u16>,
+    pub new_x: Option<u16>,
+    pub close_x: Option<u16>,
 }
 
 impl WindowCornerTab {
@@ -323,25 +323,25 @@ impl WindowCornerTab {
 }
 
 /// 🗂️ Tabs docked into one stack corner.
-pub(crate) struct WindowCornerChipGroup {
-    pub(crate) corner: WindowStackCorner,
-    pub(crate) tabs: Vec<WindowCornerTab>,
+pub struct WindowCornerChipGroup {
+    pub corner: WindowStackCorner,
+    pub tabs: Vec<WindowCornerTab>,
 }
 
 /// 🧱️ How much chrome a window can afford.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum ChromeMode {
+pub enum ChromeMode {
     Flat,
     Full,
     Compact,
 }
 
 /// 🔗 `pub(crate)`: shared with `crate::tui::window`'s `paint_window`.
-pub(crate) struct WindowChipLayout {
-    pub(crate) mode: ChromeMode,
-    pub(crate) groups: Vec<WindowCornerChipGroup>,
-    pub(crate) top_body_y: u16,
-    pub(crate) bottom_body_y: Option<u16>,
+pub struct WindowChipLayout {
+    pub mode: ChromeMode,
+    pub groups: Vec<WindowCornerChipGroup>,
+    pub top_body_y: u16,
+    pub bottom_body_y: Option<u16>,
 }
 
 impl WindowChipLayout {
@@ -519,7 +519,7 @@ fn controls_chip(w: &WindowState, x: u16) -> Option<WindowCornerTab> {
 /// 🧷 Shared by paint and click hit-testing so the two can never drift apart.
 /// Returns up to four corner chip groups; each tab carries its close glyph column, the controls chip the others.
 /// `pub(crate)`: called from `crate::tui::window`'s `paint_window`.
-pub(crate) fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
+pub fn window_chip_layout(w: &WindowState, rect: Rect) -> WindowChipLayout {
     if rect.width < 4 || rect.height < 3 {
         return WindowChipLayout::flat(rect);
     }
@@ -627,7 +627,7 @@ fn compact_layout(w: &WindowState, rect: Rect, effective: &[(usize, String, Wind
 }
 
 /// 🚪 Content inset that keeps children inside the closed outline, under the hairline a chip bends into.
-pub(crate) fn window_content_padding(w: &WindowState, rect: Rect) -> [u16; 4] {
+pub fn window_content_padding(w: &WindowState, rect: Rect) -> [u16; 4] {
     let layout = window_chip_layout(w, rect);
     if layout.mode != ChromeMode::Full {
         return [1, 1, 1, 1];
@@ -655,7 +655,7 @@ pub struct Shell {
 
 /// 🏛️ Builds navbar(top) + canvas(fill) + footer(bottom), then one Window per tiled slot.
 pub fn shell(scene: &mut Scene, navbar: NavbarState, footer: FooterState, layout: &WindowLayout) -> Shell {
-    use crate::tui::layout::{Constraint, Dimension, Direction};
+    use crate::layout::{Constraint, Dimension, Direction};
     let root = scene.root();
     let navbar_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Navbar(navbar))));
     let canvas_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Canvas)));
@@ -674,15 +674,15 @@ pub fn shell(scene: &mut Scene, navbar: NavbarState, footer: FooterState, layout
     Shell { navbar: navbar_id, canvas: canvas_id, footer: footer_id, windows, mount_root: None }
 }
 
-fn window_constraint() -> crate::tui::layout::Constraint {
-    use crate::tui::layout::{Constraint, Dimension, Direction};
+fn window_constraint() -> crate::layout::Constraint {
+    use crate::layout::{Constraint, Dimension, Direction};
     Constraint { width: Dimension::Weight(1), height: Dimension::Weight(1), direction: Direction::Column, ..Default::default() }
 }
 
 /// 🪆 Mirrors `layout` into nested row/column/stack boxes under `canvas`, reparenting existing window nodes.
 /// Axes become splitter-bearing `Axis` nodes one gutter cell apart; a zoomed layout hides every other window.
 pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLayout, windows: &[(String, NodeId)], mount_root: &mut Option<NodeId>) {
-    use crate::tui::layout::{Constraint, Dimension, Direction, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
+    use crate::layout::{Constraint, Dimension, Direction, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode};
 
     if let Some(old) = *mount_root {
         for (_, window) in windows {
@@ -706,7 +706,7 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
         }
     }
 
-    fn tab_label(child: &crate::tui::layout::WindowLayoutWindowNode) -> String {
+    fn tab_label(child: &crate::layout::WindowLayoutWindowNode) -> String {
         child.title.clone().unwrap_or_else(|| child.window_kind_id.clone())
     }
 
@@ -789,7 +789,7 @@ pub fn mount_window_layout(scene: &mut Scene, canvas: NodeId, layout: &WindowLay
                 scene.reparent(*window, mount);
                 scene.node_mut(*window).set_visible(id == zid);
             }
-            let stack = crate::tui::layout::stack_hosting(layout, zid);
+            let stack = crate::layout::stack_hosting(layout, zid);
             match stack {
                 Some(stack) => style_window(scene, windows, zoomed, &stack, &StackSlot { own: zid, active: zid, peers, zoomed: true }),
                 None => {

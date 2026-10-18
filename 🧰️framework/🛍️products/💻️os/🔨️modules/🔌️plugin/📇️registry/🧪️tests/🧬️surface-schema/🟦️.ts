@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import Ajv from "ajv";
 import { buildSchema, parse } from "graphql";
 import { describe, expect, it } from "vitest";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { policyExtractGraphqlSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔗️graphql/🟦️.ts";
 import { policyExtractJsonSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🔣️json-schema/🟦️.ts";
 import { policyExtractProtobufSchemaFields } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔍️field-discovery/🛰️protobuf/🟦️.ts";

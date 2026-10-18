@@ -57,7 +57,7 @@ use crate::schema::snapshot::node_at;
 use crate::SvgSnapshot;
 use crate::schema::snapshot::{SvgDocument, SvgNode};
 
-pub(crate) fn encode_snapshot_binary(snapshot: &SvgSnapshot, output: &mut Vec<u8>) {
+pub fn encode_snapshot_binary(snapshot: &SvgSnapshot, output: &mut Vec<u8>) {
     use crate::standards::v1_1::subsets::base::io::binary::diff::enc_svg_node_bin;
     use crate::standards::v1_1::subsets::base::io::binary::diff::{write_str_lp};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{enc_declaration_bin};
@@ -80,7 +80,7 @@ pub(crate) fn encode_snapshot_binary(snapshot: &SvgSnapshot, output: &mut Vec<u8
     enc_prolog_bin(&snapshot.doc.epilog, output);
 }
 
-pub(crate) fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
+pub fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Result<SvgSnapshot, String> {
     use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_svg_node_bin};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{read_str_lp};
     use crate::standards::v1_1::subsets::base::io::binary::diff::{dec_declaration_bin};

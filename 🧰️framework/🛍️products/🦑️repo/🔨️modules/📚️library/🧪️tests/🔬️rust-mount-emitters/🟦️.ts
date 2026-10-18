@@ -25,11 +25,14 @@ export function rustMountEmitters(root: string): string[] {
 export const RUST_MOUNT_EMITTERS = [
   "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧬️surface-schema/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🌲️inline-mounts/🟦️.ts",
   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧪️test-closure/🟦️.ts",
   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧫️sandbox/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧬️mutation-families/🧰️support-hoist/🟦️.ts",
   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/📦️crate-tree/🧱️scaffold/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🗂️collection-catalog/🟦️.ts",
   "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️authoring/🧬️mutation-tree/🟦️.ts",
-  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧭️reference-resolution/🟦️.ts",
   "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🖥️host/🏗️materialization/🟦️.ts",
 ];
 

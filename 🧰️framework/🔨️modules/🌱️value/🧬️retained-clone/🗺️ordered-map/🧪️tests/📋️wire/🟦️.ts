@@ -4,7 +4,7 @@ import fixture from "../🧫️fixtures/📋️wire/🔣️.json" with {type:"js
 
 test("cold context dictionaries preserve independent JSON map semantics and original paged authority",()=>{
  for(const row of fixture.cases){const oracle=Object.fromEntries(row.entries);expect(oracle).toEqual(row.expected);const sorted=Object.entries(oracle).sort(([left],[right])=>left<right?-1:left>right?1:0);expect(Object.fromEntries(sorted)).toEqual(JSON.parse(JSON.stringify(row.expected)));}
- const native=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+ const native=readFileSync(new URL("../../🗂️map-core/🦀️.rs",import.meta.url),"utf8");
  expect(native).toContain("FromIterator<(K, V)> for RetainedOrderedMap<K, V>");
  expect(native).toContain("Deserialize<'de> for RetainedOrderedMap<K, V>");
  expect(native).toContain("cold_insert");

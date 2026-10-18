@@ -124,7 +124,7 @@ test("canonical injected catalog policy owns seven current exports",async()=>{
 test("actual injected catalog scope preserves all original export and diagnostic laws",async()=>{
  const {existsSync}=await import("node:fs"),{dirname,join}=await import("node:path");let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=dirname(root);
  expect(schema.$id).toBe("https://json.schemas.assets.semio-tech.com/os/plugin/registry/component.json");expect(schema.title).toBe("InjectedPluginCatalogV1");
- const {inventorySchemaScopes}=await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"),inventory=inventorySchemaScopes(root),scope=inventory.catalog.scopes["os.plugin.registry"],exports=["InjectedPluginCatalogV1","PluginCatalogIdV1","PluginCatalogTextV1","PluginCatalogTextsV1","PluginCatalogTargetV1","PluginCatalogHostV1","PluginCatalogPlaygroundV1"];
+ const {inventorySchemaScopes}=await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts"),inventory=inventorySchemaScopes(root),scope=inventory.catalog.scopes["os.plugin.registry"],exports=["InjectedPluginCatalogV1","PluginCatalogIdV1","PluginCatalogTextV1","PluginCatalogTextsV1","PluginCatalogTargetV1","PluginCatalogHostV1","PluginCatalogPlaygroundV1"];
  expect(Object.keys(scope.exports).sort()).toEqual(exports.sort());expect(inventory.diagnostics.filter((row:any)=>row.path===scope.path||row.path.startsWith(scope.path+"/")&&!row.path.slice(scope.path.length+1).includes("/🧬️schema/"))).toEqual([]);
 }, 300000);
 
@@ -138,7 +138,7 @@ for (const row of publicationCases.cases) test(`explicit session publication ${r
 });
 
  test("owned preview literal argv retains exact bytes through actual spawn", async () => {
-  const { generatorPreviewScriptArguments, generatorPreviewExecution } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
+  const { generatorPreviewScriptArguments } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🛠️generator-commands/🟦️.ts"), { generatorPreviewExecution } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts");
   const source = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧪️tests/🧫️fixtures/🔣️.json"), policy = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🏭️generator/👁️preview/🔤️arguments/🧬️schema/🔣️.json");
   const oracle = new Ajv({ strict: false }).compile(policy.default), { default: parseArgv } = await import("yargs-parser"), { spawnSync } = await import("node:child_process");
   for (const row of source.default.cases) {

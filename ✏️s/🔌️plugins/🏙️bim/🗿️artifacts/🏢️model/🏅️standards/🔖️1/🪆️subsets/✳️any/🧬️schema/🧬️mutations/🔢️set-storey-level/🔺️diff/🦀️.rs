@@ -1,6 +1,6 @@
 //! 🔺️ Diff constructor for `SetStoreyLevel`: a one-field storey patch; the level index stays unique within the building.
 
-use super::SetStoreyLevel;
+use crate::standards::v1::subsets::any::schema::mutations::set_storey_level::SetStoreyLevel;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::StoreyPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -1,4 +1,13 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase, ScheduleCategory, ScheduleColumn, ScheduleOp};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::set_schedule::SetSchedule;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::PRESETS;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Schedule, ScheduleFilter, ScheduleGroup, ScheduleKey, ScheduleSort};
+use crate::editor::bim::modes::edit::windows::schedule::edit::{columns, toggled};
+use crate::editor::bim::modes::edit::windows::schedule::edit::*;
 
 fn walls() -> ModelSnapshot {
     let mut snapshot = ModelSnapshot::default();

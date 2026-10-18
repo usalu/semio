@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `DeleteGridLine`: the grid line leaves in one sparse diff together with its properties and classifications (see the shared cascade).
 //! The outcome carries a cascade note when more than the grid line leaves.
 
-use super::super::cascade;
-use super::DeleteGridLine;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_grid_line::DeleteGridLine;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

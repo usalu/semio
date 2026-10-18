@@ -12,7 +12,7 @@ use crate::viewer::bim::modes::view;
 use crate::viewer::bim::modes::view::windows::{plan, world};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_framework::kernel::UiDirtyScope;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_artifact_reference::Dialect;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{
@@ -26,8 +26,7 @@ use semio_framework_value::{DslValue, FromValue};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use std::collections::{BTreeMap, HashMap};
 
-#[path = "🗣️terminology/🦀️.rs"]
-pub mod terminology;
+pub use semio_s_artifact_bim_model_tests::viewer::bim::terminology;
 
 //#region 🔖️Constants
 pub const SET_CAMERA: &str = "setCamera";
@@ -36,7 +35,7 @@ pub const SET_PROJECTION_PARAMETER: &str = "setProjectionParam";
 pub const SET_STOREY_VISIBLE: &str = "setStoreyVisible";
 pub const SET_PLAN_STOREY: &str = "setPlanStorey";
 /// 🏷️ Every dispatchable verb of this viewer, exactly once. All of them write window configuration and nothing else.
-const BIM_VIEW_TOOL_IDS: &[&str] = &[SET_CAMERA, SET_PROJECTION, SET_PROJECTION_PARAMETER, SET_STOREY_VISIBLE, SET_PLAN_STOREY];
+pub const BIM_VIEW_TOOL_IDS: &[&str] = &[SET_CAMERA, SET_PROJECTION, SET_PROJECTION_PARAMETER, SET_STOREY_VISIBLE, SET_PLAN_STOREY];
 const BIM_VIEW_PAYLOAD_SCHEMA: &str = "bim.model.view-command.v1";
 const BIM_VIEW_RAW_BYTES: usize = 8_192;
 const BIM_VIEW_CONTROLLER: &str = "s.bim.model@1/*#viewer";
@@ -183,7 +182,7 @@ pub fn window_config_mutation(command: &BimViewCommand, view_state: &ViewModel, 
     }
 }
 
-fn view_emit(command: &BimViewCommand, view_state: Option<&ViewModel>, window_config: Option<&WindowConfigSnapshot>) -> Result<Emit<ModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+pub fn view_emit(command: &BimViewCommand, view_state: Option<&ViewModel>, window_config: Option<&WindowConfigSnapshot>) -> Result<Emit<ModelMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     let view_state = view_state.ok_or_else(|| refusal("bim.model.viewer.window-required", "a view change requires a concrete window"))?;
     let mutation = window_config_mutation(command, view_state, window_config)?;
     let quiet = UiDirtyScope::Partial { window_bodies: Vec::new(), panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false };
@@ -196,7 +195,7 @@ fn text_argument(args: Option<&DslValue>, names: &[&str]) -> Option<String> {
 
 /// 🪪️ The bridge from a dispatched action's args to the typed command. The camera pose is validated as one of the two pose shapes and
 /// canonicalised to JSON text; the window kind then decides which shape it must be.
-fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<BimViewCommand, Fault> {
+pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<BimViewCommand, Fault> {
     let required = |names: &[&str]| text_argument(args, names).ok_or_else(|| invalid(&format!("{action} lacks its {} argument", names[0])));
     Ok(match action {
         SET_CAMERA => {
@@ -566,6 +565,5 @@ mod tests;
 //#endregion 🧪️Tests
 
 //#region 🧩️Modules
-#[path = "🎭️modes/🦀️.rs"]
-pub mod modes;
+
 //#endregion 🧩️Modules

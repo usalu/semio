@@ -16,9 +16,6 @@ import fixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixt
 beforeEach(() => { vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} }); });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
 
-it("validates the neutral command panel contract", () => {
-});
-
 for (const locale of fixture.locales as ("en" | "de")[]) {
   const commands: ResolvedCommand[] = fixture.commands.map(row => ({
     address: row.address as ResolvedCommand["address"],

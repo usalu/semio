@@ -54,11 +54,11 @@ export function testRetainedCommandSchemaOwnership(): { readonly fixtures: numbe
   assert.equal(Object.keys(owner.$defs).some((name) => name.startsWith("retainedCommand")), false);
   assert.equal(existsSync(join(root, "🧰️framework/🔨️modules/🔺️mesh/🟦️.ts")), false);
   assert.equal(existsSync(join(root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts")), true);
-  const scene = readFileSync(join(root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts"), "utf8");
-  const manifest = readFileSync(join(root, "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"), "utf8");
+  const scene = readFileSync(join(root, "🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧩️components/🟦️.ts"), "utf8");
+  const manifest = readFileSync(join(root, "🧰️framework/🔨️modules/🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts"), "utf8");
   const barrel = readFileSync(join(root, "🧰️framework/📦️packages/🟦️typescript/🟦️.ts"), "utf8");
-  assert(scene.includes('from "../../🛂️manifest/🟦️.ts"'));
-  assert(manifest.includes('from "../🖱️ui/🎬️scene/🟦️.ts"'));
+  assert(scene.includes('from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts"'));
+  assert(manifest.includes('from "../../🖱️ui/🎬️scene/📋️context-menu/🟦️.ts"'));
   assert(barrel.includes('export * from "../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts"'));
   assert.equal(`${scene}\n${manifest}\n${barrel}`.includes("🔺️mesh/🟦️.ts"), false);
 

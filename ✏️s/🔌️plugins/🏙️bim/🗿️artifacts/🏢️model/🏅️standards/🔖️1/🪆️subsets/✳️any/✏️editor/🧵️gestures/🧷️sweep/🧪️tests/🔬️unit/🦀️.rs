@@ -1,4 +1,21 @@
-use super::*;
+use crate::editor::bim::marks::Style;
+use crate::editor::bim::entities::wall_sweeps::baseboard;
+use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::Profile, snapshot::WallSide};
+use crate::editor::bim::gestures::session::{Step, TYPE_MISSING};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::session::{Pointer, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+#[allow(unused_imports)]
+use crate::editor::bim::marks::{Mark, Preview};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::extents_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall, WallSweep};
+use crate::editor::bim::gestures::sweep::*;
 use crate::editor::bim::marks::Shape;
 use crate::editor::bim::fixture::{room, Rig};
 

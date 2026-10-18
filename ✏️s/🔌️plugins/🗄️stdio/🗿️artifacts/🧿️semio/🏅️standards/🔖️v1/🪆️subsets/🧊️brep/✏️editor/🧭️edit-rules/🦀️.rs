@@ -40,6 +40,6 @@ pub const EDIT_RULES: EditRules = EditRules {
 const RESHAPES: &[(&str, Reshape)] = &[("create-vertex", spread_snake), ("create-edge", spread_snake), ("create-face", spread_snake), ("create-shell", spread_snake), ("create-solid", spread_snake)];
 
 /// 🧩️ Every edit goes through [`EDIT_RULES`]; a `create-*` kind spreads the inserted topology row into its payload.
-pub(crate) fn special(event: &SnapshotEditEvent, snapshot: &SemioBrepSnapshot) -> Result<Option<Vec<SemioBrepMutation>>, Fault> {
+pub fn special(event: &SnapshotEditEvent, snapshot: &SemioBrepSnapshot) -> Result<Option<Vec<SemioBrepMutation>>, Fault> {
     resolve::<SemioBrepSnapshot, SemioBrepMutation>(&EDIT_RULES, RESHAPES, snapshot, event).map(Some)
 }

@@ -1,6 +1,6 @@
 //! 🎏️ `delete-ceiling-type` payload. Removes a ceiling type that no ceiling uses.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -10,13 +10,16 @@ pub struct DeleteCeilingType {
     pub id: String,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for DeleteCeilingType {
+impl<Op> MutationKind<ModelSnapshot, Op> for DeleteCeilingType
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteCeilingType> + From<crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::CreateCeilingType> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "ceiling-type", kind: "delete-ceiling-type", record: "DeleteCeilingType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete ceiling type \"{}\"", self.id), &format!("Unterdeckentyp \"{}\" löschen", self.id))

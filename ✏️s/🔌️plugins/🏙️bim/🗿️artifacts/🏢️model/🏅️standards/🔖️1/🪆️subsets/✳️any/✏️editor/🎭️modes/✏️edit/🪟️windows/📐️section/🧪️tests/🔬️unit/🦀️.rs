@@ -1,5 +1,23 @@
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{canvas_surface, meta_record, text_record};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ViewPlane;
+#[allow(unused_imports)]
+use semio_framework_plugin::DslValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
 use crate::editor::bim::modes::edit::windows::section::config::BimSectionWindowConfig;
-use super::*;
+use crate::editor::bim::modes::edit::windows::section::*;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, View, ViewKind};
 

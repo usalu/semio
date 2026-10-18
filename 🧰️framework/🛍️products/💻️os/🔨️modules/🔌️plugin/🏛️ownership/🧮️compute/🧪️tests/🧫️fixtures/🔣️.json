@@ -1,8 +1,8 @@
 {
   "version": 1,
   "id": "plugin-sdk",
-  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
-  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+  "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/🦀️.rs",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust/Cargo.toml",
   "bindings": [
     "EngineHandles"
   ]

@@ -16,6 +16,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-actor = { workspace = true }
 semio-framework-job = { workspace = true }

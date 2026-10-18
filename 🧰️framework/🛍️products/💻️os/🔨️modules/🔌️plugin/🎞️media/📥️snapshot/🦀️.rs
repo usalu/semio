@@ -1,7 +1,7 @@
 //! 📥️ Original media snapshot and installed retirement supplier remain paired through every denied turn.
 use super::{PluginLifecycleStep,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,ValueError,ManuallyDrop};
 use semio_framework_job::{OriginalCallerSourceLoan,OriginalTurnFailure,StepContext,InteractiveJobCloseStep};
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactorySharedRetirement,ValueRefusalKind};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,ValueRefusalKind,factory::FactorySharedRetirement};
 use std::sync::{Arc,Weak,atomic::{AtomicBool,Ordering}};
 fn refused(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn funds(cx:&StepContext<'_>,demand:RetirementDemand)->bool{let grant=cx.retained_grant();!cx.retirement_should_yield()&&grant.maximum_items>0&&grant.maximum_depth>=demand.depth&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes}
@@ -74,7 +74,7 @@ impl<T:Send+Sync+'static> ArtifactMediaSnapshotSource<T>{
   let demand=self.retirement_demands(cx.retained_grant().maximum_copy_bytes)?;if !funds(cx,demand){return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}let grant=cx.retained_grant();
   let progress=if self.snapshot.is_some(){if self.retention.is_some(){if !self.lease.as_ref().is_some_and(|lease|lease.can_release(self.snapshot.as_ref().unwrap())){return Err(refused("prepared snapshot lost original paired retention").into())}self.snapshot.take();}else{*self.partial=Some(FactorySharedRetirement::new(self.snapshot.take().unwrap(),self.factory.take().ok_or_else(||refused("prepared snapshot lost installed supplier"))?));}RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}}
   else if let Some(lease)=self.lease.as_mut(){if lease.terminal_is_empty(){self.lease.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{lease.close_step(grant)?.progress()}}
-  else if let Some(retention)=self.retention.as_mut(){if retention.terminal_is_empty(){self.retention.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{retention.close_step(cx,grant)?.progress()}}
+  else if let Some(retention)=self.retention.as_mut(){if retention.terminal_is_empty(){self.retention.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{retention.close_step(cx,grant)?.progress().unwrap_or_default()}}
   else if let Some(partial)=self.partial.as_mut(){if partial.terminal_is_empty(){self.partial.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{partial.close_step(grant)?.progress()}}
   else if let Some(flag)=self.flag.as_ref(){if Arc::strong_count(flag)!=1||Arc::weak_count(flag)!=0{return Err(refused("partial snapshot flag acquired an unissued alias").into())}self.flag.take();RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}}
   else if let Some(source)=self.source.as_mut(){if source.terminal_is_empty(){self.source.take();RetainedCloneProgress{copied_items:1,..Default::default()}}else{let parent=cx.original_source_parent()?;return source.close_step(parent,cx).map(|step|match step{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}}

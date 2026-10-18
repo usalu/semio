@@ -280,7 +280,7 @@
       "source": "shell",
       "owns": "pub async fn handle_pointer_button_for",
       "forbids": "flush_deferred_actions",
-      "declares": "self.owe_settle();"
+      "declares": "self.settle.owe_settle();"
     },
     {
       "id": "a-retained-pointer-press-declares-and-returns",
@@ -288,7 +288,7 @@
       "source": "shell",
       "owns": "async fn route_retained_pointer_press",
       "forbids": "flush_deferred_actions",
-      "declares": "self.owe_settle();"
+      "declares": "self.settle.owe_settle();"
     },
     {
       "id": "a-tree-selection-declares-and-returns",
@@ -296,7 +296,7 @@
       "source": "shell",
       "owns": "fn dispatch_tree_selection",
       "forbids": "flush_deferred_actions",
-      "declares": "self.owe_settle();"
+      "declares": "settle.owe_settle();"
     },
     {
       "id": "a-pointer-move-never-converges-anything",

@@ -5,6 +5,7 @@
 use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
+use crate::standards::v1::subsets::any::component::subset;
 
 /// 🎯️ `mimes` is a documented synthesis — no real MIME registration exists anywhere in the
 /// pre-migration `definition()` (its capability rows claim only a codec id `block.2d:block2d` and an

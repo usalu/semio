@@ -2,7 +2,7 @@
 //! Positions and normals are `f32` triples in glTF's Y-up frame; transforms are the node TRS of the spec.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
 
-use super::codec;
+use crate::standards::v1::subsets::any::io::export::gltf::codec;
 use semio_framework_value::DslValue;
 
 const ARRAY_BUFFER: u64 = 34962;
@@ -101,7 +101,7 @@ fn wide<const N: usize>(values: [f32; N]) -> [f64; N] {
     values.map(f64::from)
 }
 
-fn material(material: &GltfMaterial) -> codec::Material {
+pub fn material(material: &GltfMaterial) -> codec::Material {
     codec::Material {
         name: Some(material.name.clone()),
         pbr_metallic_roughness: Some(codec::Pbr { base_color_factor: wide(material.color), metallic_factor: f64::from(material.metallic), roughness_factor: f64::from(material.roughness), ..codec::Pbr::default() }),
@@ -178,6 +178,4 @@ impl GltfModel {
 }
 //#endregion 🔖️Snapshot
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

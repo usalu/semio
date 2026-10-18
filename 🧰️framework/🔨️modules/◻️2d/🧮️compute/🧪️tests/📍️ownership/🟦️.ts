@@ -24,11 +24,13 @@ test("physical neutral owner retains original native assertions with independent
  for(const name of corpus.family)expect(source).toMatch(new RegExp("pub (?:struct|enum|trait) "+name+"\\b"));
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("caller-owned ticket output required");mkdirSync(output,{recursive:true});writeFileSync(join(output,"compute-ownership-node.json"),child.stdout);
 });
-test("independent TOML oracle proves generic compute has no product dependency or facade",()=>{
- const manifest=TOML.parse(read("🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml"));
+test("independent TOML oracle proves generic compute is its own crate root without product dependency or facade",()=>{
+ const manifest=TOML.parse(read("🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust/Cargo.toml"));
  expect(Object.keys(manifest.dependencies??{})).not.toContain("semio-framework-os-kernel");
- expect(manifest.lib).toHaveProperty("name","semio_framework_2d");
- const binding=read("🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/🦀️.rs");
- expect(binding).toContain('pub mod compute;');
+ expect(Object.keys(manifest.dependencies??{})).not.toContain("semio-framework-2d");
+ expect(manifest.lib).toHaveProperty("name","semio_framework_2d_compute");
+ const binding=read(corpus.source);
+ expect(binding).not.toContain('pub mod compute;');
+ for(const name of corpus.family.filter(name=>name!=="Engine"))expect(binding).toMatch(new RegExp("pub (?:struct|enum|trait) "+name+"\\b"));
  expect(binding).not.toMatch(/os_spr|os_engine|KernelEngineHandle/);
 });

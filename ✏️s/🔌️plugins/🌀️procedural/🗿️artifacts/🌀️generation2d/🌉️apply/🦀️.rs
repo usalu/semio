@@ -14,7 +14,7 @@ use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 use crate::*;
 use semio_s_artifact_procedural_2d_mut_widgets::generation2d_targets_invariant;
 
-pub(crate) const GENERATION2D_OWNER_BYTES: usize = 4_096;
+pub const GENERATION2D_OWNER_BYTES: usize = 4_096;
 
 /// 📐️ The ONE structural nesting bound this artifact declares. The retained ingress cursor's
 /// `PackLimits::max_depth`, the retained owner's own frame stacks and the initializer's
@@ -22,12 +22,12 @@ pub(crate) const GENERATION2D_OWNER_BYTES: usize = 4_096;
 /// would happily copy. A `Widget::Neuron`'s `params` is a neural `Dictionary` whose entries are
 /// themselves `Value::Dictionary`, and each such level costs several pack frames — a two-level
 /// dictionary already spends more than a dozen (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub(crate) const GENERATION2D_RETAINED_STACK_CAPACITY: usize = 64;
+pub const GENERATION2D_RETAINED_STACK_CAPACITY: usize = 64;
 
-pub(crate) const GENERATION2D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
+pub const GENERATION2D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 
 #[derive(semio_framework_value::RetireOwned)]
-pub(crate) enum Generation2dReplayDisplaced {
+pub enum Generation2dReplayDisplaced {
     Widget(semio_framework_artifact_flow_flow::Widget),
     Layouts(semio_framework_artifact_flow_flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>),
     Synapse(semio_framework_artifact_flow_flow::SynapseSpec),
@@ -52,7 +52,7 @@ pub(crate) fn generation2d_retire_displaced_cold(value: Generation2dReplayDispla
 
 /// 🔁️ Direct semantic replay table. It consumes the retained mutation and writes only the
 /// addressed field or collection; no VCS diff/apply or whole-snapshot replacement is reachable.
-pub(crate) fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<Option<Generation2dReplayDisplaced>, &'static str> {
+pub fn generation2d_apply_initialization_mutation(snapshot: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<Option<Generation2dReplayDisplaced>, &'static str> {
     let retired = match mutation {
         Generation2dMutation::CreateWidget(payload) => {
             if snapshot.host_snapshot.widgets.iter().any(|entry| semio_s_artifact_procedural_2d_model::widget_id(entry) == semio_s_artifact_procedural_2d_model::widget_id(&payload.widget)) {
@@ -207,7 +207,7 @@ pub(crate) fn generation2d_apply_initialization_mutation(snapshot: &mut Generati
     Ok(retired)
 }
 
-pub(crate) fn generation2d_copy_string(source: &str) -> Result<String, &'static str> {
+pub fn generation2d_copy_string(source: &str) -> Result<String, &'static str> {
     let mut target = String::new();
     target.try_reserve_exact(source.len()).map_err(|_| "generation2d-initializer.string-preflight")?;
     for character in source.chars() {
@@ -348,7 +348,7 @@ pub(crate) fn generation2d_copy_flow_ui(source: &semio_framework_artifact_flow_f
     Ok(semio_framework_artifact_flow_flow::FlowUi { camera: semio_framework_artifact_flow_flow::CameraJson { x: source.camera.x, y: source.camera.y, zoom: source.camera.zoom }, nodes, previews })
 }
 
-pub(crate) fn generation2d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget) -> Result<semio_framework_artifact_flow_flow::Widget, &'static str> {
+pub fn generation2d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget) -> Result<semio_framework_artifact_flow_flow::Widget, &'static str> {
     Ok(match source {
         semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
             let mut inputs = Vec::new();
@@ -393,7 +393,7 @@ pub(crate) fn generation2d_copy_widget(source: &semio_framework_artifact_flow_fl
     })
 }
 
-pub(crate) fn generation2d_copy_synapse(source: &semio_framework_artifact_flow_flow::SynapseSpec) -> Result<semio_framework_artifact_flow_flow::SynapseSpec, &'static str> {
+pub fn generation2d_copy_synapse(source: &semio_framework_artifact_flow_flow::SynapseSpec) -> Result<semio_framework_artifact_flow_flow::SynapseSpec, &'static str> {
     Ok(semio_framework_artifact_flow_flow::SynapseSpec {
         id: generation2d_copy_string(&source.id)?,
         from: generation2d_copy_string(&source.from)?,
@@ -403,7 +403,7 @@ pub(crate) fn generation2d_copy_synapse(source: &semio_framework_artifact_flow_f
     })
 }
 
-pub(crate) fn generation2d_copy_generation(source: &semio_framework_artifact_playbook_playbook::FormGeneration) -> Result<semio_framework_artifact_playbook_playbook::FormGeneration, &'static str> {
+pub fn generation2d_copy_generation(source: &semio_framework_artifact_playbook_playbook::FormGeneration) -> Result<semio_framework_artifact_playbook_playbook::FormGeneration, &'static str> {
     Ok(semio_framework_artifact_playbook_playbook::FormGeneration { id: generation2d_copy_string(&source.id)?, name: generation2d_copy_string(&source.name)?, values: source.values.clone() })
 }
 
@@ -411,7 +411,7 @@ pub(crate) fn generation2d_copy_generation(source: &semio_framework_artifact_pla
 /// `Widget` whose `Dictionary`/`Tree`/`OrderedSet` payloads reject a bare drop
 /// (`🧠️neural/⚙️engine/🦀️.rs`'s `Dictionary::drop`, `🌱️value/🗂️ordered/🦀️.rs`'s roots). Every other
 /// variant is plain owned text/floats and closes on drop.
-pub(crate) fn generation2d_retire_mutation_cold(mutation: Generation2dMutation) {
+pub fn generation2d_retire_mutation_cold(mutation: Generation2dMutation) {
     match mutation {
         Generation2dMutation::CreateWidget(payload) => payload.widget.retire_cold(),
         Generation2dMutation::ReplaceWidget(payload) => payload.widget.retire_cold(),

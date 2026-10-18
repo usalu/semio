@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetStair`: a sparse stair patch naming only the provided fields that differ from the base. The patched
 //! stair must hold every stair invariant again (positive width, riser and tread, sensible flight, a same-building top storey, a sound stringer, nosing, tread thickness and landing depth).
 
-use super::super::placement::{refuse_stair, stair_issue};
-use super::SetStair;
+use crate::standards::v1::subsets::any::schema::mutations::placement::{refuse_stair, stair_issue};
+use crate::standards::v1::subsets::any::schema::mutations::set_stair::SetStair;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch, patches::StairPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

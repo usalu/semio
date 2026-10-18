@@ -16,6 +16,11 @@ extern crate semio_framework_value_derive as value_derive;
 use semio_s_artifact_block_3d_diff::Block3dDiff;
 use semio_s_artifact_block_3d_model::Block3dSnapshot;
 use protocol::Mutation;
+use semio_s_artifact_block_3d_mut_object_kind::{rename_object_kind::RenameObjectKind, change_object_kind_label::ChangeObjectKindLabel, change_object_kind_variant::ChangeObjectKindVariant, change_object_kind_description::ChangeObjectKindDescription, change_object_kind_icon::ChangeObjectKindIcon, change_object_kind_unit::ChangeObjectKindUnit};
+use semio_s_artifact_block_3d_mut_representations::{create_representation::CreateRepresentation, delete_representation::DeleteRepresentation, change_representation_mesh_url::ChangeRepresentationMeshUrl, add_representation_attribute::AddRepresentationAttribute, remove_representation_attribute::RemoveRepresentationAttribute};
+use semio_s_artifact_block_3d_mut_vortex_kinds::{create_vortex_kind::CreateVortexKind, delete_vortex_kind::DeleteVortexKind, rename_vortex_kind::RenameVortexKind, change_vortex_kind_label::ChangeVortexKindLabel, change_vortex_kind_color::ChangeVortexKindColor, change_vortex_kind_default_cable_kind::ChangeVortexKindDefaultCableKind};
+use semio_s_artifact_block_3d_mut_vortices::{create_vortex::CreateVortex, delete_vortex::DeleteVortex, move_vortex::MoveVortex, resize_vortex::ResizeVortex, change_vortex_vortex_kind::ChangeVortexVortexKind, change_vortex_label::ChangeVortexLabel};
+use semio_s_artifact_block_3d_mut_meta::{add_compatibility_rule::AddCompatibilityRule, remove_compatibility_rule::RemoveCompatibilityRule, add_attribute::AddAttribute, remove_attribute::RemoveAttribute, add_author::AddAuthor, remove_author::RemoveAuthor, move_camera3d::MoveCamera3d, scale_camera3d::ScaleCamera3d, change_meta_description::ChangeMetaDescription};
 
 //#region 🔖️Store
 pub type Block3dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Block3dSnapshot, Block3dMutation>;

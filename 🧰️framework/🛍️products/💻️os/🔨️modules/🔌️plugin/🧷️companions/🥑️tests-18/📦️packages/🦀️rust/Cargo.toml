@@ -23,10 +23,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-2d-compute = { path = "../../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-2d = { path = "../../../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

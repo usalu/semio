@@ -1,0 +1,157 @@
+import { ephemeralMap } from "../../../../../../🔨️modules/🫧️transient/🟦️.ts";
+import { execFileSync } from "node:child_process";
+import { extname } from "node:path";
+import type { Taxonomy } from "../📑️taxonomy-document/🟦️.ts";
+import { tomlTableBody } from "../🪧️owner-markers/🟦️.ts";
+
+/** 🌳️ Logical preimage filesystem used equally by catalog generation and transaction revalidation. */
+export interface RegistryCatalogInputView {
+  entries(path: string): readonly { readonly name: string; readonly nodeKind: "file" | "directory" | "symlink" }[];
+  kind(path: string): "file" | "directory" | "symlink" | null;
+  readText(path: string): string;
+  readBytes(path: string): Uint8Array;
+}
+
+/** 🔮️ Read-only post-operation inputs for one explicitly registered preview owner. */
+export interface GeneratorInputProjection<ContractId extends "plugin-registry" | "wgpu-frame-worker" = "plugin-registry" | "wgpu-frame-worker"> {
+  readonly contractId: ContractId;
+  readonly schemaVersion: 1;
+  readonly moves: readonly { readonly sourcePath: string; readonly destinationPath: string; readonly nodeKind: "file" | "symlink" }[];
+  readonly edits: readonly { readonly path: string; readonly bytesBase64: string }[];
+  readonly removals: readonly string[];
+}
+
+/** 📇️ Registry projection keeps its exact producer identity on the shared input grammar. */
+export type RegistryCatalogProjection = GeneratorInputProjection<"plugin-registry">;
+
+/** 🔐️ Validates bounded stdin data before any projected path can reach the filesystem. */
+export function parseRegistryCatalogProjection(content: string, taxonomy: Taxonomy): RegistryCatalogProjection {
+  return parseGeneratorInputProjection(content, taxonomy, "plugin-registry");
+}
+
+/** 🛂️ Validates exact producer identity and bounded leaf operations before any filesystem read. */
+export function parseGeneratorInputProjection<ContractId extends GeneratorInputProjection["contractId"]>(content: string, taxonomy: Taxonomy, contractId: ContractId): GeneratorInputProjection<ContractId> {
+  const authority = contractId === "plugin-registry" ? taxonomy.generatorContracts[contractId]?.inputDiscovery?.previewInput : contractId === "wgpu-frame-worker" ? taxonomy.generatorContracts[contractId]?.packageGeneration?.previewInput : undefined;
+  const protocol = contractId === "plugin-registry" ? "registry-projected-inputs-v1" : "package-projected-inputs-v1";
+  if (!authority || authority.protocol !== protocol || Buffer.byteLength(content) > authority.maxBytes) throw new Error("Generator projected input payload exceeds its declared authority.");
+  const value = JSON.parse(content) as GeneratorInputProjection<ContractId>;
+  const keys = (row: unknown, expected: readonly string[]): boolean => Boolean(row && typeof row === "object" && !Array.isArray(row) && Object.keys(row).sort().join("\0") === [...expected].sort().join("\0"));
+  const path = (value: unknown): value is string => typeof value === "string" && value.length > 0 && value === value.normalize("NFC") && !value.includes("\\") && !value.includes("\0") && !value.startsWith("/") && !/^[A-Za-z]:/u.test(value) && value.split("/").every((part) => part && part !== "." && part !== "..") && !Object.values(taxonomy.pathExclusions).some((entry) => { const prefix = entry.path.replace(/\/+$/u, ""); return value === prefix || value.startsWith(prefix + "/"); });
+  if (!keys(value, ["contractId", "schemaVersion", "moves", "edits", "removals"]) || value.contractId !== contractId || value.schemaVersion !== 1 || !Array.isArray(value.moves) || !Array.isArray(value.edits) || !Array.isArray(value.removals) || value.moves.length + value.edits.length + value.removals.length > authority.maxOperations) throw new Error("Generator projected input payload has unsupported shape or operation count.");
+  const sources = new Set<string>(), destinations = new Set<string>(), edits = new Set<string>(), removals = new Set<string>();
+  for (const move of value.moves) {
+    if (!keys(move, ["sourcePath", "destinationPath", "nodeKind"]) || !path(move.sourcePath) || !path(move.destinationPath) || move.sourcePath === move.destinationPath || !["file", "symlink"].includes(move.nodeKind) || sources.has(move.sourcePath) || destinations.has(move.destinationPath)) throw new Error("Registry projected move is invalid or duplicated.");
+    sources.add(move.sourcePath); destinations.add(move.destinationPath);
+  }
+  for (const edit of value.edits) {
+    if (!keys(edit, ["path", "bytesBase64"]) || !path(edit.path) || typeof edit.bytesBase64 !== "string" || Buffer.from(edit.bytesBase64, "base64").toString("base64") !== edit.bytesBase64 || edits.has(edit.path)) throw new Error("Registry projected edit is invalid or duplicated.");
+    edits.add(edit.path);
+  }
+  for (const removal of value.removals) {
+    if (!path(removal) || removals.has(removal) || sources.has(removal) || destinations.has(removal)) throw new Error("Registry projected removal is invalid or overlaps a move.");
+    removals.add(removal);
+  }
+  return value;
+}
+
+export const gitlinkBoundaryCache = ephemeralMap<string, ReadonlySet<string>>("framework.products.repo.modules.lib.discovery.component.ts.gitlinkBoundaryCache");
+
+/** 🧷️ Stage-zero `160000` index entries are retained terminal repository boundaries — leaves, never descended. */
+export function registryCatalogGitlinkBoundaries(repoRoot: string): ReadonlySet<string> {
+  const cached = gitlinkBoundaryCache.get(repoRoot);
+  if (cached) return cached;
+  let boundaries: ReadonlySet<string>;
+  try {
+    const stdout = execFileSync("git", ["ls-files", "--stage", "-z"], { cwd: repoRoot, encoding: "utf8", maxBuffer: 256 * 1024 * 1024 });
+    const found = new Set<string>();
+    for (const row of stdout.split("\0")) {
+      if (!row) continue;
+      const tab = row.indexOf("\t");
+      if (tab < 0) continue;
+      const [mode, , stage] = row.slice(0, tab).split(" ");
+      if (mode === "160000" && stage === "0") found.add(row.slice(tab + 1).normalize("NFC"));
+    }
+    boundaries = found;
+  } catch { boundaries = new Set(); }
+  gitlinkBoundaryCache.set(repoRoot, boundaries);
+  return boundaries;
+}
+
+/** 📂️ Decodes the closed owner-authored source table without importing an external TOML runtime. */
+export function parseRegistrySourceRoots(source: string): readonly string[] {
+  const table = "package.metadata.semio.sources";
+  const headers = source.match(/^\[package\.metadata\.semio\.sources\]\s*$/gmu) ?? [];
+  if (headers.length > 1) throw new Error("Duplicate registry source table");
+  const body = tomlTableBody(source, table);
+  if (body === undefined) return [];
+  const rows = body.split("\n").map((line) => line.trim()).filter((line) => line && !line.startsWith("#"));
+  if (rows.length !== 1 || !/^artifacts\s*=\s*\[.*\]$/u.test(rows[0]!)) throw new Error("Registry sources require one closed artifacts list");
+  let paths: unknown;
+  try { paths = JSON.parse(rows[0]!.slice(rows[0]!.indexOf("=" ) + 1).trim()); } catch { throw new Error("Registry source list requires canonical quoted TOML paths"); }
+  if (!Array.isArray(paths) || paths.length > 64 || new Set(paths).size !== paths.length || paths.some((path) => typeof path !== "string" || !path || path.length > 4096 || /^(?:[/\\]|[A-Za-z]:)/u.test(path) || /[\\\u0000-\u001f]/u.test(path) || path.split("/").some((part: string) => !part || part === "."))) throw new Error("Invalid registry artifact source roots");
+  return paths as string[];
+}
+
+export interface RegistryCompilerImport {
+  readonly path: string;
+  readonly kind: string;
+}
+
+export type RegistryCompilerLanguage = "ts" | "tsx" | "js" | "jsx";
+
+/** 🔎️ Validates Bun's runtime compiler capability and returns owned import records. */
+export function scanRegistryCompilerImports(source: string, language: RegistryCompilerLanguage, platform: unknown = Reflect.get(globalThis, "Bun")): readonly RegistryCompilerImport[] {
+  if (language !== "ts" && language !== "tsx" && language !== "js" && language !== "jsx") throw new Error("Registry import discovery requires an explicit supported compiler language.");
+  if (platform === null || typeof platform !== "object" && typeof platform !== "function") throw new Error("Registry import discovery requires Bun's compiler runtime.");
+  const constructor: unknown = Reflect.get(platform, "Transpiler");
+  if (typeof constructor !== "function") throw new Error("Registry import discovery requires Bun.Transpiler.");
+  const compiler: unknown = Reflect.construct(constructor, [{ loader: language }]);
+  if (compiler === null || typeof compiler !== "object") throw new Error("Bun.Transpiler returned an invalid compiler.");
+  const scan: unknown = Reflect.get(compiler, "scanImports");
+  if (typeof scan !== "function") throw new Error("Bun.Transpiler does not expose scanImports.");
+  const imports: unknown = Reflect.apply(scan, compiler, [source]);
+  if (!Array.isArray(imports)) throw new Error("Bun.Transpiler returned invalid import records.");
+  return imports.map((entry: unknown) => {
+    if (entry === null || typeof entry !== "object") throw new Error("Bun.Transpiler returned an invalid import record.");
+    const path: unknown = Reflect.get(entry, "path"), kind: unknown = Reflect.get(entry, "kind");
+    if (typeof path !== "string" || typeof kind !== "string") throw new Error("Bun.Transpiler import records require string path and kind.");
+    return { path, kind };
+  });
+}
+
+/** 🔗️ Scans the physical leaf's language without fallback, preserving Unicode source specifiers. */
+export function registryStaticImports(source: string, sourcePath: string): readonly string[] {
+  const extension = extname(sourcePath);
+  const language: RegistryCompilerLanguage | undefined = extension === ".ts" || extension === ".mts" || extension === ".cts" ? "ts" : extension === ".tsx" ? "tsx" : extension === ".js" || extension === ".mjs" || extension === ".cjs" ? "js" : extension === ".jsx" ? "jsx" : undefined;
+  if (!language) throw new Error(`Registry implementation language is not supported: ${sourcePath}`);
+  let imports: readonly RegistryCompilerImport[];
+  try { imports = scanRegistryCompilerImports(source.replace(/^#![^\n]*(?:\n|$)/u, "\n"), language); }
+  catch (error) { throw new Error(`Registry compiler import scan failed for ${sourcePath}: ${error instanceof Error ? error.message : String(error)}`); }
+  return [...new Set(imports.filter((entry) => entry.kind === "import-statement").map((entry) => {
+    const decoded = Buffer.from(entry.path, "latin1").toString("utf8");
+    return decoded !== entry.path && !decoded.includes("\ufffd") && source.includes(decoded) ? decoded : entry.path;
+  }))].sort();
+}
+
+export type RegistryCompilerInputRole = "implementation-entry" | "static-import";
+
+/** 🔗️ Admits a caller-supplied role string, so the boundary check is expressible and the roles stay closed. */
+function isRegistryCompilerInputRole(value: string): value is RegistryCompilerInputRole {
+  return value === "implementation-entry" || value === "static-import";
+}
+
+export interface RegistryCompilerInputDependencies {
+  readonly kind: "module" | "json-data";
+  readonly imports: readonly string[];
+}
+
+/** 🧾️ Admits strict JSON only as imported data; compiler entries retain their exact module grammar. */
+export function registryCompilerInputDependencies(source: string, sourcePath: string, role: string): RegistryCompilerInputDependencies {
+  if (!isRegistryCompilerInputRole(role)) throw new Error(`Registry compiler input role is not supported: ${role}`);
+  if (role === "static-import" && extname(sourcePath) === ".json") {
+    try { JSON.parse(source); }
+    catch (error) { throw new Error(`Registry imported JSON is invalid: ${sourcePath}: ${error instanceof Error ? error.message : String(error)}`); }
+    return { kind: "json-data", imports: [] };
+  }
+  return { kind: "module", imports: registryStaticImports(source, sourcePath) };
+}

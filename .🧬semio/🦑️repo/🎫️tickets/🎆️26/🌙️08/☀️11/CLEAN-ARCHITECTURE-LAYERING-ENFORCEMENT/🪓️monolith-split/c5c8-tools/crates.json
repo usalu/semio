@@ -1,0 +1,67 @@
+[
+ {
+  "tag": "sc",
+  "name": "semio-s-artifact-layout-layout-engine",
+  "pkg": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ej",
+  "name": "semio-s-artifact-layout-layout-engine-json",
+  "pkg": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ex",
+  "name": "semio-s-artifact-layout-layout-engine-export",
+  "pkg": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ed",
+  "name": "semio-s-artifact-layout-layout-editor",
+  "pkg": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "mfs",
+  "name": "semio-framework-plugin-surface-fixture",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "pai",
+  "name": "semio-framework-plugin-instance-app",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "pub",
+  "name": "semio-framework-plugin-instance-typed-ops",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "rc",
+  "name": "semio-framework-plugin-retained-command",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ch",
+  "name": "semio-framework-plugin-child",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "wc",
+  "name": "semio-framework-plugin-window-config",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "dc",
+  "name": "semio-framework-os-directory-client",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "dct",
+  "name": "semio-framework-os-directory-client-tests",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🧶️companion/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "dd",
+  "name": "semio-framework-os-kernel-dsl-derive-expand",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧩️expand/📦️packages/🦀️rust"
+ }
+]

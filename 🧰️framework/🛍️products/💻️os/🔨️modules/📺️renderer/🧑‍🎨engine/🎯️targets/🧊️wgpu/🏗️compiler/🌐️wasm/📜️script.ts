@@ -100,7 +100,7 @@ async function compileTrunkRenderer(options: TrunkRendererBuild&Readonly<{storag
 
 class BuildScript extends BundleScript {
   async run([profile, ...args]: string[]): Promise<void> {
-    if (args.length||profile===undefined) throw new Error("Renderer compilation accepts only its Nx profile");
+    if (args.length||profile===undefined) throw new Error("Renderer compilation accepts only its build profile");
     const controller = new AbortController(), stop = (): void => controller.abort();
     process.once("SIGINT", stop); process.once("SIGTERM", stop);
     try { await buildTrunkRenderer({ rustPackageRoot: this.root, componentRoot: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"), workspace: this.repoRoot, profile, invocation:this.invocation, control:scriptCompilerAdmissionControlV1(this.invocation,"renderer:wasm",0),signal: controller.signal }); }

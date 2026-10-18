@@ -14,24 +14,24 @@ use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
@@ -68,7 +68,7 @@ pub(crate) fn dec_point3_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfPo
 
 /// 🌳️ `0`=Perspective / `1`=Orthogonal -- binary twin of `enc_camera`/`dec_camera`'s `P`/`O` tags.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
+pub fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
     match c {
         BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => {
             out.push(0);
@@ -88,7 +88,7 @@ pub(crate) fn enc_camera_bin(c: &BcfCamera, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCamera, String> {
+pub fn dec_camera_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfCamera, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(BcfCamera::Perspective { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, field_of_view: reader.read_f64_le().map_err(|e| e.to_string())? }),
         1 => Ok(BcfCamera::Orthogonal { view_point: dec_point3_bin(reader)?, direction: dec_point3_bin(reader)?, up_vector: dec_point3_bin(reader)?, view_to_world_scale: reader.read_f64_le().map_err(|e| e.to_string())? }),
@@ -141,7 +141,7 @@ pub(crate) fn dec_coloring_bin(reader: &mut store::ByteReader<'_>) -> Result<Bcf
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
+pub fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
     enc_str_list_bin(&c.selection, out);
     enc_visibility_bin(&c.visibility, out);
     store::pack_rt::write_varint_u64(out, c.coloring.len() as u64);
@@ -151,7 +151,7 @@ pub(crate) fn enc_components_bin(c: &BcfComponents, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComponents, String> {
+pub fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComponents, String> {
     let selection = dec_str_list_bin(reader)?;
     let visibility = dec_visibility_bin(reader)?;
     let coloring_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
@@ -163,7 +163,7 @@ pub(crate) fn dec_components_bin(reader: &mut store::ByteReader<'_>) -> Result<B
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_comment_bin(c: &BcfComment, out: &mut Vec<u8>) {
+pub fn enc_comment_bin(c: &BcfComment, out: &mut Vec<u8>) {
     write_str_lp(out, &c.guid);
     write_str_lp(out, &c.date);
     write_str_lp(out, &c.author);
@@ -172,7 +172,7 @@ pub(crate) fn enc_comment_bin(c: &BcfComment, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComment, String> {
+pub fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfComment, String> {
     let guid = read_str_lp(reader)?;
     let date = read_str_lp(reader)?;
     let author = read_str_lp(reader)?;
@@ -182,7 +182,7 @@ pub(crate) fn dec_comment_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfC
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
+pub fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
     write_str_lp(out, &v.guid);
     out.push(if v.camera.is_some() { 1 } else { 0 });
     if let Some(camera) = &v.camera {
@@ -199,7 +199,7 @@ pub(crate) fn enc_viewpoint_bin(v: &BcfViewpoint, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpoint, String> {
+pub fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfViewpoint, String> {
     let guid = read_str_lp(reader)?;
     let camera = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_camera_bin(reader)?) } else { None };
     let components = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(dec_components_bin(reader)?) } else { None };
@@ -208,7 +208,7 @@ pub(crate) fn dec_viewpoint_bin(reader: &mut store::ByteReader<'_>) -> Result<Bc
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
+pub fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
     write_str_lp(out, &t.guid);
     write_str_lp(out, &t.title);
     write_str_lp(out, &t.description);
@@ -228,7 +228,7 @@ pub(crate) fn enc_topic_bin(t: &BcfTopic, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_topic_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopic, String> {
+pub fn dec_topic_bin(reader: &mut store::ByteReader<'_>) -> Result<BcfTopic, String> {
     let guid = read_str_lp(reader)?;
     let title = read_str_lp(reader)?;
     let description = read_str_lp(reader)?;

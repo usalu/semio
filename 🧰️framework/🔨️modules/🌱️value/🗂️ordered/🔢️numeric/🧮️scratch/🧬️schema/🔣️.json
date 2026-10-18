@@ -6,6 +6,8 @@
   "additionalProperties": false,
   "properties": {
     "operations": {"type": "array", "items": {"type": "object", "required": ["kind"], "additionalProperties": false, "properties": {"kind": {"enum": ["set", "remove", "get", "first", "reset"]}, "key": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, "value": {"type": "integer"}}}},
-    "expected": {"type": "array", "items": {"type": ["integer", "null", "array"], "items": {"type": "integer"}}}
+    "expected": {"type": "array", "items": {"type": ["integer", "null", "array"], "items": {"type": "integer"}}},
+    "closeReleaseBytes": {"type": "integer", "minimum": 1},
+    "maximumCloseTurns": {"type": "integer", "minimum": 1}
   }
 }

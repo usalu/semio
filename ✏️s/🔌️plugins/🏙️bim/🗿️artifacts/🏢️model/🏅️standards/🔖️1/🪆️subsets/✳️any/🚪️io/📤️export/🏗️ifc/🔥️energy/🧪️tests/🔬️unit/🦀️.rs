@@ -1,12 +1,33 @@
-use super::*;
+use crate::standards::v1::subsets::any::io::export::ifc::projection::quote;
+use crate::standards::v1::subsets::any::io::export::ifc::Schema;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::projection::{json_cell, plain, schema_of, Cell};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{flag, real, typed, V};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::context::Export;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::holders::{holder_of, Holder};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::io::export::ifc::energy::*;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document_in, rows, string};
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const ENERGY: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy/📸️snapshot/🔣️.json");
+static ENERGY: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy/📸️snapshot/🔣️.json"));
 
 fn energy() -> ModelSnapshot {
-    from_json_str(ENERGY, JsonMemberPolicy::Reject).expect("the committed energy model decodes")
+    from_json_str((*ENERGY), JsonMemberPolicy::Reject).expect("the committed energy model decodes")
 }
 
 fn report(schema: Schema, model: &ModelSnapshot) -> String {
@@ -125,12 +146,12 @@ fn the_report_is_deterministic_and_parses_as_json() {
     assert!(first.starts_with('{') && first.ends_with('}') && first.matches('{').count() == first.matches('}').count() && first.matches('"').count() % 2 == 0, "{first}");
 }
 
-const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy");
+const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🧪️tests/🧫️fixtures/🏗️ifc/🔥️energy");
 
 #[test]
 fn the_committed_files_are_the_current_export() {
     let model = energy();
-    for (name, export) in [("energy-2x3.ifc", super::super::export_ifc2x3(&model)), ("energy-4.ifc", super::super::export_ifc4(&model))] {
+    for (name, export) in [("energy-2x3.ifc", crate::standards::v1::subsets::any::io::export::ifc::export_ifc2x3(&model)), ("energy-4.ifc", crate::standards::v1::subsets::any::io::export::ifc::export_ifc4(&model))] {
         let (bytes, _) = export.expect("the export");
         let path = format!("{FIXTURES}/{name}");
         if std::env::var("BIM_BLESS").is_ok() {

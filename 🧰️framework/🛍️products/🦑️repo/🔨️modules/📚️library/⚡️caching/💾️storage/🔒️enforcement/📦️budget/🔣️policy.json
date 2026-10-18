@@ -3,12 +3,40 @@
   "maximumBytes": 68719476736,
   "maximumControlBytes": 1048576,
   "partitions": {
-    "rust": {"directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed", "capacityBytes": 17179869184},
-    "tools": {"directory": ".cache/b/t", "capacityBytes": 8589934592},
-    "graph": {"directory": ".cache/b/g", "capacityBytes": 4294967296},
-    "dependencies": {"directory": ".cache/b/d", "capacityBytes": 8589934592},
-    "products": {"directory": ".cache/b/p", "capacityBytes": 25769803776},
-    "diagnostics": {"directory": ".cache/b/o", "capacityBytes": 2147483648},
-    "leases": {"directory": ".cache/b/l", "capacityBytes": 67108864}
+    "rust": {
+      "directory": ".🧬semio/🦑️repo/⚡️cache/rust/fixed",
+      "capacityBytes": 17179869184,
+      "maximumLogicalBytes": 17178820608
+    },
+    "tools": {
+      "directory": ".cache/b/t",
+      "capacityBytes": 8589934592,
+      "maximumLogicalBytes": 68719476736
+    },
+    "graph": {
+      "directory": ".cache/b/g",
+      "capacityBytes": 4294967296,
+      "maximumLogicalBytes": 4293918720
+    },
+    "dependencies": {
+      "directory": ".cache/b/d",
+      "capacityBytes": 8589934592,
+      "maximumLogicalBytes": 8588886016
+    },
+    "products": {
+      "directory": ".cache/b/p",
+      "capacityBytes": 25769803776,
+      "maximumLogicalBytes": 25768755200
+    },
+    "diagnostics": {
+      "directory": ".cache/b/o",
+      "capacityBytes": 2147483648,
+      "maximumLogicalBytes": 2146435072
+    },
+    "leases": {
+      "directory": ".cache/b/l",
+      "capacityBytes": 67108864,
+      "maximumLogicalBytes": 66060288
+    }
   }
 }

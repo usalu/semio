@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative set-design-option diff.
-use super::SetDesignOption;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::mutations::set_design_option::SetDesignOption;
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use crate::standards::v1::subsets::any::schema::authored::option_rules;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetDesignOption, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

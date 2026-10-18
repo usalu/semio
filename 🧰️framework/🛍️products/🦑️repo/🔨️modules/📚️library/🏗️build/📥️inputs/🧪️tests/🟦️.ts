@@ -8,9 +8,10 @@ import {runInNewContext} from "node:vm";
 import * as inputModule from "../🟨️.mjs";
 import {buildInputPathMatchesV1,compactSourceInputs} from "../🟨️.mjs";
 import fixture from "./🧫️fixtures/🔣️.json";
+import {readInferenceSourceV1} from "../../🕸️graph/📥️inference/🧪️tests/📖️source/🟦️.ts";
 
 test("selected source discovery compiles each reached glob once per operation",async()=>{
- const source=readFileSync(new URL("../../🕸️graph/📥️inference/🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("inference.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),owner=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="discoverBuildOwnerAdmissionFactsV1");
+ const source=readInferenceSourceV1("owner-discovery"),tree=ts.createSourceFile("inference.mjs",source,ts.ScriptTarget.Latest,true,ts.ScriptKind.JS),owner=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="discoverBuildOwnerAdmissionFactsV1");
  if(!owner||!ts.isFunctionDeclaration(owner)||!owner.body)throw Error("Actual selected owner declaration required");
  const selection=owner.body.statements.find(node=>ts.isIfStatement(node)&&node.expression.getText(tree)==="targets.length||inputNames.length");
  if(!selection||!ts.isIfStatement(selection)||!ts.isBlock(selection.thenStatement))throw Error("Actual selected Source block required");

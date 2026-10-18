@@ -226,9 +226,6 @@ describe("wgpu accessibility interaction contract", () => {
     }
   });
 
-  it("validates the visible-document publication grammar", () => {
-  });
-
   it.each(dockTabKeyboardFixture.cases)("matches the production React Mode roving Dock tab keyboard contract: $id", (row) => {
     vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
     vi.stubGlobal("MutationObserver", class { observe(): void {} disconnect(): void {} takeRecords(): MutationRecord[] { return []; } });

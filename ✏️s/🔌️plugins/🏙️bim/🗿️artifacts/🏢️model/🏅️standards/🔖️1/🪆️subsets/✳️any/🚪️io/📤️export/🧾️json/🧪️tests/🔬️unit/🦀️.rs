@@ -1,6 +1,7 @@
-use super::codec::{items_of, member, number_of, read_value, text_of};
-use super::{JSON_DIALECT, ModelIntoJson, adjudicated_json, codec, diagnostics_json, finding_value, severity_token};
+use crate::standards::v1::subsets::any::io::export::json::codec::{items_of, member, number_of, read_value, text_of};
+use crate::standards::v1::subsets::any::io::export::json::{JSON_DIALECT, ModelIntoJson, adjudicated_json, codec, diagnostics_json, finding_value, severity_token};
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_json::schema::snapshot::JsonValue;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
@@ -10,8 +11,8 @@ use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnos
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const DEFECTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
-const CLEAN: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
+static DEFECTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json"));
+static CLEAN: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json"));
 
 fn inferred(text: &str) -> ModelInference {
     let snapshot: ModelSnapshot = from_json_str(text, JsonMemberPolicy::Reject).expect("fixture decodes");
@@ -20,7 +21,7 @@ fn inferred(text: &str) -> ModelInference {
 
 #[test]
 fn the_document_has_the_counts_a_finding_per_finding_and_the_index_by_element_and_storey() {
-    let inference = inferred(DEFECTS);
+    let inference = inferred((*DEFECTS));
     let root = read_value(&diagnostics_json(&inference)).expect("the document is JSON");
     let total = member(&root, "counts").and_then(|counts| member(counts, "total")).and_then(number_of).expect("the total");
     assert_eq!(total as usize, inference.diagnostics.len());
@@ -55,9 +56,9 @@ fn a_finding_without_a_storey_has_a_null_storey_and_the_numbers_read_back_exactl
 
 #[test]
 fn a_clean_model_exports_an_empty_document_and_the_text_is_deterministic() {
-    let inference = inferred(CLEAN);
+    let inference = inferred((*CLEAN));
     let text = diagnostics_json(&inference);
-    assert_eq!(text, diagnostics_json(&inferred(CLEAN)));
+    assert_eq!(text, diagnostics_json(&inferred((*CLEAN))));
     assert!(text.ends_with("}\n"));
     let root = read_value(&text).expect("JSON");
     assert!(items_of(member(&root, "findings").expect("findings")).is_empty());
@@ -66,7 +67,7 @@ fn a_clean_model_exports_an_empty_document_and_the_text_is_deterministic() {
 
 #[test]
 fn the_adjudicated_findings_read_back_from_the_export_equal_the_table_of_the_inference() {
-    let inference = inferred(DEFECTS);
+    let inference = inferred((*DEFECTS));
     assert_eq!(adjudicated_json(&diagnostics_json(&inference)), Ok(table_json(&inference.diagnostics)));
     assert!(adjudicated_json("not json").is_err());
     assert!(adjudicated_json("{}").is_err());
@@ -79,11 +80,11 @@ fn the_serializer_targets_the_stdio_json_dialect() {
 }
 
 /// 📁️ The directory of the committed exports of the findings of the defect house: the files the python `csv` and `json` modules read back in the export case.
-const EXPORT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export");
+const EXPORT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export");
 
 #[test]
 fn the_committed_json_file_is_the_current_export_of_the_defect_house() {
-    let text = diagnostics_json(&inferred(DEFECTS));
+    let text = diagnostics_json(&inferred((*DEFECTS)));
     if std::env::var("BIM_BLESS").is_ok() {
         std::fs::create_dir_all(EXPORT_DIR).expect("the fixture directory");
         std::fs::write(format!("{EXPORT_DIR}/⚠️diagnostics.json"), text.as_bytes()).expect("the file is written");

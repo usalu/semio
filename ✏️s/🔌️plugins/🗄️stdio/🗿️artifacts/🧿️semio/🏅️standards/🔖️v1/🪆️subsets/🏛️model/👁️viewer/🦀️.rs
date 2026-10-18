@@ -25,7 +25,7 @@ use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::ViewEmit;
 use semio_framework_plugin::Viewer;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Dialect
 /// 🪪️ Verified against this artifact's own `📸️snapshot/🦀️.rs`

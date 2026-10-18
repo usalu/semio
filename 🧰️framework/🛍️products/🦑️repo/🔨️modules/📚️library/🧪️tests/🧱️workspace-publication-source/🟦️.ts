@@ -7,7 +7,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, 
 import { dirname, join, relative, resolve } from "node:path";
 import { tmpdir } from "node:os";
 import ts from "typescript";
-import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { computeWorkspaces } from "../../🗂️workspaces/🟦️.ts";
 import { parseWorkspaceRootDocument } from "../../🗂️workspaces/📄️manifest-projection/🟦️.ts";
 import { publishWorkspaceMembership } from "../../🗂️workspaces/📣️publication/🟦️.ts";
@@ -16,7 +16,7 @@ import { parseWorkspacePublicationArguments } from "../../🗂️workspaces/🏃
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const libraryRoot = resolve(import.meta.dir, "../..");
 
-const fixturePath = join(libraryRoot, "🧫️fixtures/🧱️workspace-publication-source/🔣️.json");
+const fixturePath = join(libraryRoot, "🧪️tests/🧫️fixtures/🧱️workspace-publication-source/🔣️.json");
 const fixtureSource = readFileSync(fixturePath, "utf8");
 const fixture = JSON.parse(fixtureSource) as {
   schemaVersion: number;
@@ -319,7 +319,7 @@ test("workspace source, check, and publication routes are exact across package a
   for (const route of Object.values(fixture.routes)) {
     expect(project.targets[route.target]?.options?.command).toBe(route.command);
     expect(
-      Object.values(manifest.scripts).filter((command) => command === `nx run @semio-tech/repo-lib:${route.target}`),
+      Object.values(manifest.scripts).filter((command) => command === `bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${route.target}`),
       route.target,
     ).toHaveLength(1);
   }

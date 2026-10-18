@@ -37,7 +37,7 @@ export async function testGeneratorInputReceipt(workspace: string, generated: st
   assert.equal(project.targets["generator-inputs"].cache, false, "the receipt digests bytes its own cache key cannot name, so its producer re-digests on every run");
   assert.equal(policy.cachedExact.includes("generator-inputs"), false, "no policy may force the receipt producer back into the cache");
   assert.deepEqual(project.targets["generator-inputs"].outputs, [`{workspaceRoot}/${contract.output}`]);
-  const { isDiscoverySkipDirectory } = await import(resolve(caching, "../🔍️discovery/🟦️.ts"));
+  const { isDiscoverySkipDirectory } = await import(resolve(caching, "../🔍️discovery/🪧️owner-markers/🟦️.ts"));
   assert.equal(isDiscoverySkipDirectory(contract.output.split("/")[0]), true, "The digest must not become its own catalog input");
   const plugin = (await import(resolve(caching, "../🏗️build/🕸️graph/📥️inference/🟨️.mjs"))).default;
   const nodes = await plugin.createNodesV2[1]([`${caching.slice(workspace.length + 1)}/📋️project.json`, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📋️project.json"], {}, { workspaceRoot: workspace });

@@ -10,7 +10,12 @@ import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️pr
 import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirMountVitePlugins, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundFlowWasmDevStubPlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts";
+import { playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🧰️scene-host/🟦️.ts";
+import { semioAssetsVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+import { semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
+import { semioViteBuild, staticDirMountVitePlugins } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 import { createAssetBuildPluginsV1 } from "../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { packageAssetDeliveries } from "../../../../🧰️framework/🔨️modules/🎠️kernel/📦️package-assets/🟦️.ts";
 import { PLAYGROUND_ASSET_PROVIDERS_V1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🖼️assets/🧩️composition/🟦️.ts";
@@ -44,7 +49,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
   const extensionDir = (name: string): string => playExtensionDirectory(name, pluginModulesDir, development?.extensionDirectories);
   return {
     root: playDir,
-    base: ".",
+    base: "./",
     cacheDir: viteCacheDirectory(repoRoot, { ...process.env, SEMIO_BUILD_MODE: readBuildMode(mode) }),
     publicDir: path.join(playDir, "🌐️public"),
     assetsInclude: ["**/*.wasm"],
@@ -80,7 +85,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => {
       semioServeCloseVitePlugin(),
       ...semioHostHtmlVitePlugin(repoRoot, { title: "semio · Play", entry: "./🟦️.tsx", bodyClass: "h-screen w-screen overflow-hidden bg-background text-foreground", cnameHost: PLAY_HOST }),
       semioEmojiIndexHtmlVitePlugin(playDir),
-      managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:"play"})),
+      managedWasmPackagesVitePluginV1(frameworkOsEngineDeliveriesV1(repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),facet:"play"}).map(({packageName,root,entry,files,entrypoint})=>({packageName,root,entry,files,entrypoint}))),
       playgroundFlowWasmDevStubPlugin(repoRoot,flowBrowserDeliveryV1(repoRoot,repositoryCachePartitionRootDataV1(repoRoot,"products"),{version:1,mode:readBuildMode(mode),command})),
       semioBackboneVitePlugin(),
       semioBlobVitePlugin(),

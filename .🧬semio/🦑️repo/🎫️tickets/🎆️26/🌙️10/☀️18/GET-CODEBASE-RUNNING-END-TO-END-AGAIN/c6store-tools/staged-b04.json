@@ -1,0 +1,14 @@
+{
+ "tag": "b04",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs",
+ "folders": [
+  "🛤️history-lane-interaction-store-and-immutable-root-laws",
+  "🏁️checkpoint-alternative-history-column-and-backbone-laws",
+  "📮️document-codec-replay-and-projection-gate-laws",
+  "⬅️backbone-attach-undo-and-text-fidelity-laws",
+  "🌌️stateful-current-and-space-history-laws",
+  "🧾️document-text-metadata-conflict-and-preview-wire-laws",
+  "🔁️spr-round-trip-message-vocabulary-and-text-format-helper-laws"
+ ]
+}

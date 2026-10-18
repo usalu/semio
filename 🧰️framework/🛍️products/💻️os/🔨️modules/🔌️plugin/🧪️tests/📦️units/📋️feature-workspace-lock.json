@@ -1,7 +1,7 @@
 {
   "version": 1,
   "path": "🧰️framework/Cargo.lock",
-  "sha256": "97645ef0ae370aef8ca2df22812f30d650ba6232e1a416dc30785d0d96d81975",
+  "sha256": "e2161c49585dec1f2bcedfbf089e06374d2adbac9cf5582d61895c71d7e082a4",
   "required": [
     "semio-framework-plugin-declared-verdict",
     "semio-framework-plugin-testing-laws",

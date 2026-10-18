@@ -91,7 +91,7 @@ use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::ViewModel;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::context::{fem2d_app, render};
 use semio_framework_plugin::{ArtifactEditor, EditorApp};
 use pack::snapshot::ArtifactDsl;

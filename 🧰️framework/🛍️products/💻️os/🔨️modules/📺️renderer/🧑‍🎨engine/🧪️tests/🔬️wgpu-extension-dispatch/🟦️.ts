@@ -8,8 +8,8 @@ import { extensionRequestActivationReason, serializeWgpuActorCall, wgpuBackboneM
 import { activationEventEnvelope, createTurnOutcomeBroadcast, type TurnOutcome } from "@semio-tech/framework";
 import { AppChannelClient, type AppChannelHandle, AppChannelRequestSequence, decodeAppCommand, encodeAppCommand, encodeAppFrame, encodePackValue } from "@semio-tech/framework-os";
 import { FRAME_WORKER_BOOT_LIVENESS_POLICY, bootPhaseCeilingMs, evaluateBrowserBootLiveness } from "../../🎯️targets/🧊️wgpu/🫀️boot-liveness/🟦️.ts";
-import { SHARD_COMMAND_MAXIMUM_PAGES } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
-import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { SHARD_COMMAND_MAXIMUM_PAGES } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, publicInvocationStringPages } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
 
 async function actualAppChannelCommand(sequenceOwnerBefore: number, commandBytes: Uint8Array, viewState: unknown): Promise<Uint8Array> {
   const outcomes = createTurnOutcomeBroadcast<TurnOutcome>();

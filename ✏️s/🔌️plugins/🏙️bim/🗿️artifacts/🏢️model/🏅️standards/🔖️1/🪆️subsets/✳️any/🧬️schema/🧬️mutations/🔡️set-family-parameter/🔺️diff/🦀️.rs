@@ -2,9 +2,9 @@
 //! that differ (providing nothing new is a no-op); an absent one is created and needs both. A formula must parse, use only existing parameters of the family and never close a circle; whether it also
 //! computes the declared kind is the business of the inference (a diagnostic), not of the diff. The key is free in every other collection.
 
-use super::super::elements;
-use super::super::family_rules;
-use super::SetFamilyParameter;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules;
+use crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter;
 use crate::standards::v1::subsets::any::schema::authored::formula;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{FamilyParameter, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};

@@ -1,6 +1,6 @@
 //! 🧮️ The methods of the value types of the `coordination` kit; they live with the value types so the entity types and the model root stay above them.
 
-use super::values::{ElementClass, ElementSelector, RuleKind, RuleScope};
+use crate::standards::v1::subsets::any::schema::snapshot::values::{ElementClass, ElementSelector, RuleKind, RuleScope};
 
 /// 📐️ The largest ramp slope a rule accepts as a limit (rise over run, 45 degrees).
 pub const MAX_SLOPE_LIMIT: f64 = 1.0;
@@ -121,7 +121,7 @@ impl RuleKind {
     }
 }
 
-impl super::values::ViewCamera {
+impl crate::standards::v1::subsets::any::schema::snapshot::values::ViewCamera {
     /// 🎥️ The eye and the target of the orbit camera in building-datum metres: the camera looks from `distance` metres away along the azimuth, above the target by the pitch.
     pub fn eye_and_target(&self) -> ([f64; 3], [f64; 3]) {
         let target = [self.target.x, self.target.y, self.target_height];
@@ -134,10 +134,10 @@ impl super::values::ViewCamera {
         let look = [target[0] - eye[0], target[1] - eye[1], target[2] - eye[2]];
         let distance = look.iter().map(|part| part * part).sum::<f64>().sqrt();
         if distance < 1e-9 {
-            return Self { target: super::values::Point2 { x: target[0], y: target[1] }, target_height: target[2], azimuth: 0.0, pitch: 0.0, distance: 1.0 };
+            return Self { target: crate::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: target[0], y: target[1] }, target_height: target[2], azimuth: 0.0, pitch: 0.0, distance: 1.0 };
         }
         let flat = look[0].hypot(look[1]);
         let azimuth = if flat < 1e-12 { 0.0 } else { look[1].atan2(look[0]) };
-        Self { target: super::values::Point2 { x: target[0], y: target[1] }, target_height: target[2], azimuth, pitch: (-look[2] / distance).clamp(-1.0, 1.0).asin(), distance }
+        Self { target: crate::standards::v1::subsets::any::schema::snapshot::values::Point2 { x: target[0], y: target[1] }, target_height: target[2], azimuth, pitch: (-look[2] / distance).clamp(-1.0, 1.0).asin(), distance }
     }
 }

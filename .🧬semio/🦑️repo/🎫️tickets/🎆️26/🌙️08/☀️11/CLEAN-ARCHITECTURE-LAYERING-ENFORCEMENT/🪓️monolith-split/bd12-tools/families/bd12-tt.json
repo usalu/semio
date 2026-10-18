@@ -1,0 +1,5 @@
+{
+ "name": "bd12tt",
+ "crates": ["semio-framework-plugin-time-travel", "semio-framework-plugin-time-travel-turns", "semio-framework-plugin-time-travel-panel"],
+ "note": "BD12 P3-6: where does the turns crate read private TimeTravelStoreState fields (E0616)"
+}

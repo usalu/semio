@@ -182,11 +182,11 @@ pub mod sqlite {
                 pub mod io {
     pub use semio_s_artifact_stdio_pdf_mut_family_13::standards::v1_7::subsets::e::io::*;
     pub mod binary {
-        pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::e::io::binary::*;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::standards::v1_7::subsets::e::io::binary::*;
         pub use semio_s_artifact_stdio_pdf_mut_family_9::standards::v1_7::subsets::e::io::binary::mutations;
     }
     pub mod text {
-        pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::e::io::text::*;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::standards::v1_7::subsets::e::io::text::*;
         pub use semio_s_artifact_stdio_pdf_mut_family_9::standards::v1_7::subsets::e::io::text::mutations;
     }
 }
@@ -217,11 +217,11 @@ pub mod sqlite {
                 pub mod io {
     pub use semio_s_artifact_stdio_pdf_mut_family_15::standards::v1_7::subsets::h::io::*;
     pub mod binary {
-        pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::h::io::binary::*;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::standards::v1_7::subsets::h::io::binary::*;
         pub use semio_s_artifact_stdio_pdf_mut_family_11::standards::v1_7::subsets::h::io::binary::mutations;
     }
     pub mod text {
-        pub use semio_s_artifact_stdio_pdf_model::standards::v1_7::subsets::h::io::text::*;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::standards::v1_7::subsets::h::io::text::*;
         pub use semio_s_artifact_stdio_pdf_mut_family_11::standards::v1_7::subsets::h::io::text::mutations;
     }
 }
@@ -248,8 +248,8 @@ pub mod editor {
     pub mod pdf14a {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf14a::*;
 
-        pub use semio_s_artifact_stdio_pdf_model::editor::pdf14a::presence;
-        pub use semio_s_artifact_stdio_pdf_model::editor::pdf14a::config;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::editor::pdf14a::presence;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::editor::pdf14a::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -265,8 +265,8 @@ pub mod editor {
         pub use semio_s_artifact_stdio_pdf_schema_3::editor::pdf14::page;
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf14::*;
 
-        pub use semio_s_artifact_stdio_pdf_model::editor::pdf14::presence;
-        pub use semio_s_artifact_stdio_pdf_model::editor::pdf14::config;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::editor::pdf14::presence;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::editor::pdf14::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -281,8 +281,8 @@ pub mod editor {
     pub mod pdf14x {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf14x::*;
 
-        pub use semio_s_artifact_stdio_pdf_model::editor::pdf14x::presence;
-        pub use semio_s_artifact_stdio_pdf_model::editor::pdf14x::config;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::editor::pdf14x::presence;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::editor::pdf14x::config;
         #[path = "."]
         pub mod modes {
             #[path = "."]
@@ -297,7 +297,7 @@ pub mod editor {
     pub mod pdf17a {
         pub use semio_s_artifact_stdio_pdf_schema_5::editor::pdf17a::*;
 
-        pub use semio_s_artifact_stdio_pdf_model::editor::pdf17a::presence;
+        pub use semio_s_artifact_stdio_pdf_model_profiles::editor::pdf17a::presence;
         pub use semio_s_artifact_stdio_pdf_snapshot::editor::pdf17a::config;
         #[path = "."]
         pub mod modes {

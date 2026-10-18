@@ -11,6 +11,7 @@ use semio_s_artifact_draw_drawing_model::DRAWING_DIALECT;
 use semio_framework_plugin::app::declarations::{editor_surface, viewer_surface, SchemaDeclaration, SubsetDeclaration};
 use semio_framework_plugin::ExampleSource;
 use std::sync::OnceLock;
+use crate::io;
 
 
 fn inference_descriptors() -> &'static [::semio_framework_schema_registry::ArtifactInferenceDescriptor] {

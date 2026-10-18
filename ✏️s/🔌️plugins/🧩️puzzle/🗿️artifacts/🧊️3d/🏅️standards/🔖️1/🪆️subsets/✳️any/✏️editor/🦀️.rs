@@ -106,7 +106,7 @@ use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_plugin::ToolRef;
 use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 // 🎭️✏️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET (contract §2.1): `ArtifactEditor`
 // replaces `ArtifactApp` as the authoring trait; `EditorApp<E>` is the runtime `ArtifactApp`
 // adapter, needed by this file's own test harness (`VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>`).

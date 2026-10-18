@@ -129,7 +129,7 @@ fn cell_to_xml(cell: &XlsxCell) -> XmlNode {
 /// `<row>`-then-`<c>` nesting, sorted ascending on both axes (spec order, and needed for
 /// deterministic bytes).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn worksheet_to_xml_with_namespace(sheet: &XlsxSheet, namespace: &str) -> XmlDocument {
+pub fn worksheet_to_xml_with_namespace(sheet: &XlsxSheet, namespace: &str) -> XmlDocument {
     let mut by_row: std::collections::BTreeMap<u32, Vec<&XlsxCell>> = std::collections::BTreeMap::new();
     for cell in &sheet.cells {
         by_row.entry(cell.row).or_default().push(cell);

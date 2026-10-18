@@ -3,6 +3,7 @@
 //! Holds the `🔖️Cache`, `🔖️DirtyPropagation` regions of the module; the root re-exports its items.
 
 use super::*;
+use std::hash::Hash;
 
 // #region 🔖️Cache
 fn hash_str<H: Hasher>(hasher: &mut H, value: &str) {

@@ -1,5 +1,5 @@
-use crate::schema::snapshot::SemioDocumentSnapshot;
-use crate::schema::inferences::*;
+use semio_s_artifact_stdio_semio_document_examples::schema::snapshot::SemioDocumentSnapshot;
+use semio_s_artifact_stdio_semio_document_examples::schema::inferences::*;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

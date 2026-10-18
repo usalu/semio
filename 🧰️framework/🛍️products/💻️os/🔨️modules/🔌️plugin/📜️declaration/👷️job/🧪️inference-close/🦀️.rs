@@ -1,7 +1,7 @@
 //! 🧪️ Original mounted typed inference and second alias close use finite caller stock and System receipts.
 use super::*;
 use semio_framework_job::{Generation,OperationId,StepBudget,root_cancel_token};
-fn law()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn law()->serde_json::Value{serde_json::from_str(include_str!("🧪️tests/🧫️fixtures/🔣️.json")).unwrap()}
 fn clock()->Option<u64>{Some(1)}
 struct Stock{remaining:RetainedCloneGrant,fuel:u64,born:usize,freed:usize}
 impl Stock{

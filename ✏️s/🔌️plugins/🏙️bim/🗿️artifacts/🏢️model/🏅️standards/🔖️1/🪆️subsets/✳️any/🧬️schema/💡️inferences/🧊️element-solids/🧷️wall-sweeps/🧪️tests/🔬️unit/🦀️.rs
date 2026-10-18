@@ -1,9 +1,33 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::WallSweep;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::Cut;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Wall, WallSide};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::TriMesh;
+#[allow(unused_imports)]
+use semio_framework_geometry::triangulation::triangulate;
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::perp;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps::*;
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{self, close};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 use serde_json::{json, Value};
 
 fn model(sweeps: Value, extra: Value) -> ModelSnapshot {
@@ -115,12 +139,12 @@ fn the_section_is_counter_clockwise_and_starts_at_the_origin() {
 }
 
 //#region 🔖️Attic
-const ATTIC: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
-const ATTIC_TABLE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/💡️inference/🧗️wall-depth/🔣️.json");
-const ATTIC_MESHES: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/🧊️meshes/🔣️.json");
+static ATTIC: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json"));
+static ATTIC_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/💡️inference/🧗️wall-depth/🔣️.json"));
+static ATTIC_MESHES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/🧊️meshes/🔣️.json"));
 
 fn attic() -> ModelSnapshot {
-    from_json_str(ATTIC, JsonMemberPolicy::Reject).expect("the attic decodes")
+    from_json_str((*ATTIC), JsonMemberPolicy::Reject).expect("the attic decodes")
 }
 
 fn attic_meshes() -> Value {
@@ -149,7 +173,7 @@ fn same(left: &Value, right: &Value, path: &str) -> Vec<String> {
 async fn the_inferred_attic_equals_the_table_shapely_wrote() {
     let snapshot = attic();
     let inferred = ModelInference::infer(&snapshot).expect("the attic infers");
-    let table: Value = serde_json::from_str(ATTIC_TABLE).expect("the oracle table is JSON");
+    let table: Value = serde_json::from_str((*ATTIC_TABLE)).expect("the oracle table is JSON");
     let mut problems = Vec::new();
     for (id, row) in table["walls"].as_object().expect("walls") {
         let layout = &inferred.wall_layout[id.as_str()];
@@ -176,7 +200,7 @@ async fn the_inferred_attic_equals_the_table_shapely_wrote() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_committed_attic_meshes_are_the_inferred_ones() {
-    let committed: Value = serde_json::from_str(ATTIC_MESHES).expect("the meshes are JSON");
+    let committed: Value = serde_json::from_str((*ATTIC_MESHES)).expect("the meshes are JSON");
     let problems = same(&committed, &attic_meshes(), "");
     assert!(problems.is_empty(), "run the bless test (BIM_BLESS=1) after changing the attic or its inference: {:?}", &problems[..problems.len().min(5)]);
 }
@@ -187,7 +211,7 @@ fn bless_the_wall_depth_meshes() {
     if std::env::var_os("BIM_BLESS").is_none() {
         return;
     }
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/🧊️meshes/🔣️.json");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/🧊️meshes/🔣️.json");
     std::fs::write(path, serde_json::to_string_pretty(&attic_meshes()).expect("meshes serialise") + "\n").expect("meshes are written");
 }
 //#endregion 🔖️Attic

@@ -1,0 +1,15 @@
+# Fresh Asset Snapshot Diagnostic
+
+Dependencies78735 naturally refused at the compound current mapping/fact comparison. The saved error does not distinguish those branches; recorded-census staleness is not established. Tools72495 later naturally refused at the metadata entry limit and explicitly did not certify custody closure. Neither is retried on a timeout or from an inferred cause.
+
+The new unit retains the original kernel→fact→kernel→fact sampling and the original mapping-selected sort order. Mapping comparison occurs first. When it differs, fact comparison remains unevaluated. Only cached current snapshots are used. A fixed nine-field bitmask describes fact differences after the complete fact comparison already refuses. It adds no I/O, tolerance, retry, funding, readiness or ownership authority.
+
+Schema-first15 portable cases cover all nine current Fact fields, mapping changes, entity order, unrelated mappings, equal image ties and mapping-first short circuit. Independent SQLite field masks and Ajv validate the result. The existing bounded native Error reporter emits the new frozen primitive DATA while the actual publisher catch continues to preserve arbitrary primary failures even when diagnostic output fails.
+
+The existing logical-observation Source/strict UI entry runs this law; no executable mode is added. Defining RED and subsequent Source/strict outcomes are recorded separately under Generated/coordination-17. Independent review and actual runtime re-entry remain pending.
+
+DefiningRED25726 exited1/null13794.75825ms before selector implementation. Initial production27001 exposed the new purpose string exceeding the old decimal-only21-unit field bound; the fresh contract now uses a separate fixed128-unit string ceiling within the unchanged4096-byte output bound. FinalSource27731 exited0/null9219.09825ms; strict-five-plus-Source28403 exited0/null18008.047167ms. Both new defining files invert byte-for-byte to the previously held105434-byte helper and55923-byte schema. Current two-file169592-byte hold and independent review are clean; see [review](2026-10-18-fresh-asset-snapshot-independent-final-review.md).
+
+Fresh all-seven census31885 exited0/null1931.25075ms and reported shared custody settled. Genuine Dependencies32416 entered from that fresh census after exact two-file SHA revalidation, using ordinary canonical Nx/Root0 and no incoming override channels. Its outcome remains unproven until the actual process terminal and stage trace settle. The census does not establish previous Tools custody closure.
+
+Dependencies32416 subsequently exited1/null610914.357292ms after accepted/observed, at a separate compound logical metadata name guard. It reported success:false/ownedCustodyClosed:false; [proof](2026-10-18-dependencies32416-independent-failure-proof.md). Its current-snapshot comparison passed in that attempt; no retrospective explanation of78735 follows. A separate name-cause unit now supplies a bounded discriminator on future actual refusals.

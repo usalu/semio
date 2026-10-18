@@ -2,10 +2,11 @@
 //! 🎹️composer::register (matching the repo-wide convention — see gif's own io leaf doc comment).
 //! W4 adds the real import/export leaves under 📥️import/🧩️deserializers and
 //! 📤️export/🧵️serializers.
-#[cfg(test)] use crate::apply_mutation;
+#[cfg(test)]
+use semio_s_artifact_stdio_contract::apply_mutation;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+    use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
     use crate::standards::v5::subsets::any::io::HtmlAnalyzer;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
@@ -46,9 +47,9 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }, store::artifact_codec::<HtmlSnapshot, crate::standards::v5::subsets::any::schema::mutations::HtmlMutation>(crate::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }, store::artifact_codec::<HtmlSnapshot, semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::schema::mutations::HtmlMutation>(semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -57,7 +58,7 @@ pub mod derived_composition {
     /// 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v5::subsets::any::schema::inferences::html_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::inferences::html_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 }
@@ -100,19 +101,15 @@ pub mod io_registry {
 
 
 
-pub mod text {
-    pub use semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::io::text::*;
-    pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::io::text::inferences;
-    pub use semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::io::text::mutations;
-}
+
 
 
 
 pub mod derived_construction {
-    use crate::standards::v5::subsets::any::schema::diff::HtmlDiff;
-    use crate::standards::v5::subsets::any::schema::mutations::{HtmlMutation};
+    use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff::HtmlDiff;
+    use semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::schema::mutations::HtmlMutation;
 
-    use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+    use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -137,7 +134,7 @@ pub mod derived_construction {
             Ok(Self::from_snapshot(<HtmlSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let diff = crate::apply_mutation(&mut self.snapshot, &mutation);
+            let diff = semio_s_artifact_stdio_contract::apply_mutation(&mut self.snapshot, &mutation);
             (self, diff)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
@@ -153,7 +150,7 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::standards::v5::subsets::any::io::import::deserializers as engine;
-    use crate::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, STDIO_HTML_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlSnapshot, STDIO_HTML_DOCUMENT_SCHEMA};
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]

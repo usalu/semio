@@ -1,0 +1,5 @@
+# Whole Products Seed Refusal99551 and Fresh Census99935
+
+Five closed saved files pass sequential nofollow descriptor/name seven-fact SHA checks; receipt `🗑️generated/products99551-census99935-independent-hold.json`. Whole helper attempt99551 naturally terminates1/null in197.56ms at Observed declared macOS leaf candidate, before publisher dispatch/effects. The old census still carries historical descendant observations: the asset whole-publication initial plan consumes that saved kernel metadata, unlike the independently reviewed Graph maintenance parent-identity extractor. Therefore the Graph saved-seed permission does not imply whole-asset acceptance of old descendant DATA.
+
+Fresh seven-partition census99935 naturally terminates0/null in1,524.911208ms and logs captured99935/sharedcustodysettled. Its saved receipt is independently hash bound; no old owner closure, pending absence or publication success is inferred from this shared reacquisition. New wholeProducts PID863 remains running and has no verdict in this proof. No live Native/protected reads were performed.

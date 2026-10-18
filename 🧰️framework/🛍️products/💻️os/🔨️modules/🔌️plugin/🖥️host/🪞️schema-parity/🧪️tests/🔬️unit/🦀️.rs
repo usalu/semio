@@ -21,12 +21,15 @@ mod tests {
         result: Option<String>,
     }
 
-    fn schema_path() -> PathBuf {
-        fixture_path!("../../../🧬️schema/📜️.wit")
+    fn schema_directory() -> PathBuf {
+        fixture_path!("../../../🧬️schema")
     }
 
     fn source() -> String {
-        let source = fs::read_to_string(schema_path()).expect("plugin WIT schema must be readable");
+        let mut files = fs::read_dir(schema_directory()).expect("plugin WIT schema directory must be readable").map(|entry| entry.expect("plugin WIT schema entry must be readable").path()).filter(|path| path.extension().is_some_and(|extension| extension == "wit")).collect::<Vec<_>>();
+        files.sort();
+        assert!(!files.is_empty(), "plugin WIT schema directory must hold WIT files");
+        let source = files.iter().map(|path| fs::read_to_string(path).expect("plugin WIT schema must be readable")).collect::<Vec<_>>().join("\n");
         source.lines().map(|line| line.split_once("//").map_or(line, |(code, _)| code)).collect::<Vec<_>>().join("\n")
     }
 

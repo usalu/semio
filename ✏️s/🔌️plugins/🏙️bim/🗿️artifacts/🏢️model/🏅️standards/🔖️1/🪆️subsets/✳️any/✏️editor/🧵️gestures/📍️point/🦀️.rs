@@ -1,8 +1,8 @@
 //! 📍️ The point tools: the column (one click, a column of the selected library type standing on the storey), the space (one click inside a room: the click is the seed of a
 //! bounded space and the number is the next free one of the storey) and the stair (press the foot, drag the direction and release, or click the foot and click the direction).
 
-use super::plane::{angle, dist, point2, same, P};
-use super::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use crate::editor::bim::gestures::plane::{angle, dist, point2, same, P};
+use crate::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Column, Space, SpaceBoundary, Stair, StairFlight, TopConstraint}, mutations::ModelMutation};
 
@@ -24,7 +24,7 @@ pub enum Kind {
 /// 📍️ The state of one point tool: the snapped pointer and, for a stair, the foot already chosen and whether the press is still down.
 pub struct Point {
     kind: Kind,
-    hover: Option<super::snap::SnapHit>,
+    hover: Option<crate::editor::bim::gestures::snap::SnapHit>,
     foot: Option<P>,
     held: bool,
 }
@@ -138,6 +138,4 @@ impl Tool for Point {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

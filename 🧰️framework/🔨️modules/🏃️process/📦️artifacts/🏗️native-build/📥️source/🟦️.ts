@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { inspectRustCompileReferences, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustGeneratedTokenOutput, type RustToken } from "@semio-tech/compiler-syntax-rust-ts";
+import { inspectRustCompileReferences, rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustGeneratedTokenOutput, type RustToken } from "../../../../📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 📎️ Cfg-selected authored input; compiler dep-info must still qualify generated ownership. */
 export interface RustSourceInputV1 { readonly path: string; readonly digest: string; readonly bytes: number; readonly activeBytes: number; readonly activeLines: number; readonly kind: "source" | "embedded"; }

@@ -84,7 +84,7 @@ export class RepoScript extends Script {
 /** 🌳️ Preserves caller cancellation and deadline while selecting configured build resources. */
 export async function runOwnedBuildInvocationV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
  requireIssuedResourceControlInvocationV1(phaseControl,parent);checkResourceLeaseControl(phaseControl);const{readOwnedBuildInvocationV1}=await import("./📥️caller/🟦️.ts");readOwnedBuildInvocationV1(root,parent,args);
- const {openRepositoryCachePartitionV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),control=phaseControl,leases=await openRepositoryCachePartitionV1(root,"leases",control);let failed=false;try{const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");await withRepositoryCacheStoreV1(root,"diagnostics",parent,control,(diagnostics,diagnosticPhase)=>withRepositoryCacheStoreV1(root,"dependencies",parent,diagnosticPhase,async(_dependencies,phaseControl)=>{const previous=process.env.SEMIO_DIAGNOSTIC_DIRECTORY;process.env.SEMIO_DIAGNOSTIC_DIRECTORY=diagnostics.environment.SEMIO_DIAGNOSTIC_DIRECTORY;try{await runOwnedBuildInLeasesV1(root,args,parent,phaseControl);}finally{if(previous===undefined)delete process.env.SEMIO_DIAGNOSTIC_DIRECTORY;else process.env.SEMIO_DIAGNOSTIC_DIRECTORY=previous;}}));}catch(error){failed=true;throw error;}finally{try{await leases.close();}catch(error){if(!failed)throw error;}}
+ const {openRepositoryCachePartitionV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts"),control=phaseControl,leases=await openRepositoryCachePartitionV1(root,"leases",control);let failed=false;try{const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");await withRepositoryCacheStoreV1(root,"diagnostics",parent,control,async(diagnostics,diagnosticPhase)=>{const previous=process.env.SEMIO_DIAGNOSTIC_DIRECTORY;process.env.SEMIO_DIAGNOSTIC_DIRECTORY=diagnostics.environment.SEMIO_DIAGNOSTIC_DIRECTORY;try{await runOwnedBuildInLeasesV1(root,args,parent,diagnosticPhase);}finally{if(previous===undefined)delete process.env.SEMIO_DIAGNOSTIC_DIRECTORY;else process.env.SEMIO_DIAGNOSTIC_DIRECTORY=previous;}});}catch(error){failed=true;throw error;}finally{try{await leases.close();}catch(error){if(!failed)throw error;}}
 }
 
 async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent:import("../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts").ScriptInvocation,phaseControl:ResourceLeaseControl):Promise<void> {
@@ -124,6 +124,9 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       const {readRepositoryCargoLaunchV1,launchRepositoryCargoV1}=await import("../🏃️process/🦀️cargo/🚪️launcher/🟦️.ts");
       process.exitCode=await launchRepositoryCargoV1(invocation,createIssuedResourceControlV1(invocation,"cargo:build-entry",0),root,readRepositoryCargoLaunchV1(resolved.args.slice(1),process.env),process.cwd(),process.env,{maximumMilliseconds:0,output:"stream"});return;
     }
+    if(!["tools","reset"].includes(command)){const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/📜️script.ts");await ensureBuildEnvironmentV1(root,invocation,phaseControl);}
+    const {withRepositoryCacheStoreV1}=await import("../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts");
+    await withRepositoryCacheStoreV1(root,"dependencies",parent,phaseControl,async(_dependencies,phaseControl)=>{
     if(command==="tools"){
       if(resolved.args[1]!=="setup"||resolved.args.length>3)throw Error("Expected repo tools setup [nx|bazel|all]");
       const tools=resolved.args[2]??selected.tool;
@@ -138,8 +141,6 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
       else{const{invalidateBuildGraphV1}=await import("./🕸️graph/🟦️.ts");await invalidateBuildGraphV1(root,invocation,phaseControl);const {runOwnedNxInvocationV1}=await import("../⚡️caching/🚀️bootstrap/📜️script.ts");await runOwnedNxInvocationV1(root,["reset"],invocation,phaseControl);}
       return;
     }
-    const {ensureBuildEnvironmentV1}=await import("./🚀️bootstrap/📜️script.ts");
-    await ensureBuildEnvironmentV1(root,invocation,phaseControl);
     if(["graph","show"].includes(command)){
       const {loadBuildGraphV1}=await import("./🕸️graph/🟦️.ts"),graph=await loadBuildGraphV1(root,invocation,phaseControl,{selection:{kind:"all"},reuse:process.env.SEMIO_BUILD_REUSE_GRAPH==="true"});
       const {buildOptionV1}=await import("./🧭️selection/🟦️.ts");
@@ -192,6 +193,7 @@ async function runOwnedBuildInLeasesV1(root:string,args:readonly string[],parent
     }
     await adapter.runBazelTasksV1(root,graph,request,invocation,artifactPhase);
     },additionalBytes=>prepareBuildToolStorageV1(root,selected.tool,invocation,rustPhase,additionalBytes));
+    });
     });
   } finally {for(const[key,value]of Object.entries(previous))if(value===undefined)delete process.env[key];else process.env[key]=value;}
 }

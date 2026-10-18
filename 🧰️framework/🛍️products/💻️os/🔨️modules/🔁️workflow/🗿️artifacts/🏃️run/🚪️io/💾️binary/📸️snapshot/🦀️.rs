@@ -19,7 +19,7 @@ impl pack::snapshot::ArtifactPack for RunArtifact {
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
         match Self::__dsl_from_record(&record) {
             Ok(value) => Ok(value),
-            Err(error) => Err(store::os_store::serialization::text_error_to_pack_error(error)),
+            Err(error) => Err(store::serialization::text_error_to_pack_error(error)),
         }
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
@@ -27,8 +27,8 @@ impl pack::snapshot::ArtifactPack for RunArtifact {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RunArtifact {
-fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, store::os_store::serialization::ArtifactCodec)> {
+fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, store::serialization::ArtifactCodec)> {
         Some((semio_framework_artifact_reference::Dialect { artifact_kind: "os.run", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::bare_artifact_codec::<Self, crate::RunMutation>(S_RUN_SCHEMA)))
     }
-fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
+fn sqlite_snapshot_codec()->Option<store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }

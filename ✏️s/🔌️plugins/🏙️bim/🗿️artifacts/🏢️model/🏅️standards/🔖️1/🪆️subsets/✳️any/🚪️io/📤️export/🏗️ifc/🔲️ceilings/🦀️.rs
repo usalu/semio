@@ -13,7 +13,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::Ceiling;
 /// 🏷️ The `Semio_Authoring` row that holds the authored record of a sloped ceiling.
 pub const RECORD_ROW: &str = "Ceiling";
 
-fn covering(x: &mut Export<'_>, id: &str, row: &Ceiling) {
+pub fn covering(x: &mut Export<'_>, id: &str, row: &Ceiling) {
     let model = x.model;
     let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.ceiling_types.get(&row.ceiling_type), x.solid(id).map(|solid| solid.bounds)) else {
         x.skip("ceiling", id, "its storey, type or inferred solid is missing");
@@ -65,6 +65,4 @@ pub fn emit(x: &mut Export<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

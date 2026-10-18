@@ -1,4 +1,4 @@
-import {rustTokens,rustTokenPairs,rustTokenSegments,rustStringValue} from "@semio-tech/compiler-syntax-rust-ts";
+import {rustTokens,rustTokenPairs,rustTokenSegments,rustStringValue} from "../../../../../../../📚️compiler/📖️syntax/🦀️rust/📦️packages/🟦️typescript/🟦️.ts";
 import {selectRustSourceV1} from "../../../../📥️source/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json";

@@ -1,5 +1,5 @@
 //! 🧭️ set-design-option authored mutation.
-use crate::*;
+use crate::standards::v1::subsets::any::schema::{diff::{DesignOptionPatch, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -17,10 +17,13 @@ impl SetDesignOption {
     pub fn patch(&self) -> DesignOptionPatch { DesignOptionPatch { group: self.group.clone(), name: self.name.clone(), primary: self.primary.clone() } }
     pub fn from_patch(id: String, patch: DesignOptionPatch) -> Self { Self { id, group: patch.group, name: patch.name, primary: patch.primary } }
 }
-impl MutationKind<ModelSnapshot, ModelMutation> for SetDesignOption {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetDesignOption
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetDesignOption>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "design-option", kind: "set-design-option", record: "SetDesignOption" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> { Ok(super::inverse::inverse(self, base)) }
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::set_design_option::diff::diff(self, base) }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::set_design_option::inverse::inverse(self, base)) }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set design option", "Ändern") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

@@ -12,7 +12,7 @@ import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
 type Json = null | boolean | number | string | Json[] | {[key: string]: Json};
 const TRANSPORT = "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport";
 const LEAVES = new URL("../../", import.meta.url);
-const FIXTURES = new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations", import.meta.url);
+const FIXTURES = new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations/", import.meta.url);
 const VALUE = frameworkSourceUrl("🔨️modules/🌱️value/🧬️schema/🔣️.json");
 const read = (url: URL): Json => JSON.parse(readFileSync(url, "utf8"));
 const folders = (root: URL) => readdirSync(root, {withFileTypes: true}).filter((entry) => entry.isDirectory()).map((entry) => entry.name);

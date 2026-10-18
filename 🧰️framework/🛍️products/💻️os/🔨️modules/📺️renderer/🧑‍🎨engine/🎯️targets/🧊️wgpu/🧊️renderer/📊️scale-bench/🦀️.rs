@@ -846,7 +846,7 @@ pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, r
         return Ok(1);
     };
     let registry = serde_json::from_slice(registry_page);
-    let _ = registry_bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    let _ = semio_framework_os_renderer_wgpu_host_base::close_renderer_io_payload(&mut registry_bytes);
     let registry: RegistryFile = match registry {
         Ok(value) => value,
         Err(error) => {
@@ -872,7 +872,7 @@ pub async fn run(registry_path: PathBuf, wasm_path: PathBuf, shard_count: u16, r
     let runtime: Arc<GuestRuntimes> = Arc::new(GuestRuntimes::Owned(OwnedRuntime::new(original_clock)));
     let package_ref = PackageRef { package: PackageId("scale-fixture".to_string()), hash: PackageHash(*semio_framework_hash::hash(wasm_bytes).as_bytes()) };
     let compiled = runtime.compile(&package_ref, wasm_bytes).await;
-    let _ = wasm_bytes_owner.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    let _ = semio_framework_os_renderer_wgpu_host_base::close_renderer_io_payload(&mut wasm_bytes_owner);
     let compiled = match compiled {
         Ok(handle) => handle,
         Err(error) => {

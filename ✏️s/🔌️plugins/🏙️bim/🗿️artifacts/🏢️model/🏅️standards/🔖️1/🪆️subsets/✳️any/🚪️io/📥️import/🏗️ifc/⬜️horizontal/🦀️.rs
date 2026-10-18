@@ -3,10 +3,12 @@
 //! association names (else one layer of the sweep depth); a pitched foreign roof has no pitch to read (its geometry is a mesh) and is reported by the unsupported-class note.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgelements/lexical/ifcroof.htm>
 
-use super::data::label;
-use super::reader::{text, Doc, Section};
-use super::spatial::{authoring_of, phase_of};
-use super::Import;
+use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc, Section};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, phase_of};
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::schema::snapshot::{Layer, LayerFunction, Point2, Roof, RoofShape, RoofType, Vertex};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
@@ -65,6 +67,4 @@ pub fn read(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

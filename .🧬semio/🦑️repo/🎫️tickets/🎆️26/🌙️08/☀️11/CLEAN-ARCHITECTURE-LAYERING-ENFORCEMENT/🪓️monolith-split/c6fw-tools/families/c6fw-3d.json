@@ -1,0 +1,15 @@
+{
+ "name": "c6fw-3d",
+ "crates": [
+  "semio-framework-3d-brep-engine",
+  "semio-framework-3d-brep-queries",
+  "semio-framework-3d-brep-construction",
+  "semio-framework-3d-brep-boolean",
+  "semio-framework-3d",
+  "semio-framework-3d-brep-intersect",
+  "semio-framework-3d-brep-tessellation",
+  "semio-framework-3d-brep-representation",
+  "semio-framework-3d-mesh-document"
+ ],
+ "note": "c6fw census 6 P13/P14: the owning crates of the ten 3d split files"
+}

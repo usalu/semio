@@ -1,10 +1,17 @@
 import { loadReturnResponseFramingSchema, loadReturnResponseFramingFixture, loadActorReturnResponseFixture, loadActorReturnFixture, loadActorReturnSchema, loadCreditMetadataInboxFixture, loadResponseCreditMetadataFixture, loadActorReturnResponseSchema, loadReturnResponseCreditSchema, loadReturnResponseCreditFixture } from "../../../../../../🔨️modules/🎭️actor/🧪️tests/🧫️fixtures/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/📃️page/🟦️.ts"), "createActorBytePage"> & Pick<typeof import("../../../../../../🔨️modules/🎭️actor/📤️return/📨️response/🟦️.ts"), "ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES" | "ActorReturnResponseFraming" | "decodeActorReturnResponse" | "encodeActorReturnResponse" | "fault" | "readActorReturnResponseHeader" | "uint">, testSource: TestSource): Promise<void> {
   const { ACTOR_RETURN_RESPONSE_MAXIMUM_BYTES, ActorReturnResponseFraming, createActorBytePage, decodeActorReturnResponse, encodeActorReturnResponse, fault, readActorReturnResponseHeader, uint } = dependencies;
 
-  const { it, expect, vi } = vitest;
+  const { it, expect } = vitest;
+  const stubbed = new Map<string, PropertyDescriptor | undefined>();
+  const vi = {
+    ...vitest.vi,
+    stubGlobal: (name: string, value: unknown): void => { if (!stubbed.has(name)) stubbed.set(name, Object.getOwnPropertyDescriptor(globalThis, name)); Object.defineProperty(globalThis, name, { value, configurable: true, writable: true }); },
+    unstubAllGlobals: (): void => { for (const [name, descriptor] of stubbed) { if (descriptor) Object.defineProperty(globalThis, name, descriptor); else delete (globalThis as Record<string, unknown>)[name]; } stubbed.clear(); },
+  };
   const hydrate = (value: unknown): any => JSON.parse(JSON.stringify(value), (key, item) => ["activationGeneration", "returnSequence", "pageSequence"].includes(key) ? BigInt(item) : item);
   const backing = (hex: string): ArrayBuffer => Uint8Array.from(Buffer.from(hex, "hex")).buffer;
   const oracle = async () => {
@@ -82,7 +89,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const fixture = await loadCreditMetadataInboxFixture();
     const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs");
     const shardPath = new URL("../../📮️shard-client/🟦️.ts", testSource.url);
-    const shard = ts.createSourceFile(shardPath.pathname, readFileSync(shardPath, "utf8"), ts.ScriptTarget.Latest, true);
+    const shard = ts.createSourceFile(shardPath.pathname, readModuleTreeSource(shardPath), ts.ScriptTarget.Latest, true);
     const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();
     for (const row of fixture.layouts) {
       const declaration = shard.statements.find(node => (ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.text === row.declaration);
@@ -104,15 +111,16 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       });
     };
     expect(variants("OutboundMessage")).toEqual(fixture.outbound); expect(variants("InboundMessage")).toEqual(fixture.inbound);
-    const producerPath = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", testSource.url);
-    const producer = ts.createSourceFile(producerPath.pathname, readFileSync(producerPath, "utf8"), ts.ScriptTarget.Latest, true);
-    const producers = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
+    const producerLeaf = { shardWorkerSource: "🧵️shard-worker-source", hostShimSource: "🪢️host-shim-source" } as const;
+    const producerPath = (name: keyof typeof producerLeaf) => new URL(`../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/${producerLeaf[name]}/🟦️.ts`, testSource.url);
+    const producer = (name: keyof typeof producerLeaf) => ts.createSourceFile(producerPath(name).pathname, readFileSync(producerPath(name), "utf8"), ts.ScriptTarget.Latest, true);
+    const producers = { shardWorkerSource: (await import("../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts")).shardWorkerSource, hostShimSource: (await import("../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts")).hostShimSource };
     // 🫀️ Inventoried from the EMITTED bytes, not the template's raw text: `shardWorkerSource` now
     // interpolates the schema-owned liveness policy, so its return is a template EXPRESSION and its
     // literal text no longer is the worker. The AST check still fences the shape (one returned
     // template, nothing else), the inventory reads what the browser actually gets.
     const generated = (name: "shardWorkerSource" | "hostShimSource") => {
-      const declaration = producer.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
+      const declaration = producer(name).statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
       if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned))) throw new Error("Changed generated inbox source " + name);
       return ts.createSourceFile(name + ".js", producers[name](), ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
@@ -143,13 +151,17 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
   it("ActorWorkerInboxInventory executes generated heartbeat, ordinary reply and awaited effect traffic together", async () => {
     const fixture = await loadCreditMetadataInboxFixture(); const { default: ts } = await import("typescript"); const { readFileSync } = await import("node:fs"); const vm = await import("node:vm");
-    const path = new URL("../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", testSource.url);
-    const source = ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
-    const producers = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
+    const producerLeaf = { shardWorkerSource: "🧵️shard-worker-source", hostShimSource: "🪢️host-shim-source" } as const;
+    const parseLeaf = (name: keyof typeof producerLeaf) => { const path = new URL(`../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/${producerLeaf[name]}/🟦️.ts`, testSource.url); return ts.createSourceFile(path.pathname, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true); };
+    const sources = { shardWorkerSource: parseLeaf("shardWorkerSource"), hostShimSource: parseLeaf("hostShimSource") };
+    const producers = { shardWorkerSource: (await import("../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts")).shardWorkerSource, hostShimSource: (await import("../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts")).hostShimSource };
+    const { classicShardWorkerSource, vmOriginalSource } = await import("../✂️worker-vm-source/🟦️.ts");
     const generated = (name: "shardWorkerSource" | "hostShimSource") => {
-      const declaration = source.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
+      const declaration = sources[name].statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === name);
       const returned = declaration && ts.isFunctionDeclaration(declaration) ? declaration.body?.statements.find(ts.isReturnStatement)?.expression : null;
-      if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned))) throw new Error("Changed generated inbox source " + name); return producers[name]();
+      if (!returned || !(ts.isNoSubstitutionTemplateLiteral(returned) || ts.isTemplateExpression(returned))) throw new Error("Changed generated inbox source " + name);
+      const text = producers[name]() as string;
+      return name === "shardWorkerSource" ? classicShardWorkerSource(text) : text;
     };
     const messages: any[] = []; const receive = (message: unknown) => messages.push(message);
     const shim = vm.createContext({ exports: {}, URL, self: { postMessage: receive } });
@@ -157,7 +169,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     new vm.Script(ts.transpileModule(shimCode, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.CommonJS } }).outputText).runInContext(shim);
     let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
     const checkpoint = Object.freeze({ ordinary: "checkpoint" }); const effectResult = Object.freeze({ effect: "completed" });
-    const context = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, self: { postMessage: receive, addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } }, apiA: { poll: () => shim.exports.storageRead({ key: "awaited" }), resolveEffect: shim.exports.__resolveEffect, rejectEffect: shim.exports.__rejectEffect }, apiB: { checkpoint: async () => checkpoint } });
+    const context = vm.createContext({ WebAssembly: { Suspending: class {}, promising: (value: unknown) => value }, self: { postMessage: receive, addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } }, apiA: { originalSource: vmOriginalSource, poll: () => shim.exports.storageRead({ key: "awaited" }), resolveEffect: shim.exports.__resolveEffect, rejectEffect: shim.exports.__rejectEffect }, apiB: { originalSource: vmOriginalSource, checkpoint: async () => checkpoint } });
     new vm.Script(generated("shardWorkerSource")).runInContext(context);
     new vm.Script('actors.set("a", { api: apiA, activationGeneration: 1n, pendingAssets: [] }); actors.set("b", { api: apiB, activationGeneration: 2n, pendingAssets: [] });').runInContext(context);
     if (!dispatch) throw new Error("Missing generated worker dispatcher");
@@ -199,7 +211,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     const paths = { output: "../../🪪️activation/🚪️instance/📥️output/🟦️.ts", shard: "../../📮️shard-client/🟦️.ts", response: "./🟦️.ts", result: "../🟦️.ts" };
     const totals = new Map<string, { bytes: bigint; slots: bigint; owners: bigint }>();
     for (const layout of fixture.layouts) {
-      const path = paths[layout.source as keyof typeof paths]; const parsed = ts.createSourceFile(path, readFileSync(new URL(path, testSource.url), "utf8"), ts.ScriptTarget.Latest, true);
+      const path = paths[layout.source as keyof typeof paths]; const parsed = ts.createSourceFile(path, layout.source === "shard" ? readModuleTreeSource(new URL(path, testSource.url)) : readFileSync(new URL(path, testSource.url), "utf8"), ts.ScriptTarget.Latest, true);
       const declaration = parsed.statements.find(node => (ts.isClassDeclaration(node) || ts.isTypeAliasDeclaration(node)) && node.name?.text === layout.declaration);
       const members = declaration && ts.isClassDeclaration(declaration) ? declaration.members.filter(ts.isPropertyDeclaration) : declaration && ts.isTypeAliasDeclaration(declaration) && ts.isTypeLiteralNode(declaration.type) ? declaration.type.members : null;
       if (!members) throw new Error("Missing declared metadata source " + layout.declaration);

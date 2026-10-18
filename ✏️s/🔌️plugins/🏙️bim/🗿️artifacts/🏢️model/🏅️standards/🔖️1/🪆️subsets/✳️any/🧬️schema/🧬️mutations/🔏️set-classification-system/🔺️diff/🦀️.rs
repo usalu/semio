@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetClassificationSystem`: a sparse system patch of exactly the provided fields that differ from the base. The name stays non-blank and the entry table must stay sound (unique codes, parents
 //! that are rows, no cycle); element classifications whose code the new table lacks stay and are reported by a diagnostic. Providing only equal values is a no-op.
 
-use super::SetClassificationSystem;
+use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
 use crate::standards::v1::subsets::any::schema::{snapshot::{entries_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

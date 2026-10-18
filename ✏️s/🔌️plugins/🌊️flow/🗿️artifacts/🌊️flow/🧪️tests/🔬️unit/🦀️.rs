@@ -110,7 +110,18 @@ fn authored_slider_labels_survive_child_content_round_trip() {
 /// renderers. Read from the production source because that literal is the only place the drift lives.
 #[test]
 fn editor_tool_proofs_declare_the_artifact_document_schema() {
-    static EDITOR_SOURCE: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"));
+    static EDITOR_SOURCE: std::sync::LazyLock<String> = std::sync::LazyLock::new(|| [
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🙈️internal-actions-and-context-menu/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗃️direct-store-emit-and-work/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️direct-store-command-work/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🏭️direct-store-factory-and-child-group-route/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📤️host-only-retained-route/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕸️graph-operation-route/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧩️contributions-route-and-instance-owner/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎛️flow-play-app/🦀️.rs"),
+        fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🚀️app-assembly/🦀️.rs"),
+    ].concat());
     let declared: Vec<&str> = (*EDITOR_SOURCE)
         .lines()
         .filter_map(|line| line.trim().strip_prefix("artifact_schema:"))

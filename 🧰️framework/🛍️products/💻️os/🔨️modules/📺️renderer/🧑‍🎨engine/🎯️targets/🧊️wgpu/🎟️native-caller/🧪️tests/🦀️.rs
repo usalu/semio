@@ -9,7 +9,7 @@ use semio_framework_value::{RetainedCloneStep,ValueError,ValueRefusalKind};
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn clock()->Option<u64>{Some(1000)}
 fn observe<T>(run:impl FnOnce()->T)->(T,usize,usize){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,heap.requested_bytes,heap.released_bytes)}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🎟️native-caller/🔣️.json")).unwrap()}
 
 #[test]
 fn native_original_root_callbacks_keep_source_epoch_failure_and_paid_terminal_closure(){

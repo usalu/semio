@@ -103,7 +103,7 @@ fn render_pages(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyRe
     Ok(pages)
 }
 
-pub(crate) fn editable_pages(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyResult<Vec<EditableDocumentPage>> {
+pub fn editable_pages(document: &DocxSnapshot) -> semio_framework_plugin::UiAssemblyResult<Vec<EditableDocumentPage>> {
     Ok(render_pages(document)?.into_iter().map(|page| page.page).collect())
 }
 
@@ -153,7 +153,7 @@ fn formatting_toolbar(address: &DocxXmlAddress, formatting: Option<DocxRunFormat
     toolbar.try_build().map(Some).map_err(|_| PluginAssemblyError::new("stdio.docx.formatting.toolbar", "formatting toolbar build capacity"))
 }
 
-pub(crate) fn render_windowed_for_controller(
+pub fn render_windowed_for_controller(
     document: &DocxSnapshot,
     windows: &TreeWindows<'_>,
     locale: Locale,

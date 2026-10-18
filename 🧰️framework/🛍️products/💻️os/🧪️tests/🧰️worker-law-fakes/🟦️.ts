@@ -10,7 +10,7 @@ export function workerLawSourceV1(registrar: TestSource): TestSource {
 }
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
-type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
+type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
 type DirectoryStreamMessage = import("@semio-tech/framework/directory/schema").DirectoryStreamMessage;
 type DocumentExecutionTargetLeaseFieldsV1 = import("@semio-tech/framework/directory/schema").DocumentExecutionTargetLeaseFieldsV1;

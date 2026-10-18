@@ -1,0 +1,9 @@
+🔌️mcp.go	🔌️mcp carries the MCP entry of the cli: the stdio runner, result conversion, argument and path guards.	43-222
+🎼️mcp_prompt.go	🎼️mcp_prompt carries the MCP prompt template rendering and prompt handlers of the cli.	226-303
+🛎️mcp_tool_repo.go	🛎️mcp_tool_repo carries the MCP tool handlers of the cli for analysis, policy, tickets, drafts, todos, goals, export and contributors.	305-623
+🧬️mcp_tool_codebase.go	🧬️mcp_tool_codebase carries the MCP tool handlers of the cli for folders, files, sections, artifact moves, graphql and navigation.	625-890
+🏬️mcp_resource.go	🏬️mcp_resource carries the MCP resource handlers of the cli.	894-1425
+🗣️mcp_description.go	🗣️mcp_description carries the MCP tool and prompt descriptions of the cli.	1429-1721
+🏭️mcp_factory.go	🏭️mcp_factory carries the MCP server factory of the cli with the ticket handlers and hook and MCP runners.	1725-2019
+🧩️mcp_protocol.go	🧩️mcp_protocol carries the MCP protocol types and builders of the cli.	2023-2230
+🖥️mcp_adapter.go	🖥️mcp_adapter carries the MCP server adapter of the cli: server registry, listings and the stdio JSON-RPC loop.	2232-2448

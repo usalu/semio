@@ -330,7 +330,6 @@ name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d-booleans",
- "semio-framework-2d-compute",
  "semio-framework-2d-engine",
  "semio-framework-2d-path-flatten",
  "semio-framework-2d-path-stroke",
@@ -2496,7 +2495,7 @@ name = "semio-framework-plugin-decl-app"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-composition-admission",
@@ -2583,7 +2582,7 @@ name = "semio-framework-plugin-decl-surface"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-composition-admission",
@@ -3517,7 +3516,7 @@ name = "semio-framework-plugin-testing-laws"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-composition-admission",
  "semio-framework-diagnostic",
@@ -4819,6 +4818,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-contract",
+ "semio-s-artifact-norm-din18599-checks",
  "semio-s-artifact-norm-din18599-diff",
  "semio-s-artifact-norm-din18599-editor",
  "semio-s-artifact-norm-din18599-inferences",
@@ -4829,6 +4829,7 @@ dependencies = [
  "semio-s-artifact-norm-din18599-mutations",
  "semio-s-artifact-norm-din18599-schema",
  "semio-s-artifact-stdio-semio-table-model",
+ "semio-s-artifact-stdio-semio-value-model",
  "serde_json",
 ]
 
@@ -4868,7 +4869,7 @@ name = "semio-s-artifact-norm-din18599-editor"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-async-macros",
  "semio-framework-composition-admission",
  "semio-framework-dsl-record-derive",
@@ -4964,6 +4965,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-semio-table-model",
+ "semio-s-artifact-stdio-semio-value-model",
  "semio-s-plugin-norm-app-surface",
  "serde",
 ]
@@ -5051,7 +5053,7 @@ dependencies = [
 name = "semio-s-artifact-norm-din18599-viewer"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-async-macros",
  "semio-framework-composition-admission",
  "semio-framework-os-kernel",
@@ -5300,7 +5302,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-semio-audio"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
@@ -5719,7 +5721,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-semio-table"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
@@ -5829,7 +5831,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-semio-text"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",
@@ -5981,7 +5983,7 @@ dependencies = [
 name = "semio-s-artifact-stdio-semio-video"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-diagnostic",

@@ -1,7 +1,7 @@
 //! 🔥️ CAD play app — the Energy window: the `aec.building.energy` pane's world-3d viewport.
 
 use semio_s_artifact_cad_cad_config::CadDislocateOptions;
-use crate;
+use crate as edit;
 use crate::options;
 use semio_s_artifact_cad_cad_kit::editor::cad::terminology::CadLabels;
 use semio_s_artifact_cad_cad_kit::{CadPlayRuntime, CadPlayView};

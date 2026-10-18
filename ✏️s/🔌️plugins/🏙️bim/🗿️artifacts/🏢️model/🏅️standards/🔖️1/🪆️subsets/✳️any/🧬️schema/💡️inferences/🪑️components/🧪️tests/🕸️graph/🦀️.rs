@@ -6,13 +6,14 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::{diff::{patches::{ComponentPatch, FamilyParameterPatch, MepElementPatch, ProjectPatch}, Entry, ModelDiff}, snapshot::{ModelSnapshot, Point3}};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeSet;
 
-const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json");
-const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/💡️inference/🪑️components/🔣️.json");
+static ROOM: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json"));
+static TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/💡️inference/🪑️components/🔣️.json"));
 
 fn room() -> ModelSnapshot {
-    from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes")
+    from_json_str((*ROOM), JsonMemberPolicy::Reject).expect("the room decodes")
 }
 
 fn settle(session: &mut ModelInferenceSession, snapshot: &ModelSnapshot) {
@@ -236,7 +237,7 @@ fn the_quantities_sum_per_family_category_system_and_size() {
 fn the_text_table_is_the_table_the_oracle_wrote() {
     let inference = ModelInference::infer(&room()).expect("infers");
     let actual = crate::standards::v1::subsets::any::io::text::inferences::components::table_json(&inference);
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems(TABLE, &actual);
+    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*TABLE), &actual);
     assert!(problems.is_empty(), "{problems:#?}");
     let projected = crate::standards::v1::subsets::any::io::text::projection::encode_inference_projection_json(&room(), "components").expect("the components projection exists");
     assert_eq!(projected, actual);

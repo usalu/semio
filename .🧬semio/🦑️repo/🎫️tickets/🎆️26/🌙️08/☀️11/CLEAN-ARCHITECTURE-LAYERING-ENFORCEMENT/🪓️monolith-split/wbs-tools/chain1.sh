@@ -1,0 +1,3 @@
+#!/bin/zsh
+"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/wbs-tools/vb.sh" projektetage "/Users/ueli/Documents/semio/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/📦️packages/🟦️typescript" "/Users/ueli/Documents/semio/♻️mit-bestand/🎤️präsentation/📅️33.projektetage/🏗️builder/🌐️vite/🟦️.ts" prototype 900
+"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/wbs-tools/vb.sh" hubadmin "/Users/ueli/Documents/semio/🌎️hub/🔨️modules/🛡️admin/📦️packages/🟦️typescript" "/Users/ueli/Documents/semio/🌎️hub/🔨️modules/🛡️admin/🏗️builder/🌐️vite/🟦️.ts" prototype 900

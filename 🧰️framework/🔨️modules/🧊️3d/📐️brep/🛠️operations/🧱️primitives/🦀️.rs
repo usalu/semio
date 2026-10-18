@@ -25,7 +25,7 @@ use semio_framework_3d_brep_surface::Surface;
 use semio_framework_3d_brep_tolerance::Tol;
 use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 use semio_framework_3d_brep_representation::topology::{Body, Wire};
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 use semio_framework_3d_brep_representation::topology::Edge;
 use semio_framework_3d_brep_vector::matrix::Frame3;
 use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2, Vec3};
@@ -154,8 +154,8 @@ fn set_outer_pcurves(body: &mut Body, face: FaceId, pcurves: &[(Curve2Id, (f64, 
 /// below to exclude poles from the edge count (see `w1e-primitives.md` §sphere for why the naive
 /// `V−E+F` would otherwise read 0, not 2, for the sphere).
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-#[cfg(test)]
-pub(crate) fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
+#[cfg(any(test, feature = "testkit"))]
+pub fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
     edge.v0 == edge.v1 && matches!(curve, Curve3::Line { dir, .. } if dir.norm() < 1e-12)
 }
 
@@ -870,17 +870,3 @@ fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
 
 // #endregion 🔖️CoplanarMerge
 
-// #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️topology-seed/🦀️.rs"]
-mod topology_seed_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️topology-reachability/🦀️.rs"]
-mod topology_reachability_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️topology-compaction/🦀️.rs"]
-mod topology_compaction_tests;
-// #endregion 🔖️Tests

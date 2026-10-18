@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("backbone retirement preserves original ordered owners and exact physical release", () => {
   const law = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
@@ -38,6 +39,8 @@ test("installed backbone admission retains empty allocated queues under the call
     const retained = database.query<{ retained: number }, number[]>("SELECT (?1 > 0 OR ?2 > 0) AS retained");
     for (const row of law.installedQueues) expect(Boolean(retained.get(row.length, row.capacity)?.retained)).toBe(row.retained);
   } finally { database.close(); }
-  const store = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
-  for (const authority of ["fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant)", "if self.member_inbox.capacity() != 0", "ArtifactStoreCursorDisposerPhase::Backbone => self.close_take_backbone_retirement(grant)", "ArtifactStoreCursorDisposerPhase::Backbone if store.member_inbox.capacity() == 0"]) expect(store.includes(authority)).toBe(true);
+  const engine = readModuleTreeSource(new URL("../../../⚙️engine/📥️lifted/🏪️store/🦀️.rs", import.meta.url));
+  const owners = readFileSync(new URL("../../../🏗️initialization/🏠️owners/📥️lifted/🏪️store/🦀️.rs", import.meta.url), "utf8");
+  for (const authority of ["fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant)", "if self.wire.member_inbox.capacity() != 0", "ArtifactStoreCursorDisposerPhase::Backbone => self.close_take_backbone_retirement(grant)"]) expect(engine.includes(authority)).toBe(true);
+  expect(owners.includes("ArtifactStoreCursorDisposerPhase::Backbone if store.close_host_member_inbox_capacity() == 0 && !store.close_host_backbone_attached()")).toBe(true);
 });

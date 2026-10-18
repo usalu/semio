@@ -39,7 +39,7 @@ use semio_framework_artifact_reference::SubsetId;
 #[allow(unused_imports)]
 use semio_framework_plugin::ViewEmit;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::dxf::*;
 
 #[semio_framework_async_macros::async_test]

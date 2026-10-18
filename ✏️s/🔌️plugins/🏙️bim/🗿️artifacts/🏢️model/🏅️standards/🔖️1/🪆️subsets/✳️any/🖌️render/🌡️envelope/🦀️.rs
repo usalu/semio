@@ -202,6 +202,4 @@ pub fn u_values(parts: &[Part<'_>], mesh: &MeshData) -> Vec<Option<f64>> {
 }
 //#endregion 🔖️Mesh
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

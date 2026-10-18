@@ -105,6 +105,16 @@
     "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🎨️styling/🟦️.ts",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/💨️tailwind/🟦️.ts",
     "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/📤️file-serving/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗺️mesh-collection/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚀️boot-html/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🔖️favicon/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🧰️scene-host/🟦️.ts",
+    "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🛰️tile-proxy/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🏗️builder/🌐️vite/🟦️.ts"
   ],
   "requireModules": [

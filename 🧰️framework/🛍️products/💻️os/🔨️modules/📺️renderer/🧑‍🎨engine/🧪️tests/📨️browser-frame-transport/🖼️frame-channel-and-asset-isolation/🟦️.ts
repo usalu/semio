@@ -52,7 +52,7 @@ describe("browser frame worker transport", () => {
 
   it("isolates unavailable browser assets while preserving capacity faults and cancellation", () => {
     const root = dirname(fileURLToPath(import.meta.url));
-    const fixture = JSON.parse(readFileSync(join(root, "../../../🧫️fixtures/📄️native-asset-response/🔣️.json"), "utf8")) as {
+    const fixture = JSON.parse(readFileSync(join(root, "../../🧫️fixtures/📄️native-asset-response/🔣️.json"), "utf8")) as {
       readonly failureIsolation: {
         readonly browser: readonly {
           readonly detail: string;

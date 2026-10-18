@@ -10,7 +10,7 @@ use semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::PendingNativeC
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_reactor_lifecycle::life_instance_registry::instance_lifetime::PluginInstanceCloseLease;
 use semio_framework_plugin_reactor_lifecycle::life_instance_registry::{PluginRuntime, RuntimeActorAuthority, instance_lifetime};
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
+use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell;
 use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 use crate::inst_wire_frames::with_instances_mut;
@@ -33,7 +33,7 @@ async fn plugin_advance_actor_opening<PA:PluginApp>(runtime:&PluginRuntime<PA>,i
  if opening.loan.is_none()&&!opening.returning_loan{let parent=cx.original_source_parent()?;let Some(loan)=parent.admit_loan(cx)?else{return Ok(false)};*opening.loan=Some(loan);return Ok(false)}
  if opening.closing{
   if let Some(app)=opening.app.as_mut(){
-   if !app.close_terminal_is_empty(){let grant=runtime_lifecycle_grant();app.close_step(cx,grant)?;return Ok(false)}
+   if !app.close_terminal_is_empty(){let loan=cx.retained_grant();app.close_step(cx,loan)?;return Ok(false)}
    if cx.retained_grant().maximum_items==0||cx.retained_grant().maximum_depth==0{return Ok(false)}opening.app.take();opening.authority=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
   }
  }else{
@@ -104,19 +104,6 @@ pub async fn plugin_create_app_with_id<PA: PluginApp>(runtime: &PluginRuntime<PA
         }))?;
         Ok(id)
     }
-}
-/// 🚪️ Bytes one app close/maintenance step may retire — one PAGE, the same unit the reactor turn's
-/// own retirement ladder is priced in (`PATCH_RETIREMENT_BYTES_PER_UNIT`). At 4 096 it was exactly
-/// `ARTIFACT_OUTPUT_CHUNK_BYTES`, so a retained item larger than one output chunk — a tessellated
-/// preview mesh in a displaced window transient — could not be released by ANY number of steps and
-/// the ladder answered `Pending { 0, 0 }` until the structural accountant killed the close with
-/// `plugin.internal.zero-progress` (reproduced by the close-cost fixture's eight-document session,
-/// ticket 26/09/09).
-const RUNTIME_CLOSE_BYTES_PER_STEP: usize = 32 * 1_024;
-/// 🎟️ Runtime admission bounds price logical copy, constructor capacity and physical release independently.
-#[doc(hidden)]
-pub fn runtime_lifecycle_grant()->RetainedCloneGrant {
-    RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:RUNTIME_CLOSE_BYTES_PER_STEP,maximum_capacity_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,maximum_depth:4096}
 }
 pub(super) const RUNTIME_CLOSE_INNER_GRANT_US: u64 = 2_000;
 #[doc(hidden)]

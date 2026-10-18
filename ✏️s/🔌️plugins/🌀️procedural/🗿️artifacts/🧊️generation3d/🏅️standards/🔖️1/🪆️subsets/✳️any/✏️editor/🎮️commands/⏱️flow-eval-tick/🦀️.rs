@@ -17,7 +17,7 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FRAMEWORK_TO
 
 /// 🪟️ The BODY one preview window kind renders — the thing a chain hop's refresh has to name, as
 /// opposed to the window kind its payload is addressed by.
-pub(crate) fn preview_body_key(window_kind_id: &str) -> &'static str {
+pub fn preview_body_key(window_kind_id: &str) -> &'static str {
     if window_kind_id == semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_WINDOW_GENERATE_PREVIEW {
         semio_s_artifact_procedural_3d_mode_generate::windows::preview::GENERATION_3D_PLAY_BODY_GENERATE_PREVIEW
     } else {

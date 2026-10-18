@@ -14,7 +14,7 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertColdFormedMember w
     Ok({ crate::insert_cold_formed_member::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert cold-formed member at position #{}", self.index.map_or_else(|| "end".to_string(), |index| index.to_string())), &format!("Kaltprofil-Bauteil an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert cold-formed member at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Kaltprofil-Bauteil an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

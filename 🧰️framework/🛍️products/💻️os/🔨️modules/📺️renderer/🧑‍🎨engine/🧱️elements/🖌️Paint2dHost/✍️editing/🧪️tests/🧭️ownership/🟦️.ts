@@ -2,12 +2,12 @@
 import { expect, test } from "bun:test";
 
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { join } from "node:path";
 import fixture from "./🧫️fixtures/🔣️.json";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 const owner = join(import.meta.dir,"../..");
-let repoRoot = owner;
-while (!existsSync(join(repoRoot,"nx.json"))) repoRoot = dirname(repoRoot);
+const repoRoot = findWorkspaceRoot(owner);
 
 for (const row of fixture.cases) test(row.name, async () => {
   const sourcePath = join(owner,"🟦️.ts"), testsPath = join(owner,"🧪️tests/🟦️.ts");

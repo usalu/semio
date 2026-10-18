@@ -99,7 +99,7 @@ export async function testInferredNativeInputs(workspace: string, output: string
   const helper = readFileSync(join(workspace, testDomain, "🕸️dependencies/🟨️.mjs"), "utf8");
   put("plugin/🟨️.mjs", readFileSync(join(workspace, testDomain, "🟨️.mjs"), "utf8"));
   put("plugin/🕸️dependencies/🟨️.mjs", helper);
-  put("📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", `export { cacheInternals } from ${JSON.stringify(pathToFileURL(join(workspace, library, "🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)};\n`);
+  put("📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", `export { cacheInternals, libraryBootstrap, loadCurrentImplementationV1, currentImplementationRevisionV1 } from ${JSON.stringify(pathToFileURL(join(workspace, library, "🏗️build/🕸️graph/📥️inference/🟨️.mjs")).href)};\n`);
   put("reload/📜️script.ts", [
     'import assert from "node:assert/strict";',
     'import { readFileSync, writeFileSync } from "node:fs";',

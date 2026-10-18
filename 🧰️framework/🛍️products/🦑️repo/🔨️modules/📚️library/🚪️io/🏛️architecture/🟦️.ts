@@ -1,6 +1,8 @@
 import { posix } from "node:path";
 import { rustStringValue, rustTokens } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
-import { inspectRustModuleGraphFacts, loadCatalogTaxonomy, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraphFacts } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import { policyListPluginArtifactDirs } from "../../🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts";
 import { policyReadFileSafe, policyReaddirSafe } from "../../🔍️discovery/📖️source-access/🟦️.ts";
 

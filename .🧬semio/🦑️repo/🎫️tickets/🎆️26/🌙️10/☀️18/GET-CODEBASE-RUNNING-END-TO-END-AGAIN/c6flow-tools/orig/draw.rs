@@ -1,0 +1,1105 @@
+//! 🖍️ Flow 2D drawing kernel — ephemeral node-evaluation scene-graph kernel (content-addressed via
+//! the OS `EngineCache`) plus
+//! its JSON bridge for the flow `draw` operator extension.
+//!
+//! 🪦 Relocated verbatim from the framework's `🧰️framework/🔨️modules/◻️2d/🗄️store/🦀️.rs`
+//! (ticket 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS) — that file was a
+//! **parallel non-artifact store** living in shared framework surface, duplicating what should be
+//! (and, for the persisted drawing document, now is) `✳️drawing`'s real `ArtifactStore` + 17
+//! mutation triads + `🎛flattened-scene` inference. This kernel is NOT that persisted document: it
+//! is flow's own ephemeral, per-evaluation scratch geometry (shapes/booleans/gradients/text/trace/
+//! DWG round-trip built and discarded while a node graph runs). It lives here, private to flow, rather than as shared framework API: nothing outside
+//! flow's own two files (`💻️os/🔨️modules/🌊️flow/🖍️drawing/🦀️.rs`, this file, and
+//! `✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/🦀️.rs`) ever referenced it. `PathSegment`/
+//! `Vec2`/`DrawingError` remain shared framework surface
+//! (`semio_framework_2d::{...}`) — genuinely generic geometry-kernel primitives also used by the
+//! framework's own `booleans`/`trace` pure-function kernels and by the unrelated `🖍️draw` plugin.
+
+use neural_engine as neural;
+
+use std::collections::HashSet;
+use std::fmt;
+use std::sync::{LazyLock, Mutex};
+
+use neural::EvalError;
+use serde::{Deserialize, Serialize};
+use semio_framework_value_derive::{FromValue, ToValue};
+
+// #region 🔖️KernelTypes
+/// 🧭️ Drawing entity kind carried by a handle.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum DrawingKind {
+    Rect,
+    Ellipse,
+    Circle,
+    Line,
+    Polygon,
+    Path,
+    Text,
+    Group,
+}
+
+/// 🧭️ Opaque content-addressed drawing handle (hex-encoded OS engine key).
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct DrawingHandle(pub String);
+
+impl DrawingHandle {
+    pub fn as_str(&self) -> &str {
+        &self.0
+    }
+}
+
+/// 🔁️ Hand-written: tuple structs are a shape `#[derive(ToValue, FromValue)]` cannot express.
+impl semio_framework_value::ToValue for DrawingHandle {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
+    }
+}
+
+impl semio_framework_value::FromValue for DrawingHandle {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(semio_framework_value::FromValue::from_value(value)?))
+    }
+}
+
+/// 🎨️ Gradient color stop.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+pub struct GradientStop {
+    pub offset: f64,
+    pub color: [f64; 4],
+}
+
+/// 🪣️ Fill style.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+#[value(tag = "kind", rename_all = "camelCase")]
+pub enum FillStyle {
+    Solid { color: [f64; 4] },
+    LinearGradient { x1: f64, y1: f64, x2: f64, y2: f64, stops: Vec<GradientStop> },
+    RadialGradient { cx: f64, cy: f64, r: f64, stops: Vec<GradientStop> },
+}
+
+/// 🖌️ Stroke style.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+pub struct StrokeStyle {
+    pub color: [f64; 4],
+    pub width: f64,
+    pub cap: LineCap,
+    pub join: LineJoin,
+    #[serde(default)]
+    #[value(default)]
+    pub dash: Vec<f64>,
+}
+
+/// 🔚️ Line cap.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum LineCap {
+    Butt,
+    Round,
+    Square,
+}
+
+/// 🔗️ Line join.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(rename_all = "camelCase")]
+pub enum LineJoin {
+    Miter,
+    Round,
+    Bevel,
+}
+
+/// 📐️ Affine 2D transform `[a,b,c,d,e,f]` mapping `(x,y)` to `(a*x+c*y+e, b*x+d*y+f)`.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Affine2D(pub [f64; 6]);
+
+/// 🔁️ Hand-written: tuple structs are a shape `#[derive(ToValue, FromValue)]` cannot express.
+impl semio_framework_value::ToValue for Affine2D {
+    fn to_value(&self) -> semio_framework_value::DslValue {
+        semio_framework_value::ToValue::to_value(&self.0)
+    }
+}
+
+impl semio_framework_value::FromValue for Affine2D {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, semio_framework_value::ValueError> {
+        Ok(Self(semio_framework_value::FromValue::from_value(value)?))
+    }
+}
+
+impl Default for Affine2D {
+    fn default() -> Self {
+        Self([1.0, 0.0, 0.0, 1.0, 0.0, 0.0])
+    }
+}
+
+impl Affine2D {
+    pub fn identity() -> Self {
+        Self::default()
+    }
+
+    pub fn translate(dx: f64, dy: f64) -> Self {
+        Self([1.0, 0.0, 0.0, 1.0, dx, dy])
+    }
+
+    pub fn rotate(angle: f64) -> Self {
+        let (sin, cos) = angle.sin_cos();
+        Self([cos, sin, -sin, cos, 0.0, 0.0])
+    }
+
+    pub fn scale(sx: f64, sy: f64) -> Self {
+        Self([sx, 0.0, 0.0, sy, 0.0, 0.0])
+    }
+
+    pub fn multiply(self, other: Self) -> Self {
+        let [a, b, c, d, e, f] = self.0;
+        let [a2, b2, c2, d2, e2, f2] = other.0;
+        Self([a * a2 + c * b2, b * a2 + d * b2, a * c2 + c * d2, b * c2 + d * d2, a * e2 + c * f2 + e, b * e2 + d * f2 + f])
+    }
+
+    pub fn transform_point(self, point: semio_framework_2d::Vec2) -> semio_framework_2d::Vec2 {
+        let [a, b, c, d, e, f] = self.0;
+        [a * point[0] + c * point[1] + e, b * point[0] + d * point[1] + f]
+    }
+}
+
+/// 🧩️ Scene-graph node variants.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum DrawingNode {
+    Rect { x: f64, y: f64, width: f64, height: f64 },
+    Ellipse { cx: f64, cy: f64, rx: f64, ry: f64 },
+    Circle { cx: f64, cy: f64, r: f64 },
+    Line { x1: f64, y1: f64, x2: f64, y2: f64 },
+    Polygon { points: Vec<semio_framework_2d::Vec2> },
+    Path {
+        #[serde(with = "path_segments")]
+        segments: Vec<semio_framework_2d::PathSegment>,
+    },
+    Text { x: f64, y: f64, content: String, size: f64 },
+    Group { children: Vec<String> },
+}
+
+/// 🖼️ Flattened scene node for preview and export.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct SceneNode {
+    pub transform: Affine2D,
+    pub node: DrawingNode,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub fill: Option<FillStyle>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stroke: Option<StrokeStyle>,
+    #[serde(default = "default_opacity")]
+    pub opacity: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none", with = "optional_path_segments")]
+    pub clip: Option<Vec<semio_framework_2d::PathSegment>>,
+}
+
+fn default_opacity() -> f64 {
+    1.0
+}
+
+/// 🎬️ Serializable drawing scene transfer type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct DrawingScene {
+    pub width: f64,
+    pub height: f64,
+    pub nodes: Vec<SceneNode>,
+}
+
+impl Default for DrawingScene {
+    fn default() -> Self {
+        Self { width: 512.0, height: 512.0, nodes: Vec::new() }
+    }
+}
+// #endregion 🔖️KernelTypes
+
+// #region 🔖️PathSegmentJson
+/// 🛤️ Serde conversion type of [`semio_framework_2d::PathSegment`]. This kernel is the only serde user of the shared
+/// path vocabulary, so it owns the camelCase JSON shape (`kind` tag, `largeArc`) instead of the geometry kernel.
+#[derive(Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+enum PathSegmentJson {
+    Move { to: semio_framework_2d::Vec2 },
+    Line { to: semio_framework_2d::Vec2 },
+    Quad { ctrl: semio_framework_2d::Vec2, to: semio_framework_2d::Vec2 },
+    Cubic { ctrl1: semio_framework_2d::Vec2, ctrl2: semio_framework_2d::Vec2, to: semio_framework_2d::Vec2 },
+    Arc { rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: bool, to: semio_framework_2d::Vec2 },
+    Close,
+}
+
+impl From<&semio_framework_2d::PathSegment> for PathSegmentJson {
+    fn from(segment: &semio_framework_2d::PathSegment) -> Self {
+        use semio_framework_2d::PathSegment as P;
+        match *segment {
+            P::Move { to } => Self::Move { to },
+            P::Line { to } => Self::Line { to },
+            P::Quad { ctrl, to } => Self::Quad { ctrl, to },
+            P::Cubic { ctrl1, ctrl2, to } => Self::Cubic { ctrl1, ctrl2, to },
+            P::Arc { rx, ry, rotation, large_arc, sweep, to } => Self::Arc { rx, ry, rotation, large_arc, sweep, to },
+            P::Close => Self::Close,
+        }
+    }
+}
+
+impl From<PathSegmentJson> for semio_framework_2d::PathSegment {
+    fn from(segment: PathSegmentJson) -> Self {
+        match segment {
+            PathSegmentJson::Move { to } => Self::Move { to },
+            PathSegmentJson::Line { to } => Self::Line { to },
+            PathSegmentJson::Quad { ctrl, to } => Self::Quad { ctrl, to },
+            PathSegmentJson::Cubic { ctrl1, ctrl2, to } => Self::Cubic { ctrl1, ctrl2, to },
+            PathSegmentJson::Arc { rx, ry, rotation, large_arc, sweep, to } => Self::Arc { rx, ry, rotation, large_arc, sweep, to },
+            PathSegmentJson::Close => Self::Close,
+        }
+    }
+}
+
+/// 🧵️ `#[serde(with)]` codec of a path-segment list through [`PathSegmentJson`].
+mod path_segments {
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(segments: &[semio_framework_2d::PathSegment], serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_seq(segments.iter().map(super::PathSegmentJson::from))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<semio_framework_2d::PathSegment>, D::Error> {
+        Ok(Vec::<super::PathSegmentJson>::deserialize(deserializer)?.into_iter().map(Into::into).collect())
+    }
+}
+
+/// 🧵️ `#[serde(with)]` codec of an optional path-segment list through [`PathSegmentJson`].
+mod optional_path_segments {
+    use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+    pub fn serialize<S: Serializer>(segments: &Option<Vec<semio_framework_2d::PathSegment>>, serializer: S) -> Result<S::Ok, S::Error> {
+        segments.as_ref().map(|segments| segments.iter().map(super::PathSegmentJson::from).collect::<Vec<_>>()).serialize(serializer)
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Option<Vec<semio_framework_2d::PathSegment>>, D::Error> {
+        Ok(Option::<Vec<super::PathSegmentJson>>::deserialize(deserializer)?.map(|segments| segments.into_iter().map(Into::into).collect()))
+    }
+}
+// #endregion 🔖️PathSegmentJson
+
+// #region 🔖️KernelTrait
+/// 🔌️ Model-free synchronous 2D drawing kernel interface for flow's ephemeral node-evaluation
+/// contract, implemented only by [`DrawingStore`] below.
+pub trait DrawingKernel {
+    // #region Primitives
+    fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn ellipse(&mut self, cx: f64, cy: f64, rx: f64, ry: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn circle(&mut self, cx: f64, cy: f64, r: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn line(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn polygon(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    // #endregion Primitives
+
+    // #region Paths
+    fn polyline_path(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn rect_path(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    // #endregion Paths
+
+    // #region Style
+    fn set_fill(&mut self, handle: &DrawingHandle, fill: FillStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn set_stroke(&mut self, handle: &DrawingHandle, stroke: StrokeStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn linear_gradient_fill(&mut self, handle: &DrawingHandle, x1: f64, y1: f64, x2: f64, y2: f64, stops: &[GradientStop]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    // #endregion Style
+
+    // #region Transforms
+    fn translate(&mut self, handle: &DrawingHandle, dx: f64, dy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn rotate(&mut self, handle: &DrawingHandle, angle: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn scale(&mut self, handle: &DrawingHandle, sx: f64, sy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    // #endregion Transforms
+
+    // #region Group
+    fn group(&mut self, children: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    // #endregion Group
+
+    // #region Booleans
+    fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn bool_op_many(&mut self, operation: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    fn boolean_segments(&self, a: &[semio_framework_2d::PathSegment], b: &[semio_framework_2d::PathSegment], operation: &str) -> Result<Vec<semio_framework_2d::PathSegment>, semio_framework_2d::DrawingError>;
+    // #endregion Booleans
+
+    // #region Trace
+    fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    // #endregion Trace
+
+    // #region Text
+    fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    // #endregion Text
+
+    // #region Clip
+    fn apply_clip(&mut self, target: &DrawingHandle, clip: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError>;
+    // #endregion Clip
+
+    // #region Export
+    fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError>;
+    fn export_svg(&self, handle: &DrawingHandle) -> Result<String, semio_framework_2d::DrawingError>;
+    fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError>;
+    // #endregion Export
+
+    // #region Core
+    fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, semio_framework_2d::DrawingError>;
+    fn dispose(&mut self, handle: &DrawingHandle);
+    fn retain_sync(&mut self, live: &HashSet<String>);
+    // #endregion Core
+}
+// #endregion 🔖️KernelTrait
+
+// #region 🔖️Engine
+use semio_framework_2d_compute::Engine as _;
+
+/// ⚙️ Content-addressed drawing node engine (`ENGINE_ID = "framework.2d.drawing"`).
+pub struct DrawingEngine;
+
+impl semio_framework_2d_compute::Engine for DrawingEngine {
+    const ENGINE_ID: &'static str = "framework.2d.drawing";
+
+    fn compute(&self, input: &[u8]) -> Result<Vec<u8>, semio_framework_2d_compute::EngineFault> {
+        let node = StoredNode::decode_pack(input).map_err(semio_framework_2d_compute::EngineFault::InvalidInput)?;
+        StoredNode::encode_pack(&node).map_err(semio_framework_2d_compute::EngineFault::InvalidInput)
+    }
+}
+
+const ENGINE_CACHE_BUDGET_BYTES: usize = 64 * 1024 * 1024;
+
+fn map_engine_fault(fault: semio_framework_2d_compute::EngineFault) -> semio_framework_2d::DrawingError {
+    match fault {
+        semio_framework_2d_compute::EngineFault::Evicted => semio_framework_2d::DrawingError::MissingHandle("engine cache evicted handle".into()),
+        semio_framework_2d_compute::EngineFault::InvalidInput(message) => semio_framework_2d::DrawingError::InvalidInput(message),
+        semio_framework_2d_compute::EngineFault::Compute(message) => semio_framework_2d::DrawingError::Operation(message),
+        semio_framework_2d_compute::EngineFault::UnknownEngine(message) => semio_framework_2d::DrawingError::Operation(message),
+    }
+}
+
+fn drawing_handle_from_key(key: semio_framework_2d_compute::EngineKey) -> DrawingHandle {
+    DrawingHandle(hex_encode(&key.0))
+}
+
+fn compute_handle_for_drawing(handle: &DrawingHandle) -> Result<semio_framework_2d_compute::EngineHandle, semio_framework_2d::DrawingError> {
+    let bytes = hex_decode(handle.as_str()).map_err(|_| semio_framework_2d::DrawingError::InvalidInput("invalid drawing handle hex".into()))?;
+    if bytes.len() != 32 {
+        return Err(semio_framework_2d::DrawingError::InvalidInput("drawing handle length".into()));
+    }
+    let mut key = [0u8; 32];
+    key.copy_from_slice(&bytes);
+    Ok(semio_framework_2d_compute::EngineHandle { key: semio_framework_2d_compute::EngineKey(key), engine_id: DrawingEngine::ENGINE_ID.to_string() })
+}
+
+fn hex_encode(bytes: &[u8]) -> String {
+    bytes.iter().map(|byte| format!("{byte:02x}")).collect()
+}
+
+fn hex_decode(text: &str) -> Result<Vec<u8>, ()> {
+    if !text.len().is_multiple_of(2) {
+        return Err(());
+    }
+    let mut out = Vec::with_capacity(text.len() / 2);
+    for index in (0..text.len()).step_by(2) {
+        let byte = u8::from_str_radix(&text[index..index + 2], 16).map_err(|_| ())?;
+        out.push(byte);
+    }
+    Ok(out)
+}
+// #endregion 🔖️Engine
+
+// #region 🔖️Store
+#[derive(Clone, serde::Serialize, serde::Deserialize)]
+struct StoredNode {
+    kind: DrawingKind,
+    node: DrawingNode,
+    transform: Affine2D,
+    pub fill: Option<FillStyle>,
+    stroke: Option<StrokeStyle>,
+    #[serde(default, with = "optional_path_segments")]
+    clip: Option<Vec<semio_framework_2d::PathSegment>>,
+    opacity: f64,
+}
+
+impl StoredNode {
+    fn encode_pack(node: &StoredNode) -> Result<Vec<u8>, String> {
+        serde_json::to_vec(node).map_err(|error| error.to_string())
+    }
+
+    fn decode_pack(bytes: &[u8]) -> Result<StoredNode, String> {
+        serde_json::from_slice(bytes).map_err(|error| error.to_string())
+    }
+}
+
+/// 🗄️ [`DrawingKernel`] using engine derive through the WIT `engine-derive`/`engine-read` guest↔host
+/// boundary (process-local [`semio_framework_2d_compute::EngineCache`]) — flow's own ephemeral node-evaluation kernel,
+/// not a persisted artifact store.
+pub struct DrawingStore {
+    cache: semio_framework_2d_compute::EngineCache,
+    pub live: HashSet<String>,
+}
+
+impl Default for DrawingStore {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl DrawingStore {
+    pub fn new() -> Self {
+        let mut cache = semio_framework_2d_compute::EngineCache::new(ENGINE_CACHE_BUDGET_BYTES);
+        cache.register(DrawingEngine);
+        Self { cache, live: HashSet::new() }
+    }
+
+    /// 🧩 Attach to an existing host-owned cache (registers [`DrawingEngine`]).
+    pub fn with_engine_cache(mut cache: semio_framework_2d_compute::EngineCache) -> Self {
+        cache.register(DrawingEngine);
+        Self { cache, live: HashSet::new() }
+    }
+
+    /// 🧠 Mutable engine cache backing the WIT `engine-derive`/`engine-read` guest↔host boundary.
+    pub fn engine_cache_mut(&mut self) -> &mut semio_framework_2d_compute::EngineCache {
+        &mut self.cache
+    }
+
+    fn derive_node(&mut self, node: &StoredNode) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        let pack = StoredNode::encode_pack(node).map_err(semio_framework_2d::DrawingError::InvalidInput)?;
+        let compute_handle = self.cache.derive(DrawingEngine::ENGINE_ID, &pack).map_err(map_engine_fault)?;
+        let drawing = drawing_handle_from_key(compute_handle.key);
+        self.live.insert(drawing.as_str().to_string());
+        Ok(drawing)
+    }
+
+    fn register(&mut self, kind: DrawingKind, node: DrawingNode) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.derive_node(&StoredNode { kind, node, transform: Affine2D::identity(), fill: None, stroke: None, clip: None, opacity: 1.0 })
+    }
+
+    fn fork(&mut self, source: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        let entry = self.entry(source)?;
+        self.derive_node(&entry)
+    }
+
+    fn with_mutated<F>(&mut self, source: &DrawingHandle, mutate: F) -> Result<DrawingHandle, semio_framework_2d::DrawingError>
+    where
+        F: FnOnce(&mut StoredNode),
+    {
+        let mut entry = self.entry(source)?;
+        mutate(&mut entry);
+        self.derive_node(&entry)
+    }
+
+    pub fn entry(&self, handle: &DrawingHandle) -> Result<StoredNode, semio_framework_2d::DrawingError> {
+        if !self.live.contains(handle.as_str()) {
+            return Err(semio_framework_2d::DrawingError::MissingHandle(handle.as_str().to_string()));
+        }
+        let compute_handle = compute_handle_for_drawing(handle)?;
+        let pack = self.cache.read(&compute_handle).map_err(map_engine_fault)?;
+        StoredNode::decode_pack(&pack).map_err(semio_framework_2d::DrawingError::InvalidInput)
+    }
+
+    pub fn registry_len(&self) -> usize {
+        self.live.len()
+    }
+
+    pub fn dispose_sync(&mut self, handle: &DrawingHandle) {
+        self.live.remove(handle.as_str());
+    }
+
+    pub fn retain_sync(&mut self, live: &HashSet<String>) {
+        self.live.retain(|handle| live.contains(handle));
+    }
+
+    fn node_to_segments(node: &DrawingNode) -> Vec<semio_framework_2d::PathSegment> {
+        match node {
+            DrawingNode::Rect { x, y, width, height } => rect_segments(*x, *y, *width, *height),
+            DrawingNode::Ellipse { cx, cy, rx, ry } => ellipse_segments(*cx, *cy, *rx, *ry),
+            DrawingNode::Circle { cx, cy, r } => ellipse_segments(*cx, *cy, *r, *r),
+            DrawingNode::Line { x1, y1, x2, y2 } => vec![semio_framework_2d::PathSegment::Move { to: [*x1, *y1] }, semio_framework_2d::PathSegment::Line { to: [*x2, *y2] }],
+            DrawingNode::Polygon { points } => polygon_segments(points),
+            DrawingNode::Path { segments } => segments.clone(),
+            DrawingNode::Text { .. } => Vec::new(),
+            DrawingNode::Group { .. } => Vec::new(),
+        }
+    }
+
+    fn flatten_handle(&self, handle: &DrawingHandle, parent: Affine2D) -> Result<Vec<SceneNode>, semio_framework_2d::DrawingError> {
+        let entry = self.entry(handle)?;
+        let transform = parent.multiply(entry.transform);
+        match &entry.node {
+            DrawingNode::Group { children } => children.iter().try_fold(Vec::new(), |mut acc, child| {
+                let nested = self.flatten_handle(&DrawingHandle(child.clone()), transform)?;
+                acc.extend(nested);
+                Ok::<_, semio_framework_2d::DrawingError>(acc)
+            }),
+            _ => Ok(vec![SceneNode { transform, node: entry.node.clone(), fill: entry.fill.clone(), stroke: entry.stroke.clone(), opacity: entry.opacity, clip: entry.clip.clone() }]),
+        }
+    }
+
+    pub fn flatten_scene_sync(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError> {
+        let nodes = self.flatten_handle(handle, Affine2D::identity())?;
+        let (width, height) = scene_bounds(&nodes);
+        Ok(DrawingScene { width, height, nodes })
+    }
+
+    pub fn export_svg_sync(&self, handle: &DrawingHandle) -> Result<String, semio_framework_2d::DrawingError> {
+        let scene = self.flatten_scene_sync(handle)?;
+        Ok(serialize_svg(&scene))
+    }
+
+    pub fn export_pdf_sync(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
+        let scene = self.flatten_scene_sync(handle)?;
+        Ok(serialize_pdf(&scene))
+    }
+
+
+}
+// #endregion 🔖️Store
+
+// #region 🔖️Geometry
+fn rect_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<semio_framework_2d::PathSegment> {
+    use semio_framework_2d::PathSegment;
+    vec![PathSegment::Move { to: [x, y] }, PathSegment::Line { to: [x + width, y] }, PathSegment::Line { to: [x + width, y + height] }, PathSegment::Line { to: [x, y + height] }, PathSegment::Close]
+}
+
+fn polygon_segments(points: &[semio_framework_2d::Vec2]) -> Vec<semio_framework_2d::PathSegment> {
+    use semio_framework_2d::PathSegment;
+    let mut segments = Vec::new();
+    if let Some(first) = points.first() {
+        segments.push(PathSegment::Move { to: *first });
+        for point in points.iter().skip(1) {
+            segments.push(PathSegment::Line { to: *point });
+        }
+        if points.len() > 2 {
+            segments.push(PathSegment::Close);
+        }
+    }
+    segments
+}
+
+fn ellipse_segments(cx: f64, cy: f64, rx: f64, ry: f64) -> Vec<semio_framework_2d::PathSegment> {
+    use semio_framework_2d::PathSegment;
+    const K: f64 = 0.5522847498;
+    let ox = rx * K;
+    let oy = ry * K;
+    vec![
+        PathSegment::Move { to: [cx, cy - ry] },
+        PathSegment::Cubic { ctrl1: [cx + ox, cy - ry], ctrl2: [cx + rx, cy - oy], to: [cx + rx, cy] },
+        PathSegment::Cubic { ctrl1: [cx + rx, cy + oy], ctrl2: [cx + ox, cy + ry], to: [cx, cy + ry] },
+        PathSegment::Cubic { ctrl1: [cx - ox, cy + ry], ctrl2: [cx - rx, cy + oy], to: [cx - rx, cy] },
+        PathSegment::Cubic { ctrl1: [cx - rx, cy - oy], ctrl2: [cx - ox, cy - ry], to: [cx, cy - ry] },
+        PathSegment::Close,
+    ]
+}
+
+fn polyline_segments(points: &[semio_framework_2d::Vec2]) -> Vec<semio_framework_2d::PathSegment> {
+    use semio_framework_2d::PathSegment;
+    let mut segments = Vec::new();
+    if let Some(first) = points.first() {
+        segments.push(PathSegment::Move { to: *first });
+        for point in points.iter().skip(1) {
+            segments.push(PathSegment::Line { to: *point });
+        }
+    }
+    segments
+}
+
+fn scene_bounds(nodes: &[SceneNode]) -> (f64, f64) {
+    let mut max_x = 512.0_f64;
+    let mut max_y = 512.0_f64;
+    for node in nodes {
+        match &node.node {
+            DrawingNode::Rect { x, y, width, height } => {
+                max_x = max_x.max(x + width);
+                max_y = max_y.max(y + height);
+            }
+            DrawingNode::Circle { cx, cy, r } => {
+                max_x = max_x.max(cx + r);
+                max_y = max_y.max(cy + r);
+            }
+            DrawingNode::Ellipse { cx, cy, rx, ry } => {
+                max_x = max_x.max(cx + rx);
+                max_y = max_y.max(cy + ry);
+            }
+            DrawingNode::Text { x, y, size, .. } => {
+                max_x = max_x.max(x + size * 4.0);
+                max_y = max_y.max(y + size);
+            }
+            _ => {}
+        }
+    }
+    (max_x.max(1.0), max_y.max(1.0))
+}
+// #endregion 🔖️Geometry
+
+// #region 🔖️Export
+fn color_css(color: [f64; 4]) -> String {
+    let r = (color[0] * 255.0).round().clamp(0.0, 255.0) as u8;
+    let g = (color[1] * 255.0).round().clamp(0.0, 255.0) as u8;
+    let b = (color[2] * 255.0).round().clamp(0.0, 255.0) as u8;
+    let a = color[3].clamp(0.0, 1.0);
+    if (a - 1.0).abs() < f64::EPSILON {
+        format!("#{:02x}{:02x}{:02x}", r, g, b)
+    } else {
+        format!("rgba({r},{g},{b},{a:.3})")
+    }
+}
+
+fn segments_to_svg_d(segments: &[semio_framework_2d::PathSegment]) -> String {
+    use semio_framework_2d::PathSegment;
+    let mut out = String::new();
+    for segment in segments {
+        match segment {
+            PathSegment::Move { to } => out.push_str(&format!("M {} {} ", to[0], to[1])),
+            PathSegment::Line { to } => out.push_str(&format!("L {} {} ", to[0], to[1])),
+            PathSegment::Quad { ctrl, to } => out.push_str(&format!("Q {} {} {} {} ", ctrl[0], ctrl[1], to[0], to[1])),
+            PathSegment::Cubic { ctrl1, ctrl2, to } => out.push_str(&format!("C {} {} {} {} {} {} ", ctrl1[0], ctrl1[1], ctrl2[0], ctrl2[1], to[0], to[1])),
+            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
+                out.push_str(&format!("A {} {} {} {} {} {} {} ", rx, ry, rotation, if *large_arc { 1 } else { 0 }, if *sweep { 1 } else { 0 }, to[0], to[1]));
+            }
+            PathSegment::Close => out.push('Z'),
+        }
+    }
+    out.trim().to_string()
+}
+
+fn serialize_svg(scene: &DrawingScene) -> String {
+    let mut body = String::new();
+    for node in &scene.nodes {
+        match &node.node {
+            DrawingNode::Text { x, y, content, size } => {
+                let [tx, ty] = node.transform.transform_point([*x, *y]);
+                let fill = node.fill.as_ref().map_or_else(
+                    || "black".into(),
+                    |f| match f {
+                        FillStyle::Solid { color } => color_css(*color),
+                        _ => "black".into(),
+                    },
+                );
+                body.push_str(&format!(r#"<text x="{tx}" y="{ty}" font-size="{size}" fill="{fill}">{content}</text>"#));
+            }
+            _ => {
+                let segments = DrawingStore::node_to_segments(&node.node);
+                if segments.is_empty() {
+                    continue;
+                }
+                let d = segments_to_svg_d(&segments);
+                let mut attrs = format!(r#"d="{d}""#);
+                if let Some(fill) = &node.fill {
+                    match fill {
+                        FillStyle::Solid { color } => attrs.push_str(&format!(r#" fill="{}""#, color_css(*color))),
+                        FillStyle::LinearGradient { x1, y1, x2, y2, stops } => {
+                            let id = format!("lg{}", body.len());
+                            body.push_str(&format!(r#"<defs><linearGradient id="{id}" x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}">"#));
+                            for stop in stops {
+                                body.push_str(&format!(r#"<stop offset="{}" stop-color="{}"/>"#, stop.offset, color_css(stop.color)));
+                            }
+                            body.push_str("</linearGradient></defs>");
+                            attrs.push_str(&format!(r#" fill="url(#{id})""#));
+                        }
+                        FillStyle::RadialGradient { cx, cy, r, stops } => {
+                            let id = format!("rg{}", body.len());
+                            body.push_str(&format!(r#"<defs><radialGradient id="{id}" cx="{cx}" cy="{cy}" r="{r}">"#));
+                            for stop in stops {
+                                body.push_str(&format!(r#"<stop offset="{}" stop-color="{}"/>"#, stop.offset, color_css(stop.color)));
+                            }
+                            body.push_str("</radialGradient></defs>");
+                            attrs.push_str(&format!(r#" fill="url(#{id})""#));
+                        }
+                    }
+                } else {
+                    attrs.push_str(r#" fill="none""#);
+                }
+                if let Some(stroke) = &node.stroke {
+                    attrs.push_str(&format!(r#" stroke="{}" stroke-width="{}""#, color_css(stroke.color), stroke.width));
+                }
+                body.push_str(&format!("<path {attrs}/>"));
+            }
+        }
+    }
+    format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">{body}</svg>"#, scene.width, scene.height, scene.width, scene.height)
+}
+
+fn segments_to_pdf_operations(segments: &[semio_framework_2d::PathSegment]) -> String {
+    use semio_framework_2d::PathSegment;
+    let mut out = String::new();
+    for segment in segments {
+        match segment {
+            PathSegment::Move { to } => out.push_str(&format!("{} {} m\n", to[0], to[1])),
+            PathSegment::Line { to } => out.push_str(&format!("{} {} l\n", to[0], to[1])),
+            PathSegment::Close => out.push_str("h\n"),
+            _ => {}
+        }
+    }
+    out
+}
+
+fn serialize_pdf(scene: &DrawingScene) -> Vec<u8> {
+    let mut stream = String::new();
+    stream.push_str("0.1 0.1 0.1 rg\n");
+    for node in &scene.nodes {
+        let segments = DrawingStore::node_to_segments(&node.node);
+        if segments.is_empty() {
+            continue;
+        }
+        stream.push_str(&segments_to_pdf_operations(&segments));
+        if node.fill.is_some() {
+            stream.push_str("f\n");
+        } else if node.stroke.is_some() {
+            stream.push_str("S\n");
+        }
+    }
+    let content = stream.as_bytes();
+    let objects = [
+        "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n",
+        "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n",
+        &format!("3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents 4 0 R /Resources << >> >>\nendobj\n", scene.width, scene.height),
+        &format!("4 0 obj\n<< /Length {} >>\nstream\n", content.len()),
+    ];
+    let mut pdf = String::from("%PDF-1.4\n");
+    let mut offsets = Vec::new();
+    for object in &objects[..3] {
+        offsets.push(pdf.len());
+        pdf.push_str(object);
+    }
+    offsets.push(pdf.len());
+    pdf.push_str(objects[3]);
+    pdf.push_str(std::str::from_utf8(content).unwrap_or(""));
+    pdf.push_str("\nendstream\nendobj\n");
+    let xref = pdf.len();
+    pdf.push_str("xref\n0 5\n0000000000 65535 f \n");
+    for offset in offsets {
+        pdf.push_str(&format!("{:010} 00000 n \n", offset));
+    }
+    pdf.push_str(&format!("trailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n"));
+    pdf.into_bytes()
+}
+// #endregion 🔖️Export
+
+// #region 🔖️KernelImpl
+impl DrawingKernel for DrawingStore {
+    fn rect(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.register(DrawingKind::Rect, DrawingNode::Rect { x, y, width, height })
+    }
+
+    fn ellipse(&mut self, cx: f64, cy: f64, rx: f64, ry: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.register(DrawingKind::Ellipse, DrawingNode::Ellipse { cx, cy, rx, ry })
+    }
+
+    fn circle(&mut self, cx: f64, cy: f64, r: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.register(DrawingKind::Circle, DrawingNode::Circle { cx, cy, r })
+    }
+
+    fn line(&mut self, x1: f64, y1: f64, x2: f64, y2: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.register(DrawingKind::Line, DrawingNode::Line { x1, y1, x2, y2 })
+    }
+
+    fn polygon(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        if points.len() < 3 {
+            return Err(semio_framework_2d::DrawingError::InvalidInput("polygon needs at least 3 points".into()));
+        }
+        self.register(DrawingKind::Polygon, DrawingNode::Polygon { points: points.to_vec() })
+    }
+
+    fn polyline_path(&mut self, points: &[semio_framework_2d::Vec2]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        if points.len() < 2 {
+            return Err(semio_framework_2d::DrawingError::InvalidInput("polyline needs at least 2 points".into()));
+        }
+        self.register(DrawingKind::Path, DrawingNode::Path { segments: polyline_segments(points) })
+    }
+
+    fn rect_path(&mut self, x: f64, y: f64, width: f64, height: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.register(DrawingKind::Path, DrawingNode::Path { segments: rect_segments(x, y, width, height) })
+    }
+
+    fn set_fill(&mut self, handle: &DrawingHandle, fill: FillStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.with_mutated(handle, |entry| entry.fill = Some(fill))
+    }
+
+    fn set_stroke(&mut self, handle: &DrawingHandle, stroke: StrokeStyle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.with_mutated(handle, |entry| entry.stroke = Some(stroke))
+    }
+
+    fn linear_gradient_fill(&mut self, handle: &DrawingHandle, x1: f64, y1: f64, x2: f64, y2: f64, stops: &[GradientStop]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.set_fill(handle, FillStyle::LinearGradient { x1, y1, x2, y2, stops: stops.to_vec() })
+    }
+
+    fn translate(&mut self, handle: &DrawingHandle, dx: f64, dy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::translate(dx, dy)))
+    }
+
+    fn rotate(&mut self, handle: &DrawingHandle, angle: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::rotate(angle)))
+    }
+
+    fn scale(&mut self, handle: &DrawingHandle, sx: f64, sy: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.with_mutated(handle, |entry| entry.transform = entry.transform.multiply(Affine2D::scale(sx, sy)))
+    }
+
+    fn group(&mut self, children: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        if children.is_empty() {
+            return Err(semio_framework_2d::DrawingError::InvalidInput("group needs children".into()));
+        }
+        let handles: Vec<String> = children.iter().map(|h| h.as_str().to_string()).collect();
+        self.register(DrawingKind::Group, DrawingNode::Group { children: handles })
+    }
+
+    fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.bool_operation(a, b, "union")
+    }
+
+    fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.bool_operation(a, b, "difference")
+    }
+
+    fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.bool_operation(a, b, "intersection")
+    }
+
+    fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.bool_operation(a, b, "xor")
+    }
+
+    fn bool_op_many(&mut self, operation: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        if handles.is_empty() {
+            return Err(semio_framework_2d::DrawingError::InvalidInput("boolean operation needs at least one handle".into()));
+        }
+        if handles.len() == 1 {
+            return self.fork(&handles[0]);
+        }
+        let mut segments_list: Vec<Vec<semio_framework_2d::PathSegment>> = Vec::new();
+        for handle in handles {
+            segments_list.push(DrawingStore::node_to_segments(&self.entry(handle)?.node));
+        }
+        let merged = semio_framework_2d::booleans::boolean_paths_many(&segments_list, operation)?;
+        self.register(DrawingKind::Path, DrawingNode::Path { segments: merged })
+    }
+
+    fn boolean_segments(&self, a: &[semio_framework_2d::PathSegment], b: &[semio_framework_2d::PathSegment], operation: &str) -> Result<Vec<semio_framework_2d::PathSegment>, semio_framework_2d::DrawingError> {
+        semio_framework_2d::booleans::boolean_paths(a, b, operation)
+    }
+
+    fn trace_bitmap(&mut self, width: u32, height: u32, mask_or_luma: &[u8], threshold: f64, simplify_epsilon: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        let segments = semio_framework_2d::trace::trace_bitmap_paths(width, height, mask_or_luma, threshold, simplify_epsilon)?;
+        self.register(DrawingKind::Path, DrawingNode::Path { segments })
+    }
+
+    fn text(&mut self, x: f64, y: f64, content: &str, size: f64) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        self.register(DrawingKind::Text, DrawingNode::Text { x, y, content: content.to_string(), size })
+    }
+
+    fn apply_clip(&mut self, target: &DrawingHandle, clip: &DrawingHandle) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        let clip_segments = DrawingStore::node_to_segments(&self.entry(clip)?.node);
+        self.with_mutated(target, |entry| entry.clip = Some(clip_segments))
+    }
+
+    fn flatten_scene(&self, handle: &DrawingHandle) -> Result<DrawingScene, semio_framework_2d::DrawingError> {
+        self.flatten_scene_sync(handle)
+    }
+
+    fn export_svg(&self, handle: &DrawingHandle) -> Result<String, semio_framework_2d::DrawingError> {
+        self.export_svg_sync(handle)
+    }
+
+    fn export_pdf(&self, handle: &DrawingHandle) -> Result<Vec<u8>, semio_framework_2d::DrawingError> {
+        self.export_pdf_sync(handle)
+    }
+
+
+    fn kind(&self, handle: &DrawingHandle) -> Result<DrawingKind, semio_framework_2d::DrawingError> {
+        Ok(self.entry(handle)?.kind)
+    }
+
+    fn dispose(&mut self, handle: &DrawingHandle) {
+        self.dispose_sync(handle);
+    }
+
+    fn retain_sync(&mut self, live: &HashSet<String>) {
+        DrawingStore::retain_sync(self, live);
+    }
+}
+
+impl DrawingStore {
+    fn bool_operation(&mut self, a: &DrawingHandle, b: &DrawingHandle, operation: &str) -> Result<DrawingHandle, semio_framework_2d::DrawingError> {
+        let a_segments = DrawingStore::node_to_segments(&self.entry(a)?.node);
+        let b_segments = DrawingStore::node_to_segments(&self.entry(b)?.node);
+        let merged = semio_framework_2d::booleans::boolean_paths(&a_segments, &b_segments, operation)?;
+        self.register(DrawingKind::Path, DrawingNode::Path { segments: merged })
+    }
+}
+// #endregion 🔖️KernelImpl
+
+// #region 🖍️DrawingKernel
+static DRAWING_KERNEL: LazyLock<Mutex<DrawingStore>> = LazyLock::new(|| Mutex::new(DrawingStore::new()));
+
+fn drawing_kernel() -> &'static Mutex<DrawingStore> {
+    &DRAWING_KERNEL
+}
+
+/// 🖊️ Runs `f` against the process-wide 2D drawing kernel.
+pub fn with_drawing_kernel<T>(f: impl FnOnce(&mut DrawingStore) -> Result<T, EvalError>) -> Result<T, EvalError> {
+    let mut guard = drawing_kernel().lock().map_err(|_| EvalError::InvalidInput("draw kernel lock poisoned".into()))?;
+    f(&mut guard)
+}
+
+/// 🧯️ Internal error type for drawing JSON-bridging helpers.
+#[derive(Debug)]
+enum DrawingKernelError {
+    Json(serde_json::Error),
+    Invalid(String),
+}
+
+impl fmt::Display for DrawingKernelError {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Json(error) => error.fmt(formatter),
+            Self::Invalid(message) => formatter.write_str(message),
+        }
+    }
+}
+
+impl std::error::Error for DrawingKernelError {}
+
+impl From<serde_json::Error> for DrawingKernelError {
+    fn from(error: serde_json::Error) -> Self {
+        Self::Json(error)
+    }
+}
+
+/// 🌉️ Single-key `{"error": message}` JSON wrapper, shared by every drawing-bridge JSON export.
+fn json_error(message: impl fmt::Display) -> String {
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([("error".to_string(), semio_framework_pack_json::Value::String(message.to_string()))]))
+}
+
+fn json_kernel_unavailable() -> String {
+    json_error("draw kernel unavailable")
+}
+
+/// 🌉️ Single-key `{key: value}` string JSON wrapper, shared by every drawing-bridge JSON export.
+fn json_field(key: &str, value: impl Into<String>) -> String {
+    semio_framework_pack_json::to_string(&semio_framework_pack_json::object([(key.to_string(), semio_framework_pack_json::Value::String(value.into()))]))
+}
+
+/// 🧹️ Retains only drawing handles referenced by the current evaluation outputs.
+pub fn retain_drawing_handles(live: &[String]) {
+    let live_set: HashSet<String> = live.iter().cloned().collect();
+    if let Ok(mut guard) = drawing_kernel().lock() {
+        guard.retain_sync(&live_set);
+    }
+}
+
+/// 🎬️ Flattens a drawing handle to JSON scene payload.
+pub fn render_scene_json(handle: &str) -> String {
+    drawing_kernel()
+        .lock()
+        .ok().map_or_else(json_kernel_unavailable, |store| {
+            let drawing = DrawingHandle(handle.to_string());
+            match store.flatten_scene(&drawing) {
+                Ok(scene) => serde_json::to_string(&scene).unwrap_or_else(|_| "{}".into()),
+                Err(error) => json_error(error),
+            }
+        })
+}
+
+/// 📄️ Exports a drawing handle as SVG JSON wrapper.
+pub fn export_svg_json(handle: &str) -> String {
+    drawing_kernel()
+        .lock()
+        .ok().map_or_else(json_kernel_unavailable, |store| {
+            let drawing = DrawingHandle(handle.to_string());
+            match store.export_svg(&drawing) {
+                Ok(svg) => json_field("svg", svg),
+                Err(error) => json_error(error),
+            }
+        })
+}
+
+/// 📑️ Exports a drawing handle as base64 PDF JSON wrapper.
+pub fn export_pdf_json(handle: &str) -> String {
+    drawing_kernel()
+        .lock()
+        .ok().map_or_else(json_kernel_unavailable, |store| {
+            let drawing = DrawingHandle(handle.to_string());
+            match store.export_pdf(&drawing) {
+                Ok(pdf) => json_field("pdf", drawing_base64_encode(&pdf)),
+                Err(error) => json_error(error),
+            }
+        })
+}
+
+
+/// 🗑️ Disposes a drawing handle owned by the in-process draw kernel.
+pub fn dispose_drawing(handle: &str) {
+    if let Ok(mut store) = drawing_kernel().lock() {
+        store.dispose(&DrawingHandle(handle.to_string()));
+    }
+}
+
+/// 🔍️ Autotraces a bitmap mask into path segments JSON.
+pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, simplify_epsilon: f64) -> String {
+    drawing_kernel()
+        .lock()
+        .ok()
+        .and_then(|mut store| match store.trace_bitmap(width, height, mask, threshold, simplify_epsilon) {
+            Ok(handle) => match store.flatten_scene(&handle) {
+                Ok(scene) => {
+                    let segments = scene.nodes.into_iter().find_map(|node| if let DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
+                    segments.map(|segs| serde_json::json!({ "segments": segs.iter().map(PathSegmentJson::from).collect::<Vec<_>>() }).to_string())
+                }
+                Err(error) => Some(json_error(error)),
+            },
+            Err(error) => Some(json_error(error)),
+        })
+        .unwrap_or_else(json_kernel_unavailable)
+}
+
+/// 🔀️ Boolean-combines two path segment arrays.
+pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> String {
+    let parse = |json: &str| -> Result<Vec<semio_framework_2d::PathSegment>, DrawingKernelError> {
+        let parsed: serde_json::Value = serde_json::from_str(json)?;
+        if let Some(error) = parsed.get("error").and_then(|v| v.as_str()) {
+            return Err(DrawingKernelError::Invalid(error.to_string()));
+        }
+        let segments_value = parsed.get("segments").cloned().ok_or_else(|| DrawingKernelError::Invalid("missing segments".to_string()))?;
+        Ok(serde_json::from_value::<Vec<PathSegmentJson>>(segments_value)?.into_iter().map(Into::into).collect())
+    };
+    drawing_kernel()
+        .lock()
+        .ok().map_or_else(json_kernel_unavailable, |store| match (parse(a_json), parse(b_json)) {
+            (Ok(a), Ok(b)) => match store.boolean_segments(&a, &b, operation) {
+                Ok(segments) => serde_json::json!({ "segments": segments.iter().map(PathSegmentJson::from).collect::<Vec<_>>() }).to_string(),
+                Err(error) => json_error(error),
+            },
+            (Err(error), _) | (_, Err(error)) => json_error(error),
+        })
+}
+
+fn drawing_base64_encode(data: &[u8]) -> String {
+    const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    let mut out = String::new();
+    for chunk in data.chunks(3) {
+        let b0 = chunk[0] as u32;
+        let b1 = chunk.get(1).copied().unwrap_or(0) as u32;
+        let b2 = chunk.get(2).copied().unwrap_or(0) as u32;
+        let triple = (b0 << 16) | (b1 << 8) | b2;
+        out.push(TABLE[((triple >> 18) & 63) as usize] as char);
+        out.push(TABLE[((triple >> 12) & 63) as usize] as char);
+        out.push(if chunk.len() > 1 { TABLE[((triple >> 6) & 63) as usize] as char } else { '=' });
+        out.push(if chunk.len() > 2 { TABLE[(triple & 63) as usize] as char } else { '=' });
+    }
+    out
+}
+
+
+// #endregion 🖍️DrawingKernel
+
+// #region 🔖️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️drawing-kernel/🦀️.rs"]
+mod drawing_kernel_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️path-segment-json/🦀️.rs"]
+mod path_segment_json_tests;
+// #endregion 🔖️Tests

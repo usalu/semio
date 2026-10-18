@@ -41,6 +41,4 @@ pub fn handle(payload: &WorldPointerDown, doc: &ArtifactView<'_, ModelSnapshot>,
     run(ctx, doc, |pointer| ToolEvent::Down(*pointer), &raw)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

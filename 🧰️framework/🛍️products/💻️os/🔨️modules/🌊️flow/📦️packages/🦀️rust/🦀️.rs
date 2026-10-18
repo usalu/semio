@@ -10,7 +10,7 @@ pub use semio_framework_os_kernel::os_spr;
 /// 🧬️ Components still use former kernel path names (`crate::os_store` / `os_dsl` / `os_spr`).
 pub use semio_framework_os_kernel::os_store;
 pub use semio_framework_os_kernel::os_vcs;
-pub use protocol::value::ordered::{OrderedMap, OrderedSet};
+pub use semio_framework_value::ordered::{OrderedMap, OrderedSet};
 //#endregion 🔖️KernelModuleAliases
 
 //#region 🔖️InfiniteAlias
@@ -41,8 +41,9 @@ pub use semio_framework_os_flow_drawing::{
     SceneNode, StrokeStyle, trace_bitmap_json, with_drawing_kernel,
 };
 
+pub use semio_framework_os_flow_operators::registry::drain_flow_extension_registry_retirements;
 pub use semio_framework_os_flow_operators::{
-    CatalogueGroup, CatalogueItem, CatalogueSection, drain_flow_extension_registry_retirements, flow_app_catalogue, flow_app_catalogue_json,
+    CatalogueGroup, CatalogueItem, CatalogueSection, flow_app_catalogue, flow_app_catalogue_json,
     flow_app_catalogue_json_shared, flow_catalogue_sections, FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_BYTES, FLOW_EXTENSION_CONTRIBUTIONS_MAXIMUM_PAGES, flow_extension_invocation_address, flow_extension_registry,
     flow_extension_registry_generation, FLOW_EXTENSION_REGISTRY_TEST_LOCK, FLOW_LOD_MODE_AUTOMATIC, flow_neuron_kind_info_map, flow_neuron_kind_infos_json, flow_operator_catalogue_json,
     flow_operator_catalogue_records, flow_operator_registry, flow_palette_catalogue_sections, FlowAppCatalogue, FlowExtensionAddressMiss, FlowExtensionInfo,

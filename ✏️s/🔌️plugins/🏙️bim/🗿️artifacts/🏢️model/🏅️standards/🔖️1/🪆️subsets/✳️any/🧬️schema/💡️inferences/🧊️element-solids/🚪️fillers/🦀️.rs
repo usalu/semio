@@ -3,8 +3,8 @@
 //! up from the sill) and centred on the thickness of the host, then placed with that frame. Invalid placements and missing types produce no solid; a filler is built for exactly
 //! the frames the host cuts (`OpeningFrame::valid`).
 
-use super::super::super::opening_frames::OpeningFrame;
-use super::super::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily};
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily};
 use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, WindowType};
 use semio_framework_geometry::mesh::{extrude, TriMesh};
 use semio_framework_geometry::placement::{Affine3, ZPlane};
@@ -131,6 +131,4 @@ pub fn dependency(snapshot: &ModelSnapshot, opening: &Opening) -> DslValue {
 }
 //#endregion 🔖️Solid
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🗄️FsRepoContext
 /// 🗄️ The production context: every aggregate answered from the repository on disk through the
-/// domain crate that owns it. Twin of `NewRepoContext` in `🔗️graphql/📦️packages/🐹️go/🐹️.go`.
+/// domain crate that owns it. Twin of `NewRepoContext` in `🔗️graphql/📦️packages/🐹️go/🩻️context/🐹️.go`.
 pub struct FsRepoContext {
     pub(super) root: std::path::PathBuf,
     pub(super) codebase: Codebase,

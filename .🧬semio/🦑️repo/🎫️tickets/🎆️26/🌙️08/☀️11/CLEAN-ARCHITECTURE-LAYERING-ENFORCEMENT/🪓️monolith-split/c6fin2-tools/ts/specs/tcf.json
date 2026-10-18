@@ -1,0 +1,13 @@
+{
+ "file": "/Users/ueli/Documents/semio/🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🟦️.ts",
+ "importers": "auto",
+ "allowManual": ["dynamic import of parent"],
+ "children": [
+  {"dir": "🪪️browser-actor-and-opened-root-fixtures", "doc": "/** 🪪️ The document browser actor identity, trusted browser actor catalog, native catalog receipt pair and trusted catalog opened root fixture proofs. */",
+   "names": ["proveDocumentBrowserActorIdentityFixture", "proveTrustedBrowserActorCatalogFixture", "proveNativeCatalogReceiptPairs", "proveTrustedCatalogOpenedRootFixture"]},
+  {"dir": "🗺️gis-retained-collaboration-and-publication-fixtures", "doc": "/** 🗺️ The trusted gis retained browser, gis map collaboration contract and gis publication fixture proofs. */",
+   "names": ["proveTrustedGisRetainedBrowserFixture", "proveTrustedGisMapCollaborationContractFixture", "proveTrustedGisPublicationFixture"]},
+  {"dir": "🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures", "doc": "/** 🚀️ The trusted stdio gis bootstrap fixture proof and the trusted compiled dependencies fixture proof. */",
+   "names": ["proveTrustedStdioGisBootstrapFixture", "proveTrustedCompiledDependenciesFixture"]}
+ ]
+}

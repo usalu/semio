@@ -1,4 +1,4 @@
-import { loadTaxonomy } from "../../../🟦️.ts";
+import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { POLICY_SKIP_DIRS, POLICY_SOURCE_OPERATIONS, policySourceDirectory, type PolicySourceOperations } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 
 export type PolicyArtifactSchemaOwnerDiscoveryIssue = Readonly<{ path: string; state: "unreadable" | "symlink" | "not-directory" }>;

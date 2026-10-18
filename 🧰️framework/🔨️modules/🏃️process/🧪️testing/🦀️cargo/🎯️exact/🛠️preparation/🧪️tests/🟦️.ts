@@ -5,7 +5,7 @@ import{readFileSync}from"node:fs";
 import ts from"typescript";
 import schema from"../🧬️schema/🔣️.json";
 import requestSchema from"../📋️request/🧬️schema/🔣️.json";
-import corpus from"../🧫️fixtures/🔣️.json";
+import corpus from"./🧫️fixtures/🔣️.json";
 import{readExactCargoLawPreparationV1,exactCargoLawPreparationPortV1}from"../🟦️.ts";
 import{projectExactCargoPreparationV1}from"../📋️request/🟦️.ts";
 import{receiveScriptProcessInvocation,createIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";

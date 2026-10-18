@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetIssue`: a sparse issue patch of exactly the provided fields that differ. The issue that results must be writable (see `issue_problem`); a patch that restates the current values is
 //! `mutation.no-op`.
 
-use super::SetIssue;
+use crate::standards::v1::subsets::any::schema::mutations::set_issue::SetIssue;
 use crate::standards::v1::subsets::any::schema::{snapshot::{issue_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

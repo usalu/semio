@@ -1,6 +1,6 @@
 //! 🧾️ Properties of the BIM entity table: the property types, texts, values and entries. See [`super`].
 
-use super::*;
+use crate::editor::bim::entities::*;
 
 //#region 🔖️Properties
 /// 🏷️ The measure kinds of a typed property value, in the order the entry grammar names them.

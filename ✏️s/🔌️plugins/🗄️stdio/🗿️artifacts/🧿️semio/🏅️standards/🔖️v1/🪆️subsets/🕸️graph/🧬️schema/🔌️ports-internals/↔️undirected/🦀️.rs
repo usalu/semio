@@ -9,7 +9,7 @@ use graph_manifest::{PropertyBag, PropertyValue};
 /// 🕸️ NetworkX `MultiGraph` parity facade: an undirected multigraph wrapping `Storage<Ported, Undirected>`. Every node gets a lazily-allocated "default handle" (see `handle_of`) so callers work at plain `NodeId` level, matching NetworkX's handle-free `MultiGraph` API — the `Ported` port model is only an internal storage detail here. `Storage<Ported,_>::add_edge_with` always mints a fresh `EdgeId`, which directly plays the role of NetworkX's per-pair insertion "key" (`G.add_edge(u, v)` returns a key); this is a deliberate simplification since `EdgeId` is globally unique/monotone rather than scoped per node pair like NetworkX's keys.
 #[derive(Clone, Debug)]
 pub struct PortUndirectedGraph {
-    storage: Storage<Ported, Undirected>,
+    pub storage: Storage<Ported, Undirected>,
     default_handle: BTreeMap<NodeId, HandleId>,
 }
 

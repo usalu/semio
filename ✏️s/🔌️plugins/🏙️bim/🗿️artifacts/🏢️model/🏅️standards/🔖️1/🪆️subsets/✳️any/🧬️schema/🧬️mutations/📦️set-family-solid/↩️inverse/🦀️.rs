@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetFamilySolid`: an absolute `SetFamilySolid` restoring the base value of exactly the fields the forward really changes, none when the solid is absent or nothing changes.
 
-use super::SetFamilySolid;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetFamilySolid, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetFamilySolid, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid>,
+{
     let Some(record) = base.family_solids.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetFamilySolid, base: &ModelSnapshot) -> Vec<ModelMutat
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetFamilySolid(SetFamilySolid::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetFamilySolid::from_patch(payload.id.clone(), restore))]
 }

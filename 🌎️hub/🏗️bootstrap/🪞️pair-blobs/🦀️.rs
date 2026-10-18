@@ -102,12 +102,12 @@ impl CanonicalPairHttpControl {
     }
 
     #[cfg(any(test, feature = "testkit"))]
-    pub(crate) fn is_active(&self) -> bool {
+    pub fn is_active(&self) -> bool {
         self.active.load(std::sync::atomic::Ordering::Acquire)
     }
 
     #[cfg(any(test, feature = "testkit"))]
-    pub(crate) fn progress_snapshot(&self) -> [Option<RebootstrapProgress>; CANONICAL_PAIR_PROGRESS_STAGES] {
+    pub fn progress_snapshot(&self) -> [Option<RebootstrapProgress>; CANONICAL_PAIR_PROGRESS_STAGES] {
         *self.progress.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
     }
 }

@@ -98,7 +98,7 @@ use semio_framework_plugin::SelectionMode;
 #[allow(unused_imports)]
 use semio_framework_plugin::SelectionSpec;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::animate::{ANIMATE_PRESENTATION_RETAINED_TOOL_IDS, ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES, ANIMATE_PRESENTATION_CONFIG_STEP_BYTES, ANIMATE_PRESENTATION_RETAINED_PUBLICATION_CONTRACTS, AnimatePresentationConfigPreparationFactory, AnimatePresentationConfigPreparation, AnimatePresentationConfigByteCounter};
 pub(crate) mod context {
     use crate::editor::animate::*;

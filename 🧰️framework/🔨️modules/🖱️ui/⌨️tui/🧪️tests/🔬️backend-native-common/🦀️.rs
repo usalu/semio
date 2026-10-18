@@ -1,6 +1,6 @@
 mod native_common_tests {
     use super::*;
-    use crate::tui::event::{Key, KeyEvent, MouseEvent};
+    use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseEvent};
     use std::time::Duration;
 
     #[test]
@@ -21,10 +21,10 @@ mod native_common_tests {
         assert_eq!(input.remaining(Instant::now()), None);
         input.feed(b"\x1b", &mut events);
         let remaining = input.remaining(Instant::now()).expect("a lone escape is pending");
-        assert!(remaining <= crate::tui::ansi::ESCAPE_TIMEOUT);
+        assert!(remaining <= crate::ansi::ESCAPE_TIMEOUT);
         input.expire_due(Instant::now(), &mut events);
         assert!(events.is_empty(), "not due yet");
-        input.expire_due(Instant::now() + crate::tui::ansi::ESCAPE_TIMEOUT + Duration::from_millis(1), &mut events);
+        input.expire_due(Instant::now() + crate::ansi::ESCAPE_TIMEOUT + Duration::from_millis(1), &mut events);
         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Esc, mods: 0 })]);
         assert_eq!(input.remaining(Instant::now()), None);
     }
@@ -34,7 +34,7 @@ mod native_common_tests {
         let mut input = InputPipeline::new();
         let mut events = Vec::new();
         input.feed(b"", &mut events);
-        std::thread::sleep(crate::tui::ansi::ESCAPE_TIMEOUT + Duration::from_millis(20));
+        std::thread::sleep(crate::ansi::ESCAPE_TIMEOUT + Duration::from_millis(20));
         input.feed(b"j", &mut events);
         assert_eq!(events, vec![Event::Key(KeyEvent { key: Key::Esc, mods: 0 }), Event::Key(KeyEvent { key: Key::Char('j'), mods: 0 })]);
     }
@@ -48,7 +48,7 @@ mod native_common_tests {
         let mut events = Vec::new();
         input.feed(b"\x1b", &mut events);
         let nearer = next_timeout(Some(Instant::now() + Duration::from_secs(5)), &input, Instant::now()).expect("bounded");
-        assert!(nearer <= crate::tui::ansi::ESCAPE_TIMEOUT);
+        assert!(nearer <= crate::ansi::ESCAPE_TIMEOUT);
         assert_eq!(next_timeout(Some(now), &input, now + Duration::from_secs(1)), Some(Duration::ZERO), "a passed deadline never waits");
     }
 

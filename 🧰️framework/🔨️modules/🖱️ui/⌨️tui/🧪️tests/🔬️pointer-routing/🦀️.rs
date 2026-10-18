@@ -2,14 +2,15 @@
 //! (feature `🧪️tests/🖱️pointer-routing/🥒️.feature`). The vitest oracle in that folder re-derives every
 //! chrome expectation from the golden frame and the declared chips, so engine, painter and table agree.
 
-use crate::tui::chrome::{shell, window_chip_layout, ChromeState, FooterState, NavbarState, TabKind, WindowState};
-use crate::tui::engine::Tui;
-use crate::tui::event::{Event, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Size};
-use crate::tui::layout::{Constraint, Dimension, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
-use crate::tui::scene::{Node, NodeContent, NodeId};
-use crate::tui::theme::Theme;
-use crate::tui::widget::{TabsState, WidgetSignal, WidgetState, WizardState};
+use semio_framework_ui_tui_frame::chrome::{shell, window_chip_layout, ChromeState, FooterState, NavbarState, TabKind, WindowState};
+use semio_framework_ui_tui_engine::Tui;
+use semio_framework_ui_tui_core::event::{Event, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Size};
+use semio_framework_ui_tui_frame::layout::{Constraint, Dimension, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
+use semio_framework_ui_tui_frame::scene::{Node, NodeContent, NodeId};
+use semio_framework_ui_tui_core::theme::Theme;
+use semio_framework_ui_tui_widgets::widget::{TabsState, WidgetState, WizardState};
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 use std::collections::BTreeMap;
 use ui_styling::appearance::AppearanceName;
@@ -182,7 +183,7 @@ fn the_golden_chrome_rows_and_declared_chips_match_what_the_engine_paints() {
 fn elision_vectors_match_the_declared_outputs() {
     let fixture_value = parse(FIXTURE, JsonMemberPolicy::Reject).expect("fixture parses");
     for case in field(&fixture_value, "elision").as_array().unwrap() {
-        let out = crate::tui::text::elide_end(text(case, "text"), number(case, "max") as u16);
+        let out = semio_framework_ui_tui_core::text::elide_end(text(case, "text"), number(case, "max") as u16);
         assert_eq!(&*out, text(case, "out"), "elide {case:?}");
     }
 }

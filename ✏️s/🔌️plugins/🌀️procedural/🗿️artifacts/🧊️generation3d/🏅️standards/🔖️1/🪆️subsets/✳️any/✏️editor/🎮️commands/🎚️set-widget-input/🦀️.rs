@@ -132,7 +132,7 @@ pub(crate) fn input_leaf(host_snapshot: &FlowHostSnapshot, payload: &SetWidgetIn
 }
 
 /// 🥽️ Resolves the canonical Construct input or its connected text source without changing graph ownership.
-pub(crate) fn mesh_source_text(host: &FlowHostSnapshot, widget_id: &str, channel: &str) -> Result<(String, String, String), String> {
+pub fn mesh_source_text(host: &FlowHostSnapshot, widget_id: &str, channel: &str) -> Result<(String, String, String), String> {
     let widget = host.widgets.iter().find(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget) == widget_id).ok_or("Choose an existing mesh source")?;
     match widget {
         Widget::InputNote { id, text } if channel == "text" && host.synapses.iter().any(|wire| wire.from == *id && wire.to_port == "data" && host.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == &wire.to && neuron_kind == "brep.mesh.construct"))) => Ok((id.clone(), "text".into(), text.clone())),
@@ -185,7 +185,7 @@ pub(crate) fn edit_mesh_source(text: &str, payload: &SetWidgetInput) -> Result<O
 }
 
 /// 🖼️ A picked raster replaces one canonical texture in the existing source value.
-pub(crate) fn import_mesh_texture(text: &str, name: &str, payload: &str) -> Result<String, String> {
+pub fn import_mesh_texture(text: &str, name: &str, payload: &str) -> Result<String, String> {
     use semio_framework_pack_json::{Value, Object, JsonMemberPolicy};
     if name.is_empty() || name.chars().count() > 128 || text.len() > 16_777_216 || payload.len() > 22_369_664 { return Err("Texture import exceeds its bounds".into()); }
     let (mime, encoded) = if let Some(encoded) = payload.strip_prefix("data:image/png;base64,") { ("image/png", encoded) } else if let Some(encoded) = payload.strip_prefix("data:image/jpeg;base64,") { ("image/jpeg", encoded) } else { return Err("Choose a PNG or JPEG texture".into()); };

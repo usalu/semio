@@ -22,7 +22,7 @@ pub struct MemberOpenDeclaration {
     pub maximum_history_allocation_bytes:usize,
 }
 
-pub(crate) struct MemberFactorySelectionRejected {
+pub struct MemberFactorySelectionRejected {
     pub diagnostic: MemberOpenDiagnostic,
     pub input: VerifiedMemberHistoryInput,
 }

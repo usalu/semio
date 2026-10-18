@@ -8,10 +8,11 @@
 //!
 //! Every tool shows the plan outline of what it would create as ghosts, so the preview travels in the window transient like every other mark.
 
-use super::plane::{angle, dist, point2, quantised, rotate_about, same, translate, COINCIDENT, P};
-use super::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::editor::bim::gestures::session::Modifiers;
+use crate::editor::bim::gestures::plane::{angle, dist, point2, quantised, rotate_about, same, translate, COINCIDENT, P};
+use crate::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use crate::editor::bim::marks::{Mark, Preview, Style};
-use super::transform::{ghost, outline};
+use crate::editor::bim::gestures::transform::{ghost, outline};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::standards::v1::subsets::any::schema::mutations::modify::{self, ArrayPattern, MAX_COPIES};
@@ -309,6 +310,4 @@ impl Tool for Duplicate {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

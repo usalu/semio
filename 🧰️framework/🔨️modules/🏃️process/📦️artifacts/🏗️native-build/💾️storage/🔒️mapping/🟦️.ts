@@ -5,7 +5,7 @@ import{AsyncLocalStorage}from"node:async_hooks";
 import{randomBytes,createHash}from"node:crypto";
 import{acquireResourceLease,acquireQueuedResourceLease,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,acceptResourceLeaseDescendantCleanupV1,requireAcceptedResourceLeaseRetainedCleanupV1,requireMaterializedPathV1,checkResourceLeaseControl,type ResourceLease,type ResourceLeaseControl,type AcceptedResourceLeaseCleanupV1,type ResourceLeaseWriterProofV1}from"../../../../🔒️leases/🟦️.ts";
 import{requireAcceptedPhysicalCleanupControlV1,requireAcceptedPhysicalCleanupDescendantV1,requireIssuedResourceControlV1,withIssuedResourceOperationV1,requireIssuedResourceControlRefinementV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import schema from"../🧬️schema/🔣️.json";
+import schema from"../🧬️schema/🔣️.json" with{type:"json"};
 const protocol=Object.freeze({...schema.definitions.MappingProtocol.const});
 type Binding=Readonly<{root:string;identity:string;leaseDirectory:string;control:ResourceLeaseControl}>;
 type Scope={binding:Binding;resource:string;lease:ResourceLease;proof?:ResourceLeaseWriterProofV1;enrollment?:AcceptedPhysicalCleanupV1;loan?:AcceptedResourceLeaseCleanupV1;mode:"shared"|"exclusive";live:boolean;accepting:boolean;pending:Set<Promise<unknown>>;failed:boolean;failure:unknown};

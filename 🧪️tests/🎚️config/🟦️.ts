@@ -20,7 +20,7 @@ import { dirname, resolve } from "node:path";
 //
 // Test discovery is now owned by the testing domain
 // (`🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test`): cases are found from
-// `**/🧪️tests/*/component.feature`, one cacheable Nx project is generated per case, and each
+// `**/🧪️tests/*/component.feature`, one cacheable build project is generated per case, and each
 // project runs through its own native host. `compose/**` is excluded in that discovery library, not
 // here and not by a CI path filter. No allowlist may turn a failure into a skip.
 //

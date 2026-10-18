@@ -32,7 +32,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(playActivationLanes()).not.toContain("s");
     });
 
-    it("is exactly what the Nx graph activates and prepares", () => {
+    it("is exactly what the project graph activates and prepares", () => {
       const project = JSON.parse(readFileSync(join(repoRoot, "🏢️semio-tech/🎡️play/📋️project.json"), "utf8"));
       const lanes = [...playActivationLanes()].sort();
       const from = (target: string, pattern: RegExp) => project.targets[target].dependsOn.flatMap((entry: string) => pattern.exec(entry)?.[1] ?? []).sort();

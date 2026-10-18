@@ -1,17 +1,16 @@
 import { existsSync, rmSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
-import { coverageDir } from "../../🟦️.ts";
+import { coverageDir } from "../../🏃️process/📋️context/🔣️policy/🟦️.ts";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
-import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { orchestratorBudgetOpts, runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
-import { processTableSnapshot } from "../../🏃️process/📋️process-table/🟦️.ts";
+import { processTableSnapshot, ACTIVE_SEMIO_TECH_BUILD } from "../../🏃️process/📋️process-table/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runTaxonomyCliWorkflow } from "../../🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts";
 import { cleanCollectEmptyFolderRemovals } from "../🔍️empty-folders/🟦️.ts";
 import { cleanCollectMarkerOnlyFolderRemovals } from "../🔍️marker-only-folders/🟦️.ts";
 import { cleanProtectedPrefixes, cleanProjectRemovals, CLEAN_PROTECTION_VIEW } from "../🛡️protection/🟦️.ts";
 import { cleanRemovePath, runWorkspaceClean } from "../🗑️removal/🟦️.ts";
-import { ACTIVE_SEMIO_TECH_BUILD, cleanKillStrayProcesses } from "../🧟️stray-processes/🟦️.ts";
 
 /**
  * 🧹Workspace cleaner: misplaced emoji mounts, ticket junk, oversized build artifacts, and rustc
@@ -24,11 +23,13 @@ import { ACTIVE_SEMIO_TECH_BUILD, cleanKillStrayProcesses } from "../🧟️stra
  */
 export class CleanScript extends Script {
   run(segments: string[]): void {
+    const entry = readWorkspaceCleanupEntryV1(segments);
+    segments = [entry.mode, ...entry.arguments];
     if (segments[0] === "taxonomy") {
       runTaxonomyCliWorkflow(this.root, segments.slice(1));
       return;
     }
-    const dry = segments.includes("--dry") || segments.includes("dry");
+    const dry = entry.dry;
     if (segments[0] === "marker-only-folders") {
       const protectedPrefixes = cleanProtectedPrefixes(this.root);
       const pending = cleanCollectMarkerOnlyFolderRemovals(this.root, protectedPrefixes);
@@ -78,10 +79,6 @@ export class CleanScript extends Script {
       runCmd("bun", [join(this.root, domain, "📜️script.ts"), "clean", ...segments.slice(1)], { cwd: join(this.root, domain), ...orchestratorBudgetOpts() });
       return;
     }
-    if (segments[0] === "stray-processes") {
-      this.runKillStrayProcesses(dry);
-      return;
-    }
     if (segments[0] === "coverage") {
       // 📊️ Generated coverage reports only — no source, no fixture, no other cache entry.
       const removed: string[] = [];
@@ -108,14 +105,6 @@ export class CleanScript extends Script {
     ];
     for (const line of lines) console.log(line);
     this.runCachePrune(dry);
-    this.runKillStrayProcesses(dry);
-  }
-
-  /** 🧟️Reaps stray bun/zsh/cargo/node/esbuild/rustc processes left over from crashed or abandoned sessions. */
-  private runKillStrayProcesses(dry: boolean): void {
-    const removals = cleanKillStrayProcesses(dry, repoCacheDirectory(this.root, "🎛️dashboard"));
-    console.log(`[clean] stray-processes ${dry ? "dry-run" : "applied"} removals=${removals.length}`);
-    for (const row of removals) console.log(`[clean] ${dry ? "would-kill" : "killed"} ${row.action} pid=${row.pid} ppid=${row.ppid} ${row.name}`);
   }
 
   /** ⚡️Bounds the shared cache root through its own owner instead of size-sweeping it — `clean` never walks or deletes under it directly. */
@@ -134,3 +123,6 @@ export class CleanScript extends Script {
     console.log(`[clean] cache-prune ${status === 0 ? "ok" : `unavailable (exit ${status})`} ${repoCacheDirectory(this.root)}`);
   }
 }
+
+/** 🧭️ Decodes the complete workspace cleanup entry before observing or changing resources. */
+export function readWorkspaceCleanupEntryV1(segments:readonly string[]):Readonly<{mode:"workspace"|"taxonomy"|"test"|"coverage"|"empty-folders"|"marker-only-folders";dry:boolean;arguments:readonly string[]}>{if(!Array.isArray(segments)||segments.some(value=>typeof value!=="string"))throw Error("Closed workspace cleanup command required");const first=segments[0];if(first==="taxonomy"||first==="test")return Object.freeze({mode:first,dry:false,arguments:Object.freeze(segments.slice(1))});const marker=(value:string)=>value==="--dry"||value==="dry",mode=first===undefined||marker(first)?"workspace":first,tail=first===undefined?[]:marker(first)?segments:segments.slice(1);if(!["workspace","coverage","empty-folders","marker-only-folders"].includes(mode)||tail.length>1||tail.some(value=>!marker(value)))throw Error("Closed workspace cleanup command required");return Object.freeze({mode:mode as "workspace"|"coverage"|"empty-folders"|"marker-only-folders",dry:tail.length===1,arguments:Object.freeze([])});}

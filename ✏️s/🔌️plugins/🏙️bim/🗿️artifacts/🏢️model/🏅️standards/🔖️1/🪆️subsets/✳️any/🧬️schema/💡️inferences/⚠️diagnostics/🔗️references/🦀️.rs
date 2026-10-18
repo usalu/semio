@@ -2,7 +2,7 @@
 //! model findings cover what belongs to no storey: spatial structure, elements on missing storeys, openings of missing hosts, type materials,
 //! orphaned properties and ids used twice.
 
-use super::{Diagnostic, DiagnosticCode};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::standards::v1::subsets::any::schema::authored::references;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, TopConstraint};
 use std::collections::{BTreeMap, BTreeSet};

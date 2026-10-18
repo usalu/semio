@@ -1,0 +1,13 @@
+{
+ "tag": "dut",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/🧪️tests/🔬️dag-unit/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/🧭️host/🧪️tests/🔬️dag-unit/🦀️.rs",
+ "folders": [
+  "🧮️cursors-projection-and-selection-laws",
+  "🎚️reorganize-sliders-and-label-overlays",
+  "📐️area-select-align-and-entity-screen-json",
+  "🔗️reconnect-proximity-and-lod-hit-laws",
+  "🔍️detail-lod-variadic-wheel-and-minimap",
+  "📝️manual-lod-notes-and-preview-tree"
+ ]
+}

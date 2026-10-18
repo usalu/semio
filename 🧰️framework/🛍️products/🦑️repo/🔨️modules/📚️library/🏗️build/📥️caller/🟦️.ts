@@ -1,7 +1,7 @@
 import type{ResourceLeaseControl}from"../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {requireBuildOrchestrationContextV1,projectBuildOrchestrationCapabilitiesV1} from "./📤️orchestration/🟨️.mjs";
-import nxCallerSchema from"../../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
+import nxCallerSchema from"../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
 import authoringSchema from "../🧬️schema/📥️authoring.json";
 import schema from "../🧬️schema/📥️caller.json";
 import nativeSchema from "../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";

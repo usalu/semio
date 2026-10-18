@@ -49,7 +49,7 @@ use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use std::collections::BTreeSet;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 
@@ -101,10 +101,6 @@ pub use semio_framework_plugin::ui_node_list;
 //#region 🧪️UnitTests
 /// 🧪️ Shared test scaffolding for every taxonomy node's own `🧪️Tests` region — a component file must be
 /// able to drive the whole app without re-deriving the harness.
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod unit_tests;
-//#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts
 

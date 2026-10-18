@@ -1,8 +1,9 @@
 //! 🔌️ The rules every component and MEP leaf shares: what makes a component, a component override and an MEP element valid in a base. Pure, computed from the authored records and the text of their formulas
 //! only (through the family rules), never from an inference. A leaf prefixes the field of the [`Fault`] with the record name on create (`["component", "family"]`) and uses it as is on set (`["family"]`).
 
-use super::elements;
-use super::family_rules::{self, Fault};
+use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules::{self, Fault};
 use crate::standards::v1::subsets::any::schema::snapshot::{Component, FamilyCategory, MepElement, MepShape, ModelSnapshot, Point3};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -138,6 +139,4 @@ pub fn mounted_on<'a>(base: &'a ModelSnapshot, wall: &'a str) -> impl Iterator<I
     base.components.iter().filter(move |(_, row)| row.host.as_deref() == Some(wall)).map(|(id, _)| id)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

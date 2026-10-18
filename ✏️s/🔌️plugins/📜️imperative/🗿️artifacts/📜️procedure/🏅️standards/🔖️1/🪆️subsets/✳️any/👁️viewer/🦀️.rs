@@ -24,7 +24,7 @@ use semio_framework_plugin::NoTransientMutation;
 // from the crate root now); `Dialect`/`StandardId`/`SubsetId` and the window-kit types (contract
 // §2.6) are still only reachable through `app` — see the identical note in `✏️editor`'s own file.
 use semio_framework_plugin::app::{ArtifactViewer, ViewEmit, Viewer};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

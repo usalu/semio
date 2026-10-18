@@ -35,7 +35,7 @@ test("actual generic record metadata has one independent canonical package below
   expect(native).toEqual(TOML.parse(source) as typeof native);
   expect(native.package.name).toBe("semio-framework-dsl-record");
   expect(native.lib).toEqual({name: "semio_framework_dsl_record", path: "../../🦀️.rs"});
-  expect(Object.keys(native.dependencies).sort()).toEqual(["semio-framework-diagnostic", "semio-framework-dsl", "semio-framework-pack-json", "semio-framework-value"]);
+  expect(Object.keys(native.dependencies).sort()).toEqual(["semio-framework-diagnostic", "semio-framework-dsl", "semio-framework-dsl-notation", "semio-framework-dsl-record-emission", "semio-framework-dsl-record-model", "semio-framework-io-control", "semio-framework-pack-json", "semio-framework-value"]);
 });
 
 test("record model and binding definitions directly select the actual neutral value and JSON floors", () => {
@@ -43,10 +43,10 @@ test("record model and binding definitions directly select the actual neutral va
     const source = path === "🦀️.rs" ? readTree(path) : read(path);
     for (const spelling of ["protocol::value::", "protocol::bytes::", "crate::os_pack::", "use crate::os_dsl::"]) expect(source.includes(spelling), `${path}: ${spelling}`).toBe(false);
   }
-  expect(readTree("🦀️.rs").includes("pub struct RecordSpec")).toBe(true);
+  expect(read("📐️model/🦀️.rs").includes("pub struct RecordSpec")).toBe(true);
   expect(read("🪆️binding/🦀️.rs").includes("pub trait DslField")).toBe(true);
   expect(read("🪆️binding/🦀️.rs").includes("pub trait DslVariants")).toBe(true);
-  expect(readTree("🦀️.rs").includes("semio_framework_pack_json::")).toBe(true);
+  expect(read("📐️model/🦀️.rs").includes("semio_framework_pack_json::")).toBe(true);
 });
 
 test("schema constructor refusal corpus preserves all eight semantic kinds at every owned boundary", async () => {

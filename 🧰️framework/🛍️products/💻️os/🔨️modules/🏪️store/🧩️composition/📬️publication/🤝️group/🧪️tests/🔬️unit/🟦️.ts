@@ -3,6 +3,7 @@ import { Database } from "bun:sqlite";
 import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
 import fixture from "../🧫️fixtures/📚️history-cases/🔣️.json" with { type: "json" };
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("one common decision publishes three retained member roots together", () => {
   const generated = join(process.env.SEMIO_TICKET_DIR!, "🗑️generated");
@@ -32,7 +33,7 @@ test("one common decision publishes three retained member roots together", () =>
     }
   } finally { rmSync(directory, { recursive: true, force: true }); }
   const group = resolve(import.meta.dir, "../../🦀️.rs");
-  const source = readFileSync(resolve(import.meta.dir, "../../../../../🦀️.rs"), "utf8") + (existsSync(group) ? readFileSync(group, "utf8") : "");
+  const source = readModuleTreeSource(resolve(import.meta.dir, "../../../../../🦀️.rs")) + (existsSync(group) ? readFileSync(group, "utf8") : "");
   for (const method of ["stage_apply_batch_group", "adopt_apply_batch_group", "stage_one_item_publication", "adopt_one_item_publication"]) expect(source.includes(`fn ${method}(`)).toBe(true);
 });
 
@@ -50,7 +51,7 @@ test("private prepared roots can be read before one common decision", () => {
       expect(database.query("SELECT value FROM roots ORDER BY lane").all().map(root => (root as { value: number }).value)).toEqual(row.before);
     }
   } finally { database.close(); }
-  expect(readFileSync(resolve(import.meta.dir, "../../../../../🦀️.rs"), "utf8").includes("fn snapshot_read_erased_for_publication(")).toBe(true);
+  expect(readModuleTreeSource(resolve(import.meta.dir, "../../../../../🦀️.rs")).includes("fn snapshot_read_erased_for_publication(")).toBe(true);
 });
 
 test("private prepared read cancellation returns to the exact authority before rollback", () => {
@@ -70,7 +71,7 @@ test("private prepared read cancellation returns to the exact authority before r
       expect(database.query("SELECT value FROM roots ORDER BY lane").all().map(root => (root as { value: number }).value)).toEqual(row.before);
     }
   } finally { database.close(); }
-  expect(readFileSync(resolve(import.meta.dir, "../../../../../🦀️.rs"), "utf8").includes("fn return_prepared_snapshot_read_erased(")).toBe(true);
+  expect(readModuleTreeSource(resolve(import.meta.dir, "../../../../../🦀️.rs")).includes("fn return_prepared_snapshot_read_erased(")).toBe(true);
 });
 
 test("private child projections borrow only their exact member read authority",()=>{
@@ -80,7 +81,7 @@ test("private child projections borrow only their exact member read authority",(
   database.run("CREATE TABLE reads (id TEXT PRIMARY KEY, member TEXT NOT NULL, read_member TEXT NOT NULL, typed INTEGER NOT NULL)");
   for(const row of law.cases){database.run("INSERT INTO reads VALUES (?, ?, ?, ?)",[row.id,row.member,row.readMember,Number(row.typed)]);expect(database.query("SELECT member=read_member AND typed=1 AS accepted FROM reads WHERE id=?").get(row.id)).toEqual({accepted:Number(row.accepted)});}
  }finally{database.close();}
- const source=readFileSync(resolve(import.meta.dir,"../../../../../🦀️.rs"),"utf8");
+ const source=readModuleTreeSource(resolve(import.meta.dir,"../../../../../🦀️.rs"));
  expect(source.includes("fn child_restore_projection_for_read<")).toBe(true);
  expect(law.allocatedBytes).toBe(0);expect(law.liveAuthorityChanged).toBe(false);
 });

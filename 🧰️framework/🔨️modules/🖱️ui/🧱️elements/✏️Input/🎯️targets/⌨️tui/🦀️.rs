@@ -4,12 +4,12 @@
 //! move by whole clusters and never panic on non-ASCII text. The caret is the terminal's own cursor (`input_cursor`);
 //! the painter draws no caret glyph, so it can never hide a character.
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::text::{boundary_at_cell, boundary_at_or_before, display_width, elide, next_boundary, previous_boundary, window_cells, Elision};
-use crate::tui::theme::{Role, Surface, Theme};
-use crate::tui::widget::{CursorShape, CursorSpec, WidgetSignal};
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::text::{boundary_at_cell, boundary_at_or_before, display_width, elide, next_boundary, previous_boundary, window_cells, Elision};
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 
 /// ✏️ A single-line text value, its cursor (a byte offset) and the hint shown while it is empty.
 pub struct InputState {

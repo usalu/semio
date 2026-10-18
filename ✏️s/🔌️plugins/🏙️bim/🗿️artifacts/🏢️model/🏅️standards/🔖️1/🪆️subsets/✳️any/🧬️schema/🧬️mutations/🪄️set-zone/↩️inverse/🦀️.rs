@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetZone`: an absolute `SetZone` restoring the base value of exactly the fields the forward really changes, none when the zone is absent or nothing changes.
 
-use super::SetZone;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_zone::SetZone;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetZone, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetZone, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_zone::SetZone>,
+{
     let Some(record) = base.zones.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetZone, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetZone(SetZone::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetZone::from_patch(payload.id.clone(), restore))]
 }

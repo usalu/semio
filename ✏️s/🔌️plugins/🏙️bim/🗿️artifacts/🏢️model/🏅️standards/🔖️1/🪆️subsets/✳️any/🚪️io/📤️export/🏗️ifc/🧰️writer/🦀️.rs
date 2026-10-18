@@ -109,7 +109,7 @@ pub fn derived() -> V {
 //#endregion 🔖️Values
 
 //#region 🔖️GlobalId
-const ALPHABET: &[u8; 64] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
+pub const ALPHABET: &[u8; 64] = b"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$";
 
 fn fnv1a(bytes: &[u8], seed: u64) -> u64 {
     let mut hash = seed;
@@ -376,6 +376,4 @@ pub fn label(value: &str) -> V {
     typed("IFCLABEL", text(value))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

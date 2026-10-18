@@ -16,7 +16,8 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../.
 import {buildModePolicy} from "../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import type {LinkedComponentV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts";
 import type {SemanticDescriptorEmissionV1} from "../🖨️describe/🛂️descriptor-emission/🟦️.ts";
-import {CATALOG_DESCRIPTOR_MAX_BYTES,verifySemanticDescriptorPairBytesV1} from "../📇️registry/✅️catalog-verification/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../📇️registry/✅️catalog-verification/🟦️.ts";
+import { verifySemanticDescriptorPairBytesV1 } from "../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import { encodeComponentReceiptV1, componentReceiptBindsV1, COMPONENT_PROFILE_POLICIES } from "../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 import { type ComponentReceiptV1 } from "../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
 import publicationSchema from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};

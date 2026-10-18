@@ -94,7 +94,7 @@ use semio_framework_plugin::ToolJobFactory;
 #[allow(unused_imports)]
 use semio_framework_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 pub(crate) mod context {
     use crate::editor::architect::*;
 use crate::editor::architect::catalog::analysis_kind_picker_options;

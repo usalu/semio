@@ -206,7 +206,7 @@ impl PngNativePaint {
     pub const fn rgb(red: u16, green: u16, blue: u16) -> Self { Self { profile: PngNativeProfile::Rgb, first: red, second: green, third: blue, fourth: 0 } }
     pub const fn rgba(red: u16, green: u16, blue: u16, alpha: u16) -> Self { Self { profile: PngNativeProfile::Rgba, first: red, second: green, third: blue, fourth: alpha } }
 
-    pub(crate) fn samples(self) -> [u16; 4] { [self.first, self.second, self.third, self.fourth] }
+    pub fn samples(self) -> [u16; 4] { [self.first, self.second, self.third, self.fourth] }
 }
 
 

@@ -5,7 +5,7 @@ use std::collections::HashSet;
 use protocol::causal::transition::HistoryFoldIndex;
 use std::hash::Hash;
 use semio_framework_value::ValueType;
-use semio_framework_os_kernel_neural_engine_model::{Atom, Cardinality, ChannelSpec, ColdDictionaryBuilder, ColdOwner, ColdRetire, Dictionary, EvalError, FieldSpec, NeuralEngineError, Operator, OperatorInfo, OperatorPlanAdmission, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, SCHEMA_KEY, Schema, SchemaRef, VALUE_TYPE_LIST, VALUE_TYPE_NUMBER, Value, ValueRetirement, derive_channel_names, operator_signature, validate_neuron_inputs, validate_operator_outputs};
+use semio_framework_os_kernel_neural_engine_model::{original_retirement_cursor, OperatorRetirement, Atom, Cardinality, ChannelSpec, ColdDictionaryBuilder, ColdOwner, ColdRetire, Dictionary, EvalError, FieldSpec, NeuralEngineError, Operator, OperatorInfo, OperatorPlanAdmission, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, SCHEMA_KEY, Schema, SchemaRef, VALUE_TYPE_LIST, VALUE_TYPE_NUMBER, Value, ValueRetirement, derive_channel_names, operator_signature, validate_neuron_inputs, validate_operator_outputs};
 
 #[path = "✅️output/🦀️.rs"]
 mod output;
@@ -145,52 +145,7 @@ impl RetireOwned for SharedRegistry {
     fn controlled_retirement_supported()->bool {true}
 }
 
-struct OperatorRetirement {operator:Option<Box<dyn Operator>>,values:ValueRetirement}
-impl OperatorRetirement {
-    fn terminal_is_empty(&self)->bool {self.operator.is_none()&&self.values.terminal_is_empty()}
-    fn next_copy_byte_demand(&self)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_copy_byte_demand()}else{self.operator.as_ref().map_or(Ok(0),|value|value.next_retire_copy_byte_demand())}}
-    fn next_capacity_byte_demand(&self,copy:usize)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_capacity_byte_demand(copy)}else{self.operator.as_ref().map_or(Ok(0),|value|value.next_retire_capacity_byte_demand(copy))}}
-    fn next_release_byte_demand(&self)->Result<usize,ValueError> {
-        if !self.values.terminal_is_empty(){return self.values.next_release_byte_demand();}
-        self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(size_of_val(value.as_ref()))}else{value.next_retire_release_byte_demand()})
-    }
-    fn next_depth_demand(&self)->Result<usize,ValueError> {if !self.values.terminal_is_empty(){self.values.next_depth_demand()}else{self.operator.as_ref().map_or(Ok(0),|value|if value.retirement_is_empty(){Ok(1)}else{value.next_retire_depth_demand()})}}
-    fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        let empty=RetainedCloneProgress::default();
-        if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty));}
-        if !self.values.terminal_is_empty(){return self.values.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(empty));}
-        if grant.maximum_depth<self.next_depth_demand()? {return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"operator retained ownership exceeds admitted depth"));}
-        let value=self.operator.as_mut().unwrap();
-        if value.retirement_is_empty() {
-            let bytes=size_of_val(value.as_ref());
-            if bytes>grant.maximum_release_bytes{return Ok(RetainedCloneStep::Progress(empty));}
-            drop(self.operator.take());
-            return Ok(RetainedCloneStep::Complete(RetainedCloneProgress {copied_items:1,released_bytes:bytes,..empty}));
-        }
-        let step=value.retire_step(grant,&mut self.values)?;
-        Ok(RetainedCloneStep::Progress(admit_retained_clone_close(grant,step,value.retirement_is_empty(),"original operator fields")?.progress()))
-    }
-}
-impl Drop for OperatorRetirement {fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"operator abandoned before physical shell closure");}}
-impl RetireOwned for Box<dyn Operator> {
-    fn retirement(self)->Box<dyn RetirementCursor> {Box::new(OperatorRetirement {operator:Some(self),values:ValueRetirement::default()})}
-    fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<OperatorRetirement>())}
-    fn controlled_retirement_supported()->bool {true}
-}
-macro_rules! original_retirement_cursor {
-    ($type:ty) => {impl RetirementCursor for $type {
-        fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match Self::close_step(self,grant){Err(error)=>RetirementStep::Failure(error),Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress)}}
-        fn terminal_is_empty(&self)->bool {Self::terminal_is_empty(self)}
-        fn next_work_byte_demand(&self)->Result<usize,ValueError> {self.next_copy_byte_demand()}
-        fn next_birth_bytes(&self,copy:usize)->Option<usize> {self.next_capacity_byte_demand(copy).ok()}
-        fn next_close_byte_demand(&self)->Option<usize> {self.next_release_byte_demand().ok()}
-        fn next_depth_demand(&self)->Result<usize,ValueError> {Self::next_depth_demand(self)}
-        fn terminal_release_bytes(&self)->Option<usize> {self.terminal_is_empty().then_some(std::mem::size_of::<Self>())}
-    }};
-}
 original_retirement_cursor!(RegistryLeaseRetirement);
-original_retirement_cursor!(OperatorRetirement);
 //#endregion 🧹️RegistryRetirement
 
 #[cfg(test)]

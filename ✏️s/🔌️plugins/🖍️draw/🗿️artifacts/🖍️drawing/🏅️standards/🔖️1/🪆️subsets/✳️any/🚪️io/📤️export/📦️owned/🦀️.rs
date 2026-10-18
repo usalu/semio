@@ -78,6 +78,7 @@ use semio_s_artifact_draw_drawing_host::outcome::DrawingJobTurn;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_value::{DslValue,ValueRefusalKind,retained_clone::RetainedCloneBirthDemand};
 use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep,JobOutcomeBorrow,JobOutcomeDescriptor,JobOutcomeView,StepContext};
+use semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes;
 #[derive(semio_framework_value::RetireOwned)]
 struct SerializerMetadata{route:(ArtifactDialect,ArtifactDialect),options:DslValue,failure:Option<Fault>}
 struct DrawingOwnedSerializerJob{producer:ExportProducer,metadata:ControlledRetirement<SerializerMetadata>,generation:u64,revision:[u8;32],finished:bool,closing:bool,cancelled:bool,failed:bool,outcomes:DrawingJobOutcomes}

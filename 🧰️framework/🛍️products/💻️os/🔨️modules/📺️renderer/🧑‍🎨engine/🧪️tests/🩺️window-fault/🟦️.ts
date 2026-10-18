@@ -42,7 +42,7 @@ describe("window fault discriminators", () => {
   });
 
   it("classifies every declared runtime fault code exactly as the fixture says, for both cleanup scopes", () => {
-    expect(faultVectors.vectors.length).toBe(19);
+    expect(faultVectors.vectors.length).toBe(18);
     for (const vector of faultVectors.vectors as readonly FaultVector[]) {
       expect(classifyWindowFault(vector.code), vector.variant).toBe(vector.class);
       for (const scope of faultVectors.scopes) {
@@ -64,7 +64,6 @@ describe("window fault discriminators", () => {
     expect(classifyWindowFault("plugin.internal.interactive-ceiling")).toBe("interactive-ceiling");
     expect(classifyWindowFault("plugin.internal.clock")).toBe("clock");
     expect(classifyWindowFault("plugin.internal.clock-regression")).toBe("clock");
-    expect(classifyWindowFault("plugin.internal.clock-cooperative")).toBe("clock");
   });
 
   it("applies the fixture's supervisor and non-plugin classification cases", () => {

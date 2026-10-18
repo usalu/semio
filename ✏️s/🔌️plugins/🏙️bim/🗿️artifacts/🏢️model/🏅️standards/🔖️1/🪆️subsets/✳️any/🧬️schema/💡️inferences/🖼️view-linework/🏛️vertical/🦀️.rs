@@ -4,12 +4,13 @@
 //! fine view its hidden edges are dashed. A *section* additionally cuts the solids the plane passes through: the cut is a filled region in the cut style, and the faces that close it hide
 //! what lies behind them. An *elevation* cuts nothing. Storey levels are datum lines across the plane.
 
-use super::clip::{clip_ring, clip_segment, Rect};
-use super::cut::{cut_regions, Cut};
-use super::filters::{category_of_family, phase_of};
-use super::frame::Frame;
-use super::hidden_lines::{bodies, faces, feature_edges, mean_depth, pieces, Facing, Tri};
-use super::ViewLinework;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::clip::{clip_ring, clip_segment, Rect};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::cut::{cut_regions, Cut};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::filters::{category_of_family, phase_of};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::hidden_lines::{bodies, faces, feature_edges, mean_depth, pieces, Facing, Tri};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanStyle, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;

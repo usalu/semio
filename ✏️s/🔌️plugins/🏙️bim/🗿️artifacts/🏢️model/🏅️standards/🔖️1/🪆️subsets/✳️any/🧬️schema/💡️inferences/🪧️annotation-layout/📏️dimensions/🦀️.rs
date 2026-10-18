@@ -4,8 +4,8 @@
 //! difference of the positions along `d`, printed in the unit and precision of the style. Nothing here is stored: moving an anchored wall moves the line and changes the printed number.
 //! 📎 https://www.iso.org/standard/53699.html (ISO 129-1 presentation of dimensions)
 
-use super::anchors::{resolve, Reason, Reference, EPS};
-use super::{marks_of, print, text_width, AnchorLayout, DimensionLayout, DimensionSegment, Inputs, Line, TextAnchor};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{resolve, Reason, Reference, EPS};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{marks_of, print, text_width, AnchorLayout, DimensionLayout, DimensionSegment, Inputs, Line, TextAnchor};
 use crate::standards::v1::subsets::any::schema::snapshot::{Dimension, ModelSnapshot, Point2};
 
 fn dot(a: (f64, f64), b: (f64, f64)) -> f64 {

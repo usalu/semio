@@ -2,8 +2,8 @@
 //! wall base. Its profile is the section of the selected beam or column type of the library, else a baseboard; its material is the selected material, else the first of the project. The ghost is the band the sweep covers along the face; it turns to
 //! a warning when the model would refuse it. One click writes the sweep.
 
-use super::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
-use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, TYPE_MISSING};
+use crate::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
+use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, TYPE_MISSING};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::wall_sweeps::baseboard;
 use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
@@ -124,6 +124,4 @@ impl Tool for Sweeping {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

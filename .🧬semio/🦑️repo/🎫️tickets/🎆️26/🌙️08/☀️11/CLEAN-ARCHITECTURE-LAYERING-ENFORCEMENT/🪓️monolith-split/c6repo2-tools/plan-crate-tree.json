@@ -1,0 +1,120 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🟦️.ts",
+ "keepParentIn": ".",
+ "cap": 950,
+ "unwrapDescribe": "artifact crate carve",
+ "aggregator": true,
+ "supportChunk": "🏗️virtual-crate",
+ "chunks": [
+  {
+   "dir": ".",
+   "leaf": "🟦️.ts"
+  },
+  {
+   "dir": "🏗️virtual-crate",
+   "units": [
+    0,
+    1
+   ]
+  },
+  {
+   "dir": "🔪️module-cuts",
+   "ranges": [
+    [
+     2,
+     8
+    ]
+   ]
+  },
+  {
+   "dir": "📖️fixture-reads",
+   "ranges": [
+    [
+     9,
+     23
+    ]
+   ]
+  },
+  {
+   "dir": "🔒️workspace-registration",
+   "ranges": [
+    [
+     24,
+     31
+    ]
+   ]
+  },
+  {
+   "dir": "🪝️test-hoisting",
+   "ranges": [
+    [
+     32,
+     53
+    ]
+   ]
+  },
+  {
+   "dir": "🕸️facade-weaving",
+   "ranges": [
+    [
+     54,
+     70
+    ]
+   ]
+  },
+  {
+   "dir": "🧭️root-aliases",
+   "ranges": [
+    [
+     71,
+     74
+    ]
+   ]
+  },
+  {
+   "dir": "🧬️layout-differential",
+   "ranges": [
+    [
+     75,
+     82
+    ]
+   ]
+  },
+  {
+   "dir": "📏️measure-and-pack",
+   "ranges": [
+    [
+     83,
+     94
+    ]
+   ]
+  },
+  {
+   "dir": "📝️docs-and-mounts",
+   "ranges": [
+    [
+     95,
+     104
+    ]
+   ]
+  },
+  {
+   "dir": "🧰️host-imports",
+   "ranges": [
+    [
+     105,
+     112
+    ]
+   ]
+  },
+  {
+   "dir": "🚦️test-support-wiring",
+   "ranges": [
+    [
+     113,
+     114
+    ]
+   ]
+  }
+ ]
+}

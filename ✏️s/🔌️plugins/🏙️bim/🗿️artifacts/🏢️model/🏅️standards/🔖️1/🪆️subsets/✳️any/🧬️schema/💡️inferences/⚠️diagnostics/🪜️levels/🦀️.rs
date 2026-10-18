@@ -1,7 +1,7 @@
 //! 🪜️ Storey levels of one building: levels that skip a number leave a gap, two storeys on one level overlap, a building without level 0 has no
 //! datum; spaces of the building that share a number are ambiguous.
 
-use super::{Diagnostic, DiagnosticCode};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 

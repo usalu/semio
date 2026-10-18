@@ -64,6 +64,6 @@ fn geometry(tree: &DslValue, entries: &mut Entries) -> Result<(), String> {
 }
 
 /// 🧩️ Every edit goes through [`EDIT_RULES`]; a geometry edit carries the buffers it keeps.
-pub(crate) fn special(event: &SnapshotEditEvent, snapshot: &SemioMeshSnapshot) -> Result<Option<Vec<SemioMeshMutation>>, Fault> {
+pub fn special(event: &SnapshotEditEvent, snapshot: &SemioMeshSnapshot) -> Result<Option<Vec<SemioMeshMutation>>, Fault> {
     resolve::<SemioMeshSnapshot, SemioMeshMutation>(&EDIT_RULES, RESHAPES, snapshot, event).map(Some)
 }

@@ -1,6 +1,6 @@
 //! 🧰️ Shared helpers of the IFC export tests: the committed house model and readers over the generated Part-21 document.
 
-use super::{model_to_part21, Schema};
+use crate::standards::v1::subsets::any::io::export::ifc::{model_to_part21, Schema};
 use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, Axis, Beam, Ceiling, CeilingType, Column, CurtainPanel, CurtainPanelOverride, Layer, LayerFunction, LocationLine, ModelSnapshot, Opening, OpeningKind, Phase, Point2, Profile, Ramp, Slab, Slope, TopConstraint, Vertex, Wall, WallSide, WallSweep, Zone};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Instance, Part21Value};

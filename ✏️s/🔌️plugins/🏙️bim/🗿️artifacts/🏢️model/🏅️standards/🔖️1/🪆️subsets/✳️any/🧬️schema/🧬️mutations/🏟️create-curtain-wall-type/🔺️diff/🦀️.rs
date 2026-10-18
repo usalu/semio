@@ -2,9 +2,9 @@
 //! positive distances in strictly ascending order), both mullion sections have positive dimensions, the default panel names existing types or materials and both
 //! materials exist.
 
-use super::super::elements;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::curtain_type_flaw;
-use super::CreateCurtainWallType;
+use crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall_type::CreateCurtainWallType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

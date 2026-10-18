@@ -11,9 +11,9 @@
 //!
 //! Related: DIN 277 and ISO 9836 area schemes (gross, net, rentable), <https://www.iso.org/standard/32443.html>.
 
-use super::super::element_solids::{dep_object, dep_value};
-use super::super::finishes::FinishSurface;
-use super::super::quantities::ElementQuantity;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Space, Zone};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
@@ -129,6 +129,4 @@ pub fn table_json(zones: &BTreeMap<String, ZoneTotals>, schemes: &BTreeMap<Strin
 }
 //#endregion 🔖️Projection
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetIssueComment`: a sparse comment patch of exactly the provided fields that differ. The comment that results must be writable (see `comment_problem`); a patch that restates the current values is
 //! `mutation.no-op`.
 
-use super::SetIssueComment;
+use crate::standards::v1::subsets::any::schema::mutations::set_issue_comment::SetIssueComment;
 use crate::standards::v1::subsets::any::schema::{snapshot::{comment_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -30,6 +30,7 @@ semio-framework-dsl-record-derive = { path = "../../../../../../../🔨️module
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-io-base64 = { path = "../../../../../../../🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-native-decode = { path = "../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 
 [dev-dependencies]

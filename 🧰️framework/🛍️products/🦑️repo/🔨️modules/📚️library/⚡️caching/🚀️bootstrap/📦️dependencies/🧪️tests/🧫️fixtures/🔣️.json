@@ -1,21 +1,31 @@
 {
   "version": 1,
   "operations": [
-    {
-      "mode": "sync",
-      "arguments": [
-        "install",
-        "--frozen-lockfile"
-      ]
-    },
-    {
-      "mode": "lock",
-      "arguments": [
-        "install",
-        "--lockfile-only"
-      ]
-    }
-  ],
+  {
+    "mode": "sync",
+    "arguments": [
+      "install",
+      "--frozen-lockfile",
+      "--ignore-scripts",
+      "--linker=isolated",
+      "--backend=hardlink",
+      "--cache-dir",
+      "/cache"
+    ]
+  },
+  {
+    "mode": "lock",
+    "arguments": [
+      "install",
+      "--lockfile-only",
+      "--ignore-scripts",
+      "--linker=isolated",
+      "--backend=hardlink",
+      "--cache-dir",
+      "/cache"
+    ]
+  }
+],
   "platforms": [
     "linux",
     "darwin",

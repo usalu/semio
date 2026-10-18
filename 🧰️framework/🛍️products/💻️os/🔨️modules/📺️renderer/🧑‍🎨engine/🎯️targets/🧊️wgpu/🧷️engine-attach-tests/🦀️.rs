@@ -33,4 +33,19 @@ mod scenes {
     mod canvas2d_camera_tests;
 }
 
+#[path = "."]
+mod engine_canvas {
+    use semio_framework_os_infinite_board_normal_focus::wheel_screen;
+    use semio_framework_os_renderer_wgpu_engine_board::board2d::{board_drain_into_buffer, board_set_pointer_inside, coalesce_owned_board_events, with_board_host, with_board_host_mut};
+    use semio_framework_os_renderer_wgpu_engine_board::tiled_map::{map_local_pointer, tiled_map_wheel_into};
+    use semio_framework_os_renderer_wgpu_engine_graph::node_graph::{node_graph_pointer_down_into, node_graph_pointer_move_into, node_graph_pointer_up_into, node_graph_wheel_into};
+    use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_registry::ENGINE_SURFACES;
+    use semio_framework_surface::tiled_map::MapHost;
+    use semio_framework_ui_layout::layout::ActionDescriptor;
+    use semio_framework_ui_theme::geometry::Rect;
+    use serde_json::{Value, json};
+
+    include!("../../../🧱️elements/⚙️EngineCanvas/🧪️tests/🧵️wgpu-standalone-wrappers/🦀️.rs");
+}
+
 

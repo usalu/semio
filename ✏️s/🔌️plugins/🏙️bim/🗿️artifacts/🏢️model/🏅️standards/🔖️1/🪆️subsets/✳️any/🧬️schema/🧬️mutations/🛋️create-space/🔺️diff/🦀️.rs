@@ -2,8 +2,8 @@
 //! bounded space needs a finite seed and an explicit outline at least three finite vertices that enclose area, its zone must exist and its
 //! finishes must name materials. Outline, area, volume and finish areas of a bounded space are inferred from the walls around the seed.
 
-use super::super::elements;
-use super::CreateSpace;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_space::CreateSpace;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, SpaceBoundary, Vertex}};
 use protocol::{MutationOutcome, OutcomeCode};
 

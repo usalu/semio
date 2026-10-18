@@ -28,7 +28,7 @@ pub fn finishes(x: &mut Export<'_>, id: &str, entity: u64) {
     define(x, &key, &[entity], set);
 }
 
-fn totals(entity: u64, totals: &ZoneTotals) -> (u64, &'static str, Vec<Quantity>) {
+pub fn totals(entity: u64, totals: &ZoneTotals) -> (u64, &'static str, Vec<Quantity>) {
     (entity, "Semio_ZoneTotals", vec![Quantity::Area("GrossFloorArea", totals.area), Quantity::Area("NetFloorArea", totals.net_area), Quantity::Volume("GrossVolume", totals.volume), Quantity::Area("FloorFinishArea", totals.floor_finish_area), Quantity::Area("WallFinishArea", totals.wall_finish_area), Quantity::Area("CeilingFinishArea", totals.ceiling_finish_area)])
 }
 
@@ -114,6 +114,4 @@ pub fn report_json(model: &ModelSnapshot) -> Result<String, String> {
 }
 //#endregion 🔖️Report
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+

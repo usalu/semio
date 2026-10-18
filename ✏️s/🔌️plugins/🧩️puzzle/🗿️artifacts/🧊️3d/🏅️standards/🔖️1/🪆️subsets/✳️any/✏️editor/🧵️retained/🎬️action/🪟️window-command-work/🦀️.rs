@@ -1,6 +1,7 @@
 //! 🪟️ Window command work: the one-action-per-window route through the shared action prologue, spending one bounded turn on the scene, one per owed mesh fallback and one on the dispatch.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 /// 🧾️ The shared action prologue's three halves as this work's own stages.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

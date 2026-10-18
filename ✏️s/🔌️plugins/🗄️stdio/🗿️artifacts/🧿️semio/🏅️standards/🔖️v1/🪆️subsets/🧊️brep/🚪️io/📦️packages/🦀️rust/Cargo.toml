@@ -21,7 +21,7 @@ semio-framework-3d-brep-tolerance.workspace = true
 semio-framework-3d-brep-surface.workspace = true
 semio-framework-3d-brep-curve.workspace = true
 semio-framework = { workspace = true }
-semio-framework-2d = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 semio-framework-3d-brep-queries = { workspace = true }
 semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-3d-brep-tessellation = { workspace = true }

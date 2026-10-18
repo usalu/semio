@@ -21,10 +21,15 @@ identical in both files by `🧪️tests/🔬️schema/🟦️.ts`, which also c
 ## 🧪️tests
 
 - `🤝️protocol-contract/🐹️.go` — MCP wire protocol contract.
+- `🧰️protocol-harness/🐹️.go` — shared harness of the protocol contract cases.
+- `🚦️protocol-lifecycle/🐹️.go` — lifecycle and pagination.
+- `🛑️protocol-cancellation/🐹️.go` — cancellation, pipe saturation and reconnect.
+- `📏️protocol-bounds/🐹️.go` — payload, nesting, identifier and cursor bounds.
+- `📈️protocol-progress-replay/🐹️.go` — progress, dropped peers, error envelopes and deterministic replay.
 - `🔬️schema/🟦️.ts` — SDL ↔ JSON Schema parity and the draft-07 oracle.
 
 # 💯️Requirements
 
-The GraphQL surface is a contract of this module, not of the CLI binary: `⌨️cli/internal/graphql`
-implements the executor, `🧩️vscode` writes documents against it, and neither may add a field that this
+The GraphQL surface is a contract of this module, not of the CLI binary: `🔗️graphql/📦️packages/🐹️go`
+implements the executor and the CLI imports it, `🧩️vscode` writes documents against it, and neither may add a field that this
 module does not declare.

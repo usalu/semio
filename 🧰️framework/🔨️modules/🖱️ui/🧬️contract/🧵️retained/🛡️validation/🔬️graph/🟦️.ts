@@ -1,5 +1,5 @@
 //#region 🧬️GraphContract
-import type { Component, UiContractViolation, UiDocumentLimits, UiNodeRecord } from "../../../../../🛂️manifest/🟦️.ts";
+import type { Component, UiContractViolation, UiDocumentLimits, UiNodeRecord } from "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import type { RetainedUiComponent, RetainedUiNodeRecord } from "../../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../../🧮️tables/🟦️.ts";
 import { numberLimitValues, numberRangeIsValid, snapsAreValid } from "../../../🛡️limits/🟦️.ts";

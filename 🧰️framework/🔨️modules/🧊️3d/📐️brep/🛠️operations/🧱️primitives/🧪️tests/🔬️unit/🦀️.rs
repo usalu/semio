@@ -1,4 +1,8 @@
-use super::*;
+use semio_framework_3d_brep_construction::primitives::*;
+use semio_framework_3d_brep_representation::arena::SolidId;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
 use semio_framework_3d_brep_validation::validate_body;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

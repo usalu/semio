@@ -30,10 +30,11 @@ test("canonical paged map fixture preserves accepted JSON bytes and exact lifeti
   }
   db.close();
   const source = readFileSync(new URL("🧵️borrowed/🧪️tests/🧵️borrowed/🦀️.rs", base), "utf8");
-  expect(source).toContain("Text(PagedUtf8");
-  expect(source).toContain("Array(PagedList");
-  expect(source).toContain("Object(PagedMap");
-  expect(source).toContain("admit_typed_controlled_retirement");
+  expect(source).toContain("Text(String)");
+  expect(source).toContain("Array(Vec<MapValue>)");
+  expect(source).toContain("Object(MapFields)");
+  expect(source).toContain("semio_framework_value::ordered::OrderedMap<MapValue>");
+  expect(source).toContain("admit_owned_retirement");
   expect(source).not.toContain("active.truncate");
 });
 

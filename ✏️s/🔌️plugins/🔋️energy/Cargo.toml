@@ -51,6 +51,7 @@ members = [
   "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/♻️restore/📦️packages/🦀️rust",
   "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📡️wire/📦️packages/🦀️rust",
   "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🧪️tests/🔬️unit/📦️packages/🦀️rust",
   "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🪜️retirement/📦️packages/🦀️rust",
   "🔨️modules/⚡️simulation/⚙️engine/🧮️meters/📦️packages/🦀️rust",
   "🔨️modules/⚡️simulation/⚙️engine/🧰️props/📦️packages/🦀️rust",

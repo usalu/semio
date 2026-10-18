@@ -7,8 +7,8 @@
 import { type Implementation, IMPLEMENTATIONS } from "@semio-tech/framework/test/adapter";
 import { readFileSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { getSemioRoot } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { type Taxonomy } from "../../📚️library/🔍️discovery/🟦️.ts";
+import { getSemioRoot } from "../../📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
+import { type Taxonomy } from "../../📚️library/🔍️discovery/📑️taxonomy-document/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🔣️Contract

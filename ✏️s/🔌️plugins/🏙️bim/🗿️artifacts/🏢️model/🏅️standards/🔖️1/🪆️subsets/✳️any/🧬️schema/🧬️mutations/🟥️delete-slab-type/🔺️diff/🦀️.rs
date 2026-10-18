@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteSlabType`: one deleted slab type entry together with the properties and classifications keyed by the type; refused while a slab still uses the type.
 
-use super::super::cascade;
-use super::DeleteSlabType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_slab_type::DeleteSlabType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -4,8 +4,9 @@ import { mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from "
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import emojiRegex from "emoji-regex";
-import { semanticDirectoryKindId, validateTaxonomy, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
-import { matchDirectoryKind } from "../../🧹️normalization/🟦️.ts";
+import { semanticDirectoryKindId, validateTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
+import { matchDirectoryKind } from "../../🧹️normalization/🏷️file-kind-matching/🟦️.ts";
 import { loadTaxonomy } from "../../🧹️normalization/🔣️taxonomy/🟦️.ts";
 
 type Row = Readonly<{ ownerKindIds: readonly string[]; memberNames: readonly string[]; memberSlugPattern?: unknown; source: "registry" }>;

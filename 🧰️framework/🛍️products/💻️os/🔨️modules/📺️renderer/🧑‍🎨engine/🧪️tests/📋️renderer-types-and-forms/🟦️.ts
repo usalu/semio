@@ -1,6 +1,6 @@
 /** 📋 Renderer types, owned declarative controls, external slots and declarative forms parity. */
 import { createElement } from "react";
-import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
 import { presenceOverlayFixture, sliderPresentationFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { manifestActionSemanticsFixture as actionSemanticsFixture, loadContextExtensionInputFixture, loadManifestViewContextSchema } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { fireEvent, render } from "@semio-tech/ui-react/test";

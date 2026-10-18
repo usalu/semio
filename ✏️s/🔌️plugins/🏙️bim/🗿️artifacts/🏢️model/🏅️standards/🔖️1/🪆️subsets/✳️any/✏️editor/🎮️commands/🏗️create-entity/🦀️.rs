@@ -78,6 +78,4 @@ pub fn creatable() -> Vec<&'static EntityKind> {
     ENTITIES.iter().filter(|row| row.create.is_some()).collect()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

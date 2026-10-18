@@ -1,6 +1,7 @@
 //! 🕹️ Forms play app: the `FormsPlayApp` editor and its `ArtifactEditor` implementation.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️FormsPlayApp
 /// 🧪️ B1: unit struct — every former `FormsPlayRuntime` field now lives in `FormsConfig`, written through

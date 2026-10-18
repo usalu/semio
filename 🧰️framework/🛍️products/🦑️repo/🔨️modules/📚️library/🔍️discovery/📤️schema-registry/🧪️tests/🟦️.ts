@@ -46,7 +46,7 @@ test("original schema routes refuse test inputs and protect existing output befo
  const script=new SchemaScript(root,root,invocation);
  for(const route of ["verify","entries"])
   await expect(script.run([route,"--rust-entries","testing-input.json"])).rejects.toThrow("Registry inputs are produced fresh");
- await expect(script.run(["entries","--out"])).rejects.toThrow("--out requires a path");
+ await expect(script.run(["entries","--out"])).rejects.toThrow("--out requires a report name");
  const base=process.env.SEMIO_TEST_ARTIFACT_DIR;
  if(!base)throw Error("Original schema route test requires its declared test artifact directory");
  const directory=mkdtempSync(join(base,"registry-refusal-")), output=join(directory,"existing.json");

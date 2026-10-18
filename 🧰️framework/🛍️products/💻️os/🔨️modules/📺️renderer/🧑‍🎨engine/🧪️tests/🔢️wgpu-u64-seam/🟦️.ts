@@ -6,7 +6,7 @@ import laws from "../🧫️fixtures/🔢️wgpu-u64-seam/🔣️.json";
 
 const engineRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const rustText = readFileSync(join(engineRoot, laws.rustSource), "utf8");
-const workerText = readFileSync(join(engineRoot, laws.workerSource), "utf8");
+const sources: Record<string, string> = { workerSource: readFileSync(join(engineRoot, laws.workerSource), "utf8"), originalSource: readFileSync(join(engineRoot, laws.originalSource), "utf8") };
 
 /** 🦀️ The Rust signature is the ABI authority — the TypeScript handle type is its twin, never its source. */
 function rustParameters(rustFn: string): readonly { readonly name: string; readonly type: string }[] {
@@ -18,12 +18,13 @@ function rustParameters(rustFn: string): readonly { readonly name: string; reado
   });
 }
 
-/** 🧾️ One declaration line of the frame Worker's hand-written wasm-bindgen handle type. */
-function handleDeclaration(jsName: string): string {
-  const block = new RegExp(`type ${laws.handleType} = \\{([^}]*)\\}`, "u").exec(workerText)?.[1];
-  expect(block, `no ${laws.handleType} declaration`).toBeTypeOf("string");
-  const line = block!.split("\n").map((row) => row.trim()).find((row) => row.startsWith(`${jsName}(`));
-  expect(line, `no ${jsName} member on ${laws.handleType}`).toBeTypeOf("string");
+/** 🧾️ One declaration line of the hand-written wasm-bindgen carrier type that holds `jsName`. */
+function handleDeclaration(exported: (typeof laws.exports)[number]): string {
+  const holder = exported.declaration.holder.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
+  const block = new RegExp(`${holder}[^{]*\\{([^}]*)\\}`, "u").exec(sources[exported.declaration.source]!)?.[1];
+  expect(block, `no ${exported.declaration.holder} declaration`).toBeTypeOf("string");
+  const line = block!.split("\n").map((row) => row.trim()).find((row) => row.startsWith(`${exported.jsName}(`));
+  expect(line, `no ${exported.jsName} member on ${exported.declaration.holder}`).toBeTypeOf("string");
   return line!;
 }
 
@@ -33,7 +34,7 @@ describe("wgpu u64 seam", () => {
       const parameters = rustParameters(exported.rustFn);
       const widened = parameters.filter((parameter) => parameter.type === laws.widenedIntegerType).map((parameter) => parameter.name);
       expect(widened).toEqual(exported.widenedParameters);
-      const declaration = handleDeclaration(exported.jsName);
+      const declaration = handleDeclaration(exported);
       const declared = declaration.slice(declaration.indexOf("(") + 1, declaration.lastIndexOf(")")).split(",").map((part) => part.trim()).filter(Boolean);
       expect(declared).toHaveLength(parameters.length);
       for (const [index, parameter] of parameters.entries()) {
@@ -46,9 +47,9 @@ describe("wgpu u64 seam", () => {
 
   it("lowers every widened argument at the call site", () => {
     for (const exported of laws.exports) {
-      const call = new RegExp(`runtime!\\.${exported.jsName}\\(([^;]*?)\\)[;)]`, "u").exec(workerText)?.[1];
+      const call = new RegExp(`${exported.call.receiver}\\.${exported.jsName}\\(([^;]*?)\\)[;)]`, "u").exec(sources[exported.call.source]!)?.[1];
       expect(call, `no ${exported.jsName} call site`).toBeTypeOf("string");
-      expect((call!.match(new RegExp(`${laws.lowering}\\(`, "gu")) ?? []).length).toBe(exported.widenedParameters.length);
+      expect((call!.match(new RegExp(`${laws.lowering}\\(`, "gu")) ?? []).length).toBe(exported.call.loweredArguments);
     }
   });
 

@@ -87,7 +87,7 @@ impl TrustedCatalogDataRoot {
 
 /// 📤️ One exclusive publication window bound to the already-opened catalog directory.
 pub(super) struct TrustedCatalogPublicationOwner {
-    directory: File,
+    pub directory: File,
     _fence: semio_hub_artifact_authority::FileFence,
 }
 
@@ -99,7 +99,7 @@ pub enum TrustedPublicationSync {
 }
 
 impl TrustedCatalogPublicationOwner {
-    pub(super) fn open_current(&self) -> Result<Option<TrustedCatalogOpenedFile>, AuthorityError> {
+    pub fn open_current(&self) -> Result<Option<TrustedCatalogOpenedFile>, AuthorityError> {
         match platform::open_regular_at(&self.directory, std::iter::once(OsStr::new("current.json"))) {
             Ok(file) => TrustedCatalogOpenedFile::new(file).map(Some),
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(None),
@@ -107,12 +107,12 @@ impl TrustedCatalogPublicationOwner {
         }
     }
 
-    pub(super) fn open_generation(&self, generation_id: &str) -> Result<TrustedCatalogGenerationRoot, AuthorityError> {
+    pub fn open_generation(&self, generation_id: &str) -> Result<TrustedCatalogGenerationRoot, AuthorityError> {
         let path = TrustedCatalogRelativePathV1::parse(&format!("generations/{generation_id}"))?;
         Ok(TrustedCatalogGenerationRoot { directory: platform::open_directory_at(&self.directory, path.os_segments()).map_err(catalog_error)? })
     }
 
-    pub(super) fn replace_current(&self, nonce: &str, bytes: &[u8], context: &OperationContext<'_>) -> Result<TrustedPublicationSync, AuthorityError> {
+    pub fn replace_current(&self, nonce: &str, bytes: &[u8], context: &OperationContext<'_>) -> Result<TrustedPublicationSync, AuthorityError> {
         use std::io::Write;
         context.checkpoint()?;
         if nonce.len() != 32 || !nonce.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte)) || bytes.is_empty() || bytes.len() > 65_536 {
@@ -168,11 +168,11 @@ impl TrustedCatalogOpenedFile {
 
     /// 🚰️ The opened handle as an async reader with the length its `fstat` answered, for a caller that verifies the
     /// bytes while it streams them.
-    pub(super) fn into_reader(self) -> (tokio::fs::File, u64) {
+    pub fn into_reader(self) -> (tokio::fs::File, u64) {
         (tokio::fs::File::from_std(self.file), self.length)
     }
 
-    pub(super) async fn read_bounded(self, maximum: u64, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {
+    pub async fn read_bounded(self, maximum: u64, context: &OperationContext<'_>) -> Result<Vec<u8>, AuthorityError> {
         context.checkpoint()?;
         if self.length == 0 || self.length > maximum {
             return Err(catalog("trusted file is empty, non-regular, or exceeds its fixed byte boundary"));

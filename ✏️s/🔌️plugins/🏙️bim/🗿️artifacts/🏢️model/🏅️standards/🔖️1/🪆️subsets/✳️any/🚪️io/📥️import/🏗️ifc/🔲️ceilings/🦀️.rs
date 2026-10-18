@@ -4,10 +4,11 @@
 //! unsupported-class note.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifccovering.htm>
 
-use super::data::label;
-use super::reader::{text, Doc, Loop, Section};
-use super::spatial::authoring_of;
-use super::Import;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc, Loop, Section};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::authoring_of;
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::ceilings::RECORD_ROW;
 use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType, Layer, LayerFunction, Point2, Vertex};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -90,6 +91,4 @@ pub fn read(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateBuilding`: one created building entry; the site must exist, the id must be free.
 
-use super::super::elements;
-use super::CreateBuilding;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_building::CreateBuilding;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

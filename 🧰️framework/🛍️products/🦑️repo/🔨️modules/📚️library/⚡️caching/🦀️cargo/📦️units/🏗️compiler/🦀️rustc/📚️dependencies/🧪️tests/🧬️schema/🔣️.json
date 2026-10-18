@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "selectedOnly",
+    "maximumDependencies",
+    "receiptBytesUnchanged",
+    "refusals",
+    "children",
+    "cachedUnits",
+    "current"
+  ],
+  "properties": {
+    "current": {"const": [{"kind":"current","changedArtifact":false,"changedReceipt":false,"binding":"current","body":"success","entered":true,"failed":false},{"kind":"artifact-change","changedArtifact":true,"changedReceipt":false,"binding":"current","body":"success","entered":false,"failed":true},{"kind":"receipt-change","changedArtifact":false,"changedReceipt":true,"binding":"current","body":"success","entered":false,"failed":true},{"kind":"wrong-bound-digest","changedArtifact":false,"changedReceipt":false,"binding":"wrong","body":"success","entered":false,"failed":true},{"kind":"unbound-digest","changedArtifact":false,"changedReceipt":false,"binding":"unbound","body":"success","entered":false,"failed":true},{"kind":"body-undefined","changedArtifact":false,"changedReceipt":false,"binding":"current","body":"undefined","entered":true,"failed":true},{"kind":"body-frozen","changedArtifact":false,"changedReceipt":false,"binding":"current","body":"frozen","entered":true,"failed":true}]},
+    "version": {
+      "const": 1
+    },
+    "selectedOnly": {
+      "const": true
+    },
+    "maximumDependencies": {
+      "const": 4096
+    },
+    "receiptBytesUnchanged": {
+      "const": true
+    },
+    "refusals": {
+      "const": [
+        "map-proxy",
+        "map-subclass",
+        "map-extra",
+        "entry-getter",
+        "entry-proxy",
+        "entry-extra",
+        "directory-retarget",
+        "plan-retarget",
+        "receipt-clone",
+        "reader-not-function",
+        "reader-proxy",
+        "missing"
+      ]
+    },
+    "children": {
+      "const": [
+        {
+          "kind": "success",
+          "failed": false
+        },
+        {
+          "kind": "undefined",
+          "failed": true
+        },
+        {
+          "kind": "frozen",
+          "failed": true
+        }
+      ]
+    },
+    "cachedUnits": {
+      "const": 65536
+    }
+  }
+}

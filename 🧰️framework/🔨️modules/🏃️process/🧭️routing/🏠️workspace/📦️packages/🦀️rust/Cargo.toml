@@ -22,4 +22,11 @@ workspace = true
 path = "../../🦀️.rs"
 doctest = false
 
+[[test]]
+name = "process-routing-workspace-corpus"
+path = "../../🧪️tests/🦀️.rs"
+
 [dependencies]
+
+[dev-dependencies]
+serde_json = { workspace = true }

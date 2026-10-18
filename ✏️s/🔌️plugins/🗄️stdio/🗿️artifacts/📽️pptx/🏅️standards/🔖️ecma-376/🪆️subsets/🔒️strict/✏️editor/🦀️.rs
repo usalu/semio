@@ -146,7 +146,7 @@ impl ArtifactEditor for PptxStrictEditor {
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
-        _engines: &semio_framework_2d::compute::EngineHandles,
+        _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(PptxStrictEditorCommand::SetPage { page, item, revision, text }) = command else {
             let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Edit(event) = command else { unreachable!() };

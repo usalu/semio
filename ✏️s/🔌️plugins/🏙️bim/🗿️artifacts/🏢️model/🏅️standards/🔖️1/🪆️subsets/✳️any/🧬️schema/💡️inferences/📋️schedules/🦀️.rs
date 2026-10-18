@@ -5,7 +5,7 @@
 //! The submodules: [`rows`] reads the authored facts of the elements and turns one source row into cells, [`table`] filters, sorts, groups and totals. The vocabulary of keys, the validity of a definition and the
 //! presets of the library are authored values and live with the snapshot (`crate::standards::v1::subsets::any::schema::snapshot::schedule_kit`).
 
-use super::super::quantities::ElementQuantity;
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule, ScheduleKey};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
@@ -102,18 +102,7 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
 }
 //#endregion 🔖️Inference
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-#[cfg(test)]
-#[path = "🧪️tests/🧰️kit/🦀️.rs"]
-mod kit;
-#[cfg(test)]
-#[path = "🧪️tests/🗂️rows/🦀️.rs"]
-mod tests_rows;
-#[cfg(test)]
-#[path = "🧪️tests/🧮️table/🦀️.rs"]
-mod tests_table;
-#[cfg(test)]
-#[path = "🧪️tests/🕸️graph/🦀️.rs"]
-mod tests_graph;
+
+
+
+

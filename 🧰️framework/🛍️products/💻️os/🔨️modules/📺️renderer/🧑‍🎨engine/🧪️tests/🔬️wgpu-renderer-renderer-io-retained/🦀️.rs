@@ -2,6 +2,9 @@ use super::*;
 
 static RENDERER_IO_TEST_OWNER: Mutex<()> = Mutex::new(());
 
+/// 🪙️ One page release of a completed result, with the ledger parent depths its payload ladder needs.
+const RESULT_PAGE_CLOSE_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_capacity_bytes: 0, maximum_release_bytes: 2 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES, maximum_depth: 3 };
+
 struct RendererIoPollWake {
     count: std::sync::atomic::AtomicUsize,
 }
@@ -52,7 +55,7 @@ fn mounted_registry_max_plus_one_zero_pump_drop_and_generation_are_exact() {
         if index + 1 == RENDERER_IO_SESSION_SLOTS {
             let plus_one_request_pointer = request_pointer;
             let returned_pointer =
-                renderer_io_with_node(handle.slot, handle.generation, |node| node.rejected.as_ref().and_then(|rejected| rejected.job().retained_request_backing_identity()).expect("maximum plus one retains the exact rejected request"))
+                renderer_io_with_node(handle.slot, handle.generation, |node| node.job.as_ref().and_then(|job| job.retained_request_backing_identity()).expect("maximum plus one retains the exact rejected request"))
                     .expect("maximum plus one mounted generation");
             assert_eq!(returned_pointer, plus_one_request_pointer);
         }
@@ -95,7 +98,7 @@ fn headless_entrypoint_drives_retained_io_and_matches_the_json_oracle() {
         let semio_framework_os_services::NativeIoValue::Page {mut bytes,eof}=value else {panic!("wrong I/O result")};
         assert!(eof);
         let parsed:serde_json::Value=serde_json::from_slice(bytes.page(0).expect("page bytes")).expect("renderer JSON");
-        while !matches!(bytes.close_step(1,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES),semio_framework_job::JobPayloadCloseStep::Complete) {}
+        while !bytes.terminal_is_empty() {let _=bytes.close_step(RESULT_PAGE_CLOSE_GRANT);}
         parsed
     });
     assert_eq!(actual,oracle);
@@ -134,7 +137,7 @@ fn native_app_worker_completes_io_without_a_presentation_host() {
         let semio_framework_os_services::NativeIoValue::Page {mut bytes,eof}=value else {panic!("wrong I/O result")};
         assert!(eof);
         let actual:serde_json::Value=serde_json::from_slice(bytes.page(0).expect("page bytes")).expect("renderer JSON");
-        while !matches!(bytes.close_step(1,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES),semio_framework_job::JobPayloadCloseStep::Complete) {}
+        while !bytes.terminal_is_empty() {let _=bytes.close_step(RESULT_PAGE_CLOSE_GRANT);}
         sent.send(actual).expect("worker result");
     });
     let actual=received.recv_timeout(std::time::Duration::from_secs(5)).expect("application worker must advance I/O without a presentation callback");
@@ -159,7 +162,7 @@ fn native_kernel_worker_completes_io_without_a_presentation_host() {
         let semio_framework_os_services::NativeIoValue::Page {mut bytes,eof}=value else {panic!("wrong I/O result")};
         assert!(eof);
         let actual:serde_json::Value=serde_json::from_slice(bytes.page(0).expect("page bytes")).expect("renderer JSON");
-        while !matches!(bytes.close_step(1,semio_framework_job::JOB_PAYLOAD_PAGE_BYTES),semio_framework_job::JobPayloadCloseStep::Complete) {}
+        while !bytes.terminal_is_empty() {let _=bytes.close_step(RESULT_PAGE_CLOSE_GRANT);}
         sent.send(actual).expect("worker result");
     });
     let actual=received.recv_timeout(std::time::Duration::from_secs(5)).expect("kernel worker must advance I/O without a presentation callback");

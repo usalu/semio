@@ -9,7 +9,7 @@ import jsonPatch from "fast-json-patch";
 const subsets=["1️⃣cc1","2️⃣cc2","3️⃣cc3","4️⃣cc4","5️⃣cc5","6️⃣cc6"];
 const root=fileURLToPath(new URL("../../🪆️subsets/",import.meta.url));
 for(const [index,subset] of subsets.entries())test(`STEP ${subset} commits every native conformance intent with independent expected output`,()=>{
- const owner=join(root,subset),cases=join(owner,"🧫️fixtures/🎛️history-inputs"),kinds=index===0?["restore-entities","set-file-schema","set-product-identity","remove-shape-representation"]:index===5?["restore-entities","set-file-schema","set-product-identity","set-shape-representation"]:["restore-entities","set-file-schema","set-product-identity","set-shape-representation","demote-shape-representation"];
+ const owner=join(root,subset),cases=join(owner,"🧪️tests/🧫️fixtures/🎛️history-inputs"),kinds=index===0?["restore-entities","set-file-schema","set-product-identity","remove-shape-representation"]:index===5?["restore-entities","set-file-schema","set-product-identity","set-shape-representation"]:["restore-entities","set-file-schema","set-product-identity","set-shape-representation","demote-shape-representation"];
  const directories=readdirSync(cases).sort();expect(directories.length).toBe(kinds.length);
  const actual=[];
  for(const directory of directories){
@@ -25,13 +25,13 @@ for(const [index,subset] of subsets.entries())test(`STEP ${subset} commits every
 for(const [index,subset] of subsets.entries())test(`STEP ${subset} native editor and viewer retain the declared class mutation owner`,()=>{
  const owner=join(root,subset),name=`StepCc${index+1}Mutation`;
  for(const leaf of ["✏️editor/🦀️.rs","👁️viewer/🦀️.rs"]){const native=readFileSync(join(owner,leaf),"utf8");expect(native).toContain(`type Mutation = ${name};`);expect(native).not.toContain("type Mutation = StepMutation;");}
- const codec=readFileSync(join(owner,"🚪️io/🧬️mutations/🦀️.rs"),"utf8");expect(codec).toContain(name);expect(readFileSync(join(owner,"🚪️io/🧬️mutations/💾️binary/🦀️.rs"),"utf8")).toContain("VariantTag::Key");
+ const codec=readFileSync(join(owner,"🚪️io/📝️text/🧬️mutations/🦀️.rs"),"utf8");expect(codec).toContain(name);expect(readFileSync(join(owner,"🚪️io/💾️binary/🧬️mutations/🦀️.rs"),"utf8")).toContain("VariantTag::Key");
 });
 
 
 for(const [index,subset] of subsets.entries())test(`STEP ${subset} construction retains its independently declared class-native intent`,()=>{
- const owner=join(root,subset),name=`StepCc${index+1}Mutation`,fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🎛️history-inputs/♻️restore-entities/🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);
- const native=readFileSync(join(owner,"🚪️io/🦀️.rs"),"utf8"),construction=native.slice(native.indexOf("pub mod derived_construction"));expect(construction).toContain(`type Mutation = ${name};`);expect(construction).toContain(`apply_step_cc${index+1}_mutation`);expect(construction).not.toContain("type Mutation = StepMutation;");
+ const owner=join(root,subset),name=`StepCc${index+1}Mutation`,fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🎛️history-inputs/♻️restore-entities/🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);
+ const native=readFileSync(join(owner,"🚪️io/🦀️.rs"),"utf8"),construction=native.slice(native.indexOf("pub mod derived_construction"));expect(construction).toContain(`type Mutation = ${name};`);expect(construction).toContain("protocol::Mutation::diff(&mutation, &self.snapshot)");expect(construction).not.toContain("type Mutation = StepMutation;");
 });
 
 for(const subset of subsets)test(`STEP ${subset} instance words stay references while human names remain primitive controls`,async()=>{
@@ -41,12 +41,12 @@ for(const subset of subsets)test(`STEP ${subset} instance words stay references 
  const {mutationInputDefs}=await import("@semio-tech/framework/manifest");const identityControl=mutationInputDefs(identity,()=>undefined).find((input:any)=>input.id==="/identity")!;expect(identityControl.schema.kind).toBe("object");for(const field of ["product","formation","definition"]){const input=(identityControl.schema as any).fields.find((input:any)=>input.id===`/${field}`)!;expect(input.schema.kind).toBe("reference");expect(input.schema.idType).toBe("integer");expect(input.schema.many??false).toBe(false);}
 
  if(subset!=="1️⃣cc1"){const representation=JSON.parse(readFileSync(join(owner,"🧬️schema/🧬️mutations/🪜set-shape-representation/🧬️schema/🔣️.json"),"utf8"));for(const field of ["items","context"]){const descriptor=representation.$defs.ShapeRepresentationRow.properties[field];expect(descriptor["x-semio-ui"].widget).toBe("reference");expect(descriptor["x-semio-ui"].role).toBe("target");expect(descriptor["x-semio-ui"].ref).toEqual({kind:"entity"});}const control=mutationInputDefs(representation,()=>undefined).find((input:any)=>input.id==="/representation")!;expect(control.schema.kind).toBe("object");for(const field of ["items","context"]){const input=(control.schema as any).fields.find((input:any)=>input.id===`/${field}`)!;expect(input.schema.kind).toBe("reference");expect(input.schema.idType).toBe("integer");expect(input.schema.many??false).toBe(field==="items");}}
- const fixtures=join(owner,"🧫️fixtures/🎛️history-inputs");for(const directory of readdirSync(fixtures)){const fixture=JSON.parse(readFileSync(join(fixtures,directory,"🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);}
+ const fixtures=join(owner,"🧪️tests/🧫️fixtures/🎛️history-inputs");for(const directory of readdirSync(fixtures)){const fixture=JSON.parse(readFileSync(join(fixtures,directory,"🦠️mutation/🔣️.json"),"utf8"));expect(jsonPatch.applyPatch(structuredClone(fixture.before),fixture.oracle.patch,true).newDocument).toEqual(fixture.after);}
 });
 
 test("STEP snapshot instance and reference words remain addresses with independently valid unchanged fixtures",()=>{
  const snapshot=JSON.parse(readFileSync(join(root,"🧱️base/🧬️schema/📸️snapshot/🔣️.json"),"utf8")),admits=new Ajv({strict:false}).compile(snapshot);
- for(const subset of subsets)for(const directory of readdirSync(join(root,subset,"🧫️fixtures/🎛️history-inputs"))){const fixture=JSON.parse(readFileSync(join(root,subset,"🧫️fixtures/🎛️history-inputs",directory,"🦠️mutation/🔣️.json"),"utf8"));expect(admits(fixture.before),JSON.stringify(admits.errors)).toBe(true);expect(admits(fixture.after),JSON.stringify(admits.errors)).toBe(true);}
+ for(const subset of subsets)for(const directory of readdirSync(join(root,subset,"🧪️tests/🧫️fixtures/🎛️history-inputs"))){const fixture=JSON.parse(readFileSync(join(root,subset,"🧪️tests/🧫️fixtures/🎛️history-inputs",directory,"🦠️mutation/🔣️.json"),"utf8"));expect(admits(fixture.before),JSON.stringify(admits.errors)).toBe(true);expect(admits(fixture.after),JSON.stringify(admits.errors)).toBe(true);}
  const reference=snapshot.$defs.StepValue.oneOf.find((variant:any)=>variant.properties?.reference)?.properties.reference;
  for(const descriptor of [snapshot.$defs.StepEntity.properties.id,reference]){expect(descriptor.type).toBe("integer");expect(descriptor["x-semio-ui"].widget).toBe("reference");expect(descriptor["x-semio-ui"].role).toBe("target");expect(descriptor["x-semio-ui"].ref).toEqual({kind:"entity"});}
 });

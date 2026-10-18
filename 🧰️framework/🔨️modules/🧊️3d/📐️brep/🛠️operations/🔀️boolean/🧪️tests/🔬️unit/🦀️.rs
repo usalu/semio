@@ -1,4 +1,18 @@
-use super::*;
+#![cfg(test)]
+#![allow(unused_imports)]
+
+use semio_framework_3d_brep_boolean::*;
+use semio_framework_3d_brep_boolean::testkit::*;
+use semio_framework_3d_brep_construction::primitives::{make_convex_hull};
+use semio_framework_3d_brep_representation::contract::{PointClassification};
+use semio_framework_3d_brep_queries::mass_properties::{solid_volume};
+use semio_framework_3d_brep_validation::validate_body;
+use semio_framework_3d_brep_representation::arena::{SolidId};
+use semio_framework_3d_brep_representation::error::{KernelError};
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_vector::{Pnt3, Vec3};
+
 use semio_framework_3d_brep_construction::primitives::{make_box, make_cylinder, make_sphere};
 use semio_framework_3d_brep_construction::transform::transform_solid;
 use semio_framework_3d_brep_vector::matrix::Affine3;

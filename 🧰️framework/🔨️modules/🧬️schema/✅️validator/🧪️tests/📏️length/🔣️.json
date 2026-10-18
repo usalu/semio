@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "iterations": 4096,
+  "generatedPairs": 4096,
+  "performance": {
+    "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "schemas": [
+      {
+        "type": "string"
+      },
+      {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      {
+        "type": "string",
+        "minLength": 64,
+        "maxLength": 64
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "units": [],
+      "repeat": 1,
+      "characters": 0
+    },
+    {
+      "id": "ascii",
+      "units": [
+        65
+      ],
+      "repeat": 1,
+      "characters": 1
+    },
+    {
+      "id": "nul",
+      "units": [
+        0
+      ],
+      "repeat": 1,
+      "characters": 1
+    },
+    {
+      "id": "bmp",
+      "units": [
+        233,
+        20013
+      ],
+      "repeat": 1,
+      "characters": 2
+    },
+    {
+      "id": "combining",
+      "units": [
+        101,
+        769
+      ],
+      "repeat": 1,
+      "characters": 2
+    },
+    {
+      "id": "pair",
+      "units": [
+        55357,
+        56832
+      ],
+      "repeat": 1,
+      "characters": 1
+    },
+    {
+      "id": "lone-high",
+      "units": [
+        55296
+      ],
+      "repeat": 1,
+      "characters": 1
+    },
+    {
+      "id": "lone-low",
+      "units": [
+        56320
+      ],
+      "repeat": 1,
+      "characters": 1
+    },
+    {
+      "id": "broken-pair",
+      "units": [
+        55357,
+        65,
+        56832
+      ],
+      "repeat": 1,
+      "characters": 3
+    },
+    {
+      "id": "pair-low",
+      "units": [
+        55357,
+        56832,
+        56320
+      ],
+      "repeat": 1,
+      "characters": 2
+    },
+    {
+      "id": "high-pair",
+      "units": [
+        55296,
+        55296,
+        56320
+      ],
+      "repeat": 1,
+      "characters": 2
+    },
+    {
+      "id": "max-scalar",
+      "units": [
+        56319,
+        57343
+      ],
+      "repeat": 1,
+      "characters": 1
+    },
+    {
+      "id": "family",
+      "units": [
+        55357,
+        56424,
+        8205,
+        55357,
+        56425,
+        8205,
+        55357,
+        56423,
+        8205,
+        55357,
+        56422
+      ],
+      "repeat": 1,
+      "characters": 7
+    },
+    {
+      "id": "crlf",
+      "units": [
+        13,
+        10
+      ],
+      "repeat": 1,
+      "characters": 2
+    },
+    {
+      "id": "joiner",
+      "units": [
+        8205
+      ],
+      "repeat": 1,
+      "characters": 1
+    },
+    {
+      "id": "two-high",
+      "units": [
+        55296,
+        56319
+      ],
+      "repeat": 1,
+      "characters": 2
+    },
+    {
+      "id": "low-pair",
+      "units": [
+        56320,
+        55296,
+        56320
+      ],
+      "repeat": 1,
+      "characters": 2
+    },
+    {
+      "id": "long",
+      "units": [
+        97,
+        55357,
+        56832,
+        55296
+      ],
+      "repeat": 4096,
+      "characters": 12288
+    }
+  ],
+  "diagnostic": {
+    "units": [
+      55357,
+      56832
+    ],
+    "schema": {
+      "type": "string",
+      "minLength": 2,
+      "maxLength": 0,
+      "pattern": "^never$"
+    },
+    "errors": [
+      " must contain at least 2 character(s)",
+      " must contain at most 0 character(s)",
+      " must match ^never$"
+    ]
+  }
+}

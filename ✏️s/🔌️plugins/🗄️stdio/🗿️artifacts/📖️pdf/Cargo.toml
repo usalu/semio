@@ -40,6 +40,7 @@ members = [
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📐️model/📦️packages/🦀️rust",
+  "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📐️model/🧩️profiles/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🧪️tests/🔬️pdf-snapshot-value/📦️packages/🦀️rust",
   "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/🔎️graph-projection/📦️packages/🦀️rust",

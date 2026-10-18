@@ -244,9 +244,9 @@ pub(crate) fn base_vlr(record_id: u16) -> LasVlr {
 /// 🧪️ Representative `LasDiff` cases built declaratively (empty, header scalars with an array and float lanes, and the keyed `vlrs`/`points`
 /// row triples with the tri-state `gps_time`/`rgb` point fields) — shared by `diff_codec_text_binary_roundtrip_law` and the engine's
 /// `diff_grammar_conformance_law`/`protocol_walk_law`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<LasDiff> {
+pub fn demo_diff_cases() -> Vec<LasDiff> {
     vec![
         LasDiff::default(),
         LasDiff { version_major: Some(2), version_minor: Some(4), system_identifier: Some("after-system".into()), points_by_return: Some([0, 0, 2, 1, 0]), x_scale: Some(0.001), max_z: Some(50.0), ..LasDiff::default() },

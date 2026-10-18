@@ -2,8 +2,8 @@ import { cargoWorkspaceForManifest } from "../../🗂️workspaces/🦀️cargo/
 import { builtinModules } from "node:module";
 import { existsSync, readdirSync, readFileSync, writeFileSync, type Dirent } from "node:fs";
 import { dirname, extname, join } from "node:path";
-import { runProbe } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { canonicalFilenameForKind } from "../../🔍️discovery/🟦️.ts";
+import { runProbe } from "../../🏃️process/🔍️probe/🟦️.ts";
+import { canonicalFilenameForKind } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 const DEPENDENCY_SKIP_DIRS = new Set(["compose", "node_modules", ".git", ".cache", ".lake", ".🧬semio", "target", "dist", "build", "coverage", "🤖️generated", ".claude", "vendor", ".venv", ".turbo", ".nx", ".storybook", "storybook-static"]);
 

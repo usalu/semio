@@ -1,7 +1,7 @@
 //! 📡️ The repo CLI event stream: the typed event records, the Go-twin number formatting and the three renderers (NDJSON, human, Markdown) every verb result flows through.
 
 use semio_framework_repo_graphql::{Executor, RepoContext};
-use semio_framework_repo_model::{ansi, entity};
+use semio_framework_repo_model_entity::{ansi, entity};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value as Json};
 

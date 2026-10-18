@@ -86,7 +86,7 @@ test("IFC2x3 native backing and semantic cell limits have closed independent rol
 
 test("IFC2x3 subset history snapshots have independent complete relational witnesses",async()=>{
  for(const[folder,id]of[["🤝️cv20","cv20"],["🧮️sav","sav"],["🏢️cobie","cobie"]]){
-  const root=new URL("../../../../../"+folder+"/🧫️fixtures/🧬️history-snapshots/📋️rename-file/",import.meta.url);
+  const root=new URL("../../../../../"+folder+"/🧪️tests/🧫️fixtures/🧬️history-snapshots/📋️rename-file/",import.meta.url);
   const before=await Bun.file(new URL("📸️snapshot/⬅️before/🔣️.json",root)).json()as Ifc2x3Snapshot;
   const after=await Bun.file(new URL("📸️snapshot/➡️after/🔣️.json",root)).json()as Ifc2x3Snapshot;
   for(const[side,input]of[["⬅️before",before],["➡️after",after]]as const){

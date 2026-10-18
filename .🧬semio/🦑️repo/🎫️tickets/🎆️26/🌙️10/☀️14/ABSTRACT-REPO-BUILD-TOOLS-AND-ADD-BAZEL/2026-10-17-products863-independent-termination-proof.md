@@ -1,0 +1,5 @@
+# Whole Products863: Independent Abnormal Terminal Proof
+
+The closed saved publication log and terminal JSON pass sequential nofollow descriptor/name seven-fact SHA checks under32MiB bound; receipt `🗑️generated/products863-independent-termination-hold.json`. Actual terminal statusnull/signalSIGKILL in210,879.012625ms. The saved log reaches accepted/observed/witnessed, detached/underlying/staged/published and attached, with published receiptSHAf17bf162df37341bd93c2bc2de591b0d844c23f0910206f1ca6d22eb1049a8b4. There is no completed result or final custody evidence in these two files.
+
+No kill cause, publication success, full preservation-after witness, pending absence, mapping status, descriptor/lease settlement or owned custody closure is inferred. Logged stage is evidence of that callback's saved observation, not independent present authority. Any recovery must reenter canonical durable pending publication handling with genuine current owner/CAS; no raw metadata clear or adoption follows. No Native/protected reads, signals or process actions were performed by this audit.

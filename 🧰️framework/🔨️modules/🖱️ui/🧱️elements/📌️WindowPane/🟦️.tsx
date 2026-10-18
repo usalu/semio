@@ -9,7 +9,7 @@ import { LevelProvider, getLevelZClass, useSurfaceActive } from "../🌈️Surfa
 import { FlowProvider } from "../../🔨️modules/🧭️flow-direction-context/🟦️.tsx";
 import { WindowChrome } from "../🗂️WindowChrome/🟦️.tsx";
 import { childElementId } from "../🆔️ElementId/🟦️.tsx";
-import { WindowPaneChromeToggle } from "../🌳️Tree/🟦️.tsx";
+import { WindowPaneChromeToggle } from "../🌳️Tree/🔀️pane-chrome-toggle/🟦️.tsx";
 import { usePointerDrag } from "../🖼️Panel/🟦️.tsx";
 import { useUiMobile } from "../../🔨️modules/📱️ui-mobile-context/🟦️.tsx";
 import { type Anchor, anchorHorizontal, anchorPositionStyle, flowFromAnchor, nearestAnchor } from "../../🔨️modules/⚓️panel-anchor/🟦️.ts";

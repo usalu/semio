@@ -246,24 +246,6 @@
         "command": "bun ./📜️script.ts test-snapshot-sqlite-admission"
       }
     },
-    "cooperative-host-check": {
-      "executor": "repo:script",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts cooperative-host-check",
-        "cwd": "{projectRoot}"
-      },
-      "outputs": []
-    },
-    "cooperative-host-native-check": {
-      "executor": "repo:script",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts cooperative-host-check --native",
-        "cwd": "{projectRoot}"
-      },
-      "outputs": []
-    },
     "canonical-architecture": {
       "executor": "repo:script",
       "cache": false,

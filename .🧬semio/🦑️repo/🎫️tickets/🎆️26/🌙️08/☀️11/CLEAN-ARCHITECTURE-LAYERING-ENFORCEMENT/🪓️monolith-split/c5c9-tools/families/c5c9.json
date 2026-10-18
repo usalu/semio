@@ -1,0 +1,9 @@
+{
+ "name": "c5c9",
+ "crates": [
+  "semio-framework-os-directory-client",
+  "semio-framework-os-directory-client-tests",
+  "semio-framework-os-kernel-dsl-derive-expand"
+ ],
+ "note": "CENSUS5-C package 9: the owning crates of the three split files"
+}

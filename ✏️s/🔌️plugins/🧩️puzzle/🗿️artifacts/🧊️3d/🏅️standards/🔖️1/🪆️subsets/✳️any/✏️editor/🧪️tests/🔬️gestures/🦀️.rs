@@ -94,7 +94,7 @@ use semio_framework_plugin::ToolJobFactoryError;
 use semio_framework_plugin::ToolRef;
 use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowMeasure;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_value::FromValue;
 use {semio_framework_pack_json::json, semio_framework_pack_json::object, semio_framework_pack_json::parse, semio_framework_pack_json::to_json_string, semio_framework_pack_json::to_string, semio_framework_pack_json::Value};
 use semio_framework_plugin::app::{EphemeralEmit, InteractionView};

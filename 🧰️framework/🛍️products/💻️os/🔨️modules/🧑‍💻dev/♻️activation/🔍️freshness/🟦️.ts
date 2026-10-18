@@ -17,7 +17,7 @@ import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MA
 
 import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath, componentOwnerRootV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -92,7 +92,7 @@ export async function collectStagedModuleFacts(options: {
 }
 
 /** 📣️ Prints one `[stale]` line per component whose served bytes are behind, each naming the exact
- * Nx target that fixes it. Called at serve start and again on every activation-receipt change, so a
+ * build target that fixes it. Called at serve start and again on every activation-receipt change, so a
  * restage that lands while the server runs retires its own warning. */
 export function reportStagedModuleFreshness(variant: string, renderer: "react" | "wgpu", profile: "prototype" | "release", facts: readonly StagedModuleFacts[]): readonly StagedModuleVerdict[] {
   const verdicts = facts.map(stagedModuleVerdict);

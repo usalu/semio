@@ -1,8 +1,8 @@
 //! ↩️ Inverse of `DeleteSlabType`: the setters of the properties and classifications of the type, then the concrete `CreateSlabType` carrying the full removed record, none when the slab type was absent.
 
-use super::super::create_slab_type::CreateSlabType;
-use super::super::cascade;
-use super::DeleteSlabType;
+use crate::standards::v1::subsets::any::schema::mutations::create_slab_type::CreateSlabType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_slab_type::DeleteSlabType;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteSlabType, base: &ModelSnapshot) -> Vec<Op>

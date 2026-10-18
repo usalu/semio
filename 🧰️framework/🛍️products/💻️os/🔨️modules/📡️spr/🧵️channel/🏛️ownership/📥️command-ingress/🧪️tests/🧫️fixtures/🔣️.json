@@ -211,18 +211,6 @@
     },
     {
       "kind": "private-import",
-      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/🦀️.rs",
-      "names": [
-        "FixedCommandPage",
-        "CommandPageSet",
-        "PagedCommand",
-        "COMMAND_PAGE_MAXIMUM_BYTES",
-        "INVOCATION_RESULT_PACK_MAXIMUM_BYTES"
-      ],
-      "namespace": "::protocol::wire::command_ingress"
-    },
-    {
-      "kind": "private-import",
       "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🧵️channel/👥️presence-roster/🦀️.rs",
       "names": [
         "FixedCommandPage",

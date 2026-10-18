@@ -1,0 +1,14 @@
+{
+ "tag": "mfs",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧬️mutation-fixtures-surface/🦀️.rs",
+ "folders": [
+  "🗃️snapshot-diff-and-commands",
+  "🏭️registered-factory-and-natural-decode",
+  "🪟️editor-and-viewer-fixtures",
+  "👁️viewer-and-editor-lifecycle-laws",
+  "📄️natural-file-reserved-job-laws",
+  "🎫️controller-and-envelope-laws",
+  "🧵️retained-work-and-child-emission-laws"
+ ]
+}

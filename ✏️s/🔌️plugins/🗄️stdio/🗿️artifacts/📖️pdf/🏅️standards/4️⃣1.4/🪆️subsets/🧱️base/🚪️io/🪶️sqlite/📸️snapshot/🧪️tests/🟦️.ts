@@ -72,7 +72,7 @@ test("PDF1.4 rejects noncontiguous pages, weakened schema and bounded cancellati
 
 import { Buffer } from "node:buffer";
 test("PDF14 populated page UI corpus is closed and independently SQL editable",async()=>{
-  const fixture=await Bun.file(new URL("../../../../✏️editor/\u{1f9eb}️fixtures/\u{1f4c4}️resolved-page-domain/\u{1f523}️.json",import.meta.url)).json();
+  const fixture=await Bun.file(new URL("../../../../✏️editor/🧪️tests/🧫️fixtures/📄️resolved-page-domain/🔣️.json",import.meta.url)).json();
   
   expect(fixture["dialect"]).toEqual({"artifactKind":"s.stdio.pdf","standard":"1.4","subset":"*"});expect(fixture["schema"]).toEqual("stdio.pdf");expect(fixture["pages"]).toEqual([{"width":200,"height":300,"text":"Semio page one"},{"width":400,"height":500,"text":"Seite zwei"}]);expect(fixture["setPage"]).toEqual({"page":0,"item":0,"text":"Edited own14 text"});expect(fixture["geometryEdit"]).toEqual({"index":1,"width":8,"height":9});expect(fixture["invalidAddress"]).toEqual({"page":2,"item":0});expect(fixture["invalidItem"]).toEqual(1);expect(fixture["nativeHeader"]).toEqual("%PDF-1.4");expect(fixture["forbiddenOwnFields"]).toEqual(["mediaBox","cropBox","rotate","objects","trailer"]);expect(fixture["requiredActionVocabulary"]).toEqual(["set-page","insert-page","remove-page","move-page","set-page-size","replace-page-text"]);expect(fixture["artifactSchemaId"]).toEqual("s.stdio.pdf");expect(fixture["sqlEdit"]).toEqual({"page":1,"width":8,"height":9,"text":"Independent page edit"});
   

@@ -1,4 +1,4 @@
-import type { BreachRecord } from "../../../../🟦️.ts";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyAbstractionOwnershipBreaches } from "../../../../📏️ownership/🏛️abstraction/⚖️law/🟦️.ts";
 import { policyAppSchemaConfigFidelityBreaches } from "../🪞️config-fidelity/🟦️.ts";

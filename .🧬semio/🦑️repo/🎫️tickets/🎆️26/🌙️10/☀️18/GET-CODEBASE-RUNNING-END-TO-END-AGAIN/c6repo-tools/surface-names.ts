@@ -1,0 +1,10 @@
+import { analyze } from "./ast.ts";
+import { exportMap } from "./exports.ts";
+import { build, surfaceOf } from "./split.ts";
+import { plan } from "./plan-root.ts";
+import { writeFileSync } from "node:fs";
+const a = analyze(plan.source);
+const built = build(plan, a);
+const { map, missingStars } = surfaceOf(plan, a, built, exportMap);
+writeFileSync(process.argv[2], JSON.stringify({ map: [...map], missingStars }));
+console.log(map.size);

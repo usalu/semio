@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-proc3d",
+ "crates": ["semio-s-artifact-procedural-3d-editor", "semio-s-artifact-procedural-3d-editor-unit-tests"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-s-artifact-procedural-3d-editor"]},
+ "note": "HDR-3: generation3d mounted registry laws to a companion"
+}

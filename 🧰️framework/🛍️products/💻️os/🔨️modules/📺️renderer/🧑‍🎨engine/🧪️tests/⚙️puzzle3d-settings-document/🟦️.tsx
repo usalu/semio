@@ -10,7 +10,6 @@ import { createRequire } from "node:module";
 import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@semio-tech/ui-react/test";
 import { createElement } from "react";
-import Ajv2020 from "ajv/dist/2020";
 import { UiDocumentStore } from "../../🧱️elements/📃️UiDocumentStore/🟦️.tsx";
 import { Field, Section, formatNumber, uiDataLabel } from "@semio-tech/ui-react";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
@@ -35,13 +34,6 @@ const sectionFieldFixture = JSON.parse(readFileSync(sectionFieldPresentationFixt
 
 describe("Puzzle3D Settings Component document", () => {
   afterEach(() => cleanup());
-
-  it("validates the shared pointer commit contract", () => {
-  });
-
-  it("admits the closed numeric press corpus through the independent wire oracle", () => {
-    
-  });
 
   it("matches the shared display precision and square-button presentation contract", () => {
     const fixture = JSON.parse(readFileSync(uiStepperPresentationFixtureUrl, "utf8"));
@@ -139,6 +131,32 @@ describe("Puzzle3D Settings Component document", () => {
 
     const inputs = screen.getAllByRole("spinbutton");
     expect(inputs).toHaveLength(law.controls.length);
+    law.controls.forEach((control, index) => {
+      const input = inputs[index] as HTMLInputElement;
+      expect(input.id).toBe(`${law.document.surface}/${control.key}`);
+      expect(input.value).toBe(control.formatted);
+      expect(computeAccessibleName(input)).toBe(control.label);
+      expect(input.getAttribute("data-mixed")).toBeNull();
+      const group = input.closest('[data-slot="stepper-group"]');
+      expect(group).not.toBeNull();
+      const plus = group!.querySelector('[data-slot="stepper-plus"]');
+      expect(plus).not.toBeNull();
+      fireEvent.mouseDown(plus!);
+      fireEvent.mouseUp(plus!);
+      const controlIntents = intents.filter((intent) => intent.nodeKey === control.key);
+      expect(controlIntents).toHaveLength(1 + pressInputFixture.lifecycle.releasedActions);
+      const [intent, committed] = controlIntents;
+      expect(intent.nodeKey).toBe(control.key);
+      expect(intent.trigger).toBe("change");
+      expect(intent.action).toEqual({ scope: "puzzle3d-play", name: control.action, version: 1 });
+      expect(intent.args).toEqual({ windowId: law.windowId });
+      expect(intent.input.commit).toBe(pressInputFixture.lifecycle.offeredCommit);
+      expect(intent.input.gesture.split(":").slice(0, -2).join(":")).toBe(control.key);
+      expect(intent.input.value).toBeCloseTo(control.value + control.step, 9);
+      expect(committed.input).toEqual({ ...intent.input, commit: pressInputFixture.lifecycle.releasedCommit });
+      expect(committed.seq).toBe(intent.seq + BigInt(pressInputFixture.lifecycle.sequenceStep));
+      expect({ ...committed, input: intent.input, seq: intent.seq }).toEqual(intent);
+    });
     expect(intents).toHaveLength(law.controls.length * (1 + pressInputFixture.lifecycle.releasedActions));
   });
 });

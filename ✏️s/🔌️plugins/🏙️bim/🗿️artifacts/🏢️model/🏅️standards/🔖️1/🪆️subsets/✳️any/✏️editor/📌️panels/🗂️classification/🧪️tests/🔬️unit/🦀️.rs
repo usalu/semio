@@ -1,4 +1,32 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ClassificationSystem, ModelSnapshot};
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+#[allow(unused_imports)]
+use crate::editor::bim::panels::properties::input_row;
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use std::collections::BTreeSet;
+use crate::editor::bim::panels::classification::*;
 use crate::standards::v1::subsets::any::schema::snapshot::ClassificationItem;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};

@@ -6,7 +6,8 @@ import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { MUTATION_DESCRIPTOR_SCHEMA_REL, mutationTaxonomyCancelled, mutationTaxonomyCapturedSchema, mutationTaxonomyCompare, mutationTaxonomyInputPath, mutationTaxonomyScope, mutationTaxonomySourceAdmission, mutationTaxonomySourceFileFacts, mutationTaxonomyStructuralDirectories, policyFindAllMutationsDirs, type MutationTaxonomyAssignmentRow, type MutationTaxonomyCapturedSchema, type MutationTaxonomyInventoryOptions, type MutationTaxonomySourceRecord, type MutationTaxonomyStructuralDirectory } from "../📸️captured-source/🟦️.ts";
 import { getRepoMetaDir } from "../../../🗂️workspaces/🧬️metadata/🟦️.ts";
-import { loadTaxonomy, semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦️.ts";
+import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 
 export const MUTATION_TAXONOMY_ASSIGNMENT_LEDGER_SCHEMA = {
   type: "object",

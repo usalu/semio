@@ -11,7 +11,7 @@ use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::ViewModel;
 use semio_framework::{AppRole, Fault, IconName};
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_ui_locale::LocalizedLabel;
 
 const EDITOR_STAMP_DIALECT: Dialect = Dialect { artifact_kind: "builder-test.schema-stamp-editor", standard: StandardId("1"), subset: SubsetId::ANY };

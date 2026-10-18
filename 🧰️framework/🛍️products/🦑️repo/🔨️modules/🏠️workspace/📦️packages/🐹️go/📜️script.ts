@@ -3,7 +3,9 @@ import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules
 import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ `@semio-tech/repo-workspace-go` router: `bun ./📜️script.ts test`. */
 import { dirname, join } from "node:path";
-import { goLevelTestArgs, goCoverageArgs, runRepositoryTestCommand } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { goLevelTestArgs } from "../../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
+import { goCoverageArgs } from "../../../📚️library/🧪️testing/📊️coverage/🟦️.ts";
+import { runCanonicalGoTests } from "../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -13,7 +15,7 @@ const ownerRoot = join(dirname(dirname(moduleRoot)));
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    await runRepositoryTestCommand("go", ["test", "...", ...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, ownerRoot), ...rest], { cwd: moduleRoot, env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") } });
+    await runCanonicalGoTests(moduleRoot, [...goLevelTestArgs(level), ...goCoverageArgs(this.repoRoot, ownerRoot), ...rest], { env: { ...process.env, GOWORK: join(this.repoRoot, "go.work") } });
   }
 }
 

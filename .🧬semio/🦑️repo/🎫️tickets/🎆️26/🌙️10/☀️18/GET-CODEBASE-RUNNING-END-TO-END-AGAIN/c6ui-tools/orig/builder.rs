@@ -1,0 +1,2573 @@
+//! 🏗️ Ergonomic semantic builders (`ui::stack()`, `ui::button()`) — wasip2-safe, no engine.
+//!
+//! 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md. Every `fn`
+//! below is plain sync by owner ruling U1.
+//!
+//! ⚠️ Decision (flagged for the coordinator, detailed in `📓️terra-contract-builder-report.md`):
+//! [`BuiltNode`] duplicates the shape the sibling `semio-framework-ui-runtime` crate's own
+//! `ComponentTree` needs, because this crate must not depend on that crate (the dependency runs the
+//! other way — see `🦀️.rs`). The runtime converts a `BuiltNode` tree into its own reconciler
+//! input; if the two shapes drift, that conversion is the one place to fix, never a second builder.
+
+use std::fmt;
+use std::ops::{Index, IndexMut};
+use std::sync::{LazyLock, Mutex};
+
+use serde::{Deserialize,Serialize};
+pub use semio_framework_ui_contract_components::*;
+use semio_framework_ui_contract_values::retirement_protocol as typed;
+#[path="♻️retirement/🦀️.rs"]
+mod tree_retirement;
+pub use tree_retirement::{BuiltTreeRetirement,OriginalBuiltTreeRetirement};
+
+#[path = "♻️retirement/📋️children/🦀️.rs"]
+mod built_retirement;
+pub(crate) use built_retirement::BuiltChildRetirementNext;
+
+//#region 🔖️Builder
+
+//#region 🧱️BuiltNode
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn is_default<T: Default + PartialEq>(value: &T) -> bool {
+    *value == T::default()
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn is_false(value: &bool) -> bool {
+    !*value
+}
+
+/// 🔗️ Aliases one node's action bindings for [`BuiltNode::credited_clone`], each embedded
+/// [`crate::UiValue`] paying its own arena alias credit and refusing rather than overdrawing.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn credited_bindings(bindings: &crate::UiNodeBindings) -> Option<crate::UiNodeBindings> {
+    let mut aliased = crate::UiNodeBindings::default();
+    for binding in bindings.iter() {
+        aliased.try_push(binding.credited_clone()?).ok()?;
+    }
+    Some(aliased)
+}
+
+use semio_framework_ui_contract_budget::{UI_BUILT_CHILDREN_MAX,UI_BUILT_CHILD_RETIRE_SLOTS};
+
+type BuiltChildBacking = Box<[Option<Box<BuiltNode>>]>;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct BuiltChildRetireKey {
+    slot: usize,
+    epoch: u64,
+}
+
+#[derive(Default)]
+struct BuiltChildRetireSlot {
+    epoch: u64,
+    reserved: bool,
+    owner: Option<BuiltChildRetireOwner>,
+}
+
+struct BuiltChildRetireOwner {
+    backing: BuiltChildBacking,
+    len: usize,
+    cursor: usize,
+}
+
+struct BuiltChildRetireAuthority {
+    slots: [BuiltChildRetireSlot; UI_BUILT_CHILD_RETIRE_SLOTS],
+    reserve_cursor: usize,
+    close_cursor: usize,
+}
+
+impl Default for BuiltChildRetireAuthority {
+    fn default() -> Self {
+        Self { slots: std::array::from_fn(|_| BuiltChildRetireSlot::default()), reserve_cursor: 0, close_cursor: 0 }
+    }
+}
+
+static BUILT_CHILD_RETIRE_AUTHORITY: LazyLock<Mutex<BuiltChildRetireAuthority>> = LazyLock::new(|| Mutex::new(BuiltChildRetireAuthority::default()));
+
+fn with_built_child_retire_authority<T>(f: impl FnOnce(&mut BuiltChildRetireAuthority) -> T) -> T {
+    let mut authority = BUILT_CHILD_RETIRE_AUTHORITY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    f(&mut authority)
+}
+
+impl BuiltChildRetireAuthority {
+    fn reserve(&mut self) -> Option<BuiltChildRetireKey> {
+        for offset in 0..UI_BUILT_CHILD_RETIRE_SLOTS {
+            let slot = (self.reserve_cursor + offset) % UI_BUILT_CHILD_RETIRE_SLOTS;
+            let entry = &mut self.slots[slot];
+            if entry.reserved || entry.owner.is_some() {
+                continue;
+            }
+            let epoch = entry.epoch.checked_add(1)?;
+            entry.epoch = epoch;
+            entry.reserved = true;
+            self.reserve_cursor = (slot + 1) % UI_BUILT_CHILD_RETIRE_SLOTS;
+            return Some(BuiltChildRetireKey { slot, epoch });
+        }
+        None
+    }
+
+    fn release(&mut self, key: BuiltChildRetireKey) {
+        let entry = &mut self.slots[key.slot];
+        if entry.epoch == key.epoch && entry.owner.is_none() {
+            entry.reserved = false;
+        }
+    }
+
+    fn publish(&mut self, key: BuiltChildRetireKey, owner: BuiltChildRetireOwner) {
+        let entry = &mut self.slots[key.slot];
+        entry.epoch = key.epoch;
+        entry.reserved = true;
+        entry.owner = Some(owner);
+    }
+
+    fn take_close_page(&mut self) -> Option<BuiltNode> {
+        for offset in 0..UI_BUILT_CHILD_RETIRE_SLOTS {
+            let slot = (self.close_cursor + offset) % UI_BUILT_CHILD_RETIRE_SLOTS;
+            let entry = &mut self.slots[slot];
+            let Some(owner) = entry.owner.as_mut() else { continue };
+            while owner.cursor < owner.len {
+                let cursor = owner.cursor;
+                let next = owner.cursor.checked_add(1)?;
+                owner.cursor = next;
+                if let Some(node) = owner.backing[cursor].take() {
+                    self.close_cursor = slot;
+                    return Some(*node);
+                }
+            }
+            entry.owner = None;
+            entry.reserved = false;
+            self.close_cursor = (slot + 1) % UI_BUILT_CHILD_RETIRE_SLOTS;
+            return None;
+        }
+        None
+    }
+
+    fn is_terminal_empty(&self) -> bool {
+        self.slots.iter().all(|slot| !slot.reserved && slot.owner.is_none())
+    }
+
+    fn is_close_queue_empty(&self) -> bool {
+        self.slots.iter().all(|slot| slot.owner.is_none())
+    }
+}
+
+/// 🧹️ Retires one queued built-child page and reports whether the close queue is now empty. Live
+/// reservations (trees still mounted) do not count: a closing owner waits only for the pages handed
+/// back for retirement, never for every other surface to unmount.
+pub fn close_built_node_page_one() -> bool {
+    let node = with_built_child_retire_authority(BuiltChildRetireAuthority::take_close_page);
+    drop(node);
+    with_built_child_retire_authority(|authority| authority.is_close_queue_empty())
+}
+
+/// 🏁️ True once no built-child page is reserved or queued anywhere — the shutdown witness.
+pub fn built_node_pages_are_terminal_empty() -> bool {
+    with_built_child_retire_authority(|authority| authority.is_terminal_empty())
+}
+
+/// ♻️ Reclaims ONE retirement slot by draining the queue in place, for a builder that would otherwise
+/// be refused while reclaimable credit sits unpumped.
+///
+/// [`BUILT_CHILD_RETIRE_AUTHORITY`] is a credit pool, not a free list: a dropped page publishes its
+/// backing into the slot it already holds and the slot is released only when a pump
+/// ([`close_built_node_page_one`]) drains that owner. The pump is owned by the reactor turn and the
+/// reconciler, so every OTHER owner of built pages — a panel kit assembling a probe tree, an
+/// out-of-turn assembly helper, a second plugin runtime sharing the process — abandons its slots for
+/// good, and the refusal then lands on an unrelated later builder as `ui.fixed-capacity`, at whatever
+/// stage happened to run once the 384th slot went. An admission must never refuse against credit it
+/// can itself reclaim, so exhaustion drains before it refuses and only a pool whose every slot backs
+/// a LIVE tree still says no.
+///
+/// Draining is bounded by exactly one page: a fully drained owner releases its slot, and the nodes it
+/// releases republish into the slots they already hold — [`BuiltChildRetireAuthority::reserve`] is the
+/// only claimant, so the pool cannot grow while it is being drained. Every node is dropped outside the
+/// authority lock, because dropping one republishes its own children through the same non-reentrant
+/// mutex.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn reclaim_built_child_retire_slot() -> Option<BuiltChildRetireKey> {
+    loop {
+        let drained = with_built_child_retire_authority(BuiltChildRetireAuthority::take_close_page);
+        let handed_back = drained.is_some();
+        drop(drained);
+        if let Some(handback) = with_built_child_retire_authority(BuiltChildRetireAuthority::reserve) {
+            return Some(handback);
+        }
+        if !handed_back && with_built_child_retire_authority(|authority| authority.is_close_queue_empty()) {
+            return None;
+        }
+    }
+}
+
+#[derive(Default)]
+pub struct BuiltChildren {
+    backing: Option<BuiltChildBacking>,
+    len: usize,
+    handback: Option<BuiltChildRetireKey>,
+}
+
+impl fmt::Debug for BuiltChildren {
+    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+        formatter.debug_struct("BuiltChildren").field("len", &self.len).finish()
+    }
+}
+
+impl BuiltChildren {
+    #[expect(clippy::result_large_err, reason = "A refused child admission returns the exact unboxed node before obtaining backing or retirement credit.")]
+    pub fn try_push(&mut self, node: BuiltNode) -> Result<(), BuiltNode> {
+        if self.len == UI_BUILT_CHILDREN_MAX {
+            return Err(node);
+        }
+        if self.backing.is_none() {
+            let reserved = with_built_child_retire_authority(BuiltChildRetireAuthority::reserve);
+            let Some(handback) = reserved.or_else(reclaim_built_child_retire_slot) else { return Err(node) };
+            let mut backing = Vec::with_capacity(UI_BUILT_CHILDREN_MAX);
+            backing.resize_with(UI_BUILT_CHILDREN_MAX, || None);
+            self.backing = Some(backing.into_boxed_slice());
+            self.handback = Some(handback);
+        }
+        let Some(backing) = self.backing.as_mut() else { return Err(node) };
+        let Some(slot) = backing.get_mut(self.len) else { return Err(node) };
+        if slot.is_some() {
+            return Err(node);
+        }
+        let Some(len) = self.len.checked_add(1) else { return Err(node) };
+        *slot = Some(Box::new(node));
+        self.len = len;
+        Ok(())
+    }
+
+    pub fn pop(&mut self) -> Option<BuiltNode> {
+        let index = self.len.checked_sub(1)?;
+        self.len = index;
+        self.backing.as_mut()?.get_mut(index)?.take().map(|node| *node)
+    }
+
+    /// 🧾️ A second owner of the same children, each level paying its own retirement reservation and
+    /// every embedded `UiValue` its own arena alias credit — never `Clone`, which would duplicate one
+    /// [`BuiltChildRetireKey`] into two owners and publish the same slot twice. Refuses when either
+    /// credit is exhausted, so an alias is a bounded admission and never a silent overdraft.
+    pub fn credited_clone(&self) -> Option<Self> {
+        let mut aliased = Self::default();
+        for child in self.iter() {
+            aliased.try_push(child.credited_clone()?).ok()?;
+        }
+        Some(aliased)
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.backing.as_ref().map_or(0, |_| UI_BUILT_CHILDREN_MAX)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn get(&self, index: usize) -> Option<&BuiltNode> {
+        (index < self.len).then(|| self.backing.as_ref()?.get(index)?.as_deref()).flatten()
+    }
+
+    pub fn get_mut(&mut self, index: usize) -> Option<&mut BuiltNode> {
+        if index >= self.len {
+            return None;
+        }
+        self.backing.as_mut()?.get_mut(index)?.as_deref_mut()
+    }
+
+    pub fn iter(&self) -> impl DoubleEndedIterator<Item = &BuiltNode> {
+        self.backing.iter().flat_map(|backing| backing[..self.len].iter()).filter_map(Option::as_deref)
+    }
+
+    pub fn iter_mut(&mut self) -> impl DoubleEndedIterator<Item = &mut BuiltNode> {
+        let len = self.len;
+        self.backing.iter_mut().flat_map(move |backing| backing[..len].iter_mut()).filter_map(Option::as_deref_mut)
+    }
+}
+
+impl Index<usize> for BuiltChildren {
+    type Output = BuiltNode;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.backing.as_ref().and_then(|backing| backing.get(index)).and_then(Option::as_deref).expect("built child index must be admitted")
+    }
+}
+
+impl IndexMut<usize> for BuiltChildren {
+    fn index_mut(&mut self, index: usize) -> &mut Self::Output {
+        self.backing.as_mut().and_then(|backing| backing.get_mut(index)).and_then(Option::as_deref_mut).expect("built child index must be admitted")
+    }
+}
+
+impl<'a> IntoIterator for &'a BuiltChildren {
+    type Item = &'a BuiltNode;
+    type IntoIter = std::iter::FilterMap<std::slice::Iter<'a, Option<Box<BuiltNode>>>, fn(&Option<Box<BuiltNode>>) -> Option<&BuiltNode>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        fn present(value: &Option<Box<BuiltNode>>) -> Option<&BuiltNode> {
+            value.as_deref()
+        }
+        self.backing.as_deref().map_or([].as_slice(), |backing| &backing[..self.len]).iter().filter_map(present)
+    }
+}
+
+impl<'a> IntoIterator for &'a mut BuiltChildren {
+    type Item = &'a mut BuiltNode;
+    type IntoIter = std::iter::FilterMap<std::slice::IterMut<'a, Option<Box<BuiltNode>>>, fn(&mut Option<Box<BuiltNode>>) -> Option<&mut BuiltNode>>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        fn present(value: &mut Option<Box<BuiltNode>>) -> Option<&mut BuiltNode> {
+            value.as_deref_mut()
+        }
+        let len = self.len;
+        self.backing.as_deref_mut().map_or([].as_mut_slice(), |backing| &mut backing[..len]).iter_mut().filter_map(present)
+    }
+}
+
+pub struct BuiltChildrenIntoIter {
+    backing: Option<BuiltChildBacking>,
+    len: usize,
+    cursor: usize,
+    handback: Option<BuiltChildRetireKey>,
+}
+
+impl Iterator for BuiltChildrenIntoIter {
+    type Item = BuiltNode;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        while self.cursor < self.len {
+            let cursor = self.cursor;
+            let next = self.cursor.checked_add(1)?;
+            self.cursor = next;
+            if let Some(node) = self.backing.as_mut()?.get_mut(cursor)?.take() {
+                return Some(*node);
+            }
+        }
+        if let Some(handback) = self.handback.take() {
+            with_built_child_retire_authority(|authority| authority.release(handback));
+        }
+        self.backing = None;
+        None
+    }
+}
+
+impl ExactSizeIterator for BuiltChildrenIntoIter {
+    fn len(&self) -> usize {
+        self.len.saturating_sub(self.cursor)
+    }
+}
+
+impl Drop for BuiltChildrenIntoIter {
+    fn drop(&mut self) {
+        if let (Some(backing), Some(handback)) = (self.backing.take(), self.handback.take()) {
+            with_built_child_retire_authority(|authority| authority.publish(handback, BuiltChildRetireOwner { backing, len: self.len, cursor: self.cursor }));
+        }
+    }
+}
+
+impl IntoIterator for BuiltChildren {
+    type Item = BuiltNode;
+    type IntoIter = BuiltChildrenIntoIter;
+
+    fn into_iter(mut self) -> Self::IntoIter {
+        BuiltChildrenIntoIter { backing: self.backing.take(), len: self.len, cursor: 0, handback: self.handback.take() }
+    }
+}
+
+impl Drop for BuiltChildren {
+    fn drop(&mut self) {
+        if let (Some(backing), Some(handback)) = (self.backing.take(), self.handback.take()) {
+            with_built_child_retire_authority(|authority| authority.publish(handback, BuiltChildRetireOwner { backing, len: self.len, cursor: 0 }));
+        }
+    }
+}
+
+impl Serialize for BuiltChildren {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        use serde::ser::{Error, SerializeSeq};
+        if !self.is_empty() {
+            return Err(S::Error::custom("BuiltChildren requires retained page transport"));
+        }
+        serializer.serialize_seq(Some(0))?.end()
+    }
+}
+
+impl<'de> Deserialize<'de> for BuiltChildren {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        use serde::de::{SeqAccess, Visitor};
+        struct BuiltChildrenVisitor;
+        impl<'de> Visitor<'de> for BuiltChildrenVisitor {
+            type Value = BuiltChildren;
+
+            fn expecting(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
+                formatter.write_str("empty built children; populated pages require retained transport")
+            }
+
+            fn visit_seq<A: SeqAccess<'de>>(self, mut access: A) -> Result<Self::Value, A::Error> {
+                if access.next_element::<BuiltNode>()?.is_some() {
+                    return Err(serde::de::Error::custom("BuiltChildren requires retained page transport"));
+                }
+                Ok(BuiltChildren::default())
+            }
+        }
+        deserializer.deserialize_seq(BuiltChildrenVisitor)
+    }
+}
+
+/// 🧱️ The contract-local shape a builder terminates into — everything a [`crate::UiNodeRecord`]
+/// carries except `id` (minted by the runtime at reconciliation, never by an author) and with
+/// `children` nested inline rather than addressed by [`crate::UiNodeId`], since a freshly authored
+/// tree has no ids yet to address by. Every field below serializes away at its default, mirroring the
+/// wire-cost guarantee this whole builder family exists to make automatic.
+// 🌱️ No `ToValue`/`FromValue` here (ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-
+// ARTIFACTS): `component: crate::Component` (and `bindings`/`menu`) embed `UiValue`, the deliberate
+// DslValue-free exception — see its docstring in `🎬️action.rs`.
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BuiltNode {
+    /// 🔑️ The reconciliation key — an author-set [`HasBase::id`] or a positional `"#N"` fallback. See
+    /// [`HasChildren::child`] for why the fallback is only stable while sibling order is unchanged.
+    pub key: crate::UiText,
+    pub component: crate::Component,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub layout: crate::LayoutSpec,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub style: crate::StyleSpec,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub activity: crate::Activity,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub disabled: bool,
+    #[serde(default, skip_serializing_if = "is_default")]
+    pub accessibility: crate::AccessibilitySpec,
+    #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    pub bindings: crate::UiNodeBindings,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub menu: Option<crate::MenuRef>,
+    #[serde(default, skip_serializing_if = "BuiltChildren::is_empty")]
+    pub children: BuiltChildren,
+    #[serde(skip)]
+    pub rejected_children: BuiltChildren,
+}
+
+impl BuiltNode {
+    #[expect(clippy::result_large_err, reason = "An oversized key returns its component unchanged without introducing an allocation on the error path.")]
+    pub fn try_new(key: impl AsRef<str>, component: crate::Component) -> Result<Self, crate::Component> {
+        let Some(key) = crate::UiText::try_from_str(key.as_ref()) else { return Err(component) };
+        Ok(Self {
+            key,
+            component,
+            layout: crate::LayoutSpec::default(),
+            style: crate::StyleSpec::default(),
+            activity: crate::Activity::default(),
+            disabled: false,
+            accessibility: crate::AccessibilitySpec::default(),
+            bindings: crate::UiNodeBindings::default(),
+            menu: None,
+            children: BuiltChildren::default(),
+            rejected_children: BuiltChildren::default(),
+        })
+    }
+
+    #[expect(clippy::result_large_err, reason = "A rejected positional identity returns the original component without a new heap owner.")]
+    pub fn try_at(position: usize, component: crate::Component) -> Result<Self, crate::Component> {
+        let Some(key) = positional_key(position) else { return Err(component) };
+        Self::try_new(key, component)
+    }
+
+    /// 🧾️ A second owner of this whole subtree, credited the same way [`crate::Component::credited_clone`]
+    /// credits an embedded [`crate::UiValue`] — the retained read a memoizing author needs in order to
+    /// hand a cached tree back out. NOT a `Clone` impl: [`BuiltChildren`] owns a retirement reservation
+    /// that must be reserved per owner, so a derived `Clone` would publish one slot twice.
+    pub fn credited_clone(&self) -> Option<Self> {
+        Some(Self {
+            key: self.key.clone(),
+            component: self.component.credited_clone()?,
+            layout: self.layout.clone(),
+            style: self.style,
+            activity: self.activity,
+            disabled: self.disabled,
+            accessibility: self.accessibility.clone(),
+            bindings: credited_bindings(&self.bindings)?,
+            menu: match self.menu.as_ref() {
+                Some(menu) => Some(menu.credited_clone()?),
+                None => None,
+            },
+            children: self.children.credited_clone()?,
+            rejected_children: self.rejected_children.credited_clone()?,
+        })
+    }
+
+    pub fn empty_separator() -> Self {
+        Self {
+            key: crate::UiText::default(),
+            component: crate::Component::Separator(crate::SeparatorProps {}),
+            layout: crate::LayoutSpec::default(),
+            style: crate::StyleSpec::default(),
+            activity: crate::Activity::default(),
+            disabled: false,
+            accessibility: crate::AccessibilitySpec::default(),
+            bindings: crate::UiNodeBindings::default(),
+            menu: None,
+            children: BuiltChildren::default(),
+            rejected_children: BuiltChildren::default(),
+        }
+    }
+
+    #[expect(clippy::result_large_err, reason = "Child admission hands back the partial parent and exact rejected child for explicit retirement.")]
+    pub fn try_with_children(mut self, children: impl IntoIterator<Item = BuiltNode>) -> Result<Self, (Self, BuiltNode)> {
+        for mut child in children {
+            if child.key.is_empty() {
+                let Some(key) = positional_key(self.children.len()) else { return Err((self, child)) };
+                child.key = key;
+            }
+            if let Err(child) = self.children.try_push(child) {
+                return Err((self, child));
+            }
+        }
+        Ok(self)
+    }
+
+    #[cfg(test)]
+    pub fn with_children(self, children: impl IntoIterator<Item = BuiltNode>) -> Self {
+        self.try_with_children(children).unwrap_or_else(|(node, _)| node)
+    }
+}
+//#endregion 🧱️BuiltNode
+
+//#region 🧩️Base
+/// 🧰️ Record-level state shared by every builder in this file — reachable only through the chainable
+/// methods on [`HasBase`]/[`HasChildren`]/[`HasStackLayout`], never through its own fields, which stay
+/// private to this module.
+pub struct NodeBase {
+    id: Option<crate::UiText>,
+    layout: crate::LayoutSpec,
+    style: crate::StyleSpec,
+    activity: crate::Activity,
+    disabled: bool,
+    accessibility: crate::AccessibilitySpec,
+    bindings: crate::UiNodeBindings,
+    menu: Option<crate::MenuRef>,
+    children: BuiltChildren,
+    rejected_children: BuiltChildren,
+}
+
+impl NodeBase {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn with_layout(layout: crate::LayoutSpec) -> Self {
+        Self {
+            id: None,
+            layout,
+            style: crate::StyleSpec::default(),
+            activity: crate::Activity::default(),
+            disabled: false,
+            accessibility: crate::AccessibilitySpec::default(),
+            bindings: crate::UiNodeBindings::default(),
+            menu: None,
+            children: BuiltChildren::default(),
+            rejected_children: BuiltChildren::default(),
+        }
+    }
+
+    /// 🍃️ A terminal node's own base — [`crate::LayoutSpec::Leaf`], the crate's own default.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn leaf() -> Self {
+        Self::with_layout(crate::LayoutSpec::default())
+    }
+
+    /// 📚️ A children-arranging node's own base — [`crate::LayoutSpec::Stack`] along `axis`.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn stack(axis: crate::Axis) -> Self {
+        Self::with_layout(crate::LayoutSpec::Stack(crate::StackLayout { axis, ..Default::default() }))
+    }
+}
+
+/// 🔢️ The fallback key for a node at `index` among its siblings — stable only while sibling count
+/// and order stay fixed; see [`HasChildren::child`].
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn positional_key(index: usize) -> Option<crate::UiText> {
+    crate::UiText::try_format(format_args!("#{index}"))
+}
+
+/// 🏗️ Assembles `base` and `component` into a [`BuiltNode`], leaving `key` empty when `base.id` was
+/// never set — the caller (either [`Buildable::build`] or [`HasChildren::child`]) fills that sentinel
+/// with the right default for its position.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn assemble(base: NodeBase, component: crate::Component) -> BuiltNode {
+    BuiltNode {
+        key: base.id.unwrap_or_default(),
+        component,
+        layout: base.layout,
+        style: base.style,
+        activity: base.activity,
+        disabled: base.disabled,
+        accessibility: base.accessibility,
+        bindings: base.bindings,
+        menu: base.menu,
+        children: base.children,
+        rejected_children: base.rejected_children,
+    }
+}
+//#endregion 🧩️Base
+
+//#region 🔧️Traits
+/// 🔧️ The chainable vocabulary every builder in this file carries — identity, style, visual state,
+/// actions, and accessibility overrides. Set [`HasBase::id`] explicitly for any node whose position
+/// among its siblings can change: the positional fallback key ([`HasChildren::child`]) is what
+/// preserves a node's state across a re-present, and it only stays stable while sibling order and
+/// count do not.
+pub trait HasBase: Sized {
+    /// 🔩️ Internal accessor — never call directly; use the chainable methods below.
+    #[doc(hidden)]
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase;
+
+    /// 🔑️ Sets the reconciliation key explicitly.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn try_id(mut self, id: impl AsRef<str>) -> Result<Self, Self> {
+        let Some(id) = crate::UiText::try_from_str(id.as_ref()) else { return Err(self) };
+        self.base_mut().id = Some(id);
+        Ok(self)
+    }
+
+    /// 🚫️ Marks the node non-interactive without removing it from the tree.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn disabled(mut self, disabled: bool) -> Self {
+        self.base_mut().disabled = disabled;
+        self
+    }
+
+    /// 🧭️ Sets the node's [`crate::Activity`] lifecycle state.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn activity(mut self, activity: crate::Activity) -> Self {
+        self.base_mut().activity = activity;
+        self
+    }
+
+    /// 🎨️ Overrides the node's design-token [`crate::StyleSpec`] wholesale.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn style(mut self, style: crate::StyleSpec) -> Self {
+        self.base_mut().style = style;
+        self
+    }
+
+    /// 🎨️ Sets the [`crate::Tone`] color role.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn tone(mut self, tone: crate::Tone) -> Self {
+        self.base_mut().style.tone = tone;
+        self
+    }
+
+    /// 🖌️ Sets the [`crate::Variant`] chrome treatment.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn variant(mut self, variant: crate::Variant) -> Self {
+        self.base_mut().style.variant = variant;
+        self
+    }
+
+    /// 📏️ Sets the [`crate::SizeToken`] t-shirt size.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn size(mut self, size: crate::SizeToken) -> Self {
+        self.base_mut().style.size = size;
+        self
+    }
+
+    /// 🔆️ Sets the [`crate::Emphasis`] visual prominence.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn emphasis(mut self, emphasis: crate::Emphasis) -> Self {
+        self.base_mut().style.emphasis = emphasis;
+        self
+    }
+
+    /// 📐️ Sets the [`crate::Density`] spacing.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn density(mut self, density: crate::Density) -> Self {
+        self.base_mut().style.density = density;
+        self
+    }
+
+    /// 📋️ Attaches a resolved context menu.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn menu(mut self, menu: crate::MenuRef) -> Self {
+        self.base_mut().menu = Some(menu);
+        self
+    }
+
+    /// 🎬️ Binds `trigger` to `action` with no args.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A full binding list returns the builder and exact binding without allocating for rejection.")]
+    fn try_on(mut self, trigger: crate::Trigger, action: crate::ActionId) -> Result<Self, (Self, crate::ActionBinding)> {
+        let binding = crate::ActionBinding { trigger, action, args: None, capability: None };
+        match self.base_mut().bindings.try_push(binding) {
+            Ok(()) => Ok(self),
+            Err(binding) => Err((self, binding)),
+        }
+    }
+
+    /// 🎬️ Binds `trigger` to `action`, carrying `args` for the action to consume.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A refused binding retains the builder and argument owner together for caller-directed retirement.")]
+    fn try_on_with(mut self, trigger: crate::Trigger, action: crate::ActionId, args: crate::UiValue) -> Result<Self, (Self, crate::ActionBinding)> {
+        let binding = crate::ActionBinding { trigger, action, args: Some(args), capability: None };
+        match self.base_mut().bindings.try_push(binding) {
+            Ok(()) => Ok(self),
+            Err(binding) => Err((self, binding)),
+        }
+    }
+
+    /// ♿️ Overrides the node's accessible name. [`button`] and [`tree_item`] already derive this from
+    /// their visible label; call this only to override that default.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn try_label(mut self, label: impl AsRef<str>) -> Result<Self, Self> {
+        let Some(label) = crate::UiText::try_from_str(label.as_ref()).map(crate::Label) else { return Err(self) };
+        self.base_mut().accessibility.label = Some(label);
+        Ok(self)
+    }
+
+    /// ♿️ Sets the node's accessible description.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn try_describe(mut self, description: impl AsRef<str>) -> Result<Self, Self> {
+        let Some(description) = crate::UiText::try_from_str(description.as_ref()).map(crate::Label) else { return Err(self) };
+        self.base_mut().accessibility.description = Some(description);
+        Ok(self)
+    }
+
+    /// 📢️ Makes the node a live region: a reader announces its text whenever it changes, without the
+    /// reader ever having to reach the node. This is the ONLY way a background state change — an
+    /// evaluation going `Computing → Evaluated`, a progress phase advancing — is heard at all, so a
+    /// status surface that never calls this is silent by construction.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn live(mut self, live: crate::Liveness) -> Self {
+        self.base_mut().accessibility.live = live;
+        self
+    }
+
+    /// ⌨️ Declares the keyboard shortcut that reaches this node, announced by a reader and mirrored
+    /// into `aria-keyshortcuts`. Declaring it here never BINDS it — the binding stays with whoever
+    /// owns the keybinding — so the two can be checked against each other.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn try_shortcut(mut self, shortcut: impl AsRef<str>) -> Result<Self, Self> {
+        let Some(shortcut) = crate::UiText::try_from_str(shortcut.as_ref()) else { return Err(self) };
+        self.base_mut().accessibility.shortcut = Some(shortcut);
+        Ok(self)
+    }
+}
+
+/// 👶️ Adds `.child(..)`/`.children(..)` to a builder whose component genuinely nests others.
+pub trait HasChildren: HasBase {
+    /// 👶️ Appends one already-built or still-buildable child. An omitted child key becomes
+    /// `"#{position}"` at the moment it is pushed here — stable only while the number and order of its
+    /// siblings do not change, which is why a node whose position can shift (a reorderable list row,
+    /// for instance) should carry an explicit [`HasBase::id`] instead.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "The rejected child and partial builder retain their original ownership without an extra error allocation.")]
+    fn try_child(mut self, child: impl Into<BuiltNode>) -> Result<Self, (Self, BuiltNode)> {
+        let mut node = child.into();
+        if node.key.is_empty() {
+            let Some(key) = positional_key(self.base_mut().children.len()) else { return Err((self, node)) };
+            node.key = key;
+        }
+        if let Err(node) = self.base_mut().children.try_push(node) {
+            return Err((self, node));
+        }
+        Ok(self)
+    }
+
+    #[expect(clippy::result_large_err, reason = "A rejected child preserves the exact builder, rejected node, and remaining iterator without allocating.")]
+    fn try_children<T: Into<BuiltNode>, I: IntoIterator<Item = T>>(mut self, children: I) -> Result<Self, RetainedChildren<Self, I::IntoIter>> {
+        let mut remaining = children.into_iter();
+        while let Some(child) = remaining.next() {
+            match self.try_child(child) {
+                Ok(builder) => self = builder,
+                Err((builder, rejected)) => return Err(RetainedChildren { builder, rejected, remaining }),
+            }
+        }
+        Ok(self)
+    }
+
+    #[cfg(test)]
+    fn child(self, child: impl Into<BuiltNode>) -> Self {
+        self.try_child(child).unwrap_or_else(|(builder, _)| builder)
+    }
+
+    #[cfg(test)]
+    fn children<T: Into<BuiltNode>, I: IntoIterator<Item = T>>(self, children: I) -> Self {
+        self.try_children(children).unwrap_or_else(|error| error.builder)
+    }
+}
+
+pub struct RetainedChildren<B, I> {
+    pub builder: B,
+    pub rejected: BuiltNode,
+    pub remaining: I,
+}
+
+/// 📏️ Adds [`crate::StackLayout`] tuning to a builder whose default layout is
+/// [`crate::LayoutSpec::Stack`] — true of every implementor in this file, so these methods never fall
+/// through to a no-op in practice.
+pub trait HasStackLayout: HasBase {
+    /// ↔️ Sets the gap between children.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn gap(mut self, gap: crate::SpaceToken) -> Self {
+        if let crate::LayoutSpec::Stack(stack) = &mut self.base_mut().layout {
+            stack.gap = gap;
+        }
+        self
+    }
+
+    /// 📐️ Sets the container's own padding.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn padding(mut self, padding: crate::EdgeSpace) -> Self {
+        if let crate::LayoutSpec::Stack(stack) = &mut self.base_mut().layout {
+            stack.padding = padding;
+        }
+        self
+    }
+
+    /// ↕️ Sets cross-axis alignment.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn align(mut self, align: crate::Align) -> Self {
+        if let crate::LayoutSpec::Stack(stack) = &mut self.base_mut().layout {
+            stack.align = align;
+        }
+        self
+    }
+
+    /// ↔️ Sets main-axis distribution.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn justify(mut self, justify: crate::Justify) -> Self {
+        if let crate::LayoutSpec::Stack(stack) = &mut self.base_mut().layout {
+            stack.justify = justify;
+        }
+        self
+    }
+
+    /// 📈️ Lets the stack grow to fill its parent's remaining main-axis space.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn grow(mut self, grow: bool) -> Self {
+        if let crate::LayoutSpec::Stack(stack) = &mut self.base_mut().layout {
+            stack.grow = grow;
+        }
+        self
+    }
+
+    /// 🔁️ Permits children to wrap onto additional lines.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn wrap(mut self, wrap: bool) -> Self {
+        if let crate::LayoutSpec::Stack(stack) = &mut self.base_mut().layout {
+            stack.wrap = wrap;
+        }
+        self
+    }
+}
+
+/// 🏗️ Finalizes any builder into a [`BuiltNode`], filling an empty key with the positional default
+/// `"#0"`. Blanket-implemented for every `T: Into<BuiltNode>`; [`ImageBuilder<NoAlt>`](ImageBuilder)
+/// deliberately does NOT implement `Into<BuiltNode>` (only [`ImageBuilder<HasAlt>`](ImageBuilder) does),
+/// so this trait — and therefore `.try_build()` — is simply absent from `ImageBuilder<NoAlt>`'s method set
+/// at compile time, rather than present but panicking.
+pub trait Buildable: Into<BuiltNode> {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A failed positional-key assignment returns the already-built node directly for explicit retirement.")]
+    fn try_build(self) -> Result<BuiltNode, BuiltNode>
+    where
+        Self: Sized,
+    {
+        let mut node: BuiltNode = self.into();
+        if node.key.is_empty() {
+            let Some(key) = positional_key(0) else { return Err(node) };
+            node.key = key;
+        }
+        Ok(node)
+    }
+}
+
+impl<T: Into<BuiltNode>> Buildable for T {}
+//#endregion 🔧️Traits
+
+//#region 📚️Stack
+/// 📚️ A one-axis flex-like container — `Component::Container(role: Plain)` over
+/// `LayoutSpec::Stack`. Build with [`stack`], [`column`], or [`row`].
+pub struct StackBuilder {
+    base: NodeBase,
+}
+
+/// 📚️ A stack laid out along `axis`. [`column`]/[`row`] are the common-case shorthands.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn stack(axis: crate::Axis) -> StackBuilder {
+    StackBuilder { base: NodeBase::stack(axis) }
+}
+
+/// 📚️ A vertical [`stack`].
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn column() -> StackBuilder {
+    stack(crate::Axis::Vertical)
+}
+
+/// 📚️ A horizontal [`stack`].
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn row() -> StackBuilder {
+    stack(crate::Axis::Horizontal)
+}
+
+impl HasBase for StackBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+impl HasChildren for StackBuilder {}
+impl HasStackLayout for StackBuilder {}
+
+impl From<StackBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: StackBuilder) -> Self {
+        assemble(builder.base, crate::Component::Container(crate::ContainerProps { role: crate::ContainerRole::Plain, label: None, description: None, required: None, error: None, default_open: None, drop_overlay: None }))
+    }
+}
+//#endregion 📚️Stack
+
+//#region 🗂️Container
+/// 🗂️ A labeled, chrome-carrying container — `Component::Container(role: Section | Field)`. Build
+/// with [`section`] or [`field`].
+pub struct ContainerBuilder {
+    base: NodeBase,
+    role: crate::ContainerRole,
+    label: crate::Label,
+    description: Option<crate::UiText>,
+    required: Option<bool>,
+    error: Option<crate::UiText>,
+    default_open: Option<bool>,
+    drop_overlay: Option<crate::DropOverlaySpec>,
+}
+
+impl ContainerBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn new(role: crate::ContainerRole, label: crate::Label) -> Self {
+        Self { base: NodeBase::stack(crate::Axis::Vertical), role, label, description: None, required: None, error: None, default_open: None, drop_overlay: None }
+    }
+
+    /// 📝️ Sets the container's help/description copy.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn description(mut self, description: crate::UiText) -> Self {
+        self.description = Some(description);
+        self
+    }
+
+    /// ❗️ Marks the container required (e.g. a form field).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn required(mut self, required: bool) -> Self {
+        self.required = Some(required);
+        self
+    }
+
+    /// ⚠️ Sets a validation error message.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn error(mut self, error: crate::UiText) -> Self {
+        self.error = Some(error);
+        self
+    }
+
+    /// 🔽️ Sets whether a collapsible section starts open.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn default_open(mut self, default_open: bool) -> Self {
+        self.default_open = Some(default_open);
+        self
+    }
+
+    /// 📥️ Sets the hover-state copy shown while a drag is over this container.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn drop_overlay(mut self, drop_overlay: crate::DropOverlaySpec) -> Self {
+        self.drop_overlay = Some(drop_overlay);
+        self
+    }
+}
+
+/// 🗂️ A labeled, collapsible section — `Component::Container(role: Section)`.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn section(label: crate::Label) -> ContainerBuilder {
+    ContainerBuilder::new(crate::ContainerRole::Section, label)
+}
+
+/// 🗂️ A labeled form field — `Component::Container(role: Field)`.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn field(label: crate::Label) -> ContainerBuilder {
+    ContainerBuilder::new(crate::ContainerRole::Field, label)
+}
+
+impl HasBase for ContainerBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+impl HasChildren for ContainerBuilder {}
+impl HasStackLayout for ContainerBuilder {}
+
+impl From<ContainerBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: ContainerBuilder) -> Self {
+        assemble(
+            builder.base,
+            crate::Component::Container(crate::ContainerProps {
+                role: builder.role,
+                label: Some(builder.label),
+                description: builder.description,
+                required: builder.required,
+                error: builder.error,
+                default_open: builder.default_open,
+                drop_overlay: builder.drop_overlay,
+            }),
+        )
+    }
+}
+//#endregion 🗂️Container
+
+//#region 📝️Text
+/// 📝️ Plain display text — `Component::Text`. Build with [`text`].
+pub struct TextBuilder {
+    base: NodeBase,
+    value: crate::Label,
+    emphasize: Option<bool>,
+}
+
+/// 📝️ Display text reading `value`.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn text(value: crate::Label) -> TextBuilder {
+    TextBuilder { base: NodeBase::leaf(), value, emphasize: None }
+}
+
+impl TextBuilder {
+    /// 🔆️ Marks the text visually emphasized.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn emphasize(mut self, emphasize: bool) -> Self {
+        self.emphasize = Some(emphasize);
+        self
+    }
+}
+
+impl HasBase for TextBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<TextBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: TextBuilder) -> Self {
+        assemble(builder.base, crate::Component::Text(crate::TextProps { value: builder.value, emphasize: builder.emphasize, data_attributes: None }))
+    }
+}
+//#endregion 📝️Text
+
+//#region 🔘️Button
+/// 🔘️ A clickable button — `Component::Button`. Build with [`button`].
+pub struct ButtonBuilder {
+    base: NodeBase,
+    label: crate::Label,
+    icon: crate::UiText,
+}
+
+/// 🔘️ A button reading `label`. Its accessible name defaults to `label` — override with
+/// [`HasBase::label`] if the visible and accessible text should differ.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn button(label: crate::Label) -> ButtonBuilder {
+    let mut base = NodeBase::leaf();
+    base.accessibility.label = Some(label.clone());
+    ButtonBuilder { base, label, icon: crate::UiText::default() }
+}
+
+impl ButtonBuilder {
+    /// 🖼️ Sets the icon key.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn icon(mut self, icon: crate::UiText) -> Self {
+        self.icon = icon;
+        self
+    }
+}
+
+impl HasBase for ButtonBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<ButtonBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: ButtonBuilder) -> Self {
+        assemble(builder.base, crate::Component::Button(crate::ButtonProps { icon: builder.icon, label: builder.label }))
+    }
+}
+//#endregion 🔘️Button
+
+//#region ⌨️Input
+/// ⌨️ A text/number/date/color/file input — `Component::Input`. Build with [`input`].
+pub struct InputBuilder {
+    base: NodeBase,
+    kind: crate::InputKind,
+    value: crate::UiText,
+    placeholder: Option<crate::Label>,
+    commit: Option<crate::UiText>,
+    min: Option<f64>,
+    max: Option<f64>,
+    step: Option<f64>,
+    accept: Option<crate::UiText>,
+    precision: Option<u16>,
+    snaps: crate::UiFixedList<f64>,
+    display_factor: Option<f64>,
+    limits: Option<crate::UiNumberLimits>,
+    draft_target: Option<crate::UiText>,
+    publication_revision: Option<crate::UiPublicationRevision>,
+}
+
+/// ⌨️ An input of `kind`, initially empty.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn input(kind: crate::InputKind) -> InputBuilder {
+    InputBuilder { base: NodeBase::leaf(), kind, value: crate::UiText::default(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, precision: None, snaps: crate::UiFixedList::default(), display_factor: None, limits: None, draft_target: None, publication_revision: None }
+}
+
+impl InputBuilder {
+    /// ✍️ Sets the current value.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn value(mut self, value: crate::UiText) -> Self {
+        self.value = value;
+        self
+    }
+
+    /// 💬️ Sets placeholder copy.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn placeholder(mut self, placeholder: crate::Label) -> Self {
+        self.placeholder = Some(placeholder);
+        self
+    }
+
+    /// 🫳️ Sets the commit convention (e.g. `"blur"`).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn commit(mut self, commit: crate::UiText) -> Self {
+        self.commit = Some(commit);
+        self
+    }
+
+    /// ⬇️ Sets the minimum value (`InputKind::Number`).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn min(mut self, min: f64) -> Self {
+        self.min = Some(min);
+        self
+    }
+
+    /// ⬆️ Sets the maximum value (`InputKind::Number`).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn max(mut self, max: f64) -> Self {
+        self.max = Some(max);
+        self
+    }
+
+    /// 🔢️ Sets the step increment (`InputKind::Number`).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn step(mut self, step: f64) -> Self {
+        self.step = Some(step);
+        self
+    }
+
+    /// 📎️ Sets the accepted file-type filter (`InputKind::File`).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn accept(mut self, accept: crate::UiText) -> Self {
+        self.accept = Some(accept);
+        self
+    }
+
+    /// 🥅️ Sets the fraction digits a number field shows and commits, capped at
+    /// [`crate::UI_NUMBER_PRECISION_MAX`] (`InputKind::Number`).
+    pub fn precision(mut self, precision: u16) -> Self {
+        self.precision = Some(precision.min(crate::UI_NUMBER_PRECISION_MAX));
+        self
+    }
+
+    /// 💯️ Sets a number field's value, printed at the field's precision when one is set — or, once a display factor
+    /// is set, as the exact stored number the renderer shows `× factor` at that precision.
+    pub fn number(mut self, value: f64) -> Self {
+        let text = match (self.display_factor, self.precision) {
+            (None, Some(precision)) => crate::format_ui_number_fixed(value, precision),
+            _ => crate::format_ui_number(value),
+        };
+        self.value = crate::UiText::clipped(&text);
+        self
+    }
+
+    /// 🪞️ Sets the factor a number field shows its stored value at (`stored × factor`) and divides a typed one back by;
+    /// set it before [`Self::number`].
+    pub fn display_factor(mut self, factor: f64) -> Self {
+        self.display_factor = Some(factor);
+        self
+    }
+
+    /// 🥏️ Sets the hard range a typed number must keep, with the refusals naming its bounds.
+    pub fn limits(mut self, limits: crate::UiNumberLimits) -> Self {
+        self.limits = Some(limits);
+        self
+    }
+
+    /// 🎯️ Sets the opaque semantic identity used to retain an in-progress draft.
+    pub fn draft_target(mut self, draft_target: crate::UiText) -> Self {
+        self.draft_target = Some(draft_target);
+        self
+    }
+
+    /// 🧾️ Pins the input to the exact native document revision that authored it.
+    pub fn publication_revision(mut self, publication_revision: crate::UiPublicationRevision) -> Self {
+        self.publication_revision = Some(publication_revision);
+        self
+    }
+
+    /// 📌️ Appends one detent of a number field. Refused when it would break the detent law against the bounds set
+    /// so far (not strictly above the previous snap, outside `min..=max`, non-finite) or the list is full.
+    pub fn try_snap(mut self, snap: f64) -> Result<Self, Self> {
+        let previous = self.snaps.iter().last().copied();
+        if !crate::snaps_are_valid(previous.into_iter().chain([snap]), self.min.unwrap_or(f64::NEG_INFINITY), self.max.unwrap_or(f64::INFINITY)) || self.snaps.try_push(snap).is_err() {
+            return Err(self);
+        }
+        Ok(self)
+    }
+}
+
+impl HasBase for InputBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<InputBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: InputBuilder) -> Self {
+        assemble(
+            builder.base,
+            crate::Component::Input(crate::InputProps { kind: builder.kind, value: builder.value, placeholder: builder.placeholder, commit: builder.commit, min: builder.min, max: builder.max, step: builder.step, accept: builder.accept, precision: builder.precision, snaps: builder.snaps, display_factor: builder.display_factor, limits: builder.limits, draft_target: builder.draft_target, publication_revision: builder.publication_revision }),
+        )
+    }
+}
+//#endregion ⌨️Input
+
+//#region 🔀️Toggle
+/// 🔀️ A binary switch — `Component::Toggle`. Build with [`toggle`].
+pub struct ToggleBuilder {
+    base: NodeBase,
+    appearance: crate::ToggleAppearance,
+    on: bool,
+    icon: crate::UiText,
+    text: Option<crate::Label>,
+}
+
+/// 🔀️ A toggle currently `on` or off.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn toggle(on: bool) -> ToggleBuilder {
+    ToggleBuilder { base: NodeBase::leaf(), appearance: crate::ToggleAppearance::Button, on, icon: crate::UiText::default(), text: None }
+}
+
+impl ToggleBuilder {
+    /// ☑️ Selects the shared binary-control presentation.
+    pub fn appearance(mut self, appearance: crate::ToggleAppearance) -> Self {
+        self.appearance = appearance;
+        self
+    }
+
+    /// 🖼️ Sets the icon key.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn icon(mut self, icon: crate::UiText) -> Self {
+        self.icon = icon;
+        self
+    }
+
+    /// 📝️ Sets the visible text, and — unless [`HasBase::label`] already set one explicitly — the
+    /// accessible name too, for the same "hard to omit" reason [`button`] auto-derives its own.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn text(mut self, text: crate::Label) -> Self {
+        self.base.accessibility.label.get_or_insert_with(|| text.clone());
+        self.text = Some(text);
+        self
+    }
+}
+
+impl HasBase for ToggleBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<ToggleBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: ToggleBuilder) -> Self {
+        assemble(builder.base, crate::Component::Toggle(crate::ToggleProps { appearance: builder.appearance, on: builder.on, icon: builder.icon, text: builder.text }))
+    }
+}
+//#endregion 🔀️Toggle
+
+//#region 🔽️Select
+/// 🔽️ A single-choice dropdown — `Component::Select`. Build with [`select`].
+pub struct SelectBuilder {
+    base: NodeBase,
+    value: crate::UiText,
+    items: crate::UiFixedList<crate::SelectItem>,
+    placeholder: Option<crate::Label>,
+    appearance: crate::SelectAppearance,
+}
+
+/// 🔽️ A select currently holding `value`.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn select(value: crate::UiText) -> SelectBuilder {
+    SelectBuilder { base: NodeBase::leaf(), value, items: crate::UiFixedList::default(), placeholder: None, appearance: crate::SelectAppearance::Menu }
+}
+
+impl SelectBuilder {
+    /// ➕️ Appends one option.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A full select returns its builder and exact bounded option without allocating on refusal.")]
+    pub fn try_item(mut self, value: crate::UiText, label: crate::Label) -> Result<Self, (Self, crate::SelectItem)> {
+        let item = crate::SelectItem { value, label };
+        match self.items.try_push(item) {
+            Ok(()) => Ok(self),
+            Err(item) => Err((self, item)),
+        }
+    }
+
+    /// 💬️ Sets placeholder copy shown while no option is selected.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn placeholder(mut self, placeholder: crate::Label) -> Self {
+        self.placeholder = Some(placeholder);
+        self
+    }
+
+    /// 🗳️ Shows the choice as a menu (the default) or as one segmented row of its options.
+    pub fn appearance(mut self, appearance: crate::SelectAppearance) -> Self {
+        self.appearance = appearance;
+        self
+    }
+}
+
+impl HasBase for SelectBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<SelectBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: SelectBuilder) -> Self {
+        assemble(builder.base, crate::Component::Select(crate::SelectProps { value: builder.value, items: builder.items, placeholder: builder.placeholder, appearance: builder.appearance }))
+    }
+}
+//#endregion 🔽️Select
+
+//#region 🖼️IconSelect
+/// 🖼️ A single-choice icon picker — `Component::IconSelect`. Build with [`icon_select`].
+pub struct IconSelectBuilder {
+    base: NodeBase,
+    value: crate::UiText,
+    uniform: bool,
+    classifier_kind: crate::UiText,
+}
+
+/// 🖼️ An icon picker currently holding the icon id `value`, offering the icons its host classifies as `classifier_kind`
+/// (`"icon"` is the whole catalogue — what a descriptor of format `iconId` asks for).
+pub fn icon_select(value: crate::UiText, classifier_kind: crate::UiText) -> IconSelectBuilder {
+    IconSelectBuilder { base: NodeBase::leaf(), value, uniform: true, classifier_kind }
+}
+
+impl IconSelectBuilder {
+    /// 🌫️ Marks the picker as showing a mixed selection: no icon is the current one.
+    pub fn mixed(mut self) -> Self {
+        self.uniform = false;
+        self
+    }
+}
+
+impl HasBase for IconSelectBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<IconSelectBuilder> for BuiltNode {
+    fn from(builder: IconSelectBuilder) -> Self {
+        assemble(builder.base, crate::Component::IconSelect(crate::IconSelectProps { value: builder.value, uniform: builder.uniform, classifier_kind: builder.classifier_kind }))
+    }
+}
+//#endregion 🖼️IconSelect
+
+//#region 🎚️Slider
+/// 🎚️ A continuous range control — `Component::Slider`. Build with [`slider`].
+pub struct SliderBuilder {
+    base: NodeBase,
+    value: f64,
+    min: f64,
+    max: f64,
+    step: f64,
+    unit: Option<crate::UiText>,
+    snaps: crate::UiFixedList<f64>,
+    appearance: crate::SliderAppearance,
+    scale: crate::UiNumberScale,
+    precision: Option<u16>,
+    display_unit: Option<crate::UiText>,
+    display_factor: Option<f64>,
+    limits: Option<crate::UiNumberLimits>,
+}
+
+/// 🎚️ A slider currently at `value`, defaulting to the `0.0..=1.0` normalized range with a `0.1`
+/// step — the common case for an unlabeled proportion.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn slider(value: f64) -> SliderBuilder {
+    SliderBuilder {
+        base: NodeBase::leaf(),
+        value,
+        min: 0.0,
+        max: 1.0,
+        step: 0.1,
+        unit: None,
+        snaps: crate::UiFixedList::default(),
+        appearance: crate::SliderAppearance::Track,
+        scale: crate::UiNumberScale::Linear,
+        precision: None,
+        display_unit: None,
+        display_factor: None,
+        limits: None,
+    }
+}
+
+impl SliderBuilder {
+    /// ⬇️ Sets the minimum value.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn min(mut self, min: f64) -> Self {
+        self.min = min;
+        self
+    }
+
+    /// ⬆️ Sets the maximum value.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn max(mut self, max: f64) -> Self {
+        self.max = max;
+        self
+    }
+
+    /// 🔢️ Sets the step increment.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn step(mut self, step: f64) -> Self {
+        self.step = step;
+        self
+    }
+
+    /// 📏️ Sets the displayed unit suffix.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn unit(mut self, unit: crate::UiText) -> Self {
+        self.unit = Some(unit);
+        self
+    }
+
+    /// 🧲️ Appends one detent. Refused when it would break the detent law against the bounds set so
+    /// far (not strictly above the previous snap, outside `min..=max`, non-finite) or the list is full.
+    pub fn try_snap(mut self, snap: f64) -> Result<Self, Self> {
+        let previous = self.snaps.iter().last().copied();
+        if !crate::snaps_are_valid(previous.into_iter().chain([snap]), self.min, self.max) || self.snaps.try_push(snap).is_err() {
+            return Err(self);
+        }
+        Ok(self)
+    }
+
+    /// 🎡️ Draws the travel as a straight track or a rotary dial.
+    pub fn appearance(mut self, appearance: crate::SliderAppearance) -> Self {
+        self.appearance = appearance;
+        self
+    }
+
+    /// 📉️ Maps the travel onto the track evenly or by ratio.
+    pub fn scale(mut self, scale: crate::UiNumberScale) -> Self {
+        self.scale = scale;
+        self
+    }
+
+    /// 🔬️ Sets the fraction digits the readout, the spoken value and a typed value use, capped at
+    /// [`crate::UI_NUMBER_PRECISION_MAX`].
+    pub fn precision(mut self, precision: u16) -> Self {
+        self.precision = Some(precision.min(crate::UI_NUMBER_PRECISION_MAX));
+        self
+    }
+
+    /// 🪪️ Sets the unit the display value shows beside it (the stored `unit` otherwise).
+    pub fn display_unit(mut self, unit: crate::UiText) -> Self {
+        self.display_unit = Some(unit);
+        self
+    }
+
+    /// 🫗️ Sets the factor the slider shows its stored value at (`stored × factor`) and divides a typed one back by.
+    pub fn display_factor(mut self, factor: f64) -> Self {
+        self.display_factor = Some(factor);
+        self
+    }
+
+    /// 🏔️ Sets the hard range a typed value must keep, making the travel a soft range inside it.
+    pub fn limits(mut self, limits: crate::UiNumberLimits) -> Self {
+        self.limits = Some(limits);
+        self
+    }
+}
+
+impl HasBase for SliderBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<SliderBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: SliderBuilder) -> Self {
+        assemble(
+            builder.base,
+            crate::Component::Slider(crate::SliderProps {
+                value: builder.value,
+                min: builder.min,
+                max: builder.max,
+                step: builder.step,
+                unit: builder.unit,
+                snaps: builder.snaps,
+                appearance: builder.appearance,
+                scale: builder.scale,
+                precision: builder.precision,
+                display_unit: builder.display_unit,
+                display_factor: builder.display_factor,
+                limits: builder.limits,
+            }),
+        )
+    }
+}
+//#endregion 🎚️Slider
+
+//#region 🔢️NumberStepper
+/// 🪜️ A numeric spin button with decrement/increment steps — `Component::NumberStepper`. Build with
+/// [`number_stepper`]; bind `Trigger::Change` for the absolute value and `Trigger::Delta` for the
+/// relative nudge a mixed selection needs.
+pub struct NumberStepperBuilder {
+    base: NodeBase,
+    value: f64,
+    step: f64,
+    uniform: bool,
+    min: Option<f64>,
+    max: Option<f64>,
+    precision: Option<u16>,
+    snaps: crate::UiFixedList<f64>,
+    unit: Option<crate::UiText>,
+    display_unit: Option<crate::UiText>,
+    display_factor: Option<f64>,
+    limits: Option<crate::UiNumberLimits>,
+}
+
+/// 🧮️ A stepper currently at `value`, stepping by `1.0`, unbounded, showing one uniform value.
+pub fn number_stepper(value: f64) -> NumberStepperBuilder {
+    NumberStepperBuilder { base: NodeBase::leaf(), value, step: 1.0, uniform: true, min: None, max: None, precision: None, snaps: crate::UiFixedList::default(), unit: None, display_unit: None, display_factor: None, limits: None }
+}
+
+impl NumberStepperBuilder {
+    /// 👣️ Sets the step increment.
+    pub fn step(mut self, step: f64) -> Self {
+        self.step = step;
+        self
+    }
+
+    /// 🔻️ Sets the minimum value.
+    pub fn min(mut self, min: f64) -> Self {
+        self.min = Some(min);
+        self
+    }
+
+    /// 🔺️ Sets the maximum value.
+    pub fn max(mut self, max: f64) -> Self {
+        self.max = Some(max);
+        self
+    }
+
+    /// 🌗️ Marks the value mixed: a multi-selection whose members disagree shows no single value.
+    pub fn mixed(mut self) -> Self {
+        self.uniform = false;
+        self
+    }
+
+    /// 🔍️ Sets the fraction digits it shows and commits, capped at [`crate::UI_NUMBER_PRECISION_MAX`].
+    pub fn precision(mut self, precision: u16) -> Self {
+        self.precision = Some(precision.min(crate::UI_NUMBER_PRECISION_MAX));
+        self
+    }
+
+    /// 📍️ Appends one detent its page keys stop on. Refused when it would break the detent law against the bounds set
+    /// so far or the list is full.
+    pub fn try_snap(mut self, snap: f64) -> Result<Self, Self> {
+        let previous = self.snaps.iter().last().copied();
+        if !crate::snaps_are_valid(previous.into_iter().chain([snap]), self.min.unwrap_or(f64::NEG_INFINITY), self.max.unwrap_or(f64::INFINITY)) || self.snaps.try_push(snap).is_err() {
+            return Err(self);
+        }
+        Ok(self)
+    }
+
+    /// ⚗️ Sets the unit of the stored value (shown beside it without a display unit).
+    pub fn unit(mut self, unit: crate::UiText) -> Self {
+        self.unit = Some(unit);
+        self
+    }
+
+    /// 🔖️ Sets the unit the display value shows beside it.
+    pub fn display_unit(mut self, unit: crate::UiText) -> Self {
+        self.display_unit = Some(unit);
+        self
+    }
+
+    /// ✖️ Sets the factor it shows its stored value at (`stored × factor`) and divides a typed one back by.
+    pub fn display_factor(mut self, factor: f64) -> Self {
+        self.display_factor = Some(factor);
+        self
+    }
+
+    /// ⛔️ Sets the hard range a typed value must keep, with the refusals naming its bounds.
+    pub fn limits(mut self, limits: crate::UiNumberLimits) -> Self {
+        self.limits = Some(limits);
+        self
+    }
+}
+
+impl HasBase for NumberStepperBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<NumberStepperBuilder> for BuiltNode {
+    fn from(builder: NumberStepperBuilder) -> Self {
+        assemble(
+            builder.base,
+            crate::Component::NumberStepper(crate::NumberStepperProps {
+                value: builder.value,
+                step: builder.step,
+                uniform: builder.uniform,
+                min: builder.min,
+                max: builder.max,
+                precision: builder.precision,
+                snaps: builder.snaps,
+                unit: builder.unit,
+                display_unit: builder.display_unit,
+                display_factor: builder.display_factor,
+                limits: builder.limits,
+            }),
+        )
+    }
+}
+//#endregion 🔢️NumberStepper
+
+//#region 📶️Progress
+/// 📶️ A read-only progress bar — `Component::Progress`. Build with [`progress`].
+pub struct ProgressBuilder {
+    base: NodeBase,
+    completed: f64,
+    total: Option<f64>,
+    value_text: crate::Label,
+}
+
+/// 📶️ An indeterminate bar at `completed` units announcing `value_text`; call [`ProgressBuilder::total`]
+/// once the amount of work is known.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn progress(completed: f64, value_text: crate::Label) -> ProgressBuilder {
+    ProgressBuilder { base: NodeBase::leaf(), completed, total: None, value_text }
+}
+
+impl ProgressBuilder {
+    /// 🏁️ Makes the bar determinate on `0..=total`.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn total(mut self, total: f64) -> Self {
+        self.total = Some(total);
+        self
+    }
+}
+
+impl HasBase for ProgressBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<ProgressBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: ProgressBuilder) -> Self {
+        assemble(builder.base, crate::Component::Progress(crate::ProgressProps { completed: builder.completed, total: builder.total, value_text: builder.value_text }))
+    }
+}
+//#endregion 📶️Progress
+
+//#region 🌲️Tree
+/// 🌲️ A selection-bound tree's own binding node — `Component::Tree`. Sections and items are its
+/// [`HasChildren::child`]ren, not inline fields. Build with [`tree`].
+pub struct TreeBuilder {
+    base: NodeBase,
+    presentation: crate::TreePresentation,
+    interaction_domain: Option<crate::UiText>,
+}
+
+/// 🌲️ An empty tree, ready for [`tree_section`]/[`tree_item`] children.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn tree() -> TreeBuilder {
+    TreeBuilder { base: NodeBase::stack(crate::Axis::Vertical), presentation: crate::TreePresentation::Standard, interaction_domain: None }
+}
+
+impl TreeBuilder {
+    /// 🌳️ Selects the inherited row and value-column presentation.
+    pub fn presentation(mut self, presentation: crate::TreePresentation) -> Self {
+        self.presentation = presentation;
+        self
+    }
+
+    /// 🕹️ Binds this tree to an app-declared `InteractionDefinition` domain.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn interaction_domain(mut self, domain: crate::UiText) -> Self {
+        self.interaction_domain = Some(domain);
+        self
+    }
+}
+
+impl HasBase for TreeBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+impl HasChildren for TreeBuilder {}
+impl HasStackLayout for TreeBuilder {}
+
+impl From<TreeBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: TreeBuilder) -> Self {
+        assemble(builder.base, crate::Component::Tree(crate::TreeProps { presentation: builder.presentation, interaction_domain: builder.interaction_domain }))
+    }
+}
+
+/// 🌲️ A labeled, collapsible grouping of tree items — `Component::TreeSection`. Build with
+/// [`tree_section`].
+pub struct TreeSectionBuilder {
+    base: NodeBase,
+    label: crate::Label,
+    default_open: Option<bool>,
+    window: Option<crate::TreeWindow>,
+    header_toolbar: Option<crate::UiNodeId>,
+}
+
+/// 🌲️ A tree section reading `label`, ready for [`tree_item`] children.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn tree_section(label: crate::Label) -> TreeSectionBuilder {
+    TreeSectionBuilder { base: NodeBase::stack(crate::Axis::Vertical), label, default_open: None, window: None, header_toolbar: None }
+}
+
+impl TreeSectionBuilder {
+    /// 🔽️ Sets whether the section starts open.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn default_open(mut self, default_open: bool) -> Self {
+        self.default_open = Some(default_open);
+        self
+    }
+
+    /// 🪟️ Declares which slice of a longer logical child list the built children actually are — see
+    /// [`crate::TreeWindow`].
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn window(mut self, window: crate::TreeWindow) -> Self {
+        self.window = Some(window);
+        self
+    }
+
+    /// 🎛️ Relates a direct horizontal Toolbar child to the section header.
+    pub fn header_toolbar(mut self, header_toolbar: crate::UiNodeId) -> Self {
+        self.header_toolbar = Some(header_toolbar);
+        self
+    }
+}
+
+impl HasBase for TreeSectionBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+impl HasChildren for TreeSectionBuilder {}
+impl HasStackLayout for TreeSectionBuilder {}
+
+impl From<TreeSectionBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: TreeSectionBuilder) -> Self {
+        assemble(builder.base, crate::Component::TreeSection(crate::TreeSectionProps { label: Some(builder.label), default_open: builder.default_open, window: builder.window, header_toolbar: builder.header_toolbar }))
+    }
+}
+
+/// 🌿️ A single tree row — `Component::TreeItem`. Nested items are its [`HasChildren::child`]ren.
+/// Build with [`tree_item`].
+pub struct TreeItemBuilder {
+    base: NodeBase,
+    label: crate::Label,
+    description: Option<crate::UiText>,
+    icon: Option<crate::UiText>,
+    default_open: Option<bool>,
+    draggable: Option<bool>,
+    drag_data: Option<crate::UiFixedMap<crate::UiText>>,
+    dimmed: Option<bool>,
+    selected: Option<bool>,
+    window: Option<crate::TreeWindow>,
+    granularity: Option<crate::UiText>,
+    row_actions: crate::UiFixedList<crate::RowAction>,
+    target: Option<crate::RowTarget>,
+}
+
+/// 🌿️ A tree row reading `label`. Its accessible name defaults to `label`, the same "hard to omit"
+/// derivation [`button`] applies.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn tree_item(label: crate::Label) -> TreeItemBuilder {
+    let mut base = NodeBase::stack(crate::Axis::Vertical);
+    base.accessibility.label = Some(label.clone());
+    TreeItemBuilder { base, label, description: None, icon: None, default_open: None, draggable: None, drag_data: None, dimmed: None, selected: None, window: None, granularity: None, row_actions: crate::UiFixedList::default(), target: None }
+}
+
+impl TreeItemBuilder {
+    /// 📝️ Sets secondary description copy.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn description(mut self, description: crate::UiText) -> Self {
+        self.description = Some(description);
+        self
+    }
+
+    /// 🖼️ Sets the icon key.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn icon(mut self, icon: crate::UiText) -> Self {
+        self.icon = Some(icon);
+        self
+    }
+
+    /// 🔽️ Sets whether the row starts open (when it has nested items).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn default_open(mut self, default_open: bool) -> Self {
+        self.default_open = Some(default_open);
+        self
+    }
+
+    /// 🖐️ Marks the row draggable.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn draggable(mut self, draggable: bool) -> Self {
+        self.draggable = Some(draggable);
+        self
+    }
+
+    /// 🏷️ Sets the payload a drag of this row carries.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn drag_data(mut self, drag_data: crate::UiFixedMap<crate::UiText>) -> Self {
+        self.drag_data = Some(drag_data);
+        self
+    }
+
+    /// 👁️ Sets the domain "eye toggle" dimmed state — the row stays visible and clickable, just
+    /// visually de-emphasized; not the same axis as [`HasBase::disabled`].
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn dimmed(mut self, dimmed: bool) -> Self {
+        self.dimmed = Some(dimmed);
+        self
+    }
+
+    /// ☑️ Marks this row as one option of a single-choice list, chosen or not ([`crate::TreeItemProps::selected`]).
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn selected(mut self, selected: bool) -> Self {
+        self.selected = Some(selected);
+        self
+    }
+
+    /// 🪟️ Declares which slice of a longer logical child list the built children actually are — see
+    /// [`crate::TreeWindow`].
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn window(mut self, window: crate::TreeWindow) -> Self {
+        self.window = Some(window);
+        self
+    }
+
+    /// 🎯️ Makes the row a pick target of the tree's `interaction_domain` at this granularity, keyed
+    /// by the row's own record key — no per-row binding and no argument map.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn granularity(mut self, granularity: crate::UiText) -> Self {
+        self.granularity = Some(granularity);
+        self
+    }
+
+    /// 🎬️ Appends one row action — a verb on the row's [`crate::RowTarget`].
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
+    pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
+        match self.row_actions.try_push(row_action) {
+            Ok(()) => Ok(self),
+            Err(row_action) => Err((self, row_action)),
+        }
+    }
+
+    /// 🎯️ Sets the ONE target every row action and the activation of this row fire on.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn target(mut self, target: crate::RowTarget) -> Self {
+        self.target = Some(target);
+        self
+    }
+}
+
+impl HasBase for TreeItemBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+impl HasChildren for TreeItemBuilder {}
+impl HasStackLayout for TreeItemBuilder {}
+
+impl From<TreeItemBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: TreeItemBuilder) -> Self {
+        assemble(
+            builder.base,
+            crate::Component::TreeItem(crate::TreeItemProps {
+                label: builder.label,
+                description: builder.description,
+                icon: builder.icon,
+                default_open: builder.default_open,
+                draggable: builder.draggable,
+                drag_data: builder.drag_data,
+                dimmed: builder.dimmed,
+                selected: builder.selected,
+                window: builder.window,
+                granularity: builder.granularity,
+                inline_toolbar: None,
+                detail: None,
+                row_actions: builder.row_actions,
+                target: builder.target,
+            }),
+        )
+    }
+}
+//#endregion 🌲️Tree
+
+//#region 📊️Table
+/// 📊️ A column-headed data table — `Component::Table`. Its rows are [`table_row`] children. Build with
+/// [`table`].
+pub struct TableBuilder {
+    base: NodeBase,
+    label: crate::Label,
+    columns: crate::UiFixedList<crate::Label>,
+    row_label: Option<crate::Label>,
+    column_label: Option<crate::Label>,
+    actions_label: Option<crate::Label>,
+    window: Option<crate::TreeWindow>,
+    column_window: Option<crate::TreeWindow>,
+}
+
+/// 📊️ A table named `label` whose header reads `columns`. Its accessible name defaults to `label`.
+pub fn table(label: crate::Label, columns: crate::UiFixedList<crate::Label>) -> TableBuilder {
+    let mut base = NodeBase::stack(crate::Axis::Vertical);
+    base.accessibility.label = Some(label.clone());
+    TableBuilder { base, label, columns, row_label: None, column_label: None, actions_label: None, window: None, column_window: None }
+}
+
+impl TableBuilder {
+    /// ↕️ Names the row and column domains for range status and navigation.
+    pub fn axis_labels(mut self, row_label: crate::Label, column_label: crate::Label) -> Self {
+        self.row_label = Some(row_label);
+        self.column_label = Some(column_label);
+        self
+    }
+
+    /// 🎬️ Names the trailing actions column.
+    pub fn actions_label(mut self, label: crate::Label) -> Self {
+        self.actions_label = Some(label);
+        self
+    }
+
+    /// 🪟️ Declares which slice of the logical row list the built rows actually are — see
+    /// [`crate::TreeWindow`].
+    pub fn window(mut self, window: crate::TreeWindow) -> Self {
+        self.window = Some(window);
+        self
+    }
+
+    /// ↔️ Declares which slice of the logical column list the headers and row cells contain.
+    pub fn column_window(mut self, window: crate::TreeWindow) -> Self {
+        self.column_window = Some(window);
+        self
+    }
+}
+
+impl HasBase for TableBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+impl HasChildren for TableBuilder {}
+impl HasStackLayout for TableBuilder {}
+
+impl From<TableBuilder> for BuiltNode {
+    fn from(builder: TableBuilder) -> Self {
+        assemble(
+            builder.base,
+            crate::Component::Table(crate::TableProps {
+                label: builder.label,
+                columns: builder.columns,
+                row_label: builder.row_label,
+                column_label: builder.column_label,
+                actions_label: builder.actions_label,
+                window: builder.window,
+                column_window: builder.column_window,
+            }),
+        )
+    }
+}
+
+/// 📊️ One table row — `Component::TableRow`. Cells, row actions and target are props, never child
+/// records. Build with [`table_row`].
+pub struct TableRowBuilder {
+    base: NodeBase,
+    cells: crate::UiFixedList<crate::UiText>,
+    row_actions: crate::UiFixedList<crate::RowAction>,
+    target: Option<crate::RowTarget>,
+}
+
+/// 📊️ A table row reading `cells`, positional to its table's columns.
+pub fn table_row(cells: crate::UiFixedList<crate::UiText>) -> TableRowBuilder {
+    TableRowBuilder { base: NodeBase::stack(crate::Axis::Horizontal), cells, row_actions: crate::UiFixedList::default(), target: None }
+}
+
+impl TableRowBuilder {
+    /// 🎬️ Appends one row action — a verb on the row's [`crate::RowTarget`].
+    #[expect(clippy::result_large_err, reason = "A full row-action list returns its builder and original action owner for caller-directed retirement.")]
+    pub fn try_row_action(mut self, row_action: crate::RowAction) -> Result<Self, (Self, crate::RowAction)> {
+        match self.row_actions.try_push(row_action) {
+            Ok(()) => Ok(self),
+            Err(row_action) => Err((self, row_action)),
+        }
+    }
+
+    /// 🎯️ Sets the ONE target every row action and the activation of this row fire on.
+    pub fn target(mut self, target: crate::RowTarget) -> Self {
+        self.target = Some(target);
+        self
+    }
+}
+
+impl HasBase for TableRowBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+impl HasChildren for TableRowBuilder {}
+
+impl From<TableRowBuilder> for BuiltNode {
+    fn from(builder: TableRowBuilder) -> Self {
+        assemble(builder.base, crate::Component::TableRow(crate::TableRowProps { cells: builder.cells, row_actions: builder.row_actions, target: builder.target }))
+    }
+}
+//#endregion 📊️Table
+
+//#region 🖼️Image
+/// 🖼️ Typestate marker: [`ImageBuilder::alt`]/[`ImageBuilder::decorative`] not yet called. An
+/// `ImageBuilder<NoAlt>` has no `build()` at all — there is no inherent `build` on this state, and the
+/// blanket [`Buildable`] impl only applies to `T: Into<BuiltNode>`, which `ImageBuilder<NoAlt>` is not
+/// (only `ImageBuilder<HasAlt>` implements [`From`] into [`BuiltNode`]). Calling `.build()` on this
+/// state is therefore a COMPILE error (`E0599: no method named build`), never a runtime panic — see
+/// this module's own accessible-UI mandate in [`crate`]'s docs and the compile-fail example below.
+pub struct NoAlt;
+
+/// 🖼️ Typestate marker: [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] was called, so the image
+/// carries a decided accessible name (either real alt text or an explicit decorative opt-out). Only
+/// `ImageBuilder<HasAlt>` implements `Into<BuiltNode>`, which is what makes [`Buildable::build`]
+/// available on it and not on `ImageBuilder<NoAlt>`.
+pub struct HasAlt(ImageAlt);
+
+/// 🖼️ Whether an [`ImageBuilder`] carries real accessible text or has deliberately opted out —
+/// `ImageBuilder<HasAlt>` stores this value directly in its typestate payload, so no optional runtime
+/// invariant or panicking owner transition exists.
+#[expect(clippy::large_enum_variant, reason = "Image accessibility typestate owns its bounded label inline without an extra allocation during construction.")]
+enum ImageAlt {
+    Text(crate::Label),
+    Decorative,
+}
+
+/// 🖼️ An image — `Component::Image`. Build with [`image`], which returns `ImageBuilder<NoAlt>`; call
+/// [`ImageBuilder::alt`] or [`ImageBuilder::decorative`] to obtain an `ImageBuilder<HasAlt>` before
+/// [`Buildable::try_build`] is even callable — CLAUDE.md's accessible-UI mandate
+/// makes an image's accessible name non-optional, and a **typestate**, not a runtime panic, is the
+/// cheapest place to hold that line: a plugin that forgets `.alt(..)`/`.decorative()` fails to compile,
+/// it never reaches a running actor to crash.
+///
+#[doc = concat!("```compile_fail\n", include_str!("../🧪️tests/🚫️image-description-required/🦀️.rs"), "\n```\n\n")]
+#[doc = concat!("```\n", include_str!("../🧪️tests/🖼️image-described/🦀️.rs"), "\n```")]
+pub struct ImageBuilder<State = NoAlt> {
+    base: NodeBase,
+    src: crate::UiText,
+    alt: State,
+}
+
+/// 🖼️ An image loaded from `src`, in state [`NoAlt`] — call [`ImageBuilder::alt`] or
+/// [`ImageBuilder::decorative`] before `.try_build()` becomes callable at all.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn image(src: crate::UiText) -> ImageBuilder<NoAlt> {
+    ImageBuilder { base: NodeBase::leaf(), src, alt: NoAlt }
+}
+
+impl<State> ImageBuilder<State> {
+    /// ♿️ Supplies the accessible alt text, unlocking `.try_build()` by transitioning to [`HasAlt`].
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn alt(self, alt: crate::Label) -> ImageBuilder<HasAlt> {
+        ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Text(alt)) }
+    }
+
+    /// 🙈️ Explicitly opts out: the image is decorative and hidden from the accessibility tree.
+    /// Unlocks `.try_build()` by transitioning to [`HasAlt`], the same as [`ImageBuilder::alt`].
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn decorative(self) -> ImageBuilder<HasAlt> {
+        ImageBuilder { base: self.base, src: self.src, alt: HasAlt(ImageAlt::Decorative) }
+    }
+}
+
+impl<State> HasBase for ImageBuilder<State> {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<ImageBuilder<HasAlt>> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: ImageBuilder<HasAlt>) -> Self {
+        let ImageBuilder { mut base, src, alt, .. } = builder;
+        let HasAlt(alt) = alt;
+        let alt_label = match alt {
+            ImageAlt::Text(label) => {
+                base.accessibility.label.get_or_insert_with(|| label.clone());
+                Some(label)
+            }
+            ImageAlt::Decorative => {
+                base.accessibility.hidden = true;
+                None
+            }
+        };
+        assemble(base, crate::Component::Image(crate::ImageProps { src, alt: alt_label }))
+    }
+}
+//#endregion 🖼️Image
+
+//#region 🗺️Surface
+/// 🗺️ An embedded product surface — `Component::Surface`. Build with [`surface`].
+pub struct SurfaceBuilder {
+    base: NodeBase,
+    props: crate::SurfaceProps,
+}
+
+/// 🗺️ A surface carrying `props` verbatim — every field of [`crate::SurfaceProps`] is the product's
+/// own concern, not something this builder second-guesses.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn surface(props: crate::SurfaceProps) -> SurfaceBuilder {
+    SurfaceBuilder { base: NodeBase::leaf(), props }
+}
+
+impl HasBase for SurfaceBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+/// 👶️ A surface's children are NOT rendered chrome — a renderer draws `props` and nothing else. They
+/// are the surface's own out-of-doc payload carriers: `SurfaceDoc.bytes` is [`crate::UiFixedBytes`], a
+/// hard [`crate::UI_FIXED_BYTES`] ceiling that cannot page, so a scene whose payload scales with its
+/// document (a world of 10 000 instances, say) can only publish by leaving that payload OUTSIDE the
+/// doc, as retained text-leaf subtrees the reconciler pages and diffs per node like any other subtree.
+/// The layout stays [`crate::LayoutSpec::Leaf`] precisely because these children occupy no space.
+impl HasChildren for SurfaceBuilder {}
+
+impl From<SurfaceBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: SurfaceBuilder) -> Self {
+        assemble(builder.base, crate::Component::Surface(builder.props))
+    }
+}
+//#endregion 🗺️Surface
+
+//#region 🧩️Extension
+/// 🧩️ An external plugin slot — `Component::Extension`. Build with [`extension`].
+pub struct ExtensionBuilder {
+    base: NodeBase,
+    extension: crate::UiText,
+    props: crate::UiValue,
+}
+
+/// 🧩️ An extension slot addressed by `name`.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+pub fn extension(name: crate::UiText) -> ExtensionBuilder {
+    ExtensionBuilder { base: NodeBase::leaf(), extension: name, props: crate::UiValue::Null }
+}
+
+impl ExtensionBuilder {
+    /// 📦️ Sets the opaque props payload passed to the slot.
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    pub fn props(mut self, props: crate::UiValue) -> Self {
+        self.props = props;
+        self
+    }
+}
+
+impl HasBase for ExtensionBuilder {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn base_mut(&mut self) -> &mut NodeBase {
+        &mut self.base
+    }
+}
+
+impl From<ExtensionBuilder> for BuiltNode {
+    // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+    fn from(builder: ExtensionBuilder) -> Self {
+        assemble(builder.base, crate::Component::Extension(crate::ExtensionProps { extension: builder.extension, props: builder.props }))
+    }
+}
+//#endregion 🧩️Extension
+
+//#region 🧭️VectorInput
+/// 🏹️ A vector-valued input recipe: one labelled `ContainerRole::Group` laid out as a wrapping row of
+/// `ContainerRole::Field` axes, each holding one `InputKind::Number` field keyed by its axis, all
+/// sharing one unit, step, bounds, precision and commit convention. Costs `1 + 2 × axes` records.
+/// Build with [`vector_input`], add axes with [`VectorInputBuilder::try_axis`].
+pub struct VectorInputBuilder {
+    group: ContainerBuilder,
+    unit: Option<crate::UiText>,
+    step: Option<f64>,
+    min: Option<f64>,
+    max: Option<f64>,
+    precision: Option<u16>,
+    commit: Option<crate::UiText>,
+    snaps: Vec<f64>,
+    display_factor: Option<f64>,
+    limits: Option<crate::UiNumberLimits>,
+}
+
+/// 🆕️ An empty vector input reading `label`.
+pub fn vector_input(label: crate::Label) -> VectorInputBuilder {
+    let group = ContainerBuilder { base: NodeBase::stack(crate::Axis::Horizontal), role: crate::ContainerRole::Group, label, description: None, required: None, error: None, default_open: None, drop_overlay: None }.wrap(true).gap(crate::SpaceToken::Sm);
+    VectorInputBuilder { group, unit: None, step: None, min: None, max: None, precision: None, commit: None, snaps: Vec::new(), display_factor: None, limits: None }
+}
+
+impl VectorInputBuilder {
+    /// 🪧️ Sets the unit every axis shows as its field description.
+    pub fn unit(mut self, unit: crate::UiText) -> Self {
+        self.unit = Some(unit);
+        self
+    }
+
+    /// 🦶️ Sets the step every axis shares.
+    pub fn step(mut self, step: f64) -> Self {
+        self.step = Some(step);
+        self
+    }
+
+    /// ⏬️ Sets the minimum every axis shares.
+    pub fn min(mut self, min: f64) -> Self {
+        self.min = Some(min);
+        self
+    }
+
+    /// ⏫️ Sets the maximum every axis shares.
+    pub fn max(mut self, max: f64) -> Self {
+        self.max = Some(max);
+        self
+    }
+
+    /// 🔎️ Sets the fraction digits every axis shows and commits.
+    pub fn precision(mut self, precision: u16) -> Self {
+        self.precision = Some(precision.min(crate::UI_NUMBER_PRECISION_MAX));
+        self
+    }
+
+    /// 🤝️ Sets the commit convention every axis shares (e.g. `"blur"`).
+    pub fn commit(mut self, commit: crate::UiText) -> Self {
+        self.commit = Some(commit);
+        self
+    }
+
+    /// 🔄️ Sets the display factor every axis shows its stored component at.
+    pub fn display_factor(mut self, factor: f64) -> Self {
+        self.display_factor = Some(factor);
+        self
+    }
+
+    /// 🛑️ Sets the hard range every axis's typed component must keep.
+    pub fn limits(mut self, limits: crate::UiNumberLimits) -> Self {
+        self.limits = Some(limits);
+        self
+    }
+
+    /// 🧲️ Appends one detent every axis shares — the vector's component snaps. Refused when it would break the detent
+    /// law against the bounds set so far or the list is full.
+    pub fn try_snap(mut self, snap: f64) -> Result<Self, Self> {
+        let previous = self.snaps.last().copied();
+        if self.snaps.len() >= crate::UI_FIXED_LIST_ITEMS || !crate::snaps_are_valid(previous.into_iter().chain([snap]), self.min.unwrap_or(f64::NEG_INFINITY), self.max.unwrap_or(f64::INFINITY)) {
+            return Err(self);
+        }
+        self.snaps.push(snap);
+        Ok(self)
+    }
+
+    /// 🪢️ Appends one axis keyed `key`, reading `label`, currently at `value`; `bind` attaches the
+    /// axis field's own bindings (its `Trigger::Change`/`Trigger::Commit` action and args). Refused
+    /// when the key or label does not fit, `bind` refuses, or the group is full.
+    pub fn try_axis(mut self, key: &str, label: crate::Label, value: f64, bind: impl FnOnce(InputBuilder) -> Result<InputBuilder, InputBuilder>) -> Result<Self, Self> {
+        let mut field_input = input(crate::InputKind::Number);
+        field_input.step = self.step;
+        field_input.min = self.min;
+        field_input.max = self.max;
+        field_input.precision = self.precision;
+        field_input.commit = self.commit.clone();
+        field_input.display_factor = self.display_factor;
+        field_input.limits = self.limits.clone();
+        for snap in &self.snaps {
+            let Ok(snapped) = field_input.try_snap(*snap) else { return Err(self) };
+            field_input = snapped;
+        }
+        let Ok(field_input) = field_input.number(value).try_id(key) else { return Err(self) };
+        let Ok(field_input) = field_input.try_label(label.0.as_str()) else { return Err(self) };
+        let Ok(field_input) = bind(field_input) else { return Err(self) };
+        let mut axis = ContainerBuilder::new(crate::ContainerRole::Field, label);
+        if let Some(unit) = &self.unit {
+            axis = axis.description(unit.clone());
+        }
+        let Ok(axis) = axis.try_id(format!("{key}.axis")) else { return Err(self) };
+        let Ok(axis) = axis.try_child(field_input) else { return Err(self) };
+        match self.group.try_child(axis) {
+            Ok(group) => {
+                self.group = group;
+                Ok(self)
+            }
+            Err((group, _)) => {
+                self.group = group;
+                Err(self)
+            }
+        }
+    }
+}
+
+impl HasBase for VectorInputBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        self.group.base_mut()
+    }
+}
+
+impl From<VectorInputBuilder> for BuiltNode {
+    fn from(builder: VectorInputBuilder) -> Self {
+        builder.group.into()
+    }
+}
+//#endregion 🧭️VectorInput
+
+//#region 🧷️ReferenceList
+/// 🔤️ The copy a [`reference_list`] shows, already localized by the caller — this crate carries no
+/// locale, so a plugin resolves both from its own `LocalizedLabel`s.
+pub struct ReferenceListLabels {
+    /// 🖱️ The button that replaces or extends the references with the current selection.
+    pub use_selection: crate::Label,
+    /// 🪹️ The line shown while nothing is referenced.
+    pub empty: crate::Label,
+}
+
+/// 🧷️ A selection-picker recipe: a labelled `ContainerRole::Group` holding a wrapping toolbar of
+/// reference chips (each a Button reading the referenced item whose activation removes it), the empty
+/// line when there is none, and an actions row with the "use current selection" button and an optional
+/// candidate list. Costs `chips + 4` records, one more with a candidate list. Build with
+/// [`reference_list`].
+pub struct ReferenceListBuilder {
+    group: ContainerBuilder,
+    chips: ContainerBuilder,
+    actions: StackBuilder,
+    empty: crate::Label,
+}
+
+/// 🖇️ An empty reference list reading `label`.
+pub fn reference_list(label: crate::Label, labels: ReferenceListLabels) -> ReferenceListBuilder {
+    let chips = ContainerBuilder { base: NodeBase::stack(crate::Axis::Horizontal), role: crate::ContainerRole::Toolbar, label: label.clone(), description: None, required: None, error: None, default_open: None, drop_overlay: None }.wrap(true).gap(crate::SpaceToken::Xs);
+    let group = ContainerBuilder::new(crate::ContainerRole::Group, label).gap(crate::SpaceToken::Xs);
+    let actions = row().gap(crate::SpaceToken::Xs).wrap(true);
+    let use_selection = button(labels.use_selection).icon(crate::UiText::clipped("crosshair"));
+    let actions = match use_selection.try_id("useSelection") {
+        Ok(use_selection) => actions.try_child(use_selection).unwrap_or_else(|(actions, _)| actions),
+        Err(_) => actions,
+    };
+    ReferenceListBuilder { group, chips, actions, empty: labels.empty }
+}
+
+impl ReferenceListBuilder {
+    /// 🎫️ Appends one chip keyed `key` reading `label`; activating it fires `remove` (with `args`),
+    /// and a reader announces it as `remove_label` (for example "Remove Piece 3").
+    pub fn try_chip(mut self, key: &str, label: crate::Label, remove_label: &str, remove: crate::ActionId, args: Option<crate::UiValue>) -> Result<Self, Self> {
+        let chip = button(label).icon(crate::UiText::clipped("x")).variant(crate::Variant::Outline);
+        let Ok(chip) = chip.try_id(key) else { return Err(self) };
+        let Ok(chip) = chip.try_label(remove_label) else { return Err(self) };
+        let bound = match args {
+            Some(args) => chip.try_on_with(crate::Trigger::Activate, remove, args),
+            None => chip.try_on(crate::Trigger::Activate, remove),
+        };
+        let Ok(chip) = bound else { return Err(self) };
+        match self.chips.try_child(chip) {
+            Ok(chips) => {
+                self.chips = chips;
+                Ok(self)
+            }
+            Err((chips, _)) => {
+                self.chips = chips;
+                Err(self)
+            }
+        }
+    }
+
+    /// 👉️ Binds the "use current selection" button to `action` (with `args`); `enabled: false` paints
+    /// it disabled, the state while the selection holds nothing this list can reference.
+    pub fn try_use_selection(mut self, action: crate::ActionId, args: Option<crate::UiValue>, enabled: bool) -> Result<Self, Self> {
+        let Some(button) = self.actions.base.children.get_mut(0) else { return Err(self) };
+        let binding = crate::ActionBinding { trigger: crate::Trigger::Activate, action, args, capability: None };
+        if button.bindings.try_push(binding).is_err() {
+            return Err(self);
+        }
+        button.disabled = !enabled;
+        Ok(self)
+    }
+
+    /// 🗳️ Adds the optional candidate list: a select reading `placeholder` whose `Trigger::Change`
+    /// fires `add` with the picked candidate's value.
+    pub fn try_candidates(mut self, placeholder: crate::Label, add: crate::ActionId, candidates: impl IntoIterator<Item = (crate::UiText, crate::Label)>) -> Result<Self, Self> {
+        let mut list = select(crate::UiText::default()).placeholder(placeholder.clone());
+        for (value, label) in candidates {
+            list = match list.try_item(value, label) {
+                Ok(list) => list,
+                Err(_) => return Err(self),
+            };
+        }
+        let Ok(list) = list.try_id("candidates") else { return Err(self) };
+        let Ok(list) = list.try_label(placeholder.0.as_str()) else { return Err(self) };
+        let Ok(list) = list.try_on(crate::Trigger::Change, add) else { return Err(self) };
+        match self.actions.try_child(list) {
+            Ok(actions) => {
+                self.actions = actions;
+                Ok(self)
+            }
+            Err((actions, _)) => {
+                self.actions = actions;
+                Err(self)
+            }
+        }
+    }
+}
+
+impl HasBase for ReferenceListBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        self.group.base_mut()
+    }
+}
+
+impl From<ReferenceListBuilder> for BuiltNode {
+    fn from(builder: ReferenceListBuilder) -> Self {
+        let references: BuiltNode = if builder.chips.base.children.is_empty() {
+            let mut empty: BuiltNode = text(builder.empty).tone(crate::Tone::Secondary).into();
+            empty.key = crate::UiText::clipped("empty");
+            empty
+        } else {
+            let mut chips: BuiltNode = builder.chips.into();
+            chips.key = crate::UiText::clipped("chips");
+            chips
+        };
+        let mut actions: BuiltNode = builder.actions.into();
+        actions.key = crate::UiText::clipped("actions");
+        let group = builder.group.try_child(references).and_then(|group| group.try_child(actions));
+        match group {
+            Ok(group) => group.into(),
+            Err((group, _)) => group.into(),
+        }
+    }
+}
+//#endregion 🧷️ReferenceList
+
+//#region 🎨️ColorInput
+/// 🔠️ The copy a [`color_input`] shows beside its swatch, already localized by the caller.
+pub struct ColorInputLabels {
+    /// #️⃣ The hex field's label.
+    pub hex: crate::Label,
+    /// 🌫️ The alpha slider's label.
+    pub alpha: crate::Label,
+}
+
+/// 🎨️ A colour-picker recipe over an sRGB colour with components in `0..=1`: a labelled, wrapping
+/// `ContainerRole::Group` holding the swatch (`InputKind::Color` keyed `swatch`, `#rrggbb`), the hex field
+/// (`InputKind::Text` keyed `hex`, `#rrggbb` — `#rrggbbaa` with alpha — committed on blur) and, with alpha, the alpha
+/// slider (keyed `alpha`, `0..=1` in steps of `0.01`). The swatch and the hex field commit a hex string
+/// ([`crate::parse_ui_color_hex`] reads it back), the slider the straight alpha. Costs 3 records, 4 with alpha. Build
+/// with [`color_input`], fill with [`ColorInputBuilder::try_color`].
+pub struct ColorInputBuilder {
+    group: ContainerBuilder,
+    labels: ColorInputLabels,
+}
+
+/// 🫙️ An empty colour input reading `label`.
+pub fn color_input(label: crate::Label, labels: ColorInputLabels) -> ColorInputBuilder {
+    let group = ContainerBuilder { base: NodeBase::stack(crate::Axis::Horizontal), role: crate::ContainerRole::Group, label, description: None, required: None, error: None, default_open: None, drop_overlay: None }.wrap(true).gap(crate::SpaceToken::Sm);
+    ColorInputBuilder { group, labels }
+}
+
+impl ColorInputBuilder {
+    /// 🖌️ Adds the swatch and the hex field showing `rgba` ([`crate::ui_color_hex`]) and, with `alpha`, the alpha
+    /// slider; `bind_hex` attaches the swatch's and the hex field's bindings, `bind_alpha` the slider's. A missing
+    /// alpha reads 1, a non-finite one 0. Refused when a label does not fit, a binding refuses, or the group is full.
+    pub fn try_color(mut self, rgba: &[f64], alpha: bool, bind_hex: impl Fn(InputBuilder) -> Result<InputBuilder, InputBuilder>, bind_alpha: impl FnOnce(SliderBuilder) -> Result<SliderBuilder, SliderBuilder>) -> Result<Self, Self> {
+        let group_label = self.group.label.0.as_str().to_string();
+        let swatch = input(crate::InputKind::Color).value(crate::UiText::clipped(&crate::ui_color_hex(rgba, false)));
+        let Ok(swatch) = swatch.try_id("swatch").and_then(|swatch| swatch.try_label(&group_label)).and_then(&bind_hex) else { return Err(self) };
+        let hex = input(crate::InputKind::Text).value(crate::UiText::clipped(&crate::ui_color_hex(rgba, alpha))).commit(crate::UiText::clipped("blur"));
+        let Ok(hex) = hex.try_id("hex").and_then(|hex| hex.try_label(self.labels.hex.0.as_str())).and_then(&bind_hex) else { return Err(self) };
+        let mut parts: Vec<BuiltNode> = vec![swatch.into(), hex.into()];
+        if alpha {
+            let value = rgba.get(3).copied().map_or(1.0, |alpha| if alpha.is_finite() { alpha.clamp(0.0, 1.0) } else { 0.0 });
+            let slider = slider(value).min(0.0).max(1.0).step(0.01);
+            let Ok(slider) = slider.try_id("alpha").and_then(|slider| slider.try_label(self.labels.alpha.0.as_str())).and_then(bind_alpha) else { return Err(self) };
+            parts.push(slider.into());
+        }
+        for part in parts {
+            match self.group.try_child(part) {
+                Ok(group) => self.group = group,
+                Err((group, _)) => {
+                    self.group = group;
+                    return Err(self);
+                }
+            }
+        }
+        Ok(self)
+    }
+}
+
+impl HasBase for ColorInputBuilder {
+    fn base_mut(&mut self) -> &mut NodeBase {
+        self.group.base_mut()
+    }
+}
+
+impl From<ColorInputBuilder> for BuiltNode {
+    fn from(builder: ColorInputBuilder) -> Self {
+        builder.group.into()
+    }
+}
+//#endregion 🎨️ColorInput
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests
+
+//#endregion 🔖️Builder

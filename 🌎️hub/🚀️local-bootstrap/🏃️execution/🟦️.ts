@@ -111,24 +111,24 @@ export const LOCAL_HUB_DEVELOPMENT_PROFILES: readonly LocalProfile[] = Object.fr
 export const LOCAL_HUB_ADMINISTRATOR_PROFILE: LocalProfile = Object.freeze({ profileId: "administrator", subject: "local-administrator-01", displayName: "Local Administrator", allowedClientClasses: Object.freeze(["admin-relay"] as const) });
 export const LOCAL_HUB_ADMINISTRATOR_SUBJECT = `semio.local.bootstrap/v1:${LOCAL_HUB_ADMINISTRATOR_PROFILE.subject}`;
 
-/** 🎯 The single Nx target that stages the development executable every launch route reads. */
+/** 🎯 The single build target that stages the development executable every launch route reads. */
 export const HUB_DEV_BINARY_TARGET = "os-hub:build-dev";
 
-/** 🏗️ The injectable staging boundary: one attempt that returns the exit status of the Nx target. */
+/** 🏗️ The injectable staging boundary: one attempt that returns the exit status of the build target. */
 export type HubDevBinaryStaging = Readonly<{ stage: () => number }>;
 
 const nativeHubDevBinaryStaging: HubDevBinaryStaging = {
   stage: () => spawnSync("bun", ["repo", "run", HUB_DEV_BINARY_TARGET], { cwd: getWorkspaceRoot(), stdio: "inherit", shell: false }).status ?? -1,
 };
 
-/** 📦 Stages the development executable through its own Nx target on EVERY launch and returns its path. The Nx
+/** 📦 Stages the development executable through its own build target on EVERY launch and returns its path. The build
  * hash over the hub's native sources decides freshness (a cache hit restores or keeps the matching binary), so a
  * launch route never boots a binary left behind by an older tree; a failed staging names the target.
  * @see ../../📦️packages/🦀️rust/📋️project.json `build-dev` */
 export function hubDevBinaryPath(root: string, staging: HubDevBinaryStaging = nativeHubDevBinaryStaging): string {
   const path = join(root, "dist", "build-dev", process.platform === "win32" ? "os-hub.exe" : "os-hub");
   const status = staging.stage();
-  if (status !== 0 || !existsSync(path)) throw new Error(`Missing Nx-staged os-hub dev binary: ${path}; staging it through \`bun repo run ${HUB_DEV_BINARY_TARGET}\` exited with status ${status}`);
+  if (status !== 0 || !existsSync(path)) throw new Error(`Missing staged os-hub dev binary: ${path}; staging it through \`bun repo run ${HUB_DEV_BINARY_TARGET}\` exited with status ${status}`);
   return path;
 }
 

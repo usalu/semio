@@ -1,4 +1,6 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::diff::{Assigned, Entry, KeyedDelta, ModelDiff, PropertySetPatch, patches::{OpeningPatch, SlabPatch, StoreyPatch}};
+use crate::standards::v1::subsets::any::schema::snapshot::{Opening, OpeningKind, PropertySet, PropertyValue, Slab, Slope, Storey};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::os_spr::protocol_laws::{assert_diff_algebra_inverse_law};
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 

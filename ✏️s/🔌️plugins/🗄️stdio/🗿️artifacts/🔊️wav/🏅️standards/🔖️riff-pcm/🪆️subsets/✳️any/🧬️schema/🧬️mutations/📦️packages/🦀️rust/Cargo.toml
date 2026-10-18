@@ -42,6 +42,7 @@ semio-s-artifact-stdio-wav-inferences = { path = "../../../💡️inferences/�
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-wav-inferences = { path = "../../../💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }
 riff = "2.0"
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

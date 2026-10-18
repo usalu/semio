@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetColumnType`: an absolute `SetColumnType` restoring the base value of exactly the fields the forward really changes, none when the column type is absent or nothing changes.
 
-use super::SetColumnType;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_column_type::SetColumnType;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetColumnType, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetColumnType, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_column_type::SetColumnType>,
+{
     let Some(record) = base.column_types.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetColumnType, base: &ModelSnapshot) -> Vec<ModelMutati
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetColumnType(SetColumnType::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetColumnType::from_patch(payload.id.clone(), restore))]
 }

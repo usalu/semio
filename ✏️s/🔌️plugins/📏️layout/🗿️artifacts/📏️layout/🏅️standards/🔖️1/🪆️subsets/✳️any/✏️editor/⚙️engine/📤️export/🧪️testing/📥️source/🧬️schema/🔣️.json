@@ -23,10 +23,10 @@
       ],
       "properties": {
         "editor": {
-          "const": "../../🦀️.rs"
+          "const": "../../🕹️layout-play-app/🦀️.rs"
         },
         "export": {
-          "const": "./🦀️.rs"
+          "const": "../../🎥️media-export-job-and-factories/🦀️.rs"
         }
       }
     },

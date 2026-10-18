@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetStoreyHeight`: a one-field storey patch. Nothing downstream is written: every elevation above and
 //! every wall resolved by this storey follows by inference.
 
-use super::SetStoreyHeight;
+use crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::StoreyPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

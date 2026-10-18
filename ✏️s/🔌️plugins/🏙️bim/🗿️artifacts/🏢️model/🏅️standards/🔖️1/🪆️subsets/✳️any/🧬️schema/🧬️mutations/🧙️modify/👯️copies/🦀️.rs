@@ -6,7 +6,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::elements::{self, placement_diff, Placement, Refusal};
 use crate::standards::v1::subsets::any::schema::mutations::placement::host_length;
-use super::map::{self, Image, Map};
+use crate::standards::v1::subsets::any::schema::mutations::modify::map::{self, Image, Map};
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, KeyedDelta, ModelDiff, Patch, patches::WallPatch}, snapshot::{ComponentOverride, CurtainPanelOverride, EndJoin, ModelSnapshot, Opening, WallSweep}};
 use protocol::OutcomeCode;
 use std::collections::{BTreeMap, BTreeSet};

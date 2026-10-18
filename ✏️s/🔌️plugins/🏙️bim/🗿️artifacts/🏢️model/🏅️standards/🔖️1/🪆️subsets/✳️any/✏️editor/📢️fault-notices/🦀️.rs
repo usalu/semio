@@ -1,6 +1,8 @@
 //! 📢️ Fault notices of the BIM editor: the localized fault notice table. See [`super`].
 
-use super::*;
+use crate::editor::bim::terminology::BimLabels;
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::editor::bim::*;
 
 //#region 🔖️Faults
 /// 📣️ Declares the en/de notices of every `bim.*` refusal code a command can raise: each code names the `BimLabels` field that holds its two texts.

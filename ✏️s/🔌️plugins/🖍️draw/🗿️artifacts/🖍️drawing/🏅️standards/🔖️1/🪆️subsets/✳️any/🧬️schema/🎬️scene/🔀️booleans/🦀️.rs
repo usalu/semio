@@ -9,6 +9,8 @@ use semio_framework_2d::retirement::WorkRetirementProgress;
 pub type DocumentBooleanRetirementProgress=WorkRetirementProgress;
 
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
+use crate::preparation::OwnedTable;
+use crate::preparation::OwnedSet;
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentBooleanLimits{pub tolerance:f64,pub epsilon:f64,pub max_depth:usize,pub max_references:usize,pub max_edges:usize,pub max_parameters:usize,pub max_atomic_edges:usize,pub max_segments:usize,pub max_retained_segments:usize,pub max_work:u64}
 #[derive(Clone,Debug)]
@@ -34,7 +36,7 @@ struct Frame{index:usize,at:usize}
 /// ⏱️ Indexes shared references and remaps each filled result under explicit grants.
 pub struct DocumentBooleanJob{
  input:DocumentBooleanInput,cleanup_slot:u8,retired_references:Vec<Vec<String>>,retired_operations:Vec<String>,retired_children:Vec<PathBooleanRetirement>,retired_raw:Vec<Vec<PathSegment>>,phase:&'static str,work:u64,nodes:usize,resolved:usize,references:usize,retained:usize,source_segments:usize,validate_at:usize,ref_at:usize,root_at:usize,current:usize,publish_at:usize,
- ids:OwnedTable<String,usize>,visited:OwnedSet<usize>,visiting:OwnedSet<usize>,stack:Vec<Frame>,cache:OwnedTable<usize,Vec<PathSegment>>,local:OwnedTable<usize,Vec<DrawingSegment>>,
+ pub ids:OwnedTable<String,usize>,visited:OwnedSet<usize>,visiting:OwnedSet<usize>,stack:Vec<Frame>,cache:OwnedTable<usize,Vec<PathSegment>>,local:OwnedTable<usize,Vec<DrawingSegment>>,
  order:Vec<usize>,impact:OwnedTable<usize,f64>,quality:OwnedTable<usize,f64>,requirement_current:Option<usize>,
  operands:Vec<PathBooleanOperand>,operand_at:usize,copy_at:usize,copied:usize,operand:Option<PathBooleanOperand>,child:Option<PathBooleanJob>,geometry:Option<PathBooleanProgress>,
  raw:Vec<PathSegment>,remap_at:usize,reference:[f64;6],local_result:Vec<DrawingSegment>,world_result:Vec<PathSegment>,output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,

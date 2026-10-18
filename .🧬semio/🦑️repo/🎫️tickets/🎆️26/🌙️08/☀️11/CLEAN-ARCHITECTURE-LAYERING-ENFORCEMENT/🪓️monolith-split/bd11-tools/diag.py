@@ -7,11 +7,11 @@ D = os.path.dirname(T); C = os.path.join(D, "bd8-diag.ts")
 s = open(T).read()
 m = re.search(r'import\s*\{([^}]*)\}\s*from\s*"bun:test";?', s)
 names = [n.strip() for n in m.group(1).split(",") if n.strip() and n.strip() != "expect"]
-shim = F + "/bd8-tools/softexpect.ts"
+shim = F + ("/bd11-tools/softexpect-long.ts" if os.environ.get("BD11_LONG") else "/bd8-tools/softexpect.ts")
 s2 = s[:m.start()] + 'import { ' + ', '.join(names) + ' } from "bun:test"; import { expect } from "' + shim + '";' + s[m.end():]
 open(C, "w").write(s2)
 log = F + "/🗑️generated/bd11-soft.log"; open(log, "w").close()
-env = dict(os.environ, BD8_SOFT_LOG=log)
+env = dict(os.environ, BD8_SOFT_LOG=log, SEMIO_TEST_ARTIFACT_DIR=F + "/🗑️generated/bd11-artifacts", SEMIO_REPO_ROOT="/Users/ueli/Documents/semio")
 try:
     r = subprocess.run(["bash", "-c", "ulimit -n 65536; cd /Users/ueli/Documents/semio && nice -n 10 perl -e 'alarm 240; exec @ARGV' -- bun test \"./" + os.path.relpath(C, "/Users/ueli/Documents/semio") + "\" 2>&1"], capture_output=True, text=True, env=env)
 finally:
@@ -27,7 +27,7 @@ for l in open(log).read().strip().split("\n"):
     if (ln, col) in seen: continue
     seen.add((ln, col))
     line = src[ln - 1]
-    msg = re.sub(r'\s+', ' ', mm.group(4))[:140]
+    msg = re.sub(r'\s+', ' ', mm.group(4))[:(1500 if os.environ.get('BD11_LONG') else 140)]
     print(f"L{ln}:C{col} [{msg}]\n   ...{line[max(0, col - ctx):col + 6]}")
 print("failing assertions:", len(seen))
 for l in out.split("\n"):

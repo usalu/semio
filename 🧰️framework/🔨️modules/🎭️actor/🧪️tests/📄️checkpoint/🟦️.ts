@@ -7,6 +7,7 @@ import {test,expect} from "bun:test";
 import {Database} from "bun:sqlite";
 import {applyPatch} from "fast-json-patch";
 import {readFileSync} from "node:fs";
+import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 test("actor checkpoint preserves state and progress through paid original descriptor acknowledgement",()=>{
  const fixture=JSON.parse(readFileSync(new URL("./🔣️.json",import.meta.url),"utf8"));
 expect(testingSchemaExists(new URL("./🧬️schema/🔣️.json",import.meta.url))).toBe(false); const grant=new Ajv({strict:true}).compile(grantSchema);for(const value of [fixture.originalGrant,fixture.destinationCloseGrant])expect(grant(value)).toBe(true);
@@ -21,10 +22,10 @@ expect(testingSchemaExists(new URL("./🧬️schema/🔣️.json",import.meta.ur
  expect(()=>refusalDb.query("INSERT INTO original_wire VALUES(?)").run(fixture.invalidOriginalOperation)).toThrow();
  expect(refusalDb.query("SELECT count(*) AS n FROM original_wire").get()).toEqual({n:0});
  refusalDb.close();
- const actor=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+ const actor=readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url));
  const original=resolveOriginalTurnInputSource(actor);
  const grantProducer=actor.slice(actor.indexOf("impl TurnGrant"),actor.indexOf("/// ⏱️ How many envelopes"));expect(grantProducer.includes(original+".validate()")).toBe(true);expect(grantProducer.indexOf(original+".validate()")).toBeLessThan(grantProducer.indexOf("self.actor.pack_encode(out)"));
- const publication=readFileSync(new URL("../../💼️job/📨️publication/🦀️.rs",import.meta.url),"utf8"),projection=publication.slice(publication.indexOf("struct JobOutcomeProjection"),publication.indexOf("//#endregion 🪪️JobBridge"));
+ const publication=readFileSync(new URL("../../💼️job/📨️publication/🌉️publication-error-and-bridge/🦀️.rs",import.meta.url),"utf8"),projection=publication.slice(publication.indexOf("struct JobOutcomeProjection"),publication.indexOf("//#endregion 🪪️JobBridge"));
  expect(projection.includes("producer.borrow_outcome(&self.descriptor)")).toBe(true);
  expect(projection.includes("descriptor.acknowledge(cx.retained_grant())")).toBe(true);
  expect(projection.includes("cx.consume_retained")).toBe(true);
@@ -56,5 +57,5 @@ expect(testingSchemaExists(new URL("./🧬️schema/🔣️.json",import.meta.ur
 
 test("original projection allocates exact complete backing before first copied page",()=>{
  const law=JSON.parse(readFileSync(new URL("./allocation.json",import.meta.url),"utf8"));expect(testingSchemaExists(new URL("./🧬️schema/allocation.json",import.meta.url))).toBe(false);const db=new Database(":memory:");try{db.exec("CREATE TABLE allocation(capacity INTEGER,allowed INTEGER)");for(const capacity of [law.oneShortCapacityBytes,law.declaredCapacityBytes])db.query("INSERT INTO allocation VALUES(?,?)").run(capacity,Number(capacity>=Buffer.from(law.originalBytes).length));expect(db.query("SELECT allowed FROM allocation ORDER BY capacity").all()).toEqual([{allowed:0},{allowed:1}]);}finally{db.close();}
- const publication=readFileSync(new URL("../../💼️job/📨️publication/🦀️.rs",import.meta.url),"utf8");const projection=publication.slice(publication.indexOf("impl JobOutcomeProjection"),publication.indexOf("pub struct JobTurnBridge"));expect(projection.includes("try_reserve_exact")).toBe(false);expect(projection.includes("Layout::array::<u8>(required)")).toBe(true);expect(projection.includes("Vec::from_raw_parts(pointer.as_ptr(), 0, required)")).toBe(true);expect(projection.indexOf("grant.maximum_capacity_bytes < required")).toBeLessThan(projection.indexOf("std::alloc::alloc(layout)"));expect(projection.includes("retained_capacity_bytes: required")).toBe(true);
+ const publication=readFileSync(new URL("../../💼️job/📨️publication/🌉️publication-error-and-bridge/🦀️.rs",import.meta.url),"utf8");const projection=publication.slice(publication.indexOf("impl JobOutcomeProjection"),publication.indexOf("pub struct JobTurnBridge"));expect(projection.includes("try_reserve_exact")).toBe(false);expect(projection.includes("Layout::array::<u8>(required)")).toBe(true);expect(projection.includes("Vec::from_raw_parts(pointer.as_ptr(), 0, required)")).toBe(true);expect(projection.indexOf("grant.maximum_capacity_bytes < required")).toBeLessThan(projection.indexOf("std::alloc::alloc(layout)"));expect(projection.includes("retained_capacity_bytes: required")).toBe(true);
 });

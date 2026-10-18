@@ -1,19 +1,17 @@
 //! 🧵️ P3/P5 mounted frame coordinator. [`FrameBuildJob`] incrementally derives deadline candidates,
-//! and [`FrameBuildHandle::poll_runtime_and_resubmit`] couples that protocol to the complete
-//! `AppRuntime::frame` transaction. Native submits one generation at a time to the process worker
-//! pool, publishes only matching completions, and never waits while polling. Frame construction owns
-//! shell traversal, layout/tessellation, engine-scene directives, and prepared-packet creation;
-//! `AppPresenter` retains platform/GPU presentation authority.
+//! and [`FrameBuildHandle::poll_runtime_on_original_caller`] couples that protocol to the complete
+//! `AppRuntime::frame` transaction under the initiating caller's own paid authority: the admitted
+//! session, its receipts and every close step are funded by that caller's context. Frame
+//! construction owns shell traversal, layout/tessellation, engine-scene directives, and
+//! prepared-packet creation; `AppPresenter` retains platform/GPU presentation authority.
 //!
 //! The scalar wheel deadline candidate remains non-authoritative: `AppRuntime::frame` revalidates it
 //! against live state before applying it. The wasm implementation drives the job only after the
 //! renderer has booted inside its dedicated Worker isolate; calls from a browser UI isolate fail
 //! closed and never execute the transaction inline.
 
-#[cfg(not(target_arch = "wasm32"))]
-use semio_framework_async::Lane;
-use semio_framework_job::{root_cancel_token,CancelToken,CommitCandidate,InteractiveJob,StepContext,StepOutcome,INTERACTIVE_LANE_FUEL,INTERACTIVE_LANE_WALL_US};
-use semio_framework_job_worker::{BatchJobSession,WorkerJobSessionAdmissionRejected};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
+use semio_framework_job::{CancelToken,InteractiveJob,StepContext};
+use semio_framework_job_worker::BatchJobSession;use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams};
 use semio_framework_trace::{Generation, InteractiveStage, OperationId};
 use std::{mem::size_of, sync::Arc};
 use semio_framework_job::{InteractiveJobCloseStep, OriginalTurnFailure, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, RetainedCloneGrant, RetainedCloneProgress};
@@ -27,7 +25,7 @@ use semio_framework_os_renderer_wgpu_frame_actions::{FrameBuildInputs, FrameDire
 
 //#region 🧩️FrameBuildJob
 /// 🧩️ The deadline-sweep computation as a real [`InteractiveJob`] — one call to `step` always reaches
-/// [`StepOutcome::Complete`] (the work is O(open deadlines), never large enough to need more than one
+/// [`JobOutcomeBorrow::Complete`] (the work is O(open deadlines), never large enough to need more than one
 /// step; `cx.consume_fuel` is still called so a future, larger stage added to this same job under
 /// Phase 5 inherits real yield-on-overrun behaviour instead of it being bolted on later).
 pub struct FrameBuildJob {
@@ -117,30 +115,12 @@ impl InteractiveJob for FrameBuildJob {
 }
 //#endregion 🧩️FrameBuildJob
 
-//#region ⏱️Clock
-/// ⏱️ Reads the shared real microsecond clock used by job deadlines and watchdogs.
-fn now_us() -> Option<u64> {
-    semio_framework_job::default_now_us()
-}
-
-/// ⏱️ One frame-build step's grant: the interactive lane's fuel and wall budget, charged per retained
-/// Worker turn by [`ActiveFrameBuild::step`].
-fn batch_params(operation: OperationId, generation: Generation, cancel: CancelToken, retained: RetainedCloneGrant) -> BatchJobParams {
-    BatchJobParams { operation, generation, cancel, config: BatchDriveConfig { retained, site: "os_renderer_frame_build", stage: InteractiveStage::InteractiveStep, fuel_per_step: INTERACTIVE_LANE_FUEL, step_budget_us: INTERACTIVE_LANE_WALL_US }, now_us }
-}
-//#endregion ⏱️Clock
-
 //#region 📮️FrameBuildHandle
-/// 📮️ The non-blocking poll/resubmit contract item 5 of the packet brief asks for: never waits on the
-/// worker. `poll_and_resubmit` always returns immediately — either this tick's freshly-completed
-/// directives, or (if the in-flight job hasn't finished, or none was in flight yet) the last
-/// successfully computed ones. One job is in flight at a time; a still-running job is left alone (not
-/// cancelled) and re-checked next call rather than submitting a second overlapping one.
+/// 📮️ The non-blocking poll contract: never waits on the worker. One frame build is admitted at a time
+/// under the initiating caller; a still-running build is left alone (not cancelled) and re-checked next
+/// call rather than admitting a second overlapping one.
 pub struct FrameBuildHandle {
-    retained: RetainedCloneGrant,
-    retained_progress: RetainedCloneProgress,
     session: Option<semio_framework_job_worker::WorkerJobSession<ActiveFrameBuild>>,
-    rejected: Option<WorkerJobSessionAdmissionRejected<ActiveFrameBuild>>,
     ticket: Option<semio_framework_job_worker::WorkerJobTicket>,
     original_job: Option<ActiveFrameBuild>,
     original_params: Option<BatchJobParams>,
@@ -153,19 +133,7 @@ pub struct FrameBuildHandle {
     #[cfg(not(target_arch = "wasm32"))]
     completion_waker: Option<Arc<dyn Fn() + Send + Sync>>,
     latest_requested_generation: Generation,
-    last_submitted_generation: Option<Generation>,
-    cancel: CancelToken,
     closing: bool,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-struct FrameCompletionWake(Arc<dyn Fn() + Send + Sync>);
-
-#[cfg(not(target_arch = "wasm32"))]
-impl std::task::Wake for FrameCompletionWake {
-    fn wake(self: Arc<Self>) {
-        (self.0)();
-    }
 }
 
 enum ActiveFramePhase {
@@ -351,7 +319,7 @@ impl ActiveFrameBuild {
     ///
     /// 🩸️ It used to be one phase, visited once per build: the build drained the queue, then walked
     /// on. A transaction that parked on `!interaction_available()` therefore held the one live
-    /// session forever — no new build could be admitted (`FrameBuildHandle::poll_runtime_and_resubmit`
+    /// session forever — no new build could be admitted (`FrameBuildHandle::poll_runtime_on_original_caller`
     /// admits only when `session.is_none()`), so the `ResumeDispatch` carrying the interaction state
     /// home was never applied, and `DispatchEvents` behind it never reached
     /// `winit_app::dispatch_normalized_event` at all (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
@@ -563,26 +531,6 @@ impl InteractiveJob for ActiveFrameBuild {
     }
 }
 
-/// 📬️ Receives one actual issued worker receipt and separately acknowledges its held descriptor.
-fn receive_frame_outcome(owner: &mut semio_framework_job_worker::WorkerJobOutcome<ActiveFrameBuild>, grant: RetainedCloneGrant, recipient: &mut RetainedCloneProgress) -> Result<Option<JobOutcomeKind>, semio_framework_value::ValueError> {
-    if let Some((issued, progress)) = owner.retained_step_receipt() {
-        if !progress.fits(*issued) || !progress.fits(grant) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "frame worker receipt exceeds its original receiving authority").with_retained_progress(*progress)); }
-        let received = recipient.checked_add(*progress)?;
-        let actual = owner.take_retained_step_receipt().expect("original frame receipt was exclusively borrowed");
-        *recipient = received;
-        if actual.1.copied_items != 0 || actual.1.copied_bytes != 0 || actual.1.retained_capacity_bytes != 0 || actual.1.released_bytes != 0 { return Ok(None); }
-    }
-    let kind = owner.outcome_descriptor().map(JobOutcomeDescriptor::kind);
-    if let Some(kind) = kind {
-        if !matches!(kind, JobOutcomeKind::Yield | JobOutcomeKind::Complete) { return Ok(Some(kind)); }
-        let step = owner.acknowledge_outcome(grant);
-        if !step.progress().fits(grant) { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "frame acknowledgement exceeds its original receiving authority").with_retained_progress(step.progress())); }
-        *recipient = recipient.checked_add(step.progress())?;
-        return Ok(matches!(step, semio_framework_job::RetainedCloneStep::Complete(_)).then_some(kind));
-    }
-    Ok(None)
-}
-
 fn generation_is_fresh(requested: Generation, completed: Generation) -> bool {
     requested == completed
 }
@@ -591,7 +539,6 @@ impl FrameBuildHandle {
     /// 🎟️ Admits and advances the existing frame owner with the initiating business authority.
     pub fn poll_runtime_on_original_caller(&mut self,runtime:semio_framework_os_renderer_wgpu_app_runtime::AppMailbox,inputs:FrameBuildInputs,presentation_generation:Generation,cx:&mut StepContext<'_>)->Result<Option<semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation>,OriginalTurnFailure>{
         if cx.should_yield(){return Ok(None)}
-        if self.rejected.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame caller cannot take a cold rejected owner").into())}
         self.latest_requested_generation=presentation_generation;
         if self.original_refused_receipt.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original frame receiver retains its refused physical tuple").into())}
         if self.original_presentation_generation.is_some_and(|original|original!=presentation_generation){if let Some(session)=self.session.as_ref(){let _=session.begin_close();}else{return Ok(None)}}
@@ -632,7 +579,21 @@ impl FrameBuildHandle {
 
     /// ♻️ Returns pending admission and checked-out custody before closing the same admitted session.
     pub fn close_original_frame_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
-        self.closing=true;let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        self.closing=true;
+        if !self.retire_original_frame_step(cx)?{return Ok(false)}
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.completion_waker.take().is_some(){return Ok(false)}
+        Ok(true)
+    }
+
+    /// 🪢 Retires one frame owner unit under the initiating caller so a component-close bridge created by that frame can run.
+    /// Unlike [`Self::close_original_frame_step`], this keeps the handle reusable and preserves its installed wake.
+    pub fn retire_for_component_surface_close_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        Ok(self.retire_original_frame_step(cx)?&&!self.has_live_session())
+    }
+
+    fn retire_original_frame_step(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{
+        let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         if let Some(owner)=self.original_outcome.as_mut(){let step=owner.acknowledge_outcome(grant);cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);if matches!(step,semio_framework_job::RetainedCloneStep::Complete(_)){self.original_outcome.take().unwrap().begin_close();self.original_outcome_kind=None;self.original_outcome_acknowledged=false;}return Ok(false)}
         if let Some(job)=self.original_job.as_mut(){if !job.terminal_is_empty(){job.close_step(cx)?;return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_job=None;return Ok(false)}
         if let Some(params)=self.original_params.take(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_params_cancel_retirement=Some(semio_framework_async::CancelTokenRetirement::from_token(params.cancel));return Ok(false)}
@@ -642,15 +603,12 @@ impl FrameBuildHandle {
             Ok(false)=>{session.close_step(cx)?;},Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_))=>{},Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error))=>return Err(OriginalTurnFailure::debit_original(error,cx)),
         }return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.session=None;self.ticket=None;return Ok(false)}
         if self.original_refused_receipt.is_some()||self.original_presentation_generation.is_some(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);self.original_refused_receipt=None;self.original_presentation_generation=None;return Ok(false)}
-        Ok(self.rejected.is_none())
+        Ok(true)
     }
 
-    pub fn new(retained: RetainedCloneGrant) -> Self {
+    pub fn new() -> Self {
         Self {
-            retained,
-            retained_progress: Default::default(),
             session: None,
-            rejected: None,
             ticket: None,
             original_job:None,
             original_params:None,
@@ -663,8 +621,6 @@ impl FrameBuildHandle {
             #[cfg(not(target_arch = "wasm32"))]
             completion_waker: None,
             latest_requested_generation: Generation(0),
-            last_submitted_generation: None,
-            cancel: root_cancel_token(),
             closing: false,
         }
     }
@@ -676,280 +632,16 @@ impl FrameBuildHandle {
         }
     }
 
-    fn admit_active(&mut self, active: ActiveFrameBuild) {
-        let params = batch_params(active.operation, active.generation, active.cancel.clone(), active.retained);
-        match semio_framework_job_worker::WorkerJobSession::try_new(active, params) {
-            Ok(session) => self.session = Some(session),
-            Err(mut rejected) => {
-                rejected.begin_close();
-                self.rejected = Some(rejected);
-            }
-        }
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn poll_runtime_and_resubmit(&mut self, runtime: semio_framework_os_renderer_wgpu_app_runtime::AppMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation> {
-        if self.closing {
-            return None;
-        }
-        self.latest_requested_generation = generation;
-        if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(self.retained);
-            if rejected.terminal_is_empty() {
-                self.rejected = None;
-            }
-            return None;
-        }
-        if let Some(session) = self.session.as_mut() {
-            if session.generation() != generation {
-                self.cancel.cancel_now();
-                if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
-                    let _ = session.begin_close();
-                } else {
-                    let _ = session.close_step(self.retained);
-                    if session.terminal_is_empty() {
-                        self.session = None;
-                    }
-                }
-                return None;
-            }
-            if let Some(callback) = self.completion_waker.as_ref() {
-                let waker = std::task::Waker::from(Arc::new(FrameCompletionWake(Arc::clone(callback))));
-                let _ = session.register_wake(&waker);
-            }
-            match session.poll() {
-                semio_framework_job_worker::WorkerJobPoll::Idle => match session.try_submit_step(&semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Interactive, self.retained) {
-                    Ok(ticket) => self.ticket = Some(ticket),
-                    Err(semio_framework_job_worker::WorkerJobSubmitFault::Pool(kind)) => {
-                        if let Ok(rejected) = session.take_rejected() {
-                            if matches!(kind, semio_framework_async::WorkerSubmitErrorKind::Saturated | semio_framework_async::WorkerSubmitErrorKind::Contended) {
-                                rejected.resume();
-                            } else {
-                                rejected.begin_close();
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        let _ = session.begin_close();
-                    }
-                },
-                semio_framework_job_worker::WorkerJobPoll::Outcome => {
-                    if let Some(ticket) = self.ticket {
-                        if let Ok(mut owner) = session.take_outcome(ticket) {
-                            match receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress) {
-                                Ok(Some(JobOutcomeKind::Yield)) => { if owner.resume().is_ok() { self.ticket = None; } }
-                                Ok(None) => {},
-                                _ => { self.ticket = None; owner.begin_close(); },
-                            }
-                        }
-                    }
-                }
-                semio_framework_job_worker::WorkerJobPoll::Terminal => {
-                    if let Ok(mut owner) = session.take_terminal() {
-                        if receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress).ok().flatten() != Some(JobOutcomeKind::Complete) { return None; }
-                        let frame_generation = owner.job().generation;
-                        let frame = if generation_is_fresh(generation, frame_generation) { owner.job_mut().ok().and_then(|job| job.completed.take()) } else { None };
-                        owner.begin_close();
-                        return frame;
-                    }
-                }
-                semio_framework_job_worker::WorkerJobPoll::Rejected => {
-                    if let Ok(rejected) = session.take_rejected() {
-                        rejected.resume();
-                    }
-                }
-                semio_framework_job_worker::WorkerJobPoll::Closing => {
-                    let _ = session.close_step(self.retained);
-                    if session.terminal_is_empty() {
-                        self.session = None;
-                    }
-                }
-                semio_framework_job_worker::WorkerJobPoll::Submitted | semio_framework_job_worker::WorkerJobPoll::CheckedOut | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty => {}
-            }
-            return None;
-        }
-        if self.last_submitted_generation != Some(generation) {
-            self.cancel = root_cancel_token();
-            self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone(), self.retained));
-            self.last_submitted_generation = Some(generation);
-        }
-        None
-    }
-
-    /// 🌀️ A superseded build is RETIRED HERE, in this Worker turn — never parked.
-    ///
-    /// 🩸️ This used to cancel the session and `return None`, which drove the close ladder by one
-    /// step per CALL. On the browser the caller is an event-driven tick, so a shell that is
-    /// settled between inputs ticks about once a second: one superseded build then held
-    /// `self.session` for tens of seconds, no replacement build could be admitted
-    /// (`self.session.is_none()` is the admission gate), and therefore NOTHING pumped the runtime
-    /// mailbox — measured on 6118 as `frame build cancelled: session generation Generation(3) !=
-    /// requested Generation(4)` followed by 74 seconds with no further `frame build admitted`,
-    /// no `render begin`, and 75 undelivered `DispatchEvents`
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-runtime-mailbox-dispatch-2026-09-13.md`).
-    /// Falling through spends one bounded Worker turn retiring it, so a later callback can admit
-    /// a fresh build without borrowing work from the page or running an uncharged close loop.
-    ///
-    /// 🌐️ The dedicated `semio-frame-worker` scheduler owns this opportunity. Wasm has no
-    /// second thread for the `Send`-gated pool path, so `try_step_on_worker` executes one exact
-    /// retained owner turn in this isolate. Checkout and resume are ownership bookkeeping for
-    /// that SAME turn; they do not run another job unit. A later scheduler callback owns every
-    /// subsequent unit or close step.
-    ///
-    /// 🔁️ No live session means the previous frame finished (or never started), and the caller
-    /// already refuses to produce while a presentation is pending — so the next frame build starts
-    /// HERE, every opportunity.
-    ///
-    /// 🩸️ This used to admit only when `generation` differed from the last admitted one. The browser
-    /// frame generation advances on host EVENTS, not on redraws, so an idle shell admitted exactly
-    /// one build for its whole life: the first frame completed with its retained window bodies still
-    /// mid-ingress, and no second frame was ever built to finish them — a permanently blank canvas
-    /// that still asked for frames (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-    /// `📓️wgpu-blank-paint-2026-09-12.md`). One-build-at-a-time is enforced by `self.session`, which
-    /// is the authority that gate was standing in for.
-    #[cfg(target_arch = "wasm32")]
-    pub fn poll_runtime_and_resubmit(&mut self, runtime: semio_framework_os_renderer_wgpu_app_runtime::AppMailbox, inputs: FrameBuildInputs, operation: OperationId, generation: Generation) -> Option<semio_framework_os_renderer_wgpu_app_runtime::AppFramePresentation> {
-        if self.closing || web_sys::window().is_some() {
-            return None;
-        }
-        self.latest_requested_generation = generation;
-        if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(self.retained);
-            if rejected.terminal_is_empty() {
-                self.rejected = None;
-            }
-            return None;
-        }
-        if let Some(session) = self.session.as_mut() {
-            if session.generation() != generation {
-                semio_framework_os_renderer_wgpu_host_base::log_debug_once_per_transition("frame-session-generation", true, &format!("[TRACE] frame build superseded: session generation {:?} != requested {generation:?}", session.generation()));
-                self.cancel.cancel_now();
-                if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
-                    let _ = session.begin_close();
-                }
-            } else {
-                semio_framework_os_renderer_wgpu_host_base::log_debug_once_per_transition("frame-session-generation", false, "[TRACE] frame build session generation matches the requested one again");
-            }
-            let poll = match session.poll() {
-                semio_framework_job_worker::WorkerJobPoll::Idle => match session.try_step_on_worker(self.retained) {
-                    Ok((ticket, poll)) => {
-                        self.ticket = Some(ticket);
-                        poll
-                    }
-                    Err(_) => return None,
-                },
-                poll => poll,
-            };
-            let mut presentation = None;
-            let mut retire_session = false;
-            match poll {
-                semio_framework_job_worker::WorkerJobPoll::Outcome => {
-                    if let Some(ticket) = self.ticket {
-                        if let Ok(mut owner) = session.take_outcome(ticket) {
-                            match receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress) {
-                                Ok(Some(JobOutcomeKind::Yield)) => { if owner.resume().is_ok() { self.ticket = None; } }
-                                Ok(None) => {},
-                                _ => { self.ticket = None; owner.begin_close(); },
-                            }
-                        }
-                    }
-                }
-                semio_framework_job_worker::WorkerJobPoll::Terminal => {
-                    if let Ok(mut owner) = session.take_terminal() {
-                        if receive_frame_outcome(&mut owner, self.retained, &mut self.retained_progress).ok().flatten() != Some(JobOutcomeKind::Complete) { return None; }
-                        let frame_generation = owner.job().generation;
-                        let frame = if generation_is_fresh(generation, frame_generation) { owner.job_mut().ok().and_then(|job| job.completed.take()) } else { None };
-                        owner.begin_close();
-                        presentation = frame;
-                    }
-                }
-                semio_framework_job_worker::WorkerJobPoll::Closing => {
-                    let _ = session.close_step(self.retained);
-                    retire_session = session.terminal_is_empty();
-                }
-                semio_framework_job_worker::WorkerJobPoll::TerminalEmpty => retire_session = true,
-                _ => {}
-            }
-            if retire_session {
-                self.session = None;
-            }
-            return presentation;
-        }
-        semio_framework_os_renderer_wgpu_host_base::log_debug_diagnostic(&format!("[TRACE] frame build admitted generation={generation:?}"));
-        self.cancel = root_cancel_token();
-        self.admit_active(ActiveFrameBuild::new(runtime, inputs, operation, generation, self.cancel.clone(), self.retained));
-        self.last_submitted_generation = Some(generation);
-        None
-    }
-
     /// 🧵️ Whether a frame build is admitted right now — the one owner that must keep its own frames
     /// coming and must not have its inputs renumbered underneath it.
     pub fn has_live_session(&self) -> bool {
-        self.session.is_some() || self.rejected.is_some() || self.original_job.is_some() || self.original_params.is_some() || self.original_outcome.is_some()
+        self.session.is_some() || self.original_job.is_some() || self.original_params.is_some() || self.original_outcome.is_some()
     }
 
     pub fn original_event_terminal_is_empty(&self)->bool{!self.has_live_session()&&self.original_params_cancel_retirement.is_none()&&self.original_outcome_kind.is_none()&&self.original_refused_receipt.is_none()&&self.original_presentation_generation.is_none()}
 
-    /// 🪢 Retires one frame owner unit so a component-close bridge created by that frame can run.
-    /// Unlike [`Self::close_step`], this keeps the handle reusable and preserves its installed wake.
-    pub fn retire_for_component_surface_close_step(&mut self) -> bool {
-        self.cancel.cancel_now();
-        if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(self.retained);
-            if rejected.terminal_is_empty() {
-                self.rejected = None;
-            }
-        } else if let Some(session) = self.session.as_mut() {
-            if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
-                let _ = session.begin_close();
-                return false;
-            }
-            let _ = session.close_step(self.retained);
-            if session.terminal_is_empty() {
-                self.session = None;
-                self.ticket = None;
-            }
-        }
-        if self.has_live_session() {
-            return false;
-        }
-        self.last_submitted_generation = None;
-        true
-    }
-
-    pub fn close_step(&mut self) -> bool {
-        if !self.closing {
-            self.closing = true;
-            self.cancel.cancel_now();
-            return false;
-        }
-        if let Some(rejected) = self.rejected.as_mut() {
-            let _ = rejected.close_step(self.retained);
-            if rejected.terminal_is_empty() {
-                self.rejected = None;
-            }
-            return false;
-        }
-        if let Some(session) = self.session.as_mut() {
-            if !matches!(session.poll(), semio_framework_job_worker::WorkerJobPoll::Closing | semio_framework_job_worker::WorkerJobPoll::TerminalEmpty) {
-                let _ = session.begin_close();
-                return false;
-            }
-            let _ = session.close_step(self.retained);
-            if session.terminal_is_empty() {
-                self.session = None;
-            }
-            return false;
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        if self.completion_waker.take().is_some() {
-            return false;
-        }
-        true
-    }
-
     pub fn terminal_is_empty(&self) -> bool {
-        self.closing && self.session.is_none() && self.rejected.is_none() && self.original_job.is_none() && self.original_params.is_none() && self.original_params_cancel_retirement.is_none() && self.original_outcome.is_none() && self.original_outcome_kind.is_none() && self.original_refused_receipt.is_none() && self.original_presentation_generation.is_none() && {
+        self.closing && self.session.is_none() && self.original_job.is_none() && self.original_params.is_none() && self.original_params_cancel_retirement.is_none() && self.original_outcome.is_none() && self.original_outcome_kind.is_none() && self.original_refused_receipt.is_none() && self.original_presentation_generation.is_none() && {
             #[cfg(not(target_arch = "wasm32"))]
             {
                 self.completion_waker.is_none()
@@ -959,6 +651,12 @@ impl FrameBuildHandle {
                 true
             }
         }
+    }
+}
+
+impl Default for FrameBuildHandle {
+    fn default() -> Self {
+        Self::new()
     }
 }
 //#endregion 📮️FrameBuildHandle

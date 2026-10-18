@@ -1,6 +1,6 @@
 //! 🗜️ `delete-property-template` payload. Removes a property set template from the library. Templates own no entries: the property sets of elements stay as they are, they merely lose their definition.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -10,13 +10,16 @@ pub struct DeletePropertyTemplate {
     pub id: String,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for DeletePropertyTemplate {
+impl<Op> MutationKind<ModelSnapshot, Op> for DeletePropertyTemplate
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeletePropertyTemplate> + From<crate::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "property-template", kind: "delete-property-template", record: "DeletePropertyTemplate" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::delete_property_template::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_property_template::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete property template \"{}\"", self.id), &format!("Eigenschaftsvorlage \"{}\" löschen", self.id))

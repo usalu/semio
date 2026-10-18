@@ -9,7 +9,7 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { semioHostHtmlString } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioHostHtmlString } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
 import { quizHostDocument } from "../../🏗️builder/🌐️vite/🟦️.ts";
 import catalog from "../../🔣️.json" with { type: "json" };
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };

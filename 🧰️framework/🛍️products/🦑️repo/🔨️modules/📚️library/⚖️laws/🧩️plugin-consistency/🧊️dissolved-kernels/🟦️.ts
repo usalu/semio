@@ -1,8 +1,8 @@
 /** 🫧️ Wave 4 plugin consistency policy: dissolved kernels and composition rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
-import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { inspectRustChildKindMetadata } from "../../../🔍️discovery/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
+import { inspectRustChildKindMetadata } from "../../../🔍️discovery/🏛️rust-structure/🟦️.ts";
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyWalkRelFiles } from "../../../🔍️discovery/🚶️file-walk/🟦️.ts";
 import { policyAllRustFiles, policyNormalizeRelPath } from "../🏛️foundation/🟦️.ts";

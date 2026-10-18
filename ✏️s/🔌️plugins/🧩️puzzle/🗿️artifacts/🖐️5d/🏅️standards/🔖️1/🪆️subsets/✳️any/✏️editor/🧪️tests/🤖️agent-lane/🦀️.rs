@@ -168,7 +168,7 @@ use std::collections::{HashMap, HashSet};
 #[allow(unused_imports)]
 use std::sync::LazyLock;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
 use crate::editor::puzzle5d::session::*;
 #[allow(unused_imports)]

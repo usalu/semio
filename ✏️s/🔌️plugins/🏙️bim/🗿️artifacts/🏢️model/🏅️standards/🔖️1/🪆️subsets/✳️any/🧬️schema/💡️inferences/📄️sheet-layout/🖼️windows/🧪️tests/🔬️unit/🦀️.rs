@@ -1,6 +1,11 @@
 //! 🧪️ The paper frame and the window of a viewport: sizes follow the scale to the millimetre, a crop wins over the bounds, a missing drawing leaves a minimal window.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use crate::standards::v1::subsets::any::schema::snapshot::{View, Viewport};
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::PaperRect;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PlacedViewport, ViewMap};
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::*;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanBounds, PlanKind, PlanLinework, PlanPolyline, PlanStyle, PlanVertex};
 use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, Point2, ViewCrop, ViewKind};
 

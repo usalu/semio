@@ -841,11 +841,11 @@ async fn canvas_catalogue_retained_actions_preview_and_create_in_the_addressed_w
 //#region 🔤️PackageFonts
 mod package_fonts {
     use crate::LayoutPlayApp;
-    use semio_s_artifact_layout_layout_engine::scene::{LayoutEngine, text_font_asset_declarations};
+    use semio_s_artifact_layout_layout_engine::scene::{layout_engine_and_views::LayoutEngine, text_fonts::text_font_asset_declarations};
     use semio_framework_plugin::reactor::{admit_package_assets_for_testing, package_asset};
 
     fn catalog() -> std::path::PathBuf {
-        let relative = std::path::Path::new(semio_s_artifact_layout_layout_engine::scene::TEXT_FONT_ASSET_ROOT);
+        let relative = std::path::Path::new(semio_s_artifact_layout_layout_engine::scene::text_fonts::TEXT_FONT_ASSET_ROOT);
         std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find_map(|ancestor| ancestor.join(relative).is_dir().then(|| ancestor.to_path_buf())).expect("the repository root sits above the editor package")
     }
 

@@ -32,7 +32,8 @@ export async function registerRetryableLifecycleDeadlineTests(
     it("classifies every host-fixture case identically in the generated worker and never traps an eligible one", async () => {
       const { default: fixture } = await import("../../🖥️host/🔁️lifecycle/🧪️tests/🧫️fixtures/🔣️.json");
       const vm = await import("node:vm");
-      const { shardWorkerSource } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      const { shardWorkerSource } = await import("../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts");
+      const { classicShardWorkerSource, vmOriginalSource } = await import("../✂️worker-vm-source/🟦️.ts");
       const posted: Record<string, unknown>[] = [];
       let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
       let fault: unknown = null;
@@ -41,9 +42,9 @@ export async function registerRetryableLifecycleDeadlineTests(
         TextDecoder,
         console: { log: () => {}, error: () => {} },
         self: { postMessage: (message: Record<string, unknown>) => posted.push(message), addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } },
-        api: { poll: async () => { throw fault; } },
+        api: { originalSource: vmOriginalSource, poll: async () => { throw fault; } },
       });
-      new vm.Script(shardWorkerSource()).runInContext(context);
+      new vm.Script(classicShardWorkerSource(shardWorkerSource())).runInContext(context);
       new vm.Script('actors.set("a", { api, activationGeneration: 1n, pendingAssets: [] });').runInContext(context);
       const send = dispatch as unknown as ((event: { data: Record<string, unknown> }) => Promise<void>) | null;
       if (!send) throw new Error("Missing generated worker dispatcher");
@@ -79,14 +80,14 @@ export async function registerRetryableLifecycleDeadlineTests(
     });
 
     it("replays the exact same lifecycle events on a marked rejection, bounded by the shared attempt budget", async () => {
-      const { readFileSync } = await import("node:fs");
-      const source = readFileSync(new URL(testSource.url), "utf8");
-      const start = source.indexOf("private async sendInstanceLifecycle(");
+      const { readModuleTreeSource } = await import("../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts");
+      const source = readModuleTreeSource(new URL(testSource.url));
+      const start = source.indexOf("async sendInstanceLifecycle(");
       expect(start).toBeGreaterThan(0);
-      const body = source.slice(start, source.indexOf("\n  private recordInstanceTurn(", start));
+      const body = source.slice(start, source.indexOf("\n  acceptInstanceLifecycleResult(", start));
       expect(body).toContain("isRetryableLifecycleTurn(error)");
       expect(body).toContain("RETRYABLE_LIFECYCLE_TURN_ATTEMPTS");
-      expect(body.indexOf("isRetryableLifecycleTurn(error)")).toBeLessThan(body.indexOf("this.recordInstanceTurn(owner, result)"));
+      expect(body.indexOf("isRetryableLifecycleTurn(error)")).toBeLessThan(body.indexOf("this.hub.uiAcknowledgements.recordInstanceTurn(owner, result)"));
     });
   });
 }

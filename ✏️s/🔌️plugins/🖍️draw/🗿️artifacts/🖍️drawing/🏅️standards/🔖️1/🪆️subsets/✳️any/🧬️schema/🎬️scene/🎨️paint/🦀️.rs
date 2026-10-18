@@ -55,9 +55,9 @@ semio_framework_2d::physical_work_retirement!(PaintedRegionsCloseJob,PaintedPath
 #[derive(semio_framework_value::RetireOwned)]
 pub struct PaintedPathPrepareJob{
  input:PaintedPathPreparation,style:Option<StrokeGeometryStyle>,segments:Vec<semio_framework_2d::PathSegment>,flat:Vec<FlatContour>,contours:Vec<StrokeContour>,polygons:Vec<Vec<Point>>,
- flatten:Option<PathFlattenJob>,flatten_retirement:Option<PathFlattenRetirement>,outline:Option<StrokeOutlineJob>,outline_retirement:Option<StrokeOutlineRetirement>,
+ pub flatten:Option<PathFlattenJob>,flatten_retirement:Option<PathFlattenRetirement>,outline:Option<StrokeOutlineJob>,outline_retirement:Option<StrokeOutlineRetirement>,
  canonical:Option<BooleanJob>,canonical_retirement:Option<BooleanRetirement>,canonical_operands:Vec<BooleanOperand>,canonical_segments:Vec<semio_framework_2d::PathSegment>,stroke_canonical:Option<StrokeCanonicalJob>,stroke_canonical_retirement:Option<StrokeCanonicalRetirement>,raw_points:usize,raw_contours:usize,magnitude:f64,
- phase:&'static str,work:u64,next:usize,at:usize,point:usize,regions:Option<PaintedPathRegions>,failure:Option<String>,cancelled:bool,
+ pub phase:&'static str,work:u64,next:usize,at:usize,point:usize,regions:Option<PaintedPathRegions>,failure:Option<String>,cancelled:bool,
 }
 impl PaintedPathPrepareJob{
  /// 🎬️ Borrows the resolved leaf separately while copying bounded preparation attributes.

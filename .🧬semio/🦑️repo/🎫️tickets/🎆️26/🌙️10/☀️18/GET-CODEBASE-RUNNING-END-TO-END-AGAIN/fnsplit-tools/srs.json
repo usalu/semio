@@ -1,0 +1,188 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️shardclient-reserved-response-settlement/🟦️.ts",
+ "function": "registerTests1",
+ "kit": {
+  "dir": "🧰️settlement-test-kit",
+  "doc": "/** 🧰️ The shared shard client test kit: the destructured dependencies, the fake shard worker, the client harness and the resident, lifecycle and output fixtures of the settlement tests. */",
+  "name": "createShardClientSettlementTestKit",
+  "emoji": "🏭",
+  "fdoc": "Creates the shared shard client test kit of one registration from the injected dependencies.",
+  "typeName": "ShardClientSettlementTestKit"
+ },
+ "groups": [
+  {
+   "dir": "🚀️worker-bootstrap",
+   "doc": "/** 🚀️ The shard worker bootstrap registration tests. */",
+   "name": "registerShardWorkerBootstrapTests",
+   "emoji": "🥾",
+   "fdoc": "Registers the original metadata preparation, prefix cancellation, gate ending and first value retention tests of the shard worker bootstrap.",
+   "from": 63,
+   "to": 305
+  },
+  {
+   "dir": "💾️resident-composition",
+   "doc": "/** 💾️ The shard resident composition registration tests. */",
+   "name": "registerShardResidentCompositionTests",
+   "emoji": "🧱",
+   "fdoc": "Registers the ledger, activation owner, pool, parent close and funding tests of the shard resident composition.",
+   "from": 317,
+   "to": 531
+  },
+  {
+   "dir": "🧾️reserved-response-settlement",
+   "doc": "/** 🧾️ The reserved response settlement tests. */",
+   "name": "registerReservedResponseSettlementTests",
+   "emoji": "💬",
+   "fdoc": "Registers the reserved response settlement tests of the shard client.",
+   "from": 715,
+   "to": 715
+  },
+  {
+   "dir": "🪪️captured-return-authority",
+   "doc": "/** 🪪️ The captured return authority describe block: its wrapper, shared fixtures and parts. */",
+   "name": "registerCapturedReturnAuthorityTests",
+   "emoji": "🛡",
+   "fdoc": "Registers the captured return authority describe block from its helpers and parts.",
+   "describeLine": 753,
+   "helpers": {
+    "dir": "🛠️captured-return-helpers",
+    "doc": "/** 🛠️ The captured return, response, input stream and delivered input fixtures shared by the captured return authority parts. */",
+    "name": "createCapturedReturnHelpers",
+    "emoji": "🔧",
+    "fdoc": "Creates the captured return fixtures shared by the captured return authority parts.",
+    "typeName": "CapturedReturnHelpers"
+   },
+   "parts": [
+    {
+     "dir": "🔓️captured-return-admission",
+     "doc": "/** 🔓️ The captured return admission, response admission and construction tests. */",
+     "name": "registerCapturedReturnAdmissionTests",
+     "emoji": "🗝",
+     "fdoc": "Registers the unused return retirement, return admission, response admission and return construction tests.",
+     "from": 754,
+     "to": 1003
+    },
+    {
+     "dir": "🔗️kernel-return-input-binding",
+     "doc": "/** 🔗️ The kernel return input page, content, builder binding and evidence tests. */",
+     "name": "registerKernelReturnInputBindingTests",
+     "emoji": "⛓",
+     "fdoc": "Registers the kernel return input page, content, builder binding and detach evidence tests.",
+     "from": 1093,
+     "to": 1340
+    },
+    {
+     "dir": "🧵️kernel-return-input-settlement",
+     "doc": "/** 🧵️ The kernel return input resident payload, settlement and framing tests. */",
+     "name": "registerKernelReturnInputSettlementTests",
+     "emoji": "🪡",
+     "fdoc": "Registers the kernel return input payload, builder admission, settlement and framing tests.",
+     "from": 1363,
+     "to": 1615
+    },
+    {
+     "dir": "🔀️captured-return-routing",
+     "doc": "/** 🔀️ The captured return page minting, worker routing and loss tests. */",
+     "name": "registerCapturedReturnRoutingTests",
+     "emoji": "🧭",
+     "fdoc": "Registers the page minting, foreign reply, retry, raw envelope, worker loss and cancellation tests.",
+     "from": 1673,
+     "to": 1783
+    }
+   ]
+  },
+  {
+   "dir": "🔒️captured-instance-lifecycle",
+   "doc": "/** 🔒️ The captured instance lifecycle tests. */",
+   "name": "registerCapturedInstanceLifecycleTests",
+   "emoji": "🔐",
+   "fdoc": "Registers the captured instance lifecycle tests of the shard client.",
+   "from": 1804,
+   "to": 1804
+  },
+  {
+   "dir": "🎟️activation-lease",
+   "doc": "/** 🎟️ The activation lease tests. */",
+   "name": "registerActivationLeaseTests",
+   "emoji": "🎫",
+   "fdoc": "Registers the activation lease tests of the shard client.",
+   "from": 2068,
+   "to": 2068
+  },
+  {
+   "dir": "🚪️instance-close-and-round-trip",
+   "doc": "/** 🚪️ The exact instance close transport and activation turn round trip tests. */",
+   "name": "registerInstanceCloseAndRoundTripTests",
+   "emoji": "🔚",
+   "fdoc": "Registers the exact instance close transport and the activation plus turn round trip tests.",
+   "from": 2297,
+   "to": 2404
+  },
+  {
+   "dir": "📥️segmented-download-and-multiplexing",
+   "doc": "/** 📥️ The segmented download transport and actor id multiplexing tests. */",
+   "name": "registerSegmentedDownloadAndMultiplexingTests",
+   "emoji": "📦",
+   "fdoc": "Registers the segmented download transport and the actor id multiplexing tests.",
+   "from": 2427,
+   "to": 2608
+  },
+  {
+   "dir": "💓️heartbeat-and-liveness-watchdogs",
+   "doc": "/** 💓️ The heartbeat, liveness and shared array buffer heartbeat tests. */",
+   "name": "registerHeartbeatAndLivenessTests",
+   "emoji": "🩺",
+   "fdoc": "Registers the postMessage heartbeat watchdog, schema owned liveness and shared array buffer heartbeat tests.",
+   "from": 2635,
+   "to": 3034
+  },
+  {
+   "dir": "🛰️lease-watchdog-and-shard-loss",
+   "doc": "/** 🛰️ The exclusive lease, watchdog, shard failure, rebuild, crash and metrics tests. */",
+   "name": "registerLeaseWatchdogAndShardLossTests",
+   "emoji": "🐕",
+   "fdoc": "Registers the exclusive lease, watchdog start and stop, shard failure, terminate and rebuild, worker crash and metrics tests.",
+   "from": 3058,
+   "to": 3193
+  },
+  {
+   "dir": "📨️envelope-ordering-and-frames",
+   "doc": "/** 📨️ The envelope lane ordering, granted budget, wire adoption, command ingress and frame parity tests. */",
+   "name": "registerEnvelopeOrderingAndFrameTests",
+   "emoji": "🗂",
+   "fdoc": "Registers the lane ordering, granted budget tracker, grant and envelope wire adoption, fixed command ingress pages and frame parity tests.",
+   "from": 3233,
+   "to": 3378
+  },
+  {
+   "dir": "🌉️host-effect-bridge",
+   "doc": "/** 🌉️ The host effect bridge tests. */",
+   "name": "registerHostEffectBridgeTests",
+   "emoji": "🌁",
+   "fdoc": "Registers the handler success, handler error, missing handler, backpressure cap and shard loss settlement tests of the host effect bridge.",
+   "from": 3440,
+   "to": 3494
+  },
+  {
+   "dir": "🛂️inbound-activation-authority",
+   "doc": "/** 🛂️ The inbound activation authority tests. */",
+   "name": "registerInboundActivationAuthorityTests",
+   "emoji": "🪧",
+   "fdoc": "Registers the inbound activation authority tests of the shard client.",
+   "from": 3541,
+   "to": 3541
+  },
+  {
+   "dir": "💼️job-wire",
+   "doc": "/** 💼️ The shard client job wire tests. */",
+   "name": "registerJobWireTests",
+   "emoji": "🧳",
+   "fdoc": "Registers the job wire tests of the shard client.",
+   "from": 3652,
+   "to": 3652
+  }
+ ],
+ "rootKeep": [
+  3690
+ ]
+}

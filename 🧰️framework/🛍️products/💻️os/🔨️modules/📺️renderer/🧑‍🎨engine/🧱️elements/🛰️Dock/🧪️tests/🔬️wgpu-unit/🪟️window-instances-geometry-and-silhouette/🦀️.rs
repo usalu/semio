@@ -13,7 +13,7 @@ fn concrete_window_instances_round_trip_without_kind_collapse() {
         layout: WindowLayout,
         expected: Vec<ExpectedWindow>,
     }
-    let fixture: Fixture = serde_json::from_str(fixture_text!("../../../../../🧱️elements/🛰️Dock/🧪️tests/🧫️fixtures/🪟️concrete-window-instances.json")).expect("concrete window fixture");
+    let fixture: Fixture = serde_json::from_str(fixture_text!("../../../🧫️fixtures/🪟️concrete-window-instances.json")).expect("concrete window fixture");
     let mut dock = DockState::from_app(&sample_app(&["canvas"], Some(fixture.layout)), Some("canvas-copy"));
     let actual = dock.window_instances();
     assert_eq!(actual, fixture.expected.iter().map(|window| (window.id.clone(), window.window_kind_id.clone())).collect::<Vec<_>>());

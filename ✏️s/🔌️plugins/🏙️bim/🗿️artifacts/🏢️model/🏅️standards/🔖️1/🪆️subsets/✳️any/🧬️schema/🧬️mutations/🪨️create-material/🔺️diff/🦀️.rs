@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateMaterial`: one created material entry. Density, conductivity and specific heat are finite and non-negative; every colour channel lies in 0..1.
 
-use super::super::elements;
-use super::CreateMaterial;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, Rgb}};
 use protocol::{MutationOutcome, OutcomeCode};
 

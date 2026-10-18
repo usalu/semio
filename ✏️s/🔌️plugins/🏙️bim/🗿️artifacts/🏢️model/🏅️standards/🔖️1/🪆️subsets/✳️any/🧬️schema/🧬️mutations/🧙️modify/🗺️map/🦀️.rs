@@ -5,7 +5,7 @@
 //! axis-parallel line stay exact.
 
 use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Refusal};
-use super::{AlignAxis, AlignEdge};
+use crate::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge};
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;

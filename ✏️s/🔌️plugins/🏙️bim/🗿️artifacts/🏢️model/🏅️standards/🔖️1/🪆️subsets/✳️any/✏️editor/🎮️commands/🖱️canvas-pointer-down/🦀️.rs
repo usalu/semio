@@ -76,6 +76,4 @@ pub fn handle(payload: &CanvasPointerDown, doc: &ArtifactView<'_, ModelSnapshot>
     Ok(emit)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -3,11 +3,11 @@
 //! `crate::tui::chrome` (see that mod's `use crate::tui::navbar::paint_navbar;`). Placement follows the React
 //! `navbarFreeBandV1`: the centre sits in the band the flow items leave free and never covers them.
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::chrome::{NavItem, NavbarState};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::text::{display_width, elide, Elision};
-use crate::tui::theme::{Role, Surface, Theme};
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use crate::chrome::{NavItem, NavbarState};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
 
 const BAND_GAP: u16 = 1;
 

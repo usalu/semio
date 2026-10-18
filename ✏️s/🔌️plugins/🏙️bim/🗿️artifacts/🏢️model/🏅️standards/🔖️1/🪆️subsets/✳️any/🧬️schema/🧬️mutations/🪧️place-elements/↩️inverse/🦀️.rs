@@ -2,12 +2,15 @@
 //! changes, read from the base. Empty when any listed element has no placement of the given kind, any placement is not finite, or no
 //! placement changes.
 
-use super::super::elements::{self, Placement};
-use super::PlaceElements;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Placement};
+use crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 
-pub fn inverse(payload: &PlaceElements, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &PlaceElements, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
+{
     let rows: Option<Vec<(String, Placement, bool)>> = payload
         .placements
         .iter()
@@ -21,6 +24,6 @@ pub fn inverse(payload: &PlaceElements, base: &ModelSnapshot) -> Vec<ModelMutati
     if before.is_empty() {
         Vec::new()
     } else {
-        vec![ModelMutation::PlaceElements(PlaceElements { placements: before })]
+        vec![Op::from(PlaceElements { placements: before })]
     }
 }

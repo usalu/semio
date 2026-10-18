@@ -1,4 +1,27 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_framework_geometry::mesh::TriMesh;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{point, seg};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::Wall;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::{nearest_intersection, BulgeSeg, Extent};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude_between_faces, ElevationFace};
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::*;
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{close, gable_roof, model, rect, wall};

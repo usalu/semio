@@ -1,7 +1,10 @@
 import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, fsyncSync, lstatSync, mkdirSync, openSync, readSync, writeFileSync, type BigIntStats, type Stats } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "node:path";
-import { canonicalPrimaryFilenameForKind, generatorContractIdsForOutputPath, semanticDirectoryKindId, semanticDirectoryMemberAdmitsName, taxonomyRelativePathIsExcluded, type Taxonomy } from "../🔍️discovery/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, generatorContractIdsForOutputPath, semanticDirectoryKindId } from "../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { semanticDirectoryMemberAdmitsName } from "../🔍️discovery/📂️semantic-directory-kinds/🟦️.ts";
+import { taxonomyRelativePathIsExcluded } from "../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
+import { type Taxonomy } from "../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 
 export type ArtifactScaffoldOwner = Readonly<{ kind: "subset"; subsetPath: string } | { kind: "surface"; subsetPath: string; role: string }>;
 export type ArtifactScaffoldLeaf = Readonly<{ path: string; content: string }>;

@@ -1,0 +1,36 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-tui-terminal"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio tui terminal I/O: ANSI codec, backend capabilities, native raw-mode backend and pty (feature native)"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-tui-terminal"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+native = ["dep:libc"]
+
+[dependencies]
+semio-framework-async = { path = "../../../../../⏳️async/📦️packages/🦀️rust" }
+semio-framework-ui-tui-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+
+[target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
+libc = { version = "0.2.186", optional = true }
+
+[dev-dependencies]
+semio-framework-async = { path = "../../../../../⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }

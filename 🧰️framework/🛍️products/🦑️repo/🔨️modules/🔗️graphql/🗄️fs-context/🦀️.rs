@@ -5,7 +5,7 @@
 //! 🗄️ The production repo GraphQL context: `FsRepoContext` answers every aggregate from the repository on disk
 //! through the domain crate that owns it, with the provider-backed goal management and the coordinator event
 //! emitter it needs. The grammar, schema and executor stay in `semio-framework-repo-graphql`, whose `RepoContext`
-//! port this crate implements. Twin of `NewRepoContext` in `🔗️graphql/📦️packages/🐹️go/🐹️.go`.
+//! port this crate implements. Twin of `NewRepoContext` in `🔗️graphql/📦️packages/🐹️go/🩻️context/🐹️.go`.
 
 //#endregion 🧲️Header
 

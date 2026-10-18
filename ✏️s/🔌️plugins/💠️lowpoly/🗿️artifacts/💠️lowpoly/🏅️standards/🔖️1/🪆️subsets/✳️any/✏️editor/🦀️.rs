@@ -75,7 +75,7 @@ use semio_framework_plugin::WindowEngagementStatus;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 

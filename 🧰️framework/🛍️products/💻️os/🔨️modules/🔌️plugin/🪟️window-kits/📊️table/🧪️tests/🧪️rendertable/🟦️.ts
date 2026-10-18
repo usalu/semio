@@ -6,7 +6,7 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "renderEditableTable" | "renderTable" | "renderTableRows">, source: TestSource): Promise<void> {
   const { renderEditableTable, renderTable, renderTableRows } = dependencies;
-  type ActionDescriptor = import("../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").ActionDescriptor;
+  type ActionDescriptor = import("../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").ActionDescriptor;
 
   const { describe, expect, it } = vitest;
   describe("renderTable", () => {

@@ -1,6 +1,10 @@
 import { parseArtifactRef,type ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 /** 🪪️ Admitted stream words bind to exact logical generations and structural paths. */
-import type { ObjRef, PdfOp, PdfObject, PdfIndirectObject, PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram, PdfImage } from "../📸️snapshot/🟦️.ts";
+import type { ObjRef, PdfObject } from "../📸️snapshot/🧩️cos/🟦️.ts";
+import type { PdfOp } from "../📸️snapshot/🖋️content/🟦️.ts";
+import type { PdfIndirectObject } from "../📸️snapshot/📄️document/🟦️.ts";
+import type { PdfToUnicode, PdfEmbeddedCMap, PdfFontProgram } from "../📸️snapshot/🔤️font/🟦️.ts";
+import type { PdfImage } from "../📸️snapshot/🖼️resource/🟦️.ts";
 import { parsePdfOp, parsePdfToUnicode, parsePdfEmbeddedCMap, parsePdfFontProgram, parsePdfImage } from "../📸️snapshot/🟦️.ts";
 export type PdfGraphPath = { kind: "entry"; key: string } | { kind: "item"; index: number };
 export interface PdfGraphIdentity { owner: ObjRef; path: PdfGraphPath[] }

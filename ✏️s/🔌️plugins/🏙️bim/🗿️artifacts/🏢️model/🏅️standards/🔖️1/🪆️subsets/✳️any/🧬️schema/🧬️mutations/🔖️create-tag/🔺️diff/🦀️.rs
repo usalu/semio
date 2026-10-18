@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `CreateTag`: one created tag entry. The id is free in every collection. The storey and the style must exist, the element is one that can be tagged and the offset is finite.
 //! Everything the tag shows is inferred from the current geometry of what it names, never stored.
 
-use super::super::annotating;
-use super::super::elements;
-use super::CreateTag;
+use crate::standards::v1::subsets::any::schema::mutations::annotating;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_tag::CreateTag;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

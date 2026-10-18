@@ -5,7 +5,7 @@
 //! 🏗️ The repo GraphQL schema: the type vocabulary, the repo schema builders and the SDL rendering. A leaf of
 //! `semio-framework-repo-graphql`, which executes documents against it. The committed SDL
 //! `🔗️graphql/🧪️tests/🧫️fixtures/📜️served-schema/🔗️.graphql` is the oracle shared with the Go twin in
-//! `🔗️graphql/📦️packages/🐹️go/🐹️.go`.
+//! `🔗️graphql/📦️packages/🐹️go/📃️sdl/🐹️.go` and the `🏗️schema-*/🐹️.go` members.
 
 //#endregion 🧲️Header
 

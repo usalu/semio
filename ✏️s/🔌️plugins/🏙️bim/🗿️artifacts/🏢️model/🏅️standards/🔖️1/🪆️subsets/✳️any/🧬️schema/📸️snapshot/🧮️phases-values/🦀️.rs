@@ -1,6 +1,6 @@
 //! 🧮️ The methods of the value types of the `phases` kit; they live with the value types so the entity types and the model root stay above them.
 
-use super::values::Phase;
+use crate::standards::v1::subsets::any::schema::snapshot::values::Phase;
 
 impl Phase {
     /// 🔢️ Every phase in the order of a project's life: what stands, what is built, what is torn down, what only serves the works.

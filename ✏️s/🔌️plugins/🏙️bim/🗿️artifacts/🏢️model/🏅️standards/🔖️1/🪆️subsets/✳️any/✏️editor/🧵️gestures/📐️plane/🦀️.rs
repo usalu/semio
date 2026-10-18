@@ -154,6 +154,4 @@ pub fn bounds(points: impl IntoIterator<Item = P>) -> Option<[f64; 4]> {
     })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

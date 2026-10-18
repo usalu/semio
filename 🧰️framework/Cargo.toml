@@ -3,10 +3,6 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
-    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-fixture/📦️packages/🦀️rust",
-    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🪟️surface-carriers/📦️packages/🦀️rust",
-    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/⚖️laws/📦️packages/🦀️rust",
-    "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/⚖️declared-verb-verdicts/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️builder/📜️registration/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/📑️command-page/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
@@ -156,6 +152,14 @@ members = [
     "🔨️modules/🕸️graph/🧮️algorithms/📦️packages/🦀️rust",
     "🔨️modules/🕹️interaction/📦️packages/🦀️rust",
     "🔨️modules/🖌️raster/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/⌨️tui/⚙️engine/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/⌨️tui/🏃️host/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/⌨️tui/🏛️frame/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/⌨️tui/📟️vt/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/⌨️tui/📺️terminal/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/⌨️tui/🧩️widgets/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/⌨️tui/🧪️tests/🥣️companion/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/⌨️tui/🧱️core/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🌳️retained/🌳️tree/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🌳️retained/🌳️tree/🍃️nodes/📦️packages/🦀️rust",
@@ -179,6 +183,7 @@ members = [
     "🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🎟️prepared/📦️packages/🦀️rust",
+    "🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-prepared-laws/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎨️shaders/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🔌️device/📦️packages/🦀️rust",
     "🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust",
@@ -284,7 +289,6 @@ members = [
     "🔨️modules/🚪️io/🧬️schema/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/🪶️sqlite-snapshot/🏛️model/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/🪶️sqlite-snapshot/📦️packages/🦀️rust",
-    "🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust",
     "🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️tests/🌅️companion/📦️packages/🦀️rust",
     "🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust",
     "🔨️modules/🛂️manifest/🔡️mutation-inputs/📦️packages/🦀️rust",
@@ -316,7 +320,9 @@ members = [
     "🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/🛠️operations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust",
+    "🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️unit/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/🧿️collision/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/🌀️rigid/📦️packages/🦀️rust",
@@ -326,10 +332,7 @@ members = [
     "🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/🔁️reconstruction/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/✂️clipping/📦️packages/🦀️rust",
     "🔨️modules/🧊️3d/🧪️tests/🧰️support/📦️packages/🦀️rust",
-    "🔨️modules/🧪️test/⚖️transient-preparation-law/📦️packages/🦀️rust",
-    "🔨️modules/🧪️test/⚖️typed-input-law/📦️packages/🦀️rust",
     "🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust",
-    "🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust",
     "🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust",
     "🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust",
     "🔨️modules/🧬️schema/✨️derive/📦️packages/🦀️rust",
@@ -354,6 +357,8 @@ members = [
     "🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📡️progress/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+    "🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust",
     "🔨️modules/🧵️job/🔭️preview/🎟️drive/📦️packages/🦀️rust",
@@ -365,6 +370,7 @@ exclude = [
     "**/👽️guest/**",
     "**/🔮️oracles/**",
     "🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust",
+    "🛍️products/💻️os/📦️packages/🦀️rust",
     "🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust",
     "🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔮️oracles/📦️package-boundary-classification/📦️packages/🦀️rust",
 ]
@@ -496,6 +502,9 @@ exclude-patterns = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽�
 
     [workspace.dependencies.semio-framework-job]
     path = "🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+    [workspace.dependencies.semio-framework-job-native-decode]
+    path = "🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust"
 
     [workspace.dependencies.semio-framework-mesh-engine]
     path = "🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust"

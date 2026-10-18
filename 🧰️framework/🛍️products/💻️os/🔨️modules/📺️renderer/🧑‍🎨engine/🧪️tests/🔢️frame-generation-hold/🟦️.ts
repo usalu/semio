@@ -25,7 +25,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(here, "../../🧫️fixtures/🔢️frame-generation-hold/🔣️.json");
+const fixturePath = resolve(here, "../🧫️fixtures/🔢️frame-generation-hold/🔣️.json");
 
 type Step = { readonly op: string; readonly repeat?: number };
 type Expectation = { readonly generation: number; readonly delivered: number; readonly supersessions: number; readonly framesPresented: number; readonly quarantines: number };

@@ -4,7 +4,7 @@ import{createHash}from"node:crypto";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import schema from"../🧬️schema/🔣️.json";
-import law from"./🧫️fixtures/🔣️.json";
+import law from"../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🎬️media-slots/🎟️collect/🔣️.json";
 import accepted from"../../../../../🧪️tests/🧫️fixtures/🎬️presented-media-slots/🔣️.json";
 import { readModuleTreeSource } from "../../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 test("original roster source owns its typed grammar, paid coverage and original collection until close",()=>{
@@ -34,7 +34,7 @@ test("original render tree remains stationary across receiver denial and post-re
  const instance=readModuleTreeSource(`${base}/🧵️instance/🦀️.rs`);for(const required of["pending_render_tree:","pending_render_tree_identity:","close_pending_render_tree_on_original","fn original_render_tree_source","self.pending_render_tree=", "stamp_pending_render_interaction_ui"]){expect(instance.includes(required)).toBe(true)}
  const app=read("⚛️reactor/🔌️app/🦀️.rs");expect(app.includes("fn original_render_tree_source")).toBe(true);
  const runtime=read("⚛️reactor/🏃️runtime/🦀️.rs");expect(runtime.includes("instance.app.original_render_tree_source(cx)")).toBe(true);
- const turn=read("⚛️reactor/🔄️turn/🦀️.rs");expect(turn.includes("grant.commit_source(tree).is_err()")).toBe(false);
+ const turn=readModuleTreeSource(`${base}/⚛️reactor/🔄️turn/🦀️.rs`);expect(turn.includes("grant.commit_source(tree).is_err()")).toBe(false);
 });
 
 
@@ -42,7 +42,7 @@ test("original pending render retry copies its unchanged routing source in finit
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const retry=law.pendingRenderRetry,bytes=Buffer.from(retry.surface),db=new Database(":memory:");
  try{for(const copy of retry.copyGrants){const result:number[]=[];for(let at=0;at<bytes.length;at+=copy){const row=db.query("SELECT substr(?, ?, ?) AS body").get(bytes,at+1,copy)as{body:Uint8Array};result.push(...row.body);}expect(Buffer.from(result).toString()).toBe(retry.surface)}}finally{db.close()}
- const root=process.cwd(),text=readFileSync(`${root}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs`,"utf8"),patch=readFileSync(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs`,"utf8");
+ const root=process.cwd(),text=readFileSync(`${root}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/🦀️.rs`,"utf8"),patch=readModuleTreeSource(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs`);
  expect(text).toContain("pub struct UiTextOriginalCopy");expect(text).toContain("source.bytes[start..end]");expect(patch).toContain("pending_render_source: Option<ui_contract::UiTextOriginalCopy>");expect(patch).toContain("source.step(&slot.surface.0,grant)");
  expect(retry.headerCopyBytes).toBe(0);
 });
@@ -57,6 +57,6 @@ test("original intrinsic parser donates its complete native cause once beside it
 
 test("original tree producer admits its exact shell and validates unchanged native children without reconstruction",()=>{
  expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);const producer=law.originalTreeProducer,db=new Database(":memory:");try{db.exec("CREATE TABLE native_children(parent INTEGER,child INTEGER,address TEXT)");db.query("INSERT INTO native_children VALUES(0,0,?)").run("original-child");expect(db.query("SELECT address FROM native_children WHERE parent=0 AND child=0").get()).toEqual({address:"original-child"});}finally{db.close()}
- const root=process.cwd(),present=readFileSync(`${root}/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎭️present/🦀️.rs`,"utf8"),patches=readFileSync(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs`,"utf8");
+ const root=process.cwd(),present=readFileSync(`${root}/🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🎭️present/🦀️.rs`,"utf8"),patches=readModuleTreeSource(`${root}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs`);
  expect(present).toContain("source: Option<ComponentTree>");expect(present).toContain("ComponentTreeProducerFrame::EMPTY");expect(present).toContain("pub fn close_step_on_original");expect(present).not.toContain("parent.admitted.try_push");expect(present).not.toContain("frame.source.next()");expect(patches).toContain("ComponentTreeProducer::required_capacity_bytes()");expect(patches).toContain("maximum_capacity_bytes<capacity");expect(patches).toContain("authority.close_step_on_original(cx)");expect(patches).toContain("released_bytes:capacity");expect(producer.donationCopyBytes).toBe(0);
 });

@@ -1,5 +1,6 @@
-use crate::HtmlSnapshot;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::standards::v5::subsets::any::schema::inferences::*;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::inferences::HtmlInference;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

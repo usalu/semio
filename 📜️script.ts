@@ -38,7 +38,10 @@ import { interactivityDbCliSelfTests } from "./🧰️framework/🛍️products/
 import { interactivityMcpHttpTransportSelfTests } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🚚️transport/🧪️tests/🔬️interactivity-mcp-http-transport/🟦️.ts";
 import { dependencyJsLockParitySelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-js-lock-parity/🟦️.ts";
 import { dependencyTruthSelfTests } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧪️tests/🔬️dependency-truth/🟦️.ts";
-import { dispatchPolicyArgv, defineLint, runCmd, runWorkspaceScriptMain, TechnologyLinter, type BreachRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dispatchPolicyArgv, runWorkspaceScriptMain } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧭️entrypoints/🟦️.ts";
+import { defineLint, TechnologyLinter } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🧩️linters/🟦️.ts";
+import { runCmd } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { type BreachRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🚨️policy/🔖️breach/🟦️.ts";
 import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { CleanScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts";
 import { AgentsScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🤖️agent-clients/🎮️command/🟦️.ts";

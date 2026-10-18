@@ -1,7 +1,7 @@
 /** 🧹️ `lint` and `format` commands.
  * @see 📜️script.ts
  */
-import { runCmd } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../🏃️process/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 //#region 🔖️LintScript

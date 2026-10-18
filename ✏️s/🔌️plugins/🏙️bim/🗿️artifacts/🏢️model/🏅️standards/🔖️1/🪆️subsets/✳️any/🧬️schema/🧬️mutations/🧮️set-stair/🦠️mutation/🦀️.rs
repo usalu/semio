@@ -1,6 +1,6 @@
 //! 🧮️ `set-stair` payload. Sparsely changes a stair: start, direction, width, flight, top constraint, maximum riser, minimum tread, stringer, nosing, tread thickness, riser boards, landing depth, name.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2, RiserKind, StairFlight, StairStringer, TopConstraint}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Point2, RiserKind, StairFlight, StairStringer, TopConstraint}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -36,13 +36,16 @@ pub struct SetStair {
     pub name: Option<String>,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetStair {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetStair
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetStair>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "stair", kind: "set-stair", record: "SetStair" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_stair::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_stair::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change stair \"{}\"", self.id), &format!("Treppe \"{}\" ändern", self.id))

@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeletePropertyTemplate`: one deleted template entry. A template is library data and owns no entries: the property sets of elements are keyed by element id and stay as they are, they only lose
 //! their definition (the effective properties are inferred, so nothing derived is written).
 
-use super::DeletePropertyTemplate;
+use crate::standards::v1::subsets::any::schema::mutations::delete_property_template::DeletePropertyTemplate;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

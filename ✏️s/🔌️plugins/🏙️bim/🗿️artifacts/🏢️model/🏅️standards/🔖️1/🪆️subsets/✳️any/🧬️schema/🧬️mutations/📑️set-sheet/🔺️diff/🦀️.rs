@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetSheet`: a sparse sheet patch of exactly the provided fields that differ. The sheet that results must be writable (see `sheet_problem`); a patch that restates the current values is a
 //! `mutation.no-op`.
 
-use super::SetSheet;
+use crate::standards::v1::subsets::any::schema::mutations::set_sheet::SetSheet;
 use crate::standards::v1::subsets::any::schema::{snapshot::{sheet_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

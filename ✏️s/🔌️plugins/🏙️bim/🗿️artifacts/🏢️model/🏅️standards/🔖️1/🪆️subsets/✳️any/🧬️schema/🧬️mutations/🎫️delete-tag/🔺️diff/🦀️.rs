@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteTag`: the tag leaves in one sparse diff (see the shared cascade); the elements it names stay untouched.
 
-use super::super::cascade;
-use super::DeleteTag;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_tag::DeleteTag;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -1,6 +1,8 @@
 //! 🧩️ Play app: `Puzzle3dPlayApp`, the `ArtifactEditor` the framework mounts, and its context menu, render and window measure bodies.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 /// 🧩️ The puzzle-3d play editor: the `ArtifactEditor` the framework mounts as `EditorApp<Puzzle3dPlayApp>`. It holds no
 /// state of its own — every call checks the document instance's [`Puzzle3dSession`] out of the session registry, and

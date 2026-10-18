@@ -10,10 +10,10 @@ fn retire_nodes_with_frontier(nodes: impl IntoIterator<Item = XmlNode>, mut pend
     pending.extend(nodes);
     while let Some(node) = pending.pop() { if let XmlNode::Element { children, .. } = node { pending.extend(children); } }
 }
-pub(crate) fn retire_nodes(nodes: impl IntoIterator<Item = XmlNode>) { retire_nodes_with_frontier(nodes, Vec::new()); }
-pub(crate) struct XmlNodeList(pub(crate) Vec<XmlNode>);
+pub fn retire_nodes(nodes: impl IntoIterator<Item = XmlNode>) { retire_nodes_with_frontier(nodes, Vec::new()); }
+pub struct XmlNodeList(pub(crate) Vec<XmlNode>);
 impl Drop for XmlNodeList { fn drop(&mut self) { retire_nodes(std::mem::take(&mut self.0)); } }
-pub(crate) struct XmlDocumentOwner(pub(crate) Option<XmlDocument>);
+pub struct XmlDocumentOwner(pub(crate) Option<XmlDocument>);
 impl Drop for XmlDocumentOwner { fn drop(&mut self) { if let Some(mut doc) = self.0.take() { let mut nodes = std::mem::take(&mut doc.prolog); nodes.extend(std::mem::take(&mut doc.epilog)); nodes.extend(doc.root.take()); retire_nodes(nodes); } } }
 /// ♻️ Retires an enclosing owner's complete typed XML document iteratively.
 pub fn retire_xml_document(doc:XmlDocument){drop(XmlDocumentOwner(Some(doc)));}

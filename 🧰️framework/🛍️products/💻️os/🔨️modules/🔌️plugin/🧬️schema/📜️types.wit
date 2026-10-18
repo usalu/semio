@@ -1,0 +1,140 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1): shared primitives used by
+/// every other interface in this package. `pure` and `host-async` are the only interfaces `world
+/// actor` *imports* (B1 world-collapse) — everything below is plain data, carried across the
+/// `poll`/`start-job`/`checkpoint` exports and the `host-async` imports alike.
+interface types {
+  /// 📦️ The container-less dynamic-value wire grammar (`store::pack_rt::encode_wire_value` /
+  /// `pack::encode_record_body`) — no JSON string, no `resource`, anywhere on this ABI's data path.
+  type pack = list<u8>;
+  /// 🔢️ Correlates an `effect` that expects an answer with the `event.completed`/`http-chunk`/
+  /// `job-progress` that answers it. Allocated by the guest's `RequestRegistry`, never reused
+  /// within one instance's lifetime.
+  type request-id = u64;
+  /// 🪪️ Host-assigned identity of one app instance living inside this actor.
+  type instance-id = u32;
+  /// 🔁️ Monotonic per-surface UI patch counter, and the document/transaction revision counter.
+  type revision = u64;
+
+  variant plugin-error {
+    fault(pack),
+    /// 🛑️ Original admission refusal carries its fixed code without allocating a failure payload.
+    operation-refusal(u32),
+  }
+
+  /// 🎯️ Where a `send-message` effect or `event.message`/`event.request` addresses. Replaces
+  /// `backbone-poll`, the `DocumentChanged` push, `InvokeExtension` replies and topic subscriptions
+  /// with one variant (design-abi.md §2).
+  variant message-endpoint {
+    shell(instance-id),
+    backbone(string),
+    plugin-instance(instance-id),
+    extension(string),
+    topic(string),
+  }
+
+  enum inference-cache-mode {
+    cold,
+    incremental,
+    bypass,
+  }
+
+  /// 🎟️ Independent caller authority; every zero axis remains zero through inference dispatch.
+  record retained-clone-grant {
+    maximum-items: u64,
+    maximum-copy-bytes: u64,
+    maximum-capacity-bytes: u64,
+    maximum-release-bytes: u64,
+    maximum-depth: u64,
+  }
+
+  record inference-budget {
+    allocation-bytes: u64,
+    work-units: u64,
+    recursion-depth: u32,
+  }
+
+  record inference-diagnostic {
+    code: string,
+    message: string,
+    severity: string,
+    parameters: list<tuple<string, string>>,
+  }
+
+  record inference-provenance {
+    owner: string,
+    inference-schema: string,
+    algorithm-version: u32,
+    policy-version: u32,
+    source-dialect: string,
+  }
+
+  /// 🧬️ Kept verbatim (design-abi.md §1) even though `artifact-infer` is no longer a WIT export —
+  /// the cold job kind `semio.infer` (jobs.wit `start-job`) carries this shape JSON-encoded inside
+  /// its opaque `input`/output `pack`, so the typed record stays documentation-of-record for that
+  /// job's wire contract.
+  record artifact-inference-request {
+    wire-version: u32,
+    owner: string,
+    artifact-kind: string,
+    artifact-schema: string,
+    artifact-schema-version: u32,
+    document-schema: string,
+    document-schema-version: u32,
+    inference-schema: string,
+    inference-schema-version: u32,
+    algorithm-version: u32,
+    policy-version: u32,
+    revision: u64,
+    generation: u64,
+    source-dialect: string,
+    policy: list<u8>,
+    budgets: inference-budget,
+    retained: retained-clone-grant,
+    cancellation-id: string,
+    previous-state: option<list<u8>>,
+    requested-cache-mode: inference-cache-mode,
+    canonical-payload: list<u8>,
+    dependencies: list<tuple<string, list<u8>>>,
+  }
+
+  record retained-clone-progress {
+    copied-items: u64,
+    copied-bytes: u64,
+    retained-capacity-bytes: u64,
+    released-bytes: u64,
+  }
+
+  record artifact-inference-result {
+    retirement-progress: retained-clone-progress,
+    wire-version: u32,
+    owner: string,
+    artifact-kind: string,
+    artifact-schema: string,
+    artifact-schema-version: u32,
+    document-schema: string,
+    document-schema-version: u32,
+    inference-schema: string,
+    inference-schema-version: u32,
+    algorithm-version: u32,
+    policy-version: u32,
+    revision: u64,
+    generation: u64,
+    source-dialect: string,
+    policy: list<u8>,
+    budgets: inference-budget,
+    retained: retained-clone-grant,
+    previous-state: option<list<u8>>,
+    requested-cache-mode: inference-cache-mode,
+    canonical-payload: list<u8>,
+    dependencies: list<tuple<string, list<u8>>>,
+    diagnostics: list<inference-diagnostic>,
+    provenance: inference-provenance,
+    validity: string,
+    quality: string,
+    complete: bool,
+    actual-cache-mode: inference-cache-mode,
+    cancellation-id: string,
+  }
+}

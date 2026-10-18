@@ -981,4 +981,9 @@ mod tests;
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use dag::{dag_take_pending_open_instance_id};
-use dag::{dag_draw_lod_label, dag_pick_targets_at_screen_json, dag_set_canvas_palette};
+use semio_framework_os_infinite_board_dag_graph::{dag_pick_targets_at_screen_json, entity_screen_json, hovered_node_id};
+use semio_framework_os_infinite_board_dag_host::{derive_pointer_plan, set_computing_progress, set_dimmed, set_node_statuses};
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+use semio_framework_os_infinite_board_dag_graph::{dag_draw_lod_label, selection_union_bounds_screen_json, slider_overlay_state_json};
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+use semio_framework_os_infinite_board_dag_host::dag_set_canvas_palette;

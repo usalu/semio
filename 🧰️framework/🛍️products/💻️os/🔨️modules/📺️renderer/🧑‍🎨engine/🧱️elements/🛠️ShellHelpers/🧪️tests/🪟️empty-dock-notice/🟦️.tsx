@@ -17,9 +17,6 @@ afterEach(async () => {
   await uiI18n.changeLanguage("en");
 });
 
-it("validates the bilingual empty dock contract", () => {
-});
-
 it("centers the actual localized Mode notice and wraps it without adding a window or control", async () => {
   vi.stubGlobal("ResizeObserver", class { observe(): void {} unobserve(): void {} disconnect(): void {} });
   vi.stubGlobal("MutationObserver", class { observe(): void {} disconnect(): void {} takeRecords(): MutationRecord[] { return []; } });

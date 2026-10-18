@@ -2,8 +2,10 @@
 /** 🧭️ `@semio-tech/repo-lib` folder policy router: `bun ./📜️script.ts policy`. */
 import { readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { defineLint, getWorkspaceRoot, runPolicyOnlyMain, type FolderLinter } from "./📦️packages/🟦️typescript/🟦️.ts";
-import { loadCatalogTaxonomy } from "./🔍️discovery/🟦️.ts";
+import { defineLint, type FolderLinter } from "./🚨️policy/🧩️linters/🟦️.ts";
+import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
+import { runPolicyOnlyMain } from "./🚨️policy/🧭️entrypoints/🟦️.ts";
+import { loadCatalogTaxonomy } from "./🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 export const policy = defineLint("repo-lib-folder", (l: FolderLinter) => {
   const root = getWorkspaceRoot();

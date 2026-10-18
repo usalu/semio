@@ -120,7 +120,7 @@ use semio_framework_plugin::WindowEngagement;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 pub(crate) mod context {
     use crate::editor::shooting::*;
 use crate::{editor::shooting::commands::camera, editor::shooting::commands::document, editor::shooting::commands::scene};

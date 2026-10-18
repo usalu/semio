@@ -1,5 +1,6 @@
 
 use crate::*;
+use semio_s_artifact_block_2d_model::BLOCK_2D_SCHEMA;
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_kind_declares_the_2d_block_interchange_kind() {

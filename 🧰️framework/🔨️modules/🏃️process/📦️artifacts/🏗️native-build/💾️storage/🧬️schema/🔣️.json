@@ -294,7 +294,7 @@
     "ImageProtocol": {
       "const": {
         "format": "UDIF",
-        "filesystem": "Case-sensitive HFS+",
+        "filesystem": "Case-sensitive APFS",
         "minimumFilesystemBytes": 33554432,
         "unitBytes": 1048576,
         "journalMaximumBytes": 1048576,
@@ -1205,7 +1205,8 @@
         "operation": {
           "enum": [
             "publish",
-            "retire"
+            "retire",
+            "retain-inactive"
           ]
         },
         "root": {
@@ -1249,7 +1250,8 @@
           "enum": [
             "container",
             "publish",
-            "retire"
+            "retire",
+            "retain-inactive"
           ]
         },
         "directory": {
@@ -1859,6 +1861,139 @@
         "writerGrant": false,
         "sameIssuedPayload": true,
         "sameCapturePurpose": true
+      }
+    },
+    "ProtectedArtifactInputGroupProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "stage-immutable-artifact-input-group",
+        "maximumBatches": 64,
+        "maximumRoots": 64,
+        "maximumFilesPerRoot": 512,
+        "maximumFiles": 32768,
+        "maximumBytes": 67108864,
+        "maximumDirectories": 65536,
+        "maximumWork": 4194304,
+        "maximumEncodedBytes": 134217728,
+        "maximumObservationBytes": 65536
+      }
+    },
+    "ProtectedArtifactInputGroupBatch": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ProtectedArtifactInputBatch"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "roots": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 1
+            }
+          }
+        }
+      ]
+    },
+    "ProtectedArtifactInputGroup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "batches"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "stage-immutable-artifact-input-group"
+        },
+        "batches": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/definitions/ProtectedArtifactInputGroupBatch"
+          }
+        }
+      }
+    },
+    "ProtectedArtifactInputGroupObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "inputSha256",
+        "roots",
+        "files",
+        "directories",
+        "bytes",
+        "installedQualified",
+        "allocationRetired"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "staged-immutable-artifact-input-group"
+        },
+        "inputSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "roots": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "files": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32768
+        },
+        "directories": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "installedQualified": {
+          "const": false
+        },
+        "allocationRetired": {
+          "const": false
+        }
+      }
+    },
+    "JournalProjectionRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "text",
+        "capacityBytes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1048576
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
       }
     }
   }

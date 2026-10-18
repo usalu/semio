@@ -1,10 +1,24 @@
 import { SelectionCombineJob } from "@semio-tech/framework/pixels/editing";
 /** 🧪️ Moving focus to the tools must preserve an asynchronously computed pixel selection. */
-import {act,cleanup,fireEvent,render,waitFor} from "@semio-tech/ui-react/test";
+import {act,cleanup,fireEvent,render,waitFor as waitForWithin} from "@semio-tech/ui-react/test";
 import {afterEach,expect,test,vi} from "vitest";
+import {getCurrentTest} from "vitest/suite";
 import sharp from "sharp";
 import {PixelEditingOverlay as ControlledPixelEditingOverlay} from "../../🟦️.tsx";
 import {useState,type ComponentProps} from "react";
+
+/** ⏳ Waits for an asynchronous editing job under the test's own budget: a loaded machine delays the job, it never races a 1 s default. */
+const waitFor:typeof waitForWithin=(check,timeoutMs)=>waitForWithin(check,Math.max(timeoutMs??0,getCurrentTest()!.timeout));
+
+/** 🧊️ Holds the job's next zero-delay turn yield from `hold` until `release`, so the test observes the UI at an exact job step instead of racing the timer queue: the job asks for its yield right after the step that called `hold`, and nothing else schedules a zero-delay timer in between. */
+function jobStepGate(){
+  const real=globalThis.setTimeout;let armed=false,held:(()=>void)|null=null;
+  vi.spyOn(globalThis,"setTimeout").mockImplementation(((handler:TimerHandler,delay?:number,...args:unknown[])=>{
+    if(armed&&!delay){armed=false;held=()=>{real(handler as never,0,...args);};return 0 as unknown as ReturnType<typeof setTimeout>;}
+    return real(handler as never,delay,...args);
+  }) as typeof setTimeout);
+  return {hold:()=>{armed=true;},release:()=>{const resume=held;held=null;resume?.();}};
+}
 
 /** 🎛️ Applies semantic config commands as the editor does before republishing its scene. */
 function PixelEditingOverlay(props:Omit<ComponentProps<typeof ControlledPixelEditingOverlay>,"paintTarget"|"maskValue"|"fillTolerance">){
@@ -193,10 +207,10 @@ for(const cancellation of fixture.combinationCancellation.actions)test("selectio
   await waitFor(()=>expect((view.getByRole("button",{name:"Select all pixels"}) as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(view.getByRole("button",{name:"Rectangle selection"}));
   fireEvent.change(view.getByRole("combobox",{name:"Selection",exact:true}),{target:{value:"subtract"}});
-  const advance=SelectionCombineJob.prototype.advance;let cancelled=false,observedProgress:number|undefined;
+  const advance=SelectionCombineJob.prototype.advance,gate=jobStepGate();
   const spy=vi.spyOn(SelectionCombineJob.prototype,"advance").mockImplementation(function(this:SelectionCombineJob,budget?:number){
     const progress=advance.call(this,budget);
-    if(!progress.done)setTimeout(()=>{observedProgress=view.container.querySelector("progress")?.value;act(()=>{if(cancellation==="Switch utility")view.rerender(editor("paintBrush"));else fireEvent.click(view.getByRole("button",{name:cancellation,exact:true}));});cancelled=true;},0);
+    if(!progress.done)gate.hold();
     return progress;
   });
   const canvas=view.getByRole("application",{name:"Image tools"});canvas.setPointerCapture=()=>{};canvas.releasePointerCapture=()=>{};canvas.hasPointerCapture=()=>true;
@@ -204,9 +218,11 @@ for(const cancellation of fixture.combinationCancellation.actions)test("selectio
     canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:0,clientY:0}));
     canvas.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:1,button:0,clientX:width,clientY:height}));
   });
-  await waitFor(()=>expect(cancelled).toBe(true),10_000);
+  await waitFor(()=>expect(view.container.querySelector("progress")?.value).toBe(0.75));
+  act(()=>{if(cancellation==="Switch utility")view.rerender(editor("paintBrush"));else fireEvent.click(view.getByRole("button",{name:cancellation,exact:true}));});
+  gate.release();
   await waitFor(()=>expect(view.container.querySelector("progress")).toBeNull());
-  expect(spy).toHaveBeenCalledTimes(1);expect(observedProgress).toBe(0.75);expect(editCalls(dispatch)).toEqual([]);
+  expect(spy).toHaveBeenCalledTimes(1);expect(editCalls(dispatch)).toEqual([]);
   expect((view.getByRole("button",{name:"Deselect"}) as HTMLButtonElement).disabled).toBe(cancellation==="Deselect");
   view.container.querySelector("details")!.open=true;fireEvent.click(view.getByRole("button",{name:"Apply",exact:true}));
   await waitFor(()=>expect(editCalls(dispatch)).toHaveLength(1));

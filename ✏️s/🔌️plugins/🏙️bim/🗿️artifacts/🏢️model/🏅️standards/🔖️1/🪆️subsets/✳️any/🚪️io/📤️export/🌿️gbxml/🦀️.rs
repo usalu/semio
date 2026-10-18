@@ -7,7 +7,7 @@
 //! The export runs in stages ([`STAGES`]) so a job can report progress and stop between two of them.
 //! 📎 https://www.gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html, https://www.iso.org/standard/65708.html
 
-use super::holders::{holder_of, layers_of, Holder};
+use crate::standards::v1::subsets::any::io::export::holders::{holder_of, layers_of, Holder};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
 #[cfg(test)] use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnvelopeSpace};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{ModelSnapshot, OpeningKind}};
@@ -19,12 +19,9 @@ use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
 use std::collections::{BTreeMap, BTreeSet};
 
-#[path = "🧱️codec/🦀️.rs"]
-pub mod codec;
-#[path = "📐️geometry/🦀️.rs"]
-pub mod geometry;
-#[path = "🔗️pairing/🦀️.rs"]
-pub mod pairing;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::gbxml::codec;
+pub use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::io::export::gbxml::geometry;
+pub use semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::export::gbxml::pairing;
 #[path = "📊️tables/🦀️.rs"]
 pub mod tables;
 
@@ -229,7 +226,7 @@ pub type Stage = (&'static str, fn(&mut Build<'_>));
 /// 🪜️ The stages in the order they run; each reads the plan the stages before it left.
 pub const STAGES: &[Stage] = &[("zones", zones), ("spaces", spaces), ("constructions", constructions), ("windows", windows), ("surfaces", surfaces)];
 
-fn zones(b: &mut Build<'_>) {
+pub fn zones(b: &mut Build<'_>) {
     let model = b.model;
     let mut groups: BTreeMap<(String, Option<u64>, Option<u64>), Vec<&str>> = BTreeMap::new();
     for space in b.inferred.energy_envelopes.keys() {
@@ -265,7 +262,7 @@ fn zones(b: &mut Build<'_>) {
     }
 }
 
-fn spaces(b: &mut Build<'_>) {
+pub fn spaces(b: &mut Build<'_>) {
     let (model, inferred) = (b.model, b.inferred);
     for id in model.sites.keys() {
         let xml = b.plan.names.id("campus", id);
@@ -315,7 +312,7 @@ fn spaces(b: &mut Build<'_>) {
     }
 }
 
-fn material(plan: &mut Plan, model: &ModelSnapshot, id: &str, thickness: f64) -> Option<String> {
+pub fn material(plan: &mut Plan, model: &ModelSnapshot, id: &str, thickness: f64) -> Option<String> {
     let key = (id.to_string(), (thickness * 1e6).round() as i64);
     if let Some(row) = plan.materials.get(&key) {
         return Some(row.xml.clone());
@@ -335,7 +332,7 @@ fn layer(plan: &mut Plan, material_xml: &str) -> String {
     xml
 }
 
-fn constructions(b: &mut Build<'_>) {
+pub fn constructions(b: &mut Build<'_>) {
     let (model, inferred) = (b.model, b.inferred);
     let mut by_signature: BTreeMap<String, String> = BTreeMap::new();
     for (space, envelope) in &inferred.energy_envelopes {
@@ -441,7 +438,7 @@ fn opening_row(b: &Build<'_>, names: &mut Names, space: &str, child: &EnvelopeSu
     })
 }
 
-fn surfaces(b: &mut Build<'_>) {
+pub fn surfaces(b: &mut Build<'_>) {
     let inferred = b.inferred;
     let storey_of: BTreeMap<&str, &str> = inferred.energy_envelopes.iter().map(|(space, envelope)| (space.as_str(), envelope.storey.as_str())).collect();
     let space_xml: BTreeMap<String, String> = b.plan.spaces.iter().map(|row| (row.cad.clone(), row.xml.clone())).collect();
@@ -726,6 +723,4 @@ impl Serializer<ModelSnapshot> for ModelIntoGbxml {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

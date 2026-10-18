@@ -30,7 +30,7 @@
           "🌎️hub/🧪️tests/👤️browser-actor-checks/🟦️.ts",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs",
           "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts",
-          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts"
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts"
         ],
         "owner": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin",
         "plan": "These are compiler-toolchain calls: the plugin browser bundle parses the generated component JavaScript with the compiler's parser, the dependency inventory reads import graphs with it, and the hub script type-checks its worker entry points. They are recorded so that any other production import fails loudly. They shrink as those reads move to the repository's own parsers, and no path may join."

@@ -2,9 +2,9 @@
 //! are valid counter-clockwise loops with the holes strictly inside, the offset is finite and a slope stays within [0, 89 degrees).
 //! Area, volume and the sloped solid are inferred.
 
-use super::super::elements;
-use super::super::horizontal_rules::{holes_fault, loop_fault, slope_fault};
-use super::CreateSlab;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::{holes_fault, loop_fault, slope_fault};
+use crate::standards::v1::subsets::any::schema::mutations::create_slab::CreateSlab;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

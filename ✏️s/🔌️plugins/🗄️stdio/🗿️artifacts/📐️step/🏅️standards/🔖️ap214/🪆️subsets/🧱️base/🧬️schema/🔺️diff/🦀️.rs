@@ -606,9 +606,9 @@ impl DiffAlgebra<StepSnapshot> for StepDiff {
 //#region 🔖️DemoCases
 /// 🧪️ P2-FG1: representative `StepDiff` cases built declaratively — `diff_grammar_conformance_law` and `protocol_walk_law` fodder: the empty
 /// diff, every top-level field plus all three `entities`/`args` collection-triple flavors and `StepEntityDiff.complex`, and a header-only diff.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<StepDiff> {
+pub fn demo_diff_cases() -> Vec<StepDiff> {
     let entity = StepEntityDiff {
         name: Some("RENAMED_POINT".into()),
         args: Some(StepArgsDiff {

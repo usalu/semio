@@ -38,7 +38,7 @@ use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::ViewEmit;
 use semio_framework_plugin::Viewer;
 use semio_framework_plugin::ViewerApp;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 🏷️ Every verb the read-only Home is dispatched with: the host's sealed directory page, and nothing a human authors.

@@ -1,6 +1,6 @@
 //! 🧷️ `set-wall-end-join` payload. Sets the authored join preference of one end of a wall: mitered, butted or not joined; an absent join returns the end to the geometry (automatic). Only the wall layout reads it, nothing is derived here.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,13 +13,16 @@ pub struct SetWallEndJoin {
     pub join: Option<crate::standards::v1::subsets::any::schema::snapshot::EndJoin>,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetWallEndJoin {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetWallEndJoin
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetWallEndJoin>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "wall", kind: "set-wall-end-join", record: "SetWallEndJoin" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the {:?} join of wall \"{}\" to {}", self.end, self.id, self.join.map_or("automatic".to_string(), |join| format!("{join:?}"))), &format!("Verbindung am Wandende {:?} von \"{}\" auf {} setzen", self.end, self.id, self.join.map_or("automatisch".to_string(), |join| format!("{join:?}"))))

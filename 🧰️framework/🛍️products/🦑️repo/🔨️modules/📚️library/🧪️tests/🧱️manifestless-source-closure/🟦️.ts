@@ -6,7 +6,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import ts from "typescript";
-import { semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 /** 🧾️ Reads the parse diagnostics every `createSourceFile` result carries and the public `SourceFile` type omits. */
 const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
@@ -27,7 +27,7 @@ type Fixture = Readonly<{
 
 const fixtureRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🧫️fixtures/🧱️manifestless-source-closure/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🧪️tests/🧫️fixtures/🧱️manifestless-source-closure/🔣️.json"), "utf8")) as Fixture;
 
 const leaf = { python: "🐍️.py", typescript: "🟦️.ts" } as const;
 

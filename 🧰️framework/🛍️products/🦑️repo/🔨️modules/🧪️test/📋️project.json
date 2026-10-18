@@ -135,6 +135,7 @@
         "schemaSources",
         "{workspaceRoot}/**/*fixtures/**/🦠️mutation/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/*/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🔨️modules/🛂️manifest/🔣️input-labels.json",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json"
       ],
@@ -441,9 +442,8 @@
       "{projectRoot}/🧪️tests/🦠️mutation-catalogs/🟦️.ts",
       "{projectRoot}/🖥️host/🐍️.py",
       "{projectRoot}/📦️packages/🟦️typescript/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/🟨️.mjs",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
     ],
     "htmlSourcePairs": [

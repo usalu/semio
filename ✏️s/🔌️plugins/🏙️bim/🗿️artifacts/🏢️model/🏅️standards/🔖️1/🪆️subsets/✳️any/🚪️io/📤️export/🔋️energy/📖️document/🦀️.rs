@@ -3,7 +3,7 @@
 //! file its editor opens: a record print of the same members, the model as a value) and as the JSON document the artifact's `s.stdio.json` export writes (members in camel case).
 //! 📎 ../../../../../../../../../🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json
 
-use super::target::EnergyModel;
+use crate::standards::v1::subsets::any::io::export::energy::target::EnergyModel;
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
 use semio_framework_value::{DslValue, ToValue};
 
@@ -57,7 +57,7 @@ pub fn dsl_text(model: &EnergyModel) -> Result<String, String> {
 /// 🧾️ The JSON text of the snapshot of `model`, two-space indented with a final newline.
 pub fn json_text(model: &EnergyModel) -> Result<String, String> {
     let compact = semio_framework_pack_json::to_json_string(&EnergySnapshot::of(model.clone()));
-    let value = super::super::json::codec::read_value(&compact)?;
-    Ok(super::super::json::codec::document_text(&value))
+    let value = crate::standards::v1::subsets::any::io::export::json::codec::read_value(&compact)?;
+    Ok(crate::standards::v1::subsets::any::io::export::json::codec::document_text(&value))
 }
 

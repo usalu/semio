@@ -33,14 +33,6 @@
       "glue": "../../🟦️.ts"
     },
     {
-      "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
-      "kind": "typescript",
-      "boundary": "package-reexport",
-      "anchor": "export function getLibRoot",
-      "glue": "../../🟦️.ts"
-    },
-    {
       "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
       "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
       "kind": "javascript-declaration",
@@ -216,16 +208,6 @@
     }
   ],
   "ownerDirectoryChains": [
-    {
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts",
-      "parentKind": "modules",
-      "members": [
-        {
-          "name": "📚️library",
-          "kind": "members-of-modules"
-        }
-      ]
-    },
     {
       "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
       "parentKind": "modules",

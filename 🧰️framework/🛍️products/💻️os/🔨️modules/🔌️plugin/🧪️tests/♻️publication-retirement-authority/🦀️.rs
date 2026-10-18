@@ -34,7 +34,7 @@ use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::config::
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::mutations::TestMutation;
 use semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::document::TestSnapshot;
 use semio_framework::{Fault, ViewModel, ViewWindowInstance};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use std::sync::Arc;
 
 

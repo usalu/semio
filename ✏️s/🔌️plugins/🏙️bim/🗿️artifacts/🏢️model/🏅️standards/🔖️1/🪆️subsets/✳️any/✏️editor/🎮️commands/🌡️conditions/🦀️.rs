@@ -85,6 +85,4 @@ pub fn handle<P: Conditions>(payload: &P, doc: &ArtifactView<'_, ModelSnapshot>,
     payload.emit(doc.snapshot, &ctx.selected)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

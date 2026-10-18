@@ -1,6 +1,6 @@
 //! 🖌️ `set-material` payload. Patches exactly the provided fields of a material; layouts, solids and quantities that use it follow by inference.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{MaterialCategory, ModelSnapshot, Rgb}, diff::{patches::MaterialPatch, ModelDiff}, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{MaterialCategory, ModelSnapshot, Rgb}, diff::{patches::MaterialPatch, ModelDiff}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -34,13 +34,16 @@ impl SetMaterial {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetMaterial {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetMaterial
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetMaterial>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "material", kind: "set-material", record: "SetMaterial" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_material::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_material::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit material \"{}\"", self.id), &format!("Material \"{}\" ändern", self.id))

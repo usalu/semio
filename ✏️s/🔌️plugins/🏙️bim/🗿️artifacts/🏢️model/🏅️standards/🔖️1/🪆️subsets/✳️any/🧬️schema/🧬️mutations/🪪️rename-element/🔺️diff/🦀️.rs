@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `RenameElement`: a one-field patch of the name (a grid line's label) in whichever collection holds the id.
 
-use super::super::elements;
-use super::RenameElement;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::rename_element::RenameElement;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

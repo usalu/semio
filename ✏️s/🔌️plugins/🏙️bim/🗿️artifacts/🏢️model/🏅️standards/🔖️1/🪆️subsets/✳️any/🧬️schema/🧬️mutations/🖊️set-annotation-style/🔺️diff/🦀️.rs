@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetAnnotationStyle`: a sparse annotation style patch of exactly the provided fields that differ. The record that results must break none of the create rules: the name is not blank, the text height is positive, mark size, gap and overshoot are lengths of zero or more and at most six decimals are printed.
 //! Providing only equal values, or no field, is a no-op.
 
-use super::super::annotating;
-use super::SetAnnotationStyle;
+use crate::standards::v1::subsets::any::schema::mutations::annotating;
+use crate::standards::v1::subsets::any::schema::mutations::set_annotation_style::SetAnnotationStyle;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

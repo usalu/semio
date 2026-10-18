@@ -180,9 +180,6 @@ pub mod editor {
             }
         }
         #[cfg(test)]
-        #[path = "../../../🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs"]
-        pub mod unit_tests;
-        #[cfg(test)]
         #[path = "../../../🪆️subsets/✳️any/✏️editor/🧪️tests/🤖️agent-lane/🦀️.rs"]
         pub mod agent_lane_tests;
         #[cfg(test)]

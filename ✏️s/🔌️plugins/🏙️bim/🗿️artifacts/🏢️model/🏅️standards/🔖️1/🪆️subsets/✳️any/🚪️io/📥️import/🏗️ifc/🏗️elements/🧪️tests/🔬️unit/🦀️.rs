@@ -1,4 +1,20 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::Profile;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::Section;
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, text, Doc, Loop};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, phase_of};
+#[allow(unused_imports)]
+use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, BeamType, Column, ColumnType, GridLine, Layer, LayerFunction, Point2, Slab, SlabType, Space, SpaceBoundary, TopConstraint, Vertex};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_contract::part21::Part21Value;
+use crate::standards::v1::subsets::any::io::import::ifc::elements::{profile_of, profile_top};
+use crate::standards::v1::subsets::any::io::import::ifc::elements::*;
 
 #[test]
 fn sections_become_profiles_and_report_their_top() {

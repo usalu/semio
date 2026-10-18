@@ -6,7 +6,7 @@
 //! [`CHORD_TOLERANCE`](super::super::super::bodies::CHORD_TOLERANCE). Crossing walls (X joins) are a join and never a clash; a beam that
 //! ends inside a column, wall or beam rests on it and does not clash with it.
 
-use super::{Diagnostic, DiagnosticCode, Inputs};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Inputs};
 use crate::standards::v1::subsets::any::schema::inferences::bodies::{ceiling_bodies, storey_bodies, Body, BodyKind};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;

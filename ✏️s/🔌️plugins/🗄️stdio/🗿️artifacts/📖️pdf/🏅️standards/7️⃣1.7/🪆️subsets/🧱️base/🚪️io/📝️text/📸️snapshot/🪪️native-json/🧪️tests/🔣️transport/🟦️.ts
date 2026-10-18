@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import {Buffer} from "node:buffer";
 import fixture from "./🧫️fixtures/🔣️.json";
 import {pdfCosFromNativeJson,pdfFunctionFromNativeJson} from "./../../🟦️.ts";
-import {parsePdfObject,parsePdfFunction} from "./../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import { parsePdfObject, parsePdfFunction } from "../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import {schema as pdfNativeSchema} from "./../../🧬️schema/🟦️.ts";
 const oracle=new Ajv({strict:false});
 const word=(number:number):bigint=>{const bytes=Buffer.alloc(8);bytes.writeDoubleBE(number);return bytes.readBigUInt64BE()};

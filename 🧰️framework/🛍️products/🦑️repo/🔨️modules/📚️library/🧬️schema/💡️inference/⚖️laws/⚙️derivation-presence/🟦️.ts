@@ -1,4 +1,4 @@
-import type { BreachRecord } from "../../../../🟦️.ts";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceText, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME, policyStripEmoji } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import type { PolicyInferenceFamilySource, PolicyInferenceSourceIssue } from "../../🧱️contract/🟦️.ts";

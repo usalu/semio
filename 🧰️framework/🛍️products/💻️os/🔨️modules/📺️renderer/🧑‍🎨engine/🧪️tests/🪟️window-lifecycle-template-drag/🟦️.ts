@@ -92,9 +92,9 @@ describe("🪟️ window lifecycle and template drag contract", () => {
   });
 
   test("React exposes the same MIME, cancellation and targeted drop oracle", () => {
-    const canvas = readFileSync(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧱️elements", "🎨️Canvas", "🟦️.tsx"), "utf8");
+    const canvas = readModuleTreeSource(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧱️elements", "🎨️Canvas", "🟦️.tsx"));
     const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🏛️ShellHost", "🟦️.tsx"));
-    const tests = readFileSync(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧪️tests", "🧪️owned-locale-detector-retirement", "🟦️.tsx"), "utf8");
+    const tests = readModuleTreeSource(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧪️tests", "🧪️owned-locale-detector-retirement", "🟦️.tsx"));
     expect(canvas).toContain(`COMPOSE_WINDOW_TEMPLATE_MIME = "${fixture.mime}"`);
     expect(canvas).toContain("insertWindowAtDropZone");
     expect(canvas).toContain("cancelWindowTemplatePointerDrag");
@@ -178,7 +178,7 @@ describe("🪟️ window lifecycle and template drag contract", () => {
     expect(displayBranchIds(law, true, law.staleGeneration)).toEqual([]);
 
     const panels = readModuleTreeSource(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"));
-    const tree = readFileSync(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧱️elements", "🌳️Tree", "🟦️.tsx"), "utf8");
+    const tree = readFileSync(join(engineRoot, "..", "..", "..", "..", "..", "🔨️modules", "🖱️ui", "🧱️elements", "🌳️Tree", "↕️sortable-item", "🟦️.tsx"), "utf8");
     const projectionBuilder = panels.slice(panels.indexOf("function worldProjectionTemplatesToTreeItems"), panels.indexOf("function displayWindowKindIcon"));
     expect(projectionBuilder).toContain("defaultOpen: false");
     expect(projectionBuilder).toContain("template.children?.length ? { items:");

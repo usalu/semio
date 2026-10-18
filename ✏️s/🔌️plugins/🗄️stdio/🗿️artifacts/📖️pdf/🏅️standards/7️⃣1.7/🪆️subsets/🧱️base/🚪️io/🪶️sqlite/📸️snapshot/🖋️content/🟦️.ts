@@ -1,6 +1,8 @@
 import {writePdfArtifactReference,readPdfArtifactReference} from "../📦️artifact-reference/🟦️.ts";
 /** 🖋️ Handwritten PDF operators, named operands and intrinsic inline image entities. */
-import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInlineImage, PdfImageBody, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInlineImage } from "../../../../🧬️schema/📸️snapshot/🖋️content/🟦️.ts";
+import type { PdfImageBody } from "../../../../🧬️schema/📸️snapshot/🖼️resource/🟦️.ts";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, type PdfCell, type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary, readPdfDictionary, writePdfObject, readPdfObject, writePdfFilters, readPdfFilters } from "../🧩️cos/🟦️.ts";
 import { writePdfColorSpace, readPdfColorSpace, pdfColorNumberColumns } from "../🌈️color/🟦️.ts";

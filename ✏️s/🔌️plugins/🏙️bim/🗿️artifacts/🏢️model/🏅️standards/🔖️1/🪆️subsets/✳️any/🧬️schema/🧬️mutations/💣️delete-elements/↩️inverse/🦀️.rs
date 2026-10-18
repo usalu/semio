@@ -2,8 +2,8 @@
 //! property or classification setter per removed data entry, in storage order so that the store, which replays the vector reversed,
 //! restores the base exactly. Empty when the selection is refused.
 
-use super::super::cascade;
-use super::DeleteElements;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteElements, base: &ModelSnapshot) -> Vec<Op>

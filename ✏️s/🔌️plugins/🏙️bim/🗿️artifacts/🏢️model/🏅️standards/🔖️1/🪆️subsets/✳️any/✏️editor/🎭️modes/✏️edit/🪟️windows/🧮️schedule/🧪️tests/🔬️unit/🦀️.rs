@@ -1,13 +1,39 @@
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::bim_window_action;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Phase, Schedule, ScheduleField, ScheduleKey, ScheduleOp};
+#[allow(unused_imports)]
+use semio_framework_plugin::TableCell;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiTreeActionPlacement;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiTreeItemAction;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+use crate::editor::bim::modes::edit::windows::schedule::{text, row};
 use crate::editor::bim::modes::edit::windows::schedule::config::BimScheduleWindowConfig;
-use super::*;
+use crate::editor::bim::modes::edit::windows::schedule::*;
 use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::{preset, PRESETS};
 use crate::standards::v1::subsets::any::io::text::snapshot::decode_model_snapshot_json;
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json"));
 
 fn house() -> (ModelSnapshot, ModelInference) {
-    let mut snapshot = decode_model_snapshot_json(HOUSE).expect("the committed house decodes");
+    let mut snapshot = decode_model_snapshot_json((*HOUSE)).expect("the committed house decodes");
     snapshot.spaces.get_mut("sp-1").expect("the living room").floor_finish = Some("m-wood".into());
     for key in PRESETS {
         snapshot.schedules.insert(format!("sch-{key}"), preset(key, key).expect("the preset exists"));

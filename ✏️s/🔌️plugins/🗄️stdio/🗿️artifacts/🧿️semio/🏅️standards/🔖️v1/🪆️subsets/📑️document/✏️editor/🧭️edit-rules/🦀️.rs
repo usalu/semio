@@ -109,7 +109,7 @@ fn locate<'a>(tree: &'a DslValue, segs: &[String], path: &str) -> Result<Located
 }
 
 /// 🧱️ Edits of the block tree resolve to the block kind they address: a whole block is inserted, removed or replaced, a heading level, list order, paragraph style, run text, run style or image block is set; every other edit inside a block replaces that block. Everything else goes through [`EDIT_RULES`].
-pub(crate) fn special(event: &SnapshotEditEvent, snapshot: &SemioDocumentSnapshot) -> Result<Option<Vec<SemioDocumentMutation>>, Fault> {
+pub fn special(event: &SnapshotEditEvent, snapshot: &SemioDocumentSnapshot) -> Result<Option<Vec<SemioDocumentMutation>>, Fault> {
     let path = event_path(event);
     let segs = segments(path)?;
     if segs.first().map(String::as_str) != Some("blocks") {

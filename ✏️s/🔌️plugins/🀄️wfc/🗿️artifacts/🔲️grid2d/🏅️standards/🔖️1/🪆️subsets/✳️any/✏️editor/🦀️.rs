@@ -46,7 +46,7 @@ use semio_framework_plugin::ToolRunJobPurpose;
 use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_plugin::ViewModel;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️ActiveUtility
 /// 🧰️ The utility armed for the window being rendered or dispatched: the React host arms utilities

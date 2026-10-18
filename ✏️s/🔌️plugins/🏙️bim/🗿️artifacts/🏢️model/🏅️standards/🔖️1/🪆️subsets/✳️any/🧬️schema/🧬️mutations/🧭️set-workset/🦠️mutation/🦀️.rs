@@ -1,5 +1,5 @@
 //! 🧭️ set-workset authored mutation.
-use crate::*;
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, WorksetPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -15,10 +15,13 @@ impl SetWorkset {
     pub fn patch(&self) -> WorksetPatch { WorksetPatch { name: self.name.clone(), default_visible: self.default_visible.clone() } }
     pub fn from_patch(id: String, patch: WorksetPatch) -> Self { Self { id, name: patch.name, default_visible: patch.default_visible } }
 }
-impl MutationKind<ModelSnapshot, ModelMutation> for SetWorkset {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetWorkset
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetWorkset>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "workset", kind: "set-workset", record: "SetWorkset" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> { Ok(super::inverse::inverse(self, base)) }
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::set_workset::diff::diff(self, base) }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::set_workset::inverse::inverse(self, base)) }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Set workset", "Ändern") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

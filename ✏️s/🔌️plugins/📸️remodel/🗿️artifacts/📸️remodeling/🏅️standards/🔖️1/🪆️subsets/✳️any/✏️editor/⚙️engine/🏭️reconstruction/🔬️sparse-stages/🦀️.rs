@@ -50,11 +50,11 @@ enum FeaturePhase {
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct FeaturePreparation {
     pub(super) frame: usize,
-    pub(super) phase: FeaturePhase,
-    pub(super) cursor: usize,
+    pub phase: FeaturePhase,
+    pub cursor: usize,
     pub(super) gray: Vec<f32>,
     /// 🧭️ The resumable detector, alive through [`FeaturePhase::Detect`].
-    detection: Option<remodeling_feature::BoundedDetectionPreparation>,
+    pub detection: Option<remodeling_feature::BoundedDetectionPreparation>,
     /// 🗻️ The detector's pyramid, kept through [`FeaturePhase::Describe`] for the descriptors.
     pyramid: Option<remodeling_image::Pyramid>,
     pub(super) keypoints: Vec<remodeling_feature::Keypoint>,
@@ -65,8 +65,8 @@ pub(super) struct FeaturePreparation {
 pub(super) struct PairMatchPreparation {
     pub(super) frame_a: usize,
     pub(super) frame_b: usize,
-    pub(super) query: usize,
-    pub(super) candidate: usize,
+    pub query: usize,
+    pub candidate: usize,
     best_distance: u32,
     best_index: u32,
     second_distance: u32,
@@ -129,9 +129,9 @@ struct TrackGroup {
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(super) struct TrackPreparation {
-    pub(super) phase: TrackPhase,
-    pair: usize,
-    matched: usize,
+    pub phase: TrackPhase,
+    pub pair: usize,
+    pub matched: usize,
     /// Sized once for every observation the pair table can name (see [`Self::with_capacity`]): a
     /// table growing past 2¹⁵ keypoint nodes rehashed every one of them inside a single bounded union
     /// step (10 ms on the adversarial law's 200 000-match pair), and an ordered map instead spends as
@@ -145,7 +145,7 @@ pub(super) struct TrackPreparation {
     /// keypoints of one frame in one track, which is a wrong match by definition — so a wrong
     /// match can no longer fuse two good tracks into a conflicting group that is then thrown away.
     pub(super) frames: Vec<u64>,
-    grouping_cursor: usize,
+    pub grouping_cursor: usize,
     groups: std::collections::BTreeMap<usize, TrackGroup>,
     pub(super) tracks: Vec<Vec<(usize, u32)>>,
 }

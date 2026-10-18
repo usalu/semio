@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-native-decode"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Native decode source of the job protocol: a paid original source lends actual native decode imports and receives the concrete producer's effects"
+
+[package.metadata.semio]
+role = "framework"
+id = "job-native-decode"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+
+[dev-dependencies]

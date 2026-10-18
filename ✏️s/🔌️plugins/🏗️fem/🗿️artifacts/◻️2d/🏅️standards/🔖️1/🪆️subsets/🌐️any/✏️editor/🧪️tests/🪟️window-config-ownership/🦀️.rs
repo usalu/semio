@@ -91,7 +91,7 @@ use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::ViewModel;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 #[test]
 fn fem2d_window_config_document_admission_rejects_window_and_os_fields() {

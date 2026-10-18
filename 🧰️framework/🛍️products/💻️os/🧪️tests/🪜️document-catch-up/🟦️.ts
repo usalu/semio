@@ -3,7 +3,7 @@ import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪�
 import { workerLawFakesV1, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
-type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
+type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 
@@ -78,7 +78,7 @@ export async function registerDocumentCatchUpTests(vitest: Vitest, dependencies:
           fields.checkpoint = { ...fields.checkpoint, baselineFrontier: { ...fields.checkpoint.baselineFrontier, documentId } };
           state.executionTargetLease = new DocumentExecutionTargetLease(documentExecutionTargetLeaseMintToken, parseDocumentExecutionTargetLeaseFieldsV1(fields), fixture.hubOrigin, hexBytes(fixture.componentHex), hexBytes(fixture.descriptorHex));
           state.actor = "hub.v1.self";
-          const local = { id: `${documentId}:local-1`, documentId, actor: "hub.v1.self" } as unknown as import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState["pendingMutations"][number];
+          const local = { id: `${documentId}:local-1`, documentId, actor: "hub.v1.self" } as unknown as import("../../🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts").ArtifactState["pendingMutations"][number];
           state.pendingMutations = [local];
           state.pendingBatches.set(7, [local]);
           const frontier = (ordinal: number, head: string) => ({ document_id: documentId, head_edit_ordinal: ordinal, head_edit_id: head, last_commit_seq: ordinal, chain_hash: new Array(32).fill(ordinal) });

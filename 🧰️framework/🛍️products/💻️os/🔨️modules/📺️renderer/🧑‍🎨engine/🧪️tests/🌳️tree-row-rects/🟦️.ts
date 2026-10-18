@@ -102,8 +102,9 @@ describe("🌳️ the tree row metric is one number in every presentation", () =
   });
 
   it("sizes every Tree row shell on that metric and nothing else", () => {
-    const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🟦️.tsx"), "utf8");
-    expect(tree).toContain('const treeRowHeightPx = domSizePx("treeRowUiSpacing");');
+    const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🎨️chrome/🟦️.tsx"), "utf8");
+    const alignment = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/📏️row-alignment/🟦️.tsx"), "utf8");
+    expect(alignment).toContain('export const treeRowHeightPx = domSizePx("treeRowUiSpacing");');
     expect(tree).toContain('const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--tree-row-height))] max-h-[var(--tree-row-max-height,var(--tree-row-height))] w-full min-w-0 select-none overflow-hidden";');
   });
 
@@ -124,10 +125,10 @@ describe("🧊️ the wgpu side takes the same metric from the same token", () =
   const wgpuRoot = resolve(uiRoot, "🎯️targets/🧊️wgpu");
 
   it("derives `Theme::tree_row_height` from `dom::TREE_ROW_UI_SPACING`, never a literal", () => {
-    const theme = readFileSync(resolve(wgpuRoot, "🎨️theme/🦀️.rs"), "utf8");
+    const theme = readFileSync(resolve(uiRoot, "🎨️styling/🎭️theme/🧩️component/🦀️.rs"), "utf8");
     expect(theme).toContain("tree_row_height: chrome_px(dom::TREE_ROW_UI_SPACING),");
-    const widgets = readFileSync(resolve(wgpuRoot, "🪀️widgets/🦀️.rs"), "utf8");
-    expect(widgets).toContain("pub(crate) const TREE_ROW_HEIGHT: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_ROW_UI_SPACING) as f32;");
+    const widgets = readFileSync(resolve(uiRoot, "🎨️styling/🎭️theme/📏️metrics/🦀️.rs"), "utf8");
+    expect(widgets).toContain("pub const TREE_ROW_HEIGHT: f32 = (ui_styling::metrics::chrome::UI_SPACING_COMPACT_PX * ui_styling::metrics::dom::TREE_ROW_UI_SPACING) as f32;");
   });
 
   it("leaves layout as the single writer of tree row geometry", () => {
@@ -149,7 +150,7 @@ describe("🌳️ the Actions tree keeps React's intrinsic row density", () => {
 
   it("pins React's own row metric and its fixed row shell", () => {
     expect(density.rowHeightPx).toBe(rowHeightPx);
-    const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🟦️.tsx"), "utf8");
+    const tree = readFileSync(resolve(uiRoot, "🧱️elements/🌳️Tree/🎨️chrome/🟦️.tsx"), "utf8");
     expect(tree).toContain('const treeRowShellClassName = "relative h-[var(--tree-row-height,var(--size-workbench))] min-h-[var(--tree-row-min-height,var(--tree-row-height))] max-h-[var(--tree-row-max-height,var(--tree-row-height))] w-full min-w-0 select-none overflow-hidden";');
     expect(tree).toContain('const treeItemLabelSlotClassName = "flex h-full min-w-0 flex-1 items-center overflow-hidden text-xs font-normal leading-none select-text";');
   });

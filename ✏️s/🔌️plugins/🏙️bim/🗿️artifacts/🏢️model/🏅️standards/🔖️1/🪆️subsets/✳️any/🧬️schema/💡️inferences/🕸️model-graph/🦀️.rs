@@ -7,34 +7,34 @@
 //! node dispatch and the dependency of each node (the honesty contract of `dep_input`), [`projection`] copies node values into [`ModelInference`] (whole or incrementally) and
 //! [`session`] is the stepped, cancellable entry point of every consumer and [`instance`] reaches the one session per mounted instance that the framework owns, for the editor, the viewer, the exports and the imports. See `r7-design-model-graph.md` and `r7-api-model-session.md` in the BIM-PLUGIN ticket.
 
-use super::super::annotation_layout::StoreyAnnotations;
-use super::super::curtain_layout::CurtainLayout;
-use super::super::diagnostics::{Diagnostic, DiagnosticIndex};
-use super::super::element_solids::{SolidEntry, SolidKey};
-use super::super::components::ComponentEntry;
-use super::super::families::FamilyValue;
-use super::super::mep::clash::MepClashes;
-use super::super::mep::MepValue;
-use super::super::clash_sets::{ClashSetResult, SolidProbe};
-use super::super::rule_results::RuleResult;
-use super::super::opening_frames::{CutRect, HostExtent, OpeningFrame};
-use super::super::phase_visibility::PhaseVisibility;
-use super::super::plan_linework::PlanLinework;
-use super::super::quantities::{ElementQuantity, QuantityTotals};
-use super::super::schedules::ScheduleTable;
-use super::super::zones::{SchemeTotals, ZoneTotals};
-use super::super::spaces::StoreyRooms;
-use super::super::stair_runs::StairRun;
-use super::super::ramp_runs::RampRun;
-use super::super::storey_levels::StoreyLevel;
-use super::super::wall_layout::joins::Band;
-use super::super::view_linework::ViewLinework;
-use super::super::sheet_layout::SheetLayout;
-use super::super::wall_layout::attach::AttachSurface;
-use super::super::effective_properties::EffectiveProperties;
-use super::super::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
-use super::super::wall_layout::WallLayout;
-use super::super::ModelInference;
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
+use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
+use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
@@ -401,8 +401,8 @@ impl ModelNode {
 #[derive(Clone, Debug, PartialEq)]
 #[derive(semio_framework_value::RetireOwned)]
 pub enum Data {
-    Structure(Arc<super::super::analytical_members::StructuralAnalysis>),
-    OptionScope(Arc<super::super::option_scope::OptionScope>),
+    Structure(Arc<crate::standards::v1::subsets::any::schema::inferences::analytical_members::StructuralAnalysis>),
+    OptionScope(Arc<crate::standards::v1::subsets::any::schema::inferences::option_scope::OptionScope>),
     Level(StoreyLevel),
     Band(Option<Band>),
     Cut(CutRect),
@@ -585,14 +585,8 @@ pub fn infer_selected<const WANT: u64>(snapshot: &ModelSnapshot) -> ModelInferen
 pub type Values = BTreeMap<ModelNode, ModelValue>;
 //#endregion 🔖️InferredField
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/📈️incremental/🦀️.rs"]
-mod incremental_tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🧬️families/🦀️.rs"]
-mod family_tests;
+
+
+

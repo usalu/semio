@@ -2,9 +2,9 @@
 //! building and both materials must exist, the axis must have length, and spacings, offsets and the mullion profile must be sound.
 //! No height is stored: it is inferred from the top constraint.
 
-use super::super::elements;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::curtain_wall_flaw;
-use super::CreateCurtainWall;
+use crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall::CreateCurtainWall;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

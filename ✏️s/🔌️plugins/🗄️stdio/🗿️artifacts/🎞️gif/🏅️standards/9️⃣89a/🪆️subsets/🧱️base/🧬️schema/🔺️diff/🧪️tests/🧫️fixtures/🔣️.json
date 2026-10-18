@@ -1,0 +1,288 @@
+{
+  "valid": [
+    {
+      "name": "empty",
+      "value": {}
+    },
+    {
+      "name": "loop count cleared",
+      "value": {
+        "loopCount": null
+      }
+    },
+    {
+      "name": "loop count set",
+      "value": {
+        "loopCount": 65535
+      }
+    },
+    {
+      "name": "frame rows",
+      "value": {
+        "frames": {
+          "removed": [
+            3
+          ],
+          "modified": [
+            {
+              "index": 0,
+              "diff": {
+                "delayCs": 7,
+                "disposal": "restoreToPrevious",
+                "transparentIndex": null,
+                "userInput": true,
+                "plainText": {
+                  "left": 0,
+                  "top": 0,
+                  "width": 8,
+                  "height": 8,
+                  "cellWidth": 1,
+                  "cellHeight": 1,
+                  "fgColorIndex": 1,
+                  "bgColorIndex": 0,
+                  "text": "hi"
+                }
+              }
+            }
+          ],
+          "added": [
+            {
+              "index": 1,
+              "frame": {
+                "left": 0,
+                "top": 0,
+                "width": 2,
+                "height": 1,
+                "interlace": false,
+                "lct": null,
+                "indices": [
+                  0,
+                  1
+                ],
+                "delayCs": 5,
+                "disposal": "doNotDispose",
+                "transparentIndex": null,
+                "userInput": false,
+                "plainText": null
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "comment rows",
+      "value": {
+        "comments": {
+          "removed": [
+            0
+          ],
+          "modified": [
+            {
+              "index": 1,
+              "text": "edited"
+            }
+          ],
+          "added": [
+            {
+              "index": 2,
+              "text": "new"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "extension rows",
+      "value": {
+        "appExtensions": {
+          "removed": [],
+          "modified": [
+            {
+              "index": 0,
+              "extension": {
+                "identifier": [
+                  78,
+                  69,
+                  84,
+                  83,
+                  67,
+                  65,
+                  80,
+                  69
+                ],
+                "authCode": [
+                  50,
+                  46,
+                  48
+                ],
+                "data": [
+                  1,
+                  0,
+                  0
+                ]
+              }
+            }
+          ],
+          "added": [
+            {
+              "index": 1,
+              "extension": {
+                "identifier": [
+                  78,
+                  69,
+                  84,
+                  83,
+                  67,
+                  65,
+                  80,
+                  69
+                ],
+                "authCode": [
+                  50,
+                  46,
+                  48
+                ],
+                "data": [
+                  1,
+                  0,
+                  0
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "palette",
+      "value": {
+        "gct": {
+          "sorted": true,
+          "colors": [
+            {
+              "r": 0,
+              "g": 1,
+              "b": 255
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "unknown disposal",
+      "value": {
+        "frames": {
+          "modified": [
+            {
+              "index": 0,
+              "diff": {
+                "disposal": "bogus"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "delay above u16",
+      "value": {
+        "frames": {
+          "modified": [
+            {
+              "index": 0,
+              "diff": {
+                "delayCs": 65536
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "loop count above u16",
+      "value": {
+        "loopCount": 65536
+      }
+    },
+    {
+      "name": "short identifier",
+      "value": {
+        "appExtensions": {
+          "added": [
+            {
+              "index": 0,
+              "extension": {
+                "identifier": [
+                  1,
+                  2,
+                  3
+                ],
+                "authCode": [
+                  50,
+                  46,
+                  48
+                ],
+                "data": [
+                  1,
+                  0,
+                  0
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "comment without text",
+      "value": {
+        "comments": {
+          "modified": [
+            {
+              "index": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "unknown property",
+      "value": {
+        "comments": {
+          "extra": []
+        }
+      }
+    },
+    {
+      "name": "frame missing plain text",
+      "value": {
+        "frames": {
+          "added": [
+            {
+              "index": 0,
+              "frame": {
+                "left": 0,
+                "top": 0,
+                "width": 2,
+                "height": 1,
+                "interlace": false,
+                "lct": null,
+                "indices": [
+                  0,
+                  1
+                ],
+                "delayCs": 5,
+                "disposal": "doNotDispose",
+                "transparentIndex": null,
+                "userInput": false
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

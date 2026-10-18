@@ -19,9 +19,6 @@ for (const row of fixture.sources) it(`independent browser clocks preserve ${row
   }
 });
 
-it("validates the shared replaceable deadline contract", () => {
-});
-
 for (const row of fixture.cases) it(`browser timers replay ${row.id}`, () => {
   vi.useFakeTimers();
   vi.setSystemTime(0);

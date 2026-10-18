@@ -3,10 +3,15 @@ import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🦀️laws/🟦️.ts";
 /** 📦️ flow flow Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { runCmd, runCargo, runVitest, runRepositoryExactCargoLaws, runRepositoryTestCommand, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { strict as assert } from "node:assert";
+import { readModuleTreeSource } from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 
@@ -19,7 +24,7 @@ if (segments[0] === "flow-window-ownership") {
       const { testFlowWindowOwnershipOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🟦️.ts");
       testFlowWindowOwnershipOracle();
       if (segments[1] === "check" || segments[1] === "native") {
-        const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+        const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts");
         const mode = segments[1] === "check" ? ["check", "--tests"] : ["test", "--lib", "flow_window_ownership_", "--", "--nocapture"];
         await runCargo([mode[0]!, "--manifest-path", resolve(this.root, "Cargo.toml"), "-p", "semio-s-artifact-flow-flow", ...mode.slice(1)], this.repoRoot);
       }
@@ -171,7 +176,7 @@ class AddWidgetRetainedCheckScript extends BundleScript {
       assert(source.includes(witness), `missing retained addWidget source witness: ${witness}`);
     assert(source.includes('dialect.artifact_kind != "s.stdio.semio"') && source.includes('dialect.standard != "v1"') && source.includes('dialect.subset != "flow"'), "retained addWidget must bind the exact captured child dialect");
     assert(source.includes("add_widget::handle(payload, &view") && source.includes("FlowInstanceOperationOwner"), "retained addWidget must reuse the typed child planner under the instance session owner");
-    const retainedCommandSource = await Bun.file(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs")).text();
+    const retainedCommandSource = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs"));
     assert.deepEqual(fixture.progress, { en: "Applying command", de: "Befehl wird angewendet" });
     assert(retainedCommandSource.includes('{"en":"Applying command","de":"Befehl wird angewendet"}'), "retained addWidget progress must bind the production bilingual preview");
     assert(source.includes('action_interactive_job("addWidget", semio_framework_plugin::InteractiveJobClassification::Migrated)'), "the manifest must expose one migrated addWidget route");

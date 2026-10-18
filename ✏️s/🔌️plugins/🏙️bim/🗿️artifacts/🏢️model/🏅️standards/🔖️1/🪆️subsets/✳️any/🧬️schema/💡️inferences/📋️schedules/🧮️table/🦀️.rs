@@ -4,9 +4,9 @@
 //! Ordering of cells: empty before numbers before texts; numbers by value; texts case-folded with every maximal run of ASCII digits compared as an integer (`D2` before `D10`), ties by the raw text.
 //! Filters: a number cell against a numeric value compares as numbers (equality within 1e-9), everything else compares the case-folded display text; `Contains` is a substring test, `Empty` an empty cell.
 
-use super::super::super::quantities::ElementQuantity;
-use super::rows::{sources, AuthoredView, Reader};
-use super::{RowKind, ScheduleCell, ScheduleRow, ScheduleTable};
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+use crate::standards::v1::subsets::any::schema::inferences::schedules::rows::{sources, AuthoredView, Reader};
+use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell, ScheduleRow, ScheduleTable};
 use crate::standards::v1::subsets::any::schema::snapshot::{Schedule, ScheduleKey, ScheduleOp};
 use std::cmp::Ordering;
 use std::collections::BTreeMap;

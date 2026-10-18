@@ -5,11 +5,11 @@ import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import { visit } from "jsonc-parser";
 import { afterEach, describe, expect, it } from "vitest";
-import type { DiscoveredPackage } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import type { DiscoveredPackage } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
 import { renderOwnerPublications } from "../../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/📣️publication/🟦️.ts";
 import { APP_CHANNEL_VERSION } from "../../../../../🟦️.ts";
 import { readDescriptorJson } from "../../🔎️discovery/🟦️.ts";
-import { declaredComponentKind } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { declaredComponentKind } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
 
 const manifestSchema = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/📣️publication/🧬️schema/🔣️.json"), "utf8"));

@@ -1,0 +1,12 @@
+{
+ "tag": "wtests",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "🧰️wal-test-fixtures",
+  "🛑️recovery-abort-laws",
+  "📏️neutral-committed-span-laws",
+  "🧮️capacity-preflight-and-neutral-recovery-laws",
+  "🧩️segment-and-artifact-wal-laws"
+ ]
+}

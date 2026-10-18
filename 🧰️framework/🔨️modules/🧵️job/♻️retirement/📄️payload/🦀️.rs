@@ -57,7 +57,7 @@ impl std::fmt::Debug for JobPayloadSlot{fn fmt(&self,formatter:&mut std::fmt::Fo
 impl Drop for JobPayloadSlot{fn drop(&mut self){assert!(std::thread::panicking()||self.is_empty(),"job payload slot abandoned its original carrier");}}
 
 fn turn(demand:RetirementDemand,grant:RetainedCloneGrant,owner:impl FnOnce(RetainedCloneGrant)->Result<(RetainedCloneStep,bool),ValueError>)->Result<RetainedCloneStep,ValueError>{advance_retirement_turn(demand,grant,owner).map_err(|error|match error{RetirementTurnError::Owner(error)|RetirementTurnError::Receipt(error)=>error})}
-fn ledger_demands(ledger:&Option<Arc<JobPayloadOperationLedger>>)->RetirementDemand{RetirementDemand{release_bytes:if ledger.is_some(){semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>()}else{0},depth:usize::from(ledger.is_some()),..Default::default()}}
+pub(super) fn ledger_demands(ledger:&Option<Arc<JobPayloadOperationLedger>>)->RetirementDemand{RetirementDemand{release_bytes:if ledger.is_some(){semio_framework_value::shared_retirement_allocation_bytes::<JobPayloadOperationLedger>()}else{0},depth:usize::from(ledger.is_some()),..Default::default()}}
 pub(super) fn close_ledger(ledger:&mut Option<Arc<JobPayloadOperationLedger>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let demand=ledger_demands(ledger);turn(demand,grant,|_|{let Some(original)=ledger.take()else{return Ok((RetainedCloneStep::Complete(Default::default()),true));};let released_bytes=if let Some(original)=Arc::into_inner(original){drop(original);demand.release_bytes}else{0};Ok((RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()}),true))})}
 fn parent(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"job payload parent depth overflow"))?;Ok(demand)}
 
@@ -119,7 +119,3 @@ pub fn close_step_outcome_slot(slot:&mut JobOutcomeSlot,grant:RetainedCloneGrant
         Ok((RetainedCloneStep::Progress(step.progress()),false))
     })
 }
-
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

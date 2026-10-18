@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import * as snapshot from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import * as sqliteOwner from "../🟦️.ts";
 import * as artifact from "../../../../🧬️schema/🟦️.ts";
 import * as diff from "../../../../🧬️schema/🔺️diff/🟦️.ts";
 import fixture from "./🧫️fixtures/🔣️.json";
@@ -35,8 +36,8 @@ function setWords(s:snapshot.Fem2dSnapshot,word:string):void{
 function copy(d:SqliteDatabase):{tables:{name:string;sql:string;rows:{rowid:bigint;values:SqliteValue[]}[]}[]}{return{tables:d.tables.map(t=>({...t,rows:t.rows.map(r=>({...r,values:[...r.values]}))}))}}
 
 test("fem2d handwritten semantic SQLite capability is owned by its snapshot", () => {
- expect(Object.hasOwn(snapshot, "fem2dSnapshotToSqliteDatabase")).toBe(true);
- expect(Object.hasOwn(snapshot, "fem2dSnapshotFromSqliteDatabase")).toBe(true);
+ expect(Object.hasOwn(sqliteOwner, "fem2dSnapshotToSqliteDatabase")).toBe(true);
+ expect(Object.hasOwn(sqliteOwner, "fem2dSnapshotFromSqliteDatabase")).toBe(true);
 });
 
 test("fem2d complete literal state and empty holes through independent SQLite edits",async()=>{

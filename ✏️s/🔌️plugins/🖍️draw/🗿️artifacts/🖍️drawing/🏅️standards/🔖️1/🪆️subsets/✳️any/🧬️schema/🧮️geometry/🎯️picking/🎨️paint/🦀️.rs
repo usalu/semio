@@ -20,8 +20,8 @@ fn retire_polygons(polygons:&mut Vec<Vec<Point>>)->bool{if polygons.pop().is_som
 /// 🧱️ Stores only admitted fixed-shape segments; completed results contain no source references.
 pub struct PaintedPathHitJob{
  query:PaintedPathQuery,style:Option<StrokeGeometryStyle>,segments:Vec<semio_framework_2d::PathSegment>,flat:Vec<FlatContour>,contours:Vec<StrokeContour>,polygons:Vec<Vec<Point>>,
- flatten:Option<PathFlattenJob>,flatten_retirement:Option<PathFlattenRetirement>,outline:Option<StrokeOutlineJob>,outline_retirement:Option<StrokeOutlineRetirement>,
- phase:&'static str,next:usize,at:usize,edge:usize,work:u64,winding:i64,boundary:bool,stroke_hit:bool,bounds:[f64;4],output:Option<PaintedPathHit>,cancelled:bool,failure:Option<String>,cleanup:u8,
+ pub flatten:Option<PathFlattenJob>,flatten_retirement:Option<PathFlattenRetirement>,outline:Option<StrokeOutlineJob>,outline_retirement:Option<StrokeOutlineRetirement>,
+ pub phase:&'static str,next:usize,at:usize,edge:usize,work:u64,winding:i64,boundary:bool,stroke_hit:bool,bounds:[f64;4],output:Option<PaintedPathHit>,cancelled:bool,failure:Option<String>,cleanup:u8,
 }
 impl PaintedPathHitJob{
  /// 🎬️ Uses the resolved leaf's actual geometry transform and renderer stroke semantics.

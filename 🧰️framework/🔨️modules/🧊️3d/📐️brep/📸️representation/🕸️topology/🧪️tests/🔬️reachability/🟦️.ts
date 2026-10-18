@@ -12,7 +12,7 @@ test("original arena growth identity agrees with Three",()=>{
 });
 /** 🎟️ Independent Three topology and strict neutral ownership authority. */
 test("original ReachSet neutral topology agrees with Three",()=>{
-  const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),"utf8"));const law=read("../🕸️topology/🧪️tests/🧫️fixtures/🎟️reachability/🔣️.json");const schema=read("../../🧬️schema/🎟️reachability/🔣️.json");const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);const missing={...law};delete missing.physical;expect(validate(missing)).toBe(false);
+  const read=(path:string)=>JSON.parse(readFileSync(new URL(path,import.meta.url),"utf8"));const law=read("../🧫️fixtures/🎟️reachability/🔣️.json");const schema=read("../../🧬️schema/🎟️reachability/🔣️.json");const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);const missing={...law};delete missing.physical;expect(validate(missing)).toBe(false);
   const geometry=new BoxGeometry(1,1,1);const position=geometry.getAttribute("position");const index=geometry.getIndex()!;const vertices=new Set<string>();const edges=new Set<string>();let area=0,volume=0;
   for(let face=0;face<6;face++){const corners=[0,1,3,2].map(offset=>new Vector3().fromBufferAttribute(position,face*4+offset));for(let i=0;i<4;i++){const key=(point:Vector3)=>point.toArray().join(",");vertices.add(key(corners[i]));edges.add([key(corners[i]),key(corners[(i+1)%4])].sort().join("|"));}}
   for(let cursor=0;cursor<index.count;cursor+=3){const [a,b,c]=[0,1,2].map(offset=>new Vector3().fromBufferAttribute(position,index.getX(cursor+offset)));area+=new Triangle(a,b,c).getArea();volume+=a.dot(b.clone().cross(c))/6;}

@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "maximumDependencies": 4096,
+  "byteGrowth": {
+    "nullBytes": 4,
+    "digestCharacters": 64,
+    "digestJsonBytes": 66,
+    "perBinding": 62
+  },
+  "modes": [
+    "prototype",
+    "release"
+  ],
+  "refusals": [
+    "plan-copy",
+    "plan-proxy",
+    "array-proxy",
+    "array-extra",
+    "sparse",
+    "accessor",
+    "row-proxy",
+    "row-extra",
+    "missing",
+    "duplicate",
+    "wrong-unit",
+    "wrong-semantic",
+    "bad-digest",
+    "null-digest",
+    "bound-rewrite",
+    "schema-weaken"
+  ],
+  "environment": {
+    "é": "zwei",
+    "😀": "three"
+  }
+}

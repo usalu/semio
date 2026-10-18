@@ -97,7 +97,7 @@ export async function registerTests1(
       } finally { rmSync(root, { recursive: true, force: true }); }
     });
     it("publishes every literal import in the actual generated shard worker and preserves activation expressions", async () => {
-      const { shardWorkerSource } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      const { shardWorkerSource } = await import("../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts");
       await init;
       const source = shardWorkerSource();
       const importsOf = (text: string) => parse(text)[0].map(row => ({ kind: row.d === -1 ? "static" : row.d === -2 ? "import.meta" : "dynamic", specifier: row.n ?? null, expression: text.slice(row.s, row.e) }));

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { join } from "node:path";
-import { runCargo } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
 
 if (import.meta.main) {
   const [command, artifact, standard, subset, ...surface] = process.argv.slice(2);

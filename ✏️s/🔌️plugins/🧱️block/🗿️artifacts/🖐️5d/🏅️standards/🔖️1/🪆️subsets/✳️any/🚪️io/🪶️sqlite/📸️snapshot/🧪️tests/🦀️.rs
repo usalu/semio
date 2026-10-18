@@ -5,6 +5,11 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use crate::*;
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
+use semio_s_artifact_block_5d_model::Block5dPart2d;
+use semio_s_artifact_block_5d_model::Block5dPart3d;
+use semio_s_artifact_block_5d_model::Block5dGripKind;
+use semio_s_artifact_block_5d_model::Block5dGripTemplate;
+use semio_s_artifact_block_5d_model::BLOCK_5D_SCHEMA;
 fn laws() -> serde_json::Value {
     serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()
 }

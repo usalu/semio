@@ -1,7 +1,7 @@
 //! 🏘️ The zoning rows of the entity table: how a zone, an area scheme and the zone and finish references of a space read off the snapshot, how an edited value becomes a `set-zone`, `set-area-scheme`
 //! or `set-space` mutation, what a new zone or area scheme is, and the pickers (a zone, a finish material, an area measure) the properties panel offers for the reference rows.
 
-use super::{number, parse_number, parse_text, partial, rename_element, variant, Created, FieldRow, InferredRow};
+use crate::editor::bim::entities::{number, parse_number, parse_text, partial, rename_element, variant, Created, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::mutations::set_space::SetSpace;
 use crate::standards::v1::subsets::any::schema::{snapshot::{AreaMeasure, AreaScheme, ModelSnapshot, Zone}, diff::{Assigned, patches::SpacePatch}, inferences::ModelInference, mutations::ModelMutation};
@@ -120,10 +120,10 @@ pub static ZONE_INFERRED: &[InferredRow] = &[
     inferred!("floor_finish_area", field_floor_finish_area, |_, inference, id| inference.zone_totals.get(id).map(|row| number(row.floor_finish_area))),
     inferred!("wall_finish_area", field_wall_finish_area, |_, inference, id| inference.zone_totals.get(id).map(|row| number(row.wall_finish_area))),
     inferred!("ceiling_finish_area", field_ceiling_finish_area, |_, inference, id| inference.zone_totals.get(id).map(|row| number(row.ceiling_finish_area))),
-    inferred!("envelope_area", field_envelope_area, |s, inference, id| super::energy::zone_total(s, inference, id, |totals| totals.envelope_area)),
-    inferred!("h_t_prime", field_h_t_prime, |s, inference, id| super::energy::zone_total(s, inference, id, |totals| totals.h_t_prime)),
-    inferred!("a_over_v", field_a_over_v, |s, inference, id| super::energy::zone_total(s, inference, id, |totals| totals.a_over_v)),
-    inferred!("glazing_ratio", field_glazing_ratio, |s, inference, id| super::energy::zone_total(s, inference, id, |totals| totals.glazing_ratio)),
+    inferred!("envelope_area", field_envelope_area, |s, inference, id| crate::editor::bim::entities::energy::zone_total(s, inference, id, |totals| totals.envelope_area)),
+    inferred!("h_t_prime", field_h_t_prime, |s, inference, id| crate::editor::bim::entities::energy::zone_total(s, inference, id, |totals| totals.h_t_prime)),
+    inferred!("a_over_v", field_a_over_v, |s, inference, id| crate::editor::bim::entities::energy::zone_total(s, inference, id, |totals| totals.a_over_v)),
+    inferred!("glazing_ratio", field_glazing_ratio, |s, inference, id| crate::editor::bim::entities::energy::zone_total(s, inference, id, |totals| totals.glazing_ratio)),
 ];
 
 /// 🗃️ The distinct usages of the spaces of the model, so an area scheme can be written by what exists.
@@ -160,6 +160,4 @@ pub fn create_area_scheme(_: &ModelSnapshot, id: &str, _parent: &str, name: &str
 }
 //#endregion 🔖️Create
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

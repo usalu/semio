@@ -5,7 +5,7 @@ import { readFileSync } from "node:fs";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 test("canonical sealer constructor admits the exact edit frame and identity buffers before transfer", () => {
-  const law = read("../../🧫️fixtures/🔣️.json");
+  const law = read("../🧫️fixtures/🔣️.json");
   const capacity = law.editHeaderBytes + law.identityCapacityBytes.reduce((a: number, b: number) => a + b, 0);
   expect(capacity).toBeLessThanOrEqual(law.maximumBytes);
   for (const row of law.cases) {
@@ -17,13 +17,13 @@ test("canonical sealer constructor admits the exact edit frame and identity buff
     expect(moved.identities).toEqual(accepted ? [row.actor, row.id, row.id] : []);
     for (const [index, text] of moved.identities.entries()) expect(new TextEncoder().encode(text).byteLength).toBeLessThanOrEqual(law.identityCapacityBytes[index]);
   }
-  const native = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
+  const native = readFileSync(new URL("../../../../🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs", import.meta.url), "utf8");
   expect(native.includes("pub fn constructor_demand(")).toBe(true);
   expect(native.includes("pub fn admit(")).toBe(true);
 });
 
 test("canonical sealer retirement separates tiny copy work from exact constructor and backing release", () => {
-  const law = read("../../🧫️fixtures/🔣️.json");
+  const law = read("../🧫️fixtures/🔣️.json");
   for (const copy of law.retirement.copyGrants) {
     let state = { remaining: law.retirement.stages.map((row: any) => row.name) };
     for (const row of law.retirement.stages) {
@@ -40,7 +40,7 @@ test("canonical sealer retirement separates tiny copy work from exact constructo
     }
     expect(state.remaining).toEqual([]);
   }
-  const native = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
+  const native = readFileSync(new URL("../../../../🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs", import.meta.url), "utf8");
   const fixtures = readFileSync(new URL("../../../🧪️tests/🔬️unit/🦀️.rs", import.meta.url), "utf8");
   expect(native.includes("grant.maximum_bytes")).toBe(false);
   expect(fixtures.includes("admit_typed_controlled_retirement(value, grant)")).toBe(true);

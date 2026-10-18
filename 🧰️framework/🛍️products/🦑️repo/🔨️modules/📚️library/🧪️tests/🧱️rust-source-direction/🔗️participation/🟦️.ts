@@ -4,11 +4,11 @@ import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import glob from "fast-glob";
 import { parse as parseToml } from "@iarna/toml";
-import { inspectRustModuleGraph } from "../../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph } from "../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { mutationTaxonomyResolveRustRoute, type MutationTaxonomyRustRoute } from "../../../🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../../..");
-const corpus = JSON.parse(readFileSync(join(library, "🧫️fixtures/🧱️rust-source-direction/🔗️participation/🔣️.json"), "utf8"));
+const corpus = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🧱️rust-source-direction/🔗️participation/🔣️.json"), "utf8"));
 
 type Row = { id: string; files: Record<string, string>; alternate?: Record<string, string>; sourcePath: string; sourceScope: readonly string[]; specifier: string; unavailable: string | null; expected: MutationTaxonomyRustRoute };
 const rows = corpus.routes as readonly Row[];

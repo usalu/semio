@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️Attrs
 #[derive(Default, Clone)]
-struct ContainerAttrs {
+pub(super) struct ContainerAttrs {
     pub(super) keyword: Option<String>,
     pub(super) lines_layout: bool,
     pub(super) retire_with: Option<syn::Path>,

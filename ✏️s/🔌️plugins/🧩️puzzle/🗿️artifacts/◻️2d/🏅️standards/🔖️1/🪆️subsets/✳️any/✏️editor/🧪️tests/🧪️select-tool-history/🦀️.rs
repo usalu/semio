@@ -8,7 +8,7 @@
 //! references, the session band and the per-mutation outcomes. The overwrite equals a fresh fold of the edited log, both
 //! through the app and through a standalone store (`state_before`, `begin_report_replay`).
 
-use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, puzzle2d_entity_label};
+use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, puzzle2d_entity_label, board_snapshot_nodes};
 use crate::editor::puzzle2d::modes::edit::windows::overview;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::InteractionTarget;
@@ -130,7 +130,7 @@ use semio_framework_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use std::collections::{BTreeSet, HashMap, HashSet};
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 #[allow(unused_imports)]

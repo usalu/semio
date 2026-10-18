@@ -4,10 +4,13 @@
 //! A temperature of 100 or more is read as kelvin, a smaller one as degrees Celsius (the file may declare either unit). The property rows the export derived from the model are listed in the `DerivedRows` row of their element and are not read back as authored properties.
 //! 📎 https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifckernel/pset/pset_spacethermalrequirements.htm
 
-use super::data::{label, number, type_authoring};
-use super::reader::{refs, text};
-use super::spatial::{authoring_of, set_of, single_values};
-use super::Import;
+use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::Doc;
+use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number, type_authoring};
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{refs, text};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, set_of, single_values};
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::energy::{CONDITIONS_ROW, DERIVED_ROW, SPACE_SET};
 use crate::standards::v1::subsets::any::schema::snapshot::SpaceConditions;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -22,7 +25,7 @@ pub struct Thermal {
     pub frame_fraction: Option<f64>,
 }
 
-fn celsius(value: f64) -> f64 {
+pub fn celsius(value: f64) -> f64 {
     if value >= 100.0 {
         value - crate::standards::v1::subsets::any::io::export::ifc::energy::KELVIN
     } else {
@@ -31,7 +34,7 @@ fn celsius(value: f64) -> f64 {
 }
 
 /// 🏷️ The `Set.Property` rows the export derived from the model for the instance `ifc`.
-pub fn derived_rows(doc: &super::reader::Doc<'_>, ifc: u64) -> BTreeSet<String> {
+pub fn derived_rows(doc: &crate::standards::v1::subsets::any::io::import::ifc::reader::Doc<'_>, ifc: u64) -> BTreeSet<String> {
     label(&authoring_of(doc, ifc), DERIVED_ROW).map(|list| list.split(',').filter(|row| !row.is_empty()).map(str::to_string).collect()).unwrap_or_default()
 }
 
@@ -42,7 +45,7 @@ fn from_standard(rows: &BTreeMap<String, Part21Value>) -> Option<SpaceConditions
 }
 
 /// 🌡️ The conditions of the space `ifc`: the exact record, else the standard set; `None` for a space that states neither.
-pub fn conditions_of(doc: &super::reader::Doc<'_>, ifc: u64) -> Option<SpaceConditions> {
+pub fn conditions_of(doc: &crate::standards::v1::subsets::any::io::import::ifc::reader::Doc<'_>, ifc: u64) -> Option<SpaceConditions> {
     label(&authoring_of(doc, ifc), CONDITIONS_ROW).and_then(|record| from_json_str::<SpaceConditions>(&record, JsonMemberPolicy::Reject).ok()).or_else(|| from_standard(&set_of(doc, ifc, SPACE_SET)))
 }
 
@@ -54,7 +57,7 @@ pub fn read_conditions(i: &mut Import<'_>) {
     }
 }
 
-fn type_set(doc: &super::reader::Doc<'_>, type_args: &[Part21Value], name: &str) -> BTreeMap<String, Part21Value> {
+fn type_set(doc: &crate::standards::v1::subsets::any::io::import::ifc::reader::Doc<'_>, type_args: &[Part21Value], name: &str) -> BTreeMap<String, Part21Value> {
     let mut rows = BTreeMap::new();
     for set in refs(type_args, 5) {
         if let Some(args) = doc.args(set, "IFCPROPERTYSET") {
@@ -71,7 +74,7 @@ fn standard(common: &BTreeMap<String, Part21Value>, glazing: &BTreeMap<String, P
 }
 
 /// 🪟️ The thermal data of a window type object: the exact rows of its `Semio_Authoring` set, else its standard sets.
-pub fn type_thermal(doc: &super::reader::Doc<'_>, type_args: &[Part21Value], window: bool) -> Thermal {
+pub fn type_thermal(doc: &crate::standards::v1::subsets::any::io::import::ifc::reader::Doc<'_>, type_args: &[Part21Value], window: bool) -> Thermal {
     let rows = type_authoring(doc, type_args);
     let exact = Thermal { u_value: number(&rows, "UValue"), g_value: number(&rows, "GValue"), frame_fraction: number(&rows, "FrameFraction") };
     if exact != Thermal::default() {
@@ -84,12 +87,10 @@ pub fn type_thermal(doc: &super::reader::Doc<'_>, type_args: &[Part21Value], win
 }
 
 /// 🪟️ The thermal data of a window or door occurrence `ifc` whose type object says nothing: its own standard sets.
-pub fn occurrence_thermal(doc: &super::reader::Doc<'_>, ifc: u64, window: bool) -> Thermal {
+pub fn occurrence_thermal(doc: &crate::standards::v1::subsets::any::io::import::ifc::reader::Doc<'_>, ifc: u64, window: bool) -> Thermal {
     let common = set_of(doc, ifc, if window { "Pset_WindowCommon" } else { "Pset_DoorCommon" });
     let found = standard(&common, &set_of(doc, ifc, "Pset_DoorWindowGlazingType"));
     if window { found } else { Thermal { g_value: None, frame_fraction: None, ..found } }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

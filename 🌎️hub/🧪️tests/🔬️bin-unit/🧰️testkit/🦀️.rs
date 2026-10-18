@@ -4,9 +4,9 @@ use semio_hub_route_models::admin::{ADMIN_OPERATION_SHUTDOWN_DEADLINE, AdminOper
 use protocol::{ActorId, ClientFrame, Lane, MutationEnvelope, ServerFrame, ArtifactId as WireArtifactId};
 use semio_hub_ledgers::guard::{AdminSubject, admin_provider_digest};
 use std::sync::Arc;
-use semio_hub_artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, CheckpointPublicationOrchestrator, OperationContext, checkpoint_id_encoding_v1};
+use semio_hub_artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, CheckpointPublicationOrchestrator, ImmutableArtifactBlobStore, OperationContext, checkpoint_id_encoding_v1};
 use semio_hub_runtime::startup::{ArtifactCasMaintenanceSupervisor, DocumentOpenCatalogAuthorityV1, StartupCatalogControl, instance_state};
-use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStores, FsArtifactChunkCasStorage, MemoryArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
+use semio_hub_artifact_authority::chunk_cas::{ArtifactChunkBlobStore, ArtifactChunkCasStorage, ArtifactChunkCasStores, FsArtifactChunkCasStorage, MemoryArtifactChunkCasStorage, artifact_cas_manifest_locator_v1, prepare_artifact_cas_manifest_v1, prepare_artifact_cas_ownership_v1};
 use semio_hub_artifact_creation::ArtifactCreationActorV1;
 use semio_hub_route_models::artifact_creation::{ArtifactCreationHttpTaskOwnerV1, HubArtifactCreationCommitAuthorityV1};
 use semio_hub_directory_contract::model::{AuthSessionIssue, AuthSessionKind, SpaceRole};

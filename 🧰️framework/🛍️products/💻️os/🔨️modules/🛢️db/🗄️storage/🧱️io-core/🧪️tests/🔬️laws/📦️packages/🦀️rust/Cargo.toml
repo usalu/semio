@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-os-kernel-db-io-core-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion white-box laws of semio-framework-os-kernel-db-io-core"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-kernel-db-io-core-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-framework-os-kernel-db-io-core = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-ids = { path = "../../../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

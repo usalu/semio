@@ -1,6 +1,6 @@
 //! 🚮️ `delete-storey` payload. Removes a storey together with everything on it (the views and schedules scoped to it, walls, curtain walls, columns, beams, slabs, roofs, stairs, railings, spaces and the openings of its walls) and their properties and classifications; refuses while a surviving element still constrains its top to the storey.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -10,13 +10,16 @@ pub struct DeleteStorey {
     pub id: String,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for DeleteStorey {
+impl<Op> MutationKind<ModelSnapshot, Op> for DeleteStorey
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteStorey> + crate::standards::v1::subsets::any::schema::mutations::cascade::RemovalInverse,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "storey", kind: "delete-storey", record: "DeleteStorey" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::delete_storey::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::delete_storey::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Delete storey \"{}\" with everything on it", self.id), &format!("Geschoss \"{}\" samt Inhalt löschen", self.id))

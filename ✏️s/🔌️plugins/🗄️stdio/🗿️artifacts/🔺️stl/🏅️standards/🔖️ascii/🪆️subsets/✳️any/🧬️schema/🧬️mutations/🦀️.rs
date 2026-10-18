@@ -101,9 +101,9 @@ pub const KINDS: &[&str] = &["set-solid-name", "insert-triangle", "remove-triang
 /// `op_text_binary_roundtrip_law` below AND `⚙️engine::conformance_laws`'s `ops_grammar_
 /// conformance_law`/`protocol_walk_law` (same reuse pattern `binary`'s own `demo_mutation_cases`
 /// establishes).
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<StlMutation> {
+pub fn demo_mutation_cases() -> Vec<StlMutation> {
     let base = StlSnapshot { schema: crate::STDIO_STL_DOCUMENT_SCHEMA.into(), solid_name: "mesh".into(), triangles: vec![StlTriangle { normal: [0.0, 0.0, 1.0], vertices: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]] }] };
     vec![
         StlMutation::SetSolidName(set_solid_name::SetSolidName { name: "renamed".into() }),

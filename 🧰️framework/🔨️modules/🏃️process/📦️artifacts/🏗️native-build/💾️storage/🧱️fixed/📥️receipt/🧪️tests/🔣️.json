@@ -29,5 +29,695 @@
     "stopped",
     "changed-parent",
     "flush-fault"
+  ],
+  "windowsNativeBase": {
+    "receipt": {
+      "version": 1,
+      "platform": "win32",
+      "dev": 7,
+      "ino": 12,
+      "size": 33554944,
+      "filesystemBytes": 33554432,
+      "maximumPhysicalBytes": 34603008,
+      "mountDirectory": {
+        "version": 1,
+        "platform": "win32",
+        "dev": "7",
+        "ino": "11",
+        "volumeSerial": "18446744073709551615",
+        "fileId": "fedcba98765432100123456789abcdef",
+        "volume": "\\\\?\\Volume{01234567-89ab-cdef-0123-456789abcdef}\\",
+        "attributes": 16,
+        "creationTime": "123",
+        "securitySha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "streamsSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "backing": {
+        "volumeSerial": "18446744073709551615",
+        "fileId": "fedcba98765432100123456789abcdef",
+        "volume": "\\\\?\\Volume{01234567-89ab-cdef-0123-456789abcdef}\\",
+        "attributes": 32,
+        "creationTime": "123",
+        "securitySha256": "1111111111111111111111111111111111111111111111111111111111111111",
+        "streamsSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+      }
+    },
+    "facts": {
+      "nativeDevice": "7",
+      "nativeInode": "12",
+      "allocatedBytes": "33554944",
+      "path": "D:\\owned\\fixed.vhd",
+      "finalPath": "\\\\?\\Volume{01234567-89ab-cdef-0123-456789abcdef}\\owned\\fixed.vhd",
+      "kind": "file",
+      "bytes": "33554944",
+      "links": 1,
+      "writeTime": "124",
+      "changeTime": "125",
+      "volumeSerial": "18446744073709551615",
+      "fileId": "fedcba98765432100123456789abcdef",
+      "volume": "\\\\?\\Volume{01234567-89ab-cdef-0123-456789abcdef}\\",
+      "attributes": 32,
+      "creationTime": "123",
+      "securitySha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "streamsSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    }
+  },
+  "windowsNativeCases": [
+    {
+      "mutation": "none",
+      "admit": true
+    },
+    {
+      "mutation": "write-time",
+      "admit": true
+    },
+    {
+      "mutation": "change-time",
+      "admit": true
+    },
+    {
+      "mutation": "high-half",
+      "admit": false
+    },
+    {
+      "mutation": "serial",
+      "admit": false
+    },
+    {
+      "mutation": "volume",
+      "admit": false
+    },
+    {
+      "mutation": "device",
+      "admit": false
+    },
+    {
+      "mutation": "inode",
+      "admit": false
+    },
+    {
+      "mutation": "security",
+      "admit": false
+    },
+    {
+      "mutation": "streams",
+      "admit": false
+    },
+    {
+      "mutation": "creation",
+      "admit": false
+    },
+    {
+      "mutation": "attributes",
+      "admit": false
+    },
+    {
+      "mutation": "kind",
+      "admit": false
+    },
+    {
+      "mutation": "links",
+      "admit": false
+    },
+    {
+      "mutation": "size",
+      "admit": false
+    },
+    {
+      "mutation": "allocation",
+      "admit": false
+    },
+    {
+      "mutation": "reparse",
+      "admit": false
+    },
+    {
+      "mutation": "unsafe-inode",
+      "admit": false
+    },
+    {
+      "mutation": "unsafe-device",
+      "admit": false
+    },
+    {
+      "mutation": "leading-zero",
+      "admit": false
+    },
+    {
+      "mutation": "extra",
+      "admit": false
+    },
+    {
+      "mutation": "numeric-id",
+      "admit": false
+    },
+    {
+      "mutation": "accessor",
+      "admit": false
+    },
+    {
+      "mutation": "proxy",
+      "admit": false
+    },
+    {
+      "mutation": "proto",
+      "admit": false
+    }
+  ],
+  "windowsCurrentCases": [
+    {
+      "mutation": "value",
+      "admit": true
+    },
+    {
+      "mutation": "positive-short-read",
+      "admit": true
+    },
+    {
+      "mutation": "unknown",
+      "admit": false
+    },
+    {
+      "mutation": "duplicate",
+      "admit": false
+    },
+    {
+      "mutation": "alias",
+      "admit": false
+    },
+    {
+      "mutation": "pending",
+      "admit": false
+    },
+    {
+      "mutation": "malformed-dot",
+      "admit": false
+    },
+    {
+      "mutation": "duplicate-dot",
+      "admit": false
+    },
+    {
+      "mutation": "host-kind",
+      "admit": false
+    },
+    {
+      "mutation": "ancestor-kind",
+      "admit": false
+    },
+    {
+      "mutation": "host-drift",
+      "admit": false
+    },
+    {
+      "mutation": "ancestor-drift",
+      "admit": false
+    },
+    {
+      "mutation": "backing-drift",
+      "admit": false
+    },
+    {
+      "mutation": "record-drift",
+      "admit": false
+    },
+    {
+      "mutation": "early-eof",
+      "admit": false
+    },
+    {
+      "mutation": "growth",
+      "admit": false
+    },
+    {
+      "mutation": "oversize",
+      "admit": false
+    },
+    {
+      "mutation": "footer",
+      "admit": false
+    },
+    {
+      "mutation": "cancel",
+      "admit": false
+    },
+    {
+      "mutation": "undefined",
+      "admit": false
+    },
+    {
+      "mutation": "frozen",
+      "admit": false
+    },
+    {
+      "mutation": "close",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-value",
+      "admit": true
+    },
+    {
+      "mutation": "mapped-image",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-volume",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-bytes",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-zero-bytes",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-extra",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-root-kind",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-root-reparse",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-root-volume",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-root-final-path",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-root-same-host",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-root-serial-drift",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-root-id-drift",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-cancel",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-undefined",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-frozen",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-close",
+      "admit": false
+    },
+    {
+      "mutation": "mapped-held-value",
+      "admit": true
+    }
+  ],
+  "windowsOrdinaryOwnerCases": [
+    {
+      "mutation": "value",
+      "admit": true
+    },
+    {
+      "mutation": "copy-operation",
+      "admit": false
+    },
+    {
+      "mutation": "copy-options",
+      "admit": false
+    },
+    {
+      "mutation": "foreign-resource",
+      "admit": false
+    },
+    {
+      "mutation": "released-writer",
+      "admit": false
+    },
+    {
+      "mutation": "expired-control",
+      "admit": false
+    },
+    {
+      "mutation": "expired-scope",
+      "admit": false
+    },
+    {
+      "mutation": "wrong-enrollment",
+      "admit": false
+    },
+    {
+      "mutation": "concurrent",
+      "admit": true
+    },
+    {
+      "mutation": "body-frozen",
+      "admit": false
+    },
+    {
+      "mutation": "body-undefined",
+      "admit": false
+    },
+    {
+      "mutation": "overspend",
+      "admit": false
+    },
+    {
+      "mutation": "terminal-after-cancel",
+      "admit": true
+    },
+    {
+      "mutation": "terminal-frozen",
+      "admit": false
+    },
+    {
+      "mutation": "terminal-undefined",
+      "admit": false
+    },
+    {
+      "mutation": "close",
+      "admit": false
+    },
+    {
+      "mutation": "same-body-cumulative",
+      "admit": true
+    },
+    {
+      "mutation": "no-work-reset",
+      "admit": false
+    },
+    {
+      "mutation": "body-drain",
+      "admit": true
+    },
+    {
+      "mutation": "late-after-close",
+      "admit": true
+    },
+    {
+      "mutation": "shared-value",
+      "admit": true
+    },
+    {
+      "mutation": "shared-copy",
+      "admit": false
+    },
+    {
+      "mutation": "shared-replaced-guard",
+      "admit": false
+    },
+    {
+      "mutation": "shared-released",
+      "admit": false
+    },
+    {
+      "mutation": "shared-foreign-cleanup",
+      "admit": false
+    },
+    {
+      "mutation": "shared-terminal-after-cancel",
+      "admit": true
+    },
+    {
+      "mutation": "shared-closed",
+      "admit": false
+    },
+    {
+      "mutation": "shared-foreign-receiver",
+      "admit": false
+    },
+    {
+      "mutation": "shared-foreign-resource",
+      "admit": false
+    },
+    {
+      "mutation": "shared-live-guard-transition",
+      "admit": false
+    },
+    {
+      "mutation": "escaped-mechanics",
+      "admit": true
+    },
+    {
+      "mutation": "shared-terminal-first-guard",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-value",
+      "admit": true
+    },
+    {
+      "mutation": "shared-mapped-drift",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-malformed",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-frozen",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-undefined",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-terminal",
+      "admit": true
+    },
+    {
+      "mutation": "shared-mapped-terminal-cancel",
+      "admit": true
+    },
+    {
+      "mutation": "shared-mapped-terminal-drift",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-copy",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-concurrent",
+      "admit": true
+    },
+    {
+      "mutation": "shared-mapped-foreign-resource",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-body-frozen",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-body-undefined",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-body-limit",
+      "admit": false
+    },
+    {
+      "mutation": "shared-mapped-terminal-limit",
+      "admit": false
+    },
+    {
+      "mutation": "shared-held-value",
+      "admit": true
+    },
+    {
+      "mutation": "shared-held-drain",
+      "admit": true
+    },
+    {
+      "mutation": "shared-held-copy",
+      "admit": false
+    },
+    {
+      "mutation": "shared-held-escape",
+      "admit": true
+    },
+    {
+      "mutation": "shared-held-frozen",
+      "admit": false
+    },
+    {
+      "mutation": "shared-held-undefined",
+      "admit": false
+    },
+    {
+      "mutation": "shared-held-close",
+      "admit": false
+    },
+    {
+      "mutation": "shared-held-foreign-handles",
+      "admit": false
+    },
+    {
+      "mutation": "shared-held-terminal",
+      "admit": true
+    },
+    {
+      "mutation": "shared-held-terminal-cancel",
+      "admit": true
+    },
+    {
+      "mutation": "shared-held-terminal-drain",
+      "admit": true
+    },
+    {
+      "mutation": "shared-held-terminal-frozen",
+      "admit": false
+    },
+    {
+      "mutation": "shared-held-terminal-undefined",
+      "admit": false
+    },
+    {
+      "mutation": "shared-operation-value",
+      "admit": true
+    },
+    {
+      "mutation": "shared-operation-next",
+      "admit": true
+    },
+    {
+      "mutation": "shared-operation-undefined",
+      "admit": false
+    },
+    {
+      "mutation": "shared-operation-frozen",
+      "admit": false
+    },
+    {
+      "mutation": "shared-operation-concurrent",
+      "admit": true
+    }
+  ],
+  "windowsObservationCases": [
+    {
+      "mutation": "value",
+      "admit": true
+    },
+    {
+      "mutation": "nested",
+      "admit": true
+    },
+    {
+      "mutation": "awaited",
+      "admit": true
+    },
+    {
+      "mutation": "escape",
+      "admit": true
+    },
+    {
+      "mutation": "copied-receiver",
+      "admit": false
+    },
+    {
+      "mutation": "guard",
+      "admit": false
+    },
+    {
+      "mutation": "mapping",
+      "admit": false
+    },
+    {
+      "mutation": "receipt",
+      "admit": false
+    },
+    {
+      "mutation": "backing",
+      "admit": false
+    },
+    {
+      "mutation": "root",
+      "admit": false
+    },
+    {
+      "mutation": "undefined",
+      "admit": false
+    },
+    {
+      "mutation": "frozen",
+      "admit": false
+    },
+    {
+      "mutation": "cancel",
+      "admit": false
+    },
+    {
+      "mutation": "close",
+      "admit": false
+    },
+    {
+      "mutation": "initial-close",
+      "admit": false
+    },
+    {
+      "mutation": "genuine-drain",
+      "admit": true
+    }
+  ],
+  "windowsBorrowerIdentityCases": [
+    "value",
+    "outside",
+    "foreign-owner",
+    "copied-token",
+    "ancestor-control",
+    "nested",
+    "accepted-drain",
+    "expired",
+    "sibling-control",
+    "routing-drain"
+  ],
+  "windowsOperationAccountCases": [
+    {
+      "mutation": "next-success",
+      "effects": 2
+    },
+    {
+      "mutation": "nested",
+      "effects": 1
+    },
+    {
+      "mutation": "concurrent",
+      "effects": 1
+    },
+    {
+      "mutation": "failed-retry",
+      "effects": 1
+    },
+    {
+      "mutation": "undefined-retry",
+      "effects": 1
+    },
+    {
+      "mutation": "frozen-retry",
+      "effects": 1
+    },
+    {
+      "mutation": "changed-guard",
+      "effects": 0
+    },
+    {
+      "mutation": "foreign-control",
+      "effects": 0
+    }
   ]
 }

@@ -1,4 +1,5 @@
-use super::{QUANTITY_SET, SWEEP_SET};
+use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::{sweep};
+use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::{QUANTITY_SET, SWEEP_SET};
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{attic, count, document, number_of, property_sets, quantity_of, real, rows, string, tags, target, text_of};
 use crate::standards::v1::subsets::any::schema::snapshot::{Profile, WallSide};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};

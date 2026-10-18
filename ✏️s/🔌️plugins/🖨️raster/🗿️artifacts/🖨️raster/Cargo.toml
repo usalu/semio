@@ -5,6 +5,7 @@ resolver = "2"
 members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️commands-2/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧠️session/📦️packages/🦀️rust",
@@ -12,6 +13,7 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️media-bridge/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🥣️companion/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
@@ -25,6 +27,7 @@ members = [
   "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🥣️companion/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
   "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust",
+  "🔨️modules/🏠️host/🧰️owned/🧱️retirement-bounds/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",
@@ -129,6 +132,9 @@ package = "semio-framework"
 [workspace.dependencies.semio-framework-2d]
 path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-2d-compute]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-async-macros]
 path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
 
@@ -201,8 +207,14 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/📦�
 [workspace.dependencies.semio-s-artifact-raster-raster-host]
 path = "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-s-artifact-raster-raster-host-retirement-bounds]
+path = "🔨️modules/🏠️host/🧰️owned/🧱️retirement-bounds/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-raster-raster-io]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-raster-raster-io-media-bridge]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️media-bridge/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-raster-raster-model]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
@@ -239,6 +251,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️
 
 [workspace.dependencies.semio-s-artifact-raster-raster-editor-commands]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-raster-raster-editor-commands-2]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️commands-2/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-raster-raster-editor-modes]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust"

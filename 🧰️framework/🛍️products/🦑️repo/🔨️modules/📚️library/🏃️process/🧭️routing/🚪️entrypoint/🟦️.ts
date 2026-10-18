@@ -10,7 +10,7 @@ export type RunRepoScriptMainOptions = Pick<RunScriptMainOptions, "defaultComman
 export async function runRepoScriptMain(router: ScriptRouter, scriptUrl: string, options: RunRepoScriptMainOptions = {}): Promise<void> {
   const run = (invocation: ScriptInvocation) => runScriptMain(router, { ...options, invocation, beforeDispatch: async (argv) => {
     if (argv[0] !== "policy") return options.beforeDispatch?.(argv,invocation)??false;
-    const { dispatchPolicyArgv } = await import("../../../🟦️.ts");
+    const { dispatchPolicyArgv } = await import("../../../🚨️policy/🧭️entrypoints/🟦️.ts");
     return dispatchPolicyArgv([...argv], scriptUrl);
   } });
   if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) return receiveScriptProcessInvocation(process.env, run);

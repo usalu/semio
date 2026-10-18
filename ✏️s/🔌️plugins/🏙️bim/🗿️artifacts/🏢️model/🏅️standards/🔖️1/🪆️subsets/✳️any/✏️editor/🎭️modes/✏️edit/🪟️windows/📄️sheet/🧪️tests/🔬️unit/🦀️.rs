@@ -1,7 +1,31 @@
-use crate::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig;
 //! 🧪️ The sheet window: which sheet it shows, the records of the paper, the viewports and the marks, the placement of a view's records into a window, the picking of viewports and the accessible labels in both languages.
 
-use super::*;
+use crate::editor::bim::kit::{path, path_record, text_record, Paint};
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::PlacedViewport;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{canvas_surface, meta_record, Rgba};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::sheets::{self, ink::sheet_marks, ink::Mark, ink::TitleLabels};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+use crate::editor::bim::modes::edit::windows::sheet::{INK};
+use crate::editor::bim::modes::edit::windows::sheet::config::BimSheetWindowConfig;
+use crate::editor::bim::modes::edit::windows::sheet::*;
 use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{ViewMap, PaperRect};
 

@@ -33,6 +33,6 @@ test("♻️ nested edit diagnostics retain original owners until the exact gran
   }
   const producer=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");
   expect(producer).toContain("pub struct EditMessageLedgerRetirement");
-  const ledger=readFileSync(new URL("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/🦀️.rs",import.meta.url),"utf8");
-  expect(ledger.includes("inner: crate::os_spr::command::EditMessageLedgerRetirement")).toBe(true);
+  const ledger=readFileSync(new URL("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/📨️messages/🦀️.rs",import.meta.url),"utf8");
+  expect(ledger.includes("inner: protocol::mutation::EditMessageLedgerRetirement")).toBe(true);
 });

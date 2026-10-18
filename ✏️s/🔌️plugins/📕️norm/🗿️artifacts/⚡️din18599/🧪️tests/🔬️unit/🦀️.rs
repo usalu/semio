@@ -3,8 +3,12 @@ use pack::snapshot::ArtifactSqliteSnapshot as _;
 use crate::*;
 use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot;
 use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
-use standards::v1::subsets::any::schema::{evaluate_document, mutations::update_climate::UpdateClimate};
-use standards::v1::subsets::any::io::{binary::snapshot::{decode_din18599_pack,encode_din18599_pack},text::snapshot::{decode_din18599_dsl,encode_din18599_dsl,decode_din18599_snapshot_json,encode_din18599_snapshot_json}};
+use semio_s_artifact_norm_din18599_checks::evaluate_document;
+use semio_s_artifact_norm_din18599_io::binary::snapshot::{decode_din18599_pack, encode_din18599_pack};
+use semio_s_artifact_norm_din18599_io::text::snapshot::{decode_din18599_dsl, decode_din18599_snapshot_json, encode_din18599_dsl, encode_din18599_snapshot_json};
+use semio_s_artifact_norm_din18599_model::{din18599_child_restore_projection, din18599_climate_data_from_table, din18599_climate_table_child, din18599_climate_table_from_data, genesis_din18599_child_pack, Din18599Snapshot, MonthlyClimate, DIN18599_CLIMATE_TABLE_SLOT};
+use semio_s_artifact_norm_din18599_mut_zoning::update_climate::UpdateClimate;
+use semio_s_artifact_norm_din18599_mutations::Din18599Mutation;
 
 /// 🧾️ Language-neutral expectation of the derived climate table (Python `hashlib` oracle, ticket script `🧪️s4-norm-din18599-climate.py`).
 fn derivation() -> serde_json::Value {

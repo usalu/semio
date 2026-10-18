@@ -1,5 +1,5 @@
 /** 📄️ Explicit page geometry and named/indirect document entity ownership. */
-import type { PdfPage,PdfNamedColorSpace,PdfNamedProperties,PdfIndirectObject } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfPage, PdfNamedColorSpace, PdfNamedProperties, PdfIndirectObject } from "../../../../🧬️schema/📸️snapshot/📄️document/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,type Binary64,type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { writePdfOperations,readPdfOperations } from "../🖋️content/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary,writePdfObject,readPdfObject } from "../🧩️cos/🟦️.ts";

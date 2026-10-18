@@ -2,7 +2,7 @@
 // Nothing here transcribes an id: the fixture is the one statement of what this artifact mounts, so a
 // drift shows up in three languages at once instead of in one.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import contract from "../🧫️fixtures/🧩️mount-contract/🔣️.json";
 

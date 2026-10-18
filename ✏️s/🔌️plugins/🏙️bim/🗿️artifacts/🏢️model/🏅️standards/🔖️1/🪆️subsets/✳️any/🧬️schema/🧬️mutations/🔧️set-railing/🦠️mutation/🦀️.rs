@@ -1,6 +1,6 @@
 //! 🔧️ `set-railing` payload. Sets any of a railing's authored path, height, post spacing, rail and post sections, baluster row (an assigned null removes it), infill, host (an assigned null releases it), material, base offset and name; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff, patches::RailingPatch}, snapshot::{Baluster, Infill, ModelSnapshot, Point2, Profile, RailingHost}, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff, patches::RailingPatch}, snapshot::{Baluster, Infill, ModelSnapshot, Point2, Profile, RailingHost}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -44,13 +44,16 @@ impl SetRailing {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetRailing {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetRailing
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetRailing>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "railing", kind: "set-railing", record: "SetRailing" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_railing::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_railing::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit railing \"{}\"", self.id), &format!("Geländer \"{}\" ändern", self.id))

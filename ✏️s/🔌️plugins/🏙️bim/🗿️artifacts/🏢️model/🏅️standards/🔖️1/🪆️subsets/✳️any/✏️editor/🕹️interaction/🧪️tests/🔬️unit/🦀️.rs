@@ -1,4 +1,32 @@
-use super::*;
+use crate::editor::bim::entities::ENTITIES;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::ordered_storeys;
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use semio_framework_plugin::DomainTopology;
+#[allow(unused_imports)]
+use semio_framework_plugin::GranularityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::HierarchyProvider;
+#[allow(unused_imports)]
+use semio_framework_plugin::HoverSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionTopology;
+#[allow(unused_imports)]
+use semio_framework_plugin::MergeMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMethod;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionMode;
+#[allow(unused_imports)]
+use semio_framework_plugin::SelectionSpec;
+#[allow(unused_imports)]
+use semio_framework_plugin::TopologyNode;
+use crate::editor::bim::interaction::*;
 
 fn demo() -> ModelSnapshot {
     crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()

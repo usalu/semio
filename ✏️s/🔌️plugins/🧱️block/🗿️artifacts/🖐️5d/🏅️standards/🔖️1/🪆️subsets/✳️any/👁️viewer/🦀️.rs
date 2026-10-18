@@ -31,7 +31,7 @@ use semio_framework_plugin::NoTransientMutation;
 // outside this packet's lease).
 use semio_framework_plugin::app::Dialect;
 use semio_framework_plugin::{ArtifactViewer, ViewEmit, Viewer};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

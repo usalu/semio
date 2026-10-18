@@ -335,7 +335,7 @@ describe("hub harness quick contract", () => {
       for (const required of profile.selectedClosure) visit(required);
       return order;
     };
-    expect(dependencyFirst(fixture.bundle, "fixture")).toEqual(["fixture.base", "fixture.editor"]);
+    expect(dependencyFirst(fixture.bundle, "fixture")).toEqual(["fixture-base", "fixture-editor"]);
     const incomplete = structuredClone(fixture.bundle);
     incomplete.packages.pop();
     expect(() => dependencyFirst(incomplete, "fixture")).toThrow("incomplete");

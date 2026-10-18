@@ -12,6 +12,7 @@
 #![allow(clippy::result_large_err)]
 
 use semio_framework_test_fixtures::fixture_text;
+use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_RETAINED_TOOL_IDS;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

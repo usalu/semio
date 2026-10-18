@@ -3,10 +3,10 @@
 //! Wired as a crate-root sibling module of `crate::tui::widget`; the engine owns the dwell timer and
 //! placement (see `crate::tui::engine::Tui::tick`).
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::geometry::{Pos, Rect, Size};
-use crate::tui::text::{display_width, truncate_to};
-use crate::tui::theme::{Role, Surface, Theme};
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_framework_ui_tui_core::text::{display_width, truncate_to};
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
 
 /// ⏱️ How long the pointer must rest before a tooltip opens.
 pub const TOOLTIP_DELAY_MS: u64 = 400;

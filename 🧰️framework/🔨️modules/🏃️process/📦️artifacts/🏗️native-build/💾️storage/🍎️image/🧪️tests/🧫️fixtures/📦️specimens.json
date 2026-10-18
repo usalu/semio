@@ -38,7 +38,21 @@
       "name": "semio_framework_geometry_primitives",
       "test": false,
       "inputs": [
-        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs"
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🧩️shape-ref/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/📍️point-and-vector/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🧮️affine/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🔲️rect-shapes/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/⭕️curve-shapes/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🛤️bez-path/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/✂️path-seg/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🌓️arc-flattening-and-path-append/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/📏️generic-geometry/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/📈️curve-extensions/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🔺️polygon-extensions/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🧭️vec3/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🧱️mat4/🦀️.rs",
+        "🧰️framework/🔨️modules/📐️geometry/⚙️engine/🎯️world-selection/🦀️.rs"
       ]
     }
   ]

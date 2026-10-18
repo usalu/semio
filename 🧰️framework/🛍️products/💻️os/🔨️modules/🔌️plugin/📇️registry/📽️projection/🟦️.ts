@@ -7,8 +7,12 @@ import { defaultPlaygroundVariant } from "../🎮️playground/⭐️default/�
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { discoverCatalogPackages, discoverPackageProblems, getWorkspaceRoot, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, validateGeneratorContractsAgainstWorkspace } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
+import { discoverCatalogPackages, registryCatalogProjectedInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
+import { discoverPackageProblems } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { parseRegistryCatalogProjection } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
+import { registryCatalogInputView, validateGeneratorContractsAgainstWorkspace } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {buildModesV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, componentOwnerRootV1, moduleDirectoryName, parseModuleDirectories, type ModuleDirectory } from "../📦️deployment/🟦️.ts";

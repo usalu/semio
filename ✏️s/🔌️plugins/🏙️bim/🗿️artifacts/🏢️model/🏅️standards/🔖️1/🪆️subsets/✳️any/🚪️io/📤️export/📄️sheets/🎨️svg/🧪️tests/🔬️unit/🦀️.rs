@@ -1,7 +1,9 @@
 //! 🧪️ The SVG of a sheet read back by a third-party XML reader (quick-xml): paper size and viewBox, one clipped group per viewport holding the primitives of its view, the title block and the revision table as text.
 
-use super::super::testkit::{house_with_sheets, inferred, labels, texts};
-use super::super::*;
+use crate::standards::v1::subsets::any::io::export::svg::codec::text;
+use crate::standards::v1::subsets::any::io::export::sheets::svg::{group};
+use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred, labels, texts};
+use crate::standards::v1::subsets::any::io::export::sheets::*;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{tags, Tag};
 
 fn svg_of(sheet: &str) -> (String, crate::standards::v1::subsets::any::schema::inferences::ModelInference) {

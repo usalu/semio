@@ -63,7 +63,7 @@ fn clipped(polygon: &[Point], side: impl Fn(Point) -> f64) -> Vec<Point> {
     out
 }
 
-fn area_of(polygon: &[Point]) -> f64 {
+pub fn area_of(polygon: &[Point]) -> f64 {
     (0..polygon.len()).map(|index| cross(polygon[index] - Point::ZERO, polygon[(index + 1) % polygon.len()] - Point::ZERO)).sum::<f64>() / 2.0
 }
 
@@ -186,7 +186,7 @@ fn winding(stair: &Stair, run: &StairRun, flight: &StairFlightRun, winder: &Stai
     StairParts { treads, ..StairParts::default() }
 }
 
-fn landing(stair: &Stair, landing: &StairLanding) -> TriMesh {
+pub fn landing(stair: &Stair, landing: &StairLanding) -> TriMesh {
     slab((-landing.depth / 2.0, landing.depth / 2.0), (-landing.width / 2.0, landing.width / 2.0), (-stair.tread_thickness, 0.0)).transformed(&frame_at(point(&landing.centre), landing.z, landing.direction))
 }
 
@@ -273,6 +273,4 @@ pub fn stringer_ignored(stair: &Stair) -> bool {
 }
 //#endregion 🔖️Solid
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

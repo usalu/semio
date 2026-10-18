@@ -1,6 +1,10 @@
 syntax = "proto3";
 package semio.s_stdio_gif.diff;
-message GifDiff {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+import "s_stdio_gif/snapshot.proto";
+
+message GifColorTableSlot { optional semio.s_stdio_gif.snapshot.GifColorTable value = 1; }
+message GifImageDiff { optional uint32 left = 1; optional uint32 top = 2; optional uint32 width = 3; optional uint32 height = 4; optional bool interlace = 5; optional GifColorTableSlot lct = 6; optional bytes indices = 7; }
+message GifImageModified { uint32 index = 1; GifImageDiff diff = 2; }
+message GifImageAdded { uint32 index = 1; semio.s_stdio_gif.snapshot.GifImage image = 2; }
+message GifImagesDiff { repeated uint32 removed = 1; repeated GifImageModified modified = 2; repeated GifImageAdded added = 3; }
+message GifDiff { optional uint32 width = 1; optional uint32 height = 2; optional GifColorTableSlot gct = 3; optional uint32 background_color_index = 4; optional uint32 pixel_aspect_ratio = 5; optional GifImagesDiff images = 6; }

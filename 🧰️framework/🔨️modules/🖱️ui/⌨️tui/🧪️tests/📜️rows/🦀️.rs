@@ -1,6 +1,6 @@
 use super::*;
-use crate::tui::event::{MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect, Size};
+use crate::event::{MouseButton, MouseEvent, MouseKind};
+use crate::geometry::{Pos, Rect, Size};
 use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 use std::time::Instant;
 

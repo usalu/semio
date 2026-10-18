@@ -38,7 +38,7 @@ impl DrawingRetainedCommandDecoder {
     }
 
     /// 📄️ Appends one wire page within `DRAWING_GESTURE_RAW_BYTES`; an oversized owner fails closed.
-    pub(super) fn feed_page(&mut self, page: &[u8]) -> bool {
+    pub fn feed_page(&mut self, page: &[u8]) -> bool {
         if self.overflow || self.raw.len().checked_add(page.len()).is_none_or(|end| end > DRAWING_GESTURE_RAW_BYTES) || self.raw.try_reserve_exact(page.len()).is_err() {
             self.overflow = true;
             return false;
@@ -47,7 +47,7 @@ impl DrawingRetainedCommandDecoder {
         true
     }
 
-    pub(super) fn finish(&self) -> bool {
+    pub fn finish(&self) -> bool {
         if self.overflow {
             return false;
         }
@@ -58,11 +58,11 @@ impl DrawingRetainedCommandDecoder {
 
 pub struct DrawingGestureOperationJob {
     pub(super) payload: Option<DrawingGestureOperationPayload>,
-    pub(super) pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
+    pub pending_completion_rejection: Option<semio_framework_plugin::app::ArtifactToolCompletionRejection<semio_framework_plugin::EditorApp<DrawingPlayApp>>>,
     pub(super) raw_input: Option<semio_framework_action_bus::RetainedToolWireInput>,
     pub(super) raw_page_cursor: usize,
     pub(super) raw_byte_cursor: usize,
-    pub(super) decoder: Option<DrawingRetainedCommandDecoder>,
+    pub decoder: Option<DrawingRetainedCommandDecoder>,
     pub(super) raw_validated: bool,
     pub(super) completed: bool,
     pub(super) closing: bool,

@@ -1,0 +1,14 @@
+{
+ "tag": "fix",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs",
+ "folders": [
+  "🧪️law-executors-and-fault-fixtures",
+  "🚧️blocking-executors-and-fixture-helpers",
+  "📏️fixed-page-output-and-lease-laws",
+  "🪤️lost-owner-ring-close-interruption-and-queued-callback",
+  "🔁️retry-driver-and-backend-controls",
+  "🧯️pressure-slots-and-lost-backend-laws",
+  "🚨️registration-cancellation-drop-and-cleanup-laws"
+ ]
+}

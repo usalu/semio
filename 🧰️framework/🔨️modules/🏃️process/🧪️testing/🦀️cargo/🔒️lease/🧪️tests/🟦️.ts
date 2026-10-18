@@ -10,13 +10,16 @@ import policySchema from "../../🧬️schema/🔣️.json";
 import leaseSchema from "../../../../📦️artifacts/🏗️native-build/🔒️lease/🧬️schema/🔣️.json";
 import {acquireCargoBuildLeaseV1,acquireCargoProfileMaintenanceLeaseV1,cargoBuildLeaseIdentityV1} from "../../../../📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import * as api from "../../🟦️.ts";
+import { withCargoAdmissionV1, writeOwnerPackageV1 } from "../../🧪️tests/🗄️admission/🟦️.ts";
+import type { LawStorageV1 } from "../../../../📦️artifacts/🏗️native-build/🧪️tests/🦀️cargo/🟦️.ts";
 
 const base=JSON.parse(readFileSync(new URL("../../🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8")).policies[0];
 const leaseStores=new Map<string,string>();
 const artifact=()=>{const path=process.env.SEMIO_TEST_ARTIFACT_DIR;expect(path).toBeTruthy();mkdirSync(path!,{recursive:true});const root=mkdtempSync(join(path!,"t-")),store=join(process.cwd(),".cache/b/l/m/data");mkdirSync(store,{recursive:true});leaseStores.set(root,mkdtempSync(join(store,"t-")));return root;};
+const artifactIn=(law:LawStorageV1)=>{const root=mkdtempSync(join(law.root,"t-")),store=join(process.cwd(),".cache/b/l/m/data");mkdirSync(store,{recursive:true});leaseStores.set(root,mkdtempSync(join(store,"t-")));writeOwnerPackageV1(root);return root;};
 const retire=(root:string)=>{rmSync(root,{recursive:true,force:true});const leases=leaseStores.get(root);if(leases)rmSync(leases,{recursive:true,force:true});leaseStores.delete(root);};
 const policy=(root:string)=>({...base,manifestPath:join(root,"Cargo.toml"),targetDirectory:join(root,"target"),buildDirectory:join(root,"build"),leaseDirectory:leaseStores.get(root)!,configPath:join(root,"nextest.toml"),artifactDirectory:root,level:"long",coverageEnabled:false,coveragePath:null,retainArtifacts:false,buildBudgetMs:corpus.maximumProcessMs});
-const request=(root:string,current:any)=>({manifestPath:current.manifestPath,packages:["owner-package"],cwd:root,environment:{...process.env,LEASE_ROOT:root},extraArgs:[]});
+const request=(root:string,current:any,bounded:Readonly<Record<string,string>>={})=>({manifestPath:current.manifestPath,packages:["owner-package"],cwd:root,environment:{...process.env,...bounded,LEASE_ROOT:root},extraArgs:[]});
 const until=async(condition:()=>boolean)=>{const deadline=performance.now()+corpus.readinessMs;while(!condition()){if(performance.now()>deadline)throw Error("Native lease readiness expired");await Bun.sleep(10);}};
 const worker="const fs=require('node:fs'),path=require('node:path'),root=process.env.LEASE_ROOT,args=process.argv.slice(1),phase=args[1];fs.appendFileSync(path.join(root,'calls.jsonl'),JSON.stringify(args)+'\\n');fs.writeFileSync(path.join(root,phase+'.started'),'');const timer=setInterval(()=>{if(fs.existsSync(path.join(root,phase+'.release'))){clearInterval(timer);if(phase==='list')process.stdout.write(JSON.stringify({rust_build_meta:{},rust_binaries:{}}));}},10);";
 const port={command:"node",args:["-e",worker,"--"]};
@@ -36,22 +39,26 @@ test("Cargo test profile lease follows schema and independent Node CLI selection
 });
 
 test("Cargo tests hold the shared compiler lease through list and assertion termination",async()=>{
- const root=artifact(),current=policy(root),controller=new AbortController();let held:any,run:Promise<void>|undefined;
+ await withCargoAdmissionV1(async(admission,law)=>{
+ const root=artifactIn(law),current=policy(root),controller=new AbortController();let held:any,run:Promise<void>|undefined;
  try{
   held=await acquireCargoProfileMaintenanceLeaseV1({directory:current.leaseDirectory,buildDirectory:current.buildDirectory,args:["--profile",current.mode],signal:controller.signal});
-  run=api.runCargoTestsV1(request(root,current),current,port);await Bun.sleep(corpus.cancelAfterMs);expect(existsSync(join(root,"calls.jsonl"))).toBe(false);held.release();held=undefined;
+  run=api.runCargoTestsV1(request(root,current,law.environment),current,admission,port);await Bun.sleep(corpus.cancelAfterMs);expect(existsSync(join(root,"calls.jsonl"))).toBe(false);held.release();held=undefined;
   const identity=cargoBuildLeaseIdentityV1(current.buildDirectory,["--profile",current.mode]),resource=JSON.stringify([leaseSchema.definitions.Protocol.const.namespace,identity.buildDirectory,identity.profile]),databasePath=join(current.leaseDirectory,createHash("sha256").update(resource).digest("hex")+".sqlite");
   for(const phase of corpus.phases){await until(()=>existsSync(join(root,phase+".started")));const database=new Database(databasePath);try{database.exec("PRAGMA busy_timeout=0");expect(()=>database.exec("BEGIN EXCLUSIVE")).toThrow();}finally{database.close();}writeFileSync(join(root,phase+".release"),"");}
   await run;run=undefined;const database=new Database(databasePath);try{database.exec("BEGIN EXCLUSIVE");database.exec("ROLLBACK");}finally{database.close();}
   const calls=readFileSync(join(root,"calls.jsonl"),"utf8").trim().split("\n").map(line=>JSON.parse(line));expect(calls.map(row=>row[1])).toEqual(corpus.phases);expect(calls[0]).toContain("long");expect(calls[1]).toContain("--binaries-metadata");
  }finally{controller.abort();held?.release();for(const phase of corpus.phases)writeFileSync(join(root,phase+".release"),"");await run?.catch(()=>{});retire(root);}
+ });
 },30000);
 
 test("Cargo lease cancellation and process timeout release exact ownership",async()=>{
- const root=artifact(),current=policy(root),controller=new AbortController(),held=await acquireCargoProfileMaintenanceLeaseV1({directory:current.leaseDirectory,buildDirectory:current.buildDirectory,args:["--profile",current.mode],signal:new AbortController().signal});
- try{const run=api.runCargoTestsV1({...request(root,current),signal:controller.signal},current,port);const timer=setTimeout(()=>controller.abort(),corpus.cancelAfterMs);try{await expect(run).rejects.toThrow();}finally{clearTimeout(timer);}expect(existsSync(join(root,"calls.jsonl"))).toBe(false);}finally{held.release();}
+ await withCargoAdmissionV1(async(admission,law)=>{
+ const root=artifactIn(law),current=policy(root),controller=new AbortController(),held=await acquireCargoProfileMaintenanceLeaseV1({directory:current.leaseDirectory,buildDirectory:current.buildDirectory,args:["--profile",current.mode],signal:new AbortController().signal});
+ try{const run=api.runCargoTestsV1({...request(root,current,law.environment),signal:controller.signal},current,admission,port);const timer=setTimeout(()=>controller.abort(),corpus.cancelAfterMs);try{await expect(run).rejects.toThrow();}finally{clearTimeout(timer);}expect(existsSync(join(root,"calls.jsonl"))).toBe(false);}finally{held.release();}
  try{
-  await expect(api.runCargoTestsV1(request(root,current),{...current,buildBudgetMs:corpus.timeoutMs},port)).rejects.toThrow("budget");
+  await expect(api.runCargoTestsV1(request(root,current,law.environment),{...current,buildBudgetMs:corpus.timeoutMs},admission,port)).rejects.toThrow("budget");
   const reacquired=await acquireCargoBuildLeaseV1({directory:current.leaseDirectory,buildDirectory:current.buildDirectory,targetDirectory:current.targetDirectory,args:["--profile",current.mode],signal:new AbortController().signal});reacquired.release();
  }finally{retire(root);}
+ });
 },30000);

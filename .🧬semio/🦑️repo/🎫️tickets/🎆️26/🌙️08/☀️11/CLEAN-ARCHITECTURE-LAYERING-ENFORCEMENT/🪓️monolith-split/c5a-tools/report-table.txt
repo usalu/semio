@@ -1,0 +1,17 @@
+| c6 | `🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-6/🦀️.rs` | 1,405 | 123 | 6 | 268 | 1,416 |
+| c7 | `🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs` | 1,372 | 132 | 7 | 378 | 1,382 |
+| ct | `🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs` | 2,035 | 104 | 8 | 367 | 2,059 |
+| tr1 | `🧪️tests/🔬️tool-run-part-1/🦀️.rs` | 1,800 | 100 | 8 | 275 | 1,823 |
+| tt1 | `🧪️tests/🧪️time-travel-part-1/🦀️.rs` | 1,839 | 77 | 8 | 327 | 1,861 |
+| tt2 | `🧪️tests/🧪️time-travel-part-2/🦀️.rs` | 1,329 | 74 | 6 | 261 | 1,341 |
+| c1x | `🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs` | 2,478 | 12 | 10 | 295 | 2,518 |
+| atc | `🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs` | 1,569 | 32 | 8 | 349 | 1,584 |
+| c3 | `🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs` | 1,865 | 123 | 8 | 341 | 1,881 |
+| c4 | `🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-4/🦀️.rs` | 1,473 | 115 | 7 | 245 | 1,488 |
+| c5 | `🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs` | 2,143 | 106 | 8 | 361 | 2,159 |
+| tt | `⏪️time-travel/🦀️.rs` | 1,458 | 92 | 6 | 429 | 1,511 |
+| tti | `⏪️time-travel/🧵️instance/🦀️.rs` | 1,241 | 81 | 8 | 195 | 1,305 |
+| tr | `⏯️tool-run/🦀️.rs` | 1,720 | 118 | 6 | 516 | 1,789 |
+| tri | `⏯️tool-run/🧵️instance/🦀️.rs` | 1,096 | 62 | 6 | 246 | 1,145 |
+| rt | `⚛️reactor/🔄️turn/🦀️.rs` | 2,321 | 125 | 9 | 966 | 2,400 |
+TOTAL 27144 -> 27662 children 119

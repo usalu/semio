@@ -163,3 +163,26 @@ fn package_asset_leaves_answer_delivered_documents_and_refuse_everything_else() 
     assert_eq!(reader.read("memory/never-delivered.json"), None, "a host that delivered nothing under the name answers none");
     assert_eq!(reader.read("memory/not-utf8.json"), None, "a document that is not text is refused, not guessed");
 }
+
+#[test]
+fn workspace_root_above_resolves_every_vector_of_the_neutral_workspace_corpus() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../../🏃️process/🧭️routing/🏠️workspace/🧪️tests/🧫️fixtures/🔣️.json")).expect("corpus parses");
+    let base = std::env::temp_dir().join(format!("semio-workspace-root-corpus-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&base);
+    for (index, row) in corpus["cases"].as_array().expect("cases").iter().enumerate() {
+        let expected = row["expected"].as_str();
+        let mut directory = base.join(index.to_string());
+        if expected.is_none() {
+            directory.extend(std::iter::repeat("a").take(32));
+        }
+        let start = directory.join(row["start"].as_str().expect("start"));
+        std::fs::create_dir_all(&start).expect("start directory");
+        for (name, content) in row["files"].as_object().expect("files") {
+            let path = directory.join(name);
+            std::fs::create_dir_all(path.parent().expect("parent")).expect("file directory");
+            std::fs::write(&path, content.as_str().expect("content")).expect("file");
+        }
+        assert_eq!(workspace_root_above(&start), expected.map(|relative| directory.join(relative).components().collect::<std::path::PathBuf>()), "{}", row["id"]);
+    }
+    let _ = std::fs::remove_dir_all(&base);
+}

@@ -64,6 +64,4 @@ pub fn handle(payload: &EditClassification, doc: &ArtifactView<'_, ModelSnapshot
     Ok(Emit::mutations(vec![ModelMutation::SetClassificationSystem(SetClassificationSystem::from_patch(payload.id.clone(), ClassificationSystemPatch { entries: Some(entries), ..Default::default() }))]))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

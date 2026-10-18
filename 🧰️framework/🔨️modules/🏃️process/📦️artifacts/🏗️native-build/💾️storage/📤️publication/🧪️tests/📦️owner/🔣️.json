@@ -817,5 +817,410 @@
       "observations": 3,
       "stats": 18
     }
+  ],
+  "windowsDirectoryBase": {
+    "version": 1,
+    "platform": "win32",
+    "dev": "18446744073709551615",
+    "ino": "4294967297",
+    "volumeSerial": "18446744073709551615",
+    "fileId": "abcdef0123456789abcdef0123456789",
+    "volume": "\\\\?\\Volume{01234567-89ab-cdef-0123-456789abcdef}\\",
+    "attributes": 16,
+    "creationTime": "133000000000000000",
+    "securitySha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "streamsSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "windowsDirectoryCases": [
+    {
+      "id": "native-directory",
+      "mutation": "none",
+      "admit": true
+    },
+    {
+      "id": "full128-high-half",
+      "mutation": "high-half",
+      "admit": true
+    },
+    {
+      "id": "fake-posix-mode",
+      "mutation": "mode",
+      "admit": false
+    },
+    {
+      "id": "numeric-id",
+      "mutation": "numeric",
+      "admit": false
+    },
+    {
+      "id": "short-id",
+      "mutation": "short",
+      "admit": false
+    },
+    {
+      "id": "uppercase-id",
+      "mutation": "uppercase",
+      "admit": false
+    },
+    {
+      "id": "leading-zero",
+      "mutation": "leading-zero",
+      "admit": false
+    },
+    {
+      "id": "bad-volume",
+      "mutation": "bad-volume",
+      "admit": false
+    },
+    {
+      "id": "copied-extra",
+      "mutation": "extra",
+      "admit": false
+    },
+    {
+      "id": "accessor",
+      "mutation": "accessor",
+      "admit": false
+    },
+    {
+      "id": "proxy",
+      "mutation": "proxy",
+      "admit": false
+    },
+    {
+      "id": "own-prototype-key",
+      "mutation": "proto",
+      "admit": false
+    }
+  ],
+  "windowsReadBindingCases": [
+    {
+      "id": "none",
+      "mutation": "none",
+      "admit": true
+    },
+    {
+      "id": "root-only",
+      "mutation": "root-only",
+      "admit": false
+    },
+    {
+      "id": "journals-only",
+      "mutation": "journals-only",
+      "admit": false
+    },
+    {
+      "id": "unknown",
+      "mutation": "unknown",
+      "admit": false
+    },
+    {
+      "id": "duplicate",
+      "mutation": "duplicate",
+      "admit": false
+    },
+    {
+      "id": "missing-name",
+      "mutation": "missing-name",
+      "admit": false
+    },
+    {
+      "id": "extra-name",
+      "mutation": "extra-name",
+      "admit": false
+    },
+    {
+      "id": "root-getter",
+      "mutation": "root-getter",
+      "admit": false
+    },
+    {
+      "id": "root-proxy",
+      "mutation": "root-proxy",
+      "admit": false
+    },
+    {
+      "id": "name-getter",
+      "mutation": "name-getter",
+      "admit": false
+    },
+    {
+      "id": "names-proxy",
+      "mutation": "names-proxy",
+      "admit": false
+    },
+    {
+      "id": "binding-proxy",
+      "mutation": "binding-proxy",
+      "admit": false
+    },
+    {
+      "id": "proto",
+      "mutation": "proto",
+      "admit": false
+    }
+  ],
+  "retainedInactiveCases": [
+    {
+      "id": "darwin-none",
+      "platform": "darwin",
+      "fault": "none",
+      "admit": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "darwin-inactive",
+      "platform": "darwin",
+      "fault": "inactive",
+      "admit": false,
+      "initialState": "inactive"
+    },
+    {
+      "id": "darwin-reorder",
+      "platform": "darwin",
+      "fault": "reorder",
+      "admit": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "darwin-extra",
+      "platform": "darwin",
+      "fault": "extra",
+      "admit": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "darwin-pending",
+      "platform": "darwin",
+      "fault": "pending",
+      "admit": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "linux-none",
+      "platform": "linux",
+      "fault": "none",
+      "admit": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "linux-inactive",
+      "platform": "linux",
+      "fault": "inactive",
+      "admit": false,
+      "initialState": "inactive"
+    },
+    {
+      "id": "linux-reorder",
+      "platform": "linux",
+      "fault": "reorder",
+      "admit": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "linux-extra",
+      "platform": "linux",
+      "fault": "extra",
+      "admit": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "linux-pending",
+      "platform": "linux",
+      "fault": "pending",
+      "admit": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "win32-none",
+      "platform": "win32",
+      "fault": "none",
+      "admit": true,
+      "initialState": "mounted"
+    },
+    {
+      "id": "win32-inactive",
+      "platform": "win32",
+      "fault": "inactive",
+      "admit": false,
+      "initialState": "inactive"
+    },
+    {
+      "id": "win32-reorder",
+      "platform": "win32",
+      "fault": "reorder",
+      "admit": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "win32-extra",
+      "platform": "win32",
+      "fault": "extra",
+      "admit": false,
+      "initialState": "mounted"
+    },
+    {
+      "id": "win32-pending",
+      "platform": "win32",
+      "fault": "pending",
+      "admit": false,
+      "initialState": "mounted"
+    }
+  ],
+  "retainedInactiveLifecycleCases": [
+    {
+      "id": "none",
+      "fault": "none",
+      "admit": true,
+      "remount": false,
+      "unresolved": false
+    },
+    {
+      "id": "final-detach",
+      "fault": "final-detach",
+      "admit": false,
+      "remount": true,
+      "unresolved": false
+    },
+    {
+      "id": "final-inactive",
+      "fault": "final-inactive",
+      "admit": false,
+      "remount": true,
+      "unresolved": false
+    },
+    {
+      "id": "terminal-cas",
+      "fault": "terminal-cas",
+      "admit": false,
+      "remount": true,
+      "unresolved": false
+    },
+    {
+      "id": "pending-clear",
+      "fault": "pending-clear",
+      "admit": false,
+      "remount": true,
+      "unresolved": false
+    },
+    {
+      "id": "settled",
+      "fault": "settled",
+      "admit": false,
+      "remount": true,
+      "unresolved": false
+    },
+    {
+      "id": "undefined",
+      "fault": "undefined",
+      "admit": false,
+      "remount": true,
+      "unresolved": false
+    },
+    {
+      "id": "frozen",
+      "fault": "frozen",
+      "admit": false,
+      "remount": true,
+      "unresolved": false
+    },
+    {
+      "id": "cleanup-attach",
+      "fault": "cleanup-attach",
+      "admit": false,
+      "remount": true,
+      "unresolved": true
+    },
+    {
+      "id": "release",
+      "fault": "release",
+      "admit": false,
+      "remount": true,
+      "unresolved": true
+    },
+    {
+      "id": "close-after-clear",
+      "fault": "close",
+      "admit": false,
+      "remount": false,
+      "unresolved": true
+    }
+  ],
+  "retainedInactiveTerminalCases": [
+    {
+      "id": "none",
+      "fault": "none",
+      "admit": true
+    },
+    {
+      "id": "purpose",
+      "fault": "purpose",
+      "admit": false
+    },
+    {
+      "id": "mapping",
+      "fault": "mapping",
+      "admit": false
+    },
+    {
+      "id": "commands",
+      "fault": "commands",
+      "admit": false
+    },
+    {
+      "id": "pending",
+      "fault": "pending",
+      "admit": false
+    },
+    {
+      "id": "unqualified",
+      "fault": "unqualified",
+      "admit": false
+    },
+    {
+      "id": "before",
+      "fault": "before",
+      "admit": false
+    },
+    {
+      "id": "after",
+      "fault": "after",
+      "admit": false
+    },
+    {
+      "id": "durable",
+      "fault": "durable",
+      "admit": false
+    },
+    {
+      "id": "receipt",
+      "fault": "receipt",
+      "admit": false
+    },
+    {
+      "id": "stamp",
+      "fault": "stamp",
+      "admit": false
+    },
+    {
+      "id": "bytes",
+      "fault": "bytes",
+      "admit": false
+    },
+    {
+      "id": "root-sync",
+      "fault": "root-sync",
+      "admit": false
+    },
+    {
+      "id": "host-sync",
+      "fault": "host-sync",
+      "admit": false
+    },
+    {
+      "id": "empty",
+      "fault": "empty",
+      "admit": false
+    }
   ]
 }

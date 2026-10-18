@@ -27,6 +27,7 @@ semio-s-artifact-norm-en1995-mutations = { workspace = true }
 semio-s-plugin-norm-compliance = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-norm-en1995-examples = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-s-plugin-norm-compliance = { workspace = true, features = ["compliance-testing"] }
 serde = { workspace = true }

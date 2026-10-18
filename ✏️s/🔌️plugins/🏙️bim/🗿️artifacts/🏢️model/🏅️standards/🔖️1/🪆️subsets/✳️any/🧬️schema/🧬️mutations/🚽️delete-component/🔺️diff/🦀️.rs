@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `DeleteComponent`: the component leaves in one sparse diff together with its parameter overrides and its properties and classifications (see the shared cascade).
 //! The outcome carries a cascade note when more than the component leaves.
 
-use super::super::cascade;
-use super::DeleteComponent;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_component::DeleteComponent;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

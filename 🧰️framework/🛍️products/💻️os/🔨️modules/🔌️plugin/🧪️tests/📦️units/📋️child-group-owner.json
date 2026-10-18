@@ -4,7 +4,7 @@
   "target": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧩️child-operations/⚖️laws/🦀️.rs",
   "host": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
   "original": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
-  "canonicalModuleSha256": "fc7554616499e77cb41b7b3fed1cf4588954d061994d90193131dd3896cb0c0a",
+  "canonicalModuleSha256": "7c7beaa9738215f7fd0026a6bf544d1dfd0efc36ab2014aa5d55ad9b4dedce2c",
   "oldActiveInstances": 32,
   "newUniqueObligations": 16,
   "oldLawAssertions": 872,
@@ -13,7 +13,7 @@
   "laws": [
     {
       "name": "child_complete_group_source_candidate_reader_retains_actual_partial8194_pages",
-      "canonicalSha256": "33523d1a92eaa4cfdfa17aa46497a0745537357ea3320d345674386f8805a2ee",
+      "canonicalSha256": "e9e8b4e385364b234529f4af11f7c81c4e7878657f37146c0bd1c803963dec0c",
       "originalSha256": "e043b652e4680765ff99bb0307bfd2da1a7a9b5658f1185439b3e09c7d42f53a",
       "assertions": 15,
       "debugOnlyRemoved": [
@@ -22,7 +22,7 @@
     },
     {
       "name": "child_complete_group_source_candidate_matches_independent_wire",
-      "canonicalSha256": "6161c0ae5f6357119270622d52dde2efb3347df134f24d3e40c7024c6ed88dd6",
+      "canonicalSha256": "477eccd8c2ce7595bbf432d2de917274dc5618185c26628d08f4364f7d2dbe3b",
       "originalSha256": "0a7b4529c2f7725ee300f5b7d95eb416507b3b6f3602738f084b749292859be9",
       "assertions": 11,
       "debugOnlyRemoved": [
@@ -31,14 +31,14 @@
     },
     {
       "name": "child_complete_original_semantic_metadata8194_grant4096",
-      "canonicalSha256": "67aa5cf233981e53e0e3ee47bdbd36cdee755a74b046454e2bc69973d608c6bd",
+      "canonicalSha256": "307435b850854c18537340bf476b621bb9e571f1fbd94e1794cd808dd97a3c0f",
       "originalSha256": "27fd4622d6bdace85600cb0a81b38e22b67d43f315b477b010023f89d39f200b",
       "assertions": 13,
       "debugOnlyRemoved": []
     },
     {
       "name": "child_complete_group_source_candidate_paged_semantic8194_metadata_and_labels",
-      "canonicalSha256": "0e01612bde24314fbb4920bd767177808f27170d403a3530bab5d1ca083da83d",
+      "canonicalSha256": "d32516277c805830fb9e435eb6324623736264088502054617c107261659090e",
       "originalSha256": "dde95ff6380d587ee4344e389aa2937d7b1706198ba391b0ffc048f6182fba36",
       "assertions": 26,
       "debugOnlyRemoved": [
@@ -47,7 +47,7 @@
     },
     {
       "name": "child_complete_group_source_candidate_direct_producer_and_parent",
-      "canonicalSha256": "f122cd224beb416521d7e4b1387f3b66a89b8b88eaf5a9dc95245a6e39c862df",
+      "canonicalSha256": "407d19c077dae9ff2ee083b5513e0853b77b38b9a987ea72d7c67696b8cd0e0b",
       "originalSha256": "837b821cd44e535994f3e01d3abe90202d65cf72403e8a8b4bd1d71972164615",
       "assertions": 29,
       "debugOnlyRemoved": [
@@ -56,7 +56,7 @@
     },
     {
       "name": "child_complete_group_source_candidate_repeated_prefix_preserves_accepted_owners",
-      "canonicalSha256": "5052e248eacfb8257dbb745a2fd9a306d42f992f45060240c9e4ddb8daf59fcd",
+      "canonicalSha256": "64069db39ef369db397345aefc66d5523a2b0237c39e7667785eb0725c5a82b3",
       "originalSha256": "2cd00290ff73e4c0d652274c0a0f3ae0e5ddbb01e8076850396101e10290c05d",
       "assertions": 28,
       "debugOnlyRemoved": [
@@ -65,7 +65,7 @@
     },
     {
       "name": "child_complete_group_source_candidate_refuses_partial_last_locale_before_commit",
-      "canonicalSha256": "7a363825df9f7a2b66c8a3563a5c11c56af2bdc6b19f3645d8aedae4c82268f1",
+      "canonicalSha256": "d845eeaf4531f613db7d1d59a39ca569e0ec82876efdb9275f88f841725a716b",
       "originalSha256": "09ab4273b4244df5fca7699184b2cf7f9bfa79caba62e1d089426d0961ff1e7d",
       "assertions": 16,
       "debugOnlyRemoved": [
@@ -74,7 +74,7 @@
     },
     {
       "name": "child_complete_actual_authored_label_producer_preserves_all_axes_and_retained_source",
-      "canonicalSha256": "f1993f6a1e482474482d844fc8295c755fd879825402e533d2bedc418666f822",
+      "canonicalSha256": "66ad67b8c5cffddc9416b450c87bc106554eb37cc08467eae70bd74ea2b2031e",
       "originalSha256": "e86ca8b2dbb0d0629938818e8ba1e63183e9635d0175befbc97764356b64246c",
       "assertions": 23,
       "debugOnlyRemoved": [
@@ -83,7 +83,7 @@
     },
     {
       "name": "child_complete_actual_authored_label_receipt_joins_original8194_source_and_prefix",
-      "canonicalSha256": "e16cd0d69d45ce2d042dc07558fd81195b2583e78c9522eeab8f9a6957886c1c",
+      "canonicalSha256": "09359a8809534ba15d9af1c0ad04191a34d5a26bf40358c6382122bb39381daa",
       "originalSha256": "b64bd44ade15fe3c815574126d07cd9d500b26934aef471cedd59f5cfaa22d8c",
       "assertions": 16,
       "debugOnlyRemoved": [
@@ -92,7 +92,7 @@
     },
     {
       "name": "child_complete_group_source_candidate_owned_publication_preserves_empty_original_and_parent",
-      "canonicalSha256": "dca1b72f2b5bce9a2c49445e74ef752ea31ace77a71d974fde266229e3eb9892",
+      "canonicalSha256": "9507defdb59683d43763a2dda0b063385b6375d75877ebdd5f5a7c4ed114f483",
       "originalSha256": "f815839f91568b51cca5d6638295b183f4b2bed8c02b9d42025050a906ed9c1e",
       "assertions": 45,
       "debugOnlyRemoved": [
@@ -101,7 +101,7 @@
     },
     {
       "name": "child_complete_group_source_candidate_accepted_ledger_retains_original_registry_sources",
-      "canonicalSha256": "dd13379e713570eac32ac8020a57db2671eb20c31d51f61171876292b444d9df",
+      "canonicalSha256": "aef8553e229a9c1b24125ec4cebaadcd15ca38f72ba619b19aaad44f1a53e57e",
       "originalSha256": "62b747eeaf1d5106bb360d59ad88a8a039f43699f4cb6451f89ade0fe8fb0eb8",
       "assertions": 67,
       "debugOnlyRemoved": [
@@ -112,7 +112,7 @@
     },
     {
       "name": "child_complete_actual_authored_operation_producer_joins_original_projection_and_retained_receipt",
-      "canonicalSha256": "1063903df81db41b62ef8a109caf75e21586452f15856dd3475b8f3ce15f0299",
+      "canonicalSha256": "be22fe4988b872e491a37fe89988f0b8baa03248169478baafcc3e1f51de1b5d",
       "originalSha256": "fe5518a7a7515d7d13a42852cfc4b4f91cd28065dfadbfcf59641d67aed12851",
       "assertions": 31,
       "debugOnlyRemoved": [
@@ -130,7 +130,7 @@
     },
     {
       "name": "child_complete_actual_authored_typed_source_physical8194_grant4096",
-      "canonicalSha256": "4e5a72803e2679180b54a6ce153ea96327e0419acb3ce0d9c79873002197f54e",
+      "canonicalSha256": "58281197b88a885567690cabc37fb9ee826440fe1900967f2942c1f375d7f5b4",
       "originalSha256": "781124cc725186d2160a729ab5c5b9de8cfc2c6f69f3a686985034e542d6a257",
       "assertions": 36,
       "debugOnlyRemoved": [
@@ -141,7 +141,7 @@
     },
     {
       "name": "child_complete_actual_authored_paged_source8194_frame8202_physical4096",
-      "canonicalSha256": "8b303bdd130ad23ebe51e71bf8b5fe8e3d539ab2720a4ed4ed514b33a0628b7a",
+      "canonicalSha256": "85f00c7fd414c38a05894cba3eed57a3454dd4a17a4bb11c8aca7cd5da7ed1b1",
       "originalSha256": "40ab6cec24d3d9efe4ee030c12cddc84de2e27a3e9c6b818312c86df86c6cea6",
       "assertions": 45,
       "debugOnlyRemoved": [
@@ -150,7 +150,7 @@
     },
     {
       "name": "child_complete_candidate_retirement_keeps_currencies_independent",
-      "canonicalSha256": "4f6bd8e967f8c48a603bb1b44607519ba9b0a43346f207a7a4f4b4133d358b2d",
+      "canonicalSha256": "a155b545105128ac7f8857719e996042496392e75b4d64c4d0c19b14404c3627",
       "originalSha256": "4f95ea8eb5435a44a50432b4e012e7582436f8ea53e615142bf6671119ab89df",
       "assertions": 23,
       "debugOnlyRemoved": [
@@ -161,23 +161,23 @@
   "remaining": [
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪝️mounts/👥️wp3-owners/🧪️test-hosts/🧵️retained-command/🦀️.rs",
-      "sha256": "da35ae7fd37f9af1501ad0b38416836d4f3dda5818dc7f5b96a529eb05290176",
+      "sha256": "5c17aa63bd9a2ca75e12ce481e85865bf03c8837ec7b77dba3b1827fb6fd84af",
       "functions": [
         {
           "name": "test_retained_keyed_dispatch",
-          "sha256": "54c29030b280d04324122675d71838b41ca9f6dc6cd5ea5d3be29a0a6b201a6e"
+          "sha256": "6e8c7cd1e4192ccb54f22017b218877a5f8d894d6548aa9efc7b6c7791a91b8a"
         },
         {
           "name": "test_typed_operation_slot_preadmission",
-          "sha256": "96dd3656e7a5b7e62231a671a0ea628d2366fe59ff4d0906a21a94237217e32c"
+          "sha256": "ea294b36e99008b4050c829a9a758a33aeabf4f63da281747bf1ff935244aeb1"
         },
         {
           "name": "test_typed_operation_slot_retirement_under_storm",
-          "sha256": "d69b9214a3390fe6422b85f063c4b6202e4e4c1e7d1327e0d97ee8f80bbcf052"
+          "sha256": "7475959a173a397c279b164ce5e9c546fa0b58fab26d469787262de1050e563b"
         },
         {
           "name": "test_typed_operation_slot_release_on_every_outcome",
-          "sha256": "446e213bb9f7f1e29ee622b83fc08576515dda723ddd894e83f67c22b3774a2e"
+          "sha256": "b2f2481fde160fba417e04826ae28527054c4cae34806b90cdfd451da67f8e23"
         },
         {
           "name": "admit_fixture_typed_action",
@@ -185,11 +185,11 @@
         },
         {
           "name": "drive_host_typed_continuations",
-          "sha256": "2062b19f863a6fe375b1bae73c99f505d8b8f4935adaea91936c0d8ec0a1beb2"
+          "sha256": "edb1ec70781df0c769e1aabd7bc9430a837c0d73783c2641240ef053606676f8"
         },
         {
           "name": "drive_host_call_with_deferred_acks",
-          "sha256": "d94e08d2006d5be94bdf7ef4c1262ce8dd01297b68293da0b5c11d464de332b0"
+          "sha256": "1dcbe1e679e01a0dc4d0e35d0e6bc1aa89c7575c68e5c640d3b7298e20b892b0"
         },
         {
           "name": "assert_landing_terminal_lane",
@@ -197,15 +197,15 @@
         },
         {
           "name": "test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work",
-          "sha256": "5e1d2c6b83505a15ff4d1710257cffef733cd8d8bb20c7ca76cead280b0c76a4"
+          "sha256": "4e08509638ac2a18ae618a7c8ec63304cf52bf9bc2f6c6673f67531eed226b1e"
         },
         {
           "name": "test_typed_operation_completes_under_a_status_only_host_call",
-          "sha256": "ed47a449f25aa39bfe00c444c9a733c2d007237c5146d0b44b03ae5f08cbdcea"
+          "sha256": "33146c09d9f0a2b6052e3a3b6d03beea918df7aa2982cd79574c719119a4de84"
         },
         {
           "name": "test_typed_operation_lands_its_edit_inside_the_admitting_call",
-          "sha256": "cde8fc444aafef086f3ba61fa45eee1462876e3a11a82832317907686bccc04f"
+          "sha256": "43de4d375450e8877d13e8343ef0b6493cb6a885ee2feb5b31b4123ce1583717"
         },
         {
           "name": "released_slot_census",
@@ -213,15 +213,15 @@
         },
         {
           "name": "fixture_close_receipt",
-          "sha256": "3278cf5471e6b8680901becdf2fc95d726fa8d3224d1d75a71a691248be3fbb6"
+          "sha256": "33c5ae35234f07e9bf1f9780304dd792c8b90179f68a79fdc87638d3bad6d384"
         },
         {
           "name": "close_fixture_app_to_terminal_emptiness",
-          "sha256": "1d9e482c3d17855e484196bb387447b9c65776655131125bb9f19d169a2fec78"
+          "sha256": "db6fd9bb32a3ea3d7fa62747352c433a84c652af703086096146116a79602ee4"
         },
         {
           "name": "test_retained_cancellation_publication_boundaries",
-          "sha256": "cc9dcdb03e45d1e93e5dacc6794100ad05c364b60a705252fd2fbe3b8d02c080"
+          "sha256": "f68e1b7d1b6b6f2e4e70873f87e2cedebf69e432577de42e49fa6566e3f236ee"
         },
         {
           "name": "fixture_close_turn",
@@ -233,26 +233,32 @@
         },
         {
           "name": "test_retained_latest_wins_slot_and_publication_fairness",
-          "sha256": "5b81b6a3f248ce2d1d0e53b03b96df0bdd9ad05808a0fbf8ae0cb6cf0804acbc"
+          "sha256": "2913d4ace334176aff86e39c05c214f4b8cdbf7f70d66b09c6e08d6266a99eef"
         },
         {
           "name": "test_retained_document_cancellation",
-          "sha256": "920031178f7d39d84effffeec0322807bec2c06b9c0d58c65f28866e87598e3d"
+          "sha256": "660d4933bec8e51e02e51bfff6653313b56fe5b20486cb1463e14771149ccb1b"
         }
       ]
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🦀️.rs",
-      "sha256": "b7b3dcdf106f98e5939480f9074a98c690b606d6ac78bd48a8a45e1ff056cdd3",
+      "sha256": "08c4234199230665377d8f61b210584a9bd0302b5438777919ab1689af2e0539",
       "functions": [
         {
           "name": "module_source",
-          "sha256": "d39e1df4e85d6ab04f847b350e8ac6cbe7e730533d352be63f04149e66021903"
+          "sha256": "0d4b15392e31620425f4c75dd13326a3e9c0a816d37fac4efa667f14450efff6"
         },
         {
           "name": "instance_source",
-          "sha256": "3f6e7ef077c04fdcb6e344ee2886b181be9f0f09c24b05476644897f2f76db47"
-        },
+          "sha256": "c0761d3aca06864a3cd7361c25bfc515f7086b36b7a6d5bab1489d8ee22904a5"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🔎️census-oracles-and-fixture-machine/🦀️.rs",
+      "sha256": "d9b73293563df5986db8fe63cf25c782962517e3e0070eda665d64d7808d8665",
+      "functions": [
         {
           "name": "decide",
           "sha256": "bb2589ed331fa8b3240e4f3390763d1b08cfaecd80e26dacdeeb83ae4421ce87"
@@ -263,23 +269,23 @@
         },
         {
           "name": "new",
-          "sha256": "0a84297eb70117ef51340846651830473e3f54ecc15ff7e7e0d801ea84c87a63"
+          "sha256": "c6ebf941ec30c035b0b6291624d28fb718a4c4718d383f52c56653c89277f876"
         },
         {
           "name": "grant",
-          "sha256": "03dd44ad85da6927b6ebeae72cb552df96090f2484a0f86f7278fa8b2427c75c"
+          "sha256": "03eee553c9848180414a1683debf8e8cf0243ba0a29739d730ce5ef8c08b413f"
         },
         {
           "name": "freshness",
-          "sha256": "f67b183a347058bbbe2691f55e133c46cf920ca8cd3b34a1fa1aafccbc134523"
+          "sha256": "79ac545fe53eca3c5e1918c1477dac3fd29df6e3733347fb5fd2b70da9c81c67"
         },
         {
           "name": "admission",
-          "sha256": "c61741f8109070e8438eb50093440cd28e2eae0e63a7294b659b88d4d662275f"
+          "sha256": "188cd4b83c994099aafbc6bed6b90d8131023115976f66a1577a8f91db5cc997"
         },
         {
           "name": "publish",
-          "sha256": "b832697397d10fc65f36e0abbf598cfb9ebc2e3f8553d4b56d6460e88b68306c"
+          "sha256": "82c5f7d8ae3bba5916128c5fde62694fc19fc3f4d1cae2ee7e1af2c0f442e1f6"
         },
         {
           "name": "close_scalar",
@@ -287,12 +293,18 @@
         },
         {
           "name": "close_owner",
-          "sha256": "dd5f0e4ac23dacf90e509270adef62867311a6d5b14ee844b8bdcdf16e155ec8"
+          "sha256": "993a652ffedadfe00f1e55f69dfd64bf0d86e2a0436593179cb0bd9236bc41e3"
         },
         {
           "name": "transition",
-          "sha256": "99747fb7ff6c7f570d99e74b7b3e8e31b7e29c11d4362519e8fffb3ed6e60b24"
-        },
+          "sha256": "f81bbdf8d14f42f98d2637cb52d3643c618af61745f1f156f44043b9b07db339"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🔐️two-turn-presence-and-root-retirement/🦀️.rs",
+      "sha256": "c96e29d1c02b6419fea67f7e0bc560bc77867fa28a24c09730a2a133a892084b",
+      "functions": [
         {
           "name": "preflight",
           "sha256": "6323d5dd146c8c1e064215eea65ed26e6b822b50fde5be8086aa54323243ab80"
@@ -392,10 +404,16 @@
         {
           "name": "advance_registry",
           "sha256": "be3d26055ab15e7c40c688be130cf6bcce4199b3227dc5606feb5425bfa10a48"
-        },
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🚫️cancellation-publication-boundaries/🦀️.rs",
+      "sha256": "21200322dc46d0b19544336e3bec8e0079e8cb3c387af904a3c018efa1ed2e95",
+      "functions": [
         {
           "name": "retained_cancellation_publication_boundaries",
-          "sha256": "94aaac6402aecac56b3e452ca4beb5c00b29251e7f034e37a2adb58e107dab9b"
+          "sha256": "8af0d34c4436faa7ee28e7383dd7603854855e50eb136ab5cb93b7fb4710df5b"
         },
         {
           "name": "fixture_latest_wins_key",
@@ -403,15 +421,21 @@
         },
         {
           "name": "latest_wins_owned_key_retains_zero_and_subexact_headers",
-          "sha256": "f6d1937aea50853e4211e10526da4708b2ec13cd0e9f560ecbb55b99e43218a2"
-        },
+          "sha256": "ef4266e3a95709ed15ff0cfc764b44dd0eca29b6a0be946026db0ee51bce4cf2"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/📌️document-cancellation-and-latest-wins-keys/🦀️.rs",
+      "sha256": "c9d6da8f40fd88b4a592a2ea2a3d687af01c6bb3c68e1d4da947b5fe1453bf04",
+      "functions": [
         {
           "name": "retained_document_cancellation",
-          "sha256": "6ee3068f34fb12919ba891270493cfc6c7a01454d09c09f350c5dd01e742eb4e"
+          "sha256": "dbf9647248fb44746aac2314fb751c69b054644445895ee323d1c07c544eba04"
         },
         {
           "name": "retained_latest_wins_full_domain_exact_keys_match_serde_oracle_and_retire",
-          "sha256": "4455eb6eb893a97015915c627924d604e1c64e196b8ab9078508245c6e86f50c"
+          "sha256": "49f1f983362953fd03f0f0f77f7a7e833381c9366fe3fc8645c841504320a7b6"
         },
         {
           "name": "retained_latest_wins_producer_child_cannot_bypass_document_or_app_publication_claim",
@@ -419,20 +443,32 @@
         },
         {
           "name": "retained_latest_wins_contended_finish_is_deferred_and_cannot_release_replacement",
-          "sha256": "8bfa4cd4291a6353972a7b677317dc82e43b182a8b6fcaefe643b279c88d1418"
+          "sha256": "c763ab0dc1f4cb897449e3686ebde00c70a6f2f39199a8b9e26d4045732b0ca8"
         },
         {
           "name": "retained_latest_wins_rebase_rebinds_exact_registered_cancellation_authority",
-          "sha256": "6c805d5c2eb6e8b40a0021f85410ff0aa0fafa18891d410b6b478f11768ec22d"
+          "sha256": "7a05a322341e94637676b8d594fa1cff0954327aab1ccdb426af8486295f2e80"
         },
         {
           "name": "retained_latest_wins_full_registry_reclaims_completed_targets_before_admission",
-          "sha256": "54188c90b5b82f756683929952079714e262b58dafa646068c2ebbeffe349303"
-        },
+          "sha256": "6e5e6bd9d57ddbb6dd4045a1a90c0e0eff9774e6104741658d75d526e6132793"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/⚖️slot-and-publication-fairness/🦀️.rs",
+      "sha256": "5fec9980fbb313c1c7ebcb53dad648af2bd222bcd8e2bdf4edc5f5d11f84b5f0",
+      "functions": [
         {
           "name": "retained_latest_wins_slot_and_publication_fairness",
-          "sha256": "e116750eb4abcc133d9ea144610b3e34b0a2e8b5dd6447ce05de06fed7571ba8"
-        },
+          "sha256": "fb79ebef4670ec10ba84fc5aa0a58c9fcc6a94ea1579257426a35875cc8cb2e9"
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🌐️neutral-hostile-rows/🦀️.rs",
+      "sha256": "8901af31f089d37722a0a7fded35f52e9e111a920b70113f52b7af00b2e77515",
+      "functions": [
         {
           "name": "language_neutral_empty_single_max_and_plus_one_match_the_test_only_oracle",
           "sha256": "65d00db34eabaa34f55e806f16b85c05effd6a917fe8ec9c05268469b5cea4b5"
@@ -440,23 +476,35 @@
         {
           "name": "every_language_neutral_hostile_row_executes_the_owned_state_machine_and_serde_oracle",
           "sha256": "d2fd3d0833e962db31a4e04a9e38ab4c7c38f340ea92986e98ccdb970dde80cb"
-        },
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/👪️child-genesis-wire-and-group-owner/🦀️.rs",
+      "sha256": "5dbd46b53b571351109249203f432cf6a6964bdf7129e3ff38efbc23e0859af4",
+      "functions": [
         {
           "name": "document_revision_change_between_ephemeral_preparation_turns_closes_without_publishing_the_lane_root",
           "sha256": "ef47f47b2c41b5bfba5ce50249eae30a9e9f413dbda07b568f961993b5a77047"
         },
         {
           "name": "private_child_genesis_wire_retains_exact_identity_and_indivisible_backing",
-          "sha256": "f5cc06e244426267098c38b5f331d1c9a1e8fee92ca16455fbbc032798f7c21a"
+          "sha256": "f66f351eda04df25b72dc9207e51c07fba31e7a6ac7df3765bab2a12aa08c93a"
         },
         {
           "name": "retained_child_wire_rejection_retires_nested_owners_under_the_production_grant",
-          "sha256": "32471fd30952067e29426be4a7978f219be933771f17a4e7704c76c5374336d3"
+          "sha256": "243a7aa4a406468a40c157e9655c6ba6e718129da763b92a7bc7f2ecc99bc37e"
         },
         {
           "name": "typed_child_publication_has_one_retained_async_group_owner_and_never_clone_publishes",
           "sha256": "91ec4edaf8b5a20b56713b9c52a31d2d673a85068eec6778ac97328036e1b4d4"
-        },
+        }
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-typed-command-full-operation/🧾️source-rejection-anchors-and-host-lane/🦀️.rs",
+      "sha256": "497b516b8e24e9869b3ec28c39b0edff3627e90fa1f4357320f605ec31b216fe",
+      "functions": [
         {
           "name": "full_operation_source_rejects_generic_reducers_and_old_monolithic_shells",
           "sha256": "1af965936f55f61db69558e7813f545b25ff97c007d1d1f614e1d204da69a075"
@@ -467,7 +515,7 @@
         },
         {
           "name": "language_neutral_renderer_page_and_exact_ack_have_bounded_stable_wire_fields",
-          "sha256": "7c9fcec21b3bb09234e515659945c8b8b1557b9e771876af885c17963c306015"
+          "sha256": "8590256a028db8ee9edc3aecddead39dd9dd875248037214ab29a32efbd2e6c7"
         },
         {
           "name": "host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate",
@@ -545,9 +593,9 @@
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🎚️test-app-config-selection-unit/🦀️.rs",
-      "bytes": 8048,
+      "bytes": 7884,
       "nonblank": 93,
-      "sha256": "a1225f7406701dbd22e7b1f296734b3e673401cc656e86a56ea85ed414984c24"
+      "sha256": "a99e4836a6388e312a383689ca9066c39bce48d2c8ea4eddc1ba76aceda2fbc1"
     },
     {
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🖥️test-app-mutations-document/🦀️.rs",
@@ -613,6 +661,7 @@
     "semio-framework-pack-json",
     "semio-framework-plugin-decl-emission",
     "semio-framework-schema-composition",
+    "semio-framework-test-fixtures",
     "semio-framework-trace",
     "semio-framework-ui-locale",
     "semio-framework-value",

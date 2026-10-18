@@ -1,11 +1,11 @@
-import{requireArtifactDescriptorClosureV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{requireArtifactDescriptorClosureV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{AsyncLocalStorage}from"node:async_hooks";
 import{resolve}from"node:path";
 import{requireResourceLeaseReadCustodyV1,captureResourceLeaseWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,acceptResourceLeaseCleanupV1,requireAcceptedResourceLeaseRetainedCleanupV1,type AcceptedResourceLeaseCleanupV1,type ResourceLease,type ResourceLeaseControl}from"../../../../🔒️leases/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
-import{requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withAcceptedPhysicalCleanupOperationV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{requireIssuedResourceControlRefinementV1,withRequestedIssuedResourceControlV1,withAcceptedPhysicalCleanupOperationV1,requireIssuedResourceControlDescendantV1}from"../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{nativeImageOperationAdmissionV1}from"../🧹️cleanup/📋️state/🟦️.ts";
-import schema from"../🧹️cleanup/📥️operation/🧬️schema/🔣️.json";
+import schema from"../🧹️cleanup/📥️operation/🧬️schema/🔣️.json" with{type:"json"};
 const maximum=schema.definitions.Protocol.const.maximumPendingOperations,maximumUnresolvedCleanup=schema.definitions.Protocol.const.maximumUnresolvedCleanupOwners,maximumOwners=schema.definitions.Protocol.const.maximumBorrowerOwners;
 declare const guardBrand:unique symbol;
 /** 🧷️ Retains one authenticated image guard without granting mapping or activation authority. */
@@ -36,3 +36,15 @@ export function closeNativeImageBorrowerCleanupV1(owner:NativeImageBorrowerV1,lo
 import{requireResourceLeaseCleanupContinuationV1}from"../../../../🔒️leases/🟦️.ts";
 /** 🛟️ Drains only the actual current guard bound to an exact prebirth EX anchor before terminal reacquisition. */
 export function closeNativeImageBorrowerContinuationV1(owner:NativeImageBorrowerV1,loan:AcceptedResourceLeaseCleanupV1,enrollment:AcceptedPhysicalCleanupV1):Promise<readonly unknown[]>{const scope=scopeOf(owner);requireOutsideBorrower(scope);scope.open=false;return withAcceptedPhysicalCleanupOperationV1(enrollment,async()=>{while(scope.pending.size)await Promise.allSettled([...scope.pending]);const live=requireResourceLeaseCleanupContinuationV1(scope.lease,loan,enrollment);if(live)try{requireArtifactDescriptorClosureV1();scope.lease.release();}catch(error){unresolvedCleanupBorrowers.add(scope);throw error;}scope.live=false;retainedBorrowers.delete(scope);return Object.freeze([...scope.failures]);});}
+
+
+declare const nativeBorrowerOperationBrandV1:unique symbol;
+/** 🪪️ Names only one actually admitted borrower lifetime without writer or funding authority. */
+export type NativeImageBorrowerOperationV1=Readonly<{readonly[nativeBorrowerOperationBrandV1]:true}>;
+const nativeBorrowerOperationIdentitiesV1=new WeakMap<Frame,NativeImageBorrowerOperationV1>();
+/** 🧭️ Resolves only the genuine active control lifetime without reopening borrower admission. */
+function nativeBorrowerOperationFrameV1(owner:NativeImageBorrowerV1,control:ResourceLeaseControl,capture:boolean):Frame{const scope=scopeOf(owner),current=context.getStore();if(!scope.live||!current||capture&&(!current.live||!current.accepting))throw Error("Actual live Native borrower operation required");scope.verify();requireIssuedResourceControlRefinementV1(scope.control,control);requireIssuedResourceControlDescendantV1(current.control,control);let outer:Frame|undefined;for(let frame:Frame|undefined=current;frame;frame=frame.parent)if(frame.scope===scope&&(capture?frame.live:nativeBorrowerOperationIdentitiesV1.has(frame)))outer=frame;if(!outer)throw Error("Actual same-owner Native borrower frame required");requireIssuedResourceControlDescendantV1(outer.control,control);const policy=schema.definitions.BorrowerOperationIdentity.const;if(!policy.outermostSameOwner||!policy.privateIssueOnly||policy.registration||policy.writerAuthority||policy.expires!=="actual-frame-drained")throw Error("Closed Native borrower identity policy required");return outer;}
+/** 🪆️ Captures the outermost real same-owner operation through its admitted descendant drain. */
+export function captureNativeImageBorrowerOperationV1(owner:NativeImageBorrowerV1,control:ResourceLeaseControl):NativeImageBorrowerOperationV1{const outer=nativeBorrowerOperationFrameV1(owner,control,true);let token=nativeBorrowerOperationIdentitiesV1.get(outer);if(!token){token=Object.freeze({})as NativeImageBorrowerOperationV1;nativeBorrowerOperationIdentitiesV1.set(outer,token);}return token;}
+/** 🔎️ Checks an existing name through its genuine drain without new identity or admission. */
+export function requireNativeImageBorrowerOperationV1(token:NativeImageBorrowerOperationV1,owner:NativeImageBorrowerV1,control:ResourceLeaseControl):void{if(nativeBorrowerOperationIdentitiesV1.get(nativeBorrowerOperationFrameV1(owner,control,false))!==token)throw Error("Exact current Native borrower operation identity required");}

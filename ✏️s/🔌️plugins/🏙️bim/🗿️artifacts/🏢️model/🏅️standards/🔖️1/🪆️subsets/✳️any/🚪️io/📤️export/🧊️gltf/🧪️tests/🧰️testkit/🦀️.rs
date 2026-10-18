@@ -7,7 +7,7 @@ use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 pub const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 
 /// 📁️ The directory of the committed glTF export of the house and the table the `three` oracle measured from it.
-pub const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧊️gltf/🏠️house");
+pub const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧊️gltf/🏠️house");
 
 /// 🏠️ The decoded house model.
 pub fn house() -> ModelSnapshot {
@@ -29,7 +29,7 @@ pub fn third_party(bytes: &[u8]) -> (gltf::Document, Vec<u8>) {
 pub const COMPONENTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🪑️components/📸️snapshot/🔣️.json");
 
 /// 📁️ The directory of the committed glTF export of the components model and the table the `three` oracle measured from it.
-pub const COMPONENTS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧊️gltf/🪑️components");
+pub const COMPONENTS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🧪️tests/🧫️fixtures/🧊️gltf/🪑️components");
 
 /// 🪑️ The decoded components model.
 pub fn components() -> ModelSnapshot {

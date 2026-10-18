@@ -1,0 +1,12 @@
+{
+ "tag": "dgt",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "🧰️group-outcome-and-store-fixtures",
+  "📔️fake-journal-and-map-assembly-fixtures",
+  "🗺️map-assembly-and-decision-laws",
+  "🧾️journal-commit-cancellation-and-stage-error-laws",
+  "🎰️map-host-slot-foreign-anchor-and-carrier-laws"
+ ]
+}

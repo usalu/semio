@@ -1,6 +1,6 @@
 //! 🧮️ The methods of the value types of the `sheets` kit; they live with the value types so the entity types and the model root stay above them.
 
-use super::values::{IsoSize, Orientation, Paper};
+use crate::standards::v1::subsets::any::schema::snapshot::values::{IsoSize, Orientation, Paper};
 
 /// 📐️ The standard sizes in the order they are offered, A4 first.
 pub const ISO_SIZES: [IsoSize; 5] = [IsoSize::A4, IsoSize::A3, IsoSize::A2, IsoSize::A1, IsoSize::A0];

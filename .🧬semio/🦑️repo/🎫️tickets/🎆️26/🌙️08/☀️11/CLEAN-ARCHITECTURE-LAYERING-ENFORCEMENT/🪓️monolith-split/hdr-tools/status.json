@@ -805,9 +805,9 @@
   "state": "DONE"
  },
  "semio-framework-3d-brep-boolean": {
-  "note": "",
-  "after": "0.988 (lib 3/176708/3333; test 5/213580/3951)",
-  "state": "OPEN"
+  "state": "DONE",
+  "after": "0.878 (lib 3/177257/3334; test 4/186819/3511)",
+  "note": "the unit test module (452 lines) moved to the companion 3d-brep-boolean-unit-tests (testcomp.py) with three thin testkit-gated accessors for private fns; pos hdr-boolean NEW 0 non-stub, privacy 0"
  },
  "semio-s-artifact-flow-flow-unit-tests": {
   "state": "DONE",
@@ -1005,9 +1005,9 @@
   "state": "OPEN"
  },
  "semio-s-artifact-process-process3d-host": {
-  "note": "",
-  "after": "1.084 (lib 8/202340/3576; test 9/246706/4335)",
-  "state": "OPEN"
+  "state": "DONE",
+  "after": "0.832 (lib 6/153415/2640; test 7/197781/3328)",
+  "note": "1.084 -> under 0.90: retained-cursors and publication-authority peeled into producer crates (hostpeel.py: pruned use list and extern crates instead of super::*, restricted items widened, testkit forwarded and dev-depended); pos hdr-p3dhost privacy 0 resolve 0"
  },
  "semio-s-artifact-procedural-generation3d": {
   "note": "",
@@ -1418,5 +1418,30 @@
   "state": "DONE",
   "after": "0.500 (lib 16/75316/1304; test 16/75316/1304)",
   "note": "descriptor facets served at run time (new leaves --rust + default reader install)"
+ },
+ "semio-s-artifact-raster-raster-io": {
+  "state": "DONE",
+  "after": "0.875 (lib 26/55539/923; test 28/78294/1275)",
+  "note": "media bridge (semio_bridge, composite_and_media, testing and the lifted mint_raster_asset_child) peeled into raster-io-media-bridge (clumppeel.py)"
+ },
+ "semio-s-artifact-raster-raster-editor-commands": {
+  "state": "DONE",
+  "after": "0.500 (lib 16/81173/1192; test 16/81173/1192)",
+  "note": "lib was 31/32 files: 15 independent payload modules moved to raster-editor-commands-2 (famsplit.py --pin-word RasterCommand keeps every payload that names the closed command enum)"
+ },
+ "semio-s-artifact-raster-raster-host": {
+  "state": "DONE",
+  "after": "0.748 (lib 5/144463/2610; test 6/165550/2990)",
+  "note": "retirement and bounds_census with the four nesting constants peeled into raster-host-retirement-bounds (clumppeel.py --precise keeps the public and private glob semantics)"
+ },
+ "semio-s-artifact-puzzle-5d-v1": {
+  "state": "DONE",
+  "after": "0.281 (lib 5/30832/455; test 9/68808/1105)",
+  "note": "the unit_tests mount (172 KB) moved to the companion puzzle-5d-v1-unit-tests with its own copy of the mirror (mirrorsplit.py)"
+ },
+ "semio-s-artifact-puzzle-2d-v1": {
+  "state": "DONE",
+  "after": "0.772 (lib 6/158485/2279; test 11/202302/3041)",
+  "note": "three cfg(test) mounts of the editor file (agent-lane, clipboard, locks; no super:: use) moved to the mirror and then to the companion puzzle-2d-v1-editor-tests (mirrorsplit.py)"
  }
 }

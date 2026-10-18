@@ -1,9 +1,10 @@
 //! 🎚️ Persisted local state for one exact BIM plan window: which plan view it shows and its navigation. The storey and the cut height are authored in the view.
 
+use crate::editor::bim::kit::path;
 use crate::editor::bim::kit::window_config;
 
 window_config! {
-    window: super::WINDOW_KIND_ID,
+    window: crate::editor::bim::modes::edit::windows::plan::WINDOW_KIND_ID,
     schema: "bim.plan-window.config",
     envelope: "s.bim.model.plan-window.config",
     extension: "bimplanwindowcfg",

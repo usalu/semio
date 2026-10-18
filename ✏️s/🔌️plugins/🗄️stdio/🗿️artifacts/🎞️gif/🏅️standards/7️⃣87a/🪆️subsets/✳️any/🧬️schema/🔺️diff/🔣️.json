@@ -3,14 +3,136 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/diff.json",
   "title": "GifDiff",
   "type": "object",
+  "additionalProperties": false,
   "properties": {
-    "schema": {
-      "type": "string",
+    "width": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/u32",
       "x-semio-state": "artifact"
     },
-    "bytes": {
-      "type": "string",
+    "height": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/u32",
       "x-semio-state": "artifact"
+    },
+    "gct": {
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/colorTable"
+        }
+      ],
+      "x-semio-state": "artifact"
+    },
+    "backgroundColorIndex": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/byte",
+      "x-semio-state": "artifact"
+    },
+    "pixelAspectRatio": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/byte",
+      "x-semio-state": "artifact"
+    },
+    "images": {
+      "$ref": "#/$defs/GifImagesDiff",
+      "x-semio-state": "artifact"
+    }
+  },
+  "$defs": {
+    "GifImageDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "left": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/u32"
+        },
+        "top": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/u32"
+        },
+        "width": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/u32"
+        },
+        "height": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/u32"
+        },
+        "interlace": {
+          "type": "boolean"
+        },
+        "lct": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/colorTable"
+            }
+          ]
+        },
+        "indices": {
+          "type": "array",
+          "items": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/byte"
+          }
+        }
+      }
+    },
+    "GifImageModified": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "diff"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "diff": {
+          "$ref": "#/$defs/GifImageDiff"
+        }
+      }
+    },
+    "GifImageAdded": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "index",
+        "image"
+      ],
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "image": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/gif/87a/any/snapshot.json#/definitions/image"
+        }
+      }
+    },
+    "GifImagesDiff": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "removed": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "modified": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifImageModified"
+          }
+        },
+        "added": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/GifImageAdded"
+          }
+        }
+      }
     }
   }
 }

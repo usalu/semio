@@ -4,8 +4,8 @@
 #[cfg(any(test, feature = "testkit"))]
 struct DirectoryWriterTestFence {
     pub(crate) claimed: std::sync::atomic::AtomicBool,
-    pub(crate) reached: tokio::sync::Notify,
-    pub(crate) release: tokio::sync::Notify,
+    pub reached: tokio::sync::Notify,
+    pub release: tokio::sync::Notify,
 }
 
 #[cfg(any(test, feature = "testkit"))]
@@ -71,9 +71,9 @@ pub const DIRECTORY_DELIVERY_SCOPE_MAX: usize = 4096;
 #[derive(Clone, Copy)]
 struct ArtifactCasSweepPosition {
     pub(crate) execute: bool,
-    pub(crate) observed_generation: u64,
-    pub(crate) after_generation: u64,
-    pub(crate) object_offset: usize,
+    pub observed_generation: u64,
+    pub after_generation: u64,
+    pub object_offset: usize,
 }
 
 impl DirectoryService {
@@ -848,6 +848,7 @@ mod decider;
 use decider::*;
 use semio_hub_directory_contract::{ARTIFACT_CAS_DELETE_LEASE_TTL_MS, ARTIFACT_CAS_RESERVATION_MAX_TTL_MS, ARTIFACT_CAS_SWEEP_OBJECT_MAX, ARTIFACT_CAS_SWEEP_PAGE_MAX, HubClock, InviteCapability, NewDirectoryEvent, actor_user_id, now_ms, role_from_wire, validate_checkpoint_publication_completion};
 use semio_hub_directory_contract::model::{AdminEffectCommitV1, CheckpointPublicationClaimV1, CheckpointPublicationCompletionV1, DirectoryCommandClaimV1, DirectoryCommandDispositionV1, DirectoryCommandReceiptCompletion, DirectoryCommandReceiptRecord, DirectoryCommandResultKindV1, InviteRedemptionCommit, NewAdminOperationEffectReceiptV1, NewCheckpointPublicationClaimV1, NewDirectoryCommandReceipt};
+use std::fmt;
 use std::sync::Arc;
 use semio_hub_artifact_authority::chunk_cas::{ArtifactCasDeleteOutcome, ArtifactCasObjectKey, ArtifactCasOwnershipPlanV1, ArtifactCasReservation, ArtifactChunkCasStorage};
 use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryCommandOutcomeV1, DirectoryCommandReceiptV1, DirectoryCommandResultV1, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DirectoryStreamMessage};

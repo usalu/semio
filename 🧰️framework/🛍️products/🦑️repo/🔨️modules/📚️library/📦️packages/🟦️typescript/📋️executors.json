@@ -1,13 +1,13 @@
 {
   "executors": {
     "command": {
-      "implementation": "../../🔌️nx-plugin/🏃️execution/🟨️.mjs",
-      "schema": "../../🔌️nx-plugin/📤️arguments/🧬️schema/🔣️command.json",
+      "implementation": "../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs",
+      "schema": "../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️command.json",
       "description": "Execute literal portable command arguments through the original process authority and Bun shell."
     },
     "owner-command": {
-      "implementation": "../../🔌️nx-plugin/📤️arguments/🟨️.mjs",
-      "schema": "../../🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
+      "implementation": "../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "schema": "../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
       "description": "Forward literal argv to canonical native/process ownership without shell interpolation."
     }
   }

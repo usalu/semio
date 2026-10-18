@@ -47,7 +47,7 @@
       "sharedGlobals",
       "{workspaceRoot}/**/🧬️schema/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts"
     ],
     "production": [
       "{projectRoot}/**/*",

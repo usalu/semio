@@ -1,12 +1,15 @@
 //! ↩️ Inverse of `DeleteFamilySolid`: the concrete `CreateFamilySolid` carrying the full removed record, none when the solid was absent.
 
-use super::super::create_family_solid::CreateFamilySolid;
-use super::DeleteFamilySolid;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
+use crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &DeleteFamilySolid, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &DeleteFamilySolid, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid>,
+{
     match base.family_solids.get(&payload.id) {
-        Some(record) => vec![ModelMutation::CreateFamilySolid(CreateFamilySolid { id: payload.id.clone(), solid: record.clone() })],
+        Some(record) => vec![Op::from(CreateFamilySolid { id: payload.id.clone(), solid: record.clone() })],
         None => Vec::new(),
     }
 }

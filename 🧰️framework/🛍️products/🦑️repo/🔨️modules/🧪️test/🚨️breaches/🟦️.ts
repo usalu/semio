@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { type BreachRecord } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧾️Contract

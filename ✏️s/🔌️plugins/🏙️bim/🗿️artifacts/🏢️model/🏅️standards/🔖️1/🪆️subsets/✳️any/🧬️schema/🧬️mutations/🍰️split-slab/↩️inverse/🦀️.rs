@@ -2,13 +2,16 @@
 //! `SetSlabBoundary` of the exact base loops, then the created slab, which holds no data of its own by then, is deleted. Empty when the
 //! split is refused.
 
-use super::super::delete_slab::DeleteSlab;
-use super::super::set_slab_boundary::SetSlabBoundary;
-use super::diff::pieces;
-use super::SplitSlab;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab;
+use crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary;
+use crate::standards::v1::subsets::any::schema::mutations::split_slab::diff::pieces;
+use crate::standards::v1::subsets::any::schema::mutations::split_slab::SplitSlab;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &SplitSlab, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SplitSlab, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab> + From<crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary>,
+{
     if pieces(payload, base).is_err() {
         return Vec::new();
     }
@@ -16,7 +19,7 @@ pub fn inverse(payload: &SplitSlab, base: &ModelSnapshot) -> Vec<ModelMutation> 
         return Vec::new();
     };
     vec![
-        ModelMutation::DeleteSlab(DeleteSlab { id: payload.new_id.clone() }),
-        ModelMutation::SetSlabBoundary(SetSlabBoundary { id: payload.id.clone(), boundary: slab.boundary.clone(), holes: slab.holes.clone() }),
+        Op::from(DeleteSlab { id: payload.new_id.clone() }),
+        Op::from(SetSlabBoundary { id: payload.id.clone(), boundary: slab.boundary.clone(), holes: slab.holes.clone() }),
     ]
 }

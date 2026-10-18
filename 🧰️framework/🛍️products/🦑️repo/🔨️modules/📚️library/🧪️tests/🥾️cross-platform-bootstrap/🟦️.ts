@@ -29,7 +29,7 @@ type BootstrapSources = Readonly<{ sources: readonly Readonly<{ id: string; modu
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
-const fixture = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🥾️cross-platform-bootstrap/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🥾️cross-platform-bootstrap/🔣️.json"), "utf8")) as Fixture;
 
 const BOM = Buffer.from([0xef, 0xbb, 0xbf]);
 const bootstrapSources = JSON.parse(readFileSync(join(repoRoot, fixture.freshClone.bootstrapSources), "utf8")) as BootstrapSources;

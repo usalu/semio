@@ -1,11 +1,12 @@
 /** 🧪️ Framework source-text access law: the fixture cases (`🧫️fixtures/🔣️.json`, language-agnostic) resolve to exactly the entries `fast-glob` finds below the framework root, refused paths throw, and reads return the bytes `node:fs` returns.
  * @see https://github.com/mrmlnc/fast-glob */
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import fg from "fast-glob";
-import { frameworkSourcePath, frameworkSourceUrl, readFrameworkSourceJson, readFrameworkSourceText, readStoreSourceText } from "../🟦️.ts";
+import { fixtureFacadeTargets, frameworkSourcePath, frameworkSourceUrl, readFrameworkSourceJson, readFrameworkSourceText, readStoreSourceText } from "../🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8")) as { root: string; accepted: string[]; refused: { id: string; path: string }[]; json: { path: string; field: string; value: string }; store: { root: string; rootFile: string; carvedDirectories: string[]; liftedSegment: string; excludedSegments: string[]; contains: string[] } };
 const frameworkRoot = resolve(import.meta.dir, "../../../..");
@@ -48,4 +49,24 @@ test("the store source text is the facade root followed by the carved, non-test 
   expect(files.length).toBeGreaterThan(30);
   expect(actual === expected).toBe(true);
   for (const needle of store.contains) expect({ needle, found: actual.includes(needle) }).toEqual({ needle, found: true });
+});
+
+test("a fixture facade entry only re-exports files that exist; anything else is not a facade", () => {
+  const root = mkdtempSync(join(tmpdir(), "semio-facade-"));
+  try {
+    const tests = join(root, "🧪️tests", "🧫️fixtures"), facade = join(root, "📦️packages", "🧪️testing", "🧫️fixtures");
+    mkdirSync(tests, { recursive: true });
+    mkdirSync(facade, { recursive: true });
+    writeFileSync(join(tests, "🔣️.json"), "{}");
+    writeFileSync(join(tests, "🟦️.ts"), "export const own = 1;\n");
+    const entry = (name: string, text: string): string => { const path = join(facade, name); mkdirSync(path, { recursive: true }); writeFileSync(join(path, "🟦️.ts"), text); return join(path, "🟦️.ts"); };
+    const target = "../../../../🧪️tests/🧫️fixtures";
+    expect(fixtureFacadeTargets(entry("a", `/** 🧫️ Facade. */\nexport { default as one } from "${target}/🔣️.json" with { type: "json" };\nexport type { own } from "${target}/🟦️.ts";\n`))).toEqual([join(tests, "🔣️.json"), join(tests, "🟦️.ts")]);
+    expect(fixtureFacadeTargets(entry("b", `export const own = 1;\n`))).toBeUndefined();
+    expect(fixtureFacadeTargets(entry("c", `import x from "${target}/🔣️.json";\nexport { x } from "${target}/🔣️.json";\n`))).toBeUndefined();
+    expect(fixtureFacadeTargets(entry("d", `export { one } from "${target}/missing.json";\n`))).toBeUndefined();
+    expect(fixtureFacadeTargets(entry("e", `/** only a docstring */\n`))).toBeUndefined();
+    expect(fixtureFacadeTargets(join(tests, "🟦️.ts"))).toBeUndefined();
+    expect(fixtureFacadeTargets(join(tests, "🔣️.json"))).toBeUndefined();
+  } finally { rmSync(root, { recursive: true, force: true }); }
 });

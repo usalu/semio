@@ -11,6 +11,8 @@ import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️valid
 import schema from "../🧬️schema/🔣️.json";
 import {rustCfgMatchesV1} from "../../📥️source/🟦️.ts";
 import {readCargoCompilationGraphV1,type CargoCompilationGraphV1} from "../🟦️.ts";
+/** 📏️ Bounds one complete Cargo planning capture: the resolved metadata of the whole root workspace exceeds 16 MiB. */
+export const cargoPlanningOutputBytesV1=134217728;
 export interface CargoCompilerPlanningRequestV1 {readonly workspaceRoot:string;readonly cwd:string;readonly program:string;readonly prefix:readonly string[];readonly args:readonly string[];readonly environment:Readonly<Record<string,string|undefined>>;readonly maximumOutputBytes:number}
 export interface CargoCompilerPlanningPortV1 {cfg(program:string,target:string|null,environment:Readonly<Record<string,string|undefined>>,cwd:string,control:ResourceLeaseControl):Promise<readonly string[]>;sourceInputs(manifest:string,control:ResourceLeaseControl):Promise<{path:string;digest:string;bytes:number}[]>;compiler(environment:Readonly<Record<string,string|undefined>>,cwd:string,control:ResourceLeaseControl):Promise<{program:string;digest:string;hostTriple:string;cargoProgram:string}>;capture(program:string,args:readonly string[],cwd:string,environment:Readonly<Record<string,string|undefined>>,control:ResourceLeaseControl,maximumBytes:number):Promise<unknown>}
 /** 📬️ Captures complete bounded Cargo data under the unchanged original child control. */

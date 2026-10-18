@@ -1,0 +1,68 @@
+[
+ {
+  "tag": "fpa",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/🦀️.rs",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🩹️patches/📦️packages/🦀️rust",
+  "name": "semio-framework-plugin-reactor-patches"
+ },
+ {
+  "tag": "fpr",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/🦀️.rs",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🔀️post-turn-relay/📦️packages/🦀️rust",
+  "name": "semio-framework-plugin-host-post-turn-relay"
+ },
+ {
+  "tag": "fpt",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🦀️.rs",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/📦️packages/🦀️rust",
+  "name": "semio-framework-plugin-testing-laws"
+ },
+ {
+  "tag": "fhe",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/🦀️.rs",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🧪️history-edit-acceptance/📦️packages/🦀️rust",
+  "name": "semio-framework-plugin-testing-acceptance"
+ },
+ {
+  "tag": "frr",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🦀️.rs",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📦️packages/🦀️rust",
+  "name": "semio-framework-plugin-window-config"
+ },
+ {
+  "tag": "frw",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪤️runtime-mailbox-tests/🦀️.rs",
+  "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🪤️runtime-mailbox-tests/📦️packages/🦀️rust",
+  "name": "semio-framework-os-renderer-wgpu-runtime-mailbox-tests"
+ },
+ {
+  "tag": "fan",
+  "root": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🦀️.rs",
+  "manifest": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+  "name": "semio-s-artifact-animate-presentation-animate"
+ },
+ {
+  "tag": "far",
+  "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🧭️program-structure/🧪️tests/🔬️unit/📦️packages/🦀️rust/🦀️.rs",
+  "manifest": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🗄️registers/🧭️program-structure/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+  "name": "semio-s-artifact-architect-program-tests-3"
+ },
+ {
+  "tag": "fme",
+  "root": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🦀️.rs",
+  "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust",
+  "name": "semio-s-artifact-mathematical-equation-editor"
+ },
+ {
+  "tag": "fmg",
+  "root": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs",
+  "manifest": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "name": "semio-s-artifact-mathematical-equation-mutations"
+ },
+ {
+  "tag": "fwr",
+  "root": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🧪️tests/🔬️unit/📦️packages/🦀️rust/🦀️.rs",
+  "manifest": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/⚙️operations/🧪️tests/🔬️unit/📦️packages/🦀️rust",
+  "name": "semio-s-artifact-writer-writer-tests-2"
+ }
+]

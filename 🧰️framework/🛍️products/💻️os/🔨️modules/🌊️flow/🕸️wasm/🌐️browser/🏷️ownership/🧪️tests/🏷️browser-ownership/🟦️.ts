@@ -60,7 +60,7 @@ export async function testFlowBrowserOwnership(invocation: ScriptInvocation): Pr
   for (const path of [...fixture.dataOwners, ...fixture.projections.map((projection) => projection.path)]) assert.equal(existsSync(join(workspaceRoot, path)), true, path);
   for (const path of fixture.predecessors) assert.equal(existsSync(join(workspaceRoot, path)), false, `retired Flow path remains: ${path}`);
 
-  const discovery = await import(pathToFileURL(join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts")).href);
+  const discovery = await import(pathToFileURL(join(workspaceRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts")).href);
   const taxonomy = discovery.loadCatalogTaxonomy();
   for (const context of fixture.contexts) {
     const owner = fixture.owners.find((candidate) => candidate.id === context.ownerId);

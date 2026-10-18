@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteIssueComment`: the comment leaves in one sparse diff together with its properties and classifications (see the shared cascade).
 
-use super::super::cascade;
-use super::DeleteIssueComment;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_issue_comment::DeleteIssueComment;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

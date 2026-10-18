@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/ui-tui-core-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

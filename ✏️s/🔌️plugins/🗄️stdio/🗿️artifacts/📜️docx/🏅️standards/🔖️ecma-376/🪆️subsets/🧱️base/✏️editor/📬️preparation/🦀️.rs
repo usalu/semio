@@ -205,7 +205,7 @@ pub(super) fn set_run_text_is_admitted(address: &DocxXmlAddress, text: &str) -> 
     measure.text(text)
 }
 
-pub(crate) fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, String> {
+pub fn prepare_set_run_text(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, String> {
     set_run_text_is_admitted(address, text)?;
     let mutation = if address.expected_name.ends_with("}p") {
         let Some(mutation) = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::xml_address::empty_paragraph_text_mutation(snapshot, address, text).map_err(ValueError::into_message)? else { return Ok(None) };

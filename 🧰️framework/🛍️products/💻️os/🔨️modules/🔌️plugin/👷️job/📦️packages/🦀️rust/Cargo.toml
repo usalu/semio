@@ -36,6 +36,7 @@ semio-framework-plugin-decl-app = { path = "../../../📜️declaration/🧩️a
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-job = { path = "../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-native-decode = { path = "../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-job-fault-publication = { path = "../../../../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }

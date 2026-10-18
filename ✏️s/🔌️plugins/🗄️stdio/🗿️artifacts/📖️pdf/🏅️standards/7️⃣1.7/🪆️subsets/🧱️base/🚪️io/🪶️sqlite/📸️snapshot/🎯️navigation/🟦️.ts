@@ -1,5 +1,5 @@
 /** 🎯️ Handwritten PDF action variants and iterative ordered next containment. */
-import type { PdfAction,PdfActionKind } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfAction, PdfActionKind } from "../../../../🧬️schema/📸️snapshot/🎯️navigation/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type PdfCell,type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfDestination,readPdfDestination,writePdfFileSpecification,readPdfFileSpecification } from "./📍️destination/🟦️.ts";

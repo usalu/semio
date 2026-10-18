@@ -1,0 +1,1 @@
+{"name": "c6db1-query", "crates": ["semio-framework-os-kernel-db-query"], "base": {"rev": "overlay", "crates": ["semio-framework-os-kernel-db-query"]}}

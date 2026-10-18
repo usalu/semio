@@ -183,9 +183,9 @@ pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioV
 /// kinds — the single source of truth reused by `op_text_binary_roundtrip_law` below AND by
 /// `🎹️composer/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law` conformance
 /// tests, same convention json's own `demo_mutation_cases` uses.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioValueMutation> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
         SemioValueSnapshot { schema: semio_s_artifact_stdio_semio_value_model::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }

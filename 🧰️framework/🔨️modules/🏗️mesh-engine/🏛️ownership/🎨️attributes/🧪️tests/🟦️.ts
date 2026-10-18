@@ -13,7 +13,7 @@ import {testLevelBudgetMs} from "../../../../🏃️process/📦️packages/🟦
 const root = fileURLToPath(new URL("../../../", import.meta.url)), fixturePath = resolve(root, "🧪️tests/🧫️fixtures/🎨️attributes/🔣️.json"), polygonPath = resolve(root, "🧬️schema/🥽️polygon/🔣️.json"), nativePath = resolve(root, "🧪️tests/🔬️mesh-data-from-value-round-trip/🦀️.rs");
 const read=(path:string)=>readFileSync(path,"utf8"),fixture=()=>JSON.parse(read(fixturePath));
 const sha=(body:string)=>createHash("sha256").update(body).digest("hex");
-function nativeInputs(source:string,path:string):string[]{return [...source.matchAll(/include_str!\("([^"]*🎨️attributes\/🔣️.json)"\)/g)].map(match=>resolve(dirname(path),match[1]!));}
+function nativeInputs(source:string,_path:string):string[]{return [...source.matchAll(/test_inputs::text\("([^"]*🎨️attributes\/🔣️.json)"\)/g)].map(match=>resolve(root,match[1]!));}
 test("portable attribute corpus has closed language-neutral admission",()=>{
  const text = read(fixturePath), value = JSON.parse(text);
  expect(JSON5.parse(text)).toEqual(value);
@@ -40,7 +40,7 @@ test("native fixture exposure survives physical deletion of specific trees",asyn
  const sandbox = resolve(output, "mesh-attribute-deletion"), native = resolve(sandbox, relative(root, nativePath)), assets = [nativePath, fixturePath, polygonPath];
  for(const path of assets){const target=resolve(sandbox,relative(root,path));mkdirSync(dirname(target),{recursive:true});writeFileSync(target,read(path));}
  const node=Bun.which("node");if(!node)throw Error("Node test oracle is required");
- const code="const fs=require('node:fs'),p=require('node:path'),c=require('node:crypto');const source=process.argv[1],fixture=process.argv[2],text=fs.readFileSync(source,'utf8'),routes=[...text.matchAll(/include_str!\\(\"([^\\\"]*🎨️attributes\\/🔣️.json)\"\\)/g)].map(m=>p.resolve(p.dirname(source),m[1]));if(routes.length!==2||routes.some(x=>x!==fixture))throw Error('Noncanonical fixture owner');const bodies=routes.map(x=>fs.readFileSync(x,'utf8'));console.log(JSON.stringify({routes:routes.length,digests:bodies.map(x=>c.createHash('sha256').update(x).digest('hex'))}));";
+ const code="const fs=require('node:fs'),p=require('node:path'),c=require('node:crypto');const source=process.argv[1],fixture=process.argv[2],text=fs.readFileSync(source,'utf8'),routes=[...text.matchAll(/test_inputs::text\\(\"([^\\\"]*🎨️attributes\\/🔣️.json)\"\\)/g)].map(m=>p.resolve(process.cwd(),m[1]));if(routes.length!==2||routes.some(x=>x!==fixture))throw Error('Noncanonical fixture owner');const bodies=routes.map(x=>fs.readFileSync(x,'utf8'));console.log(JSON.stringify({routes:routes.length,digests:bodies.map(x=>c.createHash('sha256').update(x).digest('hex'))}));";
  let stdout="";await runBudgetedTestCommand(node,["--eval",code,native,resolve(sandbox,relative(root,fixturePath))],{cwd:sandbox,env:process.env,budgetMs:testLevelBudgetMs(),throwOnFailure:true,captureStdout:{limitBytes:4096,onChunk:bytes=>{stdout+=Buffer.from(bytes).toString("utf8");}}});
  expect(JSON.parse(stdout)).toEqual({routes:2,digests:[sha(read(fixturePath)),sha(read(fixturePath))]});
  for(const name of ["✏️s","s","hub","🛍️products"])expect(existsSync(resolve(sandbox,name))).toBe(false);

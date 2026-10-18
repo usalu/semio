@@ -2,9 +2,11 @@
 
 use super::flag_or_arg;
 use semio_framework_repo_cli_command_framework::{CliError, Invocation};
+use semio_framework_repo_graphql::RepoContext;
 use semio_framework_repo_cli_tree_source_and_search::StreamOptions;
 use semio_framework_repo_identity::{emoji_text, entity as identity_entity, flat};
-use semio_framework_repo_model::{entity, DraftCreateInput};
+use semio_framework_repo_model::{DraftCreateInput};
+use semio_framework_repo_model_entity::entity;
 use serde_json::json;
 use std::collections::BTreeSet;
 

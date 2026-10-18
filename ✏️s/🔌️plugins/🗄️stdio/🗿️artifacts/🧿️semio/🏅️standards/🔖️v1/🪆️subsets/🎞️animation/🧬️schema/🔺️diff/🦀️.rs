@@ -468,7 +468,7 @@ pub(crate) fn timeline(name: Option<&str>, channels: Vec<AnimChannel>) -> AnimTi
 /// test below.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
+pub fn demo_diff_cases() -> Vec<SemioAnimationDiff> {
     let added = timeline(Some("added"), vec![channel("m", AnimTargetProperty::Custom { name: "x".into() }, AnimInterpolation::Step, vec![kf(0.0, AnimValue::Scalar { value: 1.0 })])]);
     vec![
         SemioAnimationDiff::default(),

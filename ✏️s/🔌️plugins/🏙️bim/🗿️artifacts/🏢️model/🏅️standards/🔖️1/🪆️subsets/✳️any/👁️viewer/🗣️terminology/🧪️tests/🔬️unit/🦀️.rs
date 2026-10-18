@@ -1,4 +1,4 @@
-use super::*;
+use crate::viewer::bim::terminology::*;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 

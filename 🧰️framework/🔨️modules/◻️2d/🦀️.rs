@@ -2,7 +2,6 @@
 
 pub use semio_framework_2d_engine::{DrawingError, PathSegment, Vec2};
 pub use semio_framework_2d_retire::physical_work_retirement;
-pub use semio_framework_2d_compute as compute;
 pub use semio_framework_2d_retire as retirement;
 pub use semio_framework_2d_path_flatten as flatten;
 pub use semio_framework_2d_path_stroke as stroke;

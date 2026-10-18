@@ -14,7 +14,8 @@ import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/�
 import { decodeClientFrame, decodePresencePeer, encodePresencePeer, encodeServerFrame, type ArtifactPresencePeer } from "@semio-tech/framework-replication";
 import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
 import { COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
-import { runCmd, runProbe } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { runProbe } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { freeLoopbackPort, hubBinaryPath } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
@@ -163,7 +164,7 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   if (!hostTarget) throw new Error(`directory Home Space native target oracle failed: ${rustc.stderr}`);
   const nativeTree = runProbe("cargo", ["tree", "--manifest-path", join(repoRoot, "🌎️hub/Cargo.toml"), "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-framework-os-kernel"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
   if (nativeTree.status !== 0 || !nativeTree.stdout.includes(`semio-framework-os-kernel feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error("directory Home Space native graph lost the kernel sync transport");
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
+  const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   const owner = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx"), "utf8");
   const shell = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx"));
   const sourceClosed = (workerSource: string, ownerSource: string, shellSource: string): boolean => {

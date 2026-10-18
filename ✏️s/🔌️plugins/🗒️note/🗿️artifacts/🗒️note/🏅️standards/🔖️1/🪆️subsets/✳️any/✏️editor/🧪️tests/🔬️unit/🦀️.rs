@@ -81,7 +81,7 @@ use semio_framework_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 pub(crate) mod context {
     use crate::editor::note::*;
 use crate::editor::note::commands::ink_apply_events;

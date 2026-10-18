@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `CreateWallSweep`: one created wall sweep entry. The id is free in every collection, the host wall and the material exist, the profile has positive dimensions, the height above the wall base is not
 //! negative and the inset leaves part of the profile showing. The solid, the length and the areas of the sweep are inferred.
 
-use super::super::elements;
-use super::super::wall_depth::sweep_flaw;
-use super::CreateWallSweep;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::wall_depth::sweep_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

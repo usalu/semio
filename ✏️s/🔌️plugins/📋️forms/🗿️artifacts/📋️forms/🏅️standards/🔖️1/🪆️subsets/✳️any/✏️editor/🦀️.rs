@@ -73,7 +73,7 @@ use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::TopologyNode;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub use builder::FORMS_PLAY_BODY_BLUEPRINT;

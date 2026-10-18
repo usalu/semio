@@ -50,9 +50,5 @@ export const stdioSemioV1ModelSnapshotTextGuardConstant = <T extends string | nu
 //#endregion 🚪️Parsers
 
 export function parseSemioModelSnapshotText(value: unknown, at = "$"): SemioModelSnapshotText {
-  const row = stdioSemioV1ModelSnapshotTextGuardObject(value, at);
-  return {
-    preamble: row["preamble"] === undefined ? undefined : stdioSemioV1ModelSnapshotTextGuardString(row["preamble"], `${at}.preamble`),
-    body: row["body"] === undefined ? undefined : stdioSemioV1ModelSnapshotTextGuardString(row["body"], `${at}.body`, {"pattern": "^([0-9a-f]{2})*$"}),
-  };
+  return stdioSemioV1ModelSnapshotTextGuardString(value, `${at}`);
 }

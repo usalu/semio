@@ -14,9 +14,6 @@ afterEach(() => {
 });
 
 describe("GraphTimeline checkpoint hit regions", () => {
-  it("validates the neutral checkpoint hit contract", () => {
-  });
-
   it.each(fixture.cases)("matches the actual React checkpoint action for $id", (sample) => {
     const onAction = vi.fn();
     const view = render(

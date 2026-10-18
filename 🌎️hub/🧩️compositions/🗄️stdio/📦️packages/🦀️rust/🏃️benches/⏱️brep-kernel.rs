@@ -1,6 +1,6 @@
 //! 📈️ Owned deterministic-iteration benchmarks for the stdio BREP kernel.
 //!
-//! Run with `nx run semio-s-plugin-stdio:bench`. Every case uses a fixed warm-up and sample
+//! Run with `bun repo run semio-s-plugin-stdio:bench`. Every case uses a fixed warm-up and sample
 //! count, prints the median elapsed time, and requires no benchmark runtime dependency.
 
 use std::hint::black_box;

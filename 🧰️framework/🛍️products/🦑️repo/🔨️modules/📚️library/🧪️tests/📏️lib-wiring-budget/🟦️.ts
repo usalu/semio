@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import fastGlob from "fast-glob";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { loadTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 
 type Ratchet = { schema: string; budget: number; entries: Record<string, number> };

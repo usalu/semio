@@ -1,4 +1,32 @@
-use super::*;
+use crate::render::world::{ELEMENT_DOMAIN, ELEMENT_GRANULARITY};
+use crate::viewer::bim::modes::view::windows::{plan, world};
+use crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT;
+use semio_framework_plugin::{ActionKind, ArtifactView, ArtifactViewer, CapabilityAudience, ConfigView, InteractiveJobClassification, NoConfig, ViewModel, ViewerApp};
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use crate::viewer::bim::modes::view;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, BIM_MODEL_DOCUMENT_SCHEMA};
+#[allow(unused_imports)]
+use semio_framework::kernel::UiDirtyScope;
+#[allow(unused_imports)]
+use semio_framework_2d_compute::EngineHandles;
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::Dialect;
+#[allow(unused_imports)]
+use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ActionArgDef, ActionDefinition, ActionDescriptor, AppOperationContext, ArtifactInstanceOperationOwnerHandle, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ComponentTree, DomainTopology, Emit, Fault, FaultCode, FaultOrigin, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, MergeMode, NoConfigMutation, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, SelectionMethod, SelectionMode, SelectionSpec, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, TopologyNode, UiAssemblyResult, ViewEmit, Viewer, WindowConfigMutation, WindowConfigSnapshot, WindowMeasure};
+#[allow(unused_imports)]
+use semio_framework_ui_locale::{Label, LocalizedLabel};
+#[allow(unused_imports)]
+use semio_framework_value::FromValue;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, HashMap};
+use crate::viewer::bim::{BIM_VIEW_TOOL_IDS, view_emit, command_from_action};
+use crate::viewer::bim::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use semio_framework_plugin::{artifact_app_laws, ActionMeta, App, HistoryView, PluginApp, VcsArtifactApp, ViewWindowInstance, WindowLayoutChild, WindowLayoutRoot};
 use semio_framework_ui_locale::{Locale, Terminology};

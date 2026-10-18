@@ -39,6 +39,7 @@ semio-framework-os-mcp-wire = { path = "../../../📡️wire/📦️packages/�
 semio-framework-os-mcp-schema = { path = "../../../📐️schema-contract/📦️packages/🦀️rust" }
 semio-framework-os-mcp-inference-hub = { path = "../../../🌐️inference-hub/📦️packages/🦀️rust" }
 semio-framework-os-mcp-hub-pair = { path = "../../../🔗️hub-pair/📦️packages/🦀️rust" }
+semio-framework-ui-contract-validation = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

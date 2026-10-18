@@ -61,7 +61,7 @@ function capturingShardClient(posted: unknown[]): ShardClient {
 
 /** 🪶️ The worker's own splice, taken from its source text so the test runs the shipped code, not a copy. */
 function workerSplice(): (entry: { pendingAssets: unknown[] }, events: unknown[]) => any[] {
-  const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts"), "utf8");
+  const source = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts"), "utf8");
   const start = source.indexOf("function spliceInstanceOpenAssets(");
   const end = source.indexOf("\n}\n", start) + 3;
   return new Function(`${source.slice(start, end).replaceAll("\\`", "`")}; return spliceInstanceOpenAssets;`)() as never;

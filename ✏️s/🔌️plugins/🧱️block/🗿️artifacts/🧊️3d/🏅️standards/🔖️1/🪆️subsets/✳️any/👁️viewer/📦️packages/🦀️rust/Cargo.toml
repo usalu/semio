@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-2d = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }

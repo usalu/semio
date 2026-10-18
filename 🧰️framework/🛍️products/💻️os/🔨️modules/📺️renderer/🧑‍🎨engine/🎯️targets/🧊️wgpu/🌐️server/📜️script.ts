@@ -9,7 +9,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modul
 import { serveVite } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { playgroundCompositionPathV1 } from "../../../../../🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟦️.ts";
 
-/** 🌐️ Owns one browser listener consuming Nx-completed WGPU artifacts. */
+/** 🌐️ Owns one browser listener consuming build-completed WGPU artifacts. */
 class ServeScript extends BundleScript {
   async run([variant, profile, ...args]: string[]): Promise<void> {
     if (variant === undefined || (profile !== "prototype" && profile !== "release")) throw new Error("serve <variant> <prototype|release> [--port <port>] [--host <host>]");

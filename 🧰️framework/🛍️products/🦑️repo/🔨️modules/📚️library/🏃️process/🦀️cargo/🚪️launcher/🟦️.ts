@@ -17,7 +17,7 @@ import {acquireCargoBuildLeaseV1,cargoRequestedProfileV1} from "../../../../../.
 import {ADMISSION_POLICY_V1,buildSchedulerV1,readUnitHistoryV1,startAdmissionBrokerV1,unitHistoryPathV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/🟦️.ts";
 import {createJobserverV1,defaultJobserverStyleV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎰️jobserver/🟦️.ts";
 import {memoryCountersV1,startTelemetrySamplerV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📈️telemetry/🟦️.ts";
-import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPlanningOutputBytesV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import {readPhysicalCargoSourceV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/📖️read/🟦️.ts";
 import {requireNativeStorageReservationV1,readNativeStorageReservationPolicyV1,type NativeStorageReservationV1} from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
@@ -151,7 +151,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
    mark("inputs","begin");return withRepositoryCargoInputsV1(inputs,async input=>{const control=input.control,env=input.environment;mark("inputs","ready");
     if(request.kind==="resolve")return resolved(input);
     const generated=env.SEMIO_TYPEGEN_OUT||generatedPolicy?join(store.captureDirectory,"typegen-"+randomBytes(4).toString("hex")+".ts"):undefined,compilerEnvironment={...env,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})},compilerArgs=cargoArtifactArgumentsV1(input.selections[0]!.arguments,{mode:request.configuration,compilerConfiguration:configuration,buildDirectory:selected.build});
-    mark("graph","begin");const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:compilerEnvironment,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());mark("graph","end");mark("source","begin");await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(compilerEnvironment,cwd,store.storage));mark("source","end");await store.storage.recheck();
+    mark("graph","begin");const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args:compilerArgs,environment:compilerEnvironment,maximumOutputBytes:cargoPlanningOutputBytesV1},control,actualCargoCompilerPlanningPortV1());mark("graph","end");mark("source","begin");await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(compilerEnvironment,cwd,store.storage));mark("source","end");await store.storage.recheck();
     try{return await admitted(compilerArgs,compilerEnvironment,selected,control,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);}finally{if(generated)rmSync(generated,{force:true});}
    });
   };

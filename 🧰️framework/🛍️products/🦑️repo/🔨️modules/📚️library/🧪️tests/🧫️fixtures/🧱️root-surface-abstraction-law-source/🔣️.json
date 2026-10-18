@@ -152,7 +152,7 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🔌️io-matrix/🟦️.ts",
       "owners": [
         "🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts"
       ]
@@ -160,7 +160,12 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
       "owners": [
-        "📏️ownership/🏛️abstraction/✅️verification/🟦️.ts",
+        "📏️ownership/🏛️abstraction/✅️verification/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🏁️gate-lanes/🟦️.ts",
+      "owners": [
         "🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts"
       ]
     }

@@ -464,14 +464,21 @@ describe("exact analytic component interaction targets", () => {
       const oracle = new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(positions, 3)).setIndex([]);
       const edgeOracle = new three.BufferGeometry().setAttribute("position", new three.Float32BufferAttribute(edges, 3));
       try {
-        oracle.computeBoundingBox();
-        visuals.geometry!.computeBoundingBox();
+        const aabb = (...geometries: readonly (import("three").BufferGeometry | null)[]) => {
+          const box = new three.Box3();
+          for (const geometry of geometries) {
+            if (geometry === null || geometry.getAttribute("position").count === 0) continue;
+            geometry.computeBoundingBox();
+            box.union(geometry.boundingBox!);
+          }
+          return [box.min.toArray(), box.max.toArray()];
+        };
         expect(visuals.geometry!.getIndex()?.count ?? 0, row.kind).toBe(oracle.getIndex()!.count);
         expect(Array.from(visuals.vertexPick?.geometry.getAttribute("position").array ?? []), row.kind).toEqual(row.vertexIds.length ? Array.from(oracle.getAttribute("position").array) : []);
         expect(visuals.vertexPick?.vertexIds ?? [], row.kind).toEqual(row.vertexIds);
         expect(Array.from(visuals.edge?.getAttribute("position").array ?? []), row.kind).toEqual(Array.from(edgeOracle.getAttribute("position").array));
-        expect([visuals.geometry!.boundingBox!.min.toArray(), visuals.geometry!.boundingBox!.max.toArray()], row.kind).toEqual(row.bounds);
-        expect([oracle.boundingBox!.min.toArray(), oracle.boundingBox!.max.toArray()], row.kind).toEqual(row.bounds);
+        expect(aabb(visuals.geometry, visuals.edge), row.kind).toEqual(row.bounds);
+        expect(aabb(oracle, edgeOracle), row.kind).toEqual(row.bounds);
       } finally {
         disposeMeshVisuals(visuals);
         oracle.dispose();

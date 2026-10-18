@@ -1,0 +1,164 @@
+package semio:framework@1.0.0;
+
+interface events {
+  use types.{pack, request-id, instance-id, message-endpoint, revision};
+  use capabilities.{capability-grant, capability-change};
+  use ui.{surface-ref};
+  use instance-lifetime.{close-request, receipt, ui-patch-receipt};
+
+  record instance-open-event {
+    instance: instance-id,
+    activation-generation: u64,
+    request-sequence: u64,
+    app-id: string,
+    actor: string,
+    config: pack,
+    assets: list<tuple<string, pack>>,
+    capabilities: list<capability-grant>,
+    quotas: pack,
+  }
+
+  variant activation-event {
+    on-command(string),
+    on-view-visible(string),
+    on-file-type(string),
+    on-artifact-kind(string),
+    on-extension-request(string),
+    on-startup-finished,
+  }
+  record activate-event {
+    instance: instance-id,
+    reason: activation-event,
+  }
+  record suspend-request-event {
+    instance: instance-id,
+  }
+  record capability-changed-event {
+    instance: instance-id,
+    change: capability-change,
+  }
+  record quota-changed-event {
+    instance: instance-id,
+    quotas: pack,
+  }
+
+  /// 🎬️ A user action against a UI node — pack-encoded `contract-action::UiIntent`. `wit-flip`
+  /// (26/08/20): UI intents use a dedicated event instead of the command ingress owner,
+  /// which is what lets the host tell a genuine UI interaction from a channel command without
+  /// decoding the payload.
+  record ui-intent-event {
+    instance: instance-id,
+    intent: pack,
+  }
+
+  record surface-visible-event {
+    surface: surface-ref,
+    body-key: string,
+    view-state: list<u8>,
+  }
+  record surface-hidden-event {
+    surface: surface-ref,
+  }
+  record surface-resized-event {
+    surface: surface-ref,
+    width: u32,
+    height: u32,
+  }
+  record patch-ack-event {
+    receipt: ui-patch-receipt,
+    surface: surface-ref,
+    revision: revision,
+  }
+  /// 🩹️ The guest resends a full body (no incremental re-diff) on rejection — see
+  /// `⚛️reactor/🩹️patches`'s `base-revision` mismatch fallback.
+  record patch-rejected-event {
+    receipt: ui-patch-receipt,
+    surface: surface-ref,
+    revision: revision,
+    reason: string,
+  }
+
+  variant completion-result {
+    ok(pack),
+    fault(pack),
+  }
+  /// 🎯️ ONE generic completion for every `effect` that carries a `req` — the SDK's
+  /// `RequestRegistry` decodes `result` by the originating request's own kind; the host never
+  /// interprets it.
+  ///
+  /// 🧬️ W0: NOT wrapped in a `-params` record — the payload is already a single named type
+  /// (`completion-result`), so a second layer around one already-nominal field would be pointless
+  /// indirection. Same reasoning as `effects.wit`'s `respond-effect`.
+  record completed-event {
+    req: request-id,
+    outcome: completion-result,
+  }
+  /// 🧬️ W0: payload half of `http-chunk-event`, see `effects.wit`'s `blob-load-params`.
+  record http-chunk-params {
+    bytes: pack,
+    done: bool,
+  }
+  record http-chunk-event {
+    req: request-id,
+    params: http-chunk-params,
+  }
+  record job-progress-event {
+    job: u64,
+    progress: pack,
+  }
+  record job-completed-event {
+    job: u64,
+    outcome: completion-result,
+  }
+
+  /// 📨️ Replaces `backbone-poll`, the `DocumentChanged` push, `InvokeExtension` replies, and topic
+  /// subscription deliveries — all one variant, addressed by `message-endpoint`.
+  record message-event {
+    source: message-endpoint,
+    payload: pack,
+  }
+
+  record timer-event {
+    id: u64,
+  }
+
+  /// 📥️ Replaces `extension.invoke`, `artifact-compose`, the guest `io-run`/`io-sniff` exports,
+  /// `artifact-infer`, `artifact-mutation-plan`, `migrate-artifact` — every "someone else calls
+  /// INTO this actor" seam is now one inbound `request`, answered with the `respond` effect within
+  /// a bounded number of turns, or by spawning a job.
+  ///
+  /// 🧬️ W0: payload half extracted into `request-params`, see `effects.wit`'s `blob-load-params`.
+  record request-params {
+    origin: message-endpoint,
+    capability: string,
+    payload: pack,
+  }
+  record request-event {
+    req: request-id,
+    params: request-params,
+  }
+
+  variant event {
+    instance-open(instance-open-event),
+    instance-close(close-request),
+    instance-lifecycle-ack(receipt),
+    activate(activate-event),
+    suspend-request(suspend-request-event),
+    capability-changed(capability-changed-event),
+    quota-changed(quota-changed-event),
+    ui-intent(ui-intent-event),
+    surface-visible(surface-visible-event),
+    surface-hidden(surface-hidden-event),
+    surface-resized(surface-resized-event),
+    patch-ack(patch-ack-event),
+    patch-rejected(patch-rejected-event),
+    completed(completed-event),
+    http-chunk(http-chunk-event),
+    job-progress(job-progress-event),
+    job-completed(job-completed-event),
+    message(message-event),
+    timer(timer-event),
+    wake,
+    request(request-event),
+  }
+}

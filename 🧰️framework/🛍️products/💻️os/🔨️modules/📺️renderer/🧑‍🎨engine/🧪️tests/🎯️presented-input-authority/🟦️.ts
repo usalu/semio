@@ -15,7 +15,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(here, "../../🧫️fixtures/🎯️presented-input-authority/🔣️.json");
+const fixturePath = resolve(here, "../🧫️fixtures/🎯️presented-input-authority/🔣️.json");
 
 type Control = { readonly id: string; readonly rect: readonly [number, number, number, number]; readonly binding?: string };
 type Expectation = { readonly routed: readonly string[]; readonly refused: readonly string[]; readonly presentedGeneration: number };

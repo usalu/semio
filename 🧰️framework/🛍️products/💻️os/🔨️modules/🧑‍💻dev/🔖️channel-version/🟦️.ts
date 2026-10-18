@@ -6,7 +6,10 @@ export type { ChannelVersionConsumerV1, ChannelVersionContributionOwnerV1 } from
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { declaredComponentKind, discoverCatalogPackages, loadCatalogTaxonomy, registryCatalogInputView, type RegistryCatalogInputView, type DiscoveredPackage } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { declaredComponentKind, type DiscoveredPackage } from "../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
+import { discoverCatalogPackages } from "../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
+import { loadCatalogTaxonomy, registryCatalogInputView } from "../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type RegistryCatalogInputView } from "../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
 import { parseComponentPackageId } from "../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME } from "../../🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
 

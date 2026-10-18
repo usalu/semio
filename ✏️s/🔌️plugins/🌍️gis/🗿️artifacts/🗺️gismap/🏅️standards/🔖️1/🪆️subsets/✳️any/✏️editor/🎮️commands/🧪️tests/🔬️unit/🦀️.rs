@@ -2,9 +2,9 @@
 
 mod example {
 use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
-use super::super::example::*;
-use crate::editor::gis2d::unit_tests::context::{app, close, dispatch};
-use crate::editor::gis2d::Gis2dCommand;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::example::*;
+use crate::unit_tests::context::{app, close, dispatch};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dCommand;
 use semio_framework_plugin::PluginApp;
 
 #[semio_framework_async_macros::async_test]
@@ -22,7 +22,7 @@ async fn set_active_example_loads_the_document_without_history() {
 /// open document already carries emits nothing (the shell replays the action on every boot).
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_is_a_load_effect_and_idempotent() {
-    let definition = crate::editor::gis2d::create_gis2d_app();
+    let definition = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::create_gis2d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     let demo = example_document(DEFAULT_EXAMPLE_ID).expect("the demo resolves");
@@ -44,10 +44,10 @@ async fn set_active_example_is_a_load_effect_and_idempotent() {
 async fn the_example_catalogue_resolves_declared_ids_and_faults_on_the_rest() {
     let catalogue = example_catalogue();
     let ids: Vec<&str> = catalogue.iter().map(|source| source.id()).collect();
-    assert_eq!(ids, [crate::examples::demo::ID], "the catalogue is exactly the subset's declared example facets");
+    assert_eq!(ids, [semio_s_artifact_gis_gismap_gis2d::examples::demo::ID], "the catalogue is exactly the subset's declared example facets");
     assert!(example_document("").expect("the empty id is the catalogue's none arm").positions.is_empty());
-    let demo = example_document(crate::examples::demo::ID).expect("the declared example resolves");
-    assert_eq!(demo, crate::standards::v1::subsets::any::io::text::snapshot::default_document(), "the demo id resolves to the bundled reuse map itself");
+    let demo = example_document(semio_s_artifact_gis_gismap_gis2d::examples::demo::ID).expect("the declared example resolves");
+    assert_eq!(demo, semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::default_document(), "the demo id resolves to the bundled reuse map itself");
     assert!(!demo.routes.is_empty(), "the resolved example carries real route content");
     assert!(example_document("reuse-map").is_err(), "an id outside the catalogue faults instead of loading the demo");
 }
@@ -56,7 +56,7 @@ async fn the_example_catalogue_resolves_declared_ids_and_faults_on_the_rest() {
 /// `📚️examples` facet can never be offered by one and rejected by the other.
 #[semio_framework_async_macros::async_test]
 async fn the_manifest_stages_exactly_the_catalogue_ids() {
-    let definition = crate::editor::gis2d::create_gis2d_app();
+    let definition = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::create_gis2d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
     let arg = action.args.iter().find(|arg| arg.id == "exampleId").expect("the example choice is a declared arg");
     let semio_framework_plugin::ArgSchema::String { options, .. } = &arg.schema else { panic!("exampleId is staged as a string choice: {arg:?}") };
@@ -72,9 +72,9 @@ async fn the_manifest_stages_exactly_the_catalogue_ids() {
 
 mod inference {
 use semio_framework_plugin::kernel::Effect;
-use super::super::inference::*;
-use crate::editor::gis2d::unit_tests::context::{app, close, dispatch};
-use crate::editor::gis2d::Gis2dCommand;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::inference::*;
+use crate::unit_tests::context::{app, close, dispatch};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dCommand;
 
 /// 💡️ Exactly one host-owned intent leaves the app, and it names nothing but the proposal kind.
 #[semio_framework_async_macros::async_test]
@@ -92,7 +92,7 @@ async fn propose_bounds_region_emits_one_intent_and_no_document_state() {
 /// rejects one that does.
 #[semio_framework_async_macros::async_test]
 async fn propose_bounds_region_is_a_shell_action_that_emits_no_operations() {
-    let definition = crate::editor::gis2d::create_gis2d_app();
+    let definition = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::create_gis2d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "proposeBoundsRegion").expect("proposeBoundsRegion declared");
     assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Shell));
     let mut app = app().await;
@@ -103,9 +103,9 @@ async fn propose_bounds_region_is_a_shell_action_that_emits_no_operations() {
 
 mod shell {
 use semio_framework_plugin::kernel::Effect;
-use super::super::shell::*;
-use crate::editor::gis2d::unit_tests::context::{app, close, dispatch};
-use crate::editor::gis2d::Gis2dCommand;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::shell::*;
+use crate::unit_tests::context::{app, close, dispatch};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn open_source_on_an_unknown_feature_emits_no_effect() {
@@ -121,7 +121,7 @@ async fn open_source_on_an_unknown_feature_emits_no_effect() {
 /// rejects one that does.
 #[semio_framework_async_macros::async_test]
 async fn open_source_is_a_shell_action_that_emits_no_operations() {
-    let definition = crate::editor::gis2d::create_gis2d_app();
+    let definition = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::create_gis2d_app();
     let action = definition.window_kinds.iter().flat_map(|window| semio_framework::window_kind_actions(&definition, window)).find(|action| action.id == "openSource").expect("openSource declared");
     assert!(matches!(action.kind, semio_framework_plugin::ActionKind::Shell));
     let mut app = app().await;
@@ -131,10 +131,10 @@ async fn open_source_is_a_shell_action_that_emits_no_operations() {
 }
 
 mod view {
-use super::super::view::*;
-use crate::editor::gis2d::modes::edit::windows::map::GIS2D_PLAY_BODY_COMPOSITE;
-use crate::editor::gis2d::unit_tests::context::{app, close, dispatch, render_tiled_map_scene};
-use crate::editor::gis2d::Gis2dCommand;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::view::*;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::GIS2D_PLAY_BODY_COMPOSITE;
+use crate::unit_tests::context::{app, close, dispatch, render_tiled_map_scene};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn set_render_mode_is_view_state() {

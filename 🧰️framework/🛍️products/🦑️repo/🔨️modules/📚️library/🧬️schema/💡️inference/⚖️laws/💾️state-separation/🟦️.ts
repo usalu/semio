@@ -1,4 +1,4 @@
-import type { BreachRecord } from "../../../../🟦️.ts";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceText, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyWalkRelFileSources } from "../../../../🔍️discovery/🚶️file-walk/🟦️.ts";
 import { policyLineOfIndex } from "../../../../🔍️discovery/📍️source-coordinate/🟦️.ts";

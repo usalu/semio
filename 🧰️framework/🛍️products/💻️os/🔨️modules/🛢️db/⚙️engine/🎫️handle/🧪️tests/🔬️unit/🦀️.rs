@@ -2,6 +2,18 @@ use super::*;
 
 use db_io_core::{PayloadStorage as _, WalStorage as _};
 
+/// 🧾️ The authored source of the handle crate: every child module and then the root, in module order, as the one text the source laws scan.
+const HANDLE_SOURCE: &str = concat!(
+    include_str!("../../🎟️history-view-lease-and-journal-sink/🦀️.rs"),
+    include_str!("../../📨️submit-admission-and-state/🦀️.rs"),
+    include_str!("../../📤️submit-future-and-terminal/🦀️.rs"),
+    include_str!("../../🚪️history-admission-and-wake/🦀️.rs"),
+    include_str!("../../📚️history-state/🦀️.rs"),
+    include_str!("../../🔭️history-future-and-terminals/🦀️.rs"),
+    include_str!("../../🤝️artifact-handle/🦀️.rs"),
+    include_str!("../../🦀️.rs"),
+);
+
 //#region 🧸️Fixtures
 async fn envelope(id: &str, deps: &[&str], actor: &str, document: &protocol::ArtifactId, entries: &[(&str, serde_json::Value)]) -> protocol::MutationEnvelope {
     let mut payload = serde_json::Map::new();
@@ -43,7 +55,7 @@ fn artifact_submit_stale_generation_and_slot_aba_cannot_consume_current_work() {
     let next = ArtifactSubmitAdmission::try_claim(1, ARTIFACT_SUBMIT_PAGE_BYTES).unwrap();
     assert_eq!(next.slot, first_slot);
     assert_ne!(next.generation, first_generation);
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     let stale = source.find("if generation != self.generation").unwrap();
     let mutation = source[stale..].find("self.scheduled.store").unwrap();
     assert!(mutation > 0);
@@ -82,7 +94,7 @@ fn artifact_history_empty_one_cap_plus_one_admission_returns_exact_request() {
     for claim in claims {
         retire_history_admission(claim);
     }
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     assert!(source.contains("ArtifactHistoryWorkOwner::Request"));
 }
 
@@ -159,7 +171,7 @@ fn artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation() {
     let next = ArtifactHistoryAdmission::try_claim().unwrap();
     assert_eq!(next.slot, slot);
     assert_ne!(next.generation, generation);
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     let stale = source.find("if self.authority.generation() != self.authority_generation").unwrap();
     let handoff = source.find("self.authority.history_retained").unwrap();
     assert!(stale < handoff);
@@ -170,7 +182,7 @@ fn artifact_history_stale_generation_and_slot_aba_precede_mailbox_mutation() {
 //#region 🔖️Source laws
 #[test]
 fn artifact_submit_late_readiness_parks_then_one_shot_wake_reschedules() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     assert!(source.contains("impl std::task::Wake for ArtifactSubmitWake"));
     assert!(source.contains("self.scheduled.compare_exchange(false, true"));
     assert!(source.contains("std::task::Poll::Pending =>"));
@@ -179,7 +191,7 @@ fn artifact_submit_late_readiness_parks_then_one_shot_wake_reschedules() {
 
 #[test]
 fn artifact_submit_pool_saturation_without_later_ingress_retains_exact_job() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     assert!(source.contains("self.pool.try_submit(Lane::Io, job)"));
     assert!(source.contains("error.into_job()"));
     assert!(source.contains("self.pool.callback_at"));
@@ -188,7 +200,7 @@ fn artifact_submit_pool_saturation_without_later_ingress_retains_exact_job() {
 
 #[test]
 fn artifact_submit_cancel_before_during_after_preserves_exact_owner() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     assert!(source.contains("self.state.cancelled.store(true"));
     assert!(source.contains("self.terminalize_work(Err(DbError::Closed), SubmitProgress::Cancelled)"));
     assert!(source.contains("*self.terminal_result.lock()"));
@@ -197,7 +209,7 @@ fn artifact_submit_cancel_before_during_after_preserves_exact_owner() {
 
 #[test]
 fn artifact_submit_missing_handle_terminalizes_without_mailbox_mutation() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     let released = source.find("let Some(authority) = self.authority() else {").unwrap();
     let stale = source.find("if authority.generation() != self.authority_generation").unwrap();
     let handoff = source.find("authority.submit_retained(batch, options, submitted_at_ms)").unwrap();
@@ -207,7 +219,7 @@ fn artifact_submit_missing_handle_terminalizes_without_mailbox_mutation() {
 
 #[test]
 fn artifact_submit_terminal_job_work_result_take_resume_and_close_one_owner() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     for required in ["pub fn take_terminal_job", "pub fn take_terminal_work", "pub fn take_terminal_result", "pub fn take_actor_terminal_job", "pub fn close_step", "pub fn terminal_is_empty", "pub fn resume(mut self)"] {
         assert!(source.contains(required), "missing {required}");
     }
@@ -216,7 +228,7 @@ fn artifact_submit_terminal_job_work_result_take_resume_and_close_one_owner() {
 
 #[test]
 fn artifact_history_quiet_late_wake_and_retry_are_generation_coalesced() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     assert!(source.contains("impl std::task::Wake for ArtifactHistoryWake"));
     assert!(source.contains("self.generation == state.generation"));
     assert!(source.contains("self.scheduled.compare_exchange(false, true"));
@@ -229,7 +241,7 @@ fn artifact_history_cancel_before_during_after_retains_actor_and_result_owners()
     if !db_io_driver::process_isolated_law("tests::artifact_history_cancel_before_during_after_retains_actor_and_result_owners") {
         return;
     }
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     assert!(source.contains("history_retained(self.generation, self.cancelled.clone(), reservation)"));
     assert!(source.contains("terminalize_unhanded_request(Err(DbError::Closed), HistoryProgress::Cancelled)"));
     assert!(source.contains("self.terminalize_work(Err(DbError::Closed), HistoryProgress::Cancelled)"));
@@ -239,7 +251,7 @@ fn artifact_history_cancel_before_during_after_retains_actor_and_result_owners()
 
 #[test]
 fn artifact_history_terminal_job_work_result_take_resume_and_close_one_owner() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     for required in [
         "pub fn take_terminal_job",
         "pub fn take_terminal_work",
@@ -259,7 +271,7 @@ fn artifact_history_terminal_job_work_result_take_resume_and_close_one_owner() {
 
 #[test]
 fn artifact_history_drop_after_complete_moves_result_to_public_terminal_registry() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     let result_drop = &source[source.find("impl Drop for HistoryView").unwrap()..source.find("//#endregion 🔖️History").unwrap()];
     assert!(result_drop.contains("register_artifact_history(&state)"));
     assert!(result_drop.contains("state.terminal_result"));
@@ -269,7 +281,7 @@ fn artifact_history_drop_after_complete_moves_result_to_public_terminal_registry
 
 #[test]
 fn artifact_history_future_handle_drop_and_terminal_take_resume_are_exact() {
-    let source = include_str!("../../🦀️.rs");
+    let source = HANDLE_SOURCE;
     let future_drop = &source[source.find("impl Drop for HistoryFuture").unwrap()..source.find("impl ArtifactHistoryTerminalJob").unwrap()];
     assert!(future_drop.contains("completion.take()"));
     assert!(future_drop.contains("terminal_result"));
@@ -281,7 +293,7 @@ fn artifact_history_future_handle_drop_and_terminal_take_resume_are_exact() {
 
 #[test]
 fn retained_retry_owners_release_their_guard_before_resubmission() {
-    for (name, source) in [("db_engine_handle", include_str!("../../🦀️.rs"))] {
+    for (name, source) in [("db_engine_handle", HANDLE_SOURCE)] {
         let lines: Vec<&str> = source.lines().collect();
         for (index, line) in lines.iter().enumerate() {
             let trimmed = line.trim_start().trim_start_matches("} else ");
@@ -306,7 +318,7 @@ fn artifact_history_construction_fault_is_public_and_admission_release_is_a_fina
     if !db_io_driver::process_isolated_law("tests::artifact_history_construction_fault_is_public_and_admission_release_is_a_final_grant") {
         return;
     }
-    let engine = include_str!("../../🦀️.rs");
+    let engine = HANDLE_SOURCE;
     for required in [
         "terminal_construction: Mutex<Option<db_artifact_history::HistoryReplayReservationConstructionFault>>",
         "pub struct ArtifactHistoryTerminalConstructionFault",
@@ -327,7 +339,7 @@ fn artifact_history_construction_fault_is_public_and_admission_release_is_a_fina
 
 #[test]
 fn artifact_history_one_grant_advances_one_retained_phase_without_blocking() {
-    let engine = include_str!("../../🦀️.rs");
+    let engine = HANDLE_SOURCE;
     let history = &engine[engine.find("const ARTIFACT_HISTORY_OPERATION_SLOTS").unwrap()..engine.find("pub struct ArtifactHandle").unwrap()];
     for forbidden in ["block_on(", "ask_blocking", "submit_blocking", "loop {", "while "] {
         assert!(!history.contains(forbidden), "history outer authority retained {forbidden}");

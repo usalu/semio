@@ -48,6 +48,7 @@ semio-framework-plugin-instance-jobs = { path = "../../../👷️jobs/📦️pac
 semio-framework-plugin-instance-extension = { path = "../../../🧩️extensions/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-native-decode = { path = "../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-docs = { path = "../../../📄️docs/📦️packages/🦀️rust" }

@@ -1,6 +1,7 @@
 //! 📝️ Artifact editor of the WFC bitmap editor: the editor type, its `ArtifactEditor` implementation and its helpers. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]

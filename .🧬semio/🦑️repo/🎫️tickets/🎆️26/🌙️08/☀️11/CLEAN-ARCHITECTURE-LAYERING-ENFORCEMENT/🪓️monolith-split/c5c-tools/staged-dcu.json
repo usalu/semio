@@ -1,0 +1,10 @@
+{
+ "tag": "dcu",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "🔐️credential-wipe-fakes-and-event-page-laws",
+  "🛰️execution-target-admission-and-stream-laws",
+  "🚦️turns-receipts-cancellation-and-store-laws"
+ ]
+}

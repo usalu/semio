@@ -1,5 +1,6 @@
 import { isDeepStrictEqual } from "node:util";
 import { join } from "node:path";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { readFileSync, readdirSync } from "node:fs";
 import { createRequire } from "node:module";
 import { spawnSync } from "node:child_process";
@@ -36,7 +37,7 @@ export function toolJobLatestWinsSelfTests(): number {
     || JSON.stringify(Array.from(integration.keyRetirement.text as string).reverse().map((scalar) => Buffer.byteLength(scalar, "utf8"))) !== JSON.stringify(integration.keyRetirement.scalarBytes)) throw new Error("latest-wins UTF-8 retirement byte oracle");
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
   const contractRoot = join(base, "🧪️tests");
-  const runtimeContractTests = readdirSync(contractRoot).filter((name) => name.startsWith("🔬️plugin-runtime-plugin-builder-contract")).sort().map((name) => readFileSync(join(contractRoot, name, "🦀️.rs"), "utf8")).join("\n");
+  const runtimeContractTests = readdirSync(contractRoot).filter((name) => name.startsWith("🔬️plugin-runtime-plugin-builder-contract")).sort().map((name) => readModuleTreeSource(join(contractRoot, name, "🦀️.rs"))).join("\n");
   const body = (text: string, name: string): string => {
     const owner = name === "has_runnable_typed_operations" ? "impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp for VcsArtifactApp<A, M>" : ["take_result_page", "reject_cancelled_publication"].includes(name) ? "impl<A: ArtifactApp> MountedTypedCommandFullOperation<A>" : undefined;
     const ownerStart = owner ? text.indexOf(owner) : -1;
@@ -148,7 +149,7 @@ export function toolJobLatestWinsSelfTests(): number {
     const oracle = Buffer.alloc(law.capacity).subarray(0, law.initializedBytes);
     if (law.initializedBytes > law.capacity || oracle.byteLength !== law.expectedCopiedBytes || oracle.buffer.byteLength !== law.expectedReleasedBytes) throw new Error(`retained raw allocation copy and physical release oracle: ${law.id}`);
   }
-  const rawSource = readFileSync(join(base, "🧵️retained-command/🦀️.rs"), "utf8");
+  const rawSource = readModuleTreeSource(join(base, "🧵️retained-command/🦀️.rs"));
   const rawCloseBlock = (text: string) => {
     const owner = text.indexOf("impl<A: ArtifactApp> InteractiveJob for ArtifactRetainedCommandJob<A>");
     const start = owner < 0 ? -1 : text.indexOf("fn close_step(&mut self,grant:RetainedCloneGrant)->InteractiveJobCloseStep", owner);

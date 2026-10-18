@@ -1,6 +1,6 @@
 //! 📋️ `align-elements` payload. Moves placed elements along one axis of the plan so that the lower edge, the middle or the upper edge of the authored extent of each element lies on a target coordinate; arcs count with their extremes, hosted openings follow their host.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -13,13 +13,16 @@ pub struct AlignElements {
     pub target: f64,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for AlignElements {
+impl<Op> MutationKind<ModelSnapshot, Op> for AlignElements
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<AlignElements> + From<crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "elements", kind: "align-elements", record: "AlignElements" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::align_elements::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::align_elements::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Align {} element(s) to {:?} = {} m", self.ids.len(), self.axis, self.target), &format!("{} Element(e) auf {:?} = {} m ausrichten", self.ids.len(), self.axis, self.target))

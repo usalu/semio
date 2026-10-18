@@ -106,7 +106,7 @@ describe("📡️ a history change replaying before adoption is announced outsid
       "only the loading program's projection moves; no program or nothing to end is the same map",
     ).toEqual([null, true, true, true, true]);
     const host = readModuleTreeSource(join(shellHelpers, "..", "🏛️ShellHost", "🟦️.tsx"));
-    const load = host.slice(host.indexOf("const task = documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);"), host.indexOf("`Effect::LoadDocument` is pack+spr bytes only"));
+    const load = host.slice(host.indexOf("const task = core.documentTransferRef.current.trackDocumentTransfer(file, baseSession.pluginId);"), host.indexOf("`Effect::LoadDocument` is pack+spr bytes only"));
     expect(
       [load.split("programHistoryProjectionsWithLoadV1(").length - 1, /progress: \(status\) => \{[^}]*showLoad\(status\);/u.test(load), /\} finally \{\s*showLoad\(null\);/u.test(load)],
       "the shell folds every polled step of a load into the loading program's projection and ends it however the load ends",

@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-2d = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-job = { workspace = true }
@@ -38,6 +38,8 @@ semio-s-artifact-stdio-semio-audio-model = { workspace = true }
 semio-s-artifact-stdio-semio-audio-mutations = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-semio-audio-mutations = { workspace = true, features = ["testkit"] }
+semio-s-artifact-stdio-semio-audio-model = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }

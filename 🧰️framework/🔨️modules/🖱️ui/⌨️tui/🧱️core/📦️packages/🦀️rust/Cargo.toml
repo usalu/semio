@@ -1,0 +1,30 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-tui-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio tui core: geometry, theme, events, text model, cell buffer, rows and the widget signal types"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-tui-core"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+
+[dev-dependencies]
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+unicode-segmentation = "1.13.2"
+unicode-width = "0.2.2"

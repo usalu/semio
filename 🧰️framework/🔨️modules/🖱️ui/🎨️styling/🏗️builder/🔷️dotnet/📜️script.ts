@@ -14,7 +14,7 @@ import { acquireResourceLease } from "../../../../🏃️process/📦️packages
 
 const dotnetState = (root: string): string => process.env.SEMIO_STYLING_DOTNET_ARTIFACTS_ROOT ?? processCacheDirectoryV1(readProcessOwnerContextV1(process.env,root),"dotnet","ui-styling",`${process.platform}-${process.arch}-${createHash("sha256").update(spawnSync("dotnet",["--version"],{encoding:"utf8"}).stdout??"").digest("hex").slice(0,12)}`,readBuildMode(process.env.SEMIO_BUILD_MODE));
 
-/** 🔐️ Serializes access to the shared .NET compiler store across Nx processes. */
+/** 🔐️ Serializes access to the shared .NET compiler store across build processes. */
 async function withDotnetState(root: string, invocation: ScriptInvocation, action: (state: string, signal: AbortSignal, parallelism: number, control:CompilerAdmissionControl) => Promise<void>): Promise<void> {
   const state = dotnetState(root), control = scriptCompilerAdmissionControlV1(invocation, "styling:dotnet", buildBudgetMs()), signal = control.signal;
   let capacity: Awaited<ReturnType<typeof acquireCompilerCapacityLeaseV1>> | undefined;

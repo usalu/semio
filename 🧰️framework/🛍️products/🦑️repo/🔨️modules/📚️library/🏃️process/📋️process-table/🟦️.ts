@@ -59,3 +59,6 @@ export function processTableSnapshot(platform: NodeJS.Platform = process.platfor
     return undefined;
   }
 }
+
+/** 🏗️ Observes an Nx build command for the cache owner's conservative prune check; this is no process ownership proof. */
+export const ACTIVE_SEMIO_TECH_BUILD = /\bnx(?:\.js)?["']?\s+run\s+['"]?@semio-tech\//;

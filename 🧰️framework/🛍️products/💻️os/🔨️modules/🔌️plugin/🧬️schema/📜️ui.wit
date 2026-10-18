@@ -1,0 +1,98 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §2 channel v12) → `wit-flip`
+/// (26/08/20): revisioned UI patches, now addressed by **node id** rather than tree path —
+/// `⚛️reactor/🩹️patches` diffs against the flat `contract-doc::UiSnapshotState` node table and
+/// falls back to a whole-tree `upsert` of the root node when the diff exceeds ~60% of the body or
+/// the host reports a `base-revision` mismatch via `event.patch-rejected`. `ui-patch` no longer
+/// carries `kind: string` — node-id addressing makes a patch self-describing without it.
+///
+/// ⚠️ Deviation from the design table's literal `resource surface`: same reasoning as
+/// `capabilities.wit`'s `capability-token` — `pure` and `host-async` are `world actor`'s only
+/// imports (B1 world-collapse) and neither of them is `ui`, so a `resource` here would have no
+/// host-callable methods. `surface-ref` (an `(instance, body-key)` id pair) is the real
+/// handle carried on every UI-facing effect/event; `surface` is declared as an empty marker
+/// resource purely so the design table's vocabulary has a nominal type, and is not referenced by
+/// any function signature in this wave.
+interface ui {
+  use types.{pack, instance-id, revision};
+
+  record surface-ref {
+    instance: instance-id,
+    surface: string,
+  }
+
+  resource surface;
+
+  /// 🔢️ A node's identity within one surface — `contract-doc::UiNodeId`, monotonic per surface,
+  /// never reused, so a stale reference to a removed node is always distinguishable from a fresh
+  /// node at the same tree position.
+  type node-id = u64;
+
+  /// 🌱️ Inserts a whole node, or replaces the node already living at `node.id` — pack-encoded
+  /// `contract-doc::UiNodeRecord`. The one patch-op that carries a full node rather than a delta.
+  record patch-upsert {
+    node: pack,
+  }
+  /// 🎛️ pack-encoded `contract::Component`.
+  record patch-set-component {
+    node: node-id,
+    component: pack,
+  }
+  /// 📐️ pack-encoded `contract::LayoutSpec`.
+  record patch-set-layout {
+    node: node-id,
+    layout: pack,
+  }
+  /// 🎞️ pack-encoded `contract::Activity`.
+  record patch-set-activity {
+    node: node-id,
+    activity: pack,
+  }
+  record patch-set-children {
+    node: node-id,
+    children: list<node-id>,
+  }
+  /// 🎨️ pack-encoded `contract::StyleSpec`.
+  record patch-set-style {
+    node: node-id,
+    style: pack,
+  }
+  /// ♿️ pack-encoded `contract::AccessibilitySpec`.
+  record patch-set-accessibility {
+    node: node-id,
+    accessibility: pack,
+  }
+  /// 🔗️ pack-encoded `list<contract::ActionBinding>`.
+  record patch-set-bindings {
+    node: node-id,
+    bindings: pack,
+  }
+  /// 📋️ pack-encoded `option<contract::MenuRef>`.
+  record patch-set-menu {
+    node: node-id,
+    menu: pack,
+  }
+
+  variant patch-op {
+    upsert(patch-upsert),
+    set-component(patch-set-component),
+    set-layout(patch-set-layout),
+    set-activity(patch-set-activity),
+    set-children(patch-set-children),
+    set-style(patch-set-style),
+    set-accessibility(patch-set-accessibility),
+    set-bindings(patch-set-bindings),
+    set-menu(patch-set-menu),
+    /// 🗑️ Removes the node and its whole orphaned subtree.
+    remove(node-id),
+    set-root(node-id),
+  }
+
+  record ui-patch {
+    surface: surface-ref,
+    revision: revision,
+    base-revision: revision,
+    ops: list<patch-op>,
+  }
+}

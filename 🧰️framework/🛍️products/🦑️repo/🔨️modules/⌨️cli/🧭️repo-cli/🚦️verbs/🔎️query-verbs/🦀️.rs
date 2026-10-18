@@ -3,7 +3,8 @@
 use semio_framework_repo_cli_command_framework::{CliError, Invocation};
 use semio_framework_repo_cli_event_stream::{go_json, Format};
 use semio_framework_repo_cli_tree_source_and_search::{export_entities, flatten_tree, searched_tree, tree_filter, write_tree_forest, write_tree_node, FsTreeSource};
-use semio_framework_repo_model::{entity, TreeNodeKind};
+use semio_framework_repo_model::{TreeNodeKind};
+use semio_framework_repo_model_entity::entity;
 use serde_json::{json, Map, Value as Json};
 
 pub fn search(invocation: &mut Invocation<'_>) -> Result<(), CliError> {

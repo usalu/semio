@@ -1,6 +1,6 @@
 import {test,expect} from "bun:test";
 import Ajv from "ajv";
-import fixture from "./🧫️fixtures/🔣️.json";
+import fixture from "../../../../../🧪️tests/🧫️fixtures/♻️prepared-refusal/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 
 test("portable raster refusal owns whole original backings until exact paid release",()=>{

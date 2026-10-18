@@ -1,5 +1,13 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::storeys::{stacking, step};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelGraph, ModelNode};
+use semio_framework_test_fixtures::fixture_text;
 
 fn storey_id(node: &ModelNode) -> String {
     match node {
@@ -10,10 +18,10 @@ fn storey_id(node: &ModelNode) -> String {
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
 
 fn house() -> ModelSnapshot {
-    from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")
+    from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("house decodes")
 }
 
 fn close(left: f64, right: f64) -> bool {

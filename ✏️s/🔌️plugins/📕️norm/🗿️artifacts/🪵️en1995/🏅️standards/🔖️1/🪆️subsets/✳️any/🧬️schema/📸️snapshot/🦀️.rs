@@ -358,7 +358,7 @@ impl En1995Snapshot {
 pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
 
-use semio_s_plugin_norm_app_surface;
+use semio_s_plugin_norm_app_surface as app_surface;
 
 /// 🪵 Timber strength properties in SI (Pa, kg/m³) from EN 338 / EN 14080 tables.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -562,13 +562,3 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 pub const EN1995_DIALECT: semio_framework_plugin::app::Dialect = semio_framework_plugin::app::Dialect { artifact_kind: "s.norm.en1995", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
 
 pub const EN1995_DOCUMENT_SCHEMA: &str = "semio.norm.en1995/v1";
-
-/// 📚️ Every bundled EN 1995 example in catalogue order — compliant first, then non-compliant.
-pub fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-    vec![
-        glulam_floor_beam::source(),
-        glulam_footbridge::source(),
-        multi_fail_timber::source(),
-        overloaded_footbridge::source(),
-    ]
-}

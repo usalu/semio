@@ -1,4 +1,20 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Opening, OpeningKind};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, DoorType, WindowType};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude, TriMesh};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::{Affine3, ZPlane};
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::fillers::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{fixtures::case, ElementSolid};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use std::collections::BTreeMap;

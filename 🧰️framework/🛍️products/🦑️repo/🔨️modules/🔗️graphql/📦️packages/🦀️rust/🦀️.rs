@@ -4,7 +4,7 @@
 
 //! 🔗️ The repository's owned GraphQL document grammar: lexer, AST, recursive-descent parser,
 //! validation and variable coercion. Byte-for-byte behavioural twin of
-//! `🔗️graphql/📦️packages/🐹️go/🐹️.go`, down to the diagnostic text and the byte offsets, so the
+//! `🔗️graphql/📦️packages/🐹️go/🔤️lexer/🐹️.go`, `🌳️ast/🐹️.go` and `🧩️parser/🐹️.go`, down to the diagnostic text and the byte offsets, so the
 //! executor can be ported against this AST without re-deciding a single grammar question.
 
 //#endregion 🧲️Header

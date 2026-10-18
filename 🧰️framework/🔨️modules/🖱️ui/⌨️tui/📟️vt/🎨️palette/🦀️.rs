@@ -1,5 +1,5 @@
-use crate::tui::cell::Cell;
-use crate::tui::theme::{Rgb, Role, Surface, Theme};
+use semio_framework_ui_tui_core::cell::Cell;
+use semio_framework_ui_tui_core::theme::{Rgb, Role, Surface, Theme};
 
 /// 🏴️ Cell attribute bits the screen keeps for itself: the colour is the theme default, not an RGB value.
 pub mod flag {

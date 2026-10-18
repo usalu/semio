@@ -191,7 +191,7 @@ test("owned projected fields preserve native value paths and exact alias closure
  for(const row of law.paths){const own=row.pointer.split("/").slice(1).reduce((value:any,key:string)=>value[key],law.input);expect(own).toBe(getValueByPointer(law.input,row.pointer));expect(own).toBe(row.value);}
  let aliases=["parent","child"];for(const action of law.closeSequence){if(action==="parent"||action==="child"){const index=aliases.indexOf(action);aliases=applyPatch({aliases},[{op:"remove",path:"/aliases/"+index}],true,false).newDocument.aliases;}if(action==="complete")expect(aliases).toEqual([]);}
  expect(JSON.stringify(law.input)).toBe(before);expect(law.constructorAllocationBytes).toBe(0);expect(law.maximumItems).toBe(1);expect(law.maximumBytes).toBe(0);
- expect(readFileSync(join(root,owner,"🧬️retained-clone/🦀️.rs"),"utf8").includes("pub fn project_owned")).toBe(true);
+ expect(readFileSync(join(root,owner,"🧬️retained-clone/🔗️source/🦀️.rs"),"utf8").includes("pub fn project_owned")).toBe(true);
 });
 
 test("owned source birth funds original custody before allocation", () => {

@@ -1,5 +1,5 @@
 /** 🏷️ Individually authored PDF annotation subtype entities and geometric relationships. */
-import type { PdfAnnotationKind } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfAnnotationKind } from "../../../../../🧬️schema/📸️snapshot/📌️annotation/🏷️kind/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type PdfCell,type Binary64,type SqliteRow } from "../../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { writePdfAction,readPdfAction,writePdfDestination,readPdfDestination,writePdfFileSpecification,readPdfFileSpecification } from "../../🎯️navigation/🟦️.ts";

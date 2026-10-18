@@ -1,20 +1,47 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot, Point2, Swing};
+use std::f64::consts::FRAC_PI_2;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{depth_of, mark, seg};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::sizes::{resolve_size, Resolved};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{elevation_at, ElevationPoint};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainWall, DoorLeaves, DoorType, Opening, OpeningKind, Profile, Wall, WindowType};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::Affine3;
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::{perp, LENGTH_EPS};
+#[allow(unused_imports)]
+use semio_framework_geometry::{Point, Vec2};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
 use crate::standards::v1::subsets::any::schema::diff::{Entry, ModelDiff, patches::{OpeningPatch, StoreyPatch, WallPatch}};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_opening_frames;
+use semio_framework_test_fixtures::fixture_text;
 
-const PLACED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/📸️snapshot/🔣️.json");
-const INVALID: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/📸️snapshot/🔣️.json");
-const PLACED_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/💡️inference/🪟️opening-frames/🔣️.json");
-const INVALID_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/💡️inference/🪟️opening-frames/🔣️.json");
+static PLACED: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/📸️snapshot/🔣️.json"));
+static INVALID: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/📸️snapshot/🔣️.json"));
+static PLACED_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/🏡️placed/💡️inference/🪟️opening-frames/🔣️.json"));
+static INVALID_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪟️opening-frames/⚠️invalid/💡️inference/🪟️opening-frames/🔣️.json"));
 
 fn placed() -> ModelSnapshot {
-    from_json_str(PLACED, JsonMemberPolicy::Reject).expect("placed decodes")
+    from_json_str((*PLACED), JsonMemberPolicy::Reject).expect("placed decodes")
 }
 
 fn invalid() -> ModelSnapshot {
-    from_json_str(INVALID, JsonMemberPolicy::Reject).expect("invalid decodes")
+    from_json_str((*INVALID), JsonMemberPolicy::Reject).expect("invalid decodes")
 }
 
 fn close(left: f64, right: f64) -> bool {
@@ -253,8 +280,8 @@ fn reproduces(snapshot: &ModelSnapshot, table: &str) {
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_tables() {
-    reproduces(&placed(), PLACED_TABLE);
-    reproduces(&invalid(), INVALID_TABLE);
+    reproduces(&placed(), (*PLACED_TABLE));
+    reproduces(&invalid(), (*INVALID_TABLE));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -278,4 +305,3 @@ async fn an_opening_depends_on_its_host_and_the_cuts_of_its_siblings_and_a_host_
     assert!(!orphan.iter().find(|step| step.key == ModelNode::OpeningFrame("o-orphan".into())).expect("planned").parents.iter().any(|parent| matches!(parent, ModelNode::Host(_))), "an orphan has no host parent");
     assert!(orphan.iter().all(|step| step.key != ModelNode::Host("w-ghost".into())));
 }
-

@@ -9,12 +9,12 @@ use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
 use semio_framework_artifact_flow_flow::neural::{Atom, Dictionary, Value as NeuralValue};
 
 /// 🔢️ Native numeric carriers preserve portable numeric admission without Atom's boolean coercion.
-pub(crate) fn neural_number(value: &NeuralValue) -> Option<f64> {
+pub fn neural_number(value: &NeuralValue) -> Option<f64> {
     match value.as_atom()? { Atom::Integer(value) => Some(*value as f64), Atom::Decimal(value) => Some(*value), _ => None }
 }
 
 /// 🔘️ Native boolean admission accepts the boolean carrier alone.
-pub(crate) fn neural_boolean(value: &NeuralValue) -> Option<bool> {
+pub fn neural_boolean(value: &NeuralValue) -> Option<bool> {
     match value.as_atom()? { Atom::Boolean(value) => Some(*value), _ => None }
 }
 

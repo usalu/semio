@@ -5,7 +5,9 @@ import { join, posix, resolve } from "node:path";
 import stringify from "fast-json-stable-stringify";
 import { escape, minimatch } from "minimatch";
 import ts from "typescript";
-import { semanticPackageProjectionAuthority, type SemanticPackageProjectionCatalog, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { semanticPackageProjectionAuthority } from "../../🔍️discovery/🎁️package-projection/🟦️.ts";
+import { type SemanticPackageProjectionCatalog } from "../../🔍️discovery/📦️package-projection-contracts/🟦️.ts";
+import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -27,12 +29,12 @@ function productionExpressions() {
     expect(rows).toHaveLength(1);
     return { tree, node: rows[0]! };
   };
-  const discovery = source("🔍️discovery/🟦️.ts", "semanticPackageProjectionAuthority");
+  const discovery = source("🔍️discovery/🎁️package-projection/🟦️.ts", "semanticPackageProjectionAuthority");
   const blocks = discovery.node.body!.statements.filter((node): node is ts.IfStatement => ts.isIfStatement(node) && node.expression.getText(discovery.tree) === "!destination");
   expect(blocks).toHaveLength(1);
   const collisionBody = blocks[0]!.getText(discovery.tree);
   const collision = new Function(ts.transpileModule(`function run(row, adapters, derived, allowedDirectories, facts) { const problems = []; const destination = false; ${collisionBody} return problems; }`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText + "\nreturn run;")() as (row: object, adapters: Map<string, null>, derived: Map<string, null>, allowedDirectories: Set<string>, facts: object) => string[];
-  const normalization = source("🧹️normalization/🟦️.ts", "projectNestedCargoPackages"), initializers: ts.Expression[] = [];
+  const normalization = source("🧹️normalization/🗺️artifact-projection-catalogs/🟦️.ts", "projectNestedCargoPackages"), initializers: ts.Expression[] = [];
   const visit = (node: ts.Node) => { if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === "occupiedPaths" && node.initializer) initializers.push(node.initializer); ts.forEachChild(node, visit); };
   visit(normalization.node);
   expect(initializers).toHaveLength(1);

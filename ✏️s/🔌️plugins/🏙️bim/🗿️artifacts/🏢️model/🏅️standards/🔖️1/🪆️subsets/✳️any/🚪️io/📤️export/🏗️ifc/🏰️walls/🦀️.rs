@@ -44,7 +44,7 @@ pub fn describe(x: &mut Export<'_>, key: &str, entity: u64, name: &str, rows: Ve
     define(x, key, &[entity], set);
 }
 
-fn envelope(wall: &Wall, layout: &WallLayout, elevation: f64) -> TriMesh {
+pub fn envelope(wall: &Wall, layout: &WallLayout, elevation: f64) -> TriMesh {
     let mut solo = ModelSnapshot::default();
     solo.wall_types.insert(wall.wall_type.clone(), WallType { name: String::new(), layers: vec![Layer { material: String::new(), thickness: layout.thickness, function: LayerFunction::Structure }] });
     let one = WallLayout { layer_offsets: vec![layout.offset_left, -layout.offset_right], ..layout.clone() };
@@ -109,7 +109,7 @@ fn footprint(layout: &WallLayout, segment: &BulgeSeg) -> Option<Vec<([f64; 2], f
     band_loop(segment, layout.offset_left, layout.offset_right, None, None).map(|ring| ring.iter().map(|(corner, bulge)| ([corner.x, corner.y], *bulge)).collect())
 }
 
-fn wall(x: &mut Export<'_>, id: &str, wall: &Wall, hosts: &mut BTreeMap<String, Host>) {
+pub fn wall(x: &mut Export<'_>, id: &str, wall: &Wall, hosts: &mut BTreeMap<String, Host>) {
     let inferred = x.inferred;
     let (Some(storey), Some(layout)) = (x.storeys.get(&wall.storey).copied(), inferred.wall_layout.get(id)) else {
         x.skip("wall", id, "its storey or layout is missing");
@@ -194,7 +194,7 @@ fn ring(x: &mut Export<'_>, width: f64, height: f64, frame: f64) -> u64 {
     x.ifc.curve_profile(outer, &[inner])
 }
 
-fn filling(x: &mut Export<'_>, kind: &OpeningKind, width: f64, height: f64) -> Option<u64> {
+pub fn filling(x: &mut Export<'_>, kind: &OpeningKind, width: f64, height: f64) -> Option<u64> {
     let model = x.model;
     let (frame, depth, leaf) = match kind {
         OpeningKind::Window { window_type } => model.window_types.get(window_type).map(|row| (row.frame_width, row.frame_depth, 0.024))?,
@@ -319,6 +319,4 @@ pub fn emit(x: &mut Export<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

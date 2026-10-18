@@ -10,11 +10,11 @@
 //! layers (else the `Structure` layers, else the mid plane). Faces are offset curves of the axis (parallel lines, or concentric arcs with
 //! the same bulge); joins trim them as described in [`joins`]. Z values: see `storey-levels`.
 
-pub use super::super::storey_levels::top_of;
+pub use crate::standards::v1::subsets::any::schema::inferences::storey_levels::top_of;
 
 use crate::standards::v1::subsets::any::schema::authored::plan::{axis_length, segment_of as seg};
-use super::super::element_solids::plan_kit::mark;
-use super::super::storey_levels::{vertical_of, StoreyLevel};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::mark;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, LocationLine, ModelSnapshot, Point2, Vertex, Wall};
 use semio_framework_geometry::bulge::BulgeSeg;
 use semio_framework_geometry::loops;
@@ -277,6 +277,4 @@ pub fn band_dependency(snapshot: &ModelSnapshot, wall: &Wall) -> DslValue {
 }
 //#endregion 🔖️Geometry
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

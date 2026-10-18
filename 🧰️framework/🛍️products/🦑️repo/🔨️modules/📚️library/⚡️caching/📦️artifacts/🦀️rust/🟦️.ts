@@ -18,7 +18,7 @@ export async function runArtifactRustTests(cargoName: string, repoRoot: string, 
 
 /** 🧪️ Runs one artifact's suites across every Cargo package it is cut into (a split artifact family), in one invocation. */
 export async function runArtifactRustPackagesTests(cargoNames: readonly string[], repoRoot: string, segments: string[], invocation: ScriptInvocation): Promise<void> {
-  const { runRepositoryCargoTests } = await import("../../../🟦️.ts");
+  const { runRepositoryCargoTests } = await import("../../../🏃️process/🦀️cargo/🎟️admission/🟦️.ts");
   const { rest } = resolveTestLevel(segments);
   validateNativeCargoArguments("test", rest);
   const stopProgress = startNativeProgress(`artifact-rust:${cargoNames.join("+")}:test`);
@@ -78,7 +78,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
       if (segments.length > 1 || (mode !== undefined && mode !== "source" && mode !== "native")) throw new Error("Unknown owned SQLite snapshot command");
       if (mode !== "source") for (const testPackage of options.testPackages ?? [cargoName]) await runArtifactRustTests(testPackage, this.repoRoot, ["--lib", "sqlite_snapshot_", "--no-fail-fast"], this.invocation);
       if (mode !== "native") {
-        const { runRepositoryTestCommand } = await import("../../../🟦️.ts");
+        const { runRepositoryTestCommand } = await import("../../../🧪️testing/🎛️repository-command/🟦️.ts");
         for (const group of snapshotGroups) await runRepositoryTestCommand(process.execPath, ["test", ...group], { cwd: this.repoRoot, budgetMs: scriptInvocationBudget(this.invocation, options.snapshotSqliteTestBudgetMs ?? 0), signal: this.invocation.control.signal });
       }
     }

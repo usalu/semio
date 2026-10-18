@@ -3,7 +3,7 @@
 //! answers the same id, so the file is as small as the model is repetitive and its order is the order of first use.
 //! 📎 ISO 6946 <https://www.iso.org/standard/65708.html>
 
-use super::target::{ConstantSchedule, Construction, DailySchedule, Material, ScheduleInterpolation, Schedules, SurfaceRoughness, WeeklySchedule};
+use crate::standards::v1::subsets::any::io::export::energy::target::{ConstantSchedule, Construction, DailySchedule, Material, ScheduleInterpolation, Schedules, SurfaceRoughness, WeeklySchedule};
 use crate::standards::v1::subsets::any::schema::snapshot::Layer;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
@@ -158,6 +158,4 @@ impl ScheduleBook {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

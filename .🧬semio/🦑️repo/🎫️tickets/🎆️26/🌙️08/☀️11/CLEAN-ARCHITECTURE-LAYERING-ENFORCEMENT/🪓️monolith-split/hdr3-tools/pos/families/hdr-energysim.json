@@ -1,0 +1,6 @@
+{
+ "name": "hdr-energysim",
+ "crates": ["semio-s-plugin-energy-engine-sim", "semio-s-plugin-energy-engine-sim-tests"],
+ "base": {"rev": "b84bf526c7ba26f99c4054b47da1c1a4d5064e3d", "crates": ["semio-s-plugin-energy-engine-sim"]},
+ "note": "HDR-2: energy sim unit tests moved to a companion"
+}

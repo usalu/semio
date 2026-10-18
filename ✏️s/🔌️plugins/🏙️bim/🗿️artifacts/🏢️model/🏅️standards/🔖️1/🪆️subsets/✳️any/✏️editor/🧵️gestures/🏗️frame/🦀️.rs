@@ -3,9 +3,11 @@
 //! and the world, up the wall in a section that runs along it) and, with shift or the command key, takes the nearest line away; it writes the explicit line list of that direction into
 //! the wall. The cell tool turns the cell under the pointer into an open panel (or back into the panel of the type), and with shift into a door. Every tool is one click, one history row.
 
-use super::opening::nearest_host;
-use super::plane::{angle, axis_ends, dist, P};
-use super::session::{Pointer, Step, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use crate::editor::bim::gestures::session::Modifiers;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::editor::bim::gestures::opening::nearest_host;
+use crate::editor::bim::gestures::plane::{angle, axis_ends, dist, P};
+use crate::editor::bim::gestures::session::{Pointer, Step, Surface, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
 use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{CurtainGrid, CurtainPanel, CurtainPanelOverride, Slope}, mutations::ModelMutation};
@@ -208,7 +210,7 @@ impl Cell {
     fn write(ctx: &mut ToolContext<'_>, wall: &str, u: u32, v: u32, door: bool) -> Step {
         let existing = ctx.snapshot.curtain_panel_overrides.iter().find(|(_, row)| row.curtain == wall && row.u == u && row.v == v).map(|(id, row)| (id.clone(), row.panel.clone()));
         let panel = if door {
-            let Some(door_type) = ctx.library_type(&ctx.snapshot.door_types) else { return Step::refuse(super::session::TYPE_MISSING) };
+            let Some(door_type) = ctx.library_type(&ctx.snapshot.door_types) else { return Step::refuse(crate::editor::bim::gestures::session::TYPE_MISSING) };
             CurtainPanel::Door { door_type }
         } else {
             CurtainPanel::Empty
@@ -258,6 +260,4 @@ impl Tool for Cell {
 }
 //#endregion 🔖️Cell
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -182,6 +182,4 @@ pub fn dependency(snapshot: &ModelSnapshot, storey: &str) -> semio_framework_val
 }
 //#endregion 🔖️Rules
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

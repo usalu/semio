@@ -1,0 +1,1958 @@
+//! 👁️ Generation3d viewer — the read-only counterpart of `✏️editor` for this subset (ticket
+//! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.2). `Generation3dViewer` implements
+//! `ArtifactViewer`, never `ArtifactEditor`/`ArtifactApp` — `ViewerApp<Generation3dViewer>`
+//! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
+//! or draft mutation. MUST NOT import anything from the sibling `✏️editor` module
+//! (`policyViewerPurityBreaches`).
+//!
+//! 🕹️ Read-only does not mean inert. A user opening a generation3d artifact read-only gets: a real
+//! `World3dScene` of the evaluated geometry, live hover and selection over the framework's own
+//! `graph` interaction domain, a preview camera they can orbit/pan/zoom, four shading modes, three
+//! LOD steps and a full sun rig — every one of them a `Migrated` interactive job with an exact
+//! app-owned bounded reducer, publishing on the CONFIG lane only. That publication contract is the
+//! runtime half of the read-only guarantee whose compile-time half is `ViewEmit`.
+#![allow(clippy::result_large_err)]
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_os_kernel as store;
+
+use semio_s_artifact_procedural_3d_preview_eval as preview_eval;
+use semio_s_artifact_procedural_3d_viewer_commands::export_document;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_release;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_eval_tick;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_cancel_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::flow_tessellate_resolve;
+use semio_s_artifact_procedural_3d_viewer_commands::set_active_example;
+use semio_s_artifact_procedural_3d_viewer_commands::set_camera;
+use semio_s_artifact_procedural_3d_viewer_commands::set_contributions;
+use semio_s_artifact_procedural_3d_viewer_commands::set_lod_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_show_mode;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_azimuth;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_elevation;
+use semio_s_artifact_procedural_3d_viewer_commands::set_sun_intensity;
+use semio_s_artifact_procedural_3d_viewer_commands::toggle_sun;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfig;
+use semio_s_artifact_procedural_3d_viewer_config::Generation3dViewConfigMutation;
+use semio_s_artifact_procedural_3d_viewer_modes::view;
+use semio_s_artifact_procedural_3d_viewer_modes::view::windows::preview;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresence;
+use semio_s_artifact_procedural_3d_viewer_presence::Generation3dViewPresenceMutation;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransient;
+use semio_s_artifact_procedural_3d_viewer_transient::Generation3dViewTransientMutation;
+use semio_s_artifact_procedural_3d_mutations::Generation3dMutation;
+use semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot;
+use semio_s_artifact_procedural_3d_model::GENERATION3D_DIALECT;
+use semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA;
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
+use semio_framework_os_flow::FlowEvalSession;
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::ActionDescriptor;
+use semio_framework_plugin::ActionKind;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactOwnedToolJobFactory;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactToolPublicationLane;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use {semio_framework_artifact_reference::Dialect};
+use semio_framework_plugin::DomainTopology;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::GranularityDefinition;
+use semio_framework_plugin::HierarchyProvider;
+use semio_framework_plugin::HoverSpec;
+use semio_framework_plugin::InteractionDefinition;
+use semio_framework_plugin::InteractionRef;
+use semio_framework_plugin::InteractionTopology;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_plugin::MergeMode;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::SelectionMethod;
+use semio_framework_plugin::SelectionMode;
+use semio_framework_plugin::SelectionSpec;
+use semio_framework_plugin::ToolRunJob;
+use semio_framework_plugin::ToolRunJobPurpose;
+use semio_framework_plugin::ToolRunJobRequest;
+use semio_framework_plugin::TopologyNode;
+use semio_framework_plugin::ViewEmit;
+use semio_framework_plugin::Viewer;
+use semio_framework_plugin::ViewerApp;
+use semio_framework_plugin::WindowMeasure;
+use std::collections::HashMap;
+use semio_framework_2d_compute::EngineHandles;
+
+//#region 🔖️Constants
+pub const GENERATION3D_VIEW_APP_ID: &str = "procedural3d-view";
+
+/// 🎯️ An `ActionDescriptor` addressed at this viewer — the single factory every chrome measure
+/// builds its `on_change` with.
+pub fn generation3d_view_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
+    ActionDescriptor { controller_id: GENERATION3D_VIEW_APP_ID.into(), action: action.into(), args }
+}
+
+/// 🪟️ The window kinds this surface's `flowEvalTick` chain may be addressed to — this viewer has
+/// exactly one, and it is the ONLY window holding a retained evaluation publication. Handed to the
+/// shared [`preview_eval::attached_preview_windows`] / [`preview_eval::preview_kind`], which is
+/// where the editor's two-preview roster is expressed the same way.
+const GENERATION3D_VIEW_PREVIEW_KINDS: &[&str] = &[preview::WINDOW_KIND_ID];
+
+/// 🪟️ Every attached viewer preview window, off the shell's trusted `ViewModel` roster.
+fn generation3d_view_preview_windows(view: Option<&semio_framework_plugin::ViewModel>) -> Vec<(&str, &'static str)> {
+    preview_eval::attached_preview_windows(view, GENERATION3D_VIEW_PREVIEW_KINDS)
+}
+/// 📚️ What this read-only surface is LOOKING at: the document the session opened, or — once the
+/// navbar picker named one — the bundled example's own projection.
+///
+/// 🔒️ This is how a viewer "loads" a document without owning write authority. The editor's
+/// `setActiveExample` replaces the artifact's fixture; this surface cannot, so the picked id lives
+/// on its CONFIG (`Generation3dViewConfig::active_example_id`) and every read path — the preview
+/// render, the `flowEvalTick` chain and the interaction topology — resolves it here, exactly once,
+/// through the surface-neutral `🧬️schema::example_snapshot`.
+///
+/// 🕳️ Three states, not two — the picker's own. `None` on the config is "nothing picked", which is
+/// the document this session OPENED; `Some("")` is the picker's `No example` row, which is the EMPTY
+/// document; `Some(id)` is that bundled example. Collapsing the first two onto one empty string made
+/// `No example` show the opened document, and the opened document in the playground IS a bundled
+/// example — so the row that promises no example painted the hexagonal mushroom column's three
+/// meshes (measured on the served viewer 2026-09-13, `meshesLen 3641`). The sibling surface clears
+/// on the same row (`✏️editor/🎮️commands/🎨️set`); both surfaces now agree.
+///
+/// 🧹️ `Example` and `Empty` own a real `Generation3dSnapshot` whose neural `Dictionary` roots abort
+/// the process on a bare drop, so every caller MUST finish with [`Self::retire`] (ticket
+/// 26/09/09/PROCEDURAL-3D-END-TO-END).
+enum Generation3dViewedDocument<'a> {
+    Opened(&'a Generation3dSnapshot),
+    Example(Generation3dSnapshot),
+    Empty(Generation3dSnapshot),
+}
+
+impl<'a> Generation3dViewedDocument<'a> {
+    fn resolve(snapshot: &'a Generation3dSnapshot, config: &Generation3dViewConfig) -> Self {
+        let Some(example_id) = config.active_example_id.as_deref() else { return Self::Opened(snapshot) };
+        if example_id.is_empty() {
+            return Self::Empty(semio_s_artifact_procedural_3d_model::empty_generation3d_snapshot());
+        }
+        match semio_s_artifact_procedural_3d_io_text::snapshot::example_snapshot(example_id) {
+            Some(example) => Self::Example(example),
+            None => Self::Opened(snapshot),
+        }
+    }
+
+    fn snapshot(&self) -> &Generation3dSnapshot {
+        match self {
+            Self::Opened(snapshot) => snapshot,
+            Self::Example(example) | Self::Empty(example) => example,
+        }
+    }
+
+    fn retire(self) {
+        match self {
+            Self::Opened(_) => {}
+            Self::Example(example) | Self::Empty(example) => example.retire_cold(),
+        }
+    }
+}
+//#endregion 🔖️Constants
+
+//#region 🔖️InstanceOperationOwner
+/// 🧠️ The ONE `FlowEvalSession` this viewer instance retains across turns — its neural cache, its
+/// `eval_json`, its live preview meshes and, critically, its `pending_tessellate_by_hash` table.
+///
+/// 🐛️ Before this owner the viewer built a throwaway `FlowEvalSession::new()` per command and
+/// ticked it synchronously to completion (`👁️viewer/🦀️.rs:179-207` as of 2026-09-12): an in-flight
+/// tessellate handle noted while emitting the request was gone before any answer could arrive, and
+/// no answer could arrive at all because the sync loop emitted no `ExtensionInvocation`. The
+/// brep/math operators are CONTRIBUTED at runtime and never linked into the guest, so that loop
+/// could only ever fault — the read-only surface could never paint a brep-bearing example
+/// (`📓️audit-window-inventory-2026-09-12.md` §4 P0 item 1). Mirrors the sibling surface's own
+/// retained owner exactly.
+struct Generation3dViewInstanceOperationOwner {
+    eval_session: Option<FlowEvalSession>,
+    /// ⏯️ The `previewEval` run's surface-owned half: attached preview roster and the live job's port.
+    run_link: preview_eval::PreviewEvalRunLink,
+    closing: bool,
+}
+
+impl Generation3dViewInstanceOperationOwner {
+    fn new() -> Self {
+        Self { eval_session: Some(FlowEvalSession::new()), run_link: preview_eval::PreviewEvalRunLink::default(), closing: false }
+    }
+
+    fn with_session<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
+        if self.closing {
+            return Err(Fault::from("generation3d-view-eval-session-closing"));
+        }
+        self.eval_session.as_mut().map(body).ok_or_else(|| Fault::from("generation3d-view-eval-session-owner-missing"))
+    }
+
+    /// ⏰️ A fold that changed the session wakes the live `previewEval` run job afterwards.
+    fn with_session_waking<R>(&mut self, body: impl FnOnce(&mut FlowEvalSession) -> R) -> Result<R, Fault> {
+        let result = self.with_session(body);
+        self.run_link.wake();
+        result
+    }
+
+    /// 🧵️ Owes every attached preview window an evaluation and carries on `emit` the run start that debt
+    /// needs when no unsettled run can be woken ([`preview_eval::owe_attached_previews_carrying`]).
+    fn owe_attached_previews_carrying(&mut self, windows: &[(&str, &'static str)], servable: bool, emit: &mut Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>, grant: semio_framework_value::RetainedCloneGrant) -> Result<(), Fault> {
+        use preview_eval::PreviewEvalRunOwner as _;
+        let (session, link) = self.preview_eval_parts().ok_or_else(|| Fault::from("generation3d-view-eval-session-closing"))?;
+        preview_eval::owe_attached_previews_carrying(session, link, windows, servable, emit, grant).map_err(|error| Fault::from(error.to_string()))
+    }
+}
+
+impl preview_eval::PreviewEvalRunOwner for Generation3dViewInstanceOperationOwner {
+    fn preview_eval_parts(&mut self) -> Option<(&mut FlowEvalSession, &mut preview_eval::PreviewEvalRunLink)> {
+        let Self { eval_session, run_link, closing } = self;
+        eval_session.as_mut().filter(|_| !*closing).map(|session| (session, run_link))
+    }
+}
+
+impl semio_framework_plugin::ArtifactInstanceOperationOwner for Generation3dViewInstanceOperationOwner {
+    fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
+        self
+    }
+
+    fn retirement_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if !self.closing {
+            return Ok(Default::default());
+        }
+        let Some(session) = self.eval_session.as_ref() else { return Ok(Default::default()) };
+        if session.terminal_is_empty() {
+            return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
+        }
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: session.next_close_copy_byte_demand()?, capacity_bytes: session.next_close_capacity_byte_demand(body)?, release_bytes: session.next_close_release_byte_demand()?, depth: session.next_close_depth_demand()? })
+    }
+
+    /// 🧹️ A LIVE session owns nothing retirable — `FlowEvalSession::close_step` answers `Blocked`
+    /// until `begin_close`, and reporting that from the live maintenance ladder spends the
+    /// runtime's zero-progress credit every idle turn.
+    fn maintenance_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+        use semio_framework_plugin::PluginLifecycleStep;
+        use semio_framework_value::retained_clone::RetainedCloneProgress;
+        if !self.closing {
+            return Ok(PluginLifecycleStep::Complete(Default::default()));
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(PluginLifecycleStep::Progress(Default::default()));
+        }
+        let Some(session) = self.eval_session.as_mut() else { return Ok(PluginLifecycleStep::Complete(Default::default())) };
+        let (progress, finished) = if session.terminal_is_empty() {
+            (RetainedCloneProgress { copied_items: 1, ..Default::default() }, true)
+        } else {
+            match session.close_step(grant)? {
+                semio_framework_job::InteractiveJobCloseStep::Pending { progress } => (progress, false),
+                semio_framework_job::InteractiveJobCloseStep::Complete { progress } => (progress, true),
+                semio_framework_job::InteractiveJobCloseStep::Blocked => return Ok(PluginLifecycleStep::Blocked { reason: "Generation3d viewer evaluation session awaits its exact close grant" }),
+            }
+        };
+        if finished && session.terminal_is_empty() {
+            self.eval_session = None;
+        }
+        Ok(if self.terminal_is_empty() { PluginLifecycleStep::Complete(progress) } else { PluginLifecycleStep::Progress(progress) })
+    }
+
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_plugin::PluginLifecycleStep, semio_framework_plugin::PluginLifecycleFailure> {
+        self.closing = true;
+        if let Some(session) = self.eval_session.as_mut() {
+            session.begin_close();
+        }
+        self.maintenance_step(cx,grant)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.eval_session.is_none()
+    }
+}
+
+//#endregion 🔖️InstanceOperationOwner
+
+//#region 🔖️Command
+semio_framework_plugin::view_commands! {
+    /// 👁️ `Generation3dViewer::Command` — the SOLE dispatch surface for the read-only surface's own
+    /// behavior, covering EVERY declared action. Row order is the binary variant ordinal: appending
+    /// is safe, reordering is a wire-format break. `dispatch` returns `ViewEmit`, so no row of this
+    /// table can ever carry an artifact or draft mutation.
+    pub enum Generation3dViewCommand for Generation3dSnapshot, Generation3dViewConfig, Generation3dViewConfigMutation {
+        "setShowMode" as "show-mode" => set_show_mode::SetShowMode,
+        "setLodMode" as "lod-mode" => set_lod_mode::SetLodMode,
+        "setCamera" as "camera" => set_camera::SetCamera,
+        "toggleSun" as "toggle-sun" => toggle_sun::ToggleSun,
+        "setSunAzimuth" as "sun-azimuth" => set_sun_azimuth::SetSunAzimuth,
+        "setSunElevation" as "sun-elevation" => set_sun_elevation::SetSunElevation,
+        "setSunIntensity" as "sun-intensity" => set_sun_intensity::SetSunIntensity,
+        "setContributions" as "set-contributions" => set_contributions::SetContributions,
+        "flowEvalTick" as "flow-eval-tick" => flow_eval_tick::FlowEvalTick,
+        "flowEvalResolve" as "flow-eval-resolve" => flow_eval_resolve::FlowEvalResolve,
+        "flowTessellateResolve" as "flow-tessellate-resolve" => flow_tessellate_resolve::FlowTessellateResolve,
+        "flowEvalRelease" as "flow-eval-release" => flow_eval_release::FlowEvalRelease,
+        "flowTessellateCancelResolve" as "flow-tessellate-cancel-resolve" => flow_tessellate_cancel_resolve::FlowTessellateCancelResolve,
+        "setActiveExample" as "active-example" => set_active_example::SetActiveExample,
+        "exportDocument" as "export-document" => export_document::ExportDocument}
+}
+
+impl Default for Generation3dViewCommand {
+    fn default() -> Self {
+        Generation3dViewCommand::SetShowMode(set_show_mode::SetShowMode { value: semio_s_artifact_procedural_3d_viewer_config::default_view_show_mode() })
+    }
+}
+//#endregion 🔖️Command
+
+//#region 🧵️RetainedCommands
+/// 🧾️ Every viewer tool id, in `Generation3dViewCommand` declaration order — a bijection with the
+/// command enum's rows and with `Generation3dViewBoundedCommandJobFactory::PUBLICATION_CONTRACTS`.
+pub const GENERATION3D_VIEW_TOOL_IDS: &[&str] = &["setShowMode", "setLodMode", "setCamera", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity"];
+/// 🎨️ The navbar example picker's own tool id — an APP-scoped gesture, dispatched from the shell
+/// chrome rather than from a window, exactly as it is on the sibling surface. Kept out of
+/// [`GENERATION3D_VIEW_TOOL_IDS`] for that reason: that list is the statement of what THIS viewer's
+/// one window dispatches, and `build_definition` copies an unowned action onto every window kind
+/// anyway, which is what gets it past `ShellHost`'s `declaredAction` gate
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const GENERATION3D_VIEW_EXAMPLE_TOOL_IDS: &[&str] = &["setActiveExample"];
+/// ⏱️ The `previewEval` run's hop tool ids — a HOST route, never a user action: nobody clicks a tick.
+/// Kept out of [`GENERATION3D_VIEW_TOOL_IDS`] for exactly that reason, so the window-kind action
+/// law stays a statement about what a user can dispatch from this window.
+const GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS: &[&str] = &["flowEvalTick", "flowEvalResolve", "flowTessellateResolve", "flowEvalRelease", "flowTessellateCancelResolve"];
+/// 🪟️ The chain routes ADDRESSED AT A PREVIEW WINDOW, sharing one publication layer
+/// ([`Generation3dViewFlowEvalWindowWork`]): the dispatched hop and the two folds that continue the
+/// chain inline. A release addresses an extension actor, not a window, and stays off it.
+const GENERATION3D_VIEW_FLOW_EVAL_WINDOW_TOOL_IDS: &[&str] = &["flowEvalTick", "flowEvalResolve", "flowTessellateResolve"];
+/// 📤️ The reader's OWN io verb, on its own route. Export is the ONE direction a viewer may have —
+/// it reads the document and hands the shell a file — so its publication lane is `HostOnly` and it
+/// stays out of [`GENERATION3D_VIEW_TOOL_IDS`], whose every row writes the Config lane and
+/// broadcasts presence. Import replaces a document and therefore lives only on the editor
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, io-surface lane).
+const GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS: &[&str] = &["exportDocument"];
+const GENERATION3D_VIEW_DOCUMENT_IO_PAYLOAD_SCHEMA: &str = "generation.3d.view-document-io-command.v1";
+/// 🎒️ One format id and its addressed envelope — nothing this route carries INBOUND is larger than
+/// a gesture, so it shares the gesture quota rather than declaring a second literal. The bytes flow
+/// the other way, in a `DownloadMediaExport` effect, which no wire bound governs.
+const GENERATION3D_VIEW_DOCUMENT_IO_RAW_BYTES: usize = GENERATION3D_VIEW_RAW_BYTES;
+const GENERATION3D_VIEW_PAYLOAD_SCHEMA: &str = "generation.3d.view-command.v1";
+const GENERATION3D_VIEW_FLOW_EVAL_PAYLOAD_SCHEMA: &str = "generation.3d.view-flow-eval-command.v1";
+const GENERATION3D_VIEW_EXAMPLE_PAYLOAD_SCHEMA: &str = "generation.3d.view-example-command.v1";
+/// 🎒️ One example id on the wire — the same 8 KiB ceiling every other viewer gesture lives under.
+const GENERATION3D_VIEW_EXAMPLE_RAW_BYTES: usize = GENERATION3D_VIEW_RAW_BYTES;
+/// 🎒️ Real bound for one chain hop's wire payload, and the same one the sibling editor surface's
+/// proven chain declares (`GENERATION3D_FLOW_EVAL_RAW_BYTES`): a `flowTessellateResolve` carries a
+/// whole `tessellate` envelope, i.e. one `brep_geometry::MESH_PACK_CHUNK_BASE64_CHARS` mesh-body
+/// chunk plus its accounting header, and it is pinned to
+/// `brep_geometry::tessellate_envelope_maximum_bytes()` by
+/// `view_tessellate_envelope_fits_the_declared_wire_bound`.
+///
+/// ⚖️ It is NOT the 8 KiB gesture quota. An extension answer reaches its resolve as a parked
+/// continuation rather than a public invocation body, but the body still crosses THIS route's
+/// declared bound, and at 8 KiB the transfer unit collapsed to 4 KiB — one `flowEvalTick` round
+/// trip per 4 KiB of mesh, i.e. ten of them for `sphere-cut-with-torus`
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️preview-mesh-delivery-2026-09-12.md`).
+const GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES: usize = 65_536;
+/// 🎒️ Real bound for one viewer command's wire payload: the largest is `setCamera`'s two coordinate
+/// triples plus a fov, well under a kilobyte — 8 KiB stays a real ceiling, not a rubber stamp.
+const GENERATION3D_VIEW_RAW_BYTES: usize = 8_192;
+/// 🎒️ One config edit plus the ephemeral presence/transient completion — the evaluation itself is
+/// chunked across `step()` calls, not across work items.
+const GENERATION3D_VIEW_WORK_ITEMS: usize = 8;
+
+fn generation3d_view_bounded_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GENERATION3D_VIEW_RAW_BYTES, 32, 32, 16_384, 7_500)
+}
+
+#[expect(clippy::unnecessary_wraps, reason = "The retained work contract takes an optional extent callback.")]
+fn generation3d_view_bounded_extent(_command: &Generation3dViewCommand, _snapshot: &Generation3dSnapshot, _interaction: &protocol::InteractionState) -> Option<usize> {
+    Some(1)
+}
+
+/// 👁️ The one reducer every viewer tool runs. It converts the typed command's `ViewEmit` into the
+/// runtime `Emit` the retained-command machinery publishes — built solely from `ViewEmit`'s three
+/// fields, so the document and draft lanes stay empty BY CONSTRUCTION here exactly as they do in
+/// `ViewerApp::handle`, never by a runtime check a later edit could forget.
+#[expect(clippy::too_many_arguments, reason = "The retained command reducer implements the framework's eight-argument callback contract.")]
+fn generation3d_view_retained_reduce(
+    command: &Generation3dViewCommand,
+    snapshot: &Generation3dSnapshot,
+    config: &Generation3dViewConfig,
+    history: &semio_framework_plugin::HistoryView,
+    _interaction: &protocol::InteractionState,
+    _hover: &semio_framework_plugin::app::InteractionHoverState,
+    _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+    operation: &AppOperationContext,
+) -> Result<Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>, Fault> {
+    if !GENERATION3D_VIEW_TOOL_IDS.contains(&command.command_id()) && !GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&command.command_id()) {
+        return Err(Fault::from("generation3d-view-command-retained-route-rejected"));
+    }
+    let doc = ArtifactView::with_operation(snapshot, history, operation.clone());
+    let cfg = ConfigView { snapshot: config, window: None };
+    let view_emit = command.dispatch(&doc, &cfg)?;
+    Ok(Emit { config_mutations: view_emit.config_mutations, effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() })
+}
+
+/// 🧮️ Folds this command's emitted config operations onto the live config, so the ephemeral
+/// presence broadcast reports the state the co-viewer is about to see rather than the one it left.
+fn generation3d_view_next_config(base: &Generation3dViewConfig, mutations: &[Generation3dViewConfigMutation]) -> Generation3dViewConfig {
+    let mut next = base.clone();
+    for mutation in mutations {
+        let diff = protocol::Mutation::diff(mutation, &next).into_parts().0;
+        let applied = protocol::apply_diff(&diff, &next);
+        if let Ok(post) = applied {
+            next = post;
+        }
+    }
+    next
+}
+
+/// 👁️ One viewer command's real work: settle the config operation and complete with the ephemeral
+/// SHARED presence (camera + show mode, so a co-viewer can follow) — then owe every attached preview
+/// window an evaluation for the `previewEval` run.
+///
+/// 🐛️ It used to build a fresh `FlowEvalSession::new()` per command and `tick` it synchronously to
+/// completion here, with zero `ExtensionInvocation` sites in the whole file. The brep/math
+/// operators are contributed by the host at runtime and never linked into the guest, so that loop
+/// could only ever fault and no brep-bearing example could tessellate in the viewer at all. The
+/// evaluation is now the shared addressed chain's job (`🧵️preview-eval`), exactly as it is on the
+/// sibling surface (`📓️audit-window-inventory-2026-09-12.md` §4 P0 item 1).
+struct Generation3dViewCommandWork {
+    tool_id: &'static str,
+    /// 🔒️ The app instance's retained evaluation session, reached ONLY to owe the attached previews an
+    /// evaluation on their per-window latches.
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    emit: Option<Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>>,
+    presence: Vec<Generation3dViewPresenceMutation>,
+    emit_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Emit<Generation3dMutation, Generation3dViewConfigMutation, NoDraftMutation>>>,
+    presence_retirement: Option<semio_framework_value::retirement::controlled::ControlledRetirement<Vec<Generation3dViewPresenceMutation>>>,
+    complete: bool,
+    closing: bool,
+}
+
+impl Generation3dViewCommandWork {
+    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, instance_owner, emit: None, presence: Vec::new(), emit_retirement: None, presence_retirement: None, complete: false, closing: false }
+    }
+
+    fn close_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        use semio_framework_value::RetirementDemand;
+        if self.emit.is_some() || self.presence.capacity() != 0 {
+            return Ok(RetirementDemand { depth: 1, ..Default::default() });
+        }
+        if let Some(retirement) = self.emit_retirement.as_ref() {
+            return Ok(RetirementDemand { copy_bytes: retirement.next_copy_byte_demand()?, capacity_bytes: retirement.next_capacity_byte_demand(copy)?, release_bytes: retirement.next_release_byte_demand()?, depth: retirement.next_depth_demand()? });
+        }
+        if let Some(retirement) = self.presence_retirement.as_ref() {
+            return Ok(RetirementDemand { copy_bytes: retirement.next_copy_byte_demand()?, capacity_bytes: retirement.next_capacity_byte_demand(copy)?, release_bytes: retirement.next_release_byte_demand()?, depth: retirement.next_depth_demand()? });
+        }
+        Ok(Default::default())
+    }
+}
+
+/// 🧮️ The transient bytes one work step may materialize: the work's own frame plus the one emit it can stage.
+fn command_work_step_demands<A: semio_framework_plugin::ArtifactApp>(work_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    Ok(semio_framework_value::RetirementDemand { copy_bytes: work_bytes.saturating_add(size_of::<Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>>()), depth: 1, ..Default::default() })
+}
+
+impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewCommandWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        command: &Generation3dViewCommand,
+        snapshot: &Generation3dSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+    ) -> Option<usize> {
+        generation3d_view_bounded_extent(command, snapshot, interaction)
+    }
+
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
+        if self.closing || self.complete {
+            return Err(Fault::from("generation3d-view-work-is-terminal"));
+        }
+        self.complete = true;
+        let mut emit = generation3d_view_retained_reduce(input.command, input.snapshot, input.config, input.history, input.interaction, input.hover, input.context, input.operation)?;
+        let next = generation3d_view_next_config(input.config, &emit.config_mutations);
+        self.presence = vec![
+            Generation3dViewPresenceMutation::from(semio_s_artifact_procedural_3d_viewer_presence::SetPreviewCamera { camera: next.preview_camera.clone() }),
+            Generation3dViewPresenceMutation::from(semio_s_artifact_procedural_3d_viewer_presence::SetShowMode { value: next.show_mode.clone() }),
+        ];
+        // 🪟️ A view command that changes what the evaluation reads — the viewed example or the LOD
+        // deflection — owes the windows the SHELL says are attached a fresh evaluation and carries the
+        // run start that debt needs. A camera, sun or shading move changes nothing the evaluation reads
+        // and owes nothing: starting a run per orbit drag would be pure hop overhead.
+        if next.active_example_id != input.config.active_example_id || next.tolerance().to_bits() != input.config.tolerance().to_bits() {
+            let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+            let viewed = Generation3dViewedDocument::resolve(input.snapshot, &next);
+            let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
+            viewed.retire();
+            self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained))?;
+        }
+        let presence = std::mem::take(&mut self.presence);
+        self.emit = Some(emit);
+        let emit = self.emit.take().ok_or_else(|| Fault::from("generation3d-view-emit-owner-absent"))?;
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { presence, transient: Vec::new(), window_transient: Vec::new() } })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+
+    fn begin_close(&mut self) {
+        self.closing = true;
+    }
+
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:Default::default()})}
+        if !self.closing{return Ok(semio_framework_job::InteractiveJobCloseStep::Blocked)}
+        if self.terminal_is_empty(){return Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress:Default::default()})}
+        let demand=self.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|{(
+            ||->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
+        use semio_framework_job::InteractiveJobCloseStep;
+        use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
+        let refused = |error: semio_framework_value::ValueError| Err(error);
+        let idle = RetainedCloneProgress::default();
+        let one = RetainedCloneProgress { copied_items: 1, ..idle };
+        if !self.closing {
+            return Ok(InteractiveJobCloseStep::Blocked);
+        }
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(InteractiveJobCloseStep::Pending { progress: idle });
+        }
+        if let Some(emit) = self.emit.take() {
+            return match semio_framework_value::retirement::controlled::ControlledRetirement::new(emit) {
+                Ok(owner) => {
+                    self.emit_retirement = Some(owner);
+                    Ok(InteractiveJobCloseStep::Pending { progress: one })
+                }
+                Err((error, emit)) => {
+                    self.emit = Some(emit);
+                    refused(error)
+                }
+            };
+        }
+        if let Some(retirement) = self.emit_retirement.as_mut() {
+            let step = retirement.step(grant);
+            if retirement.terminal_is_empty() {
+                self.emit_retirement = None;
+            }
+            return match step {
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => Ok(InteractiveJobCloseStep::Pending { progress }),
+                Err(error) => refused(error),
+            };
+        }
+        if !self.presence.is_empty() || self.presence.capacity() != 0 {
+            return match semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut self.presence)) {
+                Ok(owner) => {
+                    self.presence_retirement = Some(owner);
+                    Ok(InteractiveJobCloseStep::Pending { progress: one })
+                }
+                Err((error, presence)) => {
+                    self.presence = presence;
+                    refused(error)
+                }
+            };
+        }
+        if let Some(retirement) = self.presence_retirement.as_mut() {
+            let step = retirement.step(grant);
+            if retirement.terminal_is_empty() {
+                self.presence_retirement = None;
+            }
+            return match step {
+                Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => Ok(InteractiveJobCloseStep::Pending { progress }),
+                Err(error) => refused(error),
+            };
+        }
+        Ok(InteractiveJobCloseStep::Complete { progress: idle })
+    })().map(|step|semio_framework_value::RetainedCloneStep::Progress(step.progress()))})?;
+        Ok(if self.terminal_is_empty(){semio_framework_job::InteractiveJobCloseStep::Complete{progress:step.progress()}}else{step})
+    }
+
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.copy_bytes)
+    }
+
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.release_bytes)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(self.close_demands(0)?.depth)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.closing && self.emit.is_none() && self.emit_retirement.is_none() && self.presence.is_empty() && self.presence.capacity() == 0 && self.presence_retirement.is_none()
+    }
+}
+
+//#region ⏱️FlowEvalChain
+/// ⏱️ The viewer's window-scoped `flowEvalTick` route — the read-only twin of the sibling surface's
+/// `Generation3dFlowEvalWindowWork`, running the identical shared chain.
+///
+/// 🪟️ The tick's window is the one its PAYLOAD names, never the one the shell happened to be
+/// focused on when it redispatched the self-armed effect. `retained_window_transient_target`
+/// captured that exact window's transient authority (validating it against the trusted ViewModel
+/// roster first), so the two only have to agree here.
+struct Generation3dViewFlowEvalWindowWork {
+    tool_id: &'static str,
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    tessellate: preview_eval::PreviewTessellateReceive,
+    evaluation:preview_eval::PreviewEvalReceive,
+    complete: bool,
+    closing: bool,
+}
+
+impl Generation3dViewFlowEvalWindowWork {
+    fn new(tool_id: &'static str, instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+        Self { tool_id, instance_owner, tessellate: preview_eval::PreviewTessellateReceive::new(),evaluation:preview_eval::PreviewEvalReceive::new(), complete: false, closing: false }
+    }
+}
+
+/// 🔁️ The wave a just-folded extension answer unblocked, run INLINE inside that answer's own guest
+/// turn — the read-only twin of the editor's `flow_eval_tick::continue_inline`, over the document
+/// this surface is LOOKING at.
+///
+/// 🅿️ A refused continuation publishes nothing and touches no latch: the window still owes the hop
+/// it owed, and the `previewEval` run job dispatches it on its next step.
+fn generation3d_view_continue_inline(
+    window_id: &str,
+    window_kind_id: &str,
+    host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot,
+    tolerance: f64,
+    session: &mut FlowEvalSession,
+    retained_eval: Option<&str>,
+    turn_started_us: Option<u64>,
+    retained_grant: semio_framework_value::RetainedCloneGrant,
+) -> Result<preview_eval::FlowEvalTickOutcome, semio_framework_value::ValueError> {
+    if !session.inline_continuation_admitted(window_id, turn_started_us, semio_framework_job::default_now_us()) {
+        return Ok(preview_eval::FlowEvalTickOutcome { extension_invocations: Vec::new(), publication: semio_framework_os_flow::FlowEvalPublication::Retained, census_moved: false });
+    }
+    session.arm_window_tick(window_id, retained_grant)?;
+    preview_eval::evaluate_tick(window_id, window_kind_id, host_snapshot, tolerance, session, retained_eval, turn_started_us, retained_grant)
+}
+
+/// 🐢️ The viewer's binding of [`preview_eval::chain_ui_scope`] — one preview body, no graph body
+/// (a read-only surface paints no node-graph computing chrome) and the framework tool-run panel that
+/// carries the abort affordance.
+fn generation3d_view_chain_ui_scope(census_moved: bool) -> semio_framework::kernel::UiDirtyScope {
+    preview_eval::chain_ui_scope(preview::BODY_KEY, None, &[semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY], census_moved)
+}
+
+/// 🪟️ The preview window one chain route addresses, or `None` for a route that addresses none.
+fn generation3d_view_flow_eval_window_address(command: &Generation3dViewCommand) -> Option<(&str, &str)> {
+    match command {
+        Generation3dViewCommand::FlowEvalTick(payload) => Some((payload.window_id.as_str(), payload.window_kind_id.as_str())),
+        Generation3dViewCommand::FlowEvalResolve(payload) => Some((payload.window_id.as_str(), payload.window_kind_id.as_str())),
+        Generation3dViewCommand::FlowTessellateResolve(payload) => Some((payload.window_id.as_str(), payload.window_kind_id.as_str())),
+        _ => None,
+    }
+}
+
+impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlowEvalWindowWork {
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        command: &Generation3dViewCommand,
+        _snapshot: &Generation3dSnapshot,
+        _interaction: &protocol::InteractionState,
+        context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+    ) -> Option<usize> {
+        let (window_id, window_kind_id) = generation3d_view_flow_eval_window_address(command)?;
+        let context = context?;
+        let window = context.window_transient.as_ref()?;
+        (!window_id.is_empty()
+            && window.window_id() == window_id
+            && window_kind_id == window.window_kind_id()
+            && preview_eval::preview_kind(window.window_kind_id(), GENERATION3D_VIEW_PREVIEW_KINDS).is_some()
+            && window.get::<preview::transient::Generation3dViewPreviewWindowTransientOwner>().is_some())
+        .then_some(1)
+    }
+
+    fn receive_original_command(&mut self,command:&mut Generation3dViewCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if let Generation3dViewCommand::FlowTessellateResolve(payload)=command{self.tessellate.configure_scope([Some(preview::BODY_KEY),None],[Some(semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY),None]);return self.tessellate.receive(payload,cx)}if let Generation3dViewCommand::FlowEvalResolve(payload)=command{self.evaluation.configure_scope([Some(preview::BODY_KEY),None],[Some(semio_framework_plugin::FRAMEWORK_TOOL_RUN_BODY_KEY),None]);return self.evaluation.receive(payload,cx)}Ok(true)
+    }
+
+    fn work_demands(&self,input:&ArtifactCommandInputs<'_,ViewerApp<Generation3dViewer>>,maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Generation3dViewCommand::FlowTessellateResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dViewInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.tessellate.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
+        if let Generation3dViewCommand::FlowEvalResolve(payload)=input.command{return self.instance_owner.inspect_original::<Generation3dViewInstanceOperationOwner,_>(|owner|owner.eval_session.as_ref().map_or_else(||Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview session is closing")),|session|self.evaluation.demands(payload,session,maximum_copy_bytes)))?.unwrap_or(Ok(Default::default()))}
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        if let Generation3dViewCommand::FlowTessellateResolve(payload)=input.command{
+            if self.complete||self.closing{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview command work is terminal").into())}
+            if self.tessellate.is_folded(){if let Some(ui_scope)=self.tessellate.publish_scope(cx)?{self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(Emit{ui_scope,..Default::default()}))}}else{self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner,_>(|owner|owner.with_session_waking(|session|self.tessellate.step(payload,session,cx)))??;}
+            return Ok(ArtifactCommandWorkStep::Progress{stage:"previewReceive",preview:br#"{"en":"Receiving preview geometry","de":"Vorschaugeometrie wird empfangen"}"#})
+        }
+        if let Generation3dViewCommand::FlowEvalResolve(payload)=input.command{
+            if self.complete||self.closing{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original preview command work is terminal").into())}
+            if self.evaluation.is_folded(){if let Some(ui_scope)=self.evaluation.publish_scope(cx)?{self.complete=true;return Ok(ArtifactCommandWorkStep::Complete(Emit{ui_scope,..Default::default()}))}}else{self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner,_>(|owner|owner.with_session_waking(|session|self.evaluation.step(payload,session,cx)))??;}
+            return Ok(ArtifactCommandWorkStep::Progress{stage:"previewReceive",preview:br#"{"en":"Receiving evaluation output","de":"Auswertungsergebnis wird empfangen"}"#})
+        }
+        let original: Result<_, Fault> = (|| {
+        if self.complete || self.closing {
+            return Err(Fault::from("generation3d-view-flow-eval-window-work-terminal"));
+        }
+        let turn_started_us = semio_framework_job::default_now_us();
+        let (payload_window_id, payload_window_kind_id) = generation3d_view_flow_eval_window_address(input.command).ok_or_else(|| Fault::from("generation3d-view-flow-eval-window-command-mismatch"))?;
+        let context = input.context.ok_or_else(|| Fault::from("generation3d-view-flow-eval-window-context-required"))?;
+        let window = context.window_transient.as_ref().ok_or_else(|| Fault::from("generation3d-view-flow-eval-window-transient-required"))?;
+        if window.window_id() != payload_window_id || payload_window_kind_id != window.window_kind_id() || preview_eval::preview_kind(window.window_kind_id(), GENERATION3D_VIEW_PREVIEW_KINDS).is_none() {
+            return Err(Fault::from("generation3d-view-flow-eval-window-owner-mismatch"));
+        }
+        let retained_eval = window.get::<preview::transient::Generation3dViewPreviewWindowTransientOwner>().map(|state| state.preview_eval_text.as_deref()).ok_or_else(|| Fault::from("generation3d-view-flow-eval-window-owner-required"))?;
+        let tolerance = input.config.tolerance();
+        // 📚️ The tick evaluates what this surface is LOOKING at, which is the picked example once the
+        // navbar named one — the read-only counterpart of the editor switch replacing its host_snapshot.
+        let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
+        let retained_grant=cx.retained_grant();
+        let outcome = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
+            owner.with_session_waking(|session| {
+                let host_snapshot = &viewed.snapshot().host_snapshot;
+                match input.command {
+                    Generation3dViewCommand::FlowEvalTick(_) => preview_eval::evaluate_tick(window.window_id(), window.window_kind_id(), host_snapshot, tolerance, session, retained_eval, None, retained_grant).map_err(|error| Fault::from(error.to_string())),
+                    Generation3dViewCommand::FlowEvalResolve(_) => unreachable!(),
+                    Generation3dViewCommand::FlowTessellateResolve(_) => unreachable!(),
+                    _ => Err(Fault::from("generation3d-view-flow-eval-window-command-mismatch")),
+                }
+            })
+        });
+        viewed.retire();
+        let outcome = outcome??;
+        self.complete = true;
+        let window_transient = match outcome.publication {
+            semio_framework_os_flow::FlowEvalPublication::Retained => Vec::new(),
+            semio_framework_os_flow::FlowEvalPublication::Changed(eval_text) => vec![preview::transient::addressed(window, eval_text)?],
+        };
+        Ok(ArtifactCommandWorkStep::CompleteWithEphemeral {
+            emit: Emit { extension_invocations: outcome.extension_invocations, ui_scope: generation3d_view_chain_ui_scope(outcome.census_moved), ..Default::default() },
+            ephemeral: EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient },
+        })
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+
+    fn begin_close(&mut self){self.closing=true;self.tessellate.begin_close();self.evaluation.begin_close();}
+    fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{self.begin_close();if !self.tessellate.terminal_is_empty(){self.tessellate.close_step(cx)}else{self.evaluation.close_step(cx)}}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.copy_bytes}else{self.evaluation.close_demands(0)?.copy_bytes})}
+    fn next_close_capacity_byte_demand(&self,copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(copy)?.capacity_bytes}else{self.evaluation.close_demands(copy)?.capacity_bytes})}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.release_bytes}else{self.evaluation.close_demands(0)?.release_bytes})}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if !self.tessellate.terminal_is_empty(){self.tessellate.close_demands(0)?.depth}else{self.evaluation.close_demands(0)?.depth})}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.tessellate.terminal_is_empty()&&self.evaluation.terminal_is_empty()}
+}
+
+/// that address an extension ACTOR rather than a preview window, and so publish no store lane at all
+/// (`HostOnly`). The window-addressed folds live on [`Generation3dViewFlowEvalWindowWork`] instead,
+/// because they continue the chain and owe their window a publication.
+struct Generation3dViewFlowResolveWork {
+    tool_id: &'static str,
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewFlowResolveWork {
+    fn receive_original_command(&mut self,command:&mut Generation3dViewCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        if let Generation3dViewCommand::FlowTessellateCancelResolve(payload)=command{let g=cx.retained_grant();if cx.is_cancelled()||cx.should_yield()||g.maximum_items==0||g.maximum_depth==0{return Ok(false)}if let Some(fault)=payload.fault.take(){cx.consume_fuel(1);let original=semio_framework_job::OriginalTurnFailure::from(fault);let receipt_refusal=cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}).err();return Err(semio_framework_job::OriginalTurnFailure{receipt_refusal,..original})}if !payload.input_valid{cx.consume_fuel(1);return Err(semio_framework_job::OriginalTurnFailure::debit_original(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original cancel reply routing input is malformed").with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()}),cx))}}Ok(true)
+    }
+    fn tool_id(&self) -> &'static str {
+        self.tool_id
+    }
+
+    fn extent(
+        &self,
+        command: &Generation3dViewCommand,
+        snapshot: &Generation3dSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+    ) -> Option<usize> {
+        generation3d_view_bounded_extent(command, snapshot, interaction)
+    }
+
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
+        if self.consumed {
+            return Err(Fault::from("generation3d-view-flow-resolve-work-repeated"));
+        }
+        self.consumed = true;
+        let extension_invocations = self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
+            owner.with_session_waking(|session| match input.command {
+                Generation3dViewCommand::FlowEvalRelease(payload) => Ok(preview_eval::release_invocations(payload)),
+                Generation3dViewCommand::FlowTessellateCancelResolve(payload) => {
+                    Ok(preview_eval::resolve_tessellate_cancel(payload, session))
+                }
+                _ => Err(Fault::from("generation3d-view-flow-resolve-route-rejected")),
+            })?
+        })?;
+        Ok(ArtifactCommandWorkStep::Complete(Emit { extension_invocations, ..Default::default() }))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+}
+//#endregion ⏱️FlowEvalChain
+
+
+struct Generation3dViewBoundedCommandJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Generation3dViewBoundedCommandJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GENERATION3D_VIEW_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Generation3dViewBoundedCommandJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<ViewerApp<Generation3dViewer>>;
+    type Job = ArtifactRetainedCommandJob<ViewerApp<Generation3dViewer>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GENERATION3D_VIEW_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        generation3d_view_bounded_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GENERATION3D_VIEW_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Generation3d viewer command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Generation3dViewBoundedCommandJobFactory {
+    type Owner = ViewerApp<Generation3dViewer>;
+    const TOOL_IDS: &'static [&'static str] = GENERATION3D_VIEW_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
+    /// 🔒️ CONFIG-ONLY, for every single tool. This table is the runtime half of the read-only
+    /// guarantee: naming `ArtifactToolPublicationLane::Artifact` here would be rejected against a
+    /// viewer's own emit, and no row does.
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "setShowMode", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "setLodMode", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "setCamera", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "toggleSun", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "setSunAzimuth", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "setSunElevation", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
+        ArtifactToolPublicationContract { tool_id: "setSunIntensity", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] },
+    ];
+}
+//#endregion 🧵️RetainedCommands
+
+//#region 🧩️ContributionsRoute
+/// 🧩️ The host→guest contributions route on the READ-ONLY surface. The viewer's preview window
+/// evaluates its geometry through the SAME addressed `flowEvalTick` chain the sibling surface runs
+/// (`🧵️preview-eval`), whose `evaluate`/`tessellate` hops are answered by the contributed brep and
+/// math extensions — so it needs exactly the same contributed operators. The registry it installs
+/// into is process-wide, but a session that only ever opens this app is never handed the sibling
+/// surface's own route, which is why this one exists
+/// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+const GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS: &[&str] = &["setContributions"];
+const GENERATION3D_VIEW_CONTRIBUTIONS_PAYLOAD_SCHEMA: &str = "generation.3d.view-contributions-command.v1";
+/// 📐️ The REAL wire ceiling of one contributions page: the framework's own public-invocation string
+/// bound — which no tool contract can widen, because `validate_public_json_envelope` runs before the
+/// addressed tool's contract — at its worst-case escaped width, plus the addressed envelope.
+/// 📐️ The viewer's own contributions ceiling — the same one the editor route declares, and for the
+/// same reason: the pack crosses whole over the paged command ingress, so the bound is what that
+/// ingress can assemble, not the JSON entry point's body cap.
+const GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES: usize = semio_framework::kernel::COMMAND_MAXIMUM_BYTES;
+
+fn generation3d_view_contributions_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES, 32, 32, 16_384, 7_500)
+}
+
+/// 🧩️ Installs one contributions page. Publishes nothing at all — not even the config lane every
+/// other viewer tool writes.
+struct Generation3dViewContributionsWork {
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewContributionsWork {
+    fn tool_id(&self) -> &'static str {
+        "setContributions"
+    }
+
+    fn extent(
+        &self,
+        command: &Generation3dViewCommand,
+        snapshot: &Generation3dSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+    ) -> Option<usize> {
+        generation3d_view_bounded_extent(command, snapshot, interaction)
+    }
+
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
+        if self.consumed {
+            return Err(Fault::from("generation3d-view-contributions-work-repeated"));
+        }
+        self.consumed = true;
+        let Generation3dViewCommand::SetContributions(payload) = input.command else {
+            return Err(Fault::from("generation3d-view-contributions-route-rejected"));
+        };
+        // 🪟️ An install that moved the registry owes the windows the SHELL says are attached an
+        // evaluation — the same trusted `ViewModel` roster `pending_effects` starts the run off.
+        let windows = generation3d_view_preview_windows(input.context.and_then(|context| context.view_state.as_ref()));
+        let mut emit = Emit::default();
+        self.instance_owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
+            if owner.with_session(|session| set_contributions::install(payload, session, input.operation.retained))?? {
+                let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
+                let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
+                viewed.retire();
+                owner.owe_attached_previews_carrying(&windows, servable, &mut emit, input.operation.retained)?;
+            }
+            Ok(())
+        })?;
+        Ok(ArtifactCommandWorkStep::Complete(emit))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+}
+
+struct Generation3dViewContributionsJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Generation3dViewContributionsJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Generation3dViewContributionsJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<ViewerApp<Generation3dViewer>>;
+    type Job = ArtifactRetainedCommandJob<ViewerApp<Generation3dViewer>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GENERATION3D_VIEW_CONTRIBUTIONS_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        generation3d_view_contributions_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Generation3d viewer contributions command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Generation3dViewContributionsJobFactory {
+    type Owner = ViewerApp<Generation3dViewer>;
+    const TOOL_IDS: &'static [&'static str] = GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "setContributions", lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+}
+
+struct Generation3dViewBoundedCommandJobFactoryProofs;
+
+impl Generation3dViewBoundedCommandJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: ViewerApp<Generation3dViewer>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+        controller: "s.procedural.generation3d@1/*#viewer",
+        artifact_schema: "generation.3d",
+        factory: "Generation3dViewBoundedCommandJobFactory",
+        factory_type: Generation3dViewBoundedCommandJobFactory,
+        contract: generation3d_view_bounded_contract(),
+        tools: ["setShowMode", "setLodMode", "setCamera", "toggleSun", "setSunAzimuth", "setSunElevation", "setSunIntensity"]
+    }
+}
+
+struct Generation3dViewContributionsJobFactoryProofs;
+
+impl Generation3dViewContributionsJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: ViewerApp<Generation3dViewer>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+        controller: "s.procedural.generation3d@1/*#viewer",
+        artifact_schema: "generation.3d",
+        factory: "Generation3dViewContributionsJobFactory",
+        factory_type: Generation3dViewContributionsJobFactory,
+        contract: generation3d_view_contributions_contract(),
+        tools: ["setContributions"]
+    }
+}
+//#endregion 🧩️ContributionsRoute
+
+//#region 🎨️ExampleRoute
+fn generation3d_view_example_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GENERATION3D_VIEW_EXAMPLE_RAW_BYTES, 32, 32, 16_384, 7_500)
+}
+
+/// 🎨️ The navbar example picker's own factory. It runs the very same
+/// [`Generation3dViewCommandWork`] every window gesture does — so the switch re-arms every attached
+/// preview's chain from its own emit, never from a host `refresh-ui` — but it is registered
+/// separately because it is an APP-scoped verb, not one this viewer's single window dispatches.
+struct Generation3dViewExampleJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Generation3dViewExampleJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Generation3dViewExampleJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<ViewerApp<Generation3dViewer>>;
+    type Job = ArtifactRetainedCommandJob<ViewerApp<Generation3dViewer>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GENERATION3D_VIEW_EXAMPLE_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        generation3d_view_example_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GENERATION3D_VIEW_EXAMPLE_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Generation3d viewer example command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Generation3dViewExampleJobFactory {
+    type Owner = ViewerApp<Generation3dViewer>;
+    const TOOL_IDS: &'static [&'static str] = GENERATION3D_VIEW_EXAMPLE_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
+    /// 🔒️ Still read-only, and this is the row that proves it: loading an example on a viewer is a
+    /// CONFIG edit plus an ephemeral presence broadcast. The sibling surface's own
+    /// `setActiveExample` names `ArtifactToolPublicationLane::Artifact` here; this one cannot, and
+    /// `no_viewer_tool_publishes_on_the_artifact_lane` holds it to that.
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] =
+        &[ArtifactToolPublicationContract { tool_id: "setActiveExample", lanes: &[ArtifactToolPublicationLane::Config, ArtifactToolPublicationLane::Presence, ArtifactToolPublicationLane::Transient] }];
+}
+
+struct Generation3dViewExampleJobFactoryProofs;
+
+impl Generation3dViewExampleJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: ViewerApp<Generation3dViewer>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+        controller: "s.procedural.generation3d@1/*#viewer",
+        artifact_schema: "generation.3d",
+        factory: "Generation3dViewExampleJobFactory",
+        factory_type: Generation3dViewExampleJobFactory,
+        contract: generation3d_view_example_contract(),
+        tools: ["setActiveExample"]
+    }
+}
+//#endregion 🎨️ExampleRoute
+
+//#region ⏱️FlowEvalRoute
+fn generation3d_view_flow_eval_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES, 32, 32, 16_384, 7_500)
+}
+
+/// ⏱️ The three runtime chain routes, on their OWN factory: their publication lanes are nothing
+/// like a view command's. `flowEvalTick`'s only store lane is the ADDRESSED preview window's own
+/// transient (never config, never presence); the two resolves write no store lane at all.
+struct Generation3dViewFlowEvalJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Generation3dViewFlowEvalJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Generation3dViewFlowEvalJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<ViewerApp<Generation3dViewer>>;
+    type Job = ArtifactRetainedCommandJob<ViewerApp<Generation3dViewer>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GENERATION3D_VIEW_FLOW_EVAL_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        generation3d_view_flow_eval_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Generation3d viewer flow-eval command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Generation3dViewFlowEvalJobFactory {
+    type Owner = ViewerApp<Generation3dViewer>;
+    const TOOL_IDS: &'static [&'static str] = GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
+    /// 🔒️ Still read-only: `WindowTransient` is an EPHEMERAL lane. Naming
+    /// `ArtifactToolPublicationLane::Artifact` here would be rejected against a viewer's own emit,
+    /// and no row does.
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[
+        ArtifactToolPublicationContract { tool_id: "flowEvalTick", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        // 🔁️ Both window-addressed FOLDS publish the same lane the tick does: they run the wave the
+        // settle unblocked inline and owe the addressed window the geometry and the status it
+        // advanced to.
+        ArtifactToolPublicationContract { tool_id: "flowEvalResolve", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "flowTessellateResolve", lanes: &[ArtifactToolPublicationLane::WindowTransient] },
+        ArtifactToolPublicationContract { tool_id: "flowEvalRelease", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+        ArtifactToolPublicationContract { tool_id: "flowTessellateCancelResolve", lanes: &[ArtifactToolPublicationLane::HostOnly] },
+    ];
+}
+
+struct Generation3dViewFlowEvalJobFactoryProofs;
+
+impl Generation3dViewFlowEvalJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: ViewerApp<Generation3dViewer>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+        controller: "s.procedural.generation3d@1/*#viewer",
+        artifact_schema: "generation.3d",
+        factory: "Generation3dViewFlowEvalJobFactory",
+        factory_type: Generation3dViewFlowEvalJobFactory,
+        contract: generation3d_view_flow_eval_contract(),
+        tools: ["flowEvalTick", "flowEvalResolve", "flowTessellateResolve", "flowEvalRelease", "flowTessellateCancelResolve"]
+    }
+}
+//#endregion ⏱️FlowEvalRoute
+
+//#region 📤️DocumentIoRoute
+fn generation3d_view_document_io_contract() -> ToolExecutionContract {
+    ToolExecutionContract::bounded_first_step(GENERATION3D_VIEW_DOCUMENT_IO_RAW_BYTES, 32, 32, 16_384, 7_500)
+}
+
+/// 📤️ One export hop. Deliberately NOT [`Generation3dViewCommandWork`]: that work broadcasts the
+/// camera and show mode as ephemeral presence after every command, and an export changes neither —
+/// publishing presence for it would tell every co-viewer something moved when nothing did.
+struct Generation3dViewDocumentIoWork {
+    instance_owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    consumed: bool,
+}
+
+impl ArtifactCommandWork<ViewerApp<Generation3dViewer>> for Generation3dViewDocumentIoWork {
+    fn tool_id(&self) -> &'static str {
+        "exportDocument"
+    }
+
+    fn extent(
+        &self,
+        command: &Generation3dViewCommand,
+        snapshot: &Generation3dSnapshot,
+        interaction: &protocol::InteractionState,
+        _context: Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<ViewerApp<Generation3dViewer>>>,
+    ) -> Option<usize> {
+        generation3d_view_bounded_extent(command, snapshot, interaction)
+    }
+
+    fn work_demands(&self, _input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        command_work_step_demands::<ViewerApp<Generation3dViewer>>(size_of::<Self>())
+    }
+
+    fn terminal_frame_release_bytes(&self) -> Option<usize> {
+        Some(size_of::<Self>())
+    }
+
+    fn step(&mut self, input: &ArtifactCommandInputs<'_, ViewerApp<Generation3dViewer>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<ViewerApp<Generation3dViewer>>, semio_framework_job::OriginalTurnFailure> {
+        let original: Result<_, Fault> = (|| {
+        if self.consumed {
+            return Err(Fault::from("generation3d-view-document-io-work-repeated"));
+        }
+        self.consumed = true;
+        let Generation3dViewCommand::ExportDocument(payload) = input.command else {
+            return Err(Fault::from("generation3d-view-document-io-route-rejected"));
+        };
+        /// 👁️ A viewer exports WHAT IT SHOWS. Every other viewer surface resolves the viewed document
+        /// through `Generation3dViewedDocument::resolve` — the active example replaces the opened
+        /// snapshot — and this one alone read `input.snapshot` raw. With an example picked, the export
+        /// therefore encoded a document the session never evaluated, and every format failed with
+        /// `the document evaluates to no preview geometry (no positions)` while three meshes stood on
+        /// screen (measured on :6023, ticket 26/09/09/PROCEDURAL-3D-END-TO-END gap F2).
+        let viewed = Generation3dViewedDocument::resolve(input.snapshot, input.config);
+        let cfg = ConfigView { snapshot: input.config, window: None };
+        let emitted = {
+            let doc = ArtifactView::with_operation(viewed.snapshot(), input.history, input.operation.clone());
+            if payload.format == "txt" { export_document::emit(payload, &doc, None) } else { self.instance_owner
+                .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| export_document::retained_meshes(&doc, &cfg, session)))
+                .and_then(|meshes| meshes.and_then(|meshes| export_document::emit(payload, &doc, meshes.as_deref()))) }
+        };
+        viewed.retire();
+        let view_emit = emitted?;
+        Ok(ArtifactCommandWorkStep::Complete(Emit { effects: view_emit.effects, ui_scope: view_emit.ui_dirty, ..Default::default() }))
+    
+        })();
+        original.map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
+}
+
+struct Generation3dViewDocumentIoJobFactory {
+    keys: Vec<ToolFactoryKey>,
+}
+
+impl Generation3dViewDocumentIoJobFactory {
+    fn new(controller_id: &str) -> Self {
+        Self { keys: GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
+    }
+}
+
+impl ToolJobFactory for Generation3dViewDocumentIoJobFactory {
+    type Payload = ArtifactRetainedCommandPayload<ViewerApp<Generation3dViewer>>;
+    type Job = ArtifactRetainedCommandJob<ViewerApp<Generation3dViewer>>;
+
+    fn keys(&self) -> &[ToolFactoryKey] {
+        &self.keys
+    }
+
+    fn payload_schema_id(&self) -> &str {
+        GENERATION3D_VIEW_DOCUMENT_IO_PAYLOAD_SCHEMA
+    }
+
+    fn classification(&self) -> InteractiveJobClassification {
+        InteractiveJobClassification::Migrated
+    }
+
+    fn execution_contract(&self) -> ToolExecutionContract {
+        generation3d_view_document_io_contract()
+    }
+
+    fn create_job(&mut self, _operation: semio_framework_job::Operation, payload: Self::Payload) -> Result<Self::Job, ToolJobFactoryError> {
+        Ok(ArtifactRetainedCommandJob::new(payload))
+    }
+
+    fn create_job_from_wire_pages_with_payload(
+        &mut self,
+        _operation: semio_framework_job::Operation,
+        payload: Self::Payload,
+        input: semio_framework_action_bus::RetainedToolWireInput,
+        checkpoint: Option<semio_framework_action_bus::RetainedToolWireInput>,
+    ) -> Result<Self::Job, (ToolJobFactoryError, semio_framework_action_bus::RetainedToolWireInput, Option<semio_framework_action_bus::RetainedToolWireInput>)> {
+        if input.declared_bytes() > GENERATION3D_VIEW_DOCUMENT_IO_RAW_BYTES || checkpoint.is_some() {
+            return Err((ToolJobFactoryError::new("Generation3d viewer document-io command rejects oversized wire or unsupported checkpoint owner"), input, checkpoint));
+        }
+        Ok(ArtifactRetainedCommandJob::from_wire(payload, input))
+    }
+}
+
+impl ArtifactOwnedToolJobFactory for Generation3dViewDocumentIoJobFactory {
+    type Owner = ViewerApp<Generation3dViewer>;
+    const TOOL_IDS: &'static [&'static str] = GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
+    /// 🔒️ `HostOnly` — an export writes no store lane at all, which is precisely why a VIEWER may
+    /// own it. `no_viewer_tool_publishes_on_the_artifact_lane` reads this row like every other.
+    const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: "exportDocument", lanes: &[ArtifactToolPublicationLane::HostOnly] }];
+}
+
+struct Generation3dViewDocumentIoJobFactoryProofs;
+
+impl Generation3dViewDocumentIoJobFactoryProofs {
+    semio_framework_plugin::bounded_first_step_tool_proofs! {
+        owner: ViewerApp<Generation3dViewer>,
+        owner_file: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs",
+        controller: "s.procedural.generation3d@1/*#viewer",
+        artifact_schema: "generation.3d",
+        factory: "Generation3dViewDocumentIoJobFactory",
+        factory_type: Generation3dViewDocumentIoJobFactory,
+        contract: generation3d_view_document_io_contract(),
+        tools: ["exportDocument"]
+    }
+}
+//#endregion 📤️DocumentIoRoute
+
+
+//#region 🔖️InteractionTopology
+/// 🕸️ Every node's visible port ids (`{nodeId}@{portId}`) — read-only twin of the sibling surface's
+/// own projection, so a world pick in this viewer names the exact same declared target ids.
+fn generation3d_view_port_ids_by_node(host_snapshot: &semio_framework_artifact_flow_flow::FlowHostSnapshot) -> std::collections::BTreeMap<String, Vec<String>> {
+    let (graph_nodes, _) = semio_s_artifact_procedural_3d_model::with_host(host_snapshot, |host| semio_s_artifact_procedural_3d_preview_eval::dag_host_snapshot_to_workflow(&host.dag.host_snapshot));
+    graph_nodes.into_iter().map(|node| (node.id, node.inputs.into_iter().chain(node.outputs).map(|port| port.id).collect())).collect()
+}
+//#endregion 🔖️InteractionTopology
+
+//#region 🔖️Viewer
+#[derive(Default, Clone, Copy)]
+pub struct Generation3dViewer;
+
+impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
+    /// 📣️ The localized notices of the viewer's refusal codes (design §20.12): the document-level ones.
+    fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
+        semio_s_artifact_procedural_3d_model::generation3d_document_fault_notices()
+    }
+
+    /// 🧩️ The loaded-parent child projection every archive load and maintenance swap asks for before a
+    /// decoded document may replace the store. `Generation3dSnapshot` declares no child slot, so the
+    /// projection is honestly empty; without it every replacement faulted with `viewer did not declare
+    /// a loaded-parent child projection`.
+    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
+        semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new(semio_s_artifact_procedural_3d_model::GENERATION3D_CHILD_PROJECTION), error.to_string()))
+    }
+
+    type Snapshot = Generation3dSnapshot;
+    type Mutation = Generation3dMutation;
+    type Config = Generation3dViewConfig;
+    type ConfigMutation = Generation3dViewConfigMutation;
+    type Presence = Generation3dViewPresence;
+    type PresenceMutation = Generation3dViewPresenceMutation;
+    type Transient = Generation3dViewTransient;
+    type TransientMutation = Generation3dViewTransientMutation;
+    type Command = Generation3dViewCommand;
+
+    const DIALECT: Dialect = GENERATION3D_DIALECT;
+    const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
+
+    fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
+    }
+
+    /// 🎛️ The viewer's `setCamera`/`setShowMode`/`setLodMode`/sun tools all publish onto the CONFIG
+    /// lane; without this authority every one of them fails closed with
+    /// `interactive-job.publication-authority-missing` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
+    }
+
+    fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
+        Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Presence, Self::PresenceMutation>())
+    }
+
+    fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
+        Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
+    }
+
+    fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, ViewerApp<Self>>) -> Result<(), Fault> {
+        let controller = registry.controller_id().to_string();
+        registry.register(Generation3dViewBoundedCommandJobFactory::new(&controller))?;
+        registry.register(Generation3dViewContributionsJobFactory::new(&controller))?;
+        registry.register(Generation3dViewExampleJobFactory::new(&controller))?;
+        registry.register(Generation3dViewFlowEvalJobFactory::new(&controller))?;
+        registry.register(Generation3dViewDocumentIoJobFactory::new(&controller))
+    }
+
+    /// 🧠️ One retained `FlowEvalSession` per viewer instance — see
+    /// [`Generation3dViewInstanceOperationOwner`]. Without it every chain hop would fold its answer
+    /// into a session that died with the command that built it.
+    fn build_instance_operation_owner() -> Box<dyn semio_framework_plugin::ArtifactInstanceOperationOwner> {
+        Box::new(Generation3dViewInstanceOperationOwner::new())
+    }
+
+    /// 🪟️ The viewer preview window's retained evaluation publication.
+    fn register_window_transient_owners(registry: &mut semio_framework_plugin::WindowTransientOwnerRegistry) -> Result<(), Fault> {
+        registry.register::<preview::transient::Generation3dViewPreviewWindowTransientOwner>()
+    }
+
+    /// 🎯️ `flowEvalTick` publishes the evaluation into ONE preview window's retained transient, and
+    /// the whole chain is self-dispatched: an `Effect::DispatchAction` reaches the shell with no
+    /// window of its own and is redispatched under whichever window is current. Naming the target
+    /// off the PAYLOAD makes the runtime validate it against the trusted ViewModel roster and
+    /// capture that exact window's mutation authority (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    /// 🪟️ Every route of the preview chain that may publish — the dispatched hop and both
+    /// window-addressed folds, which now continue the chain inline and therefore publish the
+    /// intermediate geometry and the advanced status pill the hop used to.
+    fn retained_window_transient_target(command: &Self::Command) -> Option<(&str, &'static str)> {
+        let (window_id, window_kind_id) = generation3d_view_flow_eval_window_address(command)?;
+        if window_id.is_empty() {
+            return None;
+        }
+        preview_eval::preview_kind(window_kind_id, GENERATION3D_VIEW_PREVIEW_KINDS).map(|kind| (window_id, kind))
+    }
+
+    /// ⏯️ Starts, finalizes or wakes the `previewEval` run for the attached preview window
+    /// ([`preview_eval::preview_eval_run_effects`]). Before the first `Event::SurfaceVisible` the host
+    /// has no roster (`view` is `None`) and there is nothing to publish into, so nothing starts.
+    ///
+    /// 📚️ Servability is asked of the graph the run will actually evaluate — the VIEWED document — not
+    /// of the one this session happens to have open. They are different documents the moment the
+    /// navbar names an example (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn pending_effects(owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view: Option<&semio_framework_plugin::ViewModel>) -> Vec<semio_framework_plugin::Effect> {
+        let windows = generation3d_view_preview_windows(view);
+        let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
+        let servable = preview_eval::may_rearm(&viewed.snapshot().host_snapshot);
+        viewed.retire();
+        let applied_edits = preview_eval::applied_document_edits_digest(doc.history);
+        owner
+            .with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| {
+                use preview_eval::PreviewEvalRunOwner as _;
+                let (session, link) = owner.preview_eval_parts().ok_or_else(|| Fault::from("generation3d-view-eval-session-closing"))?;
+                Ok(preview_eval::preview_eval_run_effects(session, link, &windows, doc.tool_run(), servable, applied_edits))
+            })
+            .unwrap_or_default()
+    }
+
+    /// ⏯️ The `previewEval` run job over the VIEWED document of the run's base and settings.
+    fn build_tool_run_job(request: ToolRunJobRequest<'_, ViewerApp<Self>>) -> Result<Option<ToolRunJob>, Fault> {
+        if request.tool_id != preview_eval::PREVIEW_EVAL_TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
+            return Ok(None);
+        }
+        let viewed = Generation3dViewedDocument::resolve(&request.snapshot, &request.config);
+        let preview_widget_ids = preview_eval::preview_widget_ids(&viewed.snapshot().host_snapshot);
+        viewed.retire();
+        Ok(Some(Box::new(preview_eval::PreviewEvalRunJob::<Generation3dViewInstanceOperationOwner>::new(request.instance_owner, request.port, request.identity, preview_widget_ids)?)))
+    }
+
+    fn build_tool_job(request: ArtifactOwnedToolJobRequest<ViewerApp<Self>>) -> Result<Option<semio_framework::ToolOperationSpec>, Fault> {
+        if !GENERATION3D_VIEW_TOOL_IDS.contains(&request.tool_id.as_str())
+            && !GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&request.tool_id.as_str())
+            && !GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&request.tool_id.as_str())
+            && !GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&request.tool_id.as_str())
+            && !GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.contains(&request.tool_id.as_str())
+        {
+            return Ok(None);
+        }
+        if request.command.command_id() != request.tool_id {
+            return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("app.command.tool-mismatch"), "the generation 3d view command does not match its exact registered tool"));
+        }
+        let tool_id = request.command.command_id();
+        let contributions = GENERATION3D_VIEW_CONTRIBUTIONS_TOOL_IDS.contains(&tool_id);
+        let example = GENERATION3D_VIEW_EXAMPLE_TOOL_IDS.contains(&tool_id);
+        let flow_eval = GENERATION3D_VIEW_FLOW_EVAL_TOOL_IDS.contains(&tool_id);
+        let work: Box<dyn ArtifactCommandWork<ViewerApp<Generation3dViewer>>> = if GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
+            Box::new(Generation3dViewDocumentIoWork { instance_owner: request.instance_operation_owner, consumed: false })
+        } else if contributions {
+            Box::new(Generation3dViewContributionsWork { instance_owner: request.instance_operation_owner, consumed: false })
+        } else if GENERATION3D_VIEW_FLOW_EVAL_WINDOW_TOOL_IDS.contains(&tool_id) {
+            Box::new(Generation3dViewFlowEvalWindowWork::new(tool_id, request.instance_operation_owner))
+        } else if flow_eval {
+            Box::new(Generation3dViewFlowResolveWork { tool_id, instance_owner: request.instance_operation_owner, consumed: false })
+        } else {
+            Box::new(Generation3dViewCommandWork::new(tool_id, request.instance_operation_owner))
+        };
+        let operation_context = AppOperationContext {
+            retained: request.retained,
+            app_instance_id: request.app_instance_id,
+            parent_document_id: request.parent_document_id.clone(),
+            operation_id: request.operation.operation.0,
+            generation: request.operation.generation.0,
+            canonical_base_revision: request.canonical_base_revision,
+            authoring_seed: request.authoring_seed.clone(),
+        };
+        let payload = ArtifactRetainedCommandPayload::new(
+            semio_framework_plugin::retained_command::ArtifactRetainedCommandInputs {
+                command: *request.command,
+                snapshot: request.snapshot,
+                snapshot_read: request.snapshot_read,
+                config: request.config,
+                history: request.history,
+                interaction_state: request.interaction_state,
+                interaction_hover: request.interaction_hover,
+                context: Some(request.context),
+                operation: operation_context,
+                completion: request.completion,
+            },
+            Generation3dViewCommand::command_id,
+            if contributions {
+                GENERATION3D_VIEW_CONTRIBUTIONS_RAW_BYTES
+            } else if flow_eval {
+                GENERATION3D_VIEW_FLOW_EVAL_RAW_BYTES
+            } else if example {
+                GENERATION3D_VIEW_EXAMPLE_RAW_BYTES
+            } else if GENERATION3D_VIEW_DOCUMENT_IO_TOOL_IDS.contains(&tool_id) {
+                GENERATION3D_VIEW_DOCUMENT_IO_RAW_BYTES
+            } else {
+                GENERATION3D_VIEW_RAW_BYTES
+            },
+            GENERATION3D_VIEW_WORK_ITEMS,
+            work,
+        );
+        Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
+    }
+
+    /// 🧾️ ALL THREE factories' proofs, in registration order. The bounded rows read their contract
+    /// off `generation3d_view_bounded_contract()` instead of respelling `8_192, 32, 32, …` seven
+    /// times — one declared quantity, one place.
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
+        let mut proofs = Generation3dViewBoundedCommandJobFactoryProofs::bounded_first_step_tool_proofs();
+        proofs.extend(Generation3dViewContributionsJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs.extend(Generation3dViewExampleJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs.extend(Generation3dViewFlowEvalJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs.extend(Generation3dViewDocumentIoJobFactoryProofs::bounded_first_step_tool_proofs());
+        proofs
+    }
+
+    /// 🎯️ Maps the host's declared command id + JSON args onto this viewer's typed command — the
+    /// bridge `PluginApp::handle_command` takes for EVERY structurally addressed invocation
+    /// (`AppCommand::Command` → `A::command_from_action`). Without it the shell's own
+    /// `setContributions` push, and every chrome measure's `on_change`, fail closed with
+    /// `app.command.unsupported` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+    fn command_from_action(action: &str, args: &mut Option<semio_framework_value::DslValue>, original_fault: &mut Option<semio_framework::Fault>) -> Result<Self::Command, Fault> {
+        let mut original_fault=original_fault;if !matches!(action,"flowEvalResolve"|"flowTessellateResolve"|"flowTessellateCancelResolve"){if let Some(fault)=original_fault.take(){return Err(fault)}}
+        let mut args = args.get_or_insert(semio_framework_value::DslValue::Null);
+        let str_arg = |keys: &[&str]| -> Option<String> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_str()).map(str::to_string)) };
+        let f64_arg = |keys: &[&str]| -> Option<f64> { keys.iter().find_map(|key| args.get(key).and_then(semio_framework_value::DslValue::as_f64)) };
+        let u64_arg = |keys: &[&str]| -> Option<u64> { keys.iter().find_map(|key| args.get(key).and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|number| number as u64)))) };
+        fn original_reply_valid(args:&semio_framework_value::DslValue,tessellate:bool,cancel:bool)->bool{
+            let semio_framework_value::DslValue::Object(rows)=args else{return false};
+            let field=|key:&str|{let mut values=rows.iter().filter(|(name,_)|name==key);let value=values.next().map(|(_,value)|value);if values.next().is_some(){None}else{value}};
+            if !["windowId","windowKindId"].iter().all(|key|field(key).and_then(|value|value.as_str()).is_some_and(|value|!value.is_empty()))||field("output").is_none(){return false}
+            if cancel{return true}
+            if field("nodeHash").and_then(semio_framework_value::DslValue::as_u64).is_none(){return false}
+            if tessellate{return field("handle").and_then(|value|value.as_str()).is_some_and(|value|!value.is_empty())&&field("tolerance").and_then(|value|value.as_f64()).is_some_and(|value|value.is_finite()&&value>0.0)}
+            let extensions=rows.iter().filter(|(key,_)|key=="extensionId").count();extensions==0||(extensions==1&&field("extensionId").and_then(|value|value.as_str()).is_some())
+        }
+        fn original_reply_text(args:&mut semio_framework_value::DslValue,key:&str,required:bool)->Result<String,Fault>{
+            let semio_framework_value::DslValue::Object(rows)=args else{return Err(Fault::from("original reply argument object is absent"))};let Some((_,source))=rows.iter_mut().find(|(name,_)|name==key)else{return if required{Err(Fault::from("original reply text is absent"))}else{Ok(String::new())}};if !matches!(source,semio_framework_value::DslValue::String(_)){return Err(Fault::from("original reply text has another type"))}let semio_framework_value::DslValue::String(value)=std::mem::replace(source,semio_framework_value::DslValue::Null)else{unreachable!()};Ok(value)
+        }
+        fn original_reply_output(args:&mut semio_framework_value::DslValue)->Result<semio_framework_value::DslValue,Fault>{let semio_framework_value::DslValue::Object(rows)=args else{return Err(Fault::from("original reply argument object is absent"))};rows.iter_mut().find(|(key,_)|key=="output").map(|(_,source)|std::mem::replace(source,semio_framework_value::DslValue::Null)).ok_or_else(||Fault::from("original reply output is absent"))}
+
+        match action {
+            "setShowMode" => Ok(Generation3dViewCommand::SetShowMode(set_show_mode::SetShowMode { value: str_arg(&["value", "showMode", "show_mode"]).unwrap_or_default() })),
+            "setLodMode" => Ok(Generation3dViewCommand::SetLodMode(set_lod_mode::SetLodMode { value: str_arg(&["value", "lodMode", "lod_mode"]).unwrap_or_default() })),
+            "setCamera" => Ok(Generation3dViewCommand::SetCamera(set_camera::SetCamera {
+                camera: args
+                    .get("camera")
+                    .and_then(|camera| <semio_s_artifact_procedural_3d_viewer_config::Generation3dViewCamera as semio_framework_value::FromValue>::from_value(camera.clone()).ok())
+                    .unwrap_or_default(),
+            })),
+            "toggleSun" => Ok(Generation3dViewCommand::ToggleSun(toggle_sun::ToggleSun {})),
+            // 🎨️ `buildActiveExampleAction` (`🛠️ShellHelpers/🟦️.tsx`) sends `{exampleId}`; an empty
+            // selection means "the document this session opened", never "no argument".
+            "setActiveExample" => Ok(Generation3dViewCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: str_arg(&["exampleId", "example_id", "value"]).unwrap_or_default() })),
+            "setSunAzimuth" => Ok(Generation3dViewCommand::SetSunAzimuth(set_sun_azimuth::SetSunAzimuth { value: f64_arg(&["value"]).unwrap_or(0.0) })),
+            "setSunElevation" => Ok(Generation3dViewCommand::SetSunElevation(set_sun_elevation::SetSunElevation { value: f64_arg(&["value"]).unwrap_or(0.0) })),
+            "setSunIntensity" => Ok(Generation3dViewCommand::SetSunIntensity(set_sun_intensity::SetSunIntensity { value: f64_arg(&["value"]).unwrap_or(1.0) })),
+            "setContributions" => Ok(Generation3dViewCommand::SetContributions(set_contributions::SetContributions {
+                json: str_arg(&["json"]).unwrap_or_default(),
+                page: u64_arg(&["page"]).unwrap_or_default(),
+                page_count: u64_arg(&["pageCount", "page_count"]).unwrap_or(1),
+            })),
+            // ⏱️ The runtime chain. `windowId`/`windowKindId` are the address the tick, both
+            // resolves and every re-arm carry; `nodeHash`/`outputJson` are echoed back onto a
+            // response action by `reactor::extension_response_args`.
+            "flowEvalTick" => Ok(Generation3dViewCommand::FlowEvalTick(flow_eval_tick::FlowEvalTick {
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
+                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
+            })),
+            "flowEvalResolve" => {
+                let input_valid=original_reply_valid(&args,false,false);
+                if !input_valid{return Ok(Generation3dViewCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,extension_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();
+                let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let extension_id=original_reply_text(&mut args,"extensionId",false).unwrap();let output=original_reply_output(&mut args).unwrap();
+                Ok(Generation3dViewCommand::FlowEvalResolve(flow_eval_resolve::FlowEvalResolve{window_id,window_kind_id,node_hash,extension_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+            },
+            "flowTessellateResolve" => {
+                let input_valid=original_reply_valid(&args,true,false);
+                if !input_valid{return Ok(Generation3dViewCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve{window_id:String::new(),window_kind_id:String::new(),node_hash:0,handle:String::new(),tolerance:0.0,output:semio_framework_value::DslValue::Null,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}
+                let node_hash=args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64).unwrap();let tolerance=args.get("tolerance").and_then(|value|value.as_f64()).unwrap();
+                let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let handle=original_reply_text(&mut args,"handle",true).unwrap();let output=original_reply_output(&mut args).unwrap();
+                Ok(Generation3dViewCommand::FlowTessellateResolve(flow_tessellate_resolve::FlowTessellateResolve{window_id,window_kind_id,node_hash,handle,tolerance,output,fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))
+            },
+            // 🔓️ The kernel release hop a closed `previewEval` run hands the host.
+            "flowEvalRelease" => Ok(Generation3dViewCommand::FlowEvalRelease(flow_eval_release::FlowEvalRelease {
+                window_id: str_arg(&["windowId", "window_id"]).unwrap_or_default(),
+                window_kind_id: str_arg(&["windowKindId", "window_kind_id"]).unwrap_or_default(),
+            })),
+            "flowTessellateCancelResolve"=>{let input_valid=original_reply_valid(&args,false,true);if !input_valid{return Ok(Generation3dViewCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve{window_id:String::new(),window_kind_id:String::new(),output:semio_framework_value::DslValue::Null,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))}let window_id=original_reply_text(&mut args,"windowId",true).unwrap();let window_kind_id=original_reply_text(&mut args,"windowKindId",true).unwrap();let output=original_reply_output(&mut args).unwrap();Ok(Generation3dViewCommand::FlowTessellateCancelResolve(flow_tessellate_cancel_resolve::FlowTessellateCancelResolve{window_id,window_kind_id,output,ok:original_fault.is_none(),fault:original_fault.take(),original_input:Some(std::mem::replace(args,semio_framework_value::DslValue::Null)),input_valid}))},
+            "exportDocument" => Ok(Generation3dViewCommand::ExportDocument(export_document::ExportDocument { format: str_arg(&["format", "value"]).unwrap_or_else(|| "stl".into()) })),
+            other => Err(Fault::from(format!("action '{other}' is not declared by the generation3d viewer"))),
+        }
+    }
+
+    /// 🏷️ The declared tool id of the command, NOT the trait's generic `"typed-command"` default:
+    /// `qualified_tool_proof` looks the bounded first-step proof up by this verb, so leaving the
+    /// default in place makes EVERY viewer action fail closed with `interactive-job.missing-factory`.
+    fn command_id(command: &Generation3dViewCommand) -> &'static str {
+        command.command_id()
+    }
+
+    fn initial_snapshot() -> Generation3dSnapshot {
+        semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot()
+    }
+
+    /// 👁️ Structurally read-only: `dispatch` returns `ViewEmit`, so this signature cannot widen into
+    /// a document write no matter what a payload module does.
+    fn handle(
+        command: &Self::Command,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        _interaction: &InteractionView<'_>,
+        _view_state: Option<&semio_framework_plugin::ViewModel>,
+        _engines: &EngineHandles,
+    ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
+        command.dispatch(doc, cfg)
+    }
+
+    /// 🕸️ The same `graph` topology the sibling surface declares — every top-level widget is a
+    /// `node`, each of its visible ports a `handle` parented to it, each synapse an `edge`, and each
+    /// `Cluster`'s nested neurons `node`s parented to their cluster (the transitive-hover source).
+    /// Without this a world pick would be pruned by `validate_state` and nothing would ever light up.
+    fn interaction_topology(doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>) -> Result<InteractionTopology, semio_framework_value::ValueError> {
+ Ok((||{
+        fn walk_neuron(neuron: &semio_framework_artifact_flow_flow::neural::Neuron, parent: String, ordered: &mut Vec<TopologyNode>) {
+            ordered.push(TopologyNode { id: neuron.id.clone(), granularity: "node".into(), parent: Some(parent) });
+            if let Some(tree) = &neuron.tree {
+                for child in &tree.neurons {
+                    walk_neuron(child, neuron.id.clone(), ordered);
+                }
+            }
+        }
+        let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
+        let host_snapshot = &viewed.snapshot().host_snapshot;
+        let mut ordered = Vec::new();
+        let ports_by_node = generation3d_view_port_ids_by_node(host_snapshot);
+        for widget in &host_snapshot.widgets {
+            let id = semio_s_artifact_procedural_3d_model::widget_id(widget).to_string();
+            ordered.push(TopologyNode { id: id.clone(), granularity: "node".into(), parent: None });
+            for port in ports_by_node.get(&id).into_iter().flatten() {
+                ordered.push(TopologyNode { id: port.clone(), granularity: "handle".into(), parent: Some(id.clone()) });
+            }
+            if let semio_framework_artifact_flow_flow::Widget::Cluster { tree, .. } = widget {
+                for child in &tree.neurons {
+                    walk_neuron(child, id.clone(), &mut ordered);
+                }
+            }
+        }
+        for synapse in &host_snapshot.synapses {
+            ordered.push(TopologyNode { id: synapse.id.clone(), granularity: "edge".into(), parent: None });
+        }
+        let mut domains = std::collections::BTreeMap::new();
+        domains.insert("graph".to_string(), DomainTopology { ordered });
+        viewed.retire();
+        InteractionTopology { domains }
+    
+})())
+}
+
+    /// 🕹️ The marks-free entry point the framework still offers (no owner, no transient, no
+    /// interaction) — every live window goes through `render_with_request_context` instead.
+    fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+        let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
+        let tree = generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, None, None, doc.tool_run(), &preview::Generation3dViewMarks::default(), semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state));
+        viewed.retire();
+        tree
+    }
+
+    /// 🕹️ Resolves the live `graph` hover/selection once per render and threads it into the preview
+    /// body, alongside the evaluation the ADDRESSED chain published into this preview window's own
+    /// transient and the retained session holding the meshes `flowTessellateResolve` folded in.
+    ///
+    /// 🪟️ The window-scoped publication is read first and the app-level lane is the fallback: the
+    /// chain writes the window's own transient (that is what `retained_window_transient_target`
+    /// captures authority for), and a surface rendered before any tick landed still has to paint
+    /// its empty world rather than evaluate itself.
+    fn render_with_request_context(
+        owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &semio_framework_plugin::ViewModel,
+        transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        let preview_eval_text = transient
+            .window::<preview::transient::Generation3dViewPreviewWindowTransientOwner>()
+            .and_then(|state| state.preview_eval_text.as_deref())
+            .or(transient.snapshot.preview_eval_text.as_deref());
+        let marks = preview::Generation3dViewMarks::from_interaction(interaction);
+        let labels = semio_s_artifact_procedural_3d_terminology::generation3d_labels(view_state);
+        let viewed = Generation3dViewedDocument::resolve(doc.snapshot, cfg.snapshot);
+        let tree = owner.with_mut::<Generation3dViewInstanceOperationOwner, _>(|owner| owner.with_session(|session| generation3d_view_render_body(body_key, viewed.snapshot(), cfg.snapshot, preview_eval_text, Some(session), doc.tool_run(), &marks, labels)));
+        viewed.retire();
+        tree.map_err(|original|semio_framework_plugin::OriginalRenderFailure::from(semio_framework_job::OriginalTurnFailure::from(original)))?.map(Some).map_err(Into::into)
+    }
+
+    /// 🎚️ The Preview window's chrome: show mode, LOD and the sun group, all bound to this viewer's
+    /// own actions so the read-only surface's window controls actually do something.
+    fn window_measures(_doc: &ArtifactView<'_, Self::Snapshot>, cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
+        let is_de = view_state.locale == semio_framework_ui_locale::Locale::De;
+        HashMap::from([(preview::WINDOW_KIND_ID.to_string(), preview::preview_window_measures(cfg.snapshot, is_de, generation3d_view_action))])
+    }
+}
+
+/// 🧱️ Every window body of the generation3d viewer, rendered against one already-resolved set of
+/// `graph` marks — one body-key match for both render entry points.
+fn generation3d_view_render_body(
+    body_key: &str,
+    document: &Generation3dSnapshot,
+    config: &Generation3dViewConfig,
+    eval_json: Option<&str>,
+    session: Option<&FlowEvalSession>,
+    run: Option<&semio_framework_plugin::ToolRunView>,
+    marks: &preview::Generation3dViewMarks,
+    labels: &semio_s_artifact_procedural_3d_terminology::Generation3dLabels,
+) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+    let node = match body_key {
+        preview::BODY_KEY => preview::render(document, config, eval_json, session, run, marks, labels),
+        _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.unknown-body", "fixed UI unknown-body admission failed")),
+    }?;
+    Ok(semio_framework_plugin::built_to_component_tree(node))
+}
+//#endregion 🔖️Viewer
+
+//#region 🔖️Manifest
+/// ⏱️ One hidden runtime command of the evaluation chain. Never in the palette, never a `View`
+/// action a window declares: a user does not dispatch a tick, the app does.
+fn generation3d_view_runtime_command(id: &str, label: LocalizedLabel, args: &[&str]) -> semio_framework_plugin::CommandDefinition {
+    let mut definition = semio_framework_plugin::CommandDefinition {
+        in_palette: false,
+        ..semio_framework_plugin::CommandDefinition::bounded_catalog(id, label, "runtime", ActionKind::View).with_args(args.iter().map(|arg| semio_framework_plugin::ActionArgDef::text(*arg, LocalizedLabel::native(*arg, *arg))).collect::<Vec<_>>())
+    };
+    definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+    definition
+}
+
+/// 🎨️ The bundled examples this dialect offers, as the picker's declared argument options — the
+/// SAME eight ids `editor::generation3d::examples()` registers onto the manifest, named through the
+/// surface-neutral `🧬️schema` constants so this read-only surface never reaches into `::editor::`
+/// (`policyViewerPurityBreaches`).
+fn generation3d_view_example_options() -> Vec<semio_framework_plugin::ActionArgOption> {
+    use semio_s_artifact_procedural_3d_model as generation3d_schema;
+    use semio_framework_plugin::ActionArgOption;
+    vec![
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_HEX_COLUMN, LocalizedLabel::native("Hexagonal Mushroom Column", "Sechseckige Pilzsäule")),
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_MESH_WORKBENCH, LocalizedLabel::native("Mesh Workbench", "Netzwerkstatt")),
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_RECT_EXTRUDE, LocalizedLabel::native("Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen")),
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_SPHERE_TORUS, LocalizedLabel::native("Sphere Cut With Torus", "Kugel mit Torus geschnitten")),
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_BOX_FILLET, LocalizedLabel::native("Box Fillet Preview", "Kantenrundung Vorschau")),
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_SPHERE_BOX_FUSE, LocalizedLabel::native("Sphere Box Fuse", "Kugel und Quader vereinen")),
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_FACE_SWEEP_EXTRUDE, LocalizedLabel::native("Face Sweep Extrude", "Fläche extrudieren")),
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_RECTANGLE_WIRE, LocalizedLabel::native("Rectangle Wire Preview", "Rechteck-Draht Vorschau")),
+        ActionArgOption::new(generation3d_schema::PROCEDURAL_EXAMPLE_BOX_SHELL, LocalizedLabel::native("Box Shell Preview", "Hohlkörper Vorschau")),
+    ]
+}
+
+pub fn create_generation3d_viewer() -> semio_framework_plugin::AppDefinition {
+    Viewer::builder(GENERATION3D_DIALECT)
+        .document(["semio", "procedural", "3d"])
+        .icon_id("workflow")
+        .mode_def(view::definition())
+        .default_mode_id(view::GENERATION3D_VIEW_MODE_VIEW)
+        .window_kind_def(preview::definition())
+        .default_layout(view::layout())
+        // 👁️ Ephemeral view actions — the only kind a read-only surface may declare. Every one is
+        // config-only; none reaches the document.
+        .action_with(ActionDefinition::new("setShowMode", LocalizedLabel::native("Set Show Mode", "Anzeigemodus festlegen"), ActionKind::View, "eye"))
+        .action_with(ActionDefinition::new("setLodMode", LocalizedLabel::native("Set Lod Mode", "LOD-Modus festlegen"), ActionKind::View, "layers"))
+        .action_with(ActionDefinition::new("setCamera", LocalizedLabel::native("Set Camera", "Kamera festlegen"), ActionKind::View, "camera"))
+        .action_with(ActionDefinition::new("toggleSun", LocalizedLabel::native("Toggle Sun", "Sonne umschalten"), ActionKind::View, "sun"))
+        .action_with(ActionDefinition::new("setSunAzimuth", LocalizedLabel::native("Set Sun Azimuth", "Sonnenazimut festlegen"), ActionKind::View, "sun"))
+        .action_with(ActionDefinition::new("setSunElevation", LocalizedLabel::native("Set Sun Elevation", "Sonnenhöhe festlegen"), ActionKind::View, "sun"))
+        .action_with(ActionDefinition::new("setSunIntensity", LocalizedLabel::native("Set Sun Intensity", "Sonnenintensität festlegen"), ActionKind::View, "sun"))
+        // 🎨️ The navbar example picker's verb. `ActionKind::View`, not `Mutation` like the sibling
+        // surface's: loading an example into a READ-ONLY surface writes this surface's config, never
+        // the document — and `ShellHost` refuses a `mutation`-kind action on a viewer session outright
+        // (`🏛️ShellHost/🟦️.tsx`'s read-only gate), so a `Mutation` row here would show the picker and
+        // then silently swallow every pick.
+        .action_with(ActionDefinition::new("setActiveExample", LocalizedLabel::native("Set Active Example", "Aktives Beispiel festlegen"), ActionKind::View, "panel-left"))
+        .action_interactive_job("setShowMode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setLodMode", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setCamera", InteractiveJobClassification::Migrated)
+        .action_interactive_job("toggleSun", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setSunAzimuth", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setSunElevation", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setSunIntensity", InteractiveJobClassification::Migrated)
+        .action_interactive_job("setActiveExample", InteractiveJobClassification::Migrated)
+        .action_args("setActiveExample", vec![semio_framework_plugin::ActionArgDef::select("exampleId", LocalizedLabel::native("Example", "Beispiel"), generation3d_view_example_options()).required()])
+        // 📤️ The reader's own io verb. `ActionKind::View` for the same reason `setActiveExample` is:
+        // `ShellHost` refuses a `Mutation`-kind action on a viewer session outright, and an export
+        // really does mutate nothing — it hands the shell a `DownloadMediaExport` and returns.
+        .action_with(ActionDefinition::new("exportDocument", LocalizedLabel::native("Export Artifact", "Artefakt exportieren"), ActionKind::View, "download"))
+        .action_interactive_job("exportDocument", InteractiveJobClassification::Migrated)
+        .action_destructive("exportDocument")
+        .action_args("exportDocument", vec![semio_framework_plugin::ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), semio_s_artifact_procedural_3d_io::document_io::export_format_options()).required().default_value(&"stl")])
+        .keybinding("mod+shift+e", "exportDocument")
+        // ⏯️ The read-only preview evaluation run: declared so the framework owns its lifecycle and
+        // injects its reserved actions, referenced by no mode because the preview surface starts it.
+        .tool(preview_eval::preview_eval_tool_definition())
+        // 🧩️ Not a view action: a hidden host COMMAND, because the host pushes it and no user ever
+        // invokes it. It publishes nothing at all, not even the config lane the seven above write.
+        .command({
+            let mut definition = semio_framework_plugin::CommandDefinition {
+                in_palette: false,
+                ..semio_framework_plugin::CommandDefinition::bounded_catalog("setContributions", LocalizedLabel::native("Set Contributions", "Beiträge festlegen"), "host", ActionKind::View).with_args([
+                    semio_framework_plugin::ActionArgDef::text("json", LocalizedLabel::native("Contributions Page", "Beiträge-Seite")),
+                    semio_framework_plugin::ActionArgDef::text("page", LocalizedLabel::native("Page", "Seite")),
+                    semio_framework_plugin::ActionArgDef::text("pageCount", LocalizedLabel::native("Page Count", "Seitenanzahl")),
+                ])
+            };
+            definition.semantics.execution.interactive_job = InteractiveJobClassification::Migrated;
+            definition
+        })
+        // ⏱️ The runtime evaluation chain — three hidden host COMMANDS, never user actions: the app
+        // self-dispatches them through `Effect::DispatchAction`, and `reactor::extension_response_args`
+        // addresses the two resolves. A command the manifest does not declare is dropped by
+        // `ShellHost`'s own `declaredAction` gate before `plugin.handleAction` is ever called, so an
+        // undeclared tick would stall the whole chain silently
+        // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
+        .command(generation3d_view_runtime_command("flowEvalTick", LocalizedLabel::native("Evaluate Flow Tick", "Flow-Auswertungsschritt"), &["windowId", "windowKindId"]))
+        .command(generation3d_view_runtime_command("flowEvalResolve", LocalizedLabel::native("Resolve Flow Evaluation", "Flow-Auswertung auflösen"), &["windowId", "windowKindId", "nodeHash", "output"]))
+        .command(generation3d_view_runtime_command("flowTessellateResolve", LocalizedLabel::native("Resolve Tessellation", "Tessellierung auflösen"), &["windowId", "windowKindId", "nodeHash", "output"]))
+        .command(generation3d_view_runtime_command("flowEvalRelease", LocalizedLabel::native("Release Preview Kernel Work", "Vorschau-Kernelarbeit freigeben"), &["windowId", "windowKindId"]))
+        .command(generation3d_view_runtime_command("flowTessellateCancelResolve", LocalizedLabel::native("Resolve Preview Cancellation", "Vorschauabbruch aufnehmen"), &["windowId", "windowKindId", "output", "ok"]))
+        // 🕹️ First-class hover/selection over the same flow-graph widget DAG the sibling surface
+        // declares — read-only, but a viewer still hovers, selects and inspects. Selection stays
+        // `broadcast: true` so a co-viewer sees what this one is looking at.
+        .interaction(InteractionDefinition {
+            id: "graph".into(),
+            label: LocalizedLabel::native("Graph", "Graph"),
+            granularities: vec![
+                GranularityDefinition { id: "node".into(), label: LocalizedLabel::native("Node", "Knoten"), icon_id: "circle".into() },
+                GranularityDefinition { id: "edge".into(), label: LocalizedLabel::native("Edge", "Kante"), icon_id: "minus".into() },
+                GranularityDefinition { id: "handle".into(), label: LocalizedLabel::native("Handle", "Griff"), icon_id: "move".into() },
+            ],
+            hierarchy: HierarchyProvider::Topology,
+            hover: HoverSpec { transitive: true, ..HoverSpec::default() },
+            selection: SelectionSpec {
+                modes: vec![SelectionMode::Multiple, SelectionMode::Single],
+                methods: vec![SelectionMethod::Pick, SelectionMethod::Rectangle],
+                merges: vec![MergeMode::Replace, MergeMode::Additive, MergeMode::Subtractive, MergeMode::Invertive, MergeMode::Range],
+                transitive: false,
+                broadcast: true,
+            },
+        })
+        .window_kind_interactions(preview::WINDOW_KIND_ID, vec![InteractionRef::new("graph")])
+        // 📇️ Window-scoped action ownership (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). This viewer has
+        // exactly one window, and that window's own chrome dispatches every verb it declares —
+        // `setShowMode`/`setLodMode` and the sun group from `preview_window_measures`, `setCamera`
+        // from the world host's viewport gesture. Stopping the evaluation is the framework's
+        // `toolRunAbort`, injected with the `previewEval` run. Declaring them explicitly is what keeps
+        // `WindowKindDefinition.actions` a statement about this window rather than a copy of the app list
+        // (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs:5334-5338`). Asserted by
+        // `every_emitted_action_is_declared_on_the_preview_window_kind`.
+        .window_kind_action_refs(preview::WINDOW_KIND_ID, vec![
+            "setShowMode".into(),
+            "setLodMode".into(),
+            "setCamera".into(),
+            "toggleSun".into(),
+            "setSunAzimuth".into(),
+            "setSunElevation".into(),
+            "setSunIntensity".into(),
+        ])
+        .action_describe("setShowMode", LocalizedLabel::native("Sets what the 3D viewer shows of the generated result; only the view changes.", "Legt fest, was der 3D-Betrachter vom erzeugten Ergebnis zeigt; nur die Ansicht ändert sich."))
+        .action_describe("setLodMode", LocalizedLabel::native("Sets the level of detail the 3D viewer draws with; only the view changes.", "Legt die Detailstufe fest, mit der der 3D-Betrachter zeichnet; nur die Ansicht ändert sich."))
+        .action_describe("toggleSun", LocalizedLabel::native("Switches the 3D viewer's sun light on or off; only the view changes.", "Schaltet das Sonnenlicht des 3D-Betrachters ein oder aus; nur die Ansicht ändert sich."))
+        .action_describe("setSunAzimuth", LocalizedLabel::native("Sets the compass direction the 3D viewer's sun shines from; only the view changes.", "Legt die Himmelsrichtung fest, aus der die Sonne des 3D-Betrachters scheint; nur die Ansicht ändert sich."))
+        .action_describe("setSunElevation", LocalizedLabel::native("Sets how high the 3D viewer's sun stands above the horizon; only the view changes.", "Legt fest, wie hoch die Sonne des 3D-Betrachters über dem Horizont steht; nur die Ansicht ändert sich."))
+        .action_describe("setSunIntensity", LocalizedLabel::native("Sets the brightness of the 3D viewer's sun; only the view changes.", "Legt die Helligkeit der Sonne des 3D-Betrachters fest; nur die Ansicht ändert sich."))
+        .action_describe("setActiveExample", LocalizedLabel::native("Shows one of the bundled generator examples in this viewer instead of the document; the document itself is not changed.", "Zeigt in diesem Betrachter eines der mitgelieferten Generatorbeispiele statt des Dokuments; das Dokument selbst ändert sich nicht."))
+        .action_describe("exportDocument", LocalizedLabel::native("Writes the 3D result shown in the viewer in the chosen format to a downloaded file on the user's machine.", "Schreibt das im Betrachter gezeigte 3D-Ergebnis im gewählten Format in eine heruntergeladene Datei auf dem Rechner des Nutzers."))
+        .action_audience("setCamera", semio_framework_plugin::CapabilityAudience::Chrome)
+        .build_definition()
+}
+//#endregion 🔖️Manifest
+
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️status-contract/🦀️.rs"]
+mod status_contract_tests;

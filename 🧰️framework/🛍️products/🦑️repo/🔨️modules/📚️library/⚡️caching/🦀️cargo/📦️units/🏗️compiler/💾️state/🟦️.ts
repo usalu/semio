@@ -5,7 +5,8 @@ import{readNativeCallerAuthorityV1}from"../../../../📦️artifacts/📋️nati
 import{resolve}from"node:path";
 import{requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,type ScriptInvocation}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
-import{requireNativeStorageReservationV1,type NativeStoragePolicyV1,type NativeStorageReservationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{requireNativeStorageReservationV1,type NativeStorageReservationV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStoragePolicyV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 import{requireRepositoryCompilerStoreV1,type RepositoryCompilerStoreV1}from"../../../../💾️storage/🔒️enforcement/🏗️compiler/🟦️.ts";
 import{withRetainedOperationsV1,withRetainedOperationV1,requireRetainedOperationLifetimeV1,type RetainedOperationLifetimeV1}from"../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🪢️lifetime/🟦️.ts";
 import{withNativeImageTerminalCloseV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧹️cleanup/📋️state/🟦️.ts";

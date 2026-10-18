@@ -1,0 +1,71 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🔮️oracles/🎨️world3d-scene-shading/📜️script.ts",
+ "importers": "auto",
+ "sharedLines": [
+  [
+   11,
+   21
+  ]
+ ],
+ "children": [
+  {
+   "dir": "🧾️pixel-oracle-fixture",
+   "doc": "/** 🧾️ The pixel oracle fixture type shared by the reference visual and grid visual oracles. */",
+   "names": [
+    "PixelOracleFixture"
+   ]
+  },
+  {
+   "dir": "🎨️scene-shading-renderers",
+   "doc": "/** 🎨️ The browser-side scene shading renderers: the painted production shader reader, the scene shading renderer and its second scene variant. */",
+   "names": [
+    "paintedShaderFromProduction",
+    "renderSceneShading",
+    "renderSceneShadingS2"
+   ]
+  },
+  {
+   "dir": "🧊️wgpu-shading-renderers",
+   "doc": "/** 🧊️ The browser-side WebGPU renderers of the shading, textured and celebration cases. */",
+   "names": [
+    "renderWgpuShading",
+    "renderWgpuTextured",
+    "renderWgpuCelebration"
+   ]
+  },
+  {
+   "dir": "🔭️reference-visual-oracle",
+   "doc": "/** 🔭️ The reference visual renderers and the reference visual oracle run. */",
+   "names": [
+    "renderReferenceVisualWgpu",
+    "renderReferenceVisual",
+    "runReferenceVisualOracle"
+   ]
+  },
+  {
+   "dir": "🕸️grid-visual-oracle",
+   "doc": "/** 🕸️ The Drei and WebGPU grid renderers and the grid visual oracle run. */",
+   "names": [
+    "renderGridDrei",
+    "renderGridWgpu",
+    "runGridVisualOracle"
+   ]
+  },
+  {
+   "dir": "📐️scene-shading-oracle",
+   "doc": "/** 📐️ The scene shading oracle fixture type and the scene shading oracle run. */",
+   "names": [
+    "SceneShadingOracleFixture",
+    "runSceneShadingOracle"
+   ]
+  },
+  {
+   "dir": "🪟️authored-surface-oracle",
+   "doc": "/** 🪟️ The authored surface reference renderer and the authored surface oracle run. */",
+   "names": [
+    "renderAuthoredSurfaceReference",
+    "runAuthoredSurfaceOracle"
+   ]
+  }
+ ]
+}

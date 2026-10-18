@@ -6,7 +6,9 @@ import { describe, expect, it, vi } from "vitest";
 import { DEEDS } from "@semio-tech/pets";
 import { type PetLayerProps } from "@semio-tech/pets-react";
 import type { CatalogView, RunResult, RunView, Sheet, SheetClassificationTask, SheetMatchingTask, SheetSortingTask } from "@semio-tech/quiz";
-import { CardIcon, ClassificationTaskView, HomeScreen, PET_DEEDS, PET_DEED_LABELS, PET_DEED_SAID, PetTopic, PreferencesPanel, QUIZ_LOCALES, QUIZ_PET_CONTROLS, QUIZ_PET_PROPS, QuizCard, ResultsScreen, RunScreen, initialQuizState, localStore, memoryStorageOrigin, petPlayers, petProp, quizText, readPreferences, switchedPets, withPets, writePreferences, type PetChoice, type QuizPreferences, type QuizSession, type QuizState, type QuizStep } from "@semio-tech/quiz-react";
+import { CardIcon, ClassificationTaskView, HomeScreen, PET_DEEDS, PET_DEED_LABELS, PET_DEED_SAID, PetTopic, PreferencesPanel, QUIZ_LOCALES, QUIZ_PET_CONTROLS, QUIZ_PET_PROPS, QuizCard, initialQuizState, localStore, memoryStorageOrigin, petPlayers, petProp, quizText, readPreferences, switchedPets, withPets, writePreferences, type PetChoice, type QuizPreferences, type QuizSession, type QuizState, type QuizStep } from "@semio-tech/quiz-react";
+import { RunScreen } from "../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx";
+import { ResultsScreen } from "../../🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx";
 import sheets from "../🧫️fixtures/🃏️sheet-assembly/🔣️.json";
 import { CATALOG, MENAGERIE, PREFERENCES, Pets, fakeSource, fakeStage, motionPreference, named, settle, text } from "../🪛️pet-companions-kit/🟦️.tsx";
 

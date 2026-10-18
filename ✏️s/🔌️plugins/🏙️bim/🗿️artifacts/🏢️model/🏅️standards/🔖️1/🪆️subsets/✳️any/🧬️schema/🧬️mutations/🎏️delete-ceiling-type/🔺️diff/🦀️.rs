@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteCeilingType`: one deleted ceiling type entry together with the properties and classifications keyed by the type; refused while a ceiling still uses the type.
 
-use super::super::cascade;
-use super::DeleteCeilingType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::DeleteCeilingType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

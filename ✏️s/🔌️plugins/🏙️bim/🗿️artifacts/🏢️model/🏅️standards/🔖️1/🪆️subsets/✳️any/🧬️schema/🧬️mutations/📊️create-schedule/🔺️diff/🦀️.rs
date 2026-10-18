@@ -1,8 +1,8 @@
 //! \u{1f53a}\uFE0F Diff constructor for \u00B6CreateSchedule\u00B6: one created schedule entry. The id is free across every collection, the definition stands (a name, columns that exist in the category,
 //! no repeated key, filters with their values, a scope without repeats) and every storey of the scope exists. Rows and totals are inferred, nothing derived is written.
 
-use super::super::elements;
-use super::CreateSchedule;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_schedule::CreateSchedule;
 use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::schedule_problem;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

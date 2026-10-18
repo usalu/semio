@@ -16,7 +16,7 @@ import { dialAngle, dialPosition, SLIDER_PAGE_STEPS, sliderAdjacentSnap, sliderA
 import { numberRangeIsValid, snapsAreValid } from "../../🛡️limits/🟦️.ts";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../🖼️presentation/🔢️number-format/🟦️.ts";
 import { uiAccessibilityValueV1 } from "../../🖼️presentation/♿️accessibility/🟦️.ts";
-import type { Component } from "../../../../🛂️manifest/🟦️.ts";
+import type { Component } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 
 type Fixture = {
   readonly validity: readonly { readonly case: string; readonly min: number; readonly max: number; readonly snaps: readonly number[]; readonly valid: boolean }[];

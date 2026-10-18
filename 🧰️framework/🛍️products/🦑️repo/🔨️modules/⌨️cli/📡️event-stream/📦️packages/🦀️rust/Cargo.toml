@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-repo-graphql = { path = "../../../../🔗️graphql/📦️packages/🦀️rust" }
 semio-framework-repo-model = { path = "../../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-model-entity = { path = "../../../../📐️model/🪪️entity/📦️packages/🦀️rust" }
 semio-framework-repo-tree = { path = "../../../../🌳️tree/📦️packages/🦀️rust" }
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -112,7 +112,7 @@ test("current native cleanup callers retain independent plain authority instead 
   assert(Buffer.byteLength(body) < policy.maximumReleaseBytes);
   for (const file of ["../♻️bounded-value-retirement/🦀️.rs", "../🧪️supersede-replay/🦀️.rs"]) {
     const path = fileURLToPath(new URL(file, import.meta.url));
-    const source = await Bun.file(path).text();
+    const source = file.includes("🧪️supersede-replay") ? readModuleTreeSource(path) : await Bun.file(path).text();
     assert(!/maximum_(?:copy|capacity|release)_bytes:\s*demand\.(?:copy|capacity|release)_bytes\s*[,}]/u.test(source), `demand becomes positive authority in ${file}`);
     assert(!source.includes(".max(demand.copy_bytes)") && !source.includes(".max(owner.next_release_byte_demand()"), `caller bound enlarged by frontier in ${file}`);
     assert(!/maximum_(?:capacity|release)_bytes:\s*(?:cursor|owner)\.next_\w+\([^)]*\)\.unwrap\(\)\s*[,}]/u.test(source), `queried owner supplies positive authority in ${file}`);
@@ -130,6 +130,7 @@ test("current native cleanup callers retain independent plain authority instead 
 
 import{existsSync,readFileSync}from"node:fs";
 import { retainedCloneNestedFixtureUrl } from "@semio-tech/value-ts/testing/fixtures";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 test("original returned read examples have no independent whole-trial schema",()=>{assert.equal(existsSync(new URL("../../🔗️read/🧾️return/🧬️schema/🔣️.json",import.meta.url)),false);const examples=JSON.parse(readFileSync(new URL("../../🔗️read/🧾️return/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));for(const row of examples.cases)assert.equal(row.expectLastCustody,row.otherAliases===0||row.dropOtherBeforeRelease,row.id);});
 
 test("original codec custody examples do not own a whole-trial schema",()=>{assert.equal(existsSync(new URL("../../📦️codec/🪶️snapshot-capability/🪶️native-retirement/🧬️schema/🔣️.json",import.meta.url)),false);});

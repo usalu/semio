@@ -3,7 +3,7 @@ import { dirname, join } from "node:path";
 
 /** 🛂️ The committed descriptor of the plugin that owns `cratePath`, or `null` when the plugin ships
  * none. Read once per plugin: a descriptor carries every example's whole `artifactJson`, so puzzle's
- * alone is 4.8 MB and the 58 panes share 31 plugins. */
+ * alone is 4.8 MB and the panes share their plugins. */
 function pluginDescriptorReader(repoRoot: string): (cratePath: string) => any | null {
   const parsed = new Map<string, any | null>();
   return (cratePath) => {
@@ -169,7 +169,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
     /** 🏷️ The acceptance suite asserts the pane's navbar trigger renders exactly the catalog's
      * `exampleLabel` (`🧪️tests/🎭️acceptance/🟦️.ts`), which only means something while that text is the
      * descriptor's own `label.native.en`. Pinned here rather than resolved in the browser test because a
-     * Playwright worker reading 31 plugin descriptors — puzzle's alone is 4.8 MB — to learn one string per
+     * Playwright worker reading every plugin descriptor — puzzle's alone is 4.8 MB — to learn one string per
      * pane would spend more time parsing JSON than booting shells. A pane whose descriptor is stale or
      * missing (the nine `stdio` panes while their descriptor predates `📓️stdio-examples.md`) is checked by
      * the presence law below and joins this one the moment its descriptor is regenerated. */

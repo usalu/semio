@@ -140,7 +140,7 @@
       },
       "outputs": [],
       "dependsOn": [
-        "component"
+        "semio-hub-gis-component:component"
       ],
       "metadata": {
         "semio": {
@@ -160,7 +160,7 @@
       },
       "outputs": [],
       "dependsOn": [
-        "component"
+        "semio-hub-gis-component:component"
       ]
     },
     "hub-edit-durability-check": {

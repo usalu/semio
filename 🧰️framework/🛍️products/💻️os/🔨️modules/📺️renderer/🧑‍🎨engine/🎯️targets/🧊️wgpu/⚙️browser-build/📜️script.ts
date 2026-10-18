@@ -6,7 +6,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modul
 import { assertGeneratedSources, readSourceInputContract } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs";
 import { renderBrowserBoot } from "./🟦️.ts";
 
-/** 🚀️ Materializes the browser boot bundle after Nx prepares its generated data inputs. */
+/** 🚀️ Materializes the browser boot bundle after the build tool prepares its generated data inputs. */
 class GenerateBrowserBootScript extends BundleScript {
   protected readonly entry: "browser-boot" | "renderer-boot" = "browser-boot";
   async run(args: string[]): Promise<void> {

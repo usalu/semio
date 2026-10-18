@@ -1,11 +1,11 @@
-use crate::tui::chrome::ChromeState;
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::layout::Constraint;
-use crate::tui::theme::{Role, Surface};
-use crate::tui::widget::WidgetState;
+use crate::chrome::ChromeState;
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use crate::layout::Constraint;
+use semio_framework_ui_tui_core::theme::{Role, Surface};
+use semio_framework_ui_tui_widgets::widget::WidgetState;
 
-pub(crate) const LAYOUT_DIRTY: u8 = 1;
-pub(crate) const PAINT_DIRTY: u8 = 2;
+pub const LAYOUT_DIRTY: u8 = 1;
+pub const PAINT_DIRTY: u8 = 2;
 
 /// 🪪️ A stable, generation-checked handle to a scene node.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -54,8 +54,8 @@ pub struct Node {
     pub hittable: bool,
     pub tooltip: Option<String>,
     pub(crate) children: Vec<NodeId>,
-    pub(crate) parent: Option<NodeId>,
-    pub(crate) rect: Rect,
+    pub parent: Option<NodeId>,
+    pub rect: Rect,
     pub(crate) dirty: u8,
 }
 
@@ -91,7 +91,7 @@ impl Scene {
         let mut slots = Vec::new();
         slots.push(Slot { node: Some(Node::new(NodeContent::Box)), generation: 0 });
         let mut overlay = Node::new(NodeContent::Box);
-        overlay.constraint.direction = crate::tui::layout::Direction::Stack;
+        overlay.constraint.direction = crate::layout::Direction::Stack;
         slots.push(Slot { node: Some(overlay), generation: 0 });
         Self { slots, free: Vec::new(), root: NodeId { index: 0, generation: 0 }, overlay_root: NodeId { index: 1, generation: 0 } }
     }
@@ -197,7 +197,7 @@ impl Scene {
         }
     }
 
-    pub(crate) fn node_raw_mut(&mut self, id: NodeId) -> &mut Node {
+    pub fn node_raw_mut(&mut self, id: NodeId) -> &mut Node {
         self.slots[id.index as usize].node.as_mut().expect("stale NodeId")
     }
 
@@ -223,7 +223,7 @@ impl Scene {
         !lineage.is_empty() && lineage.iter().all(|node| self.node(*node).visible)
     }
 
-    pub(crate) fn mark_dirty(&mut self, id: NodeId, flags: u8) {
+    pub fn mark_dirty(&mut self, id: NodeId, flags: u8) {
         let mut cursor = Some(id);
         while let Some(cur) = cursor {
             if !self.valid(cur) {
@@ -239,7 +239,7 @@ impl Scene {
     }
 
     /// 🧹️ Clears `flags` on every node; the invariant "a dirty node has dirty ancestors" survives because the whole tree is cleared together.
-    pub(crate) fn clear_dirty(&mut self, flags: u8) {
+    pub fn clear_dirty(&mut self, flags: u8) {
         for slot in &mut self.slots {
             if let Some(node) = slot.node.as_mut() {
                 node.dirty &= !flags;
@@ -248,7 +248,7 @@ impl Scene {
     }
 
     /// 🩸️ Dirty flags aggregated at both roots.
-    pub(crate) fn dirty_flags(&self) -> u8 {
+    pub fn dirty_flags(&self) -> u8 {
         self.node(self.root).dirty | self.node(self.overlay_root).dirty
     }
 

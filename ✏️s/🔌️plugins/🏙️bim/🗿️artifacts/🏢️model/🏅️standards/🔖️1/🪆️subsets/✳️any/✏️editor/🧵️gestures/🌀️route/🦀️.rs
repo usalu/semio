@@ -4,12 +4,13 @@
 //!
 //! The same options can be typed as a line: `z <length>` (the elevation), `duct <width> x <height>`, `tray <width> x <height>`, `pipe <diameter>` and `sys <system>`; a length is in metres, or with its unit `mm`, `cm` or `m`.
 
-use super::place::{length, next_system};
-use super::plane::P;
-use super::session::{snap_mark, GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, STOREY_MISSING};
+use crate::editor::bim::modes::edit::windows::plan;
+use crate::editor::bim::gestures::place::{length, next_system};
+use crate::editor::bim::gestures::plane::P;
+use crate::editor::bim::gestures::session::{snap_mark, GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, STOREY_MISSING};
 use crate::editor::bim::marks::{Mark, Preview, Style};
-use super::snap::SnapHit;
-use super::typed::INVALID;
+use crate::editor::bim::gestures::snap::SnapHit;
+use crate::editor::bim::gestures::typed::INVALID;
 use crate::editor::bim::entities::components::{system_label, system_of, SYSTEMS};
 use crate::editor::bim::entities::mep::{default_shape, shape_token, size_text, DUCT, ELEVATION, PIPE, TRAY};
 use crate::standards::v1::subsets::any::schema::{snapshot::{MepElement, MepShape, MepSystem, Point3}, mutations::ModelMutation};
@@ -214,6 +215,4 @@ impl Tool for Route {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

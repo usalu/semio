@@ -1,4 +1,5 @@
-import { canonicalPrimaryFilenameForKind, loadTaxonomy, resolveSchemaFacetKind } from "../../../🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { resolveSchemaFacetKind } from "../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceText, type PolicySourceOperations } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 
 /** 🏷️ Reads the export id declared by a facet's normative JSON Schema. */

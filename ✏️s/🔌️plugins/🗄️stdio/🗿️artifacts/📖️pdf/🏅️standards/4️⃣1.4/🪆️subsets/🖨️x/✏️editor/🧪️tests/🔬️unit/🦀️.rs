@@ -10,7 +10,7 @@ use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
 #[allow(unused_imports)]
 use {semio_framework_plugin::built_to_component_tree, semio_framework_plugin::ArtifactView, semio_framework_plugin::ComponentTree, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::DraftView, semio_framework_plugin::Emit, semio_framework_plugin::Fault, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoDraft, semio_framework_plugin::NoDraftMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::pdf14x::*;
 
 #[semio_framework_async_macros::async_test]

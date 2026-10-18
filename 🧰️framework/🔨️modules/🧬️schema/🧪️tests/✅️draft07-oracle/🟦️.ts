@@ -20,7 +20,7 @@ type Vector = {
   readonly invalid: readonly { readonly instance: unknown; readonly errorPath: string }[];
 };
 
-const vectorsPath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "🧪️tests/🧫️fixtures/✅️draft07-validation-vectors.json", "✅️draft07-validation-vectors.json");
+const vectorsPath = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "🧪️tests/🧫️fixtures/✅️draft07-validation-vectors.json");
 const vectors = JSON.parse(readFileSync(vectorsPath, "utf8")) as { readonly dialect: string; readonly cases: readonly Vector[] };
 const ajvConstructor = (Ajv as unknown as { readonly default?: typeof Ajv }).default ?? Ajv;
 const applyFormats = (addFormats as unknown as { readonly default?: typeof addFormats }).default ?? addFormats;

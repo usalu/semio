@@ -151,9 +151,9 @@ impl protocol::OpText for SemioTextMutation {
 //#region 🔖️DemoCases
 /// 🌱 One representative value per variant — single source of truth for `ops_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️.rs` and this file's own round-trip test.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioTextMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioTextMutation> {
     vec![
         SemioTextMutation::InsertRun(InsertRun { index: 1, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }),
         SemioTextMutation::RemoveRun(RemoveRun { index: 0 }),

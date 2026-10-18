@@ -1,4 +1,28 @@
-use super::*;
+#![cfg(test)]
+#![allow(unused_imports, unused_qualifications)]
+
+extern crate semio_s_plugin_energy_engine_calendar as calendar;
+extern crate semio_s_plugin_energy_engine_kernel as kernel;
+extern crate semio_s_plugin_energy_engine_meters as meters;
+extern crate semio_s_plugin_energy_engine_model as model;
+extern crate semio_s_plugin_energy_engine_output as output;
+extern crate semio_s_plugin_energy_engine_precompute as precompute;
+extern crate semio_s_plugin_energy_engine_results as results;
+extern crate semio_s_plugin_energy_engine_site as site;
+extern crate semio_s_plugin_energy_engine_sizing as sizing;
+extern crate semio_s_plugin_energy_engine_schedule as schedule;
+extern crate semio_s_plugin_energy_engine_sim_wire as wire;
+use semio_s_plugin_energy_engine_sim::*;
+use semio_s_plugin_energy_engine_sim::testkit::*;
+use crate::wire::{ENERGY_WIRE_HEADER_BYTES, EnergyJobPreview, EnergyJobStage, EnergyNumericalBounds, EnergyNumericalCensus, EnergyNumericalDimension, EnergyQualityTier, EnergyWireKind, EnergyWirePacket, EnergyWireRejection, close_retained_packet, decode_preview_packet};
+use crate::kernel::{SimulationConfig, SimulationEnvironment, TimestepWork};
+use crate::meters::{EndUse, FuelType};
+use crate::model::Model;
+use crate::results::Results;
+use crate::site::WeatherRecord;
+use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobPayloadStream, Operation, RetainedCloneGrant, RetainedCloneProgress, RetainedJobPayload, RevisionId, StepBudget, StepContext};
+use std::time::Instant;
+
 use crate::wire::ENERGY_WIRE_MAGIC;
 use crate::calendar::RunPeriod;
 use crate::model::{test_model_full_topology, test_model_single_zone};

@@ -537,7 +537,7 @@
   {
     "path": "✏️s/🔌️plugins/🖨️raster/🏭️bridge/Cargo.lock",
     "beforeSha256": "b36d24a439cddbec4a2a9ee7572d2a185ab673df2ec91e499669a2fc71d54ae9",
-    "thirdpartyPinsSha256": "1fafebd938f5ee4b219402e1bf155b7e4903ea0d91c761d5a878296baaeb0dd6"
+    "thirdpartyPinsSha256": "f379cf4996560a33171e04c7aaf716083ddb33c6c5316f7bcc30b15187fcf692"
   },
   {
     "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/Cargo.lock",
@@ -697,7 +697,7 @@
   {
     "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/Cargo.lock",
     "beforeSha256": "6864c53fc9b698297d99101595938c06fe9d4046b7daf70a117b8a6a8f84b26c",
-    "thirdpartyPinsSha256": "9015defcb4a077cb8b8dc90677a9c14c39b8c4f6eff457f22150ff3b82564fa1"
+    "thirdpartyPinsSha256": "90020e7779fd1c0d28880363693546d57430ec22648dab49df1176ea90590c9c"
   },
   {
     "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/Cargo.lock",
@@ -722,7 +722,7 @@
   {
     "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/Cargo.lock",
     "beforeSha256": "9b3c6e2871ac5dc6fdb8a9b3b7aaa14f068a8cc8d8b5811d070b961fd3c849c4",
-    "thirdpartyPinsSha256": "e387fb2ff8f7fcc3145605aea31d415d112f146b5133afe714254884788d1c8f"
+    "thirdpartyPinsSha256": "531733e3b9973d8f951d04e96140386d9197816457019cb042c4b6b434662bd8"
   },
   {
     "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🏭️bridge/Cargo.lock",

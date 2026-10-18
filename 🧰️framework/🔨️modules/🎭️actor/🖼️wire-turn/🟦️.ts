@@ -672,7 +672,7 @@ export function shardTurnDriveBudgetMsV1(grantWallMs: number, guestTurnCostMs: n
  * A result is only ever discarded when {@link shardTurnCarriesNothingV1} admits it, so the drive is
  * lossless by construction. `poll`/`now`/`live`/`inputPending` are injected so every stop is
  * assertable without a Worker, and so the generated worker
- * (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`, whose inline twin this owns) and any future
+ * (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts`, whose inline twin this owns) and any future
  * target drive the identical loop. */
 export async function driveShardTurnMoreWorkV1(drive: {
   readonly first: ShardTurnCarriers;

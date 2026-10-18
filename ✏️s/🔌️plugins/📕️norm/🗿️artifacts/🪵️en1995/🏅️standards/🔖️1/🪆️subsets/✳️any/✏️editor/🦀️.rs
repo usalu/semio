@@ -43,7 +43,7 @@ use semio_framework_plugin::{NoPresence, NoPresenceMutation};
 // (only `ArtifactEditor`/`ArtifactViewer`/`Editor`/`Viewer`/`EditorApp`/`ViewerApp`/`ViewEmit` are,
 // per ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET W0-F gap 1) — only reachable through `app`.
 use semio_framework_plugin::app::Dialect;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 /// 🏷️ This standard's display name — the app label, its artifact-kind name and the catalogue headline.
@@ -80,7 +80,7 @@ pub struct En1995PlayApp;
 impl ArtifactEditor for En1995PlayApp {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        semio_s_artifact_norm_en1995_model::examples()
+        semio_s_artifact_norm_en1995_examples::examples()
     }
     type Snapshot = En1995Snapshot;
     type Mutation = En1995Mutation;

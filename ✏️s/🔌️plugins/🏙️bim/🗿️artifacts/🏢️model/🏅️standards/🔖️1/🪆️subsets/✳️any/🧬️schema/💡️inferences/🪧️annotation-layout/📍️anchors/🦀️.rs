@@ -3,7 +3,7 @@
 //! names nothing, or an element without that geometry now, resolves to a [`Reason`], never to a stale number. Every element also has a reference point, the origin tags and leaders
 //! measure their offset from.
 
-use super::Inputs;
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::Inputs;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{mark, seg};
 use crate::standards::v1::subsets::any::schema::snapshot::{AnchorEnd, AnnotationAnchor, Axis, ModelSnapshot, Point2, Space, SpaceBoundary, WallSide};
 

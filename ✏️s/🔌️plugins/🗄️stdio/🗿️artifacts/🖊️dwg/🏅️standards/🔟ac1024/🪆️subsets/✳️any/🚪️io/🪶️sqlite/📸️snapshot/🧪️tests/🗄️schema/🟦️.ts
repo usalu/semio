@@ -5,7 +5,7 @@ import { parseSqliteDatabaseSchema,exportSqliteDatabase,importSqliteDatabase } f
 
 test("DWG embeds all 277 exact authored domain tables and independent SQLite accepts them",async()=>{
   const domains=["📄️document","🔧️header","✏️drawing","🗃️tables","📐️entities","📦️objects","🔗️associativity","🧮️evaluation","🧩️blocks","🎬️actions","🖌️styles/👁️visual","🖌️styles/🧱️material","🖌️styles/🗃️table","📃️layout","🖌️styles/↗️mleader","📏️constraints"];
-  const sql=(await Promise.all(domains.map(domain=>Bun.file(new URL("../.."+domain+"/🗄️.sql",import.meta.url)).text()))).join("\n");
+  const sql=(await Promise.all(domains.map(domain=>Bun.file(new URL("../../"+domain+"/🗄️.sql",import.meta.url)).text()))).join("\n");
   expect(DWG_SQLITE_SCHEMA).toBe(sql);
   const database=parseSqliteDatabaseSchema(sql);expect(database.tables).toHaveLength(277);
   const oracle=Database.deserialize(await exportSqliteDatabase(database));

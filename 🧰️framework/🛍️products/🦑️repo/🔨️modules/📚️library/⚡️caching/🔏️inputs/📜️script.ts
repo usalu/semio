@@ -11,7 +11,7 @@ class RegistryCatalogInputsScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("registry-catalog accepts no arguments");
     const kind = "registry-catalog", policy = JSON.parse(readFileSync(join(import.meta.dir, "../🔣️policy.json"), "utf8"));
-    const { loadCatalogTaxonomy, registryCatalogInputPaths, registryCatalogInputView } = await import("../../🔍️discovery/🟦️.ts");
+    const { loadCatalogTaxonomy, registryCatalogInputView } = await import("../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts"), { registryCatalogInputPaths } = await import("../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts");
     const taxonomy = loadCatalogTaxonomy(), view = registryCatalogInputView(this.repoRoot, taxonomy), hash = createHash("sha256");
     for (const path of registryCatalogInputPaths(this.repoRoot, taxonomy, view)) {
       const nodeKind = view.kind(path);

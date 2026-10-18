@@ -177,12 +177,12 @@ pub(crate) struct ArtifactCreationHttpTaskV1 {
 
 pub(crate) struct ArtifactCreationHttpPendingV1 {
     pub(crate) control: Arc<ArtifactCreationHttpControlV1>,
-    pub(crate) disposition: std::sync::atomic::AtomicU8,
+    pub disposition: std::sync::atomic::AtomicU8,
     pub(crate) changed: tokio::sync::Notify,
 }
 
 pub(crate) struct ArtifactCreationHttpTaskOwnerStateV1 {
-    pub(crate) closing: bool,
+    pub closing: bool,
     reservations: BTreeMap<String, Arc<ArtifactCreationHttpPendingV1>>,
     pub(crate) tasks: BTreeMap<String, ArtifactCreationHttpTaskV1>,
     recovery: Option<tokio::task::JoinHandle<()>>,
@@ -197,7 +197,7 @@ pub struct ArtifactCreationHttpTaskOwnerV1 {
 pub(crate) struct ArtifactCreationHttpReservationV1 {
     pub(crate) owner: Arc<ArtifactCreationHttpTaskOwnerV1>,
     pub(crate) key: String,
-    pub(crate) pending: Arc<ArtifactCreationHttpPendingV1>,
+    pub pending: Arc<ArtifactCreationHttpPendingV1>,
     activated: bool,
 }
 
@@ -375,7 +375,7 @@ impl ArtifactCreationHttpTaskOwnerV1 {
 }
 
 impl ArtifactCreationHttpReservationV1 {
-    pub(crate) fn activate<F>(mut self, future: F)
+    pub fn activate<F>(mut self, future: F)
     where
         F: std::future::Future<Output = ()> + Send + 'static,
     {
@@ -393,7 +393,7 @@ impl ArtifactCreationHttpReservationV1 {
         self.owner.changed.notify_waiters();
     }
 
-    pub(crate) fn finish(mut self) {
+    pub fn finish(mut self) {
         let mut state = self.owner.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         let owns_reservation = state.reservations.get(&self.key).is_some_and(|pending| Arc::ptr_eq(pending, &self.pending));
         if owns_reservation {

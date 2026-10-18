@@ -50,7 +50,7 @@ use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowEngagementInput;
 use semio_framework_plugin::WindowEngagementStatus;
 use pack::snapshot::ArtifactPack;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use std::collections::HashMap;
 use export_job::DrawingExportCommandJobFactory;
 use image_job::DrawingImageCommandJobFactory;

@@ -8,6 +8,8 @@ use semio_s_artifact_draw_drawing_geometry::editing::simplify::PathSimplifyJob;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandInputs,ArtifactCommandWorkStep};
 use semio_framework_value::{list::PagedList,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneStep},ValueError};
 use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_model::DRAWING_DOCUMENT_SCHEMA;
 pub type App=semio_framework_plugin::EditorApp<DrawingPlayApp>;
 #[derive(semio_framework_value::RetireOwned)]
 struct Workspace {source:PagedList<semio_s_artifact_draw_drawing_model::PathSegment,{usize::MAX}>,job:Option<PathSimplifyJob>}

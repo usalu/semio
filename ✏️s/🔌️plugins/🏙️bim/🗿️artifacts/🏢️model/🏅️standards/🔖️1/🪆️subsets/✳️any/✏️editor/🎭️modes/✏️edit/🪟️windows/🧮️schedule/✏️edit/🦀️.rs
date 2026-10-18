@@ -37,7 +37,7 @@ fn cycle(op: ScheduleOp) -> ScheduleOp {
     ScheduleOp::ALL[(at + 1) % ScheduleOp::ALL.len()]
 }
 
-fn columns(schedule: &Schedule, edit: &Edit) -> Result<Vec<ScheduleColumn>, &'static str> {
+pub fn columns(schedule: &Schedule, edit: &Edit) -> Result<Vec<ScheduleColumn>, &'static str> {
     let mut list = schedule.columns.clone();
     let key = ScheduleKey::parse(&edit.key).ok_or("bim.schedule.key-unknown")?;
     let at = position(&list, |column| column.key == key);
@@ -117,7 +117,7 @@ fn groups(schedule: &Schedule, edit: &Edit) -> Result<Vec<ScheduleGroup>, &'stat
     Ok(list)
 }
 
-fn toggled<T: PartialEq + Clone>(list: &[T], item: T) -> Vec<T> {
+pub fn toggled<T: PartialEq + Clone>(list: &[T], item: T) -> Vec<T> {
     if list.contains(&item) {
         list.iter().filter(|known| **known != item).cloned().collect()
     } else {
@@ -154,6 +154,4 @@ pub fn presets() -> &'static [&'static str] {
     &PRESETS
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

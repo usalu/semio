@@ -150,7 +150,7 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::{encode_option, decode_o
 
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_bool(b: &bool) -> String {
+pub fn enc_bool(b: &bool) -> String {
     if *b {
         "1".to_string()
     } else {
@@ -159,7 +159,7 @@ pub(crate) fn enc_bool(b: &bool) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
+pub fn dec_bool(s: &str) -> Result<bool, String> {
     match s {
         "1" => Ok(true),
         "0" => Ok(false),
@@ -168,37 +168,37 @@ pub(crate) fn dec_bool(s: &str) -> Result<bool, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_u8(v: &u8) -> String {
+pub fn enc_u8(v: &u8) -> String {
     v.to_string()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_u8(s: &str) -> Result<u8, String> {
+pub fn dec_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_f64(v: &f64) -> String {
+pub fn enc_f64(v: &f64) -> String {
     v.to_bits().to_string()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_f64(s: &str) -> Result<f64, String> {
+pub fn dec_f64(s: &str) -> Result<f64, String> {
     s.parse::<u64>().map(f64::from_bits).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_run_style(s: &RunStyle) -> String {
+pub fn enc_run_style(s: &RunStyle) -> String {
     format!(
         "[{},{},{},{},{},{},{}]",
         enc_bool(&s.bold),
@@ -212,7 +212,7 @@ pub(crate) fn enc_run_style(s: &RunStyle) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_run_style(s: &str) -> Result<RunStyle, String> {
+pub fn dec_run_style(s: &str) -> Result<RunStyle, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [bold, italic, underline, size, font, color, link] = parts.as_slice() else { return Err(format!("run style: expected 7 fields, got {}", parts.len())) };
@@ -228,12 +228,12 @@ pub(crate) fn dec_run_style(s: &str) -> Result<RunStyle, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_run(r: &DocRun) -> String {
+pub fn enc_run(r: &DocRun) -> String {
     format!("[{},{}]", enc_str(&r.text), enc_run_style(&r.style))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_run(s: &str) -> Result<DocRun, String> {
+pub fn dec_run(s: &str) -> Result<DocRun, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [text, style] = parts.as_slice() else { return Err(format!("run: expected 2 fields, got {}", parts.len())) };
@@ -292,45 +292,45 @@ pub fn dec_block(s: &str) -> Result<DocBlock, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_list_item(i: &DocListItem) -> String {
+pub fn enc_list_item(i: &DocListItem) -> String {
     format!("[{}]", enc_list(&i.blocks, enc_block))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_list_item(s: &str) -> Result<DocListItem, String> {
+pub fn dec_list_item(s: &str) -> Result<DocListItem, String> {
     let inner = strip_brackets(s)?;
     Ok(DocListItem { blocks: dec_list(inner, dec_block)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_cell(c: &DocTableCell) -> String {
+pub fn enc_cell(c: &DocTableCell) -> String {
     format!("[{}]", enc_list(&c.blocks, enc_block))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_cell(s: &str) -> Result<DocTableCell, String> {
+pub fn dec_cell(s: &str) -> Result<DocTableCell, String> {
     let inner = strip_brackets(s)?;
     Ok(DocTableCell { blocks: dec_list(inner, dec_block)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_row(r: &DocTableRow) -> String {
+pub fn enc_row(r: &DocTableRow) -> String {
     format!("[{}]", enc_list(&r.cells, enc_cell))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_row(s: &str) -> Result<DocTableRow, String> {
+pub fn dec_row(s: &str) -> Result<DocTableRow, String> {
     let inner = strip_brackets(s)?;
     Ok(DocTableRow { cells: dec_list(inner, dec_cell)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_style(s: &DocStyle) -> String {
+pub fn enc_style(s: &DocStyle) -> String {
     format!("[{},{},{}]", enc_str(&s.id), enc_str(&s.name), encode_option(&s.based_on, |v| enc_str(v)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_style(s: &str) -> Result<DocStyle, String> {
+pub fn dec_style(s: &str) -> Result<DocStyle, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, name, based_on] = parts.as_slice() else { return Err(format!("style: expected 3 fields, got {}", parts.len())) };
@@ -338,12 +338,12 @@ pub(crate) fn dec_style(s: &str) -> Result<DocStyle, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_image(i: &DocImage) -> String {
+pub fn enc_image(i: &DocImage) -> String {
     format!("[{},{},{}]", enc_str(&i.id), enc_str(&i.mime), hex_encode(&i.bytes))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_image(s: &str) -> Result<DocImage, String> {
+pub fn dec_image(s: &str) -> Result<DocImage, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [id, mime, bytes] = parts.as_slice() else { return Err(format!("image: expected 3 fields, got {}", parts.len())) };

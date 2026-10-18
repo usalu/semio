@@ -2,10 +2,10 @@
 //! indeterminate bar whose marker bounces while time passes. It takes no focus and no input. Wired as a
 //! crate-root sibling module of `crate::tui::widget` (see that mod's `pub use crate::tui::progress::ProgressState;`).
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::text::{display_width, elide, Elision};
-use crate::tui::theme::{Glyph, GlyphSet, Role, Surface, Theme};
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
+use semio_framework_ui_tui_core::theme::{Glyph, GlyphSet, Role, Surface, Theme};
 
 const FRAME_MS: u64 = 90;
 const EIGHTHS: [&str; 8] = [" ", "\u{258f}", "\u{258e}", "\u{258d}", "\u{258c}", "\u{258b}", "\u{258a}", "\u{2589}"];

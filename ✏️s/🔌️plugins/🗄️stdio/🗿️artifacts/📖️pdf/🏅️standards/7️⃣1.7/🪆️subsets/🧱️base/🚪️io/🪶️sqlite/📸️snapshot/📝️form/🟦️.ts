@@ -1,5 +1,5 @@
 /** 📝️ Complete form fields, widgets and optional layers with iterative ownership. */
-import type { PdfAcroForm,PdfOptionalContent,PdfFormField,PdfFormFieldKind } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfAcroForm, PdfOptionalContent, PdfFormField, PdfFormFieldKind } from "../../../../🧬️schema/📸️snapshot/📝️form/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,pdfNullExcept,type PdfCell } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary,writePdfObject,readPdfObject } from "../🧩️cos/🟦️.ts";
 import { artifactSqliteInteger,artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";

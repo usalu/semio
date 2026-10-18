@@ -1,0 +1,10 @@
+{"owner": "semio-s-artifact-stdio-semio-document-examples", "suffix": "unit-tests", "kind": "artifact",
+ "new_root": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/📚️examples/🗒️memo/🧪️tests/🔬️laws/🦀️.rs",
+ "moves": [
+  {"mount_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/📚️examples/🗒️memo/🦀️.rs", "mount_name": "tests", "as": "memo_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/📚️examples/🗒️memo/📦️packages/🦀️rust/🦀️.rs", "mount_name": "tests", "match_path": "💡️inferences/🧪️tests", "as": "inferences_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/📚️examples/🗒️memo/📦️packages/🦀️rust/🦀️.rs", "mount_name": "tests", "match_path": "🧾outline/🧪️tests", "as": "outline_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🔺️diff/🦀️.rs", "mount_name": "tests", "as": "diff_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs", "mount_name": "tests", "as": "viewer_main_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs", "mount_name": "tests", "as": "editor_main_tests"}
+ ]}

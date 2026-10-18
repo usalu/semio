@@ -1,32 +1,56 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::authored::plan::segment_of as seg;
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot};
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::mark;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{LocationLine, Point2, Vertex, Wall};
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::BulgeSeg;
+#[allow(unused_imports)]
+use semio_framework_geometry::loops;
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::angle_between;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::{Band, JOIN_TOLERANCE};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::target_of;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{StoreyPatch, WallPatch}}, snapshot::TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
-const JOINS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
+static JOINS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json"));
 
-const CASES: [(&str, &str); 5] = [
-    ("l-miter-equal", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/📐️l-miter-equal/🔣️.json")),
-    ("t-butt", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/🔱️t-butt/🔣️.json")),
-    ("x-cross", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/❌️x-cross/🔣️.json")),
-    ("location-lines", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/📏️location-lines/🔣️.json")),
-    ("arc-tangent", include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/🌀️arc-tangent/🔣️.json")),
-];
+static CASES: std::sync::LazyLock<[(&str, &str); 5]> = std::sync::LazyLock::new(|| [
+    ("l-miter-equal", fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/📐️l-miter-equal/🔣️.json")),
+    ("t-butt", fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/🔱️t-butt/🔣️.json")),
+    ("x-cross", fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/❌️x-cross/🔣️.json")),
+    ("location-lines", fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/📏️location-lines/🔣️.json")),
+    ("arc-tangent", fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧱️wall-layout/🌀️arc-tangent/🔣️.json")),
+]);
 
 fn decode(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the snapshot decodes")
 }
 
 fn house() -> ModelSnapshot {
-    decode(HOUSE)
+    decode((*HOUSE))
 }
 
 fn joins() -> ModelSnapshot {
-    decode(JOINS)
+    decode((*JOINS))
 }
 
 fn close(left: f64, right: f64) -> bool {
@@ -59,7 +83,7 @@ fn differences(expected: &serde_json::Value, actual: &serde_json::Value, path: &
 
 #[semio_framework_async_macros::async_test]
 async fn the_language_agnostic_cases_are_reproduced() {
-    for (name, text) in CASES {
+    for (name, text) in (*CASES) {
         let case: serde_json::Value = serde_json::from_str(text).expect("the case is JSON");
         let layouts = compute_wall_layout(&decode(&case["before"].to_string()));
         for (id, expected) in case["expected"].as_object().expect("expected walls") {

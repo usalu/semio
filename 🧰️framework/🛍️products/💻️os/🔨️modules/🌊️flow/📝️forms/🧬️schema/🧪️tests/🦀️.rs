@@ -15,7 +15,7 @@ impl FlowFormProducer for InputProducer {
 }
 #[test]
 fn selected_form_producer_keeps_original_widget_loans(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let widgets=semio_framework_pack_json::from_json_str::<Vec<Widget>>(&corpus["widgets"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  let mut snapshot=FlowHostSnapshot::default();snapshot.replace_widgets(widgets);
  let expected=snapshot.widgets.iter().filter_map(|widget|match widget {Widget::InputSlider{id,..}|Widget::InputNote{id,..}|Widget::InputImage{id,..}|Widget::Variable{id,..}=>Some(id.as_ptr()as usize),_=>None}).collect::<Vec<_>>();

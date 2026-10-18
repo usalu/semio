@@ -1,10 +1,10 @@
 //! 🏗️ Slabs, columns, beams, spaces and grids of an IFC file: the swept `Body` gives the outline or profile and the extent, the placement the position, rotation and level.
 
-use super::reader::{opt_text, text, Doc, Loop, Section};
-use super::data::label;
-use super::spatial::{authoring_of, phase_of};
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, text, Doc, Loop, Section};
+use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, phase_of};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-use super::Import;
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Beam, BeamType, Column, ColumnType, GridLine, Layer, LayerFunction, Point2, Profile, Slab, SlabType, Space, SpaceBoundary, TopConstraint, Vertex};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 
@@ -12,7 +12,7 @@ fn vertices(ring: &Loop, to_building: &impl Fn([f64; 2]) -> Point2) -> Vec<Verte
     ring.iter().map(|(point, bulge)| Vertex { point: to_building(*point), bulge: *bulge }).collect()
 }
 
-fn profile_of(section: &Section) -> Option<Profile> {
+pub fn profile_of(section: &Section) -> Option<Profile> {
     Some(match section {
         Section::Rectangle { width, depth, .. } => Profile::Rectangle { width: *width, depth: *depth },
         Section::Circle { diameter } => Profile::Circle { diameter: *diameter },
@@ -21,7 +21,7 @@ fn profile_of(section: &Section) -> Option<Profile> {
     })
 }
 
-fn profile_top(section: &Section) -> f64 {
+pub fn profile_top(section: &Section) -> f64 {
     match section {
         Section::Rectangle { centre, depth, .. } => centre[1] + depth / 2.0,
         Section::Circle { diameter } => diameter / 2.0,
@@ -206,7 +206,7 @@ fn grid(i: &mut Import<'_>, ifc: u64, args: &[Part21Value]) {
     let to_building = i.building_world.get(&building).map_or(world, |building| world.relative_to(building));
     let mut axes: Vec<u64> = Vec::new();
     for at in [7, 8] {
-        for axis in super::reader::refs(args, at) {
+        for axis in crate::standards::v1::subsets::any::io::import::ifc::reader::refs(args, at) {
             if !axes.contains(&axis) {
                 axes.push(axis);
             }
@@ -245,6 +245,4 @@ pub fn read(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

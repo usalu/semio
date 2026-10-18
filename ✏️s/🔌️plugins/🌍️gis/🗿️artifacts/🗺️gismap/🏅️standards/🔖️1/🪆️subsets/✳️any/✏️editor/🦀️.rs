@@ -73,7 +73,7 @@ use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use serde_json::Value;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 pub use semio_s_artifact_gis_gismap_inferences::editor::gis2d::constants_and_io;
 pub use constants_and_io::*;
@@ -104,8 +104,3 @@ use shell::open_source;
 use view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
 //#endregion 🔖️Commands
 
-//#region 🧪️UnitTests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub mod unit_tests;
-//#endregion 🧪️UnitTests

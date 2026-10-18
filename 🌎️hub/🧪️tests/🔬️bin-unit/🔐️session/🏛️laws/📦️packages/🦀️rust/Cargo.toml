@@ -45,3 +45,4 @@ semio-framework-trace = { workspace = true }
 serde_json = { workspace = true }
 axum = { version = "0.8", features = ["ws"] }
 protocol = { path = "../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
+semio-framework-server = { workspace = true }

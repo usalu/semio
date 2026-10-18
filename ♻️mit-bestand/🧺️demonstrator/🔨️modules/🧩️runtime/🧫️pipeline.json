@@ -16,6 +16,12 @@
     "verfolgen"
   ],
   "preparationProject": "@semio-tech/framework-os-dev",
+  "wasmTargets": [
+    "@semio-tech/framework-surface-rs:wasm",
+    "@semio-tech/framework-editor-rs:wasm",
+    "@semio-tech/framework-os-node-graph-rs:wasm",
+    "@semio-tech/puzzle-plugin:wasm"
+  ],
   "primaryVariant": "generator",
   "command": "🔨️modules/🧩️runtime/📜️script.ts",
   "forbiddenCommandImports": [
@@ -30,7 +36,7 @@
   ],
   "site": {
     "command": "🔨️modules/📦️site/📜️script.ts",
-    "output": "dist/site",
+    "output": "dist/release/site",
     "owner": "demonstrator:site",
     "profile": "release"
   },

@@ -6,7 +6,8 @@ import type { ClassDeclaration, ClassElement, FunctionDeclaration, IfStatement, 
 import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import * as toml from "@iarna/toml";
-import { getWorkspaceRoot, repositoryCargoTestPolicyV1 } from "../../../../../🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🗂️workspaces/🟦️.ts";
+import { repositoryCargoTestPolicyV1 } from "../../../../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
 
 const root = getWorkspaceRoot();
 const owner = resolve(import.meta.dir, "../..");

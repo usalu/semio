@@ -4,7 +4,7 @@ import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from 
 import {requireNativeStoragePathV1} from "../🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import {checkResourceLeaseControl} from "../../🔒️leases/🟦️.ts";
 import {withArtifactDescriptorSlotV1} from "../📤️publication/📥️sources/🟦️.ts";
-import {observePhysicalFileV1} from "@semio-tech/framework/filesystem/observation";
+import {observePhysicalFileV1} from "../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts";
 import sourceSchema from "../📤️publication/📥️sources/🧬️schema/🔣️.json" with {type:"json"};
 import {lstat} from "node:fs/promises";
 import { acquireCompilerCapacityLeaseV1, compilerAdmissionBudgetV1, requestedCompilerAdmissionControlV1, type CompilerAdmissionControl } from "../../🏗️build/🎟️capacity/🟦️.ts";

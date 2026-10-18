@@ -45,6 +45,7 @@ wasm-bindgen = "0.2.106"
 [dev-dependencies]
 semio-framework-async = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-job-native-decode = { path = "../../../🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../⏱️trace/📦️packages/🦀️rust" }
 # 🧪️ `#[cfg_attr(test, derive(Serialize, Deserialize))]` oracle: this crate's real wire stays

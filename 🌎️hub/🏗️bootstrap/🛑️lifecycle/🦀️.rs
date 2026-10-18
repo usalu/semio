@@ -171,7 +171,7 @@ impl Default for HubSocketDrainV1 {
 
 impl HubSocketDrainV1 {
     /// 🎟️ Admits one freshly upgraded socket; `None` once shutdown has begun.
-    pub(crate) fn admit(self: &Arc<Self>) -> Option<HubSocketDrainAdmissionV1> {
+    pub fn admit(self: &Arc<Self>) -> Option<HubSocketDrainAdmissionV1> {
         self.live.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
         let admission = HubSocketDrainAdmissionV1 { drain: self.clone(), closing: self.closing.subscribe() };
         if *admission.closing.borrow() {

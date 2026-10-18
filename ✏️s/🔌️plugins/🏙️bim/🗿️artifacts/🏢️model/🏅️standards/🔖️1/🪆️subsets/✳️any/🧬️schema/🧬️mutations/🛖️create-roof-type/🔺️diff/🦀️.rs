@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateRoofType`: one created roof type entry. Every layer names an existing material and has a positive finite
 //! thickness; a roof type has at least one layer.
 
-use super::super::elements;
-use super::CreateRoofType;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_roof_type::CreateRoofType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{Layer, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -21,12 +21,12 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use std::collections::{BTreeMap, HashMap};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     fn nibble(value: u8) -> Option<u8> {
         match value {
             b'0'..=b'9' => Some(value - b'0'),

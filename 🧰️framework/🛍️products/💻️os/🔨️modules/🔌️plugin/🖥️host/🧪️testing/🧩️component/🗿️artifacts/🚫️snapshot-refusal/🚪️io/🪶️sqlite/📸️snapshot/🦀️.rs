@@ -39,7 +39,7 @@ fn binary_bound()->usize{
  let manifest=1+32+20+10+20+20+20+10+10+10+10;
  pack::format::HEADER_SIZE+compressed_bound(1)+compressed_bound(10)+compressed_bound(manifest)+2+10+4+pack::format::FOOTER_SIZE
 }
-impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Snapshot{
+impl store::serialization::ArtifactSqliteSnapshotHost for Snapshot{
  
  
  

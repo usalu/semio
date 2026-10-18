@@ -2,7 +2,10 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { type PolicyModSpan, policyMaskLiterals } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
-import { discoverOwners, discoverPackages, loadTaxonomy, type BreachRecord, type PackageRole } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { discoverOwners, discoverPackages } from "../../../🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
+import { type PackageRole } from "../../../🔍️discovery/🪧️owner-markers/🟦️.ts";
 import { POLICY_SKIP_DIRS } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME, policyStripEmoji } from "../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { existsSync, readFileSync, readdirSync, type Dirent } from "node:fs";

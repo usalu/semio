@@ -41,7 +41,7 @@ pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
 
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -64,7 +64,7 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
@@ -87,22 +87,22 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_record(r: &EpwRecord) -> String {
+pub fn enc_record(r: &EpwRecord) -> String {
     format!("[{}]", r.fields().iter().map(|f| enc_str(f)).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_record(s: &str) -> Result<EpwRecord, String> {
+pub fn dec_record(s: &str) -> Result<EpwRecord, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     if parts.len() != EPW_RECORD_FIELD_COUNT {
         return Err(format!("record: expected {EPW_RECORD_FIELD_COUNT} fields, got {}", parts.len()));
@@ -116,12 +116,12 @@ pub(crate) fn dec_record(s: &str) -> Result<EpwRecord, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_location(l: &EpwLocation) -> String {
+pub fn enc_location(l: &EpwLocation) -> String {
     format!("[{},{},{},{},{},{},{},{},{}]", enc_str(&l.city), enc_str(&l.state_province), enc_str(&l.country), enc_str(&l.source), enc_str(&l.wmo), enc_str(&l.latitude), enc_str(&l.longitude), enc_str(&l.time_zone), enc_str(&l.elevation),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_location(s: &str) -> Result<EpwLocation, String> {
+pub fn dec_location(s: &str) -> Result<EpwLocation, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [city, state_province, country, source, wmo, latitude, longitude, time_zone, elevation] = parts.as_slice() else {
         return Err(format!("location: expected 9 fields, got {}", parts.len()));
@@ -140,13 +140,13 @@ pub(crate) fn dec_location(s: &str) -> Result<EpwLocation, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_data_periods(d: &EpwDataPeriods) -> String {
+pub fn enc_data_periods(d: &EpwDataPeriods) -> String {
     let periods = d.periods.iter().map(|p| format!("[{},{},{},{}]", enc_str(&p.name), enc_str(&p.start_day_of_week), enc_str(&p.start_date), enc_str(&p.end_date))).collect::<Vec<_>>().join(",");
     format!("[{},[{}]]", d.records_per_hour, periods)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_data_periods(s: &str) -> Result<EpwDataPeriods, String> {
+pub fn dec_data_periods(s: &str) -> Result<EpwDataPeriods, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [records_per_hour, periods] = parts.as_slice() else {
         return Err(format!("data_periods: expected 2 fields, got {}", parts.len()));

@@ -4,7 +4,7 @@ import utilityAssignmentCases from "../../🧱️elements/🐚️Shell/🧰️ut
 import { manifestUtilitiesInitialFixture as initialWindowUtilityCases } from "../../../../../../../🔨️modules/🛂️manifest/🧪️tests/🧫️fixtures/🟦️.ts";
 import { resolveUtilityActivationV1 as resolveAssignmentPress } from "../../🧱️elements/🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { createElement, useState, type ReactElement } from "react";
-import { parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { parseResolvedPluginViewState, windowViewContext } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
 import Ajv2020 from "ajv/dist/2020";
 import chordKeyTokensFixture from "../../🧱️elements/🛠️ShellHelpers/🧪️tests/🧫️fixtures/⌨️chord-key-tokens.json";
 import { cleanup, fireEvent, render } from "@semio-tech/ui-react/test";

@@ -1,6 +1,5 @@
 //! 🧬️ XLSX snapshot with one authoritative logical document per XML-bearing OPC part.
 
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument;
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};

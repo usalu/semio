@@ -69,10 +69,11 @@ export function retireNativePlatformFundedChildStorageV1(parent:NativeImageStora
 import{readNativeProtectedParentRequestV1,readNativeProtectedParentGrantV1,type NativeProtectedParentV1,type NativeProtectedParentJournalV1,type NativeProtectedParentReadV1}from"./📋️contract/🟦️.ts";
 import{capturePersistentNativeProtectedParentV1}from"../🧹️cleanup/🎛️command/🟦️.ts";
 import{captureFixedNativeProtectedParentV1}from"../🧱️fixed/🟦️.ts";
-import{observeNativeStorageJournalV1,readNativeStorageObservationPolicyV1,retainNativeStorageFailureV1 as protectedParentFailureV1,type NativeStoragePolicyV1}from"../🟦️.ts";
+import{observeNativeStorageJournalV1,readNativeStorageObservationPolicyV1,retainNativeStorageFailureV1 as protectedParentFailureV1}from"../🟦️.ts";
+import type{NativeStoragePolicyV1}from"../📜️journal/🟦️.ts";
 import{acquireResourceLease,captureResourceLeaseWriterProofV1,requireMaterializedPathV1}from"../../../../🔒️leases/🟦️.ts";
 import{acceptNativeImageMaintenanceV1,acceptNativeImageBorrowerCleanupV1,withNativeImageBorrowerOperationV1,closeNativeImageBorrowerCleanupV1,type NativeImageBorrowerV1}from"../📥️borrower/🟦️.ts";
-import{requireArtifactDescriptorClosureV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{requireArtifactDescriptorClosureV1}from"../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import storageSchema from"../🧬️schema/🔣️.json";
 import type{AcceptedResourceLeaseCleanupV1,ResourceLease}from"../../../../🔒️leases/🟦️.ts";
 const protectedParents=new WeakMap<NativeProtectedParentV1,{control:ResourceLeaseControl;read:NativeProtectedParentReadV1;options:NativeFixedPlatformOptionsV1;live:boolean;accepting:boolean}>(),unresolvedProtectedParents=new Set<unknown>();

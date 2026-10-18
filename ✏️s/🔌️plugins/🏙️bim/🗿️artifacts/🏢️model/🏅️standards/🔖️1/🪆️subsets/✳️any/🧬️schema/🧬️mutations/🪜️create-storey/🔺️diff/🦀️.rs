@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateStorey`: one created storey entry; the building must exist, the height must be positive,
 //! an authored plan cut height must be positive and the level index must be free within the building.
 
-use super::super::elements;
-use super::CreateStorey;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_storey::CreateStorey;
 use crate::standards::v1::subsets::any::schema::{snapshot::{cut_height_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

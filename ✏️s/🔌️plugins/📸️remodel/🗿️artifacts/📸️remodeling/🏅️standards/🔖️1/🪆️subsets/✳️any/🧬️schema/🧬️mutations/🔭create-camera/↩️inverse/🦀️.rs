@@ -2,6 +2,7 @@
 //! A duplicate create was a no-op, so its inverse is too.
 use crate::standards::v1::subsets::any::schema::mutations::delete_camera_calibration::DeleteCameraCalibration;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::create_camera_calibration::component::CreateCameraCalibration;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<DeleteCameraCalibration>>(payload: &super::CreateCameraCalibration, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

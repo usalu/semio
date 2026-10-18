@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("raw replay cancellation preserves original custody until separately admitted physical release", () => {
   const law = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
@@ -19,7 +20,7 @@ test("raw replay cancellation preserves original custody until separately admitt
       expect(actual?.retained).toBe(turn.originalsRetained);
     }
   } finally { database.close(); }
-  const source = readFileSync(new URL("../../../🦀️.rs", import.meta.url), "utf8");
+  const source = readModuleTreeSource(new URL("../../🦀️.rs", import.meta.url));
   const producer = readFileSync(new URL("../🦀️.rs", import.meta.url), "utf8");
   const drop = producer.slice(producer.indexOf("impl<P, M: Mutation<P>> Drop for EditReplay<P, M>"));
   expect(drop.length > 0).toBe(true);

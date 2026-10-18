@@ -1,0 +1,7 @@
+{
+ "name": "pai",
+ "crates": [
+  "semio-framework-plugin-instance-app"
+ ],
+ "note": "CENSUS5-PAI: the composer crate whose plugin-app-impl is split by roles"
+}

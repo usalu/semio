@@ -1,6 +1,7 @@
 //! 🔲️ Envelope patches of the building elements: the ceiling, roof and opening sparse patches. See [`super`].
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*};
+use crate::standards::v1::subsets::any::schema::diff::algebra::*;
 
 /// 🩹 Sparse patch of [`Ceiling`]: an absent field is untouched.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

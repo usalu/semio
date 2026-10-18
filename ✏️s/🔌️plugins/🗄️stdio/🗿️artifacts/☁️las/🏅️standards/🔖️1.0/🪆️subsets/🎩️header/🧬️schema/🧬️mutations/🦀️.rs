@@ -157,8 +157,8 @@ pub const KINDS: &[&str] = &[
 
 
 
-#[cfg(test)]
-pub(crate) fn base_snapshot() -> LasSnapshot {
+#[cfg(any(test, feature = "testkit"))]
+pub fn base_snapshot() -> LasSnapshot {
     let vlrs = vec![vlr("LASF_Spec", 100, b"vlr-a"), vlr("LASF_Spec", 101, b"vlr-b")];
     let points = vec![point(0), point(1), point(2)];
     LasSnapshot { schema: "stdio.las".into(), header: LasHeader { number_of_vlrs: vlrs.len() as u32, number_of_point_records: points.len() as u32, ..LasHeader::default() }, vlrs, points }
@@ -171,8 +171,8 @@ pub(crate) fn base_snapshot() -> LasSnapshot {
 /// duplicated literal case lists). Exercises both bare-tuple variants (`SetScaleAndOffset`/`SetBounds`), the `[u32; 5]`
 /// array (`SetPointsByReturn`), and a point/VLR carrying both tri-state-capable fields set
 /// (`gps_time`/`rgb`).
-#[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn demo_mutation_cases() -> Vec<LasMutation> {
     let mut rich_point = point(9);
     rich_point.gps_time = Some(1234.5);
     rich_point.rgb = Some((11, 22, 33));
@@ -201,8 +201,8 @@ pub(crate) fn demo_mutation_cases() -> Vec<LasMutation> {
 /// 📍️ A point as the decoder yields it under the default header (`scale 0.01`, `offset 0`):
 /// every coordinate is `record * scale + offset` of an integer record, so a scale/offset edit
 /// re-reads the same records and its inverse lands on the identical `f64`s.
-#[cfg(test)]
-pub(crate) fn point(seed: u8) -> LasPoint {
+#[cfg(any(test, feature = "testkit"))]
+pub fn point(seed: u8) -> LasPoint {
     let step = i32::from(seed);
     LasPoint {
         x: (10_000 + step * 100) as f64 * 0.01 + 0.0,
@@ -223,7 +223,7 @@ pub(crate) fn point(seed: u8) -> LasPoint {
 }
 /// 🧪️ Moved out of `mod tests` (was originally local to it) so `demo_mutation_cases()` below can
 /// share the exact same fixtures `mod tests` itself uses — single source of truth, per CLAUDE.md.
-#[cfg(test)]
-pub(crate) fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
+#[cfg(any(test, feature = "testkit"))]
+pub fn vlr(user_id: &str, record_id: u16, data: &[u8]) -> LasVlr {
     LasVlr { user_id: user_id.into(), record_id, description: format!("vlr {record_id}"), data: data.to_vec() }
 }

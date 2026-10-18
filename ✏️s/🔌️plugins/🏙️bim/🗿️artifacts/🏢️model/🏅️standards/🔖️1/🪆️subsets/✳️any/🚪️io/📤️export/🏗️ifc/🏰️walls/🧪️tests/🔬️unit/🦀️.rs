@@ -1,3 +1,4 @@
+use crate::standards::v1::subsets::any::io::export::ifc::walls::{wall, filling};
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, tags, target};
 
 #[test]
@@ -96,7 +97,7 @@ fn openings_reduce_the_net_wall_quantities() {
 }
 
 //#region 🔖️Wall depth
-use super::{envelope, ATTACH_SET, REVEAL_SET};
+use crate::standards::v1::subsets::any::io::export::ifc::walls::{envelope, ATTACH_SET, REVEAL_SET};
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{attic, location, number_of, property_sets, text_of};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::snapshot::{Opening, OpeningKind};
@@ -196,7 +197,7 @@ fn the_attic_export_is_deterministic_and_skips_nothing() {
 //#region 🔖️Committed attic
 use crate::standards::v1::subsets::any::io::export::ifc::{export_ifc2x3, projection::projection};
 
-const ATTIC_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🧗️wall-depth");
+const ATTIC_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🧗️wall-depth");
 
 fn read_attic(name: &str) -> Vec<u8> {
     std::fs::read(format!("{ATTIC_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))

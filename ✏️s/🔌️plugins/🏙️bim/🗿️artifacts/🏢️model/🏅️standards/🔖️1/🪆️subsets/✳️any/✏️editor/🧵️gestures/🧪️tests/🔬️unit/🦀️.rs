@@ -1,9 +1,10 @@
-use super::{GESTURE_KEYBINDINGS, GestureOwner, Raw, opening, overlay, plane, pointer_of, session};
+use crate::editor::bim::gestures::{GESTURE_KEYBINDINGS, GestureOwner, Raw, opening, overlay, plane, pointer_of, session};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use crate::editor::bim::modes::edit::windows::world;
 use crate::editor::bim::BimModelApp;
 use crate::standards::v1::subsets::any::schema::snapshot::{ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, Rgb, RoofType, SlabType, Swing, WindowType};
 use semio_framework_plugin::ArtifactEditor;
+use semio_framework_test_fixtures::fixture_text;
 
 use crate::editor::bim::fixture::*;
 
@@ -118,7 +119,7 @@ async fn drawing_four_walls_placing_a_window_and_dragging_the_storey_top_re_infe
     assert!((after.storey_levels["st-first"].elevation - 3.5).abs() < 1e-9, "the storey above is lifted too");
 }
 
-const GESTURE_CASES: &str = include_str!("../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json");
+static GESTURE_CASES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json"));
 
 fn point_of(value: &serde_json::Value) -> [f64; 2] {
     [value[0].as_f64().expect("x"), value[1].as_f64().expect("y")]
@@ -134,7 +135,7 @@ fn same_ring(left: &[[f64; 2]], right: &[[f64; 2]]) -> bool {
 
 #[semio_framework_async_macros::async_test]
 async fn the_cases_the_third_party_oracle_wrote_replay_through_the_tools_to_the_same_numbers() {
-    let cases: serde_json::Value = serde_json::from_str(GESTURE_CASES).expect("the committed cases");
+    let cases: serde_json::Value = serde_json::from_str((*GESTURE_CASES)).expect("the committed cases");
     let each = |key: &str| cases[key].as_array().unwrap_or_else(|| panic!("cases {key}")).clone();
     for case in each("arcs") {
         let bulge = plane::bulge_through(point_of(&case["start"]), point_of(&case["through"]), point_of(&case["end"])).expect("an arc");

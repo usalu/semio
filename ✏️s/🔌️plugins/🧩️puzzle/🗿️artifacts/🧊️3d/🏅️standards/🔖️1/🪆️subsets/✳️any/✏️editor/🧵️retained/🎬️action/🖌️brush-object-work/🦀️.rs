@@ -1,6 +1,7 @@
 //! 🖌️ Brush object work: the staged placement of one brush-previewed object, its kind, representation and vortices, the attractions it joins and the published object and attraction.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dAddBrushObjectStage {

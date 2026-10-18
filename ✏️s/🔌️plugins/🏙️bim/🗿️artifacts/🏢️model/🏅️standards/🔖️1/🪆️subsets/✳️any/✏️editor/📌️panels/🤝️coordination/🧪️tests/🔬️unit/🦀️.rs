@@ -1,17 +1,37 @@
 //! 🧪️ The coordination panels: the clash tree by set, group and clash with its four actions, the rules tree by rule and violation, the issues tree by status with comments and actions, in both languages.
 
-use super::*;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+use crate::standards::v1::subsets::any::schema::{snapshot::Issue, snapshot::IssueStatus, snapshot::ModelSnapshot, snapshot::Rule, snapshot::RuleSeverity, inferences::ModelInference};
+use semio_framework_plugin::{BuiltNode, TreeWindows};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::kind_holding;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_value_list, ui_value_map, ui_value_text};
+#[allow(unused_imports)]
+use crate::editor::bim::panels::outliner::{item, leaf};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashGroup, ClashKind, ClashSetResult};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::comments_of;
+#[allow(unused_imports)]
+use semio_framework_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, PanelTreeBuilder, UiAssemblyResult, UiValue};
+#[allow(unused_imports)]
+use semio_framework_ui_locale::{Label, LocalizedLabel};
+use crate::editor::bim::panels::coordination::{CLIP, clip};
+use crate::editor::bim::panels::coordination::*;
 use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleFinding;
 use crate::standards::v1::subsets::any::schema::snapshot::{ClashRef, IssueComment, IssuePriority, RuleKind, RuleScope};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_plugin::ViewModel;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_locale::{Locale, Terminology};
 
-const FRAME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
+static FRAME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json"));
 
 fn frame() -> (ModelSnapshot, ModelInference) {
-    let snapshot: ModelSnapshot = from_json_str(FRAME, JsonMemberPolicy::Reject).expect("the committed frame decodes");
+    let snapshot: ModelSnapshot = from_json_str((*FRAME), JsonMemberPolicy::Reject).expect("the committed frame decodes");
     let inference = ModelInference::infer(&snapshot).expect("the frame infers");
     (snapshot, inference)
 }

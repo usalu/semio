@@ -1,0 +1,18 @@
+import { readFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { isDeepStrictEqual } from "node:util";
+const fw="/Users/ueli/Documents/semio/🧰️framework/";
+const { decodePackValue, packValueToExactJson } = await import(fw+"🛍️products/💻️os/🟦️.ts");
+const reg=fw+"🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry";
+const cat = await import(reg+"/✅️catalog-verification/🟦️.ts");
+const { DESCRIPTOR_JSON_REL_PATH, parseComponentSourceOwnerV1 } = await import(reg+"/🔎️discovery/🟦️.ts");
+const root="/Users/ueli/Documents/semio";
+const m=process.argv[2];
+const s=parseComponentSourceOwnerV1(m,root), p=resolve(root,s.cratePath,...DESCRIPTOR_JSON_REL_PATH);
+const json=JSON.parse(readFileSync(p,"utf8")), pack=packValueToExactJson(decodePackValue(readFileSync(join(dirname(p),"🛂️.descriptor.semio"))));
+const norm=(cat as any).normalizeCatalogDescriptorEnums ?? ((x:any)=>x);
+const a=norm(json), b=norm(pack);
+const diffs:string[]=[];
+const walk=(x:any,y:any,path:string)=>{ if(isDeepStrictEqual(x,y))return; if(x&&y&&typeof x==="object"&&typeof y==="object"&&Array.isArray(x)===Array.isArray(y)){ const keys=new Set([...Object.keys(x),...Object.keys(y)]); for(const k of keys) walk(x[k],y[k],path+"/"+k); } else diffs.push(path+": json="+JSON.stringify(x)?.slice(0,80)+" pack="+JSON.stringify(y)?.slice(0,80)); };
+walk(a,b,"");
+console.log(diffs.slice(0,12).join("\n"),"\ncount",diffs.length);

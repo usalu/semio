@@ -1,6 +1,6 @@
 //! 🏁️ `set-issue` payload. Sparsely changes an issue: title, description, status, priority, assignee, author, creation moment, labels, elements, the clash it was raised from (an assigned null clears it) and the viewpoint (an assigned null clears it).
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::IssuePatch}, snapshot::{ClashRef, IssuePriority, IssueStatus, IssueViewpoint}};
 
@@ -45,13 +45,16 @@ impl SetIssue {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetIssue {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetIssue
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetIssue>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "issue", kind: "set-issue", record: "SetIssue" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_issue::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_issue::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change issue \"{}\"", self.id), &format!("Hinweis \"{}\" ändern", self.id))

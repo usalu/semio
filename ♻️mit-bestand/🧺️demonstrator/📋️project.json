@@ -114,7 +114,7 @@
     "build": {
       "executor": "repo:script",
       "dependsOn": [
-        "prepare",
+        "prepare-release",
         "@semio-tech/framework-surface-rs:wasm",
         "@semio-tech/framework-editor-rs:wasm",
         "@semio-tech/framework-os-node-graph-rs:wasm",
@@ -266,33 +266,6 @@
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",
         "forwardAllArgs": true
-      }
-    },
-    "prepare": {
-      "executor": "repo:script",
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        {
-          "dependentTasksOutputFiles": "**/*",
-          "transitive": true
-        }
-      ],
-      "dependsOn": [
-        "@semio-tech/framework-os-dev:prepare-aggregator-react",
-        "@semio-tech/framework-os-dev:prepare-aussuchen-react",
-        "@semio-tech/framework-os-dev:prepare-bearbeiten-react",
-        "@semio-tech/framework-os-dev:prepare-energy-react",
-        "@semio-tech/framework-os-dev:prepare-fem3d-react",
-        "@semio-tech/framework-os-dev:prepare-generation3d-react",
-        "@semio-tech/framework-os-dev:prepare-generator-react",
-        "@semio-tech/framework-os-dev:prepare-koordinator-react",
-        "@semio-tech/framework-os-dev:prepare-verfolgen-react"
-      ],
-      "options": {
-        "cwd": "♻️mit-bestand/🧺️demonstrator",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
-        "forwardAllArgs": false
       }
     },
     "test-runtime-catalog": {

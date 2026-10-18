@@ -1,0 +1,23 @@
+{
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs",
+ "folders": [
+  "🔒️close-terminal",
+  "🧾️typed-operation-results",
+  "🕹️ephemeral-interaction",
+  "📨️action-dispatch",
+  "🔀️transactions",
+  "🗃️document-load",
+  "🖼️render-surface",
+  "🎞️media-transfer"
+ ],
+ "mods": [
+  "close_terminal",
+  "typed_operation_results",
+  "ephemeral_interaction",
+  "action_dispatch",
+  "transactions",
+  "document_load",
+  "render_surface",
+  "media_transfer"
+ ]
+}

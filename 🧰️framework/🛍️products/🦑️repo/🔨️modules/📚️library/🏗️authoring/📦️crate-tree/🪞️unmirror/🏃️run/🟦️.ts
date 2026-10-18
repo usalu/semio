@@ -1,0 +1,228 @@
+/** 🏃️ Runs unmirror over whole artifact trees of a working tree: discovers the carved crates, plans every source and manifest edit, checks that the dependency graph stays acyclic and optionally writes the result. */
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, posix, relative } from "node:path";
+import { Unmirror, type UnmirrorReport } from "../🟦️.ts";
+import { Universe, type CrateInfo } from "../🔍️resolver/🟦️.ts";
+import { addDependencyLines, declaredDependencies, removeDependencyLines, type DependencyAddition } from "../📝️manifest/🟦️.ts";
+
+/** ⚙️ Options of one run: the artifact directories to unwind, the path prefixes that must not be touched, whether to write and an optional staging directory. */
+export type UnmirrorRunOptions = Readonly<{ repoRoot: string; artifacts: readonly string[]; excluded?: readonly string[]; apply: boolean; force?: boolean; stageDir?: string; log?: (line: string) => void }>;
+
+/** 🧾️ Result of one run. */
+export type UnmirrorRunResult = Readonly<{
+  report: UnmirrorReport;
+  manifests: ReadonlyMap<string, string>;
+  cycles: readonly string[];
+  conflicts: readonly string[];
+  regressions: readonly string[];
+  written: number;
+  targets: readonly string[];
+}>;
+
+const FAMILY_PREFIX = "semio-s-artifact-";
+const IDENT_PATTERN = /\b(semio_s_artifact_[a-z0-9_]+)\b/gu;
+
+const git = (repoRoot: string, ...args: string[]): string => execFileSync("git", ["-c", "core.quotepath=false", "-c", "core.fsmonitor=false", ...args], { cwd: repoRoot, encoding: "utf8", maxBuffer: 1 << 29 });
+const listFiles = (repoRoot: string, pathspec: string): string[] => [...git(repoRoot, "ls-files", "-z", "--", pathspec).split("\0"), ...git(repoRoot, "ls-files", "-z", "--others", "--exclude-standard", "--", pathspec).split("\0")].filter(Boolean);
+const identsIn = (text: string): Set<string> => new Set([...text.matchAll(IDENT_PATTERN)].map((match) => match[1]!));
+
+/** 🧭️ The facades whose root-level explicit re-exports are designed API: the artifact crate of an artifact tree and the registry crates (such as the stdio contract), when carved crates named after them live below their directory. */
+export function facadeIdents(crates: readonly CrateInfo[]): Set<string> {
+  return new Set(crates.filter((crate) => {
+    if (!/^✏️s\/🔌️plugins\/[^/]+\/(?:🗿️artifacts|📇️registry)\/[^/]+\/📦️packages\/🦀️rust$/u.test(crate.dir)) return false;
+    const base = crate.dir.replace(/\/📦️packages\/🦀️rust$/u, "");
+    return crates.some((other) => other !== crate && other.name.startsWith(`${crate.name}-`) && other.dir.startsWith(`${base}/`));
+  }).map((crate) => crate.ident));
+}
+
+/** 📦️ Every Cargo package of the working tree with the directories that belong to it (its own and the one of its library root). */
+function packageRoots(repoRoot: string): { manifest: string; dirs: string[]; lib: string }[] {
+  const rows: { manifest: string; dirs: string[]; lib: string }[] = [];
+  for (const top of ["✏️s", "🌎️hub", "🧰️framework"]) {
+    for (const manifest of new Set(listFiles(repoRoot, `${top}/**/Cargo.toml`))) {
+      const absolute = join(repoRoot, manifest);
+      if (!existsSync(absolute)) continue;
+      const text = readFileSync(absolute, "utf8");
+      if (!/^\[package\]/mu.test(text)) continue;
+      let parsed: { lib?: { path?: string } } = {};
+      try { parsed = Bun.TOML.parse(text) as { lib?: { path?: string } }; } catch { parsed = { lib: { path: /^path\s*=\s*"([^"]+)"/mu.exec(text.slice(text.indexOf("[lib]")))?.[1] } }; }
+      const dir = posix.dirname(manifest);
+      const lib = posix.normalize(posix.join(dir, parsed.lib?.path ?? "src/lib.rs"));
+      rows.push({ manifest, dirs: [...new Set([dir, posix.dirname(lib)])], lib });
+    }
+  }
+  return rows;
+}
+
+const normalDependencies = (manifest: string): string[] => {
+  const names: string[] = [];
+  let section = "";
+  for (const line of manifest.split("\n")) {
+    const header = /^\[([^\]]+)\]\s*$/u.exec(line);
+    if (header) { section = header[1]!; continue; }
+    if (!/(?:^|\.)dependencies$/u.test(section) || section.startsWith("dev-")) continue;
+    const key = /^([A-Za-z0-9_-]+)\s*=/u.exec(line)?.[1];
+    if (key) names.push(key);
+  }
+  return names;
+};
+
+/** 🔁️ The dependency cycles of the carved crates, as `a -> b -> a` chains, over normal dependencies only. */
+export function dependencyCycles(graph: ReadonlyMap<string, readonly string[]>): string[] {
+  const cycles: string[] = [];
+  const visiting = new Set<string>();
+  const done = new Set<string>();
+  const walk = (name: string, trail: readonly string[]): void => {
+    if (done.has(name)) return;
+    if (visiting.has(name)) { cycles.push([...trail.slice(trail.indexOf(name)), name].join(" -> ")); return; }
+    visiting.add(name);
+    for (const next of graph.get(name) ?? []) walk(next, [...trail, name]);
+    visiting.delete(name);
+    done.add(name);
+  };
+  for (const name of graph.keys()) walk(name, []);
+  return cycles;
+}
+
+/** 🪞️ Unwinds the path-preserving re-export layers of the given artifact trees. */
+export function runUnmirror(options: UnmirrorRunOptions): UnmirrorRunResult {
+  const t0 = Date.now();
+  const dbg = (label: string): void => { const m = process.memoryUsage(); console.error(`[DEBUG] ${((Date.now() - t0) / 1000).toFixed(1)}s rss=${(m.rss / 1e9).toFixed(2)}G heap=${(m.heapUsed / 1e9).toFixed(2)}G ${label}`); if (m.heapUsed > 6e9) process.exit(3); };
+  const { repoRoot } = options;
+  const log = options.log ?? (() => {});
+  const excluded = options.excluded ?? [];
+  const universe = new Universe(repoRoot);
+  for (const manifest of listFiles(repoRoot, "✏️s/**/Cargo.toml")) {
+    const absolute = join(repoRoot, manifest);
+    if (!existsSync(absolute)) continue;
+    const text = readFileSync(absolute, "utf8");
+    let parsed: { package?: { name?: string }; lib?: { path?: string } };
+    try { parsed = Bun.TOML.parse(text) as typeof parsed; } catch { parsed = { package: { name: /^name\s*=\s*"([^"]+)"/mu.exec(text)?.[1] }, lib: { path: /^path\s*=\s*"([^"]+)"/mu.exec(text.slice(Math.max(0, text.indexOf("[lib]"))))?.[1] } }; }
+    const name = parsed.package?.name;
+    if (!name?.startsWith(FAMILY_PREFIX)) continue;
+    const dir = posix.dirname(manifest);
+    const root = posix.normalize(posix.join(dir, parsed.lib?.path ?? "src/lib.rs"));
+    if (existsSync(join(repoRoot, root))) universe.addCrate(name, dir, root);
+  }
+  dbg(`crates ${universe.crates.size}`);
+  const all = [...universe.crates.values()];
+  const targets = all.filter((crate) => options.artifacts.some((artifact) => crate.dir.startsWith(`${artifact}/`)));
+  for (const crate of targets) universe.root(crate.ident);
+  const isExcluded = (path: string): boolean => excluded.some((prefix) => path.startsWith(prefix));
+  const targetFiles = new Set([...universe.files.keys()].filter((path) => !isExcluded(path)));
+  dbg(`targets ${targets.length} files ${universe.files.size}`);
+  const referencing = new Set<string>();
+  if (targets.length) {
+    let listing: string[] = [];
+    const patterns = join(mkdtempSync(join(tmpdir(), "semio-unmirror-")), "idents.txt");
+    writeFileSync(patterns, `${targets.map((crate) => crate.ident).join("\n")}\n`);
+    try { listing = git(repoRoot, "grep", "-l", "-w", "-z", "-F", "-f", patterns, "--", "*.rs", ":!.🧬semio").split("\0").filter(Boolean); } catch (error) { if ((error as { status?: number }).status !== 1) throw error; }
+    for (const path of listing) if (!targetFiles.has(path) && !isExcluded(path)) referencing.add(path);
+  }
+  dbg(`referencing ${referencing.size}`);
+  const nearestCrate = (path: string): CrateInfo | null => all.filter((crate) => path.startsWith(`${crate.dir}/`)).sort((left, right) => right.dir.length - left.dir.length)[0] ?? null;
+  const roots = packageRoots(repoRoot);
+  const manifestOf = (path: string): string | null => {
+    let best: { manifest: string; length: number } | null = null;
+    for (const row of roots) for (const dir of row.dirs) if (path.startsWith(`${dir}/`) && (!best || dir.length > best.length)) best = { manifest: row.manifest, length: dir.length };
+    return best?.manifest ?? null;
+  };
+  const consumers = new Set<string>();
+  const loadClosure = (load: () => void): void => {
+    const known = new Set(universe.files.keys());
+    load();
+    for (const path of universe.files.keys()) if (!known.has(path) && !isExcluded(path)) consumers.add(path);
+  };
+  const packageCrates = new Map<string, string>();
+  let loose = 0;
+  for (const path of referencing) {
+    if (universe.files.has(path)) continue;
+    const owner = nearestCrate(path);
+    if (owner) loadClosure(() => { universe.root(owner.ident); });
+    if (universe.files.has(path)) continue;
+    const manifest = manifestOf(path);
+    const lib = manifest ? roots.find((row) => row.manifest === manifest)?.lib : undefined;
+    if (manifest && lib && !universe.files.has(lib) && existsSync(join(repoRoot, lib))) {
+      const ident = packageCrates.get(manifest) ?? universe.addCrate(`__pkg_${packageCrates.size}`, posix.dirname(manifest), lib).ident;
+      packageCrates.set(manifest, ident);
+      loadClosure(() => { universe.root(ident); });
+    }
+    if (!universe.files.has(path)) loadClosure(() => { universe.root(universe.addCrate(`__loose_${loose++}`, posix.dirname(path), path).ident); });
+  }
+  dbg(`consumers ${consumers.size} files ${universe.files.size}`);
+  const engine = new Unmirror(universe, { apiRoots: facadeIdents(all), targets: new Set(targets.map((crate) => crate.ident)), editable: (path) => !isExcluded(path) });
+  let nth = 0;
+  for (const path of new Set([...targetFiles, ...consumers])) { const s0 = Date.now(); console.error(`[DEBUG] start ${path.slice(-110)}`); engine.processFile(path); nth += 1; const dt = Date.now() - s0; if (dt > 500 || nth % 50 === 0) dbg(`processed ${nth} ${path.slice(-90)} ${dt}ms`); if (process.memoryUsage().rss > 5e9) { dbg("rss limit"); process.exit(3); } }
+  const report = engine.report;
+
+  dbg(`processed all edits ${report.edits.size}`);
+  const crateFiles = new Map<string, string[]>();
+  for (const path of report.edits.keys()) { const manifest = manifestOf(path); if (manifest) crateFiles.set(manifest, [...(crateFiles.get(manifest) ?? []), path]); }
+  const textOf = (path: string): string => report.edits.get(path) ?? universe.read(path) ?? "";
+  const manifests = new Map<string, string>();
+  for (const [manifest, files] of crateFiles) {
+    let text = readFileSync(join(repoRoot, manifest), "utf8");
+    const dir = posix.dirname(manifest);
+    const declared = declaredDependencies(text);
+    const own = /^name\s*=\s*"([^"]+)"/mu.exec(text)?.[1]?.replaceAll("-", "_") ?? "";
+    const additions: DependencyAddition[] = [];
+    for (const file of files) {
+      const testFile = file.includes("/🧪️tests/") || universe.files.get(file)?.nodes[0]?.test === true;
+      for (const ident of identsIn(textOf(file))) {
+        const crate = universe.crates.get(ident);
+        if (!crate || ident === own || ident.startsWith("__loose") || additions.some((entry) => entry.name === crate.name)) continue;
+        const sections = declared.get(crate.name);
+        if (sections && !(sections.size === 1 && sections.has("dev-dependencies") && !testFile)) continue;
+        additions.push({ name: crate.name, path: relative(join(repoRoot, dir), join(repoRoot, crate.dir)), section: testFile ? "dev-dependencies" : "dependencies" });
+      }
+    }
+    if (additions.length) text = addDependencyLines(text, additions);
+    const scanDirs = roots.find((row) => row.manifest === manifest)?.dirs ?? [dir];
+    const sources = new Set([...scanDirs.flatMap((scan) => git(repoRoot, "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", scan).split("\0")).filter((path) => path.endsWith(".rs")), ...[...universe.files.keys()].filter((path) => scanDirs.some((scan) => path.startsWith(`${scan}/`))), ...files]);
+    const before = identsIn([...sources].map((path) => universe.read(path) ?? "").join("\n"));
+    const after = identsIn([...sources].map(textOf).join("\n"));
+    const unused = new Set<string>();
+    for (const name of declaredDependencies(text).keys()) {
+      const crate = all.find((entry) => entry.name === name);
+      if (!crate || after.has(crate.ident) || !before.has(crate.ident)) continue;
+      if (new RegExp(`(?:dep:|["\\s])${name}(?:/|\\?/)`, "u").test(text)) continue;
+      unused.add(name);
+    }
+    if (unused.size) { text = removeDependencyLines(text, unused); log(`${manifest}: removes ${[...unused].join(", ")}`); }
+    manifests.set(manifest, text);
+  }
+  dbg("manifests done");
+  const regressions: string[] = [];
+  const post = new Universe(repoRoot, report.edits);
+  for (const crate of universe.crates.values()) post.addCrate(crate.name, crate.dir, crate.root);
+  for (const ident of universe.loadedRoots()) post.root(ident);
+  const before = new Unmirror(universe, { apiRoots: new Set(), targets: new Set(), editable: () => false });
+  const after = new Unmirror(post, { apiRoots: new Set(), targets: new Set(), editable: () => false });
+  for (const path of post.files.keys()) {
+    const known = new Map<string, number>();
+    for (const row of before.audit(path)) known.set(row, (known.get(row) ?? 0) + 1);
+    for (const row of after.audit(path)) { const left = known.get(row) ?? 0; if (left > 0) known.set(row, left - 1); else regressions.push(`${path}: ${row}`); }
+  }
+  dbg(`audit done regressions ${regressions.length}`);
+  const graph = new Map<string, string[]>();
+  for (const crate of all) {
+    const manifest = `${crate.dir}/Cargo.toml`;
+    graph.set(crate.name, normalDependencies(manifests.get(manifest) ?? readFileSync(join(repoRoot, manifest), "utf8")).filter((name) => universe.crates.has(name.replaceAll("-", "_"))));
+  }
+  const cycles = dependencyCycles(graph);
+  const changed = new Map([...manifests].filter(([manifest, text]) => text !== readFileSync(join(repoRoot, manifest), "utf8")));
+  const conflicts: string[] = [];
+  let written = 0;
+  const rows = [...report.edits, ...changed];
+  if (options.stageDir) for (const [path, text] of rows) { const target = join(options.stageDir, path); mkdirSync(dirname(target), { recursive: true }); writeFileSync(target, text); }
+  if (options.apply && !cycles.length && (!regressions.length || options.force === true)) for (const [path, text] of rows) {
+    const absolute = join(repoRoot, path);
+    const before = universe.read(path) ?? (existsSync(absolute) ? readFileSync(absolute, "utf8") : null);
+    if (!existsSync(absolute) || readFileSync(absolute, "utf8") !== before) { conflicts.push(path); continue; }
+    writeFileSync(absolute, text);
+    written += 1;
+  }
+  return { report, manifests: changed, cycles, conflicts, regressions, written, targets: targets.map((crate) => crate.name) };
+}

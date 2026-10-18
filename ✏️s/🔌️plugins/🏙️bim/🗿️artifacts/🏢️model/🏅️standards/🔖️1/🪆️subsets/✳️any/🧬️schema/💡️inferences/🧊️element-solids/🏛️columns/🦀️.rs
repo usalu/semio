@@ -130,6 +130,4 @@ pub fn dependency(snapshot: &ModelSnapshot, column: &Column) -> DslValue {
 }
 //#endregion 🔖️Solid
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

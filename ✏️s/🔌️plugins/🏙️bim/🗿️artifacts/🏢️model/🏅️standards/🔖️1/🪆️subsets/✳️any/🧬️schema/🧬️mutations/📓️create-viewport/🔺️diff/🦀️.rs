@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateViewport`: one created viewport entry. The id must be free across every collection, then the viewport must be writable (see `viewport_problem`).
 
-use super::super::elements;
-use super::CreateViewport;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport;
 use crate::standards::v1::subsets::any::schema::{snapshot::{viewport_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

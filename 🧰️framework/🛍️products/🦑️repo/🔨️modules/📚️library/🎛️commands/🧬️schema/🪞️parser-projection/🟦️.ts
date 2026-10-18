@@ -15,6 +15,12 @@
  * no helper block defines. The only parsers left out are the ones in the registry of hand-written parsers no schema can own yet
  * (`🧱️unowned`), and the gate fails on a listed parser that no longer drifts.
  *
+ * A leaf split into component files keeps its parsers with the components: a new parser is written to the `🚪️parsers` folder next to the
+ * file that declares its type (to the leaf when the leaf declares it), the leaf re-exports every parser its folders hold, and the audit reads
+ * every file of the leaf's module tree below its `//#region 🚪️Parsers` marker, so a parser is checked wherever it lives and a second
+ * definition of one is a drift (`duplicate`). `--distribute <leaf folder>` moves the fresh parsers of the leaves below a folder into the
+ * component folders, verbatim and in leaf order.
+ *
  * Documented limits: a schema property named like an array index (`"0"`, `"1"`) cannot keep its document order in a JavaScript object, so
  * its export is refused; integers beyond 2^53 stay exact, other floats print in JavaScript form (`1.0` as `1`); the tracked and untracked
  * files are listed through git, a tree that is no work tree is walked instead.
@@ -23,11 +29,13 @@
 import { existsSync } from "node:fs";
 import { dirname, relative } from "node:path";
 import { join } from "node:path";
-import { codePointOrder, escapeRegExp, jsonString, jsonValue, type Dict } from "./🔡️json-text/🟦️.ts";
+import { EXPORT_NAME, codePointOrder, escapeRegExp, jsonString, jsonValue, type Dict } from "./🔡️json-text/🟦️.ts";
 import { declaredOptionalFields, declares, declaresParser, definesParser, existingHelper, importsParser, parserRange } from "./📖️declared-types/🟦️.ts";
-import { Context, parserKey, parserKeyParts, renderParser, type Owner, type ParserKey } from "./🧾️parser-render/🟦️.ts";
-import { renderGraphql, renderProto, renderTsType } from "./📐️type-render/🟦️.ts";
-import { PARSER_REGION, helpersBlock, withClosedHelper } from "./🚪️guard-helpers/🟦️.ts";
+import { Context, findOwner, parserKey, parserKeyParts, pointed, renderParser, type Owner, type ParserKey } from "./🧾️parser-render/🟦️.ts";
+import { renderGraphql, renderProto, renderTsType, type Taken, type TypeScope } from "./📐️type-render/🟦️.ts";
+import { PARSER_REGION } from "./🚪️guard-helpers/🟦️.ts";
+import { LeafWriter } from "./✍️leaf-writer/🟦️.ts";
+import { ownedParserNames } from "./📍️parser-files/🟦️.ts";
 import { loadUnowned, unownedKey, type UnownedParser } from "./🧱️unowned/🟦️.ts";
 import { FORMATS, LEAF, SchemaCatalog, SourceStore, buildOwnerIndex, exportsOf, facetOf, helperPrefix, leafPath, portable, readDocument } from "./🗂️documents/🟦️.ts";
 
@@ -36,11 +44,11 @@ const TS = "🟦️typescript";
 const JSON_SCHEMA = "🔣️jsonschema";
 const RUST = "🦀️rust";
 
-/** 🔎️ Why a projected parser no longer equals what the current schema and renderers produce: `self-call` only delegates to itself and never returns, `untyped-map` reads a schema-typed map as an opaque object, `open` equals the projection without the refusal of unknown properties that its schema requires, `unrenderable` has no projection at all, `stale` differs in any other way. */
-export type DriftReason = "self-call" | "untyped-map" | "open" | "stale" | "unrenderable";
+/** 🔎️ Why a projected parser no longer equals what the current schema and renderers produce: `self-call` only delegates to itself and never returns, `untyped-map` reads a schema-typed map as an opaque object, `open` equals the projection without the refusal of unknown properties that its schema requires, `unrenderable` has no projection at all, `duplicate` is a second projected definition of a parser another file of the same leaf already defines, `stale` differs in any other way. */
+export type DriftReason = "self-call" | "untyped-map" | "open" | "stale" | "unrenderable" | "duplicate";
 
 /** 🔎️ The drift reasons `restate` can regenerate. */
-export type RestateReason = Exclude<DriftReason, "unrenderable">;
+export type RestateReason = Exclude<DriftReason, "unrenderable" | "duplicate">;
 
 const RESTATE_REASONS: readonly RestateReason[] = ["self-call", "untyped-map", "open", "stale"];
 
@@ -53,6 +61,7 @@ export interface ProjectionOptions {
   readonly closing: boolean;
   readonly replace: ReadonlySet<string>;
   readonly restate: ReadonlySet<RestateReason>;
+  readonly distribute?: readonly string[];
   readonly unowned?: readonly UnownedParser[];
   readonly catalog?: SchemaCatalog;
   readonly signal?: AbortSignal;
@@ -80,11 +89,11 @@ export const DEFAULT_SCOPE = "✏️s";
 /** 🧭️ The scopes the freshness gate covers. */
 export const CHECKED_SCOPES: readonly string[] = ["✏️s", "🌎️hub"];
 
-const VALUE_FLAGS = new Set(["--under", "--formats", "--replace", "--restate"]);
+const VALUE_FLAGS = new Set(["--under", "--formats", "--replace", "--restate", "--distribute"]);
 const SWITCH_FLAGS = new Set(["--closing", "--all"]);
 
-/** 🔤️ Reads `<report|apply|check> [--under <path>] [--formats a,b] [--closing] [--replace A,B] [--restate open,stale,… | all] [--all]`; a mistyped flag is refused. */
-export function parseProjectionArguments(root: string, argv: readonly string[]): ProjectionOptions & { readonly command: string; readonly all: boolean } {
+/** 🔤️ Reads `<report|apply|check> [--under <path>] [--formats a,b] [--closing] [--replace A,B] [--restate open,stale,… | all] [--distribute <leaf folder>,…] [--all]`; a mistyped flag is refused. */
+export function parseProjectionArguments(root: string, argv: readonly string[]): ProjectionOptions & { readonly command: string; readonly all: boolean; readonly distribute: readonly string[] } {
   const named = argv[0] !== undefined && !argv[0].startsWith("--");
   const command = named ? argv[0]! : "report";
   if (!["report", "apply", "check"].includes(command)) throw new Error(`[schema parsers] unknown command ${JSON.stringify(command)} (expected report | apply | check).`);
@@ -105,7 +114,7 @@ export function parseProjectionArguments(root: string, argv: readonly string[]):
   const restated = (value("--restate") ?? "").split(",").filter((reason) => reason !== "");
   const restate = new Set<RestateReason>(restated.includes("all") ? RESTATE_REASONS : (restated as RestateReason[]));
   for (const reason of restate) if (!RESTATE_REASONS.includes(reason)) throw new Error(`[schema parsers] unknown restate reason ${JSON.stringify(reason)} (expected ${RESTATE_REASONS.join(" | ")} | all).`);
-  return { command, root, mode: command === "apply" ? "apply" : "report", under: value("--under") ?? DEFAULT_SCOPE, formats, closing: argv.includes("--closing"), replace: new Set(value("--replace")?.split(",") ?? []), restate, all: argv.includes("--all") };
+  return { command, root, mode: command === "apply" ? "apply" : "report", under: value("--under") ?? DEFAULT_SCOPE, formats, closing: argv.includes("--closing"), replace: new Set(value("--replace")?.split(",") ?? []), restate, distribute: (value("--distribute") ?? "").split(",").filter((folder) => folder !== ""), all: argv.includes("--all") };
 }
 //#endregion 🔖️Options
 
@@ -151,7 +160,7 @@ function settle(root: string, plans: ReadonlyMap<string, Plan>, closing: boolean
     const needed = new Set<ParserKey>();
     const stack: ParserKey[] = [];
     for (const [target, plan] of plans) {
-      const source = sources.read(target);
+      const source = sources.parsers(target);
       const called = new Set([...source.matchAll(/\bparse([A-Z][A-Za-z0-9]*)\(/gu)].map((match) => match[1]!));
       for (const name of plan.exports) if (replaces(target, name)) called.add(name);
       for (const name of [...called].sort(codePointOrder)) {
@@ -168,16 +177,16 @@ function settle(root: string, plans: ReadonlyMap<string, Plan>, closing: boolean
         continue;
       }
       needed.add(key);
-      const text = sources.read(owner);
+      const text = sources.parsers(owner);
       for (const callee of [...entry.local].sort(codePointOrder)) if (!definesParser(text, callee) && !importsParser(text, callee)) stack.push(parserKey(owner, callee));
       for (const foreignKey of sortedKeys(entry.foreign)) {
         const [foreignOwner, callee] = parserKeyParts(foreignKey);
-        if (!definesParser(sources.read(foreignOwner), callee)) stack.push(foreignKey);
+        if (!definesParser(sources.parsers(foreignOwner), callee)) stack.push(foreignKey);
       }
     }
     emit = needed;
   }
-  const available = (owner: string, name: string): boolean => emit.has(parserKey(owner, name)) || definesParser(sources.read(owner), name) || importsParser(sources.read(owner), name);
+  const available = (owner: string, name: string): boolean => emit.has(parserKey(owner, name)) || definesParser(sources.parsers(owner), name) || importsParser(sources.parsers(owner), name);
   let changed = true;
   while (changed) {
     changed = false;
@@ -199,45 +208,45 @@ function settle(root: string, plans: ReadonlyMap<string, Plan>, closing: boolean
 }
 //#endregion 🔖️Plans
 
-//#region 🔖️Source
-const importLines = (target: string, wanted: ReadonlyMap<string, ReadonlySet<string>>): string =>
-  [...wanted.keys()]
-    .sort(codePointOrder)
-    .map((owner) => {
-      const path = relative(dirname(target), owner).split("\\").join("/");
-      const specifier = path.startsWith(".") ? path : `./${path}`;
-      return `import { ${[...wanted.get(owner)!].sort(codePointOrder).map((name) => `parse${name}`).join(", ")} } from ${jsonString(specifier, false)};`;
-    })
-    .join("\n");
-
-function withImports(source: string, lines: string): string {
-  if (lines === "") return source;
-  if (source.startsWith("/**")) {
-    const end = source.indexOf("*/");
-    if (end !== -1) {
-      const cut = source.indexOf("\n", end) + 1;
-      return `${source.slice(0, cut)}${lines}\n${source.slice(cut)}`;
-    }
-  }
-  return `${lines}\n${source}`;
-}
-
-function dropDuplicateType(source: string, name: string): string {
-  const declarations = source.match(new RegExp(`^\\s*(?:export\\s+)?(?:interface|type)\\s+${escapeRegExp(name)}\\b`, "gm"));
-  if (declarations === null || declarations.length <= 1) return source;
-  const duplicate = new RegExp(`^export type ${escapeRegExp(name)}\\b[^\\n]*;\\n\\n?`, "m").exec(source);
-  return duplicate === null ? source : source.slice(0, duplicate.index) + source.slice(duplicate.index + duplicate[0].length);
-}
-
-function restateParser(source: string, name: string, text: string, path: string): string {
-  const range = parserRange(source, name);
-  if (range === undefined) throw new Error(`parse${name} is not a projected function in ${path}`);
-  return dropDuplicateType(source.slice(0, range[0]) + text + source.slice(range[1]), name);
-}
-//#endregion 🔖️Source
-
 //#region 🔖️Projection
-const rendererOf = (format: string, name: string, definition: Dict): string | undefined => (format === "🔗️graphql" ? renderGraphql(name, definition) : format === "🛰️protobuf" ? renderProto(name, definition) : renderTsType(name, definition));
+const rendererOf = (format: string, name: string, definition: Dict, taken: Taken, scope: TypeScope): string | undefined => (format === "🔗️graphql" ? renderGraphql(name, definition, taken) : format === "🛰️protobuf" ? renderProto(name, definition, taken) : renderTsType(name, definition, scope));
+
+/** 🧭️ The module specifier under which the leaf at `from` names the leaf at `to`: the package export for a framework leaf, the relative path otherwise. */
+function leafSpecifier(from: string, to: string, owner: Owner): string | undefined {
+  if (owner.shared) return owner.specifier;
+  const path = relative(dirname(from), to).split("\\").join("/");
+  return path.startsWith(".") ? path : `./${path}`;
+}
+
+/** 🧭️ What a TypeScript type may follow from one document: an export of this document is named, a pointer into this document is rendered in place, and a whole other document, one of its exports or a pointer into it is named or rendered through `import("<specifier>")`, so the type needs no import statement. */
+function typeScope(index: ReadonlyMap<string, Owner>, document: Dict | undefined, leaf: string, receiver: string, qualifier?: string): TypeScope {
+  const documentId = typeof document?.$id === "string" ? document.$id : undefined;
+  const named = (name: string): string => (qualifier === undefined ? name : `import(${jsonString(qualifier, false)}).${name}`);
+  return {
+    type(reference: string) {
+      const hash = reference.indexOf("#");
+      const location = hash < 0 ? reference : reference.slice(0, hash);
+      const pointer = hash < 0 ? "" : reference.slice(hash + 1);
+      const foreign = location !== "" && location !== documentId;
+      const owner = foreign ? findOwner(index, location, leaf) : undefined;
+      const last = pointer === "" ? owner?.root : pointer.split("/").at(-1);
+      if (foreign && owner === undefined) return last !== undefined && EXPORT_NAME.test(last) && pointer !== "" ? last : undefined;
+      const exported = last !== undefined && EXPORT_NAME.test(last) && (owner === undefined ? pointer.startsWith("/") : owner.exports.has(last));
+      if (owner !== undefined) {
+        const specifier = leafSpecifier(receiver, owner.ts, owner);
+        if (specifier === undefined) return undefined;
+        if (exported) return `import(${jsonString(specifier, false)}).${last}`;
+        if (!pointer.startsWith("/")) return undefined;
+        const target = pointed(pointer, owner.load());
+        return target === undefined ? undefined : { node: target, scope: typeScope(index, owner.load(), owner.ts, receiver, specifier) };
+      }
+      if (exported) return named(last!);
+      if (!pointer.startsWith("/")) return undefined;
+      const target = pointed(pointer, document);
+      return target === undefined ? undefined : { node: target, scope: this };
+    },
+  };
+}
 
 /** 🪞️ Projects the exports of every schema module under `options.under`; `report` only plans, `apply` writes the leaves. */
 export function projectParsers(options: ProjectionOptions): ProjectionReport {
@@ -247,11 +256,12 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
   if (options.restate.size > 0) {
     const unowned = new Set((options.unowned ?? loadUnowned().parsers).map((row) => unownedKey(row.path, row.name)));
     for (const row of auditParsers({ root, under, catalog, signal: options.signal })) {
-      if (row.reason !== "unrenderable" && options.restate.has(row.reason) && !unowned.has(unownedKey(row.path, row.name))) restated.add(parserKey(join(root, row.path), row.name));
+      if (row.reason !== "unrenderable" && options.restate.has(row.reason) && !unowned.has(unownedKey(row.path, row.name))) restated.add(parserKey(join(root, row.leaf), row.name));
     }
   }
   const replaces = (target: string, name: string): boolean => replace.has(name) || restated.has(parserKey(target, name));
   const index: ReadonlyMap<string, Owner> = buildOwnerIndex(root, catalog);
+  const specifiers = new Map([...index.values()].filter((owner) => owner.specifier !== undefined).map((owner) => [owner.ts, owner.specifier!] as const));
   const sources = new SourceStore();
   const promised = new Set<ParserKey>();
   const added = new Counter();
@@ -285,12 +295,13 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
         const facet = facetOf(module, path);
         const exports = exportsOf(document);
         if (exports.size === 0) continue;
+        const scope = typeScope(index, document, leafPath(root, module, facet, TS), leafPath(root, module, facet, TS));
         for (const format of provided) {
           if (format === JSON_SCHEMA) continue;
           const target = leafPath(root, module, facet, format as keyof typeof LEAF);
           if (!existsSync(target)) continue;
           const relativeTarget = portable(root, target);
-          const source = sources.read(target);
+          const source = sources.parsers(target);
           const appended: string[] = [];
           const helper = existingHelper(source) ?? helperPrefix(document.$id);
           let plan: Plan | undefined;
@@ -307,7 +318,8 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
             let present = declares(format, sources.declarations(target), name);
             let typeText: string | undefined;
             if (!present && formats.has(format) && !(closing && format === TS)) {
-              const rendered = rendererOf(format, name, definition);
+              const taken: Taken = (other) => exports.has(other) || declares(format, sources.declarations(target), other) || declares(format, appended.join("\n"), other);
+              const rendered = rendererOf(format, name, definition, taken, scope);
               if (rendered === undefined) {
                 refused.push(`${format} ${name} ${relativeTarget}`);
                 continue;
@@ -319,14 +331,14 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
               }
               present = true;
             } else if (!present && format === TS && closing) {
-              typeText = renderTsType(name, definition);
+              typeText = renderTsType(name, definition, scope);
               present = typeText !== undefined;
             } else if (!present && format === RUST) {
               rustAbsent.push(`${name} ${relativeTarget}`);
               continue;
             }
             if (format === TS && (!declaresParser(source, name) || replaces(target, name))) {
-              const context = new Context(helper, typeof document.$id === "string" ? document.$id : undefined, index, target, siblings, sources, promised);
+              const context = new Context(helper, typeof document.$id === "string" ? document.$id : undefined, index, target, siblings, sources, promised, true, document);
               const rendered = present ? renderParser(name, definition, context, declaredOptionalFields(sources.declarations(target), name)) : undefined;
               if (rendered === undefined && present) refused.push(`parser ${name} ${relativeTarget}`);
               const local = new Set(context.local);
@@ -343,43 +355,37 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
     for (const [owner, plan] of plans) for (const [name, entry] of plan.entries) if (entry.parser !== undefined) promised.add(parserKey(owner, name));
   }
   const emit = settle(root, plans, closing || replace.size > 0 || restated.size > 0, sources, refused, replaces);
+  const spread = options.distribute ?? [];
+  const drifted = new Set<ParserKey>();
+  if (spread.length > 0) for (const row of auditParsers({ root, under, catalog, signal: options.signal })) drifted.add(parserKey(join(root, row.leaf), row.name));
   for (const [target, plan] of plans) {
     const keep = [...emit].map(parserKeyParts).filter(([owner]) => owner === target).map(([, name]) => name).sort(codePointOrder);
-    if (keep.length === 0) continue;
-    let source = sources.read(target);
-    const blocks: string[] = [];
-    const foreign = new Map<string, Set<string>>();
     const relativeTarget = portable(root, target);
-    let closedCalls = false;
+    const distributes = spread.some((folder) => relativeTarget.startsWith(`${folder}/`));
+    if (keep.length === 0 && !distributes) continue;
+    const writer = new LeafWriter(sources, root, target, plan.helper, mode === "apply", specifiers);
     for (const name of keep) {
       const entry = plan.entries.get(name)!;
       if (entry.type !== undefined && !declares(TS, sources.declarations(target), name)) {
-        blocks.push(entry.type);
+        writer.addType(entry.type);
         added.add(TS);
       }
-      closedCalls ||= entry.parser!.includes(`${plan.helper}Closed(`);
-      if (replaces(target, name) && definesParser(source, name)) {
+      const closedCall = entry.parser!.includes(`${plan.helper}Closed(`);
+      if (replaces(target, name) && definesParser(sources.parsers(target), name)) {
         added.add("restated");
-        if (mode === "apply") source = restateParser(source, name, entry.parser!, relativeTarget);
+        writer.restate(name, entry.parser!, entry.foreign, closedCall);
       } else {
-        blocks.push(entry.parser!);
+        writer.add(name, entry.parser!, entry.foreign, closedCall);
         added.add("parser");
       }
-      for (const key of entry.foreign) {
-        const [owner, callee] = parserKeyParts(key);
-        if (owner === target || definesParser(source, callee) || importsParser(source, callee)) continue;
-        if (!foreign.has(owner)) foreign.set(owner, new Set());
-        foreign.get(owner)!.add(callee);
-      }
     }
-    touched.add(relativeTarget);
-    if (mode !== "apply") continue;
-    if (source.includes(PARSER_REGION)) {
-      if (closedCalls && existingHelper(source) !== plan.helper) throw new Error(`the guard prefix of ${relativeTarget} is not ${plan.helper}`);
-      if (closedCalls) source = withClosedHelper(source, plan.helper);
-    } else if (blocks.length > 0) blocks.unshift(helpersBlock(plan.helper));
-    const block = blocks.join("\n").trimEnd();
-    sources.write(target, withImports(block === "" ? source : `${source.trimEnd()}\n\n${block}\n`, importLines(target, foreign)));
+    if (distributes) {
+      const leaf = sources.read(target);
+      const region = leaf.indexOf(PARSER_REGION);
+      const fresh = region < 0 ? [] : ownedParserNames(leaf.slice(region)).filter((name) => plan.exports.has(name) && !keep.includes(name) && !replaces(target, name) && !drifted.has(parserKey(target, name)));
+      writer.distribute(fresh);
+    }
+    for (const file of writer.finish()) touched.add(file);
   }
   return { mode, under, closing, added: added.entries(), filesTouched: touched.size, refused: [...refused], rustAbsent: [...rustAbsent], touched: [...touched].sort(codePointOrder) };
 }
@@ -387,9 +393,10 @@ export function projectParsers(options: ProjectionOptions): ProjectionReport {
 //#endregion 🔖️Projection
 
 //#region 🔖️Audit
-/** 🔎️ A projected parser that no longer equals what the current schema and renderers produce. */
+/** 🔎️ A projected parser that no longer equals what the current schema and renderers produce: `path` is the file that holds it, `leaf` the leaf of its schema document. */
 export interface ParserDrift {
   readonly path: string;
+  readonly leaf: string;
   readonly name: string;
   readonly reason: DriftReason;
   readonly actual: string;
@@ -406,7 +413,7 @@ const mapConversions = (text: string): number => text.split("Object.entries(").l
 
 const SELF_CALL = /^export function parse(\w+)\(value: unknown, at = "\$"\): \1 \{\n  return parse\1\(value[^\n]*\n\}\n/gmu;
 
-/** 🔎️ Re-renders every parser below the helper region of a leaf and lists the ones whose text differs from the projection of the current schema, and the leaves that call `<prefix>Closed` without defining it. */
+/** 🔎️ Re-renders every parser below a parser region in the files of each leaf's module tree (the leaf and its parser folders) and lists the ones whose text differs from the projection of the current schema, the ones defined in two files, and the leaves that call `<prefix>Closed` without defining it, or that hold parser regions without a helper block. */
 export function auditLeaves(options: Pick<ProjectionOptions, "root" | "under" | "catalog" | "signal" | "onProgress">): ParserAudit {
   const { root, under } = options;
   const catalog = options.catalog ?? new SchemaCatalog(root);
@@ -425,31 +432,38 @@ export function auditLeaves(options: Pick<ProjectionOptions, "root" | "under" | 
       const document = readDocument(root, path);
       const target = leafPath(root, module, facetOf(module, path), TS);
       if (document === undefined || !existsSync(target)) continue;
+      const regions = sources.owned(target).map((file) => ({ file, source: sources.read(file) })).map((row) => ({ ...row, region: row.source.indexOf(PARSER_REGION) })).filter((row) => row.region >= 0);
+      if (regions.length === 0) continue;
       const source = sources.read(target);
-      const region = source.indexOf(PARSER_REGION);
-      if (region < 0) continue;
       const helper = existingHelper(source) ?? helperPrefix(document.$id);
       const relativeTarget = portable(root, target);
       if (!audited.has(target)) {
         audited.add(target);
-        if (source.includes(`${helper}Closed(`) && !new RegExp(`^export const ${escapeRegExp(helper)}Closed\\b`, "m").test(source)) helperless.push(relativeTarget);
+        const callsClosed = regions.some((row) => row.source.includes(`${helper}Closed(`)) && !new RegExp(`^export const ${escapeRegExp(helper)}Closed\\b`, "m").test(source);
+        if (callsClosed || !source.includes(PARSER_REGION)) helperless.push(relativeTarget);
       }
       for (const [name, definition] of exportsOf(document)) {
-        const range = parserRange(source, name);
-        if (range === undefined || range[0] < region) continue;
-        const found = source.slice(range[0], range[1]);
-        const context = (closed: boolean): Context => new Context(helper, typeof document.$id === "string" ? document.$id : undefined, index, target, siblings, sources, promised, closed);
+        const [first, ...extra] = regions.flatMap((row) => {
+          const range = parserRange(row.source, name);
+          return range === undefined || range[0] < row.region ? [] : [{ path: portable(root, row.file), text: row.source.slice(range[0], range[1]) }];
+        });
+        for (const row of extra) drift.push({ path: row.path, leaf: relativeTarget, name, reason: "duplicate", actual: row.text, expected: undefined });
+        if (first === undefined) continue;
+        const context = (closed: boolean): Context => new Context(helper, typeof document.$id === "string" ? document.$id : undefined, index, target, siblings, sources, promised, closed, document);
         const rendered = renderParser(name, definition, context(true), declaredOptionalFields(sources.declarations(target), name));
-        if (rendered === found) continue;
+        if (rendered === first.text) continue;
         const open = rendered === undefined ? undefined : renderParser(name, definition, context(false), declaredOptionalFields(sources.declarations(target), name));
-        const reason: DriftReason = rendered === undefined ? "unrenderable" : open === found ? "open" : mapConversions(rendered) > mapConversions(found) ? "untyped-map" : "stale";
-        drift.push({ path: relativeTarget, name, reason, actual: found, expected: rendered });
+        const reason: DriftReason = rendered === undefined ? "unrenderable" : open === first.text ? "open" : mapConversions(rendered) > mapConversions(first.text) ? "untyped-map" : "stale";
+        drift.push({ path: first.path, leaf: relativeTarget, name, reason, actual: first.text, expected: rendered });
       }
-      for (const call of source.matchAll(SELF_CALL)) {
-        if (call.index < region) continue;
-        const already = drift.findIndex((row) => row.path === relativeTarget && row.name === call[1]);
-        if (already >= 0) drift[already] = { ...drift[already]!, reason: "self-call" };
-        else drift.push({ path: relativeTarget, name: call[1]!, reason: "self-call", actual: call[0], expected: undefined });
+      for (const row of regions) {
+        for (const call of row.source.matchAll(SELF_CALL)) {
+          if (call.index < row.region) continue;
+          const file = portable(root, row.file);
+          const already = drift.findIndex((entry) => entry.path === file && entry.name === call[1]);
+          if (already >= 0) drift[already] = { ...drift[already]!, reason: "self-call" };
+          else drift.push({ path: file, leaf: relativeTarget, name: call[1]!, reason: "self-call", actual: call[0], expected: undefined });
+        }
       }
     }
   }

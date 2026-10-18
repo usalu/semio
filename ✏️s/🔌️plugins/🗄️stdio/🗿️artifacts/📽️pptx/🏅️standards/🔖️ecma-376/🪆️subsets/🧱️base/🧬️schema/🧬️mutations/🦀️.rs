@@ -149,7 +149,7 @@ pub(crate) fn plan_inverse(plan: Result<xml_address::PptxPlan, String>) -> Vec<P
 /// declaration is an ordinary attribute, so one walk covers `xmlns`, `xmlns:a` and whatever prefixed alias a deck uses. `None` when
 /// nothing under `node` declares one of `from`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn retarget_attribute_values_diff(node: &XmlNode, from: &[&str], to: &str) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
+pub fn retarget_attribute_values_diff(node: &XmlNode, from: &[&str], to: &str) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
     use semio_s_artifact_stdio_xml::schema::diff::{XmlAttrModified, XmlAttributesDiff, XmlChildModified, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
     let XmlNode::Element { attrs, children, .. } = node else { return None };
     let modified: Vec<XmlAttrModified> = attrs.iter().filter(|attr| from.contains(&attr.value.as_str()) && attr.value != to).map(|attr| XmlAttrModified { name: attr.name.clone(), value: to.to_string() }).collect();
@@ -161,7 +161,7 @@ pub(crate) fn retarget_attribute_values_diff(node: &XmlNode, from: &[&str], to: 
 
 /// 🧾️ The diff that applies one XML `root` edit to each named part: `edits` pairs a part path with the root diff it takes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn root_edits_diff(edits: Vec<(String, semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff)>) -> PptxDiff {
+pub fn root_edits_diff(edits: Vec<(String, semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff)>) -> PptxDiff {
     if edits.is_empty() {
         return PptxDiff::default();
     }
@@ -174,7 +174,7 @@ pub(crate) fn root_edits_diff(edits: Vec<(String, semio_s_artifact_stdio_xml::sc
 
 /// 🌿️ The attribute edit that sets (`Some`) or removes (`None`) attribute `name` on the ROOT element of `document`; `None` when nothing changes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, name: &str, value: Option<&str>) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
+pub fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, name: &str, value: Option<&str>) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
     use semio_s_artifact_stdio_xml::schema::diff::{XmlAttrAdded, XmlAttrModified, XmlAttributesDiff, XmlElementDiff, XmlNodeDiff};
     let Some(XmlNode::Element { attrs, .. }) = document.root.as_ref() else { return None };
     let existing = attrs.iter().find(|attr| attr.name == name);
@@ -197,7 +197,7 @@ pub(crate) fn root_attribute_diff(document: &semio_s_artifact_stdio_xml::schema:
 /// 🌿️ The children edit that inserts `insert.1` at final index `insert.0` of, or removes the children at the base indexes `remove` from, the ROOT element of `document`;
 /// `None` when nothing changes. Insertion and removal are never combined in one call.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, insert: Option<(usize, XmlNode)>, remove: &[usize]) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
+pub fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, insert: Option<(usize, XmlNode)>, remove: &[usize]) -> Option<semio_s_artifact_stdio_xml::schema::diff::XmlNodeDiff> {
     use semio_s_artifact_stdio_xml::schema::diff::{XmlChildAdded, XmlChildrenDiff, XmlElementDiff, XmlNodeDiff};
     let Some(XmlNode::Element { .. }) = document.root.as_ref() else { return None };
     let added: Vec<XmlChildAdded> = insert.map(|(index, item)| vec![XmlChildAdded { index, item }]).unwrap_or_default();
@@ -207,7 +207,7 @@ pub(crate) fn root_children_diff(document: &semio_s_artifact_stdio_xml::schema::
 /// 🧩️ The diff that adds XML part `path` of `content_type` with `document` at `index` (append when `None`), together with its content-type
 /// override. `None` when a part of that name already exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn insert_xml_part_diff(base: &PptxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>, override_index: Option<usize>) -> Option<PptxDiff> {
+pub fn insert_xml_part_diff(base: &PptxSnapshot, path: &str, content_type: &str, document: &semio_s_artifact_stdio_xml::schema::snapshot::XmlDocument, index: Option<usize>, override_index: Option<usize>) -> Option<PptxDiff> {
     use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxXmlPartsDelta;
     use semio_s_artifact_stdio_contract::list_delta::insertion_index;
     let key = path.trim_start_matches('/');
@@ -230,7 +230,7 @@ pub(crate) fn insert_xml_part_diff(base: &PptxSnapshot, path: &str, content_type
 
 /// 🧩️ The diff that removes XML part `path` and its content-type override; `None` when no such part exists.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn remove_xml_part_diff(base: &PptxSnapshot, path: &str) -> Option<PptxDiff> {
+pub fn remove_xml_part_diff(base: &PptxSnapshot, path: &str) -> Option<PptxDiff> {
     use semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::diff::PptxXmlPartsDelta;
     let key = path.trim_start_matches('/');
     let at = base.xml_parts.iter().position(|part| part.path == key)?;
@@ -241,7 +241,7 @@ pub(crate) fn remove_xml_part_diff(base: &PptxSnapshot, path: &str) -> Option<Pp
 }
 /// 🧭️ Where XML part `path` and its explicit content-type override sit in their lists: `(part index, override index)`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn xml_part_positions(base: &PptxSnapshot, path: &str) -> Option<(usize, Option<usize>)> {
+pub fn xml_part_positions(base: &PptxSnapshot, path: &str) -> Option<(usize, Option<usize>)> {
     let key = path.trim_start_matches('/');
     let part = base.xml_parts.iter().position(|part| part.path == key)?;
     let name = format!("/{key}");

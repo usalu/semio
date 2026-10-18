@@ -1,11 +1,11 @@
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
 import fg from "fast-glob";
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename, delimiter, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadCatalogTaxonomy, semanticDirectoryKindId, implementationLeafBasenameFinding } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy, semanticDirectoryKindId } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { implementationLeafBasenameFinding } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { buildCasePlan } from "@semio-tech/repo-test/execution-plan";
 import { loadOracleRegistry, oracleHostPackagesFor } from "@semio-tech/repo-test/contributions";
 import { testProjectName } from "@semio-tech/repo-test/case-discovery";
@@ -16,7 +16,7 @@ import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
-const controlPath = join(root, control.plugin, "🧫️fixtures/🔮️oracle-source-ownership/🔣️.json");
+const controlPath = join(root, control.plugin, "🧪️tests/🧫️fixtures/🔮️oracle-source-ownership/🔣️.json");
 const read = (path: string) => readFileSync(join(root, path), "utf8");
 const normSources = [control.manifest, control.destination, ...control.destinationChildren, ...control.adapters.map((row) => row.path)].map((path) => `{workspaceRoot}/${path}`).sort();
 
@@ -133,7 +133,9 @@ describe("Norm oracle source ownership", () => {
       standard: "1",
       subset: "any",
     });
-    const directory = mkdtempSync(join(tmpdir(), "semio-norm-oracle-"));
+    const scratch = process.env.SEMIO_TEST_ARTIFACT_DIR ?? join(root, ".cache", "tests");
+    mkdirSync(scratch, { recursive: true });
+    const directory = mkdtempSync(join(scratch, "semio-norm-oracle-"));
     try {
       const planPath = join(directory, "🔣️.json"),
         resultsPath = join(directory, "results.jsonl");

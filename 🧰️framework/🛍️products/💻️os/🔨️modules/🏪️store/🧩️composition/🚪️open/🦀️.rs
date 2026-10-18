@@ -159,7 +159,7 @@ impl MemberOpenRequest {
         if !self.admitted||self.detached||cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(MemberOpenDiagnostic::Stale)}
         let frame=self.framed.ok_or(MemberOpenDiagnostic::Malformed)?;let(start,extent)=frame.history_range();let pages=self.pages.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
         if !pages.is_sealed()||start.checked_add(extent).is_none_or(|end|end>pages.byte_count()){return Err(MemberOpenDiagnostic::Malformed)}
-        Ok(OriginalMemberHistorySource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{address:pages.slots.as_ptr()as usize,extent,authority:Some((self.operation.0,self.generation.0))}})
+        Ok(OriginalMemberHistorySource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{address:pages.slot_address(),extent,authority:Some((self.operation.0,self.generation.0))}})
     }
     pub fn new(operation: OperationId, generation: Generation, expires_at_us: u64, expected: ArtifactRef, owner: Option<OwnerRef>, pages: OwnedSchemaDecodePages, actor: semio_framework_os_spr::ActorId) -> Self {
         Self {

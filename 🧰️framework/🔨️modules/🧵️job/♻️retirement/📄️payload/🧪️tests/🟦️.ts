@@ -4,6 +4,7 @@ import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{readFileSync}from"node:fs";
 import{applyPatch}from"fast-json-patch";
+import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 test("original inline outcome slot removes only its independently paid presence after original payload cleanup",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
@@ -13,7 +14,7 @@ test("original inline outcome slot removes only its independently paid presence 
 test("payload pages retain their original ledger until a separately admitted full turn",async()=>{
  const law=await Bun.file(new URL("🧫️fixtures/🔣️.json",import.meta.url)).json(),schema=await Bun.file(new URL("../🧬️schema/🔣️.json",import.meta.url)).json();expect(new Ajv({strict:true}).compile(schema)(law)).toBe(true);
  const db=new Database(":memory:");try{db.run("CREATE TABLE releases(pages INTEGER,kind TEXT,amount INTEGER,step INTEGER)");for(const n of law.pages){for(let i=0;i<n;i++)db.query("INSERT INTO releases VALUES(?,?,?,?)").run(n,"page",law.pageBytes,i);db.query("INSERT INTO releases VALUES(?,?,?,?)").run(n,"ledger",128,n);}for(const n of law.pages){expect(db.query("SELECT sum(amount) AS physical,count(*) AS turns,max(step) AS last FROM releases WHERE pages=?").get(n)).toEqual({physical:n*law.pageBytes+128,turns:n+1,last:n});expect(db.query("SELECT count(*) AS n FROM releases WHERE pages=? AND kind='ledger' AND step<?").get(n,n)).toEqual({n:0});}}finally{db.close();}
- const source=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8"),producer=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source.includes("mod payload_retirement;")).toBe(true);const payload=producer.slice(producer.indexOf("impl RetainedJobPayload {"),producer.indexOf("impl RetainedJobPayloadWriter"));expect(payload.includes("pub fn retirement_demands(&self)")).toBe(true);expect(payload.includes("pub fn close_step(&mut self, grant: RetainedCloneGrant)")).toBe(true);expect(producer.includes("Arc::into_inner")).toBe(true);expect(source.includes("self.ledger.is_none()")).toBe(true);expect(payload.includes("maximum_bytes")).toBe(false);
+ const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url)),producer=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8");expect(source.includes("mod payload_retirement;")).toBe(true);const payload=producer.slice(producer.indexOf("impl RetainedJobPayload {"),producer.indexOf("impl RetainedJobPayloadWriter"));expect(payload.includes("pub fn retirement_demands(&self)")).toBe(true);expect(payload.includes("pub fn close_step(&mut self, grant: RetainedCloneGrant)")).toBe(true);expect(producer.includes("Arc::into_inner")).toBe(true);expect(source.includes("self.ledger.is_none()")).toBe(true);expect(payload.includes("maximum_bytes")).toBe(false);
  const outcome=producer.slice(producer.indexOf("impl StepOutcome {"));expect(outcome.includes("pub fn retirement_demands(&self)")).toBe(true);expect(outcome.includes("pub fn close_step(&mut self, grant: RetainedCloneGrant)")).toBe(true);expect(outcome.includes("maximum_bytes")).toBe(false);
 });
 

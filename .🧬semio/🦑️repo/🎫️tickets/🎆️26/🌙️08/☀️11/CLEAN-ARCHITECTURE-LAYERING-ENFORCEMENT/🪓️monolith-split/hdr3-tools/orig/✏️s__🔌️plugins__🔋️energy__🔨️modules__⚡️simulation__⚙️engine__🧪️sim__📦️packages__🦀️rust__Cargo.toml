@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-plugin-energy-engine-sim"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy simulation engine `sim`: Engine orchestration"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-job = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-plugin-energy-engine-calendar = { workspace = true }
+semio-s-plugin-energy-engine-error = { workspace = true }
+semio-s-plugin-energy-engine-kernel = { workspace = true }
+semio-s-plugin-energy-engine-meters = { workspace = true }
+semio-s-plugin-energy-engine-metrics = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-output = { workspace = true }
+semio-s-plugin-energy-engine-precompute = { workspace = true }
+semio-s-plugin-energy-engine-results = { workspace = true }
+semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
+semio-s-plugin-energy-engine-sim-wire = { workspace = true }
+semio-s-plugin-energy-engine-site = { workspace = true }
+semio-s-plugin-energy-engine-sizing = { workspace = true }
+semio-s-plugin-energy-engine-units = { workspace = true }
+serde = { workspace = true }
+
+[dev-dependencies]
+semio-s-plugin-energy-engine-schedule = { workspace = true }

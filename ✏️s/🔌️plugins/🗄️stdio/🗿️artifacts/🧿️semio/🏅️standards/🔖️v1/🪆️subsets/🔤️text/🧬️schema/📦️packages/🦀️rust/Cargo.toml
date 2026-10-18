@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }

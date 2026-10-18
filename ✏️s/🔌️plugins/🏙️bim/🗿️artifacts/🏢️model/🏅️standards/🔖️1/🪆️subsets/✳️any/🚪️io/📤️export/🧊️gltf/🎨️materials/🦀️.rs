@@ -2,7 +2,7 @@
 //! The colour of a face group is the one the 3D viewer paints (`group_color`), so the exported scene looks like the editor.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#reference-material
 
-use super::document::GltfMaterial;
+use crate::standards::v1::subsets::any::io::export::gltf::document::GltfMaterial;
 use crate::render::world::{family_color, group_color};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily, SolidGroup};
 use crate::standards::v1::subsets::any::schema::snapshot::{MaterialCategory, ModelSnapshot};
@@ -90,6 +90,4 @@ impl Palette {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

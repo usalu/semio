@@ -1,14 +1,17 @@
 //! ↩️ Inverse of `SetColumn`: an absolute `SetColumn` restoring the base value of exactly the fields the forward really changes,
 //! none when the column is absent or nothing would change.
 
-use super::SetColumn;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::set_column::SetColumn;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 fn restored<T: Clone + PartialEq>(value: &Option<T>, current: &T) -> Option<T> {
     value.as_ref().filter(|next| *next != current).map(|_| current.clone())
 }
 
-pub fn inverse(payload: &SetColumn, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetColumn, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_column::SetColumn>,
+{
     let Some(column) = base.columns.get(&payload.id) else {
         return Vec::new();
     };
@@ -25,5 +28,5 @@ pub fn inverse(payload: &SetColumn, base: &ModelSnapshot) -> Vec<ModelMutation> 
     if restore == nothing {
         return Vec::new();
     }
-    vec![ModelMutation::SetColumn(restore)]
+    vec![Op::from(restore)]
 }

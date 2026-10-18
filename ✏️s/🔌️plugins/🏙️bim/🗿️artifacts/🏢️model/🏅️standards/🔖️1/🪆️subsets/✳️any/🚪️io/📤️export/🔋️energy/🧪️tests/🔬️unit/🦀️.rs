@@ -1,16 +1,30 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::export::energy::build::STAGES;
+use semio_framework::io_schema::IoPayload;
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use crate::standards::v1::subsets::any::io::export::energy::target::EnergyModel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::energy::build::Build;
+#[allow(unused_imports)]
+use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+use crate::standards::v1::subsets::any::io::export::energy::*;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeSet;
 use target::{OutsideBoundary, SurfaceClass};
 
-const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🚪️energy/🏠️room/📸️snapshot/🔣️.json");
-const PAIR: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🚪️energy/🏘️pair/📸️snapshot/🔣️.json");
-const STACK: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🚪️energy/🧱️stack/📸️snapshot/🔣️.json");
+static ROOM: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🚪️energy/🏠️room/📸️snapshot/🔣️.json"));
+static PAIR: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🚪️energy/🏘️pair/📸️snapshot/🔣️.json"));
+static STACK: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🚪️energy/🧱️stack/📸️snapshot/🔣️.json"));
 
 /// 📁️ The directory of the committed energy exports (the model as JSON and as `.energy` text) that the jsonschema, shapely and numpy oracle reads.
-pub const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️energy");
+pub const DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧪️tests/🧫️fixtures/🚪️energy");
 
 fn decoded(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the committed case decodes")
@@ -21,7 +35,7 @@ fn written(snapshot: &ModelSnapshot) -> (EnergyModel, Vec<String>) {
 }
 
 fn cases() -> Vec<(&'static str, ModelSnapshot)> {
-    vec![("🏠️room", decoded(ROOM)), ("🏘️pair", decoded(PAIR)), ("🧱️stack", decoded(STACK))]
+    vec![("🏠️room", decoded((*ROOM))), ("🏘️pair", decoded((*PAIR))), ("🧱️stack", decoded((*STACK)))]
 }
 
 fn audit(model: &EnergyModel) {
@@ -74,7 +88,7 @@ fn every_case_is_written_as_a_model_the_engine_accepts() {
 
 #[test]
 fn the_site_carries_the_location_the_north_and_the_time_zone() {
-    let (model, _) = written(&decoded(ROOM));
+    let (model, _) = written(&decoded((*ROOM)));
     assert_eq!((model.site.latitude_deg, model.site.longitude_deg, model.site.elevation_m, model.site.time_zone_hours), (47.0, 8.0, 0.0, 1.0));
     assert!((model.site.north_axis_deg - (0.3f64 - 0.2).to_degrees()).abs() < 1e-12, "the bearing of the model's north is the true north minus the building rotation");
     assert_eq!(model.name, "Model");
@@ -83,7 +97,7 @@ fn the_site_carries_the_location_the_north_and_the_time_zone() {
 
 #[test]
 fn a_partition_between_two_zones_is_two_interzone_partners_and_its_door_is_merged_into_the_wall() {
-    let (model, notes) = written(&decoded(PAIR));
+    let (model, notes) = written(&decoded((*PAIR)));
     let partners: Vec<_> = model.surfaces.iter().filter(|surface| matches!(surface.outside_boundary_condition, OutsideBoundary::Interzone(_))).collect();
     assert_eq!(partners.len(), 2, "one surface in each zone: {partners:?}");
     assert!(partners.iter().all(|surface| surface.class == SurfaceClass::Interzone));
@@ -95,7 +109,7 @@ fn a_partition_between_two_zones_is_two_interzone_partners_and_its_door_is_merge
 
 #[test]
 fn rooms_with_equal_set_points_are_adiabatic_and_still_paired() {
-    let (model, _) = written(&decoded(STACK));
+    let (model, _) = written(&decoded((*STACK)));
     let adiabatic: Vec<_> = model.surfaces.iter().filter(|surface| surface.outside_boundary_condition == OutsideBoundary::Adiabatic).collect();
     assert!(adiabatic.len() >= 2, "floor and ceiling between the two heated storeys");
     assert!(model.adjacency_pairs.iter().any(|pair| adiabatic.iter().any(|surface| surface.id == pair.surface_a_id)), "an adiabatic pair is listed");
@@ -105,7 +119,7 @@ fn rooms_with_equal_set_points_are_adiabatic_and_still_paired() {
 
 #[test]
 fn a_wall_is_listed_outside_first_and_named_mirrored_when_the_room_lies_on_the_right_of_its_axis() {
-    let (model, _) = written(&decoded(ROOM));
+    let (model, _) = written(&decoded((*ROOM)));
     let insulation = model.materials.iter().find(|material| material.name.starts_with("Insulation")).expect("the insulation layer").id;
     for surface in model.surfaces.iter().filter(|surface| surface.class == SurfaceClass::ExteriorWall) {
         let construction = model.constructions.iter().find(|row| row.id == surface.construction_id).expect("the construction");
@@ -115,7 +129,7 @@ fn a_wall_is_listed_outside_first_and_named_mirrored_when_the_room_lies_on_the_r
 
 #[test]
 fn the_loads_and_set_points_of_the_conditions_become_gains_a_thermostat_and_an_ideal_loads_system() {
-    let (model, _) = written(&decoded(ROOM));
+    let (model, _) = written(&decoded((*ROOM)));
     let (people, lighting, equipment) = (&model.people[0], &model.lighting[0], &model.equipment[0]);
     assert_eq!((people.people_per_area, lighting.watts_per_area, equipment.watts_per_area), (0.1, 8.0, 12.0));
     let thermostat = &model.thermostats[0];
@@ -133,7 +147,7 @@ fn the_loads_and_set_points_of_the_conditions_become_gains_a_thermostat_and_an_i
 
 #[test]
 fn an_unheated_space_gets_gains_and_no_thermostat() {
-    let (model, _) = written(&decoded(STACK));
+    let (model, _) = written(&decoded((*STACK)));
     let cellar = model.zones.iter().find(|zone| zone.name.starts_with("sp-b")).expect("the cellar");
     assert!(!cellar.conditioned && !cellar.part_of_total_floor_area);
     assert!(model.thermostats.iter().all(|row| row.zone_id != cellar.id) && model.ideal_loads.iter().all(|row| row.zone_id != cellar.id));
@@ -148,7 +162,7 @@ fn a_model_without_a_thermal_envelope_is_refused() {
 
 #[test]
 fn the_staged_export_runs_one_stage_per_step_and_equals_the_one_shot() {
-    let snapshot = decoded(STACK);
+    let snapshot = decoded((*STACK));
     let direct = written(&snapshot);
     let staged = inference::try_with_inference(None, &snapshot, |inferred| {
         let mut job = StagedEnergy::new();
@@ -170,10 +184,10 @@ fn the_staged_export_runs_one_stage_per_step_and_equals_the_one_shot() {
 
 #[test]
 fn the_text_is_the_energy_artifacts_dsl_and_the_json_its_snapshot() {
-    let (text, _) = export_energy(&decoded(ROOM)).expect("the text");
+    let (text, _) = export_energy(&decoded((*ROOM))).expect("the text");
     assert!(text.starts_with("semio energy.model.dsl v1"), "{}", &text[..text.len().min(80)]);
     assert!(text.contains("schema=energy.model") && text.contains("structure=") && text.contains("surfaces=["));
-    let (json, _) = export_energy_json(&decoded(ROOM)).expect("the json");
+    let (json, _) = export_energy_json(&decoded((*ROOM))).expect("the json");
     let root = crate::standards::v1::subsets::any::io::export::json::codec::read_value(&json).expect("RFC 8259");
     let member = |name: &str| crate::standards::v1::subsets::any::io::export::json::codec::member(&root, name);
     assert!(member("schema").is_some() && member("model").is_some() && member("structure").is_some() && member("zones").is_some());
@@ -183,7 +197,7 @@ fn the_text_is_the_energy_artifacts_dsl_and_the_json_its_snapshot() {
 
 #[test]
 fn the_serializer_writes_the_text_and_one_warning_per_note() {
-    let snapshot = decoded(PAIR);
+    let snapshot = decoded((*PAIR));
     let (text, notes) = export_energy(&snapshot).expect("the export");
     let payload = futures_lite_block(ModelIntoEnergy::serialize(&snapshot, &ArchiveChildren::default())).expect("the hop");
     assert_eq!(payload.value, IoPayload::Text(text));

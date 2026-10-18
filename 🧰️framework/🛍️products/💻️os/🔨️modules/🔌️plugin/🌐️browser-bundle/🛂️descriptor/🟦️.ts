@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { decodePackValue, encodePackValue, packValueToExactJson, type PackValue } from "@semio-tech/framework-os";
@@ -31,7 +31,12 @@ export function parseActorComponentExports(wit: string): Record<string, string[]
   return result;
 }
 
-export const ACTOR_COMPONENT_EXPORTS = parseActorComponentExports(readFileSync(join(DESCRIPTOR_ROOT, "../../🧬️schema/📜️.wit"), "utf8"));
+/** 📜️ Reads the actor package's authored WIT files, in name order, as the one text the package declares. */
+export function readActorComponentWit(directory: string): string {
+  return readdirSync(directory).filter((name) => name.endsWith(".wit")).sort().map((name) => readFileSync(join(directory, name), "utf8")).join("\n");
+}
+
+export const ACTOR_COMPONENT_EXPORTS = parseActorComponentExports(readActorComponentWit(join(DESCRIPTOR_ROOT, "../../🧬️schema")));
 
 /** 🛂️ Both package roles must expose the complete actor world before publication. */
 export function assertActorComponentExports(component: Record<string, unknown>, required: Record<string, string[]>): void {

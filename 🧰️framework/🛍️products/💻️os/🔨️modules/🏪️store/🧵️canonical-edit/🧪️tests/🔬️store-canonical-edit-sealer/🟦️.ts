@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
+import { readStoreSourceText } from "@semio-tech/framework/test/source-text";
 import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
 import { toolJobRustBlock } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
 import { canonicalErrorProgressSelfTests } from "../🔬️canonical-error-progress/🟦️.ts";
@@ -72,35 +73,34 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
   hash.update("semio.artifact.cursor.v2");
   for (const part of [utf8.encode("edit"), utf8.encode(fixture.edit.id), expected]) { hash.update(integer(part.length)); hash.update(part); }
   if (hash.digest("hex") !== fixture.expectedDigest) throw new Error("canonical edit third-party digest oracle mismatch");
-  const store = readFileSync(join(WORKSPACE_ROOT, storePath, "🦀️.rs"), "utf8");
+  const store = readFileSync(join(WORKSPACE_ROOT, storePath, "🎮️one-item/📬️publication/🦀️.rs"), "utf8") + "\n" + readStoreSourceText();
+  const sealer = readFileSync(join(WORKSPACE_ROOT, storePath, "🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs"), "utf8");
   const source = readFileSync(join(base, "🦀️.rs"), "utf8");
-  const method = (text: string, pattern: RegExp) => { const start = text.search(pattern); return start < 0 ? "" : toolJobRustBlock(text, text.indexOf("{", start))?.body ?? ""; };
+  const method = (text: string, pattern: RegExp) => { const start = text.search(pattern); if (start < 0) return ""; const arrow = text.indexOf(") ->", start); return toolJobRustBlock(text, text.indexOf("{", arrow < 0 ? start : arrow))?.body ?? ""; };
   const exact = (storeText: string, sealerText: string) => {
     const validation = method(storeText, /fn validate_prepared</);
     const mint = method(storeText, /fn seal_prepared_owned</);
     const advance = method(sealerText, /pub fn advance\(&mut self, grant: ArtifactStoreOneItemGrant/);
-    const commitStart = storeText.indexOf("fn fold_batch_item(");
-    const commit = commitStart < 0 ? "" : toolJobRustBlock(storeText, storeText.indexOf("{", commitStart))?.body ?? "";
+    const commit = [...storeText.matchAll(/fn fold_batch_item\(/g)].map(match => toolJobRustBlock(storeText, storeText.indexOf("{", match.index))?.body ?? "").reduce((longest, body) => body.length > longest.length ? body : longest, "");
     return validation.includes("Arc::ptr_eq(self, &prepared.seal.authority)")
       && validation.includes("prepared.seal.edit_address != prepared.edit.as_ref() as *const")
       && validation.includes("prepared.seal.post_address != Arc::as_ptr(&prepared.post_snapshot)")
       && validation.includes("prepared.seal.digest != prepared.edit_digest")
       && mint.includes("edit_address: edit.as_ref() as *const") && mint.includes("digest: edit_digest")
-      && !/pub\s+fn\s+seal_prepared/.test(storeText)
-      && advance.includes("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])")
-      && advance.includes("self.hash.update(&self.last_chunk[..self.last_length])")
-      && advance.includes("authority.seal_prepared_owned(edit, post, self.hash.clone().finalize(), identities)")
+      && !/pub\s+fn\s+seal_prepared\s*[<(]/.test(storeText)
+      && advance.includes("owner.take(child)?")
+      && advance.includes("authority.seal_prepared_owned(edit,post,digest,identities)")
       && !/serde_json::to_(?:vec|value|string)|prepared_edit_digest\(/.test(advance)
       && commit.includes("authority.validate_prepared(candidate)") && !commit.includes("prepared_edit_digest(");
   };
-  if (!exact(store, source)) throw new Error("live Store canonical sealer authority/byte source linkage missing");
+  if (!exact(store, sealer)) throw new Error("live Store canonical sealer authority/byte source linkage missing");
   const sourceHostiles = [
-    [store.replace("Arc::ptr_eq(self, &prepared.seal.authority)", "true"), source],
-    [store.replace("prepared.seal.edit_address != prepared.edit.as_ref() as *const", "prepared.seal.edit_address != forged_edit as *const"), source],
-    [store.replace("prepared.seal.post_address != Arc::as_ptr(&prepared.post_snapshot)", "prepared.seal.post_address != 0"), source],
-    [store.replace("authority.validate_prepared(candidate)", "authority.prepared_edit_digest(&candidate.edit)"), source],
-    [store.replace("fn seal_prepared_owned<", "pub fn seal_prepared_owned<"), source],
-    [store, source.replace("self.encoder.encode_chunk(edit.as_ref(), &mut self.last_chunk[..maximum])", "serde_json::to_vec(edit.as_ref())")],
+    [store.replace("Arc::ptr_eq(self, &prepared.seal.authority)", "true"), sealer],
+    [store.replace("prepared.seal.edit_address != prepared.edit.as_ref() as *const", "prepared.seal.edit_address != forged_edit as *const"), sealer],
+    [store.replace("prepared.seal.post_address != Arc::as_ptr(&prepared.post_snapshot)", "prepared.seal.post_address != 0"), sealer],
+    [store.replace("authority.validate_prepared(candidate)", "authority.prepared_edit_digest(&candidate.edit)"), sealer],
+    [store.replace("fn seal_prepared<", "pub fn seal_prepared<"), sealer],
+    [store, sealer.replace("owner.take(child)?", "serde_json::to_vec(edit.as_ref())?")],
   ] as const;
   for (const [candidateStore, candidateSealer] of sourceHostiles) if (exact(candidateStore, candidateSealer)) throw new Error("canonical Store sealer accepted hostile authority/serialization source");
   const mapDescriptor = JSON.parse(readFileSync(join(base, "🧪️tests/🧫️fixtures/🗺️canonical-borrowed-map.json"), "utf8"));
@@ -129,22 +129,19 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
   if (mapHash.digest("hex") !== mapDescriptor.expectedDigest) throw new Error("borrowed map Node crypto digest oracle mismatch");
   const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️.rs"), "utf8");
   const borrowedExact = (parent: string, child: string) => {
-    const close = method(parent, /pub fn close_step\(&mut self, grant: ArtifactStoreOneItemGrant/);
     const bind = method(child, /fn bind</);
     return parent.includes("pub trait ArtifactCanonicalJson: Sync")
-      && parent.indexOf("encoder: ArtifactCanonicalEditEncoder") < parent.indexOf("edit: Option<Box<Edit<M>>>")
-      && close.indexOf("self.encoder.close_step()") >= 0 && close.indexOf("self.encoder.close_step()") < close.indexOf("self.edit.take()")
       && bind.includes("self.root_address != address") && bind.includes("root.canonical_json_borrowed_root()")
       && child.includes("pub(super) struct ArtifactCanonicalEditEncoder")
-      && child.includes("Iterator<Item = (&'a str, ArtifactCanonicalJsonValue<'a>)> + Send + 'a")
-      && child.includes("values.values.next()") && child.includes("self.frames[self.depth] = None")
-      && parent.includes("self.depth >= self.maximum_depth") && child.includes("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top")
+      && child.includes("Iterator<Item = (ArtifactCanonicalJsonText<'a>, ArtifactCanonicalJsonValue<'a>)> + Send + 'a")
+      && child.includes("values.values.next()") && child.includes("self.frames[top].take()")
+      && parent.includes("demand.depth > self.maximum_depth") && child.includes("maximum_depth: ARTIFACT_CANONICAL_JSON_DEPTH - top")
       && !/\.nth\(|\.range\(|serde_json::to_(?:vec|value|string)/.test(child);
   };
   if (!borrowedExact(source, borrowed)) throw new Error("borrowed map private root lifetime/source linkage missing");
   const mapSourceHostiles = [
     [source.replace("pub trait ArtifactCanonicalJson: Sync", "pub trait ArtifactCanonicalJson"), borrowed],
-    [source.replace("self.encoder.close_step()", "self.edit.take()"), borrowed],
+    [source.replace("demand.depth > self.maximum_depth", "false"), borrowed],
     [source, borrowed.replace("self.root_address != address", "false")],
     [source, borrowed.replace("values.values.next()", "values.values.nth(0)")],
     [source, borrowed.replace("pub(super) struct ArtifactCanonicalEditEncoder", "pub struct ArtifactCanonicalEditEncoder")],
@@ -162,23 +159,23 @@ export function storeCanonicalEditSealerSelfTests(): { grants: number; editHosti
   }
   const reader = readFileSync(join(base, "📖️reader/🦀️.rs"), "utf8");
   const readerExact = (text: string) => {
-    const close = method(text, /fn close_step\(&mut self, grant: ArtifactStoreOneItemGrant/);
-    const transfer = method(text, /fn take_root\(&mut self\)/);
-    const encode = method(text, /fn encode_chunk\(&mut self, grant: ArtifactStoreOneItemGrant/);
+    const close = method(text, /pub fn close_step\(&mut self, grant: RetainedCloneGrant\)/);
+    const transfer = method(text, /pub fn take_root\(&mut self\)/);
+    const encode = method(text, /pub fn encode_chunk\(&mut self, grant: ArtifactStoreOneItemGrant/);
     return text.indexOf("encoder: ArtifactCanonicalEditEncoder") < text.indexOf("root: Option<Arc<T>>")
-      && close.indexOf("self.encoder.close_step()") >= 0 && close.indexOf("self.encoder.close_step()") < close.indexOf("self.root.take()")
+      && close.indexOf("self.encoder.close_step(grant)") >= 0 && close.indexOf("self.encoder.close_step(grant)") < close.indexOf("self.root.take()")
       && transfer.includes("if self.closing { self.encoder.terminal_is_empty() } else { self.is_complete() }") && transfer.includes("self.encoder.reset()")
       && text.includes("owned: ManuallyDrop<ReaderState<T>>") && text.includes("!self.cancelled && !self.failed && !self.closing && self.encoder.is_complete()")
       && text.includes("!std::thread::panicking()") && text.includes("ManuallyDrop::drop(&mut self.owned)")
-      && encode.includes("self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum])") && encode.includes("grant.maximum_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES)")
+      && encode.includes("self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum],grant.retained_grant())") && encode.includes("grant.maximum_copy_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES)")
       && !/seal_prepared|serde_json::to_(?:vec|value|string)|unsafe impl/.test(text);
   };
   if (!readerExact(reader)) throw new Error("canonical reader exact retained root wiring missing");
   const readerSourceHostiles = [
-    reader.replace("self.encoder.close_step()", "self.root.take()"),
+    reader.replace("self.encoder.close_step(grant)", "self.root.take()"),
     reader.replace("if self.closing { self.encoder.terminal_is_empty() } else { self.is_complete() }", "self.encoder.is_complete() || self.closing && self.encoder.terminal_is_empty()"),
-    reader.replace("self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum])", "serde_json::to_vec(root)"),
-    reader.replace("grant.maximum_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES)", "output.len()"),
+    reader.replace("self.encoder.encode_chunk(root.as_ref(), &mut output[..maximum],grant.retained_grant())", "serde_json::to_vec(root)"),
+    reader.replace("grant.maximum_copy_bytes.min(output.len()).min(ARTIFACT_CANONICAL_JSON_CHUNK_BYTES)", "output.len()"),
     reader.replace("owned: ManuallyDrop<ReaderState<T>>", "owned: ReaderState<T>"),
     reader.replace("!std::thread::panicking()", "true"),
   ];

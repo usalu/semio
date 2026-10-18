@@ -138,6 +138,4 @@ pub fn sheet_marks(layout: &SheetLayout, labels: &TitleLabels) -> SheetMarks {
     SheetMarks { frame, captions, title_block, revisions }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

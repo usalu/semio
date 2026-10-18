@@ -10,7 +10,7 @@ import {withPublishedPlayPagesV1} from "../📦️site/📄pages/📦️publicat
 import {captureOwnedCommandResultV1} from "../../../../🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import {servePublishedPlay} from "./📦️release/🟦️.ts";
 
-/** 🎭️ Runs acceptance tests only against the server generation prepared and owned by Nx. */
+/** 🎭️ Runs acceptance tests only against the server generation prepared and owned by the build tool. */
 class TestScript extends BundleScript {
   protected selection:readonly string[]=[];
   protected reportDirectory="play-e2e";
@@ -37,7 +37,7 @@ class TestScript extends BundleScript {
   }
 }
 
-/** 🧊️ Keeps the original Nx service and a single browser for current Enduser workflows. */
+/** 🧊️ Keeps the original build-tool service and a single browser for current Enduser workflows. */
 class TestEnduserScript extends TestScript{
  protected override selection=["--grep","3d (en-US|de-DE)|language.*choose"];
  protected override reportDirectory="enduser-2026-10-13/browser";

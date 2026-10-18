@@ -1,16 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmdirSync, rmSync, type Stats, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, posix, relative, resolve } from "node:path";
-import {
-  canonicalPrimaryFilenameForKind,
-  inspectRustModuleGraphFacts,
-  rustModuleScopeProof,
-  inspectRustMutationAggregateSpan,
-  inspectRustStructure,
-  loadCatalogTaxonomy as loadTaxonomy,
-  mutationOwnerIdentity,
-  mutationPayloadSchemaRelativePath,
-} from "../../🔍️discovery/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy as loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { inspectRustModuleGraphFacts, rustModuleScopeProof } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
+import { inspectRustMutationAggregateSpan } from "../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
+import { inspectRustStructure } from "../../🔍️discovery/🏛️rust-structure/🟦️.ts";
+import { mutationOwnerIdentity } from "../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
+import { mutationPayloadSchemaRelativePath } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import {
   POLICY_MUTATION_PLAN_DIR,
   POLICY_MUTATIONS_FACET,
@@ -23,7 +19,9 @@ import {
 import { policyListMutationDirs } from "../../🧹️normalization/🧬️mutation/📇️direct-owner-index/🟦️.ts";
 import { policyKebabToPascal } from "../../🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts";
 import { NEW_SCAFFOLD_MARKER, newScaffoldRustLeaf, NEW_SCAFFOLD_TICKET_PATH, newScaffoldTsLeaf } from "../🧱️contract/🟦️.ts";
-import { CRATE_HARD_BUDGET, CRATE_TARGET_BUDGET, measureRustCrate, resolveOwningCrate } from "../📦️crate-tree/🗺️plan/🟦️.ts";
+import { CRATE_HARD_BUDGET, CRATE_TARGET_BUDGET } from "../📦️crate-tree/🗺️plan/💰️budget/🟦️.ts";
+import { measureRustCrate } from "../📦️crate-tree/🗺️plan/📏️measure/🟦️.ts";
+import { resolveOwningCrate } from "../📦️crate-tree/🗺️plan/📦️cargo-lib/🟦️.ts";
 import { addWorkspaceMembers, insertBuildOwnerRows, manifestRowKey, patchCargoLock, patchRouterPackages, readManifestDependencyRows, rebaseManifestRow, relativePosix, renderCrateManifest } from "../📦️crate-tree/📝️render/🟦️.ts";
 
 export type NewMutationScaffoldOptions = {

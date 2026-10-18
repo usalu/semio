@@ -7,7 +7,8 @@ import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import { build } from "esbuild";
 import { createSourceFile, isFunctionDeclaration, parseConfigFileTextToJson, ScriptTarget } from "typescript";
-import {prepareJavascriptDependencies,javascriptDependencyArgumentsV1} from "../🟦️.ts";
+import {prepareJavascriptDependencies,javascriptDependencyProducerArgumentsV1} from "../💾️storage/🟦️.ts";
+import dependencyInstallSchema from "../💾️storage/🧬️schema/📥️install.json"with{type:"json"};
 import {SyncScript,RefreshLockScript} from "../📜️script.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { bunDistribution, bunArchiveExecutable } from "../../🛠️tools/🟦️bun/📜️script.ts";
@@ -94,19 +95,19 @@ test("selects portable pinned Bun archives and extracts the same bytes as fflate
 
 
 
-test("selects exact portable Bun operations and refuses unissued stores before an installer child",async()=>{for(const operation of fixture.operations)expect(javascriptDependencyArgumentsV1(operation.mode)).toEqual(operation.arguments);await receiveScriptProcessInvocation(process.env,async original=>{for(const args of fixture.rejections)for(const Constructor of[SyncScript,RefreshLockScript])await expect(new Constructor(owner,owner,original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");});let called=false;for(const platform of fixture.platforms)await expect(prepareJavascriptDependencies("sync",platform,{} as never,{} as never,async()=>{called=true;})).rejects.toThrow("Original JavaScript repository required");expect(called).toBe(false);});
+test("selects exact portable Bun operations and refuses unissued stores before an installer child",async()=>{for(const operation of fixture.operations)expect(javascriptDependencyProducerArgumentsV1(operation.mode,"/cache")).toEqual(operation.arguments);await receiveScriptProcessInvocation(process.env,async original=>{for(const args of fixture.rejections)for(const Constructor of[SyncScript,RefreshLockScript])await expect(new Constructor(owner,owner,original).run(args)).rejects.toThrow("accepts --all or --scope <owner>");});for(const platform of fixture.platforms)await expect(prepareJavascriptDependencies("sync",platform,{} as never,{} as never,{kind:"all"})).rejects.toThrow("Actual current dependency Store writer required");});
 
 test("an independent Node bundle executes the same authored command corpus", async () => {
   const artifact = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!artifact) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
   mkdirSync(artifact, { recursive: true });
   const output = mkdtempSync(join(artifact, "javascript-dependencies-")), module = join(output, "dependencies.mjs");
-  const source = createSourceFile("dependencies.ts", readFileSync(join(owner, "🟦️.ts"), "utf8"), ScriptTarget.Latest, true);
-  const operation = source.statements.find(statement => isFunctionDeclaration(statement) && statement.name?.text === "javascriptDependencyArgumentsV1");
+  const source = createSourceFile("dependencies.ts", readFileSync(join(owner, "💾️storage/🟦️.ts"), "utf8"), ScriptTarget.Latest, true);
+  const operation = source.statements.find(statement => isFunctionDeclaration(statement) && statement.name?.text === "javascriptDependencyProducerArgumentsV1");
   if (!operation) throw new Error("Dependency operation is missing");
-  await build({ stdin: { contents: operation.getText(source), loader: "ts" }, outfile: module, platform: "node", format: "esm", logLevel: "silent" });
+  await build({ stdin: { contents: "const installSchema="+JSON.stringify(dependencyInstallSchema)+";"+operation.getText(source), loader: "ts" }, outfile: module, platform: "node", format: "esm", logLevel: "silent" });
   const entry = join(output, "oracle.mjs");
-  writeFileSync(entry, `import { javascriptDependencyArgumentsV1 } from ${JSON.stringify(pathToFileURL(module).href)}; const cases = ${JSON.stringify(fixture.operations)};process.stdout.write(JSON.stringify(cases.map(operation=>({args:javascriptDependencyArgumentsV1(operation.mode),cwd:"workspace"}))));`);
+  writeFileSync(entry, `import { javascriptDependencyProducerArgumentsV1 } from ${JSON.stringify(pathToFileURL(module).href)}; const cases = ${JSON.stringify(fixture.operations)};process.stdout.write(JSON.stringify(cases.map(operation=>({args:javascriptDependencyProducerArgumentsV1(operation.mode,"/cache"),cwd:"workspace"}))));`);
   const child = Bun.spawn(["node", entry], { stdout: "pipe", stderr: "pipe" });
   const [stdout, stderr, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited]);
   expect({ code, stderr }).toEqual({ code: 0, stderr: "" });

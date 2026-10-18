@@ -1,0 +1,9 @@
+# Conditional File Final Named Stat Research
+
+Final completion needs named file facts after every temporary descriptor, directory enumeration and publication-library close. Two resource-owning entry queries cannot establish this boundary: the later close can invalidate the earlier sample. The final fence now uses the still-held original directory and its already-owned system library, with no additional resource opens. It reports current observations rather than a globally immutable snapshot.
+
+Darwin uses the existing qualified descriptor-relative nofollow fstatat ABI and decoder. Linux uses libc statx with directory descriptor plus validated basename, AT_SYMLINK_NOFOLLOW|AT_NO_AUTOMOUNT (2304), and requested/required mask967: type, mode, nlink, inode, size, mtime and ctime. The mask returned by the kernel must contain every required bit. The API is documented from Linux4.11/glibc2.28; missing support refuses during system-library admission. See [Linux statx manual](https://man7.org/linux/man-pages/man2/statx.2.html).
+
+The fixed Linux UAPI structure is256bytes: mask0, nlink16, mode28, inode32, size40, ctime96, mtime112, device major136/minor140. Timestamps use signed64 seconds plus32bit nanoseconds at timestamp+8. The first-party decoder checks ordinary single-link file,8MiB bound and valid nanoseconds, composes Linux dev_t with BigInt, and emits only first-party seven-field identity. See [kernel UAPI header](https://github.com/torvalds/linux/blob/master/include/uapi/linux/stat.h).
+
+Fifteen portable vectors compare exact decoder output with independent Python struct parsing and integer arithmetic, including wide IDs/device values, negative times, missing fields and malformed buffers. This is Source evidence. The current macOS host runs actual Darwin transitions; Docker read-only version probe failed because its daemon socket is absent. No actual Linux acceptance or Windows atomic implementation is claimed.

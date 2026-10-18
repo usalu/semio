@@ -1,4 +1,4 @@
-use crate::primitives::{make_box, make_planar_face_from_points};
+use semio_framework_3d_brep_construction::primitives::{make_box, make_planar_face_from_points};
 use semio_framework_3d_brep_representation::topology::{history, Body};
 use semio_framework_3d_brep_vector::Pnt3;
 

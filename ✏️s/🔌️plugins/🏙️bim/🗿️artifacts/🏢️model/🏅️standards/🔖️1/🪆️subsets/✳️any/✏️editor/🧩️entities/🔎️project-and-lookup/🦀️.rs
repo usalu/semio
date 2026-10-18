@@ -1,6 +1,7 @@
 //! 🔎️ Project and lookup of the BIM entity table: the project fields, the classification text and the kind, holding, id and storey lookups. See [`super`].
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, mutations::ModelMutation};
+use crate::editor::bim::entities::*;
 
 //#region 🔖️Project
 /// 📇️ The id the project record answers to in `setField`: the project is no entity of the table, so its parameters are rows of their own.

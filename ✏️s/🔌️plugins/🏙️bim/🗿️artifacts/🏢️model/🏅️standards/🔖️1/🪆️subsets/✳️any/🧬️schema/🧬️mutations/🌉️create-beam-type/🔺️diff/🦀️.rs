@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateBeamType`: one created beam type entry. The id must be free, the material must exist and the profile must be a valid cross-section.
 
-use super::super::elements;
-use super::CreateBeamType;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_beam_type::CreateBeamType;
 use crate::standards::v1::subsets::any::schema::{snapshot::{profile_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

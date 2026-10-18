@@ -11,7 +11,7 @@ import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦
  * `--features conformance` check of the library itself, so a break in the feature half stays visible
  * before hub's own build hits it. Nothing else depends on this crate, which is exactly how 28 errors
  * once survived a month here (`📓️h2-server-crate-and-wave3-memo.md` §B.7 step 14). */
-import { runCargo } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

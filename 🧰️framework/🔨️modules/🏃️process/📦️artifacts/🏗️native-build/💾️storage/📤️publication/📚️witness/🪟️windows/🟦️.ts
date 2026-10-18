@@ -1,3 +1,4 @@
+import{nativeWindowsReadProtocolV1}from"../../../🧱️fixed/🗂️system/🟦️.ts";
 /** 📚️ Windows: module exporting `NativeWindowsPublicationFactsV1`, `NativeWindowsPublicationFileV1`, `NativeWindowsPublicationDirectoryV1`, `NativeWindowsPublicationFilesystemV1` and more. */
 import platformSchema from"../../../🧬️schema/🔣️.json";
 import{readNativeWindowsPublicationHostSessionInputV1,readNativeWindowsPublicationHostContextV1,type NativeWindowsPublicationHostSessionInputV1,type NativeWindowsPublicationHostEvidenceV1,type NativeWindowsPublicationHostRecordV1}from"./🗃️host/🟦️.ts";
@@ -11,7 +12,7 @@ export{readNativeWindowsDirectoryEntryV1,requireNativeWindowsPublicationObserver
 export type{NativeWindowsDirectoryEntryV1,NativeWindowsPublicationRootV1}from"./🔒️handles/🟦️.ts";
 import type{NativeWindowsDirectoryEntryV1,NativeWindowsPublicationRootV1}from"./🔒️handles/🟦️.ts";
 const nativeMountDirectory=platformSchema.definitions.ImageProtocol.const.mountDirectory;
-const protocol=Object.freeze({...exportedSchema.definitions.Protocol.const}),same=(a:NativeWindowsReadFactsV1,b:NativeWindowsReadFactsV1)=>JSON.stringify(a)===JSON.stringify(b),identity=(row:NativeWindowsReadFactsV1)=>JSON.stringify([row.path,row.volume,row.volumeSerial,row.fileId,row.nativeDevice,row.nativeInode,row.kind,row.attributes,row.creationTime,row.securitySha256,row.finalPath]);
+const protocol=nativeWindowsReadProtocolV1,same=(a:NativeWindowsReadFactsV1,b:NativeWindowsReadFactsV1)=>JSON.stringify(a)===JSON.stringify(b),identity=(row:NativeWindowsReadFactsV1)=>JSON.stringify([row.path,row.volume,row.volumeSerial,row.fileId,row.nativeDevice,row.nativeInode,row.kind,row.attributes,row.creationTime,row.securitySha256,row.finalPath]);
 /** 🧾️ Carries exact simultaneous Native views without external runtime API types. */
 export type NativeWindowsPublicationFactsV1=NativeWindowsReadFactsV1;
 /** 📖️ Exposes one privately retained file handle only through bounded owned reads. */

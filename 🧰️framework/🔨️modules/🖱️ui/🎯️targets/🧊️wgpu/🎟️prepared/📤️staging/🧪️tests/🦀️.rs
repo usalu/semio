@@ -2,7 +2,7 @@ use super::*;
 
 /// 🧫️ Drives one original staging turn under the independently authored fixed test authority.
 fn close_original_staging(close: impl FnOnce(RetainedCloneGrant) -> Result<CloseStep, ValueError>) -> bool {
-    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🎟️close-grant.json")).unwrap();
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧷️prepared-staging/🎟️close-grant.json")).unwrap();
     let n = |key: &str| law["grant"][key].as_u64().unwrap() as usize;
     let grant = RetainedCloneGrant { maximum_items: n("maximumItems"), maximum_copy_bytes: n("maximumCopyBytes"), maximum_capacity_bytes: n("maximumCapacityBytes"), maximum_release_bytes: n("maximumReleaseBytes"), maximum_depth: n("maximumDepth") };
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close(grant));

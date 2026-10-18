@@ -4,8 +4,8 @@
 //! Whole-list ruling: the boundary and the holes are ONE planar region that only validates together (every hole strictly inside
 //! the boundary); holes have no identity, so the region replaces as the boundary and holes it names.
 
-use super::super::horizontal_rules::{holes_fault, loop_fault};
-use super::SetSlabBoundary;
+use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::{holes_fault, loop_fault};
+use crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::SlabPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

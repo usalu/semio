@@ -6,9 +6,12 @@
 //#region 🔌️Adapters
 import { testLevelBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { type Implementation } from "@semio-tech/framework/test/adapter";
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { join, relative, sep } from "node:path";
-import { getRepoMetaDir, runProbe } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getRepoMetaDir } from "../../📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
+import { runProbe } from "../../📚️library/🏃️process/🔍️probe/🟦️.ts";
+import { writeCanonicalGoWorkspaceOverlay } from "../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
 import { isExcludedTestPath, isTestOraclePath, TEST_DOMAIN_REL_PATH, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { SKIP_DIR_NAMES, walkDirectories } from "../🧭️case-discovery/🟦️.ts";
 import { oraclePackages } from "../🗃️oracle-registry/🟦️.ts";
@@ -271,9 +274,17 @@ export function scanDeclaredDependencies(repoRoot: string, registry: OracleRegis
 
 /** 🐹️ Production dependency closure of a Go module — `go list` deps of the non-test build. */
 export function goProductionClosure(repoRoot: string, moduleDir: string): string[] {
-  const probe = runProbe("go", ["list", "-deps", "..."], { cwd: join(repoRoot, moduleDir), env: { ...process.env, GOWORK: join(repoRoot, "go.work") }, budgetMs: testLevelBudgetMs("long") });
-  if ((probe.status ?? 1) !== 0) return [];
-  return probe.stdout
+  const scratch = mkdtempSync(join(tmpdir(), "semio-go-closure-"));
+  let stdout: string;
+  try {
+    const overlay = writeCanonicalGoWorkspaceOverlay(join(scratch, "overlay.json"), [join(repoRoot, moduleDir)]);
+    const probe = runProbe("go", ["list", `-overlay=${overlay}`, "-deps", "..."], { cwd: join(repoRoot, moduleDir), env: { ...process.env, GOWORK: join(repoRoot, "go.work") }, budgetMs: testLevelBudgetMs("long") });
+    if ((probe.status ?? 1) !== 0) return [];
+    stdout = probe.stdout;
+  } finally {
+    rmSync(scratch, { recursive: true, force: true });
+  }
+  return stdout
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line.includes(".") && line.includes("/"));

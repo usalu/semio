@@ -33,7 +33,7 @@ pub fn group_volumes(solid: &ElementSolid, rows: &[LayerQuantity]) -> Vec<f64> {
     solid.groups.iter().map(|group| keys.iter().position(|key| *key == (group.layer, group.material.as_str())).and_then(|at| rows.get(at)).map_or(0.0, |row| row.volume)).collect()
 }
 
-fn slab(x: &mut Export<'_>, id: &str, row: &Slab) {
+pub fn slab(x: &mut Export<'_>, id: &str, row: &Slab) {
     let model = x.model;
     let (Some(storey), Some(kind), Some(bounds)) = (x.storeys.get(&row.storey).copied(), model.slab_types.get(&row.slab_type), x.solid(id).map(|solid| solid.bounds)) else {
         x.skip("slab", id, "its storey, type or inferred solid is missing");
@@ -86,7 +86,7 @@ fn slab(x: &mut Export<'_>, id: &str, row: &Slab) {
     });
 }
 
-fn roof(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Roof) {
+pub fn roof(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Roof) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("roof", id, "its storey is missing");
         return;
@@ -133,6 +133,4 @@ pub fn emit(x: &mut Export<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

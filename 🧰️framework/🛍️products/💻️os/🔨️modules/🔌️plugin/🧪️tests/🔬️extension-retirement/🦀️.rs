@@ -390,7 +390,7 @@ pub fn close_registry(registry:&mut ExtensionBundleRegistry,cx:&mut semio_framew
                 if extension_retirement_demands(small_bytes as usize).unwrap().release_bytes > small_bytes as usize { break; }
             }
             let demand = extension_retirement_demands(small_bytes as usize).unwrap();
-            let lifecycle = semio_framework_plugin_runtime_instances::inst_opening::runtime_lifecycle_grant();
+            let lifecycle = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_retained_turn().grant;
             assert!(demand.release_bytes > small_bytes as usize && demand.release_bytes <= adequate_bytes as usize && demand.release_bytes <= lifecycle.maximum_release_bytes);
             assert!(yielded(cx.with_retained_loan(RetainedCloneGrant { maximum_release_bytes: small_bytes as usize, ..lifecycle },|same|extension_close_step(same)).unwrap()));
             assert_eq!(extension_retirement_demands(small_bytes as usize).unwrap(),demand);

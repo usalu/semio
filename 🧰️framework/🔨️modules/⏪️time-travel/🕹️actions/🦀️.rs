@@ -234,9 +234,14 @@ pub fn history_edit_finalize_dialog() -> DialogDefinition {
         )
 }
 
+/// 🧩️ The history-edit dialog roster: the finalize dialog.
+pub fn history_edit_dialog_definitions() -> Vec<DialogDefinition> {
+    vec![history_edit_finalize_dialog()]
+}
+
 /// 🧩️ The history-edit contribution: the thirteen verbs join the app roster, the finalize dialog joins every app that may
 /// edit.
-pub const RESERVED: ReservedContribution = ReservedContribution::new("historyEdit").with_app_actions(history_edit_action_definitions).with_editor_dialogs(history_edit_finalize_dialog);
+pub const RESERVED: ReservedContribution = ReservedContribution::new("historyEdit").with_app_actions(history_edit_action_definitions).with_editor_dialogs(history_edit_dialog_definitions);
 
 //#endregion 🔖️HistoryEdit
 

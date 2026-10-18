@@ -126,6 +126,4 @@ pub fn table_problems(expected: &str, actual: &str) -> Vec<String> {
     problems
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

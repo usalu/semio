@@ -1,4 +1,5 @@
-import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, taxonomyRelativePathIsExcluded } from "../../../🔍️discovery/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { taxonomyRelativePathIsExcluded } from "../../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
 import { isAbsolute } from "node:path";
 
 /** 🧹️Drops every non-ASCII codepoint (emoji + variation selectors), e.g. `"📐️cad"` -> `"cad"`, `"🗣️dsl"` -> `"dsl"`. */

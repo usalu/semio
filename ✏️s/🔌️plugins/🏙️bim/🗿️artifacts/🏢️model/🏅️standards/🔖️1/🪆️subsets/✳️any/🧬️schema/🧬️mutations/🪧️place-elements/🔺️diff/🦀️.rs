@@ -2,8 +2,8 @@
 //! exactly its placement fields. Placements equal to the current one are left out. Refused: an empty map, an id that is no element or
 //! has no placement, a placement of another element kind, a non-finite number; nothing to change is `mutation.no-op`.
 
-use super::super::elements::{self, Change, Refusal};
-use super::PlaceElements;
+use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Change, Refusal};
+use crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

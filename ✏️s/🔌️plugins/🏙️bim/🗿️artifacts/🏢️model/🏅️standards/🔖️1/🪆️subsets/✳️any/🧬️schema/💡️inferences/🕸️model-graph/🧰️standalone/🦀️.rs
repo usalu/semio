@@ -1,6 +1,6 @@
 //! 🧰️ Standalone projections of one inference kind: each reads the model graph through its driver and takes the one table, for tests, oracles and one-shot callers that want a single kind without a session.
 
-use super::{kinds, try_infer_selected};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, try_infer_selected};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::schema::inferences::{ModelInference, curtain_layout::CurtainLayout, diagnostics::Diagnostic, element_solids::ElementSolid, opening_frames::OpeningFrame, plan_linework::PlanLinework, quantities::ModelQuantities, ramp_runs::RampRun, spaces::SpaceRoom, stair_runs::StairRun, storey_levels::StoreyLevel, view_linework::ViewLinework, wall_layout::WallLayout};

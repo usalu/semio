@@ -36,6 +36,8 @@ semio-s-artifact-stdio-step-snapshot = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-step-snapshot = { workspace = true, features = ["testkit"] }
+semio-s-artifact-stdio-step-mutations = { workspace = true, features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-dsl = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

@@ -62,7 +62,7 @@
         "{projectRoot}/../../🛂️manifest/📇️outputs.json",
         "{projectRoot}/📜️script.ts",
         "{projectRoot}/📋️project.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/**/*.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
       ],
       "outputs": [

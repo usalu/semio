@@ -2,7 +2,7 @@ import {CargoCompilationSnapshotPoolV1,type CargoCompilationRetentionContextV1,t
 import {completedCargoOutputClaimsV1} from "./🧾️receipt/📦️retention/📋️inventory/🟦️.ts";
 import{withCargoCompilerInputsV1,type CargoCompilerInputsPortV1}from"./📥️inputs/🟦️.ts";
 import {withIssuedResourceOperationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1} from "../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {observePhysicalFileV1,readPhysicalFileV1} from "@semio-tech/framework/filesystem/observation";
+import {observePhysicalFileV1,readPhysicalFileV1} from "../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts";
 import {withArtifactDescriptorSlotV1} from "../📤️publication/📥️sources/🟦️.ts";
 import captureSourceSchemaDocument from "../📤️publication/📥️sources/🧬️schema/🔣️.json" with {type:"json"};
 const captureSourceSchema=structuredClone(captureSourceSchemaDocument);
@@ -27,8 +27,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { homedir } from "node:os";
 import { createInterface } from "node:readline";
 import {copyFile,lstat,mkdir,open,rename,rm,type FileHandle} from "node:fs/promises";
-import type { FileObservationControlV1 } from "@semio-tech/framework/filesystem/observation";
-import {CURRENT_PHYSICAL_CONCURRENCY_V1,CurrentPhysicalFilesV1,CurrentPhysicalOwnerV1,mapBoundedV1,type CurrentPhysicalEntryV1,type CurrentPhysicalPortV1} from "@semio-tech/framework/filesystem/observation/current";
+import type { FileObservationControlV1 } from "../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/🟦️.ts";
+import {CURRENT_PHYSICAL_CONCURRENCY_V1,CurrentPhysicalFilesV1,CurrentPhysicalOwnerV1,mapBoundedV1,type CurrentPhysicalEntryV1,type CurrentPhysicalPortV1} from "../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import {
   CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,
   CargoProvenanceStreamV1,
@@ -294,7 +294,7 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
 }
 
 /** 🪵️ Forwards a compiler's diagnostics live up to a line budget, keeps the complete stream in a log file and, after a failure, replays the newest lines.
- * A release build replays the cached warnings of every fresh unit into every component task (build #9: 945 MB), so an unbounded forward floods the task log and the outer Nx buffer. */
+ * A release build replays the cached warnings of every fresh unit into every component task (build #9: 945 MB), so an unbounded forward floods the task log and the outer build buffer. */
 export class BoundedDiagnosticsV1 {
   lines = 0;
   suppressed = 0;

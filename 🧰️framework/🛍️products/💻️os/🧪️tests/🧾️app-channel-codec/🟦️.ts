@@ -366,7 +366,7 @@ describe("@semio-tech/framework-os AppChannelCodec", () => {
     const { fileURLToPath } = await import("node:url");
     const { dirname, join } = await import("node:path");
     const here = dirname(fileURLToPath(source.url));
-    const pin = JSON.parse(readFileSync(join(here, "🧪️tests/🧫️fixtures", "📡️channel", "🔖️channel-version.json"), "utf8")) as { channelVersion: number };
+    const pin = JSON.parse(readFileSync(join(here, "🔨️modules/🧑‍💻dev/🔖️channel-version/📌️pin/🔣️.json"), "utf8")) as { channelVersion: number };
     expect(APP_CHANNEL_VERSION).toBe(pin.channelVersion);
   });
 
@@ -519,7 +519,7 @@ describe("resumable media export wire", () => {
 
   it("matches the shared Rust vectors and the independent LEB128 encoder without rounding", async () => {
     const { readFileSync } = await import("node:fs");
-    const directory = "./🔨️modules/📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🎬️media-export-wire";
+    const directory = "./🔨️modules/📡️spr/🧵️channel/🧪️tests/🧫️fixtures/🎬️media-export-wire/";
     const fixture = JSON.parse(readFileSync(new URL(directory + "🔣️.json", source.url), "utf8"));
     const oracleModule = "@webassemblyjs/leb128/lib/leb.js";
     const imported = await import(oracleModule);

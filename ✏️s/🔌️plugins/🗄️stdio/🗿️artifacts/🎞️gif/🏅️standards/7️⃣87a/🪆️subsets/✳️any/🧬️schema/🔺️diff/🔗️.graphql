@@ -1,5 +1,5 @@
-# 🧬️ GifDiff
-type GifDiff {
-  schema: String
-  bytes: String
-}
+type GifImageDiff { left: Int top: Int width: Int height: Int interlace: Boolean lct: GifColorTable indices: [Int!] }
+type GifImageModified { index: Int! diff: GifImageDiff! }
+type GifImageAdded { index: Int! image: GifImage! }
+type GifImagesDiff { removed: [Int!] modified: [GifImageModified!] added: [GifImageAdded!] }
+type GifDiff { width: Int height: Int gct: GifColorTable backgroundColorIndex: Int pixelAspectRatio: Int images: GifImagesDiff }

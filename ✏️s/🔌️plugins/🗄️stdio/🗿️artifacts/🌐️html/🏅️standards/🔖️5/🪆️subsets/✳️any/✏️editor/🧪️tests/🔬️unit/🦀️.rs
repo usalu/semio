@@ -1,5 +1,5 @@
 use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
-use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::Editor;
@@ -9,7 +9,7 @@ use semio_framework_plugin::InteractiveJobClassification;
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
 use crate::editor::html::{HTML_KIT_ACTION_ID, html_example_snapshot, html_command_from_action, html_emit};
 use crate::editor::html::*;
-use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode};
 
 #[test]
 fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
@@ -21,7 +21,7 @@ fn text_edit_requires_an_explicit_text_value_and_allows_empty_documents() {
 #[test]
 fn natural_file_route_exports_html5_and_reopens_the_same_document() {
     let source = b"<!doctype html><html><head><title>Natural Open Save</title></head><body><p>Edited body.</p></body></html>";
-    let edited = crate::standards::v5::subsets::any::io::text::snapshot::parse_html_document(std::str::from_utf8(source).unwrap()).expect("HTML fixture");
+    let edited = semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::parse_html_document(std::str::from_utf8(source).unwrap()).expect("HTML fixture");
     let bytes = <HtmlEditor as ArtifactEditor>::encode_natural_file(&edited).expect("HTML natural bytes");
     let oracle = semio_s_artifact_stdio_html_test_oracle::standards::v5::subsets::any::project_html_5;
     assert_eq!(oracle(&bytes).expect("html5ever reads exported HTML"), oracle(source).expect("html5ever reads expected HTML"));
@@ -80,7 +80,7 @@ async fn the_example_switch_joins_its_exact_retained_factory() {
 /// unknown or empty id falls back to the genesis document.
 #[semio_framework_async_macros::async_test]
 async fn the_curated_example_carries_visible_content() {
-    let example = html_example_snapshot(crate::examples::demo::ID);
+    let example = html_example_snapshot(semio_s_artifact_stdio_html_inferences::examples::demo::ID);
     assert_ne!(example, HtmlSnapshot::default());
     assert_eq!(html_example_snapshot(""), HtmlSnapshot::default());
     assert_eq!(html_example_snapshot("no-such-example"), HtmlSnapshot::default());
@@ -126,7 +126,7 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 /// `interactive-job.missing-factory` (S15, session 11).
 #[semio_framework_async_macros::async_test]
 async fn the_kit_verb_loads_the_document_through_its_exact_retained_factory() {
-    let target = html_example_snapshot(crate::examples::demo::ID);
+    let target = html_example_snapshot(semio_s_artifact_stdio_html_inferences::examples::demo::ID);
     let mut app = kit_fixture_holding(&HtmlSnapshot::default()).await;
     dispatch_settled(&mut app, "textEdit", &[("text", &<HtmlSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&target))]).await.expect("textEdit settles");
     assert_eq!(app.snapshot().expect("html snapshot"), target);
@@ -137,7 +137,7 @@ async fn the_kit_verb_loads_the_document_through_its_exact_retained_factory() {
 /// `stdio.html.invalid-text` and leaves the document untouched.
 #[semio_framework_async_macros::async_test]
 async fn text_edit_refuses_text_that_is_not_the_artifacts_dsl() {
-    let example = html_example_snapshot(crate::examples::demo::ID);
+    let example = html_example_snapshot(semio_s_artifact_stdio_html_inferences::examples::demo::ID);
     let mut app = kit_fixture_holding(&example).await;
     let fault = dispatch_settled(&mut app, "textEdit", &[("text", "not a dsl document")]).await.expect_err("invalid text is refused");
     assert!(format!("{fault:?}").contains("stdio.html.invalid-text"), "{fault:?}");
@@ -148,7 +148,7 @@ async fn text_edit_refuses_text_that_is_not_the_artifacts_dsl() {
 /// ⚖️ LAW: the window's DSL envelope is a whole-document dump, so an Apply is a load and publishes no mutation row.
 #[test]
 fn an_applied_envelope_is_a_load_and_publishes_no_mutation() {
-    let next = html_example_snapshot(crate::examples::demo::ID);
+    let next = html_example_snapshot(semio_s_artifact_stdio_html_inferences::examples::demo::ID);
     let emit = html_emit(&HtmlEditCommand::LoadText { text: <HtmlSnapshot as pack::snapshot::ArtifactDsl>::print_dsl(&next) }).expect("the envelope parses");
     assert!(emit.artifact_mutations.is_empty());
     assert!(matches!(emit.effects.as_slice(), [semio_framework_plugin::Effect::LoadDocument { .. }]));
@@ -160,7 +160,7 @@ fn an_applied_envelope_is_a_load_and_publishes_no_mutation() {
 #[test]
 fn replacing_the_whole_source_is_refused_as_a_load() {
     use semio_s_artifact_stdio_contract::editing::{snapshot_edit_source, SnapshotEditEvent, SnapshotEditingEditor};
-    let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&html_example_snapshot(crate::examples::demo::ID)) };
+    let event = SnapshotEditEvent::ReplaceSource { source: snapshot_edit_source(&html_example_snapshot(semio_s_artifact_stdio_html_inferences::examples::demo::ID)) };
     assert_eq!(<HtmlEditor as SnapshotEditingEditor>::snapshot_edit_emit(&event, &HtmlSnapshot::default()).err().expect("a load, not an edit").code.0, "snapshot-edit.unsupported-path");
 }
 //#endregion 🪟️DetailsLaws

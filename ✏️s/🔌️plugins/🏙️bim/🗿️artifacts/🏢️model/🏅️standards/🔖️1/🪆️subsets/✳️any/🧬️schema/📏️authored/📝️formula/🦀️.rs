@@ -126,6 +126,4 @@ pub fn set_slot(solid: &mut FamilySolid, field: &str, text: &str) -> bool {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

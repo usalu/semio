@@ -70,14 +70,11 @@
     "type": "setDocumentInferencePort",
     "documentId": "doc-1",
     "port": {
-      "phase": "offered",
-      "jobId": "11111111111111111111111111111111",
-      "cursor": 3,
-      "completed": 3,
-      "total": 3,
-      "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
-      "cancelRequested": false,
-      "code": null
+      "owner": "neutral-owner",
+      "serviceId": "neutral.service",
+      "payload": {
+        "progress": 3
+      }
     }
   },
   "expected": {
@@ -142,14 +139,11 @@
       "syncStatusByDocument": {},
       "inferencePortByDocument": {
         "doc-1": {
-          "phase": "offered",
-          "jobId": "11111111111111111111111111111111",
-          "cursor": 3,
-          "completed": 3,
-          "total": 3,
-          "proposalHash": "9071779b724c67e0a45d5e23fddc8dbeb3d9b537936a4a14c293bc373960b130",
-          "cancelRequested": false,
-          "code": null
+          "owner": "neutral-owner",
+          "serviceId": "neutral.service",
+          "payload": {
+            "progress": 3
+          }
         }
       },
       "mergePolicy": "manual",

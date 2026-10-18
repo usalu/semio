@@ -3,7 +3,9 @@
  */
 import { NativeDependenciesScript } from "../../⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
 import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { dispatchSubcommand, runCmd, installMicroCommitGitHooks } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { dispatchSubcommand } from "../../🚨️policy/🧭️entrypoints/🟦️.ts";
+import { runCmd } from "../../🏃️process/🟦️.ts";
+import { installMicroCommitGitHooks } from "../📝️commit/🪝️hooks/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, linkSync, mkdirSync, readFileSync, rmSync, symlinkSync } from "node:fs";
 import { dirname, join, relative } from "node:path";

@@ -1,0 +1,30 @@
+import { parseFile, sccs } from "./lib.ts";
+const file = process.argv[2];
+const p = parseFile(file);
+const n = p.units.length;
+console.log(`units=${n} imports=${p.importStmts.length} reexports=${p.reexports.length} localExportLists=${p.localExportLists.length}`);
+const comps = sccs(n, (i) => p.units[i].deps);
+const big = comps.filter((c) => c.length > 1).sort((a, b) => b.length - a.length);
+console.log(`sccs=${comps.length} nonTrivial=${big.length}`);
+for (const c of big.slice(0, 15)) {
+  const lines = c.reduce((s, i) => s + p.units[i].lines, 0);
+  console.log(`  scc size=${c.length} lines=${lines} e.g. ${c.slice(0, 6).map((i) => [...p.units[i].names][0] ?? p.units[i].kind).join(",")}`);
+}
+const effects = p.units.filter((u) => u.effect);
+console.log(`effect units=${effects.length}`);
+for (const e of effects.slice(0, 20)) console.log(`  L${e.startLine}-${e.endLine} ${e.kind} ${p.text.slice(e.start, e.start + 80).replace(/\n/g, " ")}`);
+const meta = p.units.filter((u) => u.usesMeta);
+console.log(`meta units=${meta.length}: ${meta.map((u) => [...u.names][0] + "@" + u.startLine).join(" ")}`);
+const lets = p.units.filter((u) => u.kind === "let" || u.kind === "var");
+console.log(`let/var units=${lets.length}: ${lets.map((u) => [...u.names].join("/") + "@" + u.startLine).join(" ")}`);
+const merged = p.units.filter((u) => u.stmts.length > 1);
+console.log(`merged units=${merged.length}: ${merged.slice(0, 20).map((u) => [...u.names][0] + "x" + u.stmts.length).join(" ")}`);
+const byRegion = new Map<string, number>();
+for (const u of p.units) byRegion.set(u.region, (byRegion.get(u.region) ?? 0) + u.lines);
+console.log("regions:");
+for (const [r, l] of byRegion) console.log(`  ${l}\t${r}`);
+const kinds = new Map<string, number>();
+for (const u of p.units) kinds.set(u.kind, (kinds.get(u.kind) ?? 0) + 1);
+console.log([...kinds].map(([k, v]) => `${k}=${v}`).join(" "));
+for (const l of p.localExportLists) console.log("exportlist:", l.getText().slice(0, 150));
+for (const l of p.reexports) console.log("reexport:", l.getText().slice(0, 150));

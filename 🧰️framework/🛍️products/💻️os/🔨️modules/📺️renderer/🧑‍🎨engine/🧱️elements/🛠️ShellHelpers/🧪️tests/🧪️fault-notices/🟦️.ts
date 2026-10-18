@@ -39,7 +39,7 @@ describe("📣️ app fault notices reach the person in the shell's language, ne
     const ajv = new Ajv2020({ strict: true }).addSchema(valueSchema).addSchema(faultSchema);
     const validate = ajv.getSchema(`${faultSchema.$id}#/$defs/Fault`)!;
     for (const row of corpus.resolutions as unknown as readonly Resolution[]) {
-      const fault = { origin: "app", severity: "error", message: row.fault.message ?? "", code: row.fault.code, ...(row.fault.params === undefined ? {} : { params: row.fault.params }) };
+      const fault = { origin: "app", severity: "error", message: row.fault.message ?? "", retryable: false, retainedProgress: { copiedItems: 0, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: 0 }, code: row.fault.code, ...(row.fault.params === undefined ? {} : { params: row.fault.params }) };
       expect(validate(fault), `${row.id}: ${JSON.stringify(validate.errors)}`).toBe(true);
     }
   });

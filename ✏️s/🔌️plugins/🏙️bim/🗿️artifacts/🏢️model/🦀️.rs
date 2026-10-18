@@ -9,57 +9,7 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 extern crate semio_framework_value_derive as value_derive;
 
-
-//#region 🔖️Declaration
-/// 🔖️ This artifact's capability definition: standard, schema, inference, document codec and localization rows.
-pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::ArtifactDefinitionError> {
-    use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, ArtifactLocale, ArtifactLocalization};
-
-    let codec_extension = format!("{}:{}:bim", standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA.chars().count(), standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA);
-    let rows: Vec<(&str, &str, &str, Vec<(&str, &str)>, Option<(&str, &str)>)> = vec![
-        ("s.bim.model.standard.v1", "standard", "1", vec![], None),
-        ("s.bim.model.standard.v1.profile.any", "profile", "any", vec![], None),
-        ("s.bim.model.schema.artifact", "schema", "s.bim.model", vec![("schema", "s.bim.model")], None),
-        ("s.bim.model.inference.artifact", "inference", "s.bim.model.inference", vec![("schema", "s.bim.model.inference")], None),
-        ("s.bim.model.codec.document-1", "codec", "bim.model:bim", vec![("codec", standards::v1::subsets::any::schema::BIM_MODEL_DOCUMENT_SCHEMA), ("codec-extension", codec_extension.as_str())], None),
-        ("s.bim.model.localization.en", "localization", "BIM Model", vec![], Some(("en", "BIM Model"))),
-        ("s.bim.model.localization.de", "localization", "BIM-Modell", vec![], Some(("de", "BIM-Modell"))),
-    ];
-    let mut definition = ArtifactDefinition::new(ArtifactIdentity::parse("s.bim.model")?);
-    for (identity, kind, descriptor, claims, localization) in rows {
-        let mut capability = ArtifactCapability::new(ArtifactIdentity::parse(identity)?, ArtifactCapabilityKind::parse(kind)?).descriptor(descriptor.as_bytes())?;
-        for (namespace, value) in claims {
-            capability = capability.claim(ArtifactIdentityClaim::new(ArtifactIdentityNamespace::parse(namespace)?, value)?)?;
-        }
-        if let Some((locale, text)) = localization {
-            capability = capability.localization(ArtifactLocalization::new(ArtifactLocale::parse(locale)?, text)?)?;
-        }
-        definition = definition.capability(capability)?;
-    }
-    Ok(definition)
-}
-
-/// 🌳️ This artifact's declaration tree root, consumed by the hub composition through `declare_artifact`: schema, io (native codec and the IFC, glTF and SVG hops), viewer, editor and examples of every subset.
-pub fn artifact<A: BimApplication>() -> semio_framework_plugin::app::declarations::ArtifactDeclaration<A> {
-    use semio_framework_plugin::app::declarations::ArtifactDeclaration;
-    ArtifactDeclaration { kind: semio_framework_artifact_reference::ArtifactKindId::parse(standards::v1::subsets::any::schema::BIM_MODEL_DIALECT.artifact_kind).expect("canonical BIM kind"), localization: &[], standards: vec![standards::v1::standard()] }
-}
-
-/// 🧩️ App fleet capable of hosting this artifact's editor and viewer.
-pub trait BimApplication:
-    semio_framework_plugin::PluginApp
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::bim::BimModelApp>>>
-    + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::bim::BimModelViewer>>>
-{
-}
-
-impl<A> BimApplication for A where
-    A: semio_framework_plugin::PluginApp
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::EditorApp<editor::bim::BimModelApp>>>
-        + From<semio_framework_plugin::VcsArtifactApp<semio_framework_plugin::ViewerApp<viewer::bim::BimModelViewer>>>
-{
-}
-//#endregion 🔖️Declaration
+pub use semio_s_artifact_bim_model_v1::{BimApplication, artifact, definition};
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
@@ -69,807 +19,216 @@ mod tests;
 pub mod standards {
     #[path = "."]
     pub mod v1 {
-        #[path = "🏅️standards/🔖️1/🦀️.rs"]
-        mod v1_component;
-        pub use v1_component::*;
+        pub use semio_s_artifact_bim_model_v1::standards::v1::*;
+
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🦀️.rs"]
-                mod any_component;
-                pub use any_component::*;
+                pub use semio_s_artifact_bim_model_v1::standards::v1::subsets::any::*;
+
                 #[path = "."]
                 pub mod schema {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
+                    pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::*;
+
                     pub mod snapshot {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod authored {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📏️authored/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+    pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::snapshot::*;
+    pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::anchors_values;
+    pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::phases_values;
+    pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::schedule_kit_values;
+    pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::views_values;
+}
+                    pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::authored;
+                    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::diff;
                     #[path = "."]
                     pub mod inferences {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod storey_levels {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏢️storey-levels/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod model_graph {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🕸️model-graph/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod wall_layout {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧱️wall-layout/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod curtain_layout {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪞️curtain-layout/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod opening_frames {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪟️opening-frames/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod stair_runs {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪜️stair-runs/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod ramp_runs {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🛝️ramp-runs/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod spaces {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏠️spaces/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod quantities {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧮️quantities/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod option_scope {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧭️option-scope/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod phase_visibility {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎭️phase-visibility/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod finishes {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🎨️finishes/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod zones {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏘️zones/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod effective_properties {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🏷️effective-properties/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod schedules {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📋️schedules/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod families {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧬️families/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod components {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪑️components/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod mep {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌀️mep/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod bodies {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️bodies/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod plan_linework {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🗺️plan-linework/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod view_linework {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🖼️view-linework/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod sheet_layout {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📄️sheet-layout/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod analytical_members {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦴️analytical-members/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod energy_envelope {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🌡️energy-envelope/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod clash_sets {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧨️clash-sets/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod rule_results {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚖️rule-results/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod annotation_layout {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🪧️annotation-layout/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod diagnostics {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/⚠️diagnostics/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
+                        pub use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::*;
+
+                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::storey_levels;
+                        pub use semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph;
+                        pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::wall_layout;
+                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::curtain_layout;
+                        pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::opening_frames;
+                        pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::inferences::stair_runs;
+                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::ramp_runs;
+                        pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::spaces;
+                        pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::quantities;
+                        pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::option_scope;
+                        pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::inferences::phase_visibility;
+                        pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::finishes;
+                        pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::zones;
+                        pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::effective_properties;
+                        pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::schedules;
+                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::families;
+                        pub use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::components;
+                        pub use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::mep;
+                        pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::bodies;
+                        pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::plan_linework;
+                        pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::view_linework;
+                        pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::sheet_layout;
+                        pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::analytical_members;
+                        pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::energy_envelope;
+                        pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::clash_sets;
+                        pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::schema::inferences::rule_results;
+                        pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::schema::inferences::annotation_layout;
+                        pub use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::diagnostics;
                         #[path = "."]
                         pub mod element_solids {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                            #[path = "."]
-                            pub mod walls {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🧱️walls/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod curtain_walls {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🪟️curtain-walls/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod fillers {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🚪️fillers/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod wall_sweeps {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🧷️wall-sweeps/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod plan_kit {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/📐️plan-kit/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod columns {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🏛️columns/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod beams {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/➖️beams/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod slabs {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/⬜️slabs/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod ceilings {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🔲️ceilings/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod roofs {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🏠️roofs/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod stairs {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🪜️stairs/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod railings {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🛤️railings/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod ramps {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🛝️ramps/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod components {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🪑️components/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod mep {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🌀️mep/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
-                            #[path = "."]
-                            pub mod rail_hosts {
-                                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🧊️element-solids/🪝️rail-hosts/🦀️.rs"]
-                                mod component;
-                                pub use component::*;
-                            }
+                            pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::*;
+
+                            pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::walls;
+                            pub use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls;
+                            pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::fillers;
+                            pub use semio_s_artifact_bim_model_curtain_walls::standards::v1::subsets::any::schema::inferences::element_solids::wall_sweeps;
+                            pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit;
+                            pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::columns;
+                            pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::beams;
+                            pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::slabs;
+                            pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+                            pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::inferences::element_solids::roofs;
+                            pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::inferences::element_solids::stairs;
+                            pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::railings;
+                            pub use semio_s_artifact_bim_model_wall_layout::standards::v1::subsets::any::schema::inferences::element_solids::ramps;
+                            pub use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::element_solids::components;
+                            pub use semio_s_artifact_bim_model_components::standards::v1::subsets::any::schema::inferences::element_solids::mep;
+                            pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::schema::inferences::element_solids::rail_hosts;
                         }
                     }
                     #[path = "."]
                     pub mod mutations {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "."]
-                        pub mod wall_geometry {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦉️wall-geometry/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
-                        #[path = "."]
-                        pub mod modify {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧙️modify/🦀️.rs"]
-                            mod component;
-                            pub use component::*;
-                        }
+                        pub use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::schema::mutations::*;
+pub use semio_s_artifact_bim_model_cascade_restore::standards::v1::subsets::any::schema::mutations::cascade_restore;
+
+                        pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_geometry;
+                        pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::schema::mutations::modify;
                     }
                 }
-                #[path = "."]
                 pub mod io {
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                }
+    pub use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::*;
+    pub mod export {
+        pub use semio_s_artifact_bim_model_io::standards::v1::subsets::any::io::export::*;
+        pub use semio_s_artifact_bim_model_utilities_tests::standards::v1::subsets::any::io::export::solver;
+    }
+}
             }
         }
     }
 }
 
-#[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🦀️.rs"]
-pub mod examples;
+#[path = "."]
+pub mod examples {
+
+    pub use semio_s_artifact_bim_model_examples::examples::house;
+    pub use semio_s_artifact_bim_model_formula::examples::office;
+    pub use semio_s_artifact_bim_model_formula::examples::demo;
+}
 
 #[path = "."]
 pub mod editor {
     #[path = "."]
     pub mod bim {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod dispatch_context {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📮️dispatch-context/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod marks {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖍️marks/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod kit {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod terminology {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
+        pub use semio_s_artifact_bim_model_bim::editor::bim::*;
+
+        pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::dispatch_context;
+        pub use semio_s_artifact_bim_model_storey_levels::editor::bim::marks;
+        pub use semio_s_artifact_bim_model_kit::editor::bim::kit;
+        pub use semio_s_artifact_bim_model_tests::editor::bim::terminology;
         pub mod entities {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧩️entities/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod interaction {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️interaction/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod utilities {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🪛️utilities/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod gestures {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️gestures/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod chrome {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎛️chrome/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
-        #[path = "."]
-        pub mod transient {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🦀️.rs"]
-            mod component;
-            pub use component::*;
-        }
+    pub use semio_s_artifact_bim_model_entities::editor::bim::entities::*;
+    pub mod components {
+        pub use semio_s_artifact_bim_model_entities::editor::bim::entities::components::*;
+        #[cfg(any(test, feature = "testkit"))]
+        pub use semio_s_artifact_bim_model_v1::editor::bim::entities::components::tests;
+    }
+}
+        pub use semio_s_artifact_bim_model_interaction::editor::bim::interaction;
+        pub use semio_s_artifact_bim_model_kit::editor::bim::utilities;
+        pub use semio_s_artifact_bim_model_gestures::editor::bim::gestures;
+        pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::chrome;
+        pub use semio_s_artifact_bim_model_tests::editor::bim::presence;
+        pub use semio_s_artifact_bim_model_tests::editor::bim::config;
+        pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::transient;
         #[path = "."]
         pub mod modes {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🦀️.rs"]
-            mod component;
-            pub use component::*;
+            pub use semio_s_artifact_bim_model_tests::editor::bim::modes::*;
+
             #[path = "."]
             pub mod edit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
-                pub use component::*;
+                pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::*;
+
                 #[path = "."]
                 pub mod windows {
-                    #[path = "."]
-                    pub mod plan {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️plan/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod world {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️world/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod section {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📐️section/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod schedule {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧮️schedule/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod family {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧬️family/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod sheet {
-                        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📄️sheet/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
+                    pub use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::plan;
+                    pub use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::world;
+                    pub use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::section;
+                    pub use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::schedule;
+                    pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::modes::edit::windows::family;
+                    pub use semio_s_artifact_bim_model_kit::editor::bim::modes::edit::windows::sheet;
                 }
             }
         }
         #[path = "."]
         pub mod panels {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod options {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🧭️options/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod outliner {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🌳️outliner/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod properties {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod library {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🛍️library/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod families {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🪑️families/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod classification {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗂️classification/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod diagnostics {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🚨️diagnostics/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod coordination {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🤝️coordination/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
+            pub use semio_s_artifact_bim_model_tests::editor::bim::panels::*;
+
+            pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::options;
+            pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::outliner;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::panels::properties;
+            pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::library;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::panels::families;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::panels::classification;
+            pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::panels::diagnostics;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::panels::coordination;
         }
         #[path = "."]
         pub mod commands {
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🦀️.rs"]
-            mod component;
-            pub use component::*;
-            #[path = "."]
-            pub mod create_entity {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏗️create-entity/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod create_view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔭️create-view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod delete_selection {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️delete-selection/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod rename_entity {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏷️rename-entity/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod set_field {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🩹️set-field/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod set_view {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪟️set-view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod edit_family {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧬️edit-family/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod edit_schedule {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📋️edit-schedule/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod export_schedule_csv {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📊️export-schedule-csv/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod analyse_model {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔎️analyse-model/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod export_model {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️export-model/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod export_sheets {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📄️export-sheets/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod set_camera {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎥️set-camera/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod canvas_pointer_down {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🖱️canvas-pointer-down/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod canvas_pointer_move {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/↔️canvas-pointer-move/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod canvas_pointer_up {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⬆️canvas-pointer-up/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod canvas_double_click {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👆️canvas-double-click/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod canvas_commit_draft {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✅️canvas-commit-draft/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod canvas_escape {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🚪️canvas-escape/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod world_pointer_down {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌍️world-pointer-down/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod world_pointer_move {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌐️world-pointer-move/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod arm_utility {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛠️arm-utility/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod flip_walls {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔃️flip-walls/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod attach_walls {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔗️attach-walls/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod move_storey {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️move-storey/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod split_wall {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✂️split-wall/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod set_property {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧾️set-property/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod remove_property {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗃️remove-property/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod select_findings {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎯️select-findings/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod coordinate {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🤝️coordinate/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod set_classification {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗂️set-classification/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod remove_classification {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗄️remove-classification/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod apply_template {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧰️apply-template/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod conditions {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🌡️conditions/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod edit_template {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧮️edit-template/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod edit_classification {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📚️edit-classification/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod search_classification {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔍️search-classification/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod cursor_keys {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧭️cursor-keys/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod place_elements {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📍️place-elements/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod place_grid_columns {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🏛️place-grid-columns/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod engagement_input {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/⌨️engagement-input/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod browse_families {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪑️browse-families/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod set_override {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎚️set-override/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod gesture_keys {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔑️gesture-keys/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
-            #[path = "."]
-            pub mod engagement_submit {
-                #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📨️engagement-submit/🦀️.rs"]
-                mod component;
-                pub use component::*;
-            }
+            pub use semio_s_artifact_bim_model_tests::editor::bim::commands::*;
+
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::create_entity;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::create_view;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::delete_selection;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::rename_entity;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::set_field;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::set_view;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::edit_family;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::edit_schedule;
+            pub use semio_s_artifact_bim_model_bim::editor::bim::commands::export_schedule_csv;
+            pub use semio_s_artifact_bim_model_bim::editor::bim::commands::analyse_model;
+            pub use semio_s_artifact_bim_model_bim::editor::bim::commands::export_model;
+            pub use semio_s_artifact_bim_model_bim::editor::bim::commands::export_sheets;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::set_camera;
+            pub use semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_pointer_down;
+            pub use semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_pointer_move;
+            pub use semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_pointer_up;
+            pub use semio_s_artifact_bim_model_bim::editor::bim::commands::canvas_double_click;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::canvas_commit_draft;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::canvas_escape;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::world_pointer_down;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::world_pointer_move;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::arm_utility;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::flip_walls;
+            pub use semio_s_artifact_bim_model_coordination::editor::bim::commands::attach_walls;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::move_storey;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::split_wall;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::set_property;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::remove_property;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::select_findings;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::coordinate;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::set_classification;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::remove_classification;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::apply_template;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::conditions;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::edit_template;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::edit_classification;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::search_classification;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::cursor_keys;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::place_elements;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::place_grid_columns;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::engagement_input;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::browse_families;
+            pub use semio_s_artifact_bim_model_move_storey::editor::bim::commands::set_override;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::gesture_keys;
+            pub use semio_s_artifact_bim_model_gestures::editor::bim::commands::engagement_submit;
         }
     }
 }
@@ -878,15 +237,10 @@ pub mod editor {
 pub mod viewer {
     #[path = "."]
     pub mod bim {
-        #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
+        pub use semio_s_artifact_bim_model_viewer::viewer::bim::*;
+
+        pub use semio_s_artifact_bim_model_family_tests::viewer::bim::modes;
     }
 }
 
-#[path = "."]
-pub mod render {
-    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🖌️render/🦀️.rs"]
-    mod component;
-    pub use component::*;
-}
+pub use semio_s_artifact_bim_model_tests_5::render;

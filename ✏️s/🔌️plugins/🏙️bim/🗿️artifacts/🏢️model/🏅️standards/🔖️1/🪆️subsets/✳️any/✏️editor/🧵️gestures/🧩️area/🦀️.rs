@@ -4,8 +4,9 @@
 //! hangs [`DEFAULT_DROP`](crate::editor::bim::entities::ceilings::DEFAULT_DROP) below the storey top; picked from a space, a click inside a room (a space of the storey, else the room the walls
 //! around the click close) hangs a ceiling over its outline and islands.
 
-use super::plane::{angle, counter_clockwise, dist, from_point2, loop_of, rectangle, same, signed_area, P};
-use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::editor::bim::gestures::plane::{angle, counter_clockwise, dist, from_point2, loop_of, rectangle, same, signed_area, P};
+use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, STOREY_MISSING, TYPE_MISSING};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::ceilings::DEFAULT_DROP;
 use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
@@ -45,7 +46,7 @@ pub struct Area {
     kind: Kind,
     vertices: Vec<P>,
     pressed: Option<P>,
-    hover: Option<super::snap::SnapHit>,
+    hover: Option<crate::editor::bim::gestures::snap::SnapHit>,
 }
 
 impl Area {
@@ -58,7 +59,7 @@ impl Area {
         *self = Self { hover, ..Self::new(self.kind) };
     }
 
-    fn snapped(&self, ctx: &ToolContext<'_>, pointer: &Pointer) -> super::snap::SnapHit {
+    fn snapped(&self, ctx: &ToolContext<'_>, pointer: &Pointer) -> crate::editor::bim::gestures::snap::SnapHit {
         let extra: Vec<P> = self.vertices.first().copied().into_iter().collect();
         ctx.snapped(pointer, self.vertices.last().copied(), &[], &extra)
     }
@@ -113,7 +114,7 @@ impl Area {
         };
         match room.filter(|room| room.outline.len() >= 3) {
             Some(room) => self.ceiling_step(ctx, storey, room.outline, room.holes),
-            None => Step::refuse(super::session::REJECTED),
+            None => Step::refuse(crate::editor::bim::gestures::session::REJECTED),
         }
     }
 
@@ -137,7 +138,7 @@ impl Area {
         probe.spaces.insert("probe".into(), Space { storey: storey.clone(), number: String::new(), name: String::new(), boundary: SpaceBoundary::Bounded { seed: Point2 { x: at[0], y: at[1] } }, usage: String::new(), phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, zone: None, floor_finish: None, wall_finish: None, ceiling_finish: None });
         let rooms = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::probe_rooms(ctx.instance, &probe);
         let ring: Vec<P> = rooms.get("probe").filter(|room| room.status == SpaceStatus::Inferred && room.outline.len() >= 3).map(|room| room.outline.iter().map(|vertex| from_point2(vertex.point)).collect()).unwrap_or_default();
-        if ring.is_empty() { Step::refuse(super::session::REJECTED) } else { self.ring_step(ctx, &ring) }
+        if ring.is_empty() { Step::refuse(crate::editor::bim::gestures::session::REJECTED) } else { self.ring_step(ctx, &ring) }
     }
 }
 
@@ -223,6 +224,4 @@ impl Tool for Area {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,8 +1,9 @@
 //! 🌀️ The MEP element rows of the entity table: how a routed duct, pipe or cable tray reads off the snapshot (its system, its section as text, its path as `x, y, z` vertices), how an edited value becomes a `set-mep-element`
 //! mutation, and what a new element is. What an element shows (its length, its volume, the findings that name it) is read off the inference.
 
-use super::components::{system_choices, system_of};
-use super::{container, keys, number, parse_number, partial, phasing, rename_element, size_pair, Created, EntityKind, FieldRow, InferredRow};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::editor::bim::entities::components::{system_choices, system_of};
+use crate::editor::bim::entities::{container, keys, number, parse_number, partial, phasing, rename_element, size_pair, Created, EntityKind, FieldRow, InferredRow};
 use crate::standards::v1::subsets::any::schema::{snapshot::{MepElement, MepShape, MepSystem, ModelSnapshot, Point3}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 
@@ -139,6 +140,4 @@ pub const MEP_ELEMENT: EntityKind = kind!("mep-element", "waypoints", false, kin
     delete: delete!(delete_mep_element::DeleteMepElement), rename: Some(rename_element), create: Some(create_mep), fields: MEP_FIELDS, inferred: MEP_INFERRED);
 //#endregion 🔖️Kinds
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

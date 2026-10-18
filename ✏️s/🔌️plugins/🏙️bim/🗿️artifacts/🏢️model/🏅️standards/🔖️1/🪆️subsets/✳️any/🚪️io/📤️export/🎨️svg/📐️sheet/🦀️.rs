@@ -2,7 +2,7 @@
 //! scale of its view, and the fitted size of the whole sheet in paper millimetres. A camera view draws nothing and gets no slot.
 //! 📎 https://www.w3.org/TR/SVG11/coords.html#ViewBoxAttribute
 
-use super::path::{mm_per_metre, Frame};
+use crate::standards::v1::subsets::any::io::export::svg::path::{mm_per_metre, Frame};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
 use std::collections::BTreeMap;
@@ -73,6 +73,4 @@ pub fn layout(snapshot: &ModelSnapshot, drawings: &BTreeMap<String, ViewLinework
     Layout { slots, width: 2.0 * MARGIN + widest, height: 2.0 * MARGIN + content }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

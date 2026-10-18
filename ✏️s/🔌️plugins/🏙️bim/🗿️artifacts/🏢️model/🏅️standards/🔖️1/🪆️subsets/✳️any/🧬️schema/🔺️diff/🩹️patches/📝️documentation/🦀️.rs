@@ -1,6 +1,7 @@
 //! 📝️ Sparse patches of the documentation records: dimensions, tags, text notes, leaders, annotation styles, sheets, viewports, sheet revisions, views and schedules.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*};
+use crate::standards::v1::subsets::any::schema::diff::algebra::*;
 
 /// 🩹 Sparse patch of [`Dimension`]: an absent field is untouched.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

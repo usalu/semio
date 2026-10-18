@@ -37,6 +37,4 @@ pub fn handle(payload: &SetClassification, doc: &ArtifactView<'_, ModelSnapshot>
     Ok(if mutations.is_empty() { Emit::default() } else { Emit::mutations(mutations) })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

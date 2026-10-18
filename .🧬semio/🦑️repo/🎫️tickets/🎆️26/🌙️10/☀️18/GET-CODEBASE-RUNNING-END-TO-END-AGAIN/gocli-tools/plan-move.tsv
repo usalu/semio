@@ -1,0 +1,4 @@
+🐹️.go	🚚️move is the move domain of the semio repository tooling: the sealed evidence guard and the folder and file tools.	36-99,137-266
+🧩️section.go	🧩️section carries the section and definition tool functions of the move domain.	268-406,717-833
+🧵️integrate.go	🧵️integrate carries the integrate and extract tools of the move domain with the header split and merge helpers.	408-715
+🔤️rename.go	🔤️rename carries the rename tool of the move domain with the casing helpers and the file and directory copy helpers.	105-131,839-1069

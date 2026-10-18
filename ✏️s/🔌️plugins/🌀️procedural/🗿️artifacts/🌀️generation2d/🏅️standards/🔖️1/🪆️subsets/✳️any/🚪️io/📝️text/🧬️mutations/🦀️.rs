@@ -32,7 +32,7 @@ use crate::snapshot::SynapseSpecDsl;
 use crate::snapshot::WidgetDsl;
 use crate::snapshot::WidgetLayoutDsl;
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum Generation2dOperationDsl {
+pub enum Generation2dOperationDsl {
     CreateWidget {
         index: usize,
         #[dsl(statements)]
@@ -123,7 +123,7 @@ impl protocol::OpText for Generation2dOperationDsl {
     }
 }
 
-pub(crate) fn generation2d_operation_to_dsl(operation: &Generation2dMutation) -> Generation2dOperationDsl {
+pub fn generation2d_operation_to_dsl(operation: &Generation2dMutation) -> Generation2dOperationDsl {
     match operation {
         Generation2dMutation::CreateWidget(payload) => Generation2dOperationDsl::CreateWidget { index: payload.index, widget: Box::new(widget_to_dsl(&payload.widget)) },
         Generation2dMutation::ReplaceWidget(payload) => Generation2dOperationDsl::ReplaceWidget { widget: Box::new(widget_to_dsl(&payload.widget)) },
@@ -145,7 +145,7 @@ pub(crate) fn generation2d_operation_to_dsl(operation: &Generation2dMutation) ->
     }
 }
 
-pub(crate) fn generation2d_operation_from_dsl(operation: Generation2dOperationDsl) -> Result<Generation2dMutation, semio_framework_diagnostic::TextError> {
+pub fn generation2d_operation_from_dsl(operation: Generation2dOperationDsl) -> Result<Generation2dMutation, semio_framework_diagnostic::TextError> {
     use semio_s_artifact_procedural_2d_mut_generations::change_generation_value;
     use semio_s_artifact_procedural_2d_mut_document::change_schema;
     use semio_s_artifact_procedural_2d_mut_widgets::change_slider_value;

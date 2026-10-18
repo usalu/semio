@@ -1,13 +1,13 @@
 //! 🧪️ Aggregated unit tests of the `panels` leaves, one module per leaf.
 
 mod artifact {
-use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
-use crate::{editor::gis2d::GIS2D_INTERACTION_DOMAIN, editor::gis2d::GIS2D_LAYER_GRANULARITY, editor::gis2d::GIS2D_PLAY_APP_ID, editor::gis2d::GIS_MAP_LAYER_IDS};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
+use semio_s_artifact_gis_gismap_gis2d::{editor::gis2d::GIS2D_INTERACTION_DOMAIN, editor::gis2d::GIS2D_LAYER_GRANULARITY, editor::gis2d::GIS2D_PLAY_APP_ID, editor::gis2d::GIS_MAP_LAYER_IDS};
 use semio_framework_plugin::PanelTabKind;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
-use super::super::artifact::*;
-use crate::editor::gis2d::unit_tests::context::{app, close, render as render_body};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::panels::artifact::*;
+use crate::unit_tests::context::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn document_lists_map_layers() {
@@ -27,7 +27,7 @@ async fn the_definition_binds_the_framework_document_tab_to_this_body() {
 }
 
 //#region 🪟️WindowLaws
-use crate::editor::gis2d::terminology::gis2d_labels;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels;
 use semio_framework_plugin::plugin_app_close_prelude::{BuiltNode, Component};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, INTERACTION_SELECT_ACTION_ID, TREE_WINDOW_DEFAULT_ROWS};
 use semio_framework_ui_contract::TreeWindow;
@@ -127,8 +127,8 @@ async fn rows_declare_their_granularity_while_the_tree_binds_the_one_interaction
 }
 
 mod catalogue {
-use super::super::catalogue::*;
-use crate::editor::gis2d::unit_tests::context::{app, close, render as render_body};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::panels::catalogue::*;
+use crate::unit_tests::context::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn catalogue_lists_layer_toggles() {
@@ -144,12 +144,12 @@ async fn the_definition_binds_the_framework_catalogue_tab_to_this_body() {
 }
 
 mod inspection {
-use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
-use crate::{editor::gis2d::Gis2dInteractionSnapshot, editor::gis2d::GIS2D_FEATURE_GRANULARITY, editor::gis2d::GIS_MAP_LAYER_IDS};
-use crate::{GisMapSnapshot, GIS_MAP_SCHEMA};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
+use semio_s_artifact_gis_gismap_gis2d::{editor::gis2d::Gis2dInteractionSnapshot, editor::gis2d::GIS2D_FEATURE_GRANULARITY, editor::gis2d::GIS_MAP_LAYER_IDS};
+use semio_s_artifact_gis_gismap_gis2d::{GisMapSnapshot, GIS_MAP_SCHEMA};
 use semio_framework_plugin::PanelGroup;
-use super::super::inspection::*;
-use crate::editor::gis2d::unit_tests::context::{app, close, render as render_body};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::panels::inspection::*;
+use crate::unit_tests::context::{app, close, render as render_body};
 
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_always_summarises_the_schema_and_visible_count() {
@@ -166,9 +166,9 @@ async fn the_inspector_always_summarises_the_schema_and_visible_count() {
 /// feature's id and its document kind, and an empty domain renders the summary alone.
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_detail_section_follows_the_features_selection() {
-    let document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let document = semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::default_document();
     let cfg = MapWindowConfig::default();
-    let labels = crate::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     // 🧩️ A `BuiltNode` carries retained page children, so it is projected through the fixture
     // transport (the same route `unit_tests::context::render` takes) rather than serialized directly.
     let json = |interaction: &Gis2dInteractionSnapshot| -> String {
@@ -199,20 +199,20 @@ async fn the_inspector_detail_section_follows_the_features_selection() {
 #[semio_framework_async_macros::async_test]
 async fn the_inspector_summary_projects_each_document_collection_extent() {
     let cfg = MapWindowConfig::default();
-    let labels = crate::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
+    let labels = semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels(&semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native));
     let json = |document: &GisMapSnapshot| -> String {
         let tree = semio_framework_plugin::built_to_component_tree(render(document, &cfg, &Gis2dInteractionSnapshot::default(), labels).expect("inspector"));
         semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(tree).expect("inspector projection")
     };
 
-    let mut document = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
+    let mut document = semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::default_document();
     let before = json(&document);
     for row in ["gis2d-play-inspector.positions-count", "gis2d-play-inspector.routes-count", "gis2d-play-inspector.regions-count"] {
         assert!(before.contains(row), "the summary must carry {row}: {before}");
     }
     assert!(before.contains(&document.positions.len().to_string()), "the positions row must print the document's own extent: {before}");
 
-    document.positions.push(crate::MapFeature { id: "position-probe".into(), data: semio_framework_value::DslValue::Null });
+    document.positions.push(semio_s_artifact_gis_gismap_gis2d::MapFeature { id: "position-probe".into(), data: semio_framework_value::DslValue::Null });
     let after = json(&document);
     assert_ne!(before, after, "appending one position must move the inspector projection");
     assert!(after.contains(&document.positions.len().to_string()), "the positions row must follow the document: {after}");

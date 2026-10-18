@@ -1,4 +1,5 @@
-import { loadTaxonomy, subsetIdForDirectoryName } from "../../../🟦️.ts";
+import { loadTaxonomy } from "../../🔐️taxonomy-authority/🟦️.ts";
+import { subsetIdForDirectoryName } from "../../🗂️file-kind-resolution/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceDirectory, type PolicySourceOperations } from "../../📖️source-access/🟦️.ts";
 import { policyListPluginArtifactDirs } from "../🏠️roots/🟦️.ts";
 

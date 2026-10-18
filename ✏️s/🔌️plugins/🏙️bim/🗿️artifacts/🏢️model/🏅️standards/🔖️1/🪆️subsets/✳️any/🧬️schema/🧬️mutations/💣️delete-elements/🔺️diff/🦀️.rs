@@ -3,8 +3,8 @@
 //! property and classification entries of every removed element. A storey that a surviving element's top constraint still points at,
 //! and an unknown id, are refused.
 
-use super::super::cascade;
-use super::DeleteElements;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

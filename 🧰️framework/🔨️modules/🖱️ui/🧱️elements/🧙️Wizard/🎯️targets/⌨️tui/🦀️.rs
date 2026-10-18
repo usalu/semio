@@ -2,13 +2,13 @@
 //! The filter is incremental and key-stable (`ListModel`), signals carry option identities, a single press
 //! selects and a double press or Enter activates.
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::event::{mods, Key, KeyEvent, MouseEvent};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::rows::{paint_scroll_bar, row_style, ListModel, Pointer};
-use crate::tui::text::{display_width, elide, Elision};
-use crate::tui::theme::{Role, Surface, Theme};
-use crate::tui::widget::{CursorShape, CursorSpec, WidgetSignal};
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseEvent};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::rows::{paint_scroll_bar, row_style, ListModel, Pointer};
+use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 
 /// 🪄 Filterable option list for stepped command building.
 pub struct WizardState {
@@ -131,7 +131,7 @@ pub(crate) fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut
     buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
     let areas = areas(w, rect);
     if let Some(row) = areas.breadcrumb {
-        let separator = format!(" {} ", theme.glyphs.glyph(crate::tui::theme::Glyph::Prompt));
+        let separator = format!(" {} ", theme.glyphs.glyph(semio_framework_ui_tui_core::theme::Glyph::Prompt));
         let crumbs = w.steps.iter().map(|(label, _)| label.as_str()).collect::<Vec<_>>().join(&separator);
         buf.put_str(Pos { x: row.x, y: row.y }, &elide(&crumbs, row.width, Elision::End, ellipsis), muted, bg, 0, row);
     }
@@ -144,7 +144,7 @@ pub(crate) fn paint_wizard(w: &WizardState, theme: &Theme, rect: Rect, buf: &mut
     let list = areas.list;
     let count = w.list.count();
     let window = w.list.rows.window(usize::from(list.height), count);
-    let prompt = theme.glyphs.glyph(crate::tui::theme::Glyph::Prompt);
+    let prompt = theme.glyphs.glyph(semio_framework_ui_tui_core::theme::Glyph::Prompt);
     for (index, position) in window.clone().enumerate() {
         let y = list.y + index as u16;
         let selected = position == w.list.rows.selected();

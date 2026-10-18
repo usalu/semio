@@ -8,7 +8,7 @@ import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/📦
 import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 
 /** 🐾️ The pets crates, bottom up: the core carved along its domain seams, then the façade the subject hosts link. */
 const PETS_PACKAGES = ["semio-framework-pets-contract", "semio-framework-pets-kinematics", "semio-framework-pets-clearance", "semio-framework-pets-traversal", "semio-framework-pets-interaction", "semio-framework-pets-character", "semio-framework-pets-staging", "semio-framework-pets"];

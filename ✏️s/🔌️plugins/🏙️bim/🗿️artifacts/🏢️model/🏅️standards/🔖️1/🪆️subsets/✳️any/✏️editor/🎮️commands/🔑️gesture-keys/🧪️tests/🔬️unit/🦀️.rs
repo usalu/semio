@@ -1,4 +1,12 @@
-use super::*;
+use crate::editor::bim::gestures::session::GestureKey;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::run_key;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+use crate::editor::bim::commands::gesture_keys::*;
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::editor::bim::fixture::context::view;
 use crate::editor::bim::fixture::support::{demo, run};

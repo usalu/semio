@@ -15,7 +15,7 @@ test("JSON and I-JSON committed scalar and member intents match independent RFC6
  const ajv=new Ajv({strict:false});const schema=read("🧱️base/🧬️schema/📸️snapshot/🔣️.json");ajv.addSchema(schema);ajv.addSchema(JSON.parse(readFileSync(resolve(root,"../../../../../📇️registry/🧬️schema/🔣️.json"),"utf8")));const validate=ajv.compile(schema);expect(validate(before)).toBe(true);
  for(const row of rows){
   const after=applyPatch(structuredClone(before),row.patch as Operation[],true,true).newDocument;expect(validate(after)).toBe(true);expect(after).not.toEqual(before);
-  const payload=row.subset==="🧱️base"?(row.leaf==="🔢️set-scalar"?row.mutation.payload!.value:row.mutation.payload):row.mutation;const leafSchema=read(`${row.subset}/🧬️schema/🧬️mutations/${row.leaf}/🧬️schema/🔣️.json`);expect((ajv.getSchema(leafSchema.$id)??ajv.compile(leafSchema))(payload)).toBe(true);
+  const payload=row.subset==="🧱️base"?row.mutation.payload:row.mutation;const leafSchema=read(`${row.subset}/🧬️schema/🧬️mutations/${row.leaf}/🧬️schema/🔣️.json`);expect((ajv.getSchema(leafSchema.$id)??ajv.compile(leafSchema))(payload)).toBe(true);
   const document=Object.fromEntries(after.value.members.map(member=>[member.key,member.value.value]));expect(Object.keys(JSON.parse(JSON.stringify(document)))).toEqual(after.value.members.map(member=>member.key));
   const path=resolve(root,`${row.subset}/🧪️tests/🧫️fixtures/🧬️history-edits/${row.id}/🦠️mutation/🔣️.json`);expect(existsSync(path)).toBe(true);expect(JSON.parse(readFileSync(path,"utf8"))).toEqual({mutation:row.mutation,before,after});
  }

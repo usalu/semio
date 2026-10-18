@@ -1,7 +1,10 @@
 //! 🔀️ Host-action bridge of the BIM editor: folds the shell `{action, args}` vocabulary into the closed `BimCommand` enum. See [`super`].
 
+use crate::editor::bim::panels::outliner as outliner_panel;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::Fault;
 //#region 🔖️ActionBridge
-use super::*;
+use crate::editor::bim::*;
 use semio_framework_plugin::{FaultCode, FaultOrigin};
 
 fn snake(key: &str) -> String {
@@ -13,7 +16,7 @@ fn put(entries: &mut Vec<(String, DslValue)>, key: &str, value: DslValue) {
     entries.push((key.to_string(), value));
 }
 
-pub(super) fn integral(value: DslValue) -> DslValue {
+pub(crate) fn integral(value: DslValue) -> DslValue {
     match value {
         DslValue::Number(semio_framework_value::Number::Float(float)) if float.is_finite() && float.fract() == 0.0 && float.abs() < 9.007_199_254_740_992e15 => {
             if float >= 0.0 { DslValue::Number(semio_framework_value::Number::UInt(float as u64)) } else { DslValue::Number(semio_framework_value::Number::Int(float as i64)) }
@@ -24,7 +27,7 @@ pub(super) fn integral(value: DslValue) -> DslValue {
     }
 }
 
-pub(super) fn stringify(value: DslValue) -> DslValue {
+pub(crate) fn stringify(value: DslValue) -> DslValue {
     match value {
         DslValue::String(_) => value,
         DslValue::Null => DslValue::String(String::new()),
@@ -32,7 +35,7 @@ pub(super) fn stringify(value: DslValue) -> DslValue {
     }
 }
 
-pub(super) fn fold(args: Option<&DslValue>, aliases: &[(&str, &str)], defaults: &[(&str, DslValue)]) -> DslValue {
+pub(crate) fn fold(args: Option<&DslValue>, aliases: &[(&str, &str)], defaults: &[(&str, DslValue)]) -> DslValue {
     let mut entries: Vec<(String, DslValue)> = Vec::new();
     if let Some(DslValue::Object(object)) = args {
         for (key, value) in object {
@@ -85,7 +88,7 @@ fn ids_as_list(mut folded: DslValue) -> DslValue {
 }
 
 /// 🎥️ The host nests the pose under `camera` (or sends it flat); a pose with `position` is the world's orbit, one with `x` the canvas'.
-pub(super) fn camera_pose(args: Option<&DslValue>) -> DslValue {
+pub(crate) fn camera_pose(args: Option<&DslValue>) -> DslValue {
     let folded = fold(args, &[], &[]);
     let DslValue::Object(entries) = &folded else { return folded };
     let pose = match entries.iter().find(|(key, _)| key == "camera") {
@@ -97,14 +100,14 @@ pub(super) fn camera_pose(args: Option<&DslValue>) -> DslValue {
     DslValue::Object(vec![(slot.to_string(), DslValue::Object(kept))])
 }
 
-pub(super) fn only(folded: DslValue, keys: &[&str]) -> DslValue {
+pub(crate) fn only(folded: DslValue, keys: &[&str]) -> DslValue {
     match folded {
         DslValue::Object(entries) => DslValue::Object(entries.into_iter().filter(|(key, _)| keys.contains(&key.as_str())).collect()),
         other => other,
     }
 }
 
-pub(super) fn decode<T: semio_framework_value::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
+pub(crate) fn decode<T: semio_framework_value::FromValue>(action: &str, value: DslValue) -> Result<T, Fault> {
     T::from_value(value).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("bim action '{action}' arguments do not decode: {error}")))
 }
 

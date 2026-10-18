@@ -224,9 +224,9 @@ pub(crate) fn base_snapshot() -> ObjSnapshot {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<ObjMutation> {
+pub fn demo_mutation_cases() -> Vec<ObjMutation> {
     vec![
         ObjMutation::InsertVertex(insert_vertex::InsertVertex { index: 1, vertex: ObjVertex { x: 9.0, y: 9.0, z: 9.0, w: Some(1.0) } }),
         ObjMutation::RemoveVertex(remove_vertex::RemoveVertex { index: 0 }),

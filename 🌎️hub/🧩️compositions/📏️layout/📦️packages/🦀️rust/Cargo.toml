@@ -41,6 +41,10 @@ serde.workspace = true
 serde_json.workspace = true
 ui_render = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust", package = "semio-framework-ui-render" }
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
+semio-s-artifact-layout-layout-editor = { workspace = true }
+semio-s-artifact-layout-layout-editor-commands = { workspace = true }
+semio-s-artifact-layout-layout-editor-panels = { workspace = true }
+semio-s-artifact-layout-layout-viewer = { workspace = true }
 
 [dev-dependencies]
 semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }

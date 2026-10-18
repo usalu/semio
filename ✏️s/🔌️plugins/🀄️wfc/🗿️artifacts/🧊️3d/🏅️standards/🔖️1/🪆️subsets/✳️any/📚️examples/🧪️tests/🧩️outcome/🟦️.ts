@@ -1,7 +1,7 @@
 // 🎯️ Every bundled wfc3d example's committed outcome, read from the fixtures rather than transcribed
 // — an example that gains or loses a vector cannot leave this half behind.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import corridor from "../../🚪️two-room-corridor/🧪️tests/🧫️fixtures/🧩️example/🔣️.json";
 import facade from "../../🧱️wall-roof-facade-strip/🧪️tests/🧫️fixtures/🧩️example/🔣️.json";

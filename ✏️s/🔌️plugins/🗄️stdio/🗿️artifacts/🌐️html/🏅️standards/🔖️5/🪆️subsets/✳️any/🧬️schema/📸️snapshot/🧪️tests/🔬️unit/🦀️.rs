@@ -1,5 +1,6 @@
-use crate::standards::v5::subsets::any::io::text::snapshot::{parse_html_document,write_html_document};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::{parse_html_document, write_html_document};
 use crate::standards::v5::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, RawTextKind, HtmlSnapshot, STDIO_HTML_DOCUMENT_SCHEMA};
 
 const FIXTURE: &str = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🧪️example/🌐️.html");
 

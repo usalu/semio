@@ -3,9 +3,12 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
-import { frozenCoordinateEvidenceSeal, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts, semanticExactOwnedFileCatalog } from "../../🔍️discovery/🟦️.ts";
+import { frozenCoordinateEvidenceSeal, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { semanticExactOwnedFileCatalog } from "../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
-import { frozenCoordinateEvidenceCoordinates, taxonomyFixturePayloadPath } from "../../🧹️normalization/🟦️.ts";
+import { frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/❄️frozen-evidence/🟦️.ts";
+import { taxonomyFixturePayloadPath } from "../../🧹️normalization/🧱️inventory-leaf-stamps/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🕰️historical-json-source-encoding/🔣️.json"), "utf8"));
 const historical = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🕰️historical-json-source-encoding/🧬️energy-source-coordinates/🔣️.json"), "utf8"));

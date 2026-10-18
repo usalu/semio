@@ -18,7 +18,7 @@ export default {
     name: "@semio-tech/ui-styling",
     environment: "jsdom",
     include: ["🧪️tests/🧪️levels-oklabmix/🟦️.ts", "🧪️tests/🧪️theme-resolve/🟦️.ts", "🧪️tests/🧪️playgroundflowwasmdevstubplugin/🟦️.ts"],
-    coverage: { include: ["📽️projection/🟦️.ts", "🌓️theme/🟦️.ts", "🏗️builder/🌐️vite/🟦️.ts"] },
+    coverage: { include: ["📽️projection/🟦️.ts", "🌓️theme/**/🟦️.ts", "🏗️builder/🌐️vite/🟦️.ts"] },
     passWithNoTests: false,
   },
 };

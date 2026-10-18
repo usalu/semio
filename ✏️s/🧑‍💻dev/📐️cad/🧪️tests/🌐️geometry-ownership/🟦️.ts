@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
-import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 export function geometryOwnershipLaws(): void {
   const root = getWorkspaceRoot();
   const owner = join(root,"✏️s/🧑‍💻dev/📐️cad");

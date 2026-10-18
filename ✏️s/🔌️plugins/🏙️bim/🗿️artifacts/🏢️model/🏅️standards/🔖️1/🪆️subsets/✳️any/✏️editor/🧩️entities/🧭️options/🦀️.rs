@@ -1,5 +1,7 @@
 //! 🧭️ Entity table for options, groups and worksets; shared authored parameter controls.
-use super::*;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, mutations::ModelMutation};
+use crate::editor::bim::entities::*;
 
 fn create_group(_: &ModelSnapshot, id: &str, _: &str, name: &str) -> Created { Ok(ModelMutation::CreateOptionGroup(crate::standards::v1::subsets::any::schema::mutations::create_option_group::CreateOptionGroup { id: id.into(), option_group: crate::standards::v1::subsets::any::schema::snapshot::OptionGroup { name: name.into() } })) }
 fn create_option(snapshot: &ModelSnapshot, id: &str, parent: &str, name: &str) -> Created {

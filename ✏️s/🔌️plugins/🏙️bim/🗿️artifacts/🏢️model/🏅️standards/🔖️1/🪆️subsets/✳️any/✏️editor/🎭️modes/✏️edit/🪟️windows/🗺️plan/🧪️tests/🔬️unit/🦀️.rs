@@ -1,5 +1,31 @@
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{canvas_surface, meta_record, path, path_record, text_record, Paint, Rgba};
+#[allow(unused_imports)]
+use crate::render::plan::{canvas_point, plan_point};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanLinework, PlanVertex};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ViewKind;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::BulgeSeg;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_plugin::DslValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
 use crate::editor::bim::modes::edit::windows::plan::config::BimPlanWindowConfig;
-use super::*;
+use crate::editor::bim::modes::edit::windows::plan::*;
 
 fn demo() -> (ModelSnapshot, ModelInference) {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();

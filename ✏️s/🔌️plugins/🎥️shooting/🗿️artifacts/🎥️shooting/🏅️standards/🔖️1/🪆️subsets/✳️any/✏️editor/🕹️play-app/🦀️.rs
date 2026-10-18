@@ -1,6 +1,7 @@
 //! 🕹️ Play app of the shooting editor: the `ShootingPlayApp` and its `ArtifactEditor` implementation. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️ShootingPlayApp
 /// 🧪️ B1: unit struct — every former runtime field now lives in `ShootingConfig`, written through

@@ -6,6 +6,7 @@ import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import { readRustSourceClosureV1, selectRustSourceV1 } from "@semio-tech/process/artifacts/native-build/source";
 import { rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
+import { sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const os = resolve(import.meta.dir, "../.."), workspace = resolve(os, "../../.."), read = (path: string) => readFileSync(resolve(os, path), "utf8");
 const cfg = ["target_arch=aarch64", "target_os=macos", "target_env=", "target_pointer_width=64", "unix"];
@@ -68,8 +69,7 @@ test("neutral kernel cuts retain exactly one authored owner and producer-facing 
     expect(read(law.consumer)).toContain(law.canonical);
     expect(read(law.consumer)).not.toContain(law.definition);
   }
-  const generator = read("🔨️modules/🗣️dsl/✨️derive/🦀️.rs");
-  const emission = generator.slice(generator.indexOf("fn expand_mutations("),generator.indexOf("fn mutation_relative_path("));
+  const emission = sliceModuleTreeSource(resolve(os, "🔨️modules/🗣️dsl/✨️derive/🦀️.rs"), "fn expand_mutations(", "fn mutation_relative_path(");
   const owners = rustTokens(emission).filter(token=>token.kind==="identifier").map(token=>token.text);
   for (const owner of cuts.mutationOwners) expect(owners).toContain(owner);
   for (const owner of cuts.forbiddenMutationOwners) expect(owners).not.toContain(owner);

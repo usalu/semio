@@ -1,6 +1,18 @@
 //! 🧰️ The fixtures every tool test shares: the demo model without its walls, extended by one type of each family, and a rig that drives a tool session pointer event by pointer event and
 //! applies every emitted mutation through the central applier, so a test reads the model the gesture left behind.
 
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::editor::bim::modes::edit;
+use crate::editor::bim::modes::edit::windows::family;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::ViewModel;
 use crate::editor::bim::BimModelApp;
 use crate::editor::bim::gestures::ToolSession;
 use crate::editor::bim::gestures::session::{GestureKey, Modifiers, Pointer, Step, Surface, ToolContext, ToolEvent};
@@ -198,7 +210,9 @@ impl Rig {
 }
 
 pub mod context {
-    use super::super::*;
+    use crate::editor::bim::*;
+    use crate::editor::bim::{BimCommand, BimModelApp};
+    use crate::editor::bim::modes::edit::windows::world;
     use semio_framework_plugin::app::EditorApp;
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
@@ -316,7 +330,17 @@ pub mod context {
 
 /// 🧰️ Pure-handler fixtures for the command nodes: the demo model behind a history-free view, no mounted app.
 pub mod support {
-    use super::super::*;
+    use crate::editor::bim::*;
+    use crate::editor::bim::BimModelApp;
+    use semio_framework_plugin::ArtifactView;
+    use crate::editor::bim::dispatch_context::BimDispatchCtx;
+    use semio_framework_plugin::ConfigView;
+    use semio_framework_plugin::Emit;
+    use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+    use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+    use semio_framework_plugin::NoConfig;
+    use semio_framework_plugin::NoConfigMutation;
+    use semio_framework_plugin::ViewModel;
     use semio_framework_plugin::HistoryView;
 
     pub fn demo() -> ModelSnapshot {

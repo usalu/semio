@@ -30,7 +30,7 @@ use semio_framework_os_renderer_wgpu_runtime_mailbox::StagedReferenceImageAuthor
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_renderer_wgpu_runtime_mailbox::{FrameDeferredExecutionOwner, FrameMaintenanceOwner, NativeReferenceDecodeCloseStep, NativeReferenceDecodeJob, NativeReferenceDecodeOutput, push_renderer_asset_page};
 use semio_framework_os_renderer_wgpu_runtime_mailbox::{
-    PresenterInteractionStep, RUNTIME_COMPLETION_CAPACITY, RuntimeApply, RuntimeCompletion, RuntimeCompletionQueue, RuntimeDispatchReturn, RuntimeMailbox, RuntimePresentationAuthority, RuntimePresentationWitness, RuntimeRasterOperationAuthority,
+    PresenterInteractionStep, RUNTIME_COMPLETION_CAPACITY, RuntimeApply, RuntimeCompletion, RuntimeCompletionQueue, RuntimeDispatchReturn, RuntimeHostWaker, RuntimeMailbox, RuntimePresentationAuthority, RuntimePresentationWitness, RuntimeRasterOperationAuthority,
     returned_completion,
 };
 use semio_framework_os_renderer_wgpu_shell_input::PointerCapture;

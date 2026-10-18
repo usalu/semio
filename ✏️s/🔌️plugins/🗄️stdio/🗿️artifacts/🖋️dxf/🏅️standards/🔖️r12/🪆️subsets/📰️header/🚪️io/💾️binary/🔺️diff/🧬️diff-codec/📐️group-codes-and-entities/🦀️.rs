@@ -74,7 +74,7 @@ pub(crate) fn dec_vertices_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec
 /// `2`=Arc,`3`=Polyline,`4`=Text,`5`=Solid,`6`=Insert,`7`=Other (same order `enc_dxf_entity`'s own
 /// L/C/A/W/T/S/I/O letters appear in).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
+pub fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
     match e {
         DxfEntity::Line(DxfLine { start, end, layer, unknown_group_codes }) => {
             out.push(0);
@@ -138,7 +138,7 @@ pub(crate) fn enc_dxf_entity_bin(e: &DxfEntity, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntity, String> {
+pub fn dec_dxf_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfEntity, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {

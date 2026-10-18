@@ -56,3 +56,63 @@ Artifact seen in the same run: `env!("SEMIO_BUILD_MODE")` in os-mcp-catalog (set
 | 22 | E0432 `plugin::DagApps` and 9 siblings (hub compositions) | ART: `dyn_enum_close!` item macro defines the enum | none |
 | 23 | E0433 `semio_framework_plugin::bounded_first_step_tool_proofs!`, `semio_framework_value::artifact_retirement_sequence!` | ART: path-qualified `#[macro_export]` macro invocation | none |
 | 24 | E0432 `use protocol as store;` (print), `crate::element_contracts::*` (renderer wgpu crates), `crate::store`… | ART: `extern crate X as alias;`; the oracle now rewrites the item to `use crate::__m_X as alias;` (and `use alias as y;`) |
+
+## fw-all r1 (resolution-only over all 1,029 crates, `-Zno-analysis`; 302 target rows, 127 in the current scope: framework modules, os products except the renderer, repo products)
+
+Scope change 22:2x: hub (`🌎️hub/**`) and teaching go to `ohh`, `📺️renderer/**` to `ohr`. Rows 13-19 below the fw-all heading (hub space app, renderer surface fixtures) were fixed before the change; everything else hub/renderer/teaching is handed over.
+
+| # | row | class | fix |
+| --- | --- | --- | --- |
+| 25 | E0603 `DslValue`, `FromValue`, `ToValue` private through `semio_framework_os_kernel` (≈25 hub rows: runtime, directory-{sqlite,postgres,neo4j}, route-models, document-routes, inference-committer, artifact-creation, route-testkit) | REAL: the facade's private `use semio_framework_value::{…}` shadows the `pub use os_*::*` globs; verified with a scratch rustc program (`E0603 struct import is private`) | `os/📦️packages/🦀️rust/🦀️.rs`: `pub use semio_framework_value::{DslValue,FromValue,ToValue};` |
+| 26 | E0659 `tree_item`, `PeerMark` ambiguous (plugin `app` module; also space-app inspection) | REAL: two globs (`tree_kit`, `app_views`) vs the `ui_contract::*` globs brought in by `artifact_instance` | `plugin/🦀️.rs`: explicit `pub use super::tree_kit::tree_item;` and `pub use super::app_views::PeerMark;` in `app` |
+| 27 | E0432 `value::retirement::queue::RetirementQueue` ×3 (flow-model `🧵️retained`, flow host `🎞️session`, neural-engine `🧵️retirement`) | REAL: queue became crate `value-retirement-queue` | import `semio_framework_value::retirement_queue::RetirementQueue` |
+| 28 | E0432 `value::retirement::{OwnedValueRetirementFactory, SharedValueRetirementFactory}` (infinite dag `🧵️retained`, store snapshot-clone law), `FactorySharedRetirement` (plugin media snapshot) | REAL: live in `value-factory` | `semio_framework_value::factory::…` |
+| 29 | E0432 `value::retirement::shared::sealed::{SealedShared, SealedSharedBirth, SharedIssuer}` (plugin decl-app context, tool-machine gesture issuer), `value::RetirementStep` (infinite board engine) | REAL: sealed types live in `value-shared-issuance`; `RetirementStep` in `retirement` | `semio_framework_value::shared_issuance::…`, `retirement::RetirementStep` |
+| 30 | E0432 `graph::{WorldBox, world_box_from_points}`, `graph::{handle_outward_at_node_rim, handle_position_on_rectangle, rectangle_handle_angle_toward}`, `::graph::manifest`, `::graph::dsl` (infinite dag graph, model, directed presentation, dag vcs) | REAL: `graph` is now `graph-engine` only | `geometry::geom_sel::{WorldBox, world_box_from_points}`, `semio_framework_graph_drawing::routing::…`, `semio_framework_graph_manifest::PropertyBag`, `semio_framework_graph_dsl::{…}`; presentation Cargo gained `semio-framework-graph-dsl` and `-graph-manifest` |
+| 31 | E0432 `semio_framework_async::browser` (infinite dag host, ungated import of a wasm32-only module) | REAL | import gated `#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]` like its only use |
+| 32 | E0432 undeclared crates: `semio_framework_ui_locale` (plugin-operation lifted view; its `ui_contract::*` glob was unused and was removed), `semio_framework_job_worker` and `-authority` (plugin-ownership session), `semio_framework_ui_contract_validation` (os-mcp-hub-remote), `semio_framework_ui_layout` (ui), `protocol::value::ordered` (os-flow root) | REAL: missing Cargo dependencies (cycle-checked with `dep.py reach`) | dependencies added (`ohf-tools/adddep.py`); flow root now `pub use semio_framework_value::ordered::{OrderedMap, OrderedSet}` |
+| 33 | E0432 `os_flow_operators::drain_flow_extension_registry_retirements` (flow root) | REAL: lives in `registry` | `pub use …::registry::drain_flow_extension_registry_retirements;` |
+| 34 | E0432 16 link codec fns (`artifact_link_*`, `link_pin_*`, `validate_link_pin_record`) imported from `os_store_child` by the store root | REAL: they live `pub(crate)` in `os-store-link-schema` | codec fns `pub`, `pub use codec::*;` in the link-schema root, store root imports them from `semio_framework_os_store_link_schema` |
+| 35 | E0432 `DatabaseDocumentMountPublishedHook` (db engine) | REAL: the type is `cfg(any(test, feature="testkit"))`, every use `cfg(test)` | import split out with `#[cfg(test)]` |
+| 36 | E0432 `pack::source` (os-kernel `📥️mounts/🌱️wp1-leaves`) | REAL: pack never re-exports its source crate | `pub use semio_framework_pack_source as source;` (dependency present) |
+| 37 | E0432 `super::protocol` (store command receiving cursor) | REAL: `protocol` is a Cargo rename (extern prelude), not a module item | dropped from the `use super::{…}` list |
+| 38 | E0432 `durable_group_test_{bind_member,member,outcome}` (store durable-group root) | REAL: helpers are `cfg(feature="durable-group-testing")`, all uses gated the same | import split with the same cfg |
+| 39 | E0252/E0260 `store` defined twice (plugin retained-command `🦀️.rs:1` extern crate and `:20` use) | REAL | removed the `use` |
+
+Artifacts in this scope (not fixed): `NoMigrations`, `NoPluginApp`, `AuditSinks`, `ArtifactChannels`, `GatewayBackends`, `RandomSources`… (item-macro enums), `__semio_dispatch_*` (macro-generated), `tokio::select!`, `syn::Token!`, `proc_macro`, WIT `exports::semio::…` bindings, `ManagementProviders`/`EditorProviders` (macro enums), `ConnectInfo` (axum stub), `ui_wgpu`/wgpu stubs.
+
+### Hand-offs (real, not fixed here)
+
+- ohp/pi2: `plugin/🧪️tests/🔬️tool-run/📬️outcome/🦀️.rs:15` names `semio_framework_plugin_tool_run::original_tick_payload::advance_original_tick_payload`; the module is private, the fn is re-exported at the crate root (`semio_framework_plugin_tool_run::advance_original_tick_payload`).
+- plugin owner (design): `plugin-plugin-program` `🛬️lifted/🚪️gateway/🦀️.rs` imports `cancel_extension_inference` and `with_extension_inference_context`, which live in `plugin-extension` (`EXTENSION_BUNDLE` state), and `plugin-extension` depends on `plugin-plugin-program`. A real layering inversion; needs a port (hook trait) like the r7b `JackContentFactory`. The same gateway file is also mounted by the extension crate (`inference_gateway`).
+- db storage owner (peer in flight): `os/🔨️modules/🛢️db/🗄️storage/🦀️.rs` no longer defines `FaultScript`/`FaultStorage` (HEAD has them at 755/787) while `🧪️tests/🧯️fault-storage` and the `DbBackend::Fault` arms use them.
+- ohh: hub rows E0603 `DslValue/FromValue/ToValue` (fixed through row 25, re-check), `pause_directory_command_*` (artifact: `testkit` feature unification in the union), `plugin::DagApps` and siblings (macro enums); hub fixes already applied by this slice: space `app_commands!` module paths and `app_labels!` stray `pub` (rows 18, 19).
+- ohr: `extern crate … as element_contracts` rows are oracle artifacts (fixed in `ohf-tools/pos/posunion.py`); the surface-fixtures E0252 fix is row 15.
+- compile window: Cargo.lock of every workspace that gained a dependency (rows 12, 30, 32) needs the offline lock update; `semio-framework-pack` gained `semio-framework-replication-interaction` (+1 lib file / ~870 lines in its closure, re-measure the crate gate).
+
+### Proof, fw-all r2 (lib, resolution-only, run after rows 25-39; also carries the oracle's extern-crate alias fix)
+
+r1 had 302 target rows (289 distinct keys); r2 has 6, **0 new keys**. All rows of fixes 1-39 are gone (the lib-config part of fixes 1-12 was proven earlier by run m2, 17 keys gone, 1 new artifact). The 6 remaining: `proc_macro` ×3 (artifact), `os_kernel_db_fault_testing` FaultScript/FaultStorage (peer in flight, hand-off above), `pack` heads in `db/storage/memory` and `mcp/probe-document` (fixed after r2 by rows 40-41, proof pending run r3).
+
+| # | row | class | fix |
+| --- | --- | --- | --- |
+| 40 | E0432/E0433 `pack::{ByteRange, ContentHash}` (db storage memory, db io-core) and `pack::snapshot::…` (os-mcp-probe-document): `pack` is the os-kernel rename that siblings declare with `extern crate semio_framework_os_kernel as pack;` | REAL: alias never declared | added the `extern crate` line (memory, io-core, probe-document roots) |
+
+### fw-modules test config (run m3; typeck not reached, resolution-level rows only; 375 target rows)
+
+Dev-dependency gaps, REAL (tests mount from the crate but its Cargo.toml declares neither the crate nor the rename); the fix adds a `[dev-dependencies]` entry (cycle-checked):
+
+| # | crate: head | fix |
+| --- | --- | --- |
+| 41 | dsl-lexical: `semio_framework_value`; io-control: `semio_framework_diagnostic`; ui-prepared: `semio_framework_async_macros`; ui-runtime-reconcile: `semio_framework_ui_contract_validation` | dev-dependency |
+| 42 | ui-select-behavior: `ui_contract`; ui-text and ui-wgpu-draw-execution: `ui_styling` (renames, `package = …`) | dev-dependency with the rename |
+| 43 | ui `🧪️tests/🔬️targets-wgpu-theme-token-parity`: `levels::VEIL_ALPHA` has no import | `use ui_styling::levels;` |
+
+Artifacts in m3: `usvg`, `proc_macro`, `syn::Token`, macro-defined modules (`checkout`, `counter`, `drag_gesture`, `probe`, `eager`, `scrub`, `typing`), `wgpu` stubs, os-kernel `store::` paths in the transient-preparation law (os crates not in the family).
+
+## Coordinator additions (23:4x)
+
+| # | row | class | fix |
+| --- | --- | --- | --- |
+| 44 | E0616 `retirements`, `discarded_factory`, `discarded`, `discarded_pending` of `TimeTravelStoreState` (turns crate `plugin-time-travel-turns`: `🧵️instance/🧹️owners-and-retirement:94,96`, `📖️ref-reads:38`, `🪄️supersede-authoring-and-extension:48`) | REAL cross-crate privacy (fields are `pub(crate)` of the base crate) | three narrow owner methods in `⏪️time-travel/🗄️store-state/🦀️.rs`: `discard_issuer_missing()`, `adopt_discard_issuer(factory)`, `queue_retirement(owner)`; the four call sites use them, fields stay `pub(crate)`. Proof: run `tt` (3 time-travel crates, typeck canary reached, lib): privacy rows 0. |
+| 45 | `📋️callers.json` (composition admission) rows `plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs` (module tree never contained `semio_framework_composition_admission::`) and `plugin/🧪️tests/🧩️composition/🦀️.rs` (file no longer exists) | REAL stale test data (the builder-contract test crate was split into parts, the callers moved) | the two rows replaced by the three files that do call the owner: `…builder-contract-part-1/🦀️.rs`, `…part-1-x/🦀️.rs`, `…part-3/🦀️.rs` (same manifest, which declares the dependency); 88 unique rows, `minItems` 80 holds; all non-plugin-artifact sources exist and contain the string (checked with a module-tree reader, `bun test` not run: Bun 1.3.14 segfault) |

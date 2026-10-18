@@ -10,8 +10,8 @@ fn stack_transform(value:&RasterTransform)->RasterStackTransform {
 
 /// 🌉️ Resolves materialized asset children once; geometry and mask coverage belong to the shared stack job.
 struct RasterStackAssets<'a> {
-    pub(super) assets:&'a semio_s_artifact_raster_raster_model::RasterOwnedMap<semio_s_artifact_raster_raster_model::RasterAssetChild>,
-    pub(super) images:BTreeMap<String,Arc<RasterImage>>,
+    pub assets:&'a semio_s_artifact_raster_raster_model::RasterOwnedMap<semio_s_artifact_raster_raster_model::RasterAssetChild>,
+    pub images:BTreeMap<String,Arc<RasterImage>>,
     nodes:usize,
 }
 impl RasterStackAssets<'_> {
@@ -55,10 +55,10 @@ impl RasterStackAssets<'_> {
 
 /// 🧵️ Copies each unique source image in bounded grants from one captured immutable document.
 pub struct RasterStackPreparation {
-    pub(super) layers:Vec<RasterStackLayer>,
-    pub(super) images:BTreeMap<String,Arc<RasterImage>>,
+    pub layers:Vec<RasterStackLayer>,
+    pub images:BTreeMap<String,Arc<RasterImage>>,
     keys:Vec<String>,
-    pub(super) index:usize,
+    pub index:usize,
     cancelled:bool,
 }
 impl RasterStackPreparation {

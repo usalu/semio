@@ -43,6 +43,4 @@ pub fn write_storey(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMut
 }
 //#endregion 🔖️Storey
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

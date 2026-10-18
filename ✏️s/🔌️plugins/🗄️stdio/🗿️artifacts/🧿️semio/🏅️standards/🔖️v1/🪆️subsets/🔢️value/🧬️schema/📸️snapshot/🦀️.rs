@@ -187,9 +187,9 @@ impl Default for SemioValueSnapshot {
 /// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law` in
 /// `🎹️composer/🦀️.rs`) and for this file's own round-trip tests below — same convention
 /// `json`'s `demo_json_snapshot()`/`flow`'s `demo_flow_snapshot()` use.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_semio_value_snapshot() -> SemioValueSnapshot {
+pub fn demo_semio_value_snapshot() -> SemioValueSnapshot {
     SemioValueSnapshot {
         schema: STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(),
         root: SemioValue::Map {

@@ -1,7 +1,19 @@
 import type { PdfAdmittedStreamRole } from "../🪪️stream-roles/🟦️.ts";
 /** 🧬️ PdfDiff — TypeScript facet of `s.stdio.pdf.1.7` (diff), generated from the Rust model
  *  by 🐍️generate-schema-facets.py (ticket 26/09/18/PDF-ARTIFACT-SPEC-COMPLETE). */
-import type { ObjRef, PdfAcroForm, PdfAction, PdfActionKind, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfCcittParameters, PdfColorSpace, PdfDate, PdfDecimal, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEncryption, PdfEncryptionAlgorithm, PdfFileSpecification, PdfFormField, PdfFormFieldKind, PdfFunction, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfMarkInfo, PdfMarkupAnnotation, PdfObject, PdfOp, PdfOpenAction, PdfOptionalContent, PdfOptionalContentGroup, PdfPage, PdfPageLayout, PdfPageMode, PdfPredictor, PdfPropertyList, PdfStreamFilter, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences } from '../📸️snapshot/🟦️.ts';
+import type { ObjRef, PdfCcittParameters, PdfDecimal, PdfDictEntry, PdfObject, PdfPredictor, PdfStreamFilter } from '../📸️snapshot/🧩️cos/🟦️.ts';
+import type { PdfAcroForm, PdfFormField, PdfFormFieldKind, PdfOptionalContent, PdfOptionalContentGroup } from '../📸️snapshot/📝️form/🟦️.ts';
+import type { PdfAction, PdfActionKind, PdfDestination, PdfDestinationFit, PdfFileSpecification, PdfNamedDestination, PdfOpenAction, PdfOutlineItem, PdfPageLabelRange } from '../📸️snapshot/🎯️navigation/🟦️.ts';
+import type { PdfAnnotation, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle, PdfMarkupAnnotation } from '../📸️snapshot/📌️annotation/🟦️.ts';
+import type { PdfAnnotationKind } from '../📸️snapshot/📌️annotation/🏷️kind/🟦️.ts';
+import type { PdfColorSpace, PdfFunction } from '../📸️snapshot/🌈️color/🟦️.ts';
+import type { PdfDate, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfMarkInfo, PdfOutputIntent, PdfPageLayout, PdfPageMode, PdfViewerPreferences } from '../📸️snapshot/📇️metadata/🟦️.ts';
+import type { PdfExtGState, PdfFormXObject, PdfLineCap, PdfLineJoin, PdfTransparencyGroup } from '../📸️snapshot/🖼️resource/🎚️state/🟦️.ts';
+import type { PdfFont } from '../📸️snapshot/🔤️font/🟦️.ts';
+import type { PdfImage } from '../📸️snapshot/🖼️resource/🟦️.ts';
+import type { PdfInlineImage, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString } from '../📸️snapshot/🖋️content/🟦️.ts';
+import type { PdfNamedColorSpace, PdfNamedProperties, PdfPage } from '../📸️snapshot/📄️document/🟦️.ts';
+import type { PdfPattern, PdfShading } from '../📸️snapshot/🖼️resource/🌈️shading/🟦️.ts';
 import { registerSchemaDocument, validateAgainst, SchemaRefusal } from '../📸️snapshot/🟦️.ts';
 import schemaDocument from "./🔣️.json" with { type: "json" };
 
@@ -161,90 +173,200 @@ export type PdfSetPdfAcroForm =
 
 export interface PdfIndexedDiffPdfOutputIntent {
   removed?: number[];
-  modified?: PdfIndexedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfIndexedItemPdfOutputIntent[];
+  added?: PdfIndexedItemPdfOutputIntent[];
 }
 
-export interface PdfIndexedItemT {
+export interface PdfIndexedItemPdfAnnotation {
   index: number;
-  value: T;
+  value: PdfAnnotation;
+}
+
+export interface PdfIndexedItemPdfEmbeddedFile {
+  index: number;
+  value: PdfEmbeddedFile;
+}
+
+export interface PdfIndexedItemPdfExtGState {
+  index: number;
+  value: PdfExtGState;
+}
+
+export interface PdfIndexedItemPdfFont {
+  index: number;
+  value: PdfFont;
+}
+
+export interface PdfIndexedItemPdfFormXObject {
+  index: number;
+  value: PdfFormXObject;
+}
+
+export interface PdfIndexedItemPdfImage {
+  index: number;
+  value: PdfImage;
+}
+
+export interface PdfIndexedItemPdfNamedColorSpace {
+  index: number;
+  value: PdfNamedColorSpace;
+}
+
+export interface PdfIndexedItemPdfNamedDestination {
+  index: number;
+  value: PdfNamedDestination;
+}
+
+export interface PdfIndexedItemPdfNamedProperties {
+  index: number;
+  value: PdfNamedProperties;
+}
+
+export interface PdfIndexedItemPdfOp {
+  index: number;
+  value: PdfOp;
+}
+
+export interface PdfIndexedItemPdfOutlineItem {
+  index: number;
+  value: PdfOutlineItem;
+}
+
+export interface PdfIndexedItemPdfOutputIntent {
+  index: number;
+  value: PdfOutputIntent;
+}
+
+export interface PdfIndexedItemPdfPageLabelRange {
+  index: number;
+  value: PdfPageLabelRange;
+}
+
+export interface PdfIndexedItemPdfPattern {
+  index: number;
+  value: PdfPattern;
+}
+
+export interface PdfIndexedItemPdfShading {
+  index: number;
+  value: PdfShading;
 }
 
 export interface PdfKeyedDiffPdfEmbeddedFile {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfEmbeddedFile[];
+  added?: PdfIndexedItemPdfEmbeddedFile[];
 }
 
-export interface PdfKeyedItemT {
+export interface PdfKeyedItemPdfEmbeddedFile {
   key: string;
-  value: T;
+  value: PdfEmbeddedFile;
+}
+
+export interface PdfKeyedItemPdfExtGState {
+  key: string;
+  value: PdfExtGState;
+}
+
+export interface PdfKeyedItemPdfFont {
+  key: string;
+  value: PdfFont;
+}
+
+export interface PdfKeyedItemPdfFormXObject {
+  key: string;
+  value: PdfFormXObject;
+}
+
+export interface PdfKeyedItemPdfImage {
+  key: string;
+  value: PdfImage;
+}
+
+export interface PdfKeyedItemPdfNamedColorSpace {
+  key: string;
+  value: PdfNamedColorSpace;
+}
+
+export interface PdfKeyedItemPdfNamedProperties {
+  key: string;
+  value: PdfNamedProperties;
+}
+
+export interface PdfKeyedItemPdfPattern {
+  key: string;
+  value: PdfPattern;
+}
+
+export interface PdfKeyedItemPdfShading {
+  key: string;
+  value: PdfShading;
 }
 
 export interface PdfIndexedDiffPdfPageLabelRange {
   removed?: number[];
-  modified?: PdfIndexedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfIndexedItemPdfPageLabelRange[];
+  added?: PdfIndexedItemPdfPageLabelRange[];
 }
 
 export interface PdfIndexedDiffPdfNamedDestination {
   removed?: number[];
-  modified?: PdfIndexedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfIndexedItemPdfNamedDestination[];
+  added?: PdfIndexedItemPdfNamedDestination[];
 }
 
 export interface PdfIndexedDiffPdfOutlineItem {
   removed?: number[];
-  modified?: PdfIndexedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfIndexedItemPdfOutlineItem[];
+  added?: PdfIndexedItemPdfOutlineItem[];
 }
 
 export interface PdfKeyedDiffPdfNamedProperties {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfNamedProperties[];
+  added?: PdfIndexedItemPdfNamedProperties[];
 }
 
 export interface PdfKeyedDiffPdfNamedColorSpace {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfNamedColorSpace[];
+  added?: PdfIndexedItemPdfNamedColorSpace[];
 }
 
 export interface PdfKeyedDiffPdfPattern {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfPattern[];
+  added?: PdfIndexedItemPdfPattern[];
 }
 
 export interface PdfKeyedDiffPdfShading {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfShading[];
+  added?: PdfIndexedItemPdfShading[];
 }
 
 export interface PdfKeyedDiffPdfExtGState {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfExtGState[];
+  added?: PdfIndexedItemPdfExtGState[];
 }
 
 export interface PdfKeyedDiffPdfFormXObject {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfFormXObject[];
+  added?: PdfIndexedItemPdfFormXObject[];
 }
 
 export interface PdfKeyedDiffPdfImage {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfImage[];
+  added?: PdfIndexedItemPdfImage[];
 }
 
 export interface PdfKeyedDiffPdfFont {
   removed?: string[];
-  modified?: PdfKeyedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfKeyedItemPdfFont[];
+  added?: PdfIndexedItemPdfFont[];
 }
 
 export interface PdfPagesDiff {
@@ -301,14 +423,14 @@ export type PdfSetPdfTransparencyGroup =
 
 export interface PdfIndexedDiffPdfAnnotation {
   removed?: number[];
-  modified?: PdfIndexedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfIndexedItemPdfAnnotation[];
+  added?: PdfIndexedItemPdfAnnotation[];
 }
 
 export interface PdfIndexedDiffPdfOp {
   removed?: number[];
-  modified?: PdfIndexedItemT[];
-  added?: PdfIndexedItemT[];
+  modified?: PdfIndexedItemPdfOp[];
+  added?: PdfIndexedItemPdfOp[];
 }
 
 export type PdfSetPdfRect =
@@ -350,9 +472,7 @@ export const parsePdfSetPdfPageLayout = (value: unknown): PdfSetPdfPageLayout =>
 export const parsePdfSetPdfOptionalContent = (value: unknown): PdfSetPdfOptionalContent => validateAgainst<PdfSetPdfOptionalContent>(schema, "/$defs/PdfSetPdfOptionalContent", value);
 export const parsePdfSetPdfAcroForm = (value: unknown): PdfSetPdfAcroForm => validateAgainst<PdfSetPdfAcroForm>(schema, "/$defs/PdfSetPdfAcroForm", value);
 export const parsePdfIndexedDiffPdfOutputIntent = (value: unknown): PdfIndexedDiffPdfOutputIntent => validateAgainst<PdfIndexedDiffPdfOutputIntent>(schema, "/$defs/PdfIndexedDiffPdfOutputIntent", value);
-export const parsePdfIndexedItemT = (value: unknown): PdfIndexedItemT => validateAgainst<PdfIndexedItemT>(schema, "/$defs/PdfIndexedItemT", value);
 export const parsePdfKeyedDiffPdfEmbeddedFile = (value: unknown): PdfKeyedDiffPdfEmbeddedFile => validateAgainst<PdfKeyedDiffPdfEmbeddedFile>(schema, "/$defs/PdfKeyedDiffPdfEmbeddedFile", value);
-export const parsePdfKeyedItemT = (value: unknown): PdfKeyedItemT => validateAgainst<PdfKeyedItemT>(schema, "/$defs/PdfKeyedItemT", value);
 export const parsePdfIndexedDiffPdfPageLabelRange = (value: unknown): PdfIndexedDiffPdfPageLabelRange => validateAgainst<PdfIndexedDiffPdfPageLabelRange>(schema, "/$defs/PdfIndexedDiffPdfPageLabelRange", value);
 export const parsePdfIndexedDiffPdfNamedDestination = (value: unknown): PdfIndexedDiffPdfNamedDestination => validateAgainst<PdfIndexedDiffPdfNamedDestination>(schema, "/$defs/PdfIndexedDiffPdfNamedDestination", value);
 export const parsePdfIndexedDiffPdfOutlineItem = (value: unknown): PdfIndexedDiffPdfOutlineItem => validateAgainst<PdfIndexedDiffPdfOutlineItem>(schema, "/$defs/PdfIndexedDiffPdfOutlineItem", value);
@@ -379,3 +499,27 @@ export const parsePdfPathSegment = (value: unknown): PdfPathSegment => validateA
 export const parsePdfPageBox = (value: unknown): PdfPageBox => validateAgainst<PdfPageBox>(schema, "/$defs/PdfPageBox", value);
 export const parsePdfInfoDiff = (value: unknown): PdfInfoDiff => validateAgainst<PdfInfoDiff>(schema, "/$defs/PdfInfoDiff", value);
 export const parsePdfSetPdfDate = (value: unknown): PdfSetPdfDate => validateAgainst<PdfSetPdfDate>(schema, "/$defs/PdfSetPdfDate", value);
+export const parsePdfIndexedItemPdfAnnotation = (value: unknown): PdfIndexedItemPdfAnnotation => validateAgainst<PdfIndexedItemPdfAnnotation>(schema, "/$defs/PdfIndexedItemPdfAnnotation", value);
+export const parsePdfIndexedItemPdfEmbeddedFile = (value: unknown): PdfIndexedItemPdfEmbeddedFile => validateAgainst<PdfIndexedItemPdfEmbeddedFile>(schema, "/$defs/PdfIndexedItemPdfEmbeddedFile", value);
+export const parsePdfIndexedItemPdfExtGState = (value: unknown): PdfIndexedItemPdfExtGState => validateAgainst<PdfIndexedItemPdfExtGState>(schema, "/$defs/PdfIndexedItemPdfExtGState", value);
+export const parsePdfIndexedItemPdfFont = (value: unknown): PdfIndexedItemPdfFont => validateAgainst<PdfIndexedItemPdfFont>(schema, "/$defs/PdfIndexedItemPdfFont", value);
+export const parsePdfIndexedItemPdfFormXObject = (value: unknown): PdfIndexedItemPdfFormXObject => validateAgainst<PdfIndexedItemPdfFormXObject>(schema, "/$defs/PdfIndexedItemPdfFormXObject", value);
+export const parsePdfIndexedItemPdfImage = (value: unknown): PdfIndexedItemPdfImage => validateAgainst<PdfIndexedItemPdfImage>(schema, "/$defs/PdfIndexedItemPdfImage", value);
+export const parsePdfIndexedItemPdfNamedColorSpace = (value: unknown): PdfIndexedItemPdfNamedColorSpace => validateAgainst<PdfIndexedItemPdfNamedColorSpace>(schema, "/$defs/PdfIndexedItemPdfNamedColorSpace", value);
+export const parsePdfIndexedItemPdfNamedDestination = (value: unknown): PdfIndexedItemPdfNamedDestination => validateAgainst<PdfIndexedItemPdfNamedDestination>(schema, "/$defs/PdfIndexedItemPdfNamedDestination", value);
+export const parsePdfIndexedItemPdfNamedProperties = (value: unknown): PdfIndexedItemPdfNamedProperties => validateAgainst<PdfIndexedItemPdfNamedProperties>(schema, "/$defs/PdfIndexedItemPdfNamedProperties", value);
+export const parsePdfIndexedItemPdfOp = (value: unknown): PdfIndexedItemPdfOp => validateAgainst<PdfIndexedItemPdfOp>(schema, "/$defs/PdfIndexedItemPdfOp", value);
+export const parsePdfIndexedItemPdfOutlineItem = (value: unknown): PdfIndexedItemPdfOutlineItem => validateAgainst<PdfIndexedItemPdfOutlineItem>(schema, "/$defs/PdfIndexedItemPdfOutlineItem", value);
+export const parsePdfIndexedItemPdfOutputIntent = (value: unknown): PdfIndexedItemPdfOutputIntent => validateAgainst<PdfIndexedItemPdfOutputIntent>(schema, "/$defs/PdfIndexedItemPdfOutputIntent", value);
+export const parsePdfIndexedItemPdfPageLabelRange = (value: unknown): PdfIndexedItemPdfPageLabelRange => validateAgainst<PdfIndexedItemPdfPageLabelRange>(schema, "/$defs/PdfIndexedItemPdfPageLabelRange", value);
+export const parsePdfIndexedItemPdfPattern = (value: unknown): PdfIndexedItemPdfPattern => validateAgainst<PdfIndexedItemPdfPattern>(schema, "/$defs/PdfIndexedItemPdfPattern", value);
+export const parsePdfIndexedItemPdfShading = (value: unknown): PdfIndexedItemPdfShading => validateAgainst<PdfIndexedItemPdfShading>(schema, "/$defs/PdfIndexedItemPdfShading", value);
+export const parsePdfKeyedItemPdfEmbeddedFile = (value: unknown): PdfKeyedItemPdfEmbeddedFile => validateAgainst<PdfKeyedItemPdfEmbeddedFile>(schema, "/$defs/PdfKeyedItemPdfEmbeddedFile", value);
+export const parsePdfKeyedItemPdfExtGState = (value: unknown): PdfKeyedItemPdfExtGState => validateAgainst<PdfKeyedItemPdfExtGState>(schema, "/$defs/PdfKeyedItemPdfExtGState", value);
+export const parsePdfKeyedItemPdfFont = (value: unknown): PdfKeyedItemPdfFont => validateAgainst<PdfKeyedItemPdfFont>(schema, "/$defs/PdfKeyedItemPdfFont", value);
+export const parsePdfKeyedItemPdfFormXObject = (value: unknown): PdfKeyedItemPdfFormXObject => validateAgainst<PdfKeyedItemPdfFormXObject>(schema, "/$defs/PdfKeyedItemPdfFormXObject", value);
+export const parsePdfKeyedItemPdfImage = (value: unknown): PdfKeyedItemPdfImage => validateAgainst<PdfKeyedItemPdfImage>(schema, "/$defs/PdfKeyedItemPdfImage", value);
+export const parsePdfKeyedItemPdfNamedColorSpace = (value: unknown): PdfKeyedItemPdfNamedColorSpace => validateAgainst<PdfKeyedItemPdfNamedColorSpace>(schema, "/$defs/PdfKeyedItemPdfNamedColorSpace", value);
+export const parsePdfKeyedItemPdfNamedProperties = (value: unknown): PdfKeyedItemPdfNamedProperties => validateAgainst<PdfKeyedItemPdfNamedProperties>(schema, "/$defs/PdfKeyedItemPdfNamedProperties", value);
+export const parsePdfKeyedItemPdfPattern = (value: unknown): PdfKeyedItemPdfPattern => validateAgainst<PdfKeyedItemPdfPattern>(schema, "/$defs/PdfKeyedItemPdfPattern", value);
+export const parsePdfKeyedItemPdfShading = (value: unknown): PdfKeyedItemPdfShading => validateAgainst<PdfKeyedItemPdfShading>(schema, "/$defs/PdfKeyedItemPdfShading", value);

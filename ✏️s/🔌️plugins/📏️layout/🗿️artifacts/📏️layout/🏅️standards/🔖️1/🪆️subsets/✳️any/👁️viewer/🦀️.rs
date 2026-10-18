@@ -19,7 +19,7 @@ use semio_s_artifact_layout_layout_model::{LAYOUT_DIALECT, LAYOUT_DOCUMENT_SCHEM
 use {semio_framework_artifact_reference::Dialect};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ArtifactViewer, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

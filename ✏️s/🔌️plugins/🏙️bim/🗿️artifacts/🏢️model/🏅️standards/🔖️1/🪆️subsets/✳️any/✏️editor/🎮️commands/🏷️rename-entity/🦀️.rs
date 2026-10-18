@@ -21,6 +21,4 @@ pub fn handle(payload: &RenameEntity, doc: &ArtifactView<'_, ModelSnapshot>, _cf
     Ok(Emit::mutations(vec![mutation]))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

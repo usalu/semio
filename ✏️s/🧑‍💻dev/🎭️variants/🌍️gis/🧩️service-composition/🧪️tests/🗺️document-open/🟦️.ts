@@ -938,7 +938,7 @@ export async function registerGisDocumentOpenTests(vitest: Vitest, dependencies:
           expect(documentExecutionTargetStatusRoleV1(code as keyof typeof DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1)).toBe(fixture.expected.statusRoles[code]);
         }
         expect(Object.keys(DOCUMENT_EXECUTION_TARGET_STATUS_TEXT_V1).sort()).toEqual(Object.keys(fixture.expected.status).sort());
-        const workerSource = await (await import("node:fs/promises")).readFile(new URL("./🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url), "utf8");
+        const workerSource = (await import("@semio-tech/framework-compiler-ts/syntax/module-tree")).readModuleTreeSource(new URL("./🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url));
         const leaseRegion = workerSource.slice(workerSource.indexOf("//#region 🪪️ExecutionTargetLease"), workerSource.indexOf("//#endregion 🪪️ExecutionTargetLease"));
         expect(leaseRegion).not.toContain("loadPluginModule");
         expect(leaseRegion).not.toContain("ActivationRegistry");

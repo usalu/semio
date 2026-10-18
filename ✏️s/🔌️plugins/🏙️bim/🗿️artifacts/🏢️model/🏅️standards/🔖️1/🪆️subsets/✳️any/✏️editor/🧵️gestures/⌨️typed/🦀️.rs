@@ -8,7 +8,9 @@
 //! * `length`: that far from the anchor towards where the pointer last was (towards +X when it never was);
 //! * nothing: finish the gesture, as Enter does.
 
-use super::plane::{angle, dist, polar, COINCIDENT, P};
+use crate::editor::bim::gestures::session::Surface;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::editor::bim::gestures::plane::{angle, dist, polar, COINCIDENT, P};
 
 /// 🔬️ The metres one pixel reaches for a typed point: so small that a pick and a snap only find what lies exactly there.
 pub const REACH: f64 = 1e-4;
@@ -73,6 +75,4 @@ pub fn resolve(entry: &Entry, anchor: Option<P>, toward: Option<P>) -> Option<P>
     Some([clean(point[0]), clean(point[1])])
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

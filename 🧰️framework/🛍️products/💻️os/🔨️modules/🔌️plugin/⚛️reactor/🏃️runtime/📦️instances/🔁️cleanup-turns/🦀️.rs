@@ -1,4 +1,4 @@
-//! 🔁️ Live and close cleanup turns, stall verdicts, destroy and the cooperative maintenance steps.
+//! 🔁️ Live and close cleanup turns, stall verdicts, destroy and the live maintenance steps.
 
 use semio_framework_plugin_decl_app::ArtifactApp;
 use std::sync::atomic::{AtomicU32, AtomicU64, AtomicU8, Ordering};
@@ -115,10 +115,6 @@ fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<
     pump.faulted = faulted;
     pump.outcome_pending = true;
     Ok(RuntimeMaintenanceStatus::Ready)
-}
-fn runtime_close_pool() -> semio_framework_async::WorkerPool {
-    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
-    semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, cores))
 }
 /// 🩺️ The structural accountant's verdict on ONE close-ladder step, priced in BOTH currencies it
 /// claims to spend: consecutive fruitless steps AND the real microseconds they burned.
@@ -376,40 +372,6 @@ pub fn plugin_step_close_cleanup<PA: PluginApp + 'static>(runtime:&PluginRuntime
     }
 }
 
-#[cfg(target_arch = "wasm32")]
-fn pump_runtime_live_cooperative_turn<PA: PluginApp>(cell: &RuntimeAppCell<PA>) -> Result<(), Fault> {
-    let before = cell.maintenance_status.load(Ordering::SeqCst);
-    let turn = cell.maintenance_probe_turns.load(Ordering::Relaxed).saturating_add(1);
-    cell.maintenance_probe_turns.store(turn, Ordering::Relaxed);
-    let pool = runtime_close_pool();
-    let now_ms = semio_framework_job::default_now_ms();
-    if let Some(now_ms) = now_ms {
-        pool.pump(now_ms);
-    } else {
-        cell.maintenance_fault_us.store(RUNTIME_CLEANUP_UNMEASURED_US, Ordering::SeqCst);
-        cell.maintenance_status.store(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::CooperativeClock).repr(), Ordering::SeqCst);
-    }
-    if turn <= 4096 && turn.is_power_of_two() && semio_framework_trace::runtime_diagnostics_enabled() {
-        let phase = cell
-            .maintenance_pump
-            .try_lock()
-            .ok()
-            .map(|pump| u8::from(pump.session.is_some()) | (u8::from(pump.outcome_pending) << 1) | (u8::from(pump.rejected.is_some()) << 2) | (u8::from(pump.closing) << 3) | (u8::from(pump.faulted) << 4) | (u8::from(pump.terminal) << 5));
-        eprintln!(
-            "[TRACE] cooperative-maintenance instance={} turn={} generation={} status={}->{} entries={} phase={:?} clock={} pool={:?}",
-            cell.id,
-            turn,
-            cell.maintenance_generation.load(Ordering::SeqCst),
-            before,
-            cell.maintenance_status.load(Ordering::SeqCst),
-            cell.maintenance_probe_entries.load(Ordering::Relaxed),
-            phase,
-            now_ms.is_some(),
-            pool.try_cooperative_snapshot()
-        );
-    }
-    now_ms.map(|_| ()).ok_or_else(|| runtime_cleanup_fault("live", RuntimeCleanupFault::CooperativeClock, cell.id, RUNTIME_CLEANUP_UNMEASURED_US))
-}
 /// 🌡️ Whether the instance the last [`plugin_step_live_cleanup`] stepped still reports
 /// maintenance pressure — the reactor turn keeps stepping while this holds, bounded by
 /// [`LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN`] and its retirement deadline.

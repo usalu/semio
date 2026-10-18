@@ -120,7 +120,7 @@ use std::collections::HashMap;
 #[allow(unused_imports)]
 use std::sync::Arc;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::{FLOW_DIRECT_STORE_TOOL_IDS, FLOW_CHILD_GROUP_TOOL_IDS, FlowChildGroupJobFactory, FLOW_HOST_ONLY_TOOL_IDS, FLOW_GRAPH_OPERATION_TOOL_IDS, FLOW_CONTRIBUTIONS_TOOL_IDS, retained};
 
 use crate::editor::flow::*;

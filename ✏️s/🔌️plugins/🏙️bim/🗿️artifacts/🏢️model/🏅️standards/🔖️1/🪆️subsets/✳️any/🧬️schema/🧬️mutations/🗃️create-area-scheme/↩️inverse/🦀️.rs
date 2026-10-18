@@ -1,13 +1,16 @@
 //! ↩️ Inverse of `CreateAreaScheme`: the concrete `DeleteAreaScheme` of the id it created, none when the id was already taken.
 
-use super::super::delete_area_scheme::DeleteAreaScheme;
-use super::super::elements;
-use super::CreateAreaScheme;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_area_scheme::DeleteAreaScheme;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_area_scheme::CreateAreaScheme;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &CreateAreaScheme, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &CreateAreaScheme, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_area_scheme::DeleteAreaScheme>,
+{
     if elements::taken(base, &payload.id).is_some() {
         return Vec::new();
     }
-    vec![ModelMutation::DeleteAreaScheme(DeleteAreaScheme { id: payload.id.clone() })]
+    vec![Op::from(DeleteAreaScheme { id: payload.id.clone() })]
 }

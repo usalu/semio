@@ -66,10 +66,10 @@ fn read(database:&SqliteDatabase,frame:&mut Frame,source:Option<&ObjSnapshot>,po
 }
 pub struct Settlement<'a,'b>{control:RefCell<SqliteSnapshotReceivingControl<'a,'b>>,before:usize,remaining:usize,phase:SqliteSnapshotPhase,post_body:Cell<bool>,cause:RefCell<Option<ValueError>>}
 impl<'a,'b> Settlement<'a,'b>{
- fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:Cell::new(false),cause:RefCell::new(None)}}
+ pub fn new(control:&'a mut SqliteSnapshotControl<'b>,before:usize,phase:SqliteSnapshotPhase)->Self{let remaining=control.allocation_remaining_bytes();Self{control:RefCell::new(control.receiving_scope()),before,remaining,phase,post_body:Cell::new(false),cause:RefCell::new(None)}}
  fn settle(&self,owned:usize)->Result<()>{settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)}
- fn finish_body(&self,owned:usize)->Result<()>{self.settle(owned)?;self.post_body.set(true);Ok(())}
- fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if !self.post_body.get(){return true}match self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total)){Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
+ pub fn finish_body(&self,owned:usize)->Result<()>{self.settle(owned)?;self.post_body.set(true);Ok(())}
+ pub fn observe(&self,owned:usize,completed:usize,total:usize)->bool{if !self.post_body.get(){return true}match self.settle(owned).and_then(|_|self.control.borrow_mut().checkpoint(self.phase,completed,total)){Ok(())=>true,Err(error)=>{*self.cause.borrow_mut()=Some(error);false}}}
  fn refused(&self,owned:usize,error:ValueError)->ValueError{match self.settle(owned){Err(cause)=>cause,Ok(())=>self.cause.borrow_mut().take().unwrap_or(error)}}
 }
 macro_rules! receive{

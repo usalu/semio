@@ -3,7 +3,7 @@
 use crate::editor::bim::kit::window_config;
 
 window_config! {
-    window: super::WINDOW_KIND_ID,
+    window: crate::editor::bim::modes::edit::windows::world::WINDOW_KIND_ID,
     schema: "bim.world-window.config",
     envelope: "s.bim.model.world-window.config",
     extension: "bimworldwindowcfg",
@@ -11,7 +11,7 @@ window_config! {
     display: "Set BIM World Window Configuration",
     type BimWorldWindowConfig, BimWorldWindowConfigDiff, BimWorldWindowConfigMutation, BimWorldWindowConfigOwner;
     #[dsl(block)]
-    camera: store::Viewport3dOrbit = super::INITIAL_CAMERA;
+    camera: store::Viewport3dOrbit = crate::editor::bim::modes::edit::windows::world::INITIAL_CAMERA;
     #[dsl(block)]
     projection: semio_framework_plugin::WorldProjectionConfig = semio_framework_plugin::WorldProjectionConfig::default();
     isolated_storey: String = String::new();

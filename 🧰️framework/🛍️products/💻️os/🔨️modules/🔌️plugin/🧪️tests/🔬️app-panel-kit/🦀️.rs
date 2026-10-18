@@ -282,7 +282,7 @@ mod panel_kit_tests {
     /// the parity is pinned here, against the host element's source.
     #[semio_framework_async_macros::async_test]
     async fn the_host_tree_element_declares_the_same_body_node_budget() {
-        let relative = std::path::Path::new("🧰️framework").join("🔨️modules").join("🖱️ui").join("🧱️elements").join("🌳️Tree").join("🟦️.tsx");
+        let relative = std::path::Path::new("🧰️framework").join("🔨️modules").join("🖱️ui").join("🧱️elements").join("🌳️Tree").join("🔭️virtual-window").join("🟦️.tsx");
         let tsx = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().map(|root| root.join(&relative)).find(|path| path.exists()).expect("the host Tree element lives in this repo");
         let source = std::fs::read_to_string(&tsx).expect("the host Tree element is readable");
         let spelling = format!("TREE_WINDOW_BODY_NODE_BUDGET = {TREE_WINDOW_BODY_NODE_BUDGET};");

@@ -9,8 +9,20 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../..")
 const configDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
 const repoRoot = resolve(configDir, "../../../../../../../../../..");
 
+const wasmEngineStub = resolve(repoRoot, "./🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts");
+/** 🌳️ A bare package name and its whole subpath tree, for the wasm engine packages that one stub module stands in for. */
+const packageTree = (name: string) => new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\/]/g, "\\$&")}(?:/.*)?$`, "u");
+
 export default defineConfig({
   root: testRoot,
+  resolve: {
+    alias: [
+      { find: packageTree("@semio-tech/framework-os-node-graph-rs"), replacement: wasmEngineStub },
+      { find: packageTree("@semio-tech/framework-surface-rs"), replacement: wasmEngineStub },
+      { find: packageTree("@semio-tech/framework-editor-rs"), replacement: wasmEngineStub },
+      { find: packageTree("@semio-tech/flow-core"), replacement: wasmEngineStub },
+    ],
+  },
   cacheDir: process.env.SEMIO_VITEST_POLICY ? testCacheDirectoryV1(process.env, "renderer-wgpu") : repoCacheDirectory(repoRoot, "vite", "renderer-wgpu"),
   test: {
     root: testRoot,

@@ -41,22 +41,22 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_u64(s: &str) -> Result<u64, String> {
+pub fn parse_u64(s: &str) -> Result<u64, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
@@ -110,7 +110,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// Unset, `D` Derived, `I` Integer, `R` Real, `S` String, `E` Enum, `F` reFerence (`R` taken by
 /// Real), `A` Aggregate (recursive list), `T` TypedValue (recursive, name + one wrapped value).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_value(v: &StepValue) -> String {
+pub fn enc_value(v: &StepValue) -> String {
     match v {
         StepValue::Unset => "U[]".to_string(),
         StepValue::Derived => "D[]".to_string(),
@@ -125,7 +125,7 @@ pub(crate) fn enc_value(v: &StepValue) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_value(s: &str) -> Result<StepValue, String> {
+pub fn dec_value(s: &str) -> Result<StepValue, String> {
     if s.len() < 3 {
         return Err(format!("step value: too short {s:?}"));
     }
@@ -166,12 +166,12 @@ pub(crate) fn dec_complex(s: &str) -> Result<StepComplexType, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity(e: &StepEntity) -> String {
+pub fn enc_entity(e: &StepEntity) -> String {
     format!("[{},{},[{}],[{}]]", e.id, enc_str(&e.name), e.args.iter().map(enc_value).collect::<Vec<_>>().join(","), e.complex.iter().map(enc_complex).collect::<Vec<_>>().join(","),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity(s: &str) -> Result<StepEntity, String> {
+pub fn dec_entity(s: &str) -> Result<StepEntity, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, args, complex] = parts.as_slice() else { return Err(format!("entity: expected 4 fields, got {}", parts.len())) };
     Ok(StepEntity {
@@ -200,19 +200,19 @@ pub(crate) fn dec_populated_str_list(s: &str) -> Result<Vec<String>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_file_description(d: &StepFileDescription) -> String {
+pub fn enc_file_description(d: &StepFileDescription) -> String {
     format!("[[{}],{}]", d.description.iter().map(|s| enc_str(s)).collect::<Vec<_>>().join(","), enc_str(&d.implementation_level))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
+pub fn dec_file_description(s: &str) -> Result<StepFileDescription, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [description, implementation_level] = parts.as_slice() else { return Err(format!("file description: expected 2 fields, got {}", parts.len())) };
     Ok(StepFileDescription { description: dec_populated_str_list(description)?, implementation_level: dec_str(implementation_level)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_file_name(f: &StepFileName) -> String {
+pub fn enc_file_name(f: &StepFileName) -> String {
     format!(
         "[{},{},[{}],[{}],{},{},{}]",
         enc_str(&f.name),
@@ -226,7 +226,7 @@ pub(crate) fn enc_file_name(f: &StepFileName) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_file_name(s: &str) -> Result<StepFileName, String> {
+pub fn dec_file_name(s: &str) -> Result<StepFileName, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, timestamp, author, organization, preprocessor_version, originating_system, authorization] = parts.as_slice() else {
         return Err(format!("file name: expected 7 fields, got {}", parts.len()));
@@ -243,12 +243,12 @@ pub(crate) fn dec_file_name(s: &str) -> Result<StepFileName, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_file_schema(s: &StepFileSchema) -> String {
+pub fn enc_file_schema(s: &StepFileSchema) -> String {
     format!("[{}]", s.schemas.iter().map(|x| enc_str(x)).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
+pub fn dec_file_schema(s: &str) -> Result<StepFileSchema, String> {
     let schemas = dec_populated_str_list(s)?;
     Ok(StepFileSchema { schemas })
 }

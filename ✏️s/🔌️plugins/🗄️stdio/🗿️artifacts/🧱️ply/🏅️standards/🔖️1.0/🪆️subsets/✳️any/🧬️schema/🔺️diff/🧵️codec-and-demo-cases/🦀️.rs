@@ -171,9 +171,9 @@ fn sweep_b() -> PlySnapshot {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<PlyDiff> {
+pub fn demo_diff_cases() -> Vec<PlyDiff> {
     vec![
         PlyDiff::default(),
         PlyDiff {

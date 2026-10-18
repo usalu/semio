@@ -4914,5 +4914,1117 @@
         "type": "boolean"
       }
     }
+  },
+  "artifactInputGroupCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "accepted"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "one",
+          "roots64",
+          "roots65",
+          "files512",
+          "files513",
+          "files32768",
+          "duplicate",
+          "prefix",
+          "case",
+          "reordered",
+          "two-roots",
+          "wrong-root-index",
+          "foreign-purpose",
+          "extra",
+          "getter",
+          "proxy",
+          "hash",
+          "unicode",
+          "directories",
+          "bytes",
+          "encoded",
+          "directories1024",
+          "directories65536"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactInputGroupCases": [
+    {
+      "mode": "one",
+      "accepted": true
+    },
+    {
+      "mode": "roots64",
+      "accepted": true
+    },
+    {
+      "mode": "roots65",
+      "accepted": false
+    },
+    {
+      "mode": "files512",
+      "accepted": true
+    },
+    {
+      "mode": "files513",
+      "accepted": false
+    },
+    {
+      "mode": "files32768",
+      "accepted": true
+    },
+    {
+      "mode": "duplicate",
+      "accepted": false
+    },
+    {
+      "mode": "prefix",
+      "accepted": false
+    },
+    {
+      "mode": "case",
+      "accepted": false
+    },
+    {
+      "mode": "reordered",
+      "accepted": true
+    },
+    {
+      "mode": "two-roots",
+      "accepted": false
+    },
+    {
+      "mode": "wrong-root-index",
+      "accepted": false
+    },
+    {
+      "mode": "foreign-purpose",
+      "accepted": false
+    },
+    {
+      "mode": "extra",
+      "accepted": false
+    },
+    {
+      "mode": "getter",
+      "accepted": false
+    },
+    {
+      "mode": "proxy",
+      "accepted": false
+    },
+    {
+      "mode": "hash",
+      "accepted": false
+    },
+    {
+      "mode": "unicode",
+      "accepted": true
+    },
+    {
+      "mode": "directories",
+      "accepted": false
+    },
+    {
+      "mode": "bytes",
+      "accepted": false
+    },
+    {
+      "mode": "encoded",
+      "accepted": false
+    },
+    {
+      "mode": "directories1024",
+      "accepted": true
+    },
+    {
+      "mode": "directories65536",
+      "accepted": true
+    }
+  ],
+  "artifactInputGroupWorkerCases": [
+    {
+      "mode": "group-success",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "group-finite",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "group-copied-token",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-foreign-control",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-wrong-hash",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-base64",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-existing-root",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-symlink-parent",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-cancel-before",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-cancel-write",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-undefined-write",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-frozen-write",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-hardlink",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-sync-failure",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-read-drift",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-journal-drift",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-expired-before",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-retire-action",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-root-preflight",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-path-limit",
+      "failed": true,
+      "wrote": false
+    },
+    {
+      "mode": "group-unawaited",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "group-multiple-roots",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "group-empty-file",
+      "failed": false,
+      "wrote": false
+    },
+    {
+      "mode": "group-short-write",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "group-late-unknown-file",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-late-unknown-directory",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-fresh-read-unknown",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-selected-fresh-root",
+      "failed": false,
+      "wrote": true
+    },
+    {
+      "mode": "group-selected-unknown-root",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-selected-root-index",
+      "failed": true,
+      "wrote": true
+    },
+    {
+      "mode": "group-wide",
+      "failed": false,
+      "wrote": false
+    }
+  ],
+  "artifactInputGroupWorkerCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "failed",
+      "wrote"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "group-success",
+          "group-finite",
+          "group-copied-token",
+          "group-foreign-control",
+          "group-wrong-hash",
+          "group-base64",
+          "group-existing-root",
+          "group-symlink-parent",
+          "group-cancel-before",
+          "group-cancel-write",
+          "group-undefined-write",
+          "group-frozen-write",
+          "group-hardlink",
+          "group-sync-failure",
+          "group-read-drift",
+          "group-journal-drift",
+          "group-expired-before",
+          "group-retire-action",
+          "group-root-preflight",
+          "group-path-limit",
+          "group-unawaited",
+          "group-multiple-roots",
+          "group-empty-file",
+          "group-short-write",
+          "group-late-unknown-file",
+          "group-late-unknown-directory",
+          "group-fresh-read-unknown",
+          "group-selected-fresh-root",
+          "group-selected-unknown-root",
+          "group-selected-root-index",
+          "group-wide"
+        ]
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "wrote": {
+        "type": "boolean"
+      }
+    }
+  },
+  "artifactInputGroupWorkerReceiptSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "pid",
+      "failed",
+      "wrote",
+      "rootMaximum",
+      "rootDeadline",
+      "wireSha256",
+      "capabilitiesSha256",
+      "nativeEffects",
+      "wholeAllocationRetired"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "group-success",
+          "group-finite",
+          "group-copied-token",
+          "group-foreign-control",
+          "group-wrong-hash",
+          "group-base64",
+          "group-existing-root",
+          "group-symlink-parent",
+          "group-cancel-before",
+          "group-cancel-write",
+          "group-undefined-write",
+          "group-frozen-write",
+          "group-hardlink",
+          "group-sync-failure",
+          "group-read-drift",
+          "group-journal-drift",
+          "group-expired-before",
+          "group-retire-action",
+          "group-root-preflight",
+          "group-path-limit",
+          "group-unawaited",
+          "group-multiple-roots",
+          "group-empty-file",
+          "group-short-write",
+          "group-late-unknown-file",
+          "group-late-unknown-directory",
+          "group-fresh-read-unknown",
+          "group-selected-fresh-root",
+          "group-selected-unknown-root",
+          "group-selected-root-index",
+          "group-wide"
+        ]
+      },
+      "pid": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "wrote": {
+        "type": "boolean"
+      },
+      "rootMaximum": {
+        "const": 0
+      },
+      "rootDeadline": {
+        "const": null
+      },
+      "wireSha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "capabilitiesSha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "nativeEffects": {
+        "const": 0
+      },
+      "wholeAllocationRetired": {
+        "const": false
+      }
+    }
+  },
+  "artifactInputWorkerReceiptSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mode",
+      "pid",
+      "failed",
+      "wrote",
+      "rootMaximum",
+      "rootDeadline",
+      "wireSha256",
+      "nativeEffects",
+      "wholeAllocationRetired"
+    ],
+    "properties": {
+      "mode": {
+        "enum": [
+          "input-success",
+          "input-finite",
+          "input-copied-token",
+          "input-foreign-control",
+          "input-wrong-hash",
+          "input-base64",
+          "input-existing-root",
+          "input-symlink-parent",
+          "input-cancel-before",
+          "input-cancel-write",
+          "input-undefined-write",
+          "input-frozen-write",
+          "input-hardlink",
+          "input-sync-failure",
+          "input-read-drift",
+          "input-journal-drift",
+          "input-expired-before",
+          "input-retire-action",
+          "input-root-preflight",
+          "input-path-limit",
+          "input-unawaited",
+          "input-multiple-roots",
+          "input-empty-file",
+          "input-short-write",
+          "input-late-unknown-file",
+          "input-late-unknown-directory",
+          "input-fresh-read-unknown",
+          "input-selected-fresh-root",
+          "input-selected-unknown-root",
+          "input-selected-root-index"
+        ]
+      },
+      "pid": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "failed": {
+        "type": "boolean"
+      },
+      "wrote": {
+        "type": "boolean"
+      },
+      "rootMaximum": {
+        "const": 0
+      },
+      "rootDeadline": {
+        "const": null
+      },
+      "wireSha256": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      },
+      "nativeEffects": {
+        "const": 0
+      },
+      "wholeAllocationRetired": {
+        "const": false
+      }
+    }
+  },
+  "retainedInactiveRosters": [
+    {
+      "id": "one-removed",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        }
+      ],
+      "after": [],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": true
+    },
+    {
+      "id": "sibling-retained",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": true
+    },
+    {
+      "id": "selected-still-mounted",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-added",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "sibling-removed",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "sibling-kernel-changed",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "changed"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "sibling-backing-changed",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "changed",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "sibling-image-changed",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/foreign.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing-selected",
+      "before": [
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "duplicate-before",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        }
+      ],
+      "after": [],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "duplicate-after",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        },
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "invented-terminal",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        }
+      ],
+      "after": [],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "selected-descendant",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/c/m/nested/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/c/m/nested/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "selected-remounted",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        }
+      ],
+      "after": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "reopened"
+        }
+      ],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "reopened"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "empty-roster",
+      "before": [],
+      "after": [],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "extra-removal",
+      "before": [
+        {
+          "root": "/fixture/p/c/m",
+          "image": "/fixture/p/c/fixed.dmg",
+          "backingIdentity": "[11,12,33554432,33554432]",
+          "kernelIdentity": "[\"native\",21,2]"
+        },
+        {
+          "root": "/fixture/p/s/m",
+          "image": "/fixture/p/s/fixed.dmg",
+          "backingIdentity": "[11,15,33554432,33554432]",
+          "kernelIdentity": "[\"native\",25,2]"
+        }
+      ],
+      "after": [],
+      "transition": {
+        "operation": "retain-inactive",
+        "root": "/fixture/p/c/m",
+        "terminal": null
+      },
+      "accepted": false
+    }
+  ],
+  "retainedInactiveRosterCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "before",
+      "after",
+      "transition",
+      "accepted"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "before": {
+        "$ref": "#/definitions/ProtectedMaintenanceRoster"
+      },
+      "after": {
+        "$ref": "#/definitions/ProtectedMaintenanceRoster"
+      },
+      "transition": {
+        "$ref": "#/definitions/ProtectedMaintenanceTransition"
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
+  },
+  "retainedInactiveOwnerRefusals": [
+    {
+      "id": "no-arguments",
+      "arguments": 0,
+      "parent": "ordinary"
+    },
+    {
+      "id": "one-argument",
+      "arguments": 1,
+      "parent": "ordinary"
+    },
+    {
+      "id": "two-arguments",
+      "arguments": 2,
+      "parent": "ordinary"
+    },
+    {
+      "id": "extra-argument",
+      "arguments": 4,
+      "parent": "ordinary"
+    },
+    {
+      "id": "absent-owner",
+      "arguments": 3,
+      "parent": "undefined"
+    },
+    {
+      "id": "null-owner",
+      "arguments": 3,
+      "parent": "null"
+    },
+    {
+      "id": "copied-owner",
+      "arguments": 3,
+      "parent": "ordinary"
+    },
+    {
+      "id": "frozen-owner",
+      "arguments": 3,
+      "parent": "frozen"
+    },
+    {
+      "id": "proxy-owner",
+      "arguments": 3,
+      "parent": "proxy"
+    }
+  ],
+  "retainedInactiveOwnerRefusalCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "arguments",
+      "parent"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "arguments": {
+        "enum": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "parent": {
+        "enum": [
+          "ordinary",
+          "undefined",
+          "null",
+          "frozen",
+          "proxy"
+        ]
+      }
+    }
+  },
+  "retainedInactiveCanonicalCases": [
+    {
+      "effect": "current",
+      "accepted": true
+    },
+    {
+      "effect": "pending",
+      "accepted": false
+    },
+    {
+      "effect": "wrong-filesystem",
+      "accepted": false
+    },
+    {
+      "effect": "wrong-physical",
+      "accepted": false
+    },
+    {
+      "effect": "wrong-backing",
+      "accepted": false
+    },
+    {
+      "effect": "wrong-digest",
+      "accepted": false
+    },
+    {
+      "effect": "wrong-underlying",
+      "accepted": false
+    },
+    {
+      "effect": "extra-field",
+      "accepted": false
+    },
+    {
+      "effect": "malformed",
+      "accepted": false
+    },
+    {
+      "effect": "symlink",
+      "accepted": false
+    },
+    {
+      "effect": "hardlink",
+      "accepted": false
+    },
+    {
+      "effect": "cancelled",
+      "accepted": false
+    }
+  ],
+  "retainedInactiveCanonicalCaseSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "effect",
+      "accepted"
+    ],
+    "properties": {
+      "effect": {
+        "enum": [
+          "current",
+          "pending",
+          "wrong-filesystem",
+          "wrong-physical",
+          "wrong-backing",
+          "wrong-digest",
+          "wrong-underlying",
+          "extra-field",
+          "malformed",
+          "symlink",
+          "hardlink",
+          "cancelled"
+        ]
+      },
+      "accepted": {
+        "type": "boolean"
+      }
+    }
   }
 }

@@ -1,6 +1,44 @@
 //! 🖥️ Play app of the BIM editor: the `BimModelApp` and its `ArtifactEditor` implementation. See [`super`].
 
-use super::*;
+use crate::editor::bim::commands::{analyse_model, export_sheets, export_schedule_csv, export_model};
+use crate::editor::bim::config::app_schema_descriptor;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::editor::bim::entities::kind_holding;
+use crate::editor::bim::modes::edit::windows::{family, plan, schedule, section, sheet, world};
+use crate::editor::bim::panels::{families as families_panel, classification as classification_panel, diagnostics as diagnostics_panel, coordination as coordination_panel, library as library_panel, outliner as outliner_panel, properties as properties_panel};
+use crate::editor::bim::presence::{BimPresence, BimPresenceMutation};
+use crate::editor::bim::terminology::{bim_labels, BimLabels};
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
+use semio_framework_artifact_reference::Dialect;
+use semio_framework_plugin::app::InteractionView;
+use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandPayload};
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::AppOperationContext;
+use semio_framework_plugin::ArtifactEditor;
+use semio_framework_plugin::ArtifactOwnedToolJobRequest;
+use semio_framework_plugin::ArtifactToolFactoryRegistry;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::DraftView;
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::Emit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::NoConfig;
+use semio_framework_plugin::NoConfigMutation;
+use semio_framework_plugin::NoDraft;
+use semio_framework_plugin::NoDraftMutation;
+use semio_framework_plugin::TreeWindows;
+use semio_framework_plugin::ViewModel;
+use semio_framework_plugin::WindowEngagement;
+use semio_framework_plugin::WindowMeasure;
+use semio_framework_ui_locale::Label;
+use semio_framework_ui_locale::LocalizedLabel;
+use std::collections::HashMap;
+use crate::editor::bim::{args_bridge};
+use crate::editor::bim::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️BimModelApp
 #[derive(Default)]
@@ -21,7 +59,7 @@ fn problems_of(doc: &ArtifactView<'_, ModelSnapshot>) -> crate::standards::v1::s
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(super) fn render_body(instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, elements: &[String], library: &[String], hover: &[String], preview: &crate::editor::bim::marks::Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
+pub(crate) fn render_body(instance: crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Instance<'_>, body_key: &str, doc: &ArtifactView<'_, ModelSnapshot>, cfg: &ConfigView<'_, NoConfig>, view_state: &ViewModel, elements: &[String], library: &[String], hover: &[String], preview: &crate::editor::bim::marks::Preview) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
     let snapshot = doc.snapshot;
     let labels = bim_labels(view_state);
     let utility = crate::editor::bim::utilities::active(view_state);

@@ -27,7 +27,7 @@
   "supersededConditions": 6,
   "effectStormChargeSite": "FrameTransactionStage::FlushEffects;",
   "presentDriveBudget": "INTERACTIVE_STEP_CEILING_US / 2",
-  "frameWorkerTurn": "session.try_step_on_worker(self.retained)",
+  "frameWorkerTurn": "session.try_step_on_original_caller(cx)",
   "forbiddenFrameDriveLoop": "drive_deadline_us",
   "workerInvocation": {
     "nativeType": "RendererAssetDecodeInvocation",

@@ -1,20 +1,24 @@
 //! 🚪️ IO of `s.bim.model@1/*`: the native pack (binary) and DSL (text) carriers of snapshot, diff, mutations and inferences.
 //! Foreign formats (IFC, glTF, SVG) arrive as `📤️export` / `📥️import` leaves of this tree.
 
-#[path = "💾️binary/🦀️.rs"]
-pub mod binary;
+pub mod binary {
+    pub use semio_s_artifact_bim_model_cascade_restore::standards::v1::subsets::any::io::binary::*;
+    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::io::binary::diff;
+    pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::io::binary::inferences;
+}
 
-#[path = "📝️text/🦀️.rs"]
-pub mod text;
+pub mod text {
+    pub use semio_s_artifact_bim_model_family_tests::standards::v1::subsets::any::io::text::*;
+    pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::io::text::diff;
+    pub use semio_s_artifact_bim_model_mut_any_190::standards::v1::subsets::any::io::text::mutations;
+}
 
 #[path = "📤️export/🦀️.rs"]
 pub mod export;
 
-#[path = "📥️import/🦀️.rs"]
-pub mod import;
+pub use semio_s_artifact_bim_model_viewer::standards::v1::subsets::any::io::import;
 
-#[path = "💬️bcf/🦀️.rs"]
-pub mod bcf;
+pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::bcf;
 
 //#region 🔖️Inference
 /// 🔮️ Reads the inference of `model` from the shared session (the one path every consumer takes), so an export after an edit recomputes only what the edit touched; a fault of the run is a refusal of `leaf`.
@@ -68,6 +72,4 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
 }
 //#endregion 🔖️IoDeclaration
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

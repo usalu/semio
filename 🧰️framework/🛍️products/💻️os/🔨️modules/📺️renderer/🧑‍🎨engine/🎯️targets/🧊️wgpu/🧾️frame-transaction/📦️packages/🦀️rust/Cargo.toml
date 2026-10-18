@@ -35,6 +35,7 @@ semio-framework-os-renderer-wgpu-program-bridge = { path = "../../../🪢️prog
 semio-framework-os-renderer-wgpu-runtime-mailbox = { path = "../../../📨️runtime-mailbox/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-scene-canvas2d = { path = "../../../🎨️scene-canvas2d/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-shell-actions = { path = "../../../🔀️shell-actions/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-input = { path = "../../../🕹️shell-input/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-prefs = { path = "../../../🎛️shell-prefs/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-shell-state = { path = "../../../🐙️shell-state/📦️packages/🦀️rust" }

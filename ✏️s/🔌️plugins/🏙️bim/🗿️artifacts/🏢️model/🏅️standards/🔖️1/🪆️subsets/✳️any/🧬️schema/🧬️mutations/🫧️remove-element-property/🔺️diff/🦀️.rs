@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `RemoveElementProperty`: one property of one element leaves; when it was the element's last property the
 //! whole entry is deleted so that no empty property set remains. Refused: an unknown element or a property the element does not have.
 
-use super::super::elements;
-use super::RemoveElementProperty;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::remove_element_property::RemoveElementProperty;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, PropertySetPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

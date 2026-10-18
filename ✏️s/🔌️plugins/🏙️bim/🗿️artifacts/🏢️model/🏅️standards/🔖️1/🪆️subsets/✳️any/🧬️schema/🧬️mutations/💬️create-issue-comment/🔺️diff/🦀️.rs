@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateIssueComment`: one created comment entry. The id must be free across every collection, then the comment must be writable (see `comment_problem`).
 
-use super::super::elements;
-use super::CreateIssueComment;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_issue_comment::CreateIssueComment;
 use crate::standards::v1::subsets::any::schema::{snapshot::{comment_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

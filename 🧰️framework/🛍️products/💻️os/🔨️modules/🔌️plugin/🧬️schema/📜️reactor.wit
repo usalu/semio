@@ -1,0 +1,263 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). The one turn-loop entry
+/// point every actor exports — replaces `exchange`, the poll-backbone + refresh-ui heartbeat, and
+/// every per-verb surface (`handle-action`, `handle-command`, `update-window`, `refresh-ui`,
+/// `context-menu`, `apply-mutations[-text]`, `read/load-app-document-{text,pack}`,
+/// `attach/detach-backbone`, `consume/produce-media`). Rust SSOT for `budget`/`turn-status`/
+/// `turn-result`: `semio_framework::kernel::{Budget, TurnResult}` (packet A3).
+///
+/// 🧬️ B1 world-collapse: `poll` itself is now `async func`, and the earlier "deliberately not
+/// dependent on stackful-async component-model features" framing is RETIRED — S7 (terra-probe-
+/// spikes, reproduced on this ticket) found a plain sync `func` EXPORT is uncallable at all on any
+/// Store with `wasm_component_model_async(true)`, and `world actor` now imports `host-async`, which
+/// requires exactly such a Store. What `poll` still avoids is a SECOND long-lived call shape (the
+/// deleted `runner::run`'s `stream<event>`) — it stays one call in, one `turn-result` out, it just
+/// runs on an async-capable Store like every other export in this world.
+interface reactor {
+  use types.{plugin-error, pack, instance-id};
+  use effects.{effect};
+  use events.{event};
+  use ui.{ui-patch};
+  use instance-lifetime.{lifetime, receipt, ui-patch-receipt};
+
+  record retained-grant {
+    maximum-items: u64,
+    maximum-copy-bytes: u64,
+    maximum-capacity-bytes: u64,
+    maximum-release-bytes: u64,
+    maximum-depth: u64,
+  }
+  record retained-progress {
+    copied-items: u64,
+    copied-bytes: u64,
+    retained-capacity-bytes: u64,
+    released-bytes: u64,
+  }
+  record original-actor-turn-work {
+    clock-binding: u64,
+    absolute-deadline-us: u64,
+    fuel: u64,
+  }
+  record retained-turn-input {
+    operation: u64,
+    generation: u64,
+    epoch: u64,
+    work: original-actor-turn-work,
+    grant: retained-grant,
+  }
+  record retained-turn-receipt {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    remaining: retained-grant,
+    remaining-fuel: u64,
+  }
+  enum actor-authority-refusal {
+    invalid-value,
+    canceled,
+    ownership-limit,
+    allocation-failed,
+    work-limit,
+    depth-limit,
+    unsupported-owner,
+    invariant-violated,
+  }
+  record actor-admission-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    ready: bool,
+    refusal: option<actor-authority-refusal>,
+  }
+  variant actor-call-failure {
+    authority(actor-authority-refusal),
+    semantic,
+  }
+  record actor-call-refusal {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    failure: actor-call-failure,
+  }
+  record actor-context-close-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    complete: bool,
+    blocked: bool,
+    refusal: option<actor-authority-refusal>,
+  }
+  record budget {
+    retained: retained-turn-input,
+    retained-policy: retained-grant,
+    work-fuel: u64,
+    fuel: u64,
+    deadline-us: u64,
+    max-effects: u32,
+    max-patch-bytes: u32,
+    max-frames: u32,
+  }
+  record actor-poll-input-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    ready: bool,
+  }
+  record poll-input-page {
+    offset: u64,
+    length: u32,
+    word0: u64,
+    word1: u64,
+    word2: u64,
+    word3: u64,
+    word4: u64,
+    word5: u64,
+    word6: u64,
+    word7: u64,
+  }
+  record job-checkpoint {
+    state: list<u8>,
+    applied-progress: u64,
+  }
+  record command-page-cursor {
+    owner: u64,
+    generation: u64,
+    command-index: u32,
+    command-count: u32,
+    instance: instance-id,
+    seq: u64,
+    kind: u8,
+    page-index: u32,
+    page-count: u32,
+    item-count: u32,
+    metadata: u32,
+  }
+  record command-ingress-status {
+    kind: u8,
+    cursor: command-page-cursor,
+    fault: list<u8>,
+  }
+  record cold-document-pair-frontier {
+    document-id: string,
+    head-edit-ordinal: u64,
+    head-edit-id: string,
+    last-commit-seq: u64,
+    chain-sha256: list<u8>,
+  }
+  record cold-document-pair-header {
+    lifetime: lifetime,
+    transfer-generation: u64,
+    descriptor-sha256: list<u8>,
+    baseline-frontier: cold-document-pair-frontier,
+    pack-sha256: list<u8>,
+    spr-sha256: list<u8>,
+    aggregate-sha256: list<u8>,
+    pack-length: u64,
+    spr-length: u64,
+    page-count: u32,
+  }
+  record cold-document-pair-page {
+    header: cold-document-pair-header,
+    page-index: u32,
+    bytes: list<u8>,
+  }
+  record cold-document-pair-cursor {
+    lifetime: lifetime,
+    transfer-generation: u64,
+    page-index: u32,
+    page-count: u32,
+  }
+  record cold-document-pair-applied {
+    lifetime: lifetime,
+    transfer-generation: u64,
+    baseline-frontier: cold-document-pair-frontier,
+    aggregate-sha256: list<u8>,
+  }
+  record cold-document-pair-fault {
+    cursor: cold-document-pair-cursor,
+    fault: list<u8>,
+  }
+  variant cold-pair-ingress-status {
+    idle,
+    page-accepted(cold-document-pair-cursor),
+    backpressure(cold-document-pair-cursor),
+    loading(cold-document-pair-cursor),
+    applied(cold-document-pair-applied),
+    fault(cold-document-pair-fault),
+  }
+  variant turn-status {
+    idle,
+    more-work,
+    checkpoint-ready(job-checkpoint),
+    faulted(list<u8>),
+  }
+  /// 👥️ One RENDER-PLANE presence signal produced by this turn — pack-encoded
+  /// `contract-presence::PresenceUpdate`: addressed by `(surface, node-key)`, TTL-scoped, and
+  /// carrying the emitter's own selection/hover plus any peer marks it derived.
+  ///
+  /// 🚦️ Ruling (sol, 26/08/20, unified program): this is deliberately NOT the replication
+  /// `PresencePeer` roster shape it originally declared. The consumer of a turn result is the
+  /// RENDERER, which needs presence keyed to the node it must decorate and expiring on its own
+  /// clock; the collaboration ROSTER already has a dedicated channel in both directions
+  /// (`ephemeral-snapshot` outbound, `app-command::presence` -> `adopt-presence` inbound), and
+  /// shipping the whole roster on every turn would duplicate a plane that already works.
+  ///
+  /// ⛔️ Presence NEVER enters the document and never bumps a `revision`. A hover that produced a
+  /// document revision would defeat the entire revisioned-patch protocol, so a turn whose only
+  /// change is presence emits `presence` and an EMPTY `ui-patches`.
+  record presence-update {
+    update: pack,
+  }
+  record turn-result {
+    retained-receipt: retained-turn-receipt,
+    ui-patches: list<ui-patch>,
+    effects: list<effect>,
+    presence: list<presence-update>,
+    next-wake: option<u64>,
+    status: turn-status,
+    fuel-used: u64,
+    command-ingress: command-ingress-status,
+    cold-pair-ingress: cold-pair-ingress-status,
+    lifecycle-receipt: option<receipt>,
+    ui-patch-receipt: option<ui-patch-receipt>,
+  }
+  /// 📥️ Hands the next `poll` the ONE command-ingress page it may admit. Staged rather than passed
+  /// as a `poll` parameter, and carried as `bytes` rather than the fixed 64-block `byte-page.page`,
+  /// for one measured reason: an ASYNC-LIFTED export whose parameters exceed the canonical ABI's
+  /// 16 flat values is called through an indirect parameter area the caller allocates in guest
+  /// memory with `cabi_realloc` — and `wit-bindgen`'s async lift never deallocates it
+  /// (`wit-bindgen-core` `abi::call`, `if sig.indirect_params && !async_`). With the page by value
+  /// `poll`'s area was 4 360 B, leaked on EVERY turn: the whole 512 MiB guest budget in ~118 000
+  /// turns, which a browser boot reaches in about a minute (ticket
+  /// 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️guest-memory-retention-2026-09-10.md`). `cursor` plus a
+  /// `list<u8>` is 13 flat values, so this call is passed directly and the bytes cross as a list the
+  /// guest owns and drops.
+  ///
+  /// ⚖️ LAW: exactly one staged page per `poll`. Staging twice without an intervening turn is a host
+  /// defect and faults here rather than silently replacing the page the guest has not read yet.
+  stage-command-page: async func(cursor: command-page-cursor, bytes: list<u8>) -> result<_, plugin-error>;
+
+  /// 🧊️ Hands the next `poll` the ONE cold document-pair page it may admit — same staging contract
+  /// and the same reason as `stage-command-page`.
+  stage-cold-pair-page: async func(page: cold-document-pair-page) -> result<_, plugin-error>;
+
+  /// ▶️ One guest turn. Carries NO bulk payload: `list<event>` and `budget` flatten to seven values,
+  /// which the canonical ABI passes directly, so this call — the one the host makes hundreds of
+  /// thousands of times per session — allocates nothing in guest memory that outlives it.
+  admit-actor-context: async func(input: retained-turn-input, retained-policy: retained-grant) -> actor-admission-call;
+  close-actor-context: async func(input: retained-turn-input, retained-policy: retained-grant) -> actor-context-close-call;
+  /// 📥️ Scalar preflight reserves the existing resident Entry before any dynamic input lifting.
+  reserve-poll-input: async func(extent: u64, budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
+  /// 📄️ Fixed scalar words initialize at most sixty-four bytes of the same reserved source.
+  write-poll-input: async func(page: poll-input-page, budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
+  /// ♻️ Partial source custody closes under the original actor caller before context closure.
+  close-poll-input: async func(budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
+  poll: async func(events: list<event>, budget: budget) -> result<turn-result, actor-call-refusal>;
+
+  /// 🤝️ The app-channel version this guest was compiled for (`CHANNEL_VERSION`). A host reads it exactly once, right after
+  /// instantiation and before any frame, and refuses a guest of another version with `plugin.channel-mismatch`: the frame layout
+  /// is versioned as a whole, so a stale component is never misread under a stale or forged descriptor. `async` like every export
+  /// of `world actor`; the owned ABI's twin is `semio_owned_channel_version_v1`.
+  channel-version: async func() -> u32;
+}

@@ -336,9 +336,9 @@ pub(crate) fn sweep_b() -> ObjSnapshot {
 /// 🧪️ P2-FG1: representative `ObjDiff` values built declaratively (empty, the scalar and tri-state lanes, and index-keyed row triples) —
 /// single source of truth reused by `diff_codec_text_binary_roundtrip_law` below AND by `../../⚙️engine/🦀️.rs`'s
 /// `diff_grammar_conformance_law`/`protocol_walk_law` conformance tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<ObjDiff> {
+pub fn demo_diff_cases() -> Vec<ObjDiff> {
     vec![
         ObjDiff::default(),
         ObjDiff { mtllib: Some(None), usemtl: Some(Vec::new()), smoothing_groups: Some(Vec::new()), unknown_statements: Some(Vec::new()), ..Default::default() },

@@ -1,6 +1,6 @@
 //! 🟧️ `set-slab-type` payload. Patches exactly the provided fields of a slab type; the layer stack is one field and replaces the whole stack.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{Layer, ModelSnapshot}, diff::{ModelDiff, patches::SlabTypePatch}, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Layer, ModelSnapshot}, diff::{ModelDiff, patches::SlabTypePatch}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -26,13 +26,16 @@ impl SetSlabType {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetSlabType {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetSlabType
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetSlabType>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "slab-type", kind: "set-slab-type", record: "SetSlabType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_slab_type::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_slab_type::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit slab type \"{}\"", self.id), &format!("Deckentyp \"{}\" ändern", self.id))

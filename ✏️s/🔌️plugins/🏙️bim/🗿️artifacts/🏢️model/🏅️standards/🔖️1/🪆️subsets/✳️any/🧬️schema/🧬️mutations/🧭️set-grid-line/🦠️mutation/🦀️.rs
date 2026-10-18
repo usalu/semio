@@ -1,6 +1,6 @@
 //! 🧭️ `set-grid-line` payload. Patches a grid line (label, start, end): exactly the provided fields change; the building it belongs to never changes here.
 
-use crate::standards::v1::subsets::any::schema::{diff::{patches::GridLinePatch, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2}};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::GridLinePatch, ModelDiff}, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -28,13 +28,16 @@ impl SetGridLine {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetGridLine {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetGridLine
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetGridLine>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "grid-line", kind: "set-grid-line", record: "SetGridLine" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_grid_line::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_grid_line::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Update grid line \"{}\"", self.id), &format!("Rasterlinie \"{}\" ändern", self.id))

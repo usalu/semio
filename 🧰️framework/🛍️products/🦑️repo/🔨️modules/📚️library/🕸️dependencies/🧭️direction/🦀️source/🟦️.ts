@@ -1,5 +1,5 @@
 import { posix } from "node:path";
-import { type RustModuleContext } from "../../../🔍️discovery/🟦️.ts";
+import { type RustModuleContext } from "../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { type RustCompileReference } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { dependencyDirectionPathMatches as matches, type DependencyDirectionRule } from "../🟦️.ts";
 

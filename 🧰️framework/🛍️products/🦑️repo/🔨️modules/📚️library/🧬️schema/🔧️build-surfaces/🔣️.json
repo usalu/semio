@@ -14,7 +14,9 @@
     "fixedBuildFiles",
     "packageRouting",
     "editorAnswers",
-    "ciDependencies"
+    "ciDependencies",
+    "implicitExecutors",
+    "journalDataOwner"
   ],
   "properties": {
     "packageRouting": {
@@ -289,7 +291,7 @@
           ]
         },
         "command": {
-          "const": "bun repo dependencies sync --scope ."
+          "const": "bun repo dependencies sync --all"
         },
         "cases": {
           "type": "array",
@@ -316,6 +318,55 @@
               }
             }
           }
+        }
+      }
+    },
+    "implicitExecutors": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "target",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "target": {
+            "type": "object"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "journalDataOwner": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "retired",
+        "exports"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "retired": {
+          "type": "string"
+        },
+        "exports": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 2
         }
       }
     }

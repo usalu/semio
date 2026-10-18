@@ -1,7 +1,8 @@
 /** 📬 Extension invocation WIT identity, icon export and host effect wire decoding, completion publication and command-ingress fault diagnostics. */
 import { encodeAppFrame } from "@semio-tech/framework-os";
 import type { ActivationRegistry } from "../../../../../../../🔨️modules/🎠️kernel/🎛️activation-registry/🟦️.ts";
-import type { ShardClient, ShardEventEnvelope, ShardJobStep } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import type { ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import type { ShardEventEnvelope, ShardJobStep } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
 import type { PluginWasmHandle, WireTurnResult, WireVariant } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 import { stubFetch } from "../../../../../🧪️tests/🌐️fetch-stub/🟦️.ts";
 import { cancelSpawnedJobV1, resetSpawnedJobsForTestsV1, spawnedJobsSnapshotV1 } from "../../🧱️elements/🔌️PluginRuntime/💼️job-ledger/🟦️.ts";

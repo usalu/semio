@@ -26,8 +26,8 @@ semio_framework_2d::physical_work_retirement!(PreparedSceneCloseJob,PreparedScen
 /// 🧱️ Constructor adoption preserves refused owned input for work-granted retirement.
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ScenePaintJob{
- plan:Option<DocumentScenePlan>,limits:PaintedSceneLimits,flatness:f64,geometry:Vec<PreparedGeometry>,counts:PreparedSceneCounts,phase:&'static str,work:u64,validated:bool,index:usize,segment:usize,pen:Point,origin:Point,bounds:Option<Bounds>,
- path:Option<PaintedPathPrepareJob>,retired_paths:Vec<PaintedPreparationRetirement>,path_retirement:Option<PaintedPreparationRetirement>,pending:Option<PreparedGeometry>,output:Option<PreparedScene>,cancelled:bool,failure:Option<String>,
+ pub plan:Option<DocumentScenePlan>,limits:PaintedSceneLimits,flatness:f64,geometry:Vec<PreparedGeometry>,counts:PreparedSceneCounts,phase:&'static str,work:u64,validated:bool,index:usize,segment:usize,pen:Point,origin:Point,bounds:Option<Bounds>,
+ pub path:Option<PaintedPathPrepareJob>,retired_paths:Vec<PaintedPreparationRetirement>,path_retirement:Option<PaintedPreparationRetirement>,pending:Option<PreparedGeometry>,output:Option<PreparedScene>,cancelled:bool,failure:Option<String>,
 }
 impl ScenePaintJob{
  pub fn new(plan:DocumentScenePlan,flatness:f64,limits:PaintedSceneLimits)->Self{Self{plan:Some(plan),limits,flatness,geometry:Vec::new(),counts:Default::default(),phase:"nodes",work:0,validated:false,index:0,segment:0,pen:[0.0;2],origin:[0.0;2],bounds:None,path:None,retired_paths:Vec::new(),path_retirement:None,pending:None,output:None,cancelled:false,failure:None}}

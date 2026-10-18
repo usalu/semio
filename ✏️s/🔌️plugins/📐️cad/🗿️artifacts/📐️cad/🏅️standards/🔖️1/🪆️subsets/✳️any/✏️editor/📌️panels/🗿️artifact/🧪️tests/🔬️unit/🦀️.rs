@@ -3,7 +3,7 @@ extern crate semio_framework_os_kernel as store;
 #[path = "../../../../🧪️tests/🧰️support/🦀️.rs"]
 mod context;
 use semio_s_artifact_cad_cad_panels::document::*;
-use semio_s_artifact_cad_cad_modes;
+use semio_s_artifact_cad_cad_modes as edit;
 use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
 use semio_s_artifact_cad_cad_kit::{cad_action, cad_tree_item, cad_tree_item_static, ui_label, ui_value_bool, ui_value_list, ui_value_map, ui_value_text, CadPlayRuntime, CadPlayView, CAD_INTERACTION_DOMAIN, CAD_PLAY_CONTROLLER_ID};
 use semio_s_artifact_cad_cad_model::geometry::CadObject;

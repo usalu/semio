@@ -1,14 +1,17 @@
 //! ↩️ Inverse of `SetStair`: an absolute `SetStair` restoring the base values of exactly the provided fields, none when the stair is
 //! absent.
 
-use super::SetStair;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::set_stair::SetStair;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &SetStair, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetStair, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_stair::SetStair>,
+{
     let Some(stair) = base.stairs.get(&payload.id) else {
         return Vec::new();
     };
-    vec![ModelMutation::SetStair(SetStair {
+    vec![Op::from(SetStair {
         id: payload.id.clone(),
         start: payload.start.map(|_| stair.start),
         direction: payload.direction.map(|_| stair.direction),

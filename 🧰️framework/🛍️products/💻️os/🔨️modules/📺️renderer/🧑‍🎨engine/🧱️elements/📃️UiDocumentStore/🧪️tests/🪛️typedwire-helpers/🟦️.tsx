@@ -7,11 +7,11 @@ export type TypedWireVitest = NonNullable<ImportMeta["vitest"]>;
 export type TypedWireDependencies = Pick<typeof import("../../🟦️.tsx"), "DEFAULT_UI_DOCUMENT_LIMITS" | "UiDocumentStore" | "applyUiPatch" | "emitIntent" | "uiDocumentStateFromSnapshot" | "validateUiDocumentCore"> & Pick<typeof import("@semio-tech/framework"), "RetainedUiPatchCursor" | "RetainedUiSnapshotCursor" | "RetainedUiSurfaceOwner">;
 export type TypedWireSource = TestSource;
 
-type AccessibilitySpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").AccessibilitySpec;
+type AccessibilitySpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").AccessibilitySpec;
 
-type StyleSpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").StyleSpec;
+type StyleSpec = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").StyleSpec;
 
-export type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
+export type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiNodeRecord;
 
 export const exactSchemaDefinitionV1 = (source: unknown, name: string): object => {
   if (source === null || typeof source !== "object") throw new Error(`Missing schema module for ${name}`);
@@ -114,7 +114,7 @@ export async function createTypedWireSupport(vitest: TypedWireVitest, dependenci
     const fixture = await loadOperationsWirePagesFixture(); const row = fixture.valid[fixtureIndex]!; const payload = Buffer.from(Array.from({ length: Number(row.declaredBytes) }, (_, i) => (73 * i + 19) & 255));
     const name = "@webassemblyjs/leb128/lib/leb.js"; const imported: unknown = await import(name); if (!imported || typeof imported !== "object") throw new Error("Missing LEB128 oracle"); const lib: unknown = "default" in imported ? imported.default : imported; if (!lib || typeof lib !== "object" || !("encodeUIntBuffer" in lib) || typeof lib.encodeUIntBuffer !== "function") throw new Error("Invalid LEB128 oracle");
     const encode = lib.encodeUIntBuffer; const uint = (value: number) => { const input = Buffer.alloc(8); input.writeBigUInt64LE(BigInt(value)); const output: unknown = encode(input); if (!(output instanceof Uint8Array)) throw new Error("Invalid LEB128 output"); return Buffer.from(output); }; const frame = (tag: number, body: Uint8Array) => Buffer.concat([Buffer.of(tag), uint(body.length), body]);
-    const owner = new OwnedUiInstance(native.activation, native.lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const returnAdmission = await loadActivationReturnAdmissionFixture(); let source: import("../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").OwnedShardReturn | null = null;
+    const owner = new OwnedUiInstance(native.activation, native.lifetime, DEFAULT_UI_DOCUMENT_LIMITS, { usizeBits: 64 }); native.lease.bindHostRetirement(owner); const returnAdmission = await loadActivationReturnAdmissionFixture(); let source: import("../../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts").OwnedShardReturn | null = null;
     for (const phase of returnAdmission.phases) { const current = native.lease.reserveReturn(4, { maxItems: 1, maxBytes: phase.grant }); expect(current.step.kind, phase.phase).toBe(phase.kind); source = current.source; } if (!source) throw new Error("Native fixture did not admit original return owner"); const responseAdmission = await loadInstanceOutputAdmissionFixture(); for (const phase of responseAdmission.phases) expect(source.reserveResponse({ maxItems: 1, maxBytes: phase.grant }).kind, phase.phase).toBe(phase.kind); const pending = source.execute([], native.budget); const origin = source.origin; if (!origin) throw new Error("Native fixture did not issue return origin");
     const receipt = { lifetime: native.lifetime, patchSequence: 51n }; const surface = Buffer.from("window"); const bytes = Buffer.concat([Buffer.from("73727401", "hex"), frame(0, Buffer.of(0, 0, 1, 0, 0)), frame(2, Buffer.concat([encodeActorUiPatchReceipt(receipt), uint(surface.length), surface, Buffer.of(0, 1, 1)])), frame(3, Buffer.concat([Buffer.of(1), uint(7), uint(payload.length), payload])), frame(4, Buffer.alloc(0)), frame(7, Buffer.alloc(13)), frame(9, Buffer.alloc(0))]);
     await native.answer(pending, encodeActorReturnResult({ kind: "page", receipt: { identity: { origin, returnSequence: 1n }, pageSequence: 1n, length: bytes.length, final: true }, page: createActorBytePage(Uint8Array.from(bytes)) })); const content = new OwnedKernelReturnContent(source, owner, native.activation, native.lifetime);

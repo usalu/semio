@@ -1,4 +1,20 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::export::gltf::document::{GltfModel, GltfNode, GltfPrimitive};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::gltf::document::GltfMesh;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::gltf::materials::Palette;
+#[allow(unused_imports)]
+use crate::render::element_name;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+use crate::standards::v1::subsets::any::io::export::gltf::scene::*;
 use crate::standards::v1::subsets::any::io::export::gltf::projection::through;
 use crate::standards::v1::subsets::any::io::export::gltf::testkit::house;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
@@ -6,7 +22,7 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::instanc
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 
 fn build(snapshot: &ModelSnapshot) -> (GltfModel, Vec<String>) {
-    inference::with_inference(None, snapshot, |inferred| super::build(snapshot, inferred))
+    inference::with_inference(None, snapshot, |inferred| crate::standards::v1::subsets::any::io::export::gltf::scene::build(snapshot, inferred))
 }
 
 fn parent_of(model: &GltfModel, child: usize) -> Option<usize> {

@@ -33,7 +33,7 @@ pub(crate) fn dec_dxf_tag_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfT
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_other_table_bin(t: &DxfOtherTable, out: &mut Vec<u8>) {
+pub fn enc_other_table_bin(t: &DxfOtherTable, out: &mut Vec<u8>) {
     write_str_lp(out, &t.name);
     store::pack_rt::write_varint_u64(out, t.tags.len() as u64);
     for tag in &t.tags {
@@ -42,7 +42,7 @@ pub(crate) fn enc_other_table_bin(t: &DxfOtherTable, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_other_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfOtherTable, String> {
+pub fn dec_other_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DxfOtherTable, String> {
     let name = read_str_lp(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut tags = Vec::with_capacity(count as usize);

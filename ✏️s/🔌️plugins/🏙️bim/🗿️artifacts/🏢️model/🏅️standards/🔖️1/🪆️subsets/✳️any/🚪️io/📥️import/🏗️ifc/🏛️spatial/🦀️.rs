@@ -1,8 +1,10 @@
 //! 🏛️ Project, site, building and storeys of an IFC file. A storey's level comes from the `Level` it was exported with, else from the order of the storey elevations (the lowest at or above
 //! zero is level 0); its height from `GrossHeight`, else from the distance to the storey above.
 
-use super::reader::{real, reals, text, Doc};
-use super::Import;
+use crate::standards::v1::subsets::any::io::export::ifc::Schema;
+use crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{real, reals, text, Doc};
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::schema::snapshot::{Building, Phase, Point2, Site, Storey};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
@@ -44,7 +46,7 @@ pub fn phase(name: &str) -> Phase {
 
 /// 🕰️ The construction phase an instance was exported with (`Semio_Authoring.Phase`); an instance without the row is new work.
 pub fn phase_of(doc: &Doc<'_>, ifc: u64) -> Phase {
-    phase(&super::data::label(&authoring_of(doc, ifc), "Phase").unwrap_or_default())
+    phase(&crate::standards::v1::subsets::any::io::import::ifc::data::label(&authoring_of(doc, ifc), "Phase").unwrap_or_default())
 }
 
 /// 🏷️ The `name → nominal value` rows of a property set's single-value properties.
@@ -86,12 +88,12 @@ fn project(i: &mut Import<'_>) -> f64 {
             i.model.project.organization = i.doc.follow_args(&account[1], "IFCORGANIZATION").map(|organization| text(organization, 1)).unwrap_or_default();
         }
     }
-    if i.schema == super::Schema::Ifc4 {
+    if i.schema == crate::standards::v1::subsets::any::io::import::ifc::Schema::Ifc4 {
         let first = |at: usize| i.doc.document.header.file_name.get(at).and_then(Part21Value::as_list).and_then(|items| items.first()).and_then(Part21Value::as_str).unwrap_or_default().to_string();
         (i.model.project.author, i.model.project.organization) = (first(2), first(3));
     }
     let context = args[7].as_list().and_then(|items| items.first()).and_then(|item| i.doc.follow_args(item, "IFCGEOMETRICREPRESENTATIONCONTEXT"));
-    context.and_then(|context| context.get(5)).and_then(|north| i.doc.direction(north)).map_or(0.0, |north| super::frames::snap((-north[0]).atan2(north[1])))
+    context.and_then(|context| context.get(5)).and_then(|north| i.doc.direction(north)).map_or(0.0, |north| crate::standards::v1::subsets::any::io::import::ifc::frames::snap((-north[0]).atan2(north[1])))
 }
 
 fn sites(i: &mut Import<'_>, true_north: f64) {
@@ -104,7 +106,7 @@ fn sites(i: &mut Import<'_>, true_north: f64) {
     }
     if i.model.sites.is_empty() {
         i.model.sites.insert("site-1".into(), Site { name: String::new(), latitude: 0.0, longitude: 0.0, elevation: 0.0, true_north, boundary: Vec::new() });
-        i.site_world.insert("site-1".into(), super::frames::Rigid::IDENTITY);
+        i.site_world.insert("site-1".into(), crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid::IDENTITY);
     }
 }
 
@@ -114,7 +116,7 @@ fn buildings(i: &mut Import<'_>) {
         let id = Doc::identity(args, "IFCBUILDING").unwrap_or_else(|| format!("bldg-{}", index + 1));
         let site = i.doc.index.whole.get(&instance.id).and_then(|whole| i.ids.get(whole)).cloned().unwrap_or_else(|| first_site.clone());
         let world = i.doc.world(&args[5]);
-        let relative = world.relative_to(i.site_world.get(&site).unwrap_or(&super::frames::Rigid::IDENTITY));
+        let relative = world.relative_to(i.site_world.get(&site).unwrap_or(&crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid::IDENTITY));
         let site_elevation = i.model.sites.get(&site).map_or(0.0, |row| row.elevation);
         let elevation = real(args, 9).map_or(relative.origin[2], |absolute| absolute - site_elevation);
         i.model.buildings.insert(id.clone(), Building { site, name: text(args, 2), origin: Point2 { x: relative.origin[0], y: relative.origin[1] }, rotation: relative.heading(), elevation });
@@ -123,7 +125,7 @@ fn buildings(i: &mut Import<'_>) {
     }
     if i.model.buildings.is_empty() {
         i.model.buildings.insert("bldg-1".into(), Building { site: first_site, name: String::new(), origin: Point2 { x: 0.0, y: 0.0 }, rotation: 0.0, elevation: 0.0 });
-        i.building_world.insert("bldg-1".into(), super::frames::Rigid::IDENTITY);
+        i.building_world.insert("bldg-1".into(), crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid::IDENTITY);
     }
 }
 
@@ -181,6 +183,4 @@ pub fn report_unsupported(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

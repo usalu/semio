@@ -148,7 +148,7 @@ impl ArtifactApp for LabelReloadApp {
         _interaction: &InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
-        _engines: &semio_framework_2d::compute::EngineHandles,
+        _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> ArtifactMutationOutcome<TestMutation, TestConfigMutation, NoDraftMutation> {
         Ok(Emit::mutations(authored(command)))
     }

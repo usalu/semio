@@ -4,12 +4,12 @@
 //! material, a door or a window that fills the cell with its frame, or nothing; the openings hosted by the curtain wall cut their rectangle out of every panel they overlap, the panel is
 //! rebuilt from the rectangles that remain.
 
-use super::super::super::curtain_layout::CurtainLayout;
-use super::super::super::opening_frames::OpeningCut;
-use super::super::fillers::{door_parts, window_parts};
-use super::super::plan_kit::seg;
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningCut;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::fillers::{door_parts, window_parts};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
 use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
-use super::super::{dep_object, dep_types, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_types, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
 use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
 use semio_framework_geometry::bulge::BulgeSeg;
@@ -300,6 +300,4 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str, curtain: &CurtainWall) -> 
 }
 //#endregion 🔖️Solid
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

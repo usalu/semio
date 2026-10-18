@@ -1,8 +1,7 @@
 import { lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { getRepoMetaDir } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { getRepoMetaDir, TICKET_GENERATED_OUTPUT_DIRECTORY } from "../../🗂️workspaces/🧬️metadata/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
-import { TICKET_GENERATED_OUTPUT_DIRECTORY } from "../🟦️.ts";
 
 /** 🎫️ Resolves a ticket id through actual Unicode directory entries instead of constructing emoji mounts. */
 export function taxonomyTicketDirectory(repoRoot: string, ticketId: string): string {

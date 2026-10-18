@@ -1,5 +1,5 @@
 [package]
-workspace = "../../../../../../../.."
+workspace = "../../../../../../../../.."
 name = "semio-framework-plugin-surface-fixture"
 version = "0.1.0"
 edition = "2021"
@@ -26,7 +26,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { path = "../../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

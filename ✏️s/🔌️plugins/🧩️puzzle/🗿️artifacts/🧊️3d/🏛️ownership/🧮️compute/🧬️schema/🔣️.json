@@ -27,7 +27,7 @@
     "manifest": {
       "type": "string",
       "minLength": 1,
-      "const": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/📦️packages/🦀️rust/Cargo.toml"
+      "const": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📦️packages/🦀️rust/Cargo.toml"
     },
     "bindings": {
       "type": "array",

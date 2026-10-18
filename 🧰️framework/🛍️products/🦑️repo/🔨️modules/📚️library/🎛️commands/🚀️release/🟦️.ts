@@ -2,7 +2,7 @@
  * @see 📜️script.ts
  */
 import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { orchestratorBudgetOpts, runCmd } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";

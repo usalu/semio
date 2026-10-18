@@ -46,10 +46,10 @@
       "testOnly": true,
       "productionReachable": true,
       "networkDuringExecution": false,
-      "rationale": "🫥️ HONESTLY RECLASSIFIED. `countUnifiedLocForFile` in `🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts` is a third, older implementation of the same unified-LOC rule that the repository dashboard already ships, written before the Rust and Go ones and never derived from them — so it is real evidence that the three agree. It is NOT independent of this repository, and \"one line of code\" is this repository's own definition rather than a published standard, so no qualifying oracle exists to be had: this entry is a required supplement rather than a qualifying reference, and the aggregate row shapes above it additionally rest on the specification vectors committed as `shared://📤️loc-report.json` and on two independently written subjects. Keeping the reference here is what pins the two definitions together: the day the library's counter drifts from the domain crates, this case fails.",
+      "rationale": "🫥️ HONESTLY RECLASSIFIED. `countUnifiedLocForFile` in `🔨️modules/📚️library/🎛️commands/📝️commit/📊️metrics/🔢️uloc/🟦️.ts` is a third, older implementation of the same unified-LOC rule that the repository dashboard already ships, written before the Rust and Go ones and never derived from them — so it is real evidence that the three agree. It is NOT independent of this repository, and \"one line of code\" is this repository's own definition rather than a published standard, so no qualifying oracle exists to be had: this entry is a required supplement rather than a qualifying reference, and the aggregate row shapes above it additionally rest on the specification vectors committed as `shared://📤️loc-report.json` and on two independently written subjects. Keeping the reference here is what pins the two definitions together: the day the library's counter drifts from the domain crates, this case fails.",
       "productionDebt": {
         "reachableFrom": [
-          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+          "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/📝️commit/📊️metrics/🔢️uloc/🟦️.ts"
         ],
         "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library",
         "plan": "🚚️ The counter moves into 📊️metrics with the rest of the LOC domain; the library then calls the domain implementation instead of owning a second copy, and this entry is deleted together with the duplicate."

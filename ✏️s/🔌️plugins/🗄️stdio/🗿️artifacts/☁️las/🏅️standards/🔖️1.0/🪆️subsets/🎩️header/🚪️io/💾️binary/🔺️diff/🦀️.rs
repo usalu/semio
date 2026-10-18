@@ -16,29 +16,29 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use framework_schema::ArtifactSchema;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
+pub fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
     write_str_lp(out, &v.user_id);
     store::pack_rt::write_varint_u64(out, v.record_id as u64);
     write_str_lp(out, &v.description);
@@ -46,12 +46,12 @@ pub(crate) fn enc_vlr_bin(v: &LasVlr, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
+pub fn dec_vlr_bin(reader: &mut store::ByteReader<'_>) -> Result<LasVlr, String> {
     Ok(LasVlr { user_id: read_str_lp(reader)?, record_id: reader.read_varint_u64().map_err(|e| e.to_string())? as u16, description: read_str_lp(reader)?, data: read_bytes_lp(reader)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
+pub fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
     out.extend_from_slice(&p.x.to_le_bytes());
     out.extend_from_slice(&p.y.to_le_bytes());
     out.extend_from_slice(&p.z.to_le_bytes());
@@ -83,7 +83,7 @@ pub(crate) fn enc_point_bin(p: &LasPoint, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoint, String> {
+pub fn dec_point_bin(reader: &mut store::ByteReader<'_>) -> Result<LasPoint, String> {
     let x = reader.read_f64_le().map_err(|e| e.to_string())?;
     let y = reader.read_f64_le().map_err(|e| e.to_string())?;
     let z = reader.read_f64_le().map_err(|e| e.to_string())?;

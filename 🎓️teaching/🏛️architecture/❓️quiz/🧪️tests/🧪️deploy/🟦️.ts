@@ -11,6 +11,7 @@
  * @see ../../🚀️deploy/🔣️.json — the hosts, image and port
  * @see ../../🚀️deploy/🧬️schema/🔣️.json — their contract
  * @see ../../🚀️deploy/🟦️.ts — the operator verbs under test */
+import TOML from "@iarna/toml";
 import Ajv from "ajv";
 import { createHash, randomBytes } from "node:crypto";
 import { copyFileSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -35,6 +36,7 @@ type Step = { uses?: string; run?: string; with?: Record<string, unknown> };
 type Job = { if?: string; needs?: string; "runs-on": string; "timeout-minutes"?: number; permissions?: Record<string, string>; steps: Step[] };
 const compose = parse(read("compose.yaml")) as { name: string; services: Record<string, Service>; volumes: Record<string, unknown> };
 const workflow = parse(readFileSync(join(repoRoot, ".github/workflows/architecture-quiz.yml"), "utf8")) as { on: Record<string, unknown>; permissions: Record<string, string>; concurrency: Record<string, unknown>; jobs: Record<string, Job> };
+type CargoConfig = { build?: Record<string, unknown>; unstable?: Record<string, unknown>; env?: Record<string, unknown>; profile?: Record<string, unknown>; target?: Record<string, unknown> };
 const scratch: string[] = [];
 
 /** 📂️ A throw-away directory holding `files` (relative path → content). */
@@ -105,7 +107,7 @@ describe("architecture quiz deployment", () => {
     expect(deploymentDrift(drifted("🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile", (text) => text.replace(/^(ARG RUNTIME_IMAGE=[^@]+)@sha256:[0-9a-f]+$/mu, "$1")))).toEqual([expect.stringMatching(/^the base image gcr\.io\/distroless\/\S+ is not pinned to an exact tag and digest$/u)]);
     expect(deploymentDrift(drifted("🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/compose.yaml", (text) => text.replace(/image: caddy:\S+/u, "image: caddy:2")))).toEqual(["the base image caddy:2 is not pinned to an exact tag and digest"]);
     expect(deploymentDrift(drifted("🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Caddyfile", (text) => text.replace(`proctor:${deployment.proctor.port}`, "proctor:8080").replace(/request_body \{[^}]*\}/u, "")))).toEqual([`🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Caddyfile lacks "reverse_proxy proctor:${deployment.proctor.port}"`, "🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Caddyfile: the Caddyfile caps no request body"]);
-    expect(deploymentDrift(drifted(".github/workflows/architecture-quiz.yml", (text) => text.replace(/actions\/checkout@[0-9a-f]{40}/gu, "actions/checkout@v7").replace(":publish\n", ":release\n").replace(QUIZ_PAGES_DIRECTORY, "pages")))).toEqual([expect.stringContaining("dist/pages/quizzes"), ".github/workflows/architecture-quiz.yml uses actions/checkout@v7 without a commit hash", ".github/workflows/architecture-quiz.yml names @teaching/architecture-quiz:release, which is not a target of the package"]);
+    expect(deploymentDrift(drifted(".github/workflows/architecture-quiz.yml", (text) => text.replace(/actions\/checkout@[0-9a-f]{40}/gu, "actions/checkout@v7").replace(":publish --configuration=release\n", ":release --configuration=release\n").replace(QUIZ_PAGES_DIRECTORY, "pages")))).toEqual([expect.stringContaining(`dist/release/${QUIZ_PAGES_DIRECTORY}`), ".github/workflows/architecture-quiz.yml uses actions/checkout@v7 without a commit hash", ".github/workflows/architecture-quiz.yml names @teaching/architecture-quiz:release, which is not a target of the package"]);
     expect(deploymentDrift(drifted("package.json", (text) => `${text}\n{"run":"@teaching/architecture-quiz:stack-check"}\n`))).toEqual(["package.json names @teaching/architecture-quiz:stack-check, which is not a target of the package"]);
   });
 
@@ -119,8 +121,32 @@ describe("architecture quiz deployment", () => {
     const context = read("Dockerfile.dockerignore").split("\n").filter((line) => line && !line.startsWith("#"));
     expect(context[0]).toBe("*");
     expect(context).not.toContain("!Cargo.lock");
-    for (const admitted of ["!Cargo.toml", `!${TEACHING_WORKSPACE}/Cargo.lock`, "!rust-toolchain.toml", "!.cargo", "!**/Cargo.toml", "!**/*.rs", "!🎓️teaching/**/❓️quiz/🔣️.json", "!🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/compose.yaml", "!🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Caddyfile"]) expect(context).toContain(admitted);
-    for (const excluded of [".git", ".🧬semio", "**/node_modules", "**/target"]) expect(context.indexOf(excluded)).toBeGreaterThan(context.findLastIndex((line) => line.startsWith("!")));
+    for (const admitted of ["!Cargo.toml", `!${TEACHING_WORKSPACE}/Cargo.lock`, "!rust-toolchain.toml", "!**/Cargo.toml", "!**/*.rs", "!🎓️teaching/**/❓️quiz/🔣️.json", "!🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/compose.yaml", "!🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Caddyfile", "!🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile.cargo.toml"]) expect(context).toContain(admitted);
+    for (const excluded of [".cargo", "**/.cargo", ".git", ".🧬semio", "**/node_modules", "**/target"]) expect(context.indexOf(excluded)).toBeGreaterThan(context.findLastIndex((line) => line.startsWith("!")));
+  });
+
+  it("compiles the proctor image under its own Cargo configuration, never behind the repository's launcher-only compiler gate", () => {
+    const dockerfile = read("Dockerfile");
+    const context = read("Dockerfile.dockerignore").split("\n").filter((line) => line && !line.startsWith("#"));
+    const repositoryConfig = TOML.parse(readFileSync(join(repoRoot, ".cargo/config.toml"), "utf8")) as CargoConfig;
+    const builderConfig = TOML.parse(read("Dockerfile.cargo.toml")) as CargoConfig;
+    expect(context).not.toContain("!.cargo");
+    expect(context.filter((line) => line.startsWith("!") && /(^|\/)\.cargo(\/|$)/u.test(line))).toEqual([]);
+    expect(builderConfig.build).toEqual({ "build-dir": "/cache/build", rustflags: repositoryConfig.build!.rustflags });
+    for (const gate of ["rustc", "rustc-wrapper", "target-dir"]) expect(builderConfig.build).not.toHaveProperty(gate);
+    expect(builderConfig).not.toHaveProperty("env");
+    expect(builderConfig.unstable).toEqual(repositoryConfig.unstable);
+    expect(builderConfig.profile).toEqual({ release: repositoryConfig.profile!.release });
+    const linux = "cfg(all(target_os = \"linux\", target_env = \"gnu\"))";
+    expect(builderConfig.target).toEqual({ [linux]: repositoryConfig.target![linux] });
+    const copy = dockerfile.indexOf("COPY 🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile.cargo.toml /usr/local/cargo/config.toml\n");
+    expect(copy).toBeGreaterThan(dockerfile.indexOf("RUN rustup toolchain install"));
+    expect(copy).toBeLessThan(dockerfile.indexOf("COPY . .\n"));
+    expect(dockerfile).toContain(`--mount=type=cache,target=${builderConfig.build!["build-dir"]} `);
+    expect(dockerfile).toContain("test ! -e .cargo && cd");
+    const builder = dockerfile.slice(dockerfile.indexOf("AS builder"), dockerfile.indexOf("AS runtime")).split("\n").filter((line) => !line.startsWith("#")).join("\n");
+    for (const absent of ["RUSTC", "bun", "SEMIO_"]) expect(builder).not.toContain(absent);
+    expect(builder).toContain("--locked");
   });
 
   it("runs the proctor unexposed, hardened and limited behind a pinned Caddy", () => {
@@ -189,12 +215,12 @@ describe("architecture quiz deployment", () => {
       expect(job["timeout-minutes"]).toBeGreaterThan(0);
       for (const step of job.steps) if (step.uses) expect(step.uses).toMatch(/^[\w-]+\/[\w-]+@[0-9a-f]{40}$/u);
       for (const step of job.steps) if (step.uses?.startsWith("actions/checkout@")) expect(step.with).toEqual({ "persist-credentials": false });
-      for (const step of job.steps) if (step.run?.startsWith("bun install")) expect(step.run).toBe("bun install --frozen-lockfile --ignore-scripts");
+      for (const step of job.steps) if (step.run?.startsWith("bun repo dependencies sync")) expect(step.run).toBe("bun repo dependencies sync --all");
     }
-    expect(siteJob.steps.filter((step) => step.run).map((step) => step.run)).toEqual(["bun install --frozen-lockfile --ignore-scripts", "bun repo run @teaching/architecture-quiz:test", "bun repo run @teaching/architecture-quiz:publish"]);
-    expect(siteJob.steps.at(-1)!.with).toEqual({ path: `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/${QUIZ_PAGES_DIRECTORY}` });
+    expect(siteJob.steps.filter((step) => step.run).map((step) => step.run)).toEqual(["bun repo dependencies sync --all", "bun repo run @teaching/architecture-quiz:test", "bun repo run @teaching/architecture-quiz:publish --configuration=release"]);
+    expect(siteJob.steps.at(-1)!.with).toEqual({ path: `🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/release/${QUIZ_PAGES_DIRECTORY}` });
     const release = proctor.steps.map((step) => step.run ?? step.uses!.split("@")[0]);
-    expect(release.slice(release.indexOf("bun install --frozen-lockfile --ignore-scripts"))).toEqual(["bun install --frozen-lockfile --ignore-scripts", "bun repo run @teaching/architecture-quiz:docker-image-build", "docker/login-action", "bun repo run @teaching/architecture-quiz:docker-image-publish"]);
+    expect(release.slice(release.indexOf("bun repo dependencies sync --all"))).toEqual(["bun repo dependencies sync --all", "bun repo run @teaching/architecture-quiz:docker-image-build", "docker/login-action", "bun repo run @teaching/architecture-quiz:docker-image-publish"]);
   });
 
   it("accepts exactly a document sealed for the baked proctor origin", () => {

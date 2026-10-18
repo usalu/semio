@@ -1,5 +1,5 @@
 //! 🧭️ delete-workset authored mutation.
-use crate::*;
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -7,10 +7,13 @@ use protocol::{MutationKind, SemanticDescriptor};
 pub struct DeleteWorkset {
     pub id: String,
 }
-impl MutationKind<ModelSnapshot, ModelMutation> for DeleteWorkset {
+impl<Op> MutationKind<ModelSnapshot, Op> for DeleteWorkset
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<DeleteWorkset> + From<crate::standards::v1::subsets::any::schema::mutations::create_workset::CreateWorkset> + From<crate::standards::v1::subsets::any::schema::mutations::set_element_workset::SetElementWorkset>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "delete", entity: "workset", kind: "delete-workset", record: "DeleteWorkset" };
-    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { super::diff::diff(self, base) }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> { Ok(super::inverse::inverse(self, base)) }
+    fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> { crate::standards::v1::subsets::any::schema::mutations::delete_workset::diff::diff(self, base) }
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> { Ok(crate::standards::v1::subsets::any::schema::mutations::delete_workset::inverse::inverse(self, base)) }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native("Delete workset", "Löschen") }
     fn target(&self) -> Vec<String> { vec![self.id.clone()] }
 }

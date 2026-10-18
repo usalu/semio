@@ -6,7 +6,7 @@ import {createHash,randomUUID} from "node:crypto";
 import {lstat,readFile,writeFile,rename,rm,realpath,mkdir} from "node:fs/promises";
 import {isAbsolute,join,relative} from "node:path";
 import {createSelectedGraphSourceReceiptV1,selectedGraphSourceReceiptHoldsV1,isGlobalGraphIdentityPathV1,validateSelectedGraphValueV1,type SelectedGraphJournalWitnessV1,type SelectedGraphScopeV1,type SelectedGraphSourcePortsV1,type SelectedGraphSourceReceiptV1} from "../🟦️.ts";
-import {graphEnvironmentIdentityV1} from "../../../../../🔌️nx-plugin/🌍️environment/🟦️.ts";
+import {graphEnvironmentIdentityV1} from "../../../../🚀️bootstrap/🔌️nx-plugin/🌍️environment/🟦️.ts";
 import {observationsHold} from "../../../../../🏗️build/👁️observation/🟨️.mjs";
 
 /** 🔏️ The graph producer binds its native file map and inference authorities to the live observer. */

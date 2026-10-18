@@ -24,7 +24,7 @@ use semio_framework_plugin::Viewer;
 // `InteractionView` parameter type is NOT in the crate-root curated re-export list yet — only
 // reachable through `app`. Flagged for the coordinator (see this packet's notes file).
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

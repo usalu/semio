@@ -1,6 +1,8 @@
 import { pdfStreamRoleFromNativeJson } from "../🪪️stream-roles/🟦️.ts";
 /** 📄️ Explicit admission for the complete owned PDF document and page domain. */
-import type { PdfSnapshot,PdfPage,PdfNamedColorSpace,PdfNamedProperties,PdfIndirectObject,PdfPageLabelRange,PdfPageLabelStyle } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfSnapshot } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfPage, PdfNamedColorSpace, PdfNamedProperties, PdfIndirectObject } from "../../../../../🧬️schema/📸️snapshot/📄️document/🟦️.ts";
+import type { PdfPageLabelRange, PdfPageLabelStyle } from "../../../../../🧬️schema/📸️snapshot/🎯️navigation/🟦️.ts";
 import { record,array,text,integer,integers,real,four,pdfDictionaryFromNativeJson,pdfCosFromNativeJson,pdfColorFromNativeJson } from "../🟦️.ts";
 import { pdfOperationFromNativeJson } from "../🖋️content/🟦️.ts";
 import { pdfFontFromNativeJson } from "../🔤️font/🟦️.ts";

@@ -45,6 +45,8 @@ semio-s-artifact-stdio-las-tests = { path = "../../../../../🔺️diff/🧪️t
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-las-mutations = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-las-snapshot = { path = "../../../../../📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

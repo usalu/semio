@@ -365,11 +365,6 @@
   },
   "nativePilots": {
     "csv": {
-      "directory": "📊️csv/🏅️standards/🔖️rfc4180/🪆️subsets/✳️any",
-      "tagging": "internal",
-      "discriminator": "patchSnapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 6,
       "before": {
         "schema": "stdio.csv",
         "hasHeader": true,
@@ -394,11 +389,6 @@
       "maximumPatchBytes": 1048576
     },
     "json": {
-      "directory": "🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base",
-      "tagging": "adjacent",
-      "discriminator": "patchSnapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 6,
       "before": {
         "schema": "stdio.json",
         "value": {
@@ -424,11 +414,6 @@
       "maximumPatchBytes": 1048576
     },
     "png": {
-      "directory": "📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
-      "tagging": "adjacent",
-      "discriminator": "patch-snapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 19,
       "before": {
         "gama": 45455,
         "pixels": "x"
@@ -443,30 +428,34 @@
       "maximumPatchBytes": 1048576
     },
     "jpg": {
-      "directory": "📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document",
-      "tagging": "adjacent",
-      "discriminator": "patch-snapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 13,
       "before": {
-        "reEncodeQuality": 90,
-        "pixels": "x"
+        "schema": "stdio.jpg",
+        "image": {
+          "width": 1,
+          "height": 1,
+          "pixels": [
+            0
+          ],
+          "jfifVersion": [
+            1,
+            1
+          ],
+          "jfifDensityUnits": "none",
+          "jfifXDensity": 1,
+          "jfifYDensity": 1,
+          "otherSegments": []
+        }
       },
-      "largeValuePath": "/pixels",
+      "largeValuePath": "/image/pixels",
       "largeValueBytes": 2097152,
       "event": {
         "operation": "setValue",
-        "path": "/jfifXDensity",
+        "path": "/image/jfifXDensity",
         "value": 73
       },
       "maximumPatchBytes": 1048576
     },
     "tiff": {
-      "directory": "🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document",
-      "tagging": "adjacent",
-      "discriminator": "patch-snapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 9,
       "before": {
         "schema": "stdio.tiff",
         "byteOrder": "littleEndian",
@@ -494,11 +483,6 @@
       "maximumPatchBytes": 1048576
     },
     "mp4": {
-      "directory": "🎥️mp4/🏅️standards/🔖️isobmff/🪆️subsets/✳️any",
-      "tagging": "internal",
-      "discriminator": "patchSnapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 9,
       "before": {
         "movie": {
           "title": "Before"
@@ -523,11 +507,6 @@
       "maximumPatchBytes": 1048576
     },
     "wav": {
-      "directory": "🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any",
-      "tagging": "internal",
-      "discriminator": "patchSnapshot",
-      "textOpcode": "patch-snapshot",
-      "binaryTag": 5,
       "before": {
         "fmt": {
           "sampleRate": 44100

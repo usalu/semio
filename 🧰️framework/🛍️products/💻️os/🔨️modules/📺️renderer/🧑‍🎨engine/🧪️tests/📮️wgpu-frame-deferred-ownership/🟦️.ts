@@ -14,7 +14,7 @@ type Law = {
 };
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixture = JSON.parse(readFileSync(resolve(here, "../../🧫️fixtures/📮️wgpu-frame-deferred-ownership/🔣️.json"), "utf8")) as { cases: Law[] };
+const fixture = JSON.parse(readFileSync(resolve(here, "../🧫️fixtures/📮️wgpu-frame-deferred-ownership/🔣️.json"), "utf8")) as { cases: Law[] };
 
 function replay(dropAt: Law["dropAt"]) {
   let currentOwnedByRegistry = dropAt === "queued";

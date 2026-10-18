@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `DeleteCurtainWall`: the curtain wall and the openings it hosts leave in one sparse diff together with its properties and classifications (see the shared cascade).
 //! The outcome carries a cascade note when more than the curtain wall leaves.
 
-use super::super::cascade;
-use super::DeleteCurtainWall;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall::DeleteCurtainWall;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

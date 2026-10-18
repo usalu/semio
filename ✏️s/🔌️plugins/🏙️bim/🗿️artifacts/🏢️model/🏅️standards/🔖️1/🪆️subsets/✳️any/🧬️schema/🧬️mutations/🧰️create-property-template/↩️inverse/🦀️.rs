@@ -1,13 +1,16 @@
 //! ↩️ Inverse of `CreatePropertyTemplate`: the concrete `DeletePropertyTemplate` of the id it created, none when the id was already taken.
 
-use super::super::delete_property_template::DeletePropertyTemplate;
-use super::super::elements;
-use super::CreatePropertyTemplate;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_property_template::DeletePropertyTemplate;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &CreatePropertyTemplate, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &CreatePropertyTemplate, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_property_template::DeletePropertyTemplate>,
+{
     if elements::taken(base, &payload.id).is_some() {
         return Vec::new();
     }
-    vec![ModelMutation::DeletePropertyTemplate(DeletePropertyTemplate { id: payload.id.clone() })]
+    vec![Op::from(DeletePropertyTemplate { id: payload.id.clone() })]
 }

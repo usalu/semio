@@ -1,6 +1,6 @@
 //#region 🧬️SurfaceContract
 import { NumericIndex, type NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
-import type { UiDocumentLimits } from "../../../../🛂️manifest/🟦️.ts";
+import type { UiDocumentLimits } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { RetainedUiNumericTable } from "../🧮️tables/🟦️.ts";
 import { OwnedUiNodeIndex, type OwnedUiNodeIndexReader, type OwnedUiNodeIndexRetirement } from "../🗂️nodes/🟦️.ts";
 import { OwnedUiOperation, OwnedUiOperationCursor } from "../🩹️operations/🟦️.ts";

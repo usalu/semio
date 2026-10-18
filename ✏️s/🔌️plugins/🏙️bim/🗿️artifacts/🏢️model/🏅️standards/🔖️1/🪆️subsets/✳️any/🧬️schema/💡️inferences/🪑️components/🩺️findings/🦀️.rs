@@ -2,7 +2,8 @@
 //! non-hosted components that stand inside a wall and terminals without a run of their system. They are computed from the `Component` values (the parents of the `Diagnostics` node of the storey), the wall layouts and the
 //! MEP values of the storey; nothing is read from the snapshot besides the identity of the storey.
 
-use super::{ComponentIssueCode, ComponentValue};
+use crate::standards::v1::subsets::any::schema::inferences::mep;
+use crate::standards::v1::subsets::any::schema::inferences::components::{ComponentIssueCode, ComponentValue};
 use crate::standards::v1::subsets::any::schema::inferences::bodies::{region, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Inputs};
 use crate::standards::v1::subsets::any::schema::inferences::mep::{MepValue, CONNECT_DISTANCE};

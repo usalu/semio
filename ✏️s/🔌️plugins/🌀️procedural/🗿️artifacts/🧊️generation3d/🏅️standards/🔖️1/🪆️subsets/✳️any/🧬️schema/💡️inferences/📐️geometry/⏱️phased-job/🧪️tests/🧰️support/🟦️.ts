@@ -1,5 +1,7 @@
 /** 🧰️ Shared helpers of the third-party oracle tests of the O3 B-Rep categories: they read the pinned tessellations of a fixture and recompute volume, area, bounds, closedness and transform matrices with `three`, independent of the Rust kernel that produced them. */
 import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Box3, BufferAttribute, BufferGeometry, Matrix4, Triangle, Vector3 } from "three";
 
 export type PinnedMesh = { deflection: number; positions: number[]; indices: number[] };
@@ -120,8 +122,15 @@ export const fixtureDisagreements = (fixture: BrepFixture): string[] => {
   return failures;
 };
 
-/** 📚️ The fixture of a category folder, read from `🧫️fixtures/🔣️.json` beside the test folder. */
-export const loadFixture = (testFile: string): BrepFixture => JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔣️.json", testFile), "utf8")) as BrepFixture;
+/** 📚️ The fixture of a category folder, read from the subset's `🧪️tests/🧫️fixtures/<category path>/🔣️.json`. */
+export const loadFixture = (testFile: string): BrepFixture => {
+  const match = /^(.*)\/🧬️schema\/(.+?)\/🧪️tests\/[^/]+\/[^/]+$/u.exec(fileURLToPath(testFile));
+  if (!match) throw new Error(`Test file outside a subset schema category: ${testFile}`);
+  return JSON.parse(readFileSync(join(match[1]!, "🧪️tests", "🧫️fixtures", match[2]!, "🔣️.json"), "utf8")) as BrepFixture;
+};
+
+/** 📚️ The fixture of a module test folder, read from its own sibling `🧪️tests/🧫️fixtures/🔣️.json`. */
+export const loadModuleFixture = (testFile: string): BrepFixture => JSON.parse(readFileSync(join(fileURLToPath(testFile), "..", "..", "🧫️fixtures", "🔣️.json"), "utf8")) as BrepFixture;
 
 /** 🔎️ The cases of a fixture for one catalogue kind. */
 export const casesOf = (fixture: BrepFixture, kind: string): BrepCase[] => fixture.cases.filter(fixtureCase => fixtureCase.kind === kind);

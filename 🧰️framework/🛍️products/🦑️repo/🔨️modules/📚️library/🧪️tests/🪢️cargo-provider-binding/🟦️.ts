@@ -41,7 +41,7 @@ const tracedRead = (path: filesystem.PathOrFileDescriptor, options?: unknown): u
 };
 
 mock.module("node:fs", () => ({ ...actual, lstatSync: tracedLstat, readFileSync: tracedRead, default: { ...actual, lstatSync: tracedLstat, readFileSync: tracedRead } }));
-const { resolveCargoProviderBinding } = await import("../../🔍️discovery/🟦️.ts");
+const { resolveCargoProviderBinding } = await import("../../🔍️discovery/🚚️cargo-provider/🟦️.ts");
 
 function traceFilesystem(root: string, symlink: string | undefined): VirtualFilesystem {
   const files = new Map<string, string>(), directories = new Set<string>();

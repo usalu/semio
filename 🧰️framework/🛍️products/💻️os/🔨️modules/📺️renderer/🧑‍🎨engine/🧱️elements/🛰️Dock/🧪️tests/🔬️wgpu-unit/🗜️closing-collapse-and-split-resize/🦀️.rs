@@ -99,7 +99,7 @@ fn split_resize_conserves_the_pair_total_and_floors_at_eight_percent() {
 /// be converted into that axis's captured weight scale before the split is solved.
 #[test]
 fn split_resize_moves_the_separator_by_the_pointer_delta_on_react_percentage_weights() {
-    let repo = fixture_path!("../../../../../../../../../..");
+    let repo = fixture_path!("../../../../../../../../../../..");
     let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&fixture_path).unwrap_or_else(|error| panic!("read {}: {error}", fixture_path.display()))).expect("dock axis fixture");
     let oracle = &fixture["resizeOracle"];

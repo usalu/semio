@@ -11,8 +11,7 @@ use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthorit
 use semio_framework_plugin::ArtifactOwnedDisposer as _;
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 
-#[path = "📬️publication-authority/🦀️.rs"]
-mod publication_authority;
+use semio_s_artifact_process_process3d_host_publication_authority as publication_authority;
 pub use publication_authority::*;
 
 #[path = "🚀️store-initialization/🦀️.rs"]
@@ -23,8 +22,7 @@ pub use store_initialization::*;
 mod census_copy_timeline;
 pub use census_copy_timeline::*;
 
-#[path = "🧵️retained-cursors/🦀️.rs"]
-mod retained_cursors;
+use semio_s_artifact_process_process3d_host_retained_cursors as retained_cursors;
 use retained_cursors::*;
 
 #[path = "🔓️snapshot-decode/🦀️.rs"]
@@ -40,12 +38,6 @@ mod decode_owner_catalog;
 pub use decode_owner_catalog::*;
 
 const PROCESS3D_MAXIMUM_DOMAIN_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
-
-pub const PROCESS3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
-
-pub const PROCESS3D_MOUNTED_CONTROL_CREDITS: usize = 1;
-
-const PROCESS3D_PUBLICATION_SLOTS: usize = 4;
 
 const PROCESS3D_RETAINED_STACK_CAPACITY: usize = 64;
 

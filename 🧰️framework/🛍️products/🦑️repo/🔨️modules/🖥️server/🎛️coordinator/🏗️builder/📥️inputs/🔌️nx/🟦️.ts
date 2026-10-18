@@ -1,4 +1,4 @@
-import{checkResourceLeaseControl,type ResourceLeaseControl}from"@semio-tech/process/leases";
+import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlInvocationV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {join,relative,resolve} from "node:path";
 import {createRequire} from "node:module";
@@ -7,10 +7,10 @@ import {createHash} from "node:crypto";
 import {withCoordinatorNextInputsV1} from "../🟦️.ts";
 import type {BuildGraphV1,BuildTargetV1} from "../../../../../📚️library/🏗️build/🕸️graph/🟦️.ts";
 import {selectedBuildPrerequisitesV1} from "../../../../../📚️library/🏗️build/🧭️selection/📥️closure/🟦️.ts";
-import {readBuildMode} from "@semio-tech/process/build-mode";
+import {readBuildMode} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import {selectBuildTasksV1} from "../../../../../📚️library/🏗️build/🧭️selection/🟦️.ts";
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import policy from "./🔣️policy.json" with {type:"json"};
 /** 🚦️ Enables the production cache projection only after its authored complete runtime qualification. */

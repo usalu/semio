@@ -3,7 +3,7 @@
 use crate::editor::bim::kit::window_config;
 
 window_config! {
-    window: super::WINDOW_KIND_ID,
+    window: crate::editor::bim::modes::edit::windows::section::WINDOW_KIND_ID,
     schema: "bim.section-window.config",
     envelope: "s.bim.model.section-window.config",
     extension: "bimsectionwindowcfg",

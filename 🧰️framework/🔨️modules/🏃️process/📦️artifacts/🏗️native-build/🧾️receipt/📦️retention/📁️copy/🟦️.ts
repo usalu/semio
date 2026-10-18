@@ -2,7 +2,7 @@ import {constants} from "node:fs";
 import {lstat,open} from "node:fs/promises";
 import {dirname,isAbsolute,resolve} from "node:path";
 import {createHash} from "node:crypto";
-import {withArtifactDescriptorV1,artifactReadFlagsV1} from "@semio-tech/framework/filesystem/observation/descriptor";
+import {withArtifactDescriptorV1,artifactReadFlagsV1} from "../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import {withArtifactDescriptorSlotV1} from "../../../../📤️publication/📥️sources/🟦️.ts";
 import {requireIssuedResourceControlV1,withIssuedResourceOperationV1} from "../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../🔒️leases/🟦️.ts";

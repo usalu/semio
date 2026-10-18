@@ -1,7 +1,7 @@
 //! 🔍️ CAD play app panel — the inspection panel: the field groups for whatever is selected
 //! (object multi-selection, a primitive slot, a reference overlay, a node), or a schema summary.
 
-use semio_s_artifact_cad_cad_picking;
+use semio_s_artifact_cad_cad_picking as picking;
 use semio_s_artifact_cad_cad_kit::{editor::cad::terminology::typology_label, editor::cad::terminology::CadLabels};
 use semio_s_artifact_cad_cad_kit::{cad_pane_suffix, ui_label, ui_value_map, ui_value_text, CadPlayView};
 use semio_s_artifact_cad_cad_model::geometry::CadObject;

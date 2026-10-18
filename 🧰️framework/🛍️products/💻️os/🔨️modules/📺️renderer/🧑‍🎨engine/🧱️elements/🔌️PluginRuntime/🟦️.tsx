@@ -60,13 +60,9 @@ import { ActivationRegistry } from "@semio-tech/framework";
 import { createTurnOutcomeBroadcast } from "@semio-tech/framework";
 import { fetchDescriptorManifest } from "@semio-tech/framework";
 // #region 🔌️Adapters
-import {
-  assertShardJspiAvailable,
-  createShardCommandIngressPages,
-  isShardLostError,
-  SHARD_LIVENESS_POLICY,
-  ShardClient
-} from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { assertShardJspiAvailable, isShardLostError } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts";
+import { createShardCommandIngressPages } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { SHARD_LIVENESS_POLICY, ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import { SHARD_WORKER_URL } from "../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
 import { decodeActorUiPatchReceipt, encodeActorUiPatchReceipt } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedResidentLedger } from "@semio-tech/framework/value/resident";

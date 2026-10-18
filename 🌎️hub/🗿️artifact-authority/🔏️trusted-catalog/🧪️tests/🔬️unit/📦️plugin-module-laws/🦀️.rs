@@ -202,7 +202,7 @@ async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_ge
         document_id: "document".into(),
         artifact_kind: "s.fixture.document".into(),
         artifact_schema: schema.clone(),
-        owner: directory::os_directory::DocumentOwner { plugin_id: "fixture-editor".into(), package_id: "semio:fixture-editor".into(), version: "1.2.3".into(), package_hash: component_sha256.clone() },
+        owner: directory::os_directory::DocumentOwner { plugin_id: "fixture-editor".into(), package_id: "semio:fixture-editor".into(), version: "1.2.3".into(), package_hash: fixture.bundle["packages"][0]["component"]["sha256"].as_str().expect("host component sha256").to_owned() },
         pack_schema_hash: "11".repeat(32),
         bootstrap_version: 1,
         bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },

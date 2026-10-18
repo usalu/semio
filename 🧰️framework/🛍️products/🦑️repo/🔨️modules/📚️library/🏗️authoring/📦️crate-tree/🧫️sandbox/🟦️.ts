@@ -3,8 +3,14 @@ import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, write
 import { dirname, join, posix, relative, resolve } from "node:path";
 import { rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { carveWrites } from "../🟦️.ts";
-import { allItems, crateIdent, crateRelativeChains, implHeader, measureRustCrate, readCargoLib, type ArtifactCratePlan } from "../🗺️plan/🟦️.ts";
-import { classifyPackageSource, loadCatalogTaxonomy } from "../../../🔍️discovery/🟦️.ts";
+import { allItems } from "../🗺️plan/🧰️tree-helpers/🟦️.ts";
+import { crateIdent } from "../🗺️plan/🏷️naming/🟦️.ts";
+import { crateRelativeChains, implHeader } from "../🗺️plan/🧭️module-chains/🟦️.ts";
+import { measureRustCrate } from "../🗺️plan/📏️measure/🟦️.ts";
+import { readCargoLib } from "../🗺️plan/📦️cargo-lib/🟦️.ts";
+import { type ArtifactCratePlan } from "../🗺️plan/🧾️model/🟦️.ts";
+import { classifyPackageSource } from "../../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { resolveFixturePlaceholders } from "../🧪️test-closure/🟦️.ts";
 import { relativePosix } from "../📝️render/🟦️.ts";
 import { buildSandbox, checkCrossCrateVisibility, checkOrphanRules, compareModuleTrees, diffDiagnostics, patchSandboxSources, resolveCrateModules, runResolutionOracle, rustcUnresolvedCrates } from "../🔬️verify/🟦️.ts";
@@ -71,8 +77,10 @@ export const placeless = (line: string): string => {
   return /^[^\t]*\tcannot find (?:type|struct, variant or union type|value|function) `[^`]+` in this scope\t/u.test(line) ? line.split("\t").slice(0, 3).join("\t") : line;
 };
 
-/** 🧩️ The names a stripped diagnostic reports as unresolved (an import, a type, a value or a function), as the last segment of each backticked path; empty for any other diagnostic. */
+/** 🧩️ The names a stripped diagnostic reports as unresolved (an import, a type, a value, a function or the last segment of a path, `cannot find `Name` in `module``), as the last segment of each backticked path; empty for any other diagnostic. */
 export function unresolvedSubjects(line: string): string[] {
+  const inPath = /^E0433\tcannot find `([^`]+)` in `[^`]+`/u.exec(line);
+  if (inPath) return [inPath[1]!];
   const match = /^E0(?:412|422|425|432|433)\t(?:unresolved imports? |cannot find (?:type|value|struct, variant or union type|function|trait|macro) )(.*)$/u.exec(line);
   if (!match) return [];
   const subject = match[1]!.split(": ")[0]!.split(" in this scope")[0]!.split(" in module")[0]!;

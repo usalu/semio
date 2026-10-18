@@ -1,4 +1,4 @@
-import {nxTaskArgumentsSourceIdentityV1} from "./🔌️nx-plugin/📤️arguments/🟨️.mjs";
+import {nxTaskArgumentsSourceIdentityV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import {readFileSync,existsSync,lstatSync} from "node:fs";
 import {join,resolve,relative,dirname,isAbsolute} from "node:path";
 import {createHash} from "node:crypto";
@@ -7,7 +7,7 @@ import {createRequire} from "node:module";
 import {conformsOwnerContractV1 as conforms,ownerArgumentsSourceIdentityV1} from "./🏗️build/📤️arguments/🟨️.mjs";
 const publicationSchemaSource=readFileSync(new URL("./🏗️build/🧬️schema/📥️pin.json",import.meta.url)),publicationSchema=JSON.parse(publicationSchemaSource.toString("utf8"));
 const engineSchemaSource=readFileSync(new URL("./🏗️build/🧬️schema/📥️engine.json",import.meta.url)),engineSchema=JSON.parse(engineSchemaSource.toString("utf8")),engineNamedInput=engineSchema.definitions.NamedInput.const;
-const privateTaskSources=["./🔌️nx-plugin/📤️arguments/🟨️.mjs","./🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json","./🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json","./🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json","./🏗️build/📥️caller/📤️orchestration/🟨️.mjs","./🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json","./🏗️build/🧬️schema/📥️caller.json"],privateTaskBytes=privateTaskSources.map(path=>readFileSync(new URL(path,import.meta.url)));
+const privateTaskSources=["./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json","./🏗️build/📥️caller/📤️orchestration/🟨️.mjs","./🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json","./🏗️build/🧬️schema/📥️caller.json"],privateTaskBytes=privateTaskSources.map(path=>readFileSync(new URL(path,import.meta.url)));
 const dependencySourceIdentity=(captured=false)=>createHash("sha256").update(JSON.stringify([createHash("sha256").update(readFileSync(new URL(import.meta.url))).digest("hex"),createHash("sha256").update(captured?publicationSchemaSource:readFileSync(new URL("./🏗️build/🧬️schema/📥️pin.json",import.meta.url))).digest("hex"),createHash("sha256").update(captured?engineSchemaSource:readFileSync(new URL("./🏗️build/🧬️schema/📥️engine.json",import.meta.url))).digest("hex"),ownerArgumentsSourceIdentityV1(),...privateTaskSources.map((path,index)=>createHash("sha256").update(captured?privateTaskBytes[index]:readFileSync(new URL(path,import.meta.url))).digest("hex"))])).digest("hex"),loadedDependencySourceIdentity=dependencySourceIdentity(true);
 
 /** 🔏️ Attests the exact evaluated private projection and its still-current imported contract owner. */
@@ -36,7 +36,7 @@ let engineAuthority;
 export function nxBuildEngineInputsV1(){
  if(!engineAuthority){
   const started=performance.now();let loadMilliseconds=0,parseMilliseconds=0,resolutionMilliseconds=0;
-  const root=fileURLToPath(new URL("../../../../../",import.meta.url)),pending=[import.meta.url,...["./📦️packages/🟦️typescript/📋️executors.json","./🔌️nx-plugin/🏃️execution/🟨️.mjs","./🔌️nx-plugin/📤️arguments/📜️script.ts","./🔌️nx-plugin/📤️arguments/🧬️schema/🔣️command.json"].map(path=>new URL(path,import.meta.url).href)],files=new Set(),packages=new Set(["nx","typescript"]);
+  const root=fileURLToPath(new URL("../../../../../",import.meta.url)),pending=[import.meta.url,...["./📦️packages/🟦️typescript/📋️executors.json","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🏃️execution/🟨️.mjs","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/📜️script.ts","./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️command.json"].map(path=>new URL(path,import.meta.url).href)],files=new Set(),packages=new Set(["nx","typescript"]);
   const admit=(owner,specifier)=>{
    if(specifier.startsWith(".")){
     const candidate=nxBuildEngineSourceFileV1(owner,specifier);if(relative(root,candidate).startsWith(".."))throw Error("Private Nx engine source outside workspace");pending.push(candidate);

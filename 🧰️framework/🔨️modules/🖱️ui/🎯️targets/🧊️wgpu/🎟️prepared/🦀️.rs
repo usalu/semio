@@ -96,7 +96,7 @@ const PREPARED_RENDER_PROCESS_PAGES: usize = 16_383;
 const PREPARED_RENDER_PROCESS_BACKING_BYTES: usize = 128 * 1024 * 1024;
 
 #[derive(Debug)]
-struct PreparedFixedPage<T> {
+pub struct PreparedFixedPage<T> {
     slots: [Option<T>; PREPARED_RENDER_METADATA_PAGE_ITEMS],
     len: usize,
 }
@@ -233,15 +233,15 @@ const PREPARED_RENDER_BACKING_SHIFT: u32 = 21;
 const PREPARED_RENDER_ITEM_MASK: u64 = 0x7f;
 const PREPARED_RENDER_PAGE_MASK: u64 = 0x3fff;
 const PREPARED_RENDER_BACKING_MASK: u64 = 0x3fff;
-static PREPARED_RENDER_PROCESS_PERMITS: AtomicU64 = AtomicU64::new(0);
+pub static PREPARED_RENDER_PROCESS_PERMITS: AtomicU64 = AtomicU64::new(0);
 static PREPARED_RENDER_SLOT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
 static PREPARED_RENDER_SLOT_GENERATION: [AtomicU64; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU64::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
 static PREPARED_RENDER_PACKET_ABANDONMENT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
 static PREPARED_RENDER_PACKET_ABANDONMENT_OWNER: [AtomicPtr<PreparedRenderPacket>; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_RENDER_PROCESS_SLOTS];
 static PREPARED_RENDER_JOB_ABANDONMENT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
 static PREPARED_RENDER_JOB_ABANDONMENT_OWNER: [AtomicPtr<PreparedRenderJob>; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_RENDER_PROCESS_SLOTS];
-static PREPARED_RENDER_INPUT_ABANDONMENT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
-static PREPARED_RENDER_INPUT_ABANDONMENT_OWNER: [AtomicPtr<PreparedRenderInput>; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_RENDER_PROCESS_SLOTS];
+pub static PREPARED_RENDER_INPUT_ABANDONMENT_STATE: [AtomicU8; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicU8::new(0) }; PREPARED_RENDER_PROCESS_SLOTS];
+pub static PREPARED_RENDER_INPUT_ABANDONMENT_OWNER: [AtomicPtr<PreparedRenderInput>; PREPARED_RENDER_PROCESS_SLOTS] = [const { AtomicPtr::new(std::ptr::null_mut()) }; PREPARED_RENDER_PROCESS_SLOTS];
 
 fn prepared_render_units(bytes: usize) -> Option<usize> {
     bytes.checked_add(PREPARED_RASTER_PAGE_BYTES.checked_sub(1)?)?.checked_div(PREPARED_RASTER_PAGE_BYTES)
@@ -258,7 +258,7 @@ fn prepared_render_permit_delta(items: usize, pages: usize, backing_units: usize
 }
 
 #[derive(Debug)]
-struct PreparedRenderProcessPermit {
+pub struct PreparedRenderProcessPermit {
     slot: u8,
     generation: u64,
     pages: usize,
@@ -267,7 +267,7 @@ struct PreparedRenderProcessPermit {
 }
 
 impl PreparedRenderProcessPermit {
-    fn try_reserve(pages: usize, backing_bytes: usize) -> Option<Self> {
+    pub fn try_reserve(pages: usize, backing_bytes: usize) -> Option<Self> {
         let backing_units = prepared_render_units(backing_bytes)?;
         let current = PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire);
         let items = ((current >> PREPARED_RENDER_ITEM_SHIFT) & PREPARED_RENDER_ITEM_MASK).checked_add(1)?;
@@ -414,11 +414,11 @@ impl PreparedRenderCommandKind {
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PreparedRenderCommand {
-    kind: PreparedRenderCommandKind,
-    source: usize,
-    digest: u64,
-    draw_cursor: Option<DrawMeasureCursor>,
-    packet_overlay: bool,
+    pub kind: PreparedRenderCommandKind,
+    pub source: usize,
+    pub digest: u64,
+    pub draw_cursor: Option<DrawMeasureCursor>,
+    pub packet_overlay: bool,
 }
 
 impl PreparedRenderCommand {
@@ -495,7 +495,7 @@ impl PreparedRenderCommandPages {
         prepared_close_progress(demand.unwrap_or(0))
     }
 
-    fn try_push(&mut self, command: PreparedRenderCommand) -> Result<(), PreparedRenderCommand> {
+    pub fn try_push(&mut self, command: PreparedRenderCommand) -> Result<(), PreparedRenderCommand> {
         let page = self.len / PREPARED_RENDER_COMMAND_PAGE_ITEMS;
         let scalar = self.len % PREPARED_RENDER_COMMAND_PAGE_ITEMS;
         if page >= PREPARED_RENDER_COMMAND_PAGES {
@@ -538,7 +538,7 @@ impl PreparedRenderCommandPages {
         self.len == 0
     }
 
-    fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self) -> bool {
         if let Some(index) = self.len.checked_sub(1) {
             let page = index / PREPARED_RENDER_COMMAND_PAGE_ITEMS;
             let scalar = index % PREPARED_RENDER_COMMAND_PAGE_ITEMS;
@@ -570,7 +570,7 @@ impl PreparedRenderCommandPages {
         true
     }
 
-    fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.len == 0 && self.page_count == 0 && self.directories.iter().all(Option::is_none)
     }
 }
@@ -578,16 +578,16 @@ impl PreparedRenderCommandPages {
 /// 🧱️ Send-capable frame data prepared without window, surface, device, or queue access.
 pub struct PreparedRenderPacket {
     has_animated_primitives: bool,
-    pub(crate) scene_revision: u64,
-    pub(crate) preview_generation: u64,
+    pub scene_revision: u64,
+    pub preview_generation: u64,
     pub(crate) damage: PreparedRenderScissors,
     pub(crate) clips: PreparedRenderScissors,
     pub(crate) directives: PreparedRenderDirectives,
-    pub(crate) uploads: PreparedRenderUploads,
+    pub uploads: PreparedRenderUploads,
     pub(crate) evictions: PreparedRenderEvictions,
-    pub(crate) draw: DrawList,
-    pub(crate) overlay: Option<DrawList>,
-    pub(crate) commands: PreparedRenderCommandPages,
+    pub draw: DrawList,
+    pub overlay: Option<DrawList>,
+    pub commands: PreparedRenderCommandPages,
     pub(crate) time_seconds: f32,
     pub(crate) usage: PreparedRenderUsage,
     pub(crate) limits: PreparedRenderLimits,
@@ -758,7 +758,7 @@ impl PreparedRenderPacket {
     }
 
     #[expect(clippy::result_large_err, reason = "Refusal returns the exact admitted packet without allocating another owner.")]
-    fn try_arm_abandonment(mut self) -> Result<Self, Self> {
+    pub fn try_arm_abandonment(mut self) -> Result<Self, Self> {
         let Some(slot) = self.permit.as_ref().map(|permit| usize::from(permit.slot)) else { return Err(self) };
         let Some(state) = PREPARED_RENDER_PACKET_ABANDONMENT_STATE.get(slot) else { return Err(self) };
         if state.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
@@ -852,7 +852,7 @@ pub struct PreparedRenderInput {
     pub time_seconds: f32,
     pub limits: PreparedRenderLimits,
     permit: Option<PreparedRenderProcessPermit>,
-    abandonment_slot: u8,
+    pub abandonment_slot: u8,
 }
 
 /// 🛡️ Exact input owner returned when the process/page reservation refuses admission.
@@ -1159,7 +1159,7 @@ struct PreparedRenderMailboxSlot {
     state: AtomicU8,
     generation: AtomicU64,
     references: AtomicUsize,
-    packet: AtomicPtr<PreparedRenderPacket>,
+    pub packet: AtomicPtr<PreparedRenderPacket>,
 }
 
 impl PreparedRenderMailboxSlot {
@@ -1168,7 +1168,7 @@ impl PreparedRenderMailboxSlot {
     }
 }
 
-static PREPARED_RENDER_MAILBOX: [PreparedRenderMailboxSlot; PREPARED_RENDER_MAILBOX_SLOTS] = [const { PreparedRenderMailboxSlot::new() }; PREPARED_RENDER_MAILBOX_SLOTS];
+pub static PREPARED_RENDER_MAILBOX: [PreparedRenderMailboxSlot; PREPARED_RENDER_MAILBOX_SLOTS] = [const { PreparedRenderMailboxSlot::new() }; PREPARED_RENDER_MAILBOX_SLOTS];
 
 /// 📬️ Generation-qualified nonblocking capacity-one packet handoff.
 pub struct PreparedRenderReceiver {
@@ -1332,7 +1332,7 @@ impl Drop for PreparedRenderReceiver {
 /// ⚙️ Bounded worker job that measures and seals one owned render packet.
 pub struct PreparedRenderJob {
     has_animated_primitives: bool,
-    input: Option<PreparedRenderInput>,
+    pub input: Option<PreparedRenderInput>,
     usage: PreparedRenderUsage,
     section: PreparationSection,
     draw_cursor: DrawMeasureCursor,
@@ -1341,10 +1341,10 @@ pub struct PreparedRenderJob {
     pipeline_overlay_cursor: DrawMeasureCursor,
     pipeline_overlay: bool,
     metadata_cursor: usize,
-    commands: Option<PreparedRenderCommandPages>,
+    pub commands: Option<PreparedRenderCommandPages>,
     digest: u64,
     fault: Option<&'static str>,
-    fault_payload: RetainedPayloadBuilder,
+    pub fault_payload: RetainedPayloadBuilder,
     receiver: PreparedRenderReceiver,
     rejected_upload: Option<PreparedRenderUpload>,
     rejected_packet: Option<PreparedRenderPacket>,
@@ -1457,7 +1457,7 @@ impl PreparedRenderJob {
         prepared_owner_demands(self.terminal_is_empty(), self.next_close_release_byte_demand())
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+    pub fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
         if let Some(upload) = self.rejected_upload.as_ref() { return if upload.terminal_is_empty() { Ok(0) } else { upload.next_close_release_byte_demand() } }
         if let Some(packet) = self.rejected_packet.as_ref() { return if packet.retirement_is_empty() { Ok(0) } else { packet.next_close_release_byte_demand() } }
         if let Some(commands) = self.commands.as_ref() { return commands.next_close_release_byte_demand() }
@@ -1613,7 +1613,7 @@ impl PreparedRenderJob {
         self.input.as_ref()
     }
 
-    fn next_draw_usage(draw: &DrawList, cursor: &mut DrawMeasureCursor) -> Option<PreparedRenderUsage> {
+    pub fn next_draw_usage(draw: &DrawList, cursor: &mut DrawMeasureCursor) -> Option<PreparedRenderUsage> {
         let (usage, next) = match *cursor {
             DrawMeasureCursor::LayerHeader(layer) => {
                 let Some(value) = draw.layers.get(layer) else {
@@ -2442,14 +2442,14 @@ impl std::error::Error for PreparedRenderRejection {}
 /// 🎟️ Exact non-clone acknowledgement required after the platform presents a prepared packet.
 #[derive(Debug, PartialEq, Eq)]
 pub struct PreparedPresenterWitness {
-    sequence: u64,
-    scene_revision: u64,
-    preview_generation: u64,
+    pub sequence: u64,
+    pub scene_revision: u64,
+    pub preview_generation: u64,
 }
 
 /// ♻️ Previous last-valid packet returned only after exact presenter acknowledgement.
 pub struct PreparedRenderReplacement {
-    previous: Option<PreparedRenderPacket>,
+    pub previous: Option<PreparedRenderPacket>,
 }
 
 impl PreparedRenderReplacement {
@@ -2611,21 +2611,7 @@ impl OffscreenPresentToken {
 }
 //#endregion 🛡️PresentationGate
 
-#[cfg(test)]
-#[path = "../../../🧪️tests/🔬️targets-wgpu-prepared-unit/🦀️.rs"]
-mod tests;
 
-
-#[cfg(test)]
-#[global_allocator]
-static ALLOCATOR: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
-
-#[cfg(test)]
-fn measured<T>(operation: impl FnOnce() -> T) -> (T, usize, usize) {
-    let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(operation);
-    assert!(!heap.overflowed);
-    (result, heap.requested_bytes, heap.released_bytes)
-}
 
 #[cfg(test)]
 extern crate self as semio_framework_ui_prepared;

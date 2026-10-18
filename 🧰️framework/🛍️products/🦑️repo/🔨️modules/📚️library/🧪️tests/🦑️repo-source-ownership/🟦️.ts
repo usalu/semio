@@ -3,7 +3,8 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { classifyPackageSource, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { classifyPackageSource } from "../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
+import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 /** 🧾️ Reads the parse diagnostics every `createSourceFile` result carries and the public `SourceFile` type omits. */
 const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
@@ -27,7 +28,7 @@ type Fixture = Readonly<{ version: 1; entries: readonly Entry[]; ownerDirectoryC
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/🦑️repo-source-ownership/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧪️tests/🧫️fixtures/🦑️repo-source-ownership/🔣️.json"), "utf8")) as Fixture;
 
 const taxonomy = JSON.parse(readFileSync(resolve(libraryRoot, "🔣️taxonomy.json"), "utf8"));
 const basenames: Readonly<Record<Entry["kind"], string>> = {
@@ -41,12 +42,12 @@ const basenames: Readonly<Record<Entry["kind"], string>> = {
 const wrappers = new Set<Entry["boundary"]>(["package-reexport", "next-route", "next-layout", "next-page"]);
 
 describe("repository source ownership", () => {
-  test("validates the exact portable 22-entry projection", () => {
+  test("validates the exact portable 21-entry projection", () => {
     
     expect(fixture["version"]).toEqual(1);
-    expect(fixture.entries).toHaveLength(22);
-    expect(new Set(fixture.entries.map(({ legacy }) => legacy))).toHaveProperty("size", 22);
-    expect(new Set(fixture.entries.map(({ owner }) => owner))).toHaveProperty("size", 22);
+    expect(fixture.entries).toHaveLength(21);
+    expect(new Set(fixture.entries.map(({ legacy }) => legacy))).toHaveProperty("size", 21);
+    expect(new Set(fixture.entries.map(({ owner }) => owner))).toHaveProperty("size", 21);
   });
 
   test("owns implementation bytes at anonymous semantic leaves and only retains required glue", () => {
@@ -73,8 +74,8 @@ describe("repository source ownership", () => {
     }
   });
 
-  test("resolves the complete registered ancestry of both library source owners", () => {
-    expect(fixture.ownerDirectoryChains).toHaveLength(2);
+  test("resolves the complete registered ancestry of the library source owner", () => {
+    expect(fixture.ownerDirectoryChains).toHaveLength(1);
     for (const chain of fixture.ownerDirectoryChains) {
       expect(existsSync(resolve(repoRoot, chain.owner)), chain.owner).toBe(true);
       let parentKind = chain.parentKind;
@@ -107,13 +108,13 @@ describe("repository source ownership", () => {
     expect(rustTestManifest).toContain('path = "../../🦀️.rs"');
     const dotnetProject = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🔷️dotnet/🧪️Semio.Repo.Test.csproj"), "utf8");
     expect(dotnetProject).toContain('Compile Include="../../🖥️host/🔷️.cs"');
-    const library = await import("../../📦️packages/🟦️typescript/🟦️.ts");
-    expect(library.getLibRoot()).toBe(resolve(libraryRoot, "📦️packages"));
+    const { getLibRoot } = await import("../../🚨️policy/🖥️cli/🟦️.ts");
+    expect(getLibRoot()).toBe(resolve(libraryRoot, "📦️packages"));
   });
 
   test("classifies retained TypeScript package entries as declarations", () => {
     const packageEntries = fixture.entries.filter(({ boundary, kind }) => boundary === "package-reexport" && kind === "typescript");
-    expect(packageEntries).toHaveLength(3);
+    expect(packageEntries).toHaveLength(2);
     for (const row of packageEntries) {
       const source = readFileSync(resolve(repoRoot, row.legacy), "utf8");
       expect(classifyPackageSource(source, taxonomy.packageGlueGrammar.typescript!).role, row.legacy).toBe("declaration");

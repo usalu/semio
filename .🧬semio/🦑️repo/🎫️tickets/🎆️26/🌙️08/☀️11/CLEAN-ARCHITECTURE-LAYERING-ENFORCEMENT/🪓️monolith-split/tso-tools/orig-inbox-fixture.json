@@ -1,0 +1,465 @@
+{
+  "version": 1,
+  "model": {
+    "recordBytes": 64,
+    "fieldBytes": 16,
+    "meaning": "logical shell subset, not whole ownership or measured heap"
+  },
+  "layouts": [
+    {
+      "group": "client",
+      "declaration": "ShardClient",
+      "fields": [
+        "residentLedger",
+        "uiResidentControllerCell",
+        "uiResidentControllerRecord",
+        "uiResidentCell",
+        "uiResidentRecord",
+        "uiResidentPool",
+        "uiResidentPhase",
+        "uiResidentWitness",
+        "uiResidentFault",
+        "uiResidentClosing",
+        "clientAdmissionPurpose",
+        "workerBootstrapCell",
+        "workerBootstrapRecord",
+        "workerBootstrapPhase",
+        "workerBootstrapFault",
+        "workerAdmissionCell",
+        "workerAdmissionRecord",
+        "workerAdmissionIndex",
+        "workerAdmissionShell",
+        "shards",
+        "actorShard",
+        "actorActivations",
+        "instanceLifecycles",
+        "instanceTurns",
+        "pending",
+        "actorsPastFirstTurn",
+        "exclusiveIndices",
+        "heartbeatSabView",
+        "heartbeatTimeoutMs",
+        "firstTurnTimeoutMs",
+        "watchdogIntervalMs",
+        "now",
+        "createWorker",
+        "onShardLost",
+        "onActorTrap",
+        "onLiveness",
+        "onHostEffect",
+        "maxOutstandingEffectsPerActor",
+        "outstandingEffectsByActor",
+        "effectReplySeq",
+        "nextRoundRobin",
+        "requestSeq",
+        "activationGeneration",
+        "watchdogHandle"
+      ]
+    },
+    {
+      "group": "worker",
+      "declaration": "ShardSlot",
+      "fields": [
+        "index",
+        "worker",
+        "available",
+        "heartbeat",
+        "pendingRequestIds",
+        "actorIds"
+      ]
+    },
+    {
+      "group": "worker",
+      "declaration": "ShardHeartbeatState",
+      "fields": [
+        "lastHeartbeatAtMs",
+        "lastHeartbeatTurnSeq",
+        "lastHeartbeatPhase",
+        "lastLivenessAtMs",
+        "oldestPendingStartedAtMs",
+        "missedCount",
+        "lastMissCountedAtMs"
+      ]
+    },
+    {
+      "group": "activation",
+      "declaration": "ShardActivation",
+      "fields": [
+        "slot",
+        "actorId",
+        "generation",
+        "available",
+        "activated",
+        "teardownPosted",
+        "operationsAllowed",
+        "operationGeneration",
+        "lastGuestLifetime",
+        "lastReturnSequence",
+        "returned",
+        "instance",
+        "close"
+      ]
+    },
+    {
+      "group": "activation",
+      "declaration": "CapturedShardActivation",
+      "fields": [
+        "client",
+        "actorId",
+        "activationGeneration",
+        "assertActive",
+        "turn"
+      ]
+    },
+    {
+      "group": "pending",
+      "declaration": "PendingEntry",
+      "fields": [
+        "resolve",
+        "reject",
+        "slot",
+        "startedAtMs",
+        "actorId",
+        "kind",
+        "firstTurn",
+        "output"
+      ]
+    },
+    {
+      "group": "effectLedger",
+      "declaration": "HostEffectLedger",
+      "fields": [
+        "activation",
+        "requests",
+        "head",
+        "tail"
+      ]
+    },
+    {
+      "group": "effectEntry",
+      "declaration": "PendingHostEffect",
+      "fields": [
+        "activation",
+        "controller",
+        "requestId",
+        "previous",
+        "next"
+      ]
+    }
+  ],
+  "minimumShells": {
+    "client": {
+      "bytes": 768,
+      "slots": 1,
+      "owners": 1
+    },
+    "worker": {
+      "bytes": 336,
+      "slots": 2,
+      "owners": 2
+    },
+    "activation": {
+      "bytes": 416,
+      "slots": 2,
+      "owners": 2
+    },
+    "pending": {
+      "bytes": 192,
+      "slots": 1,
+      "owners": 1
+    },
+    "effectLedger": {
+      "bytes": 128,
+      "slots": 1,
+      "owners": 1
+    },
+    "effectEntry": {
+      "bytes": 144,
+      "slots": 1,
+      "owners": 1
+    }
+  },
+  "outbound": [
+    {
+      "kind": "activate",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "activationGeneration",
+        "moduleUrl",
+        "caps",
+        "budget",
+        "assets"
+      ]
+    },
+    {
+      "kind": "turn",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "activationGeneration",
+        "events",
+        "commandPage",
+        "budget",
+        "postedAtEpochMs"
+      ]
+    },
+    {
+      "kind": "startJob",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "job",
+        "jobKind",
+        "input"
+      ]
+    },
+    {
+      "kind": "stepJob",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "job",
+        "budget"
+      ]
+    },
+    {
+      "kind": "cancelJob",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "job"
+      ]
+    },
+    {
+      "kind": "takeSegmentedDownloadChunk",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "instanceId",
+        "operationId"
+      ]
+    },
+    {
+      "kind": "checkpoint",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId"
+      ]
+    },
+    {
+      "kind": "restore",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "state"
+      ]
+    },
+    {
+      "kind": "codec",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "activationGeneration",
+        "request"
+      ]
+    },
+    {
+      "kind": "dispose",
+      "ok": null,
+      "fields": [
+        "kind",
+        "actorId",
+        "activationGeneration"
+      ]
+    },
+    {
+      "kind": "frame",
+      "ok": null,
+      "fields": [
+        "kind",
+        "requestId",
+        "actorId",
+        "activationGeneration",
+        "frame"
+      ]
+    }
+  ],
+  "inbound": [
+    {
+      "kind": "result",
+      "ok": true,
+      "fields": [
+        "kind",
+        "requestId",
+        "ok",
+        "value",
+        "timings",
+        "beat"
+      ]
+    },
+    {
+      "kind": "result",
+      "ok": false,
+      "fields": [
+        "kind",
+        "requestId",
+        "ok",
+        "error",
+        "stack",
+        "type",
+        "framesBytes",
+        "retryableLifecycle",
+        "beat"
+      ]
+    },
+    {
+      "kind": "heartbeat",
+      "ok": null,
+      "fields": [
+        "kind",
+        "turnSeq",
+        "phase"
+      ]
+    },
+    {
+      "kind": "trap",
+      "ok": null,
+      "fields": [
+        "kind",
+        "actorId",
+        "activationGeneration",
+        "message"
+      ]
+    },
+    {
+      "kind": "worker-fault",
+      "ok": null,
+      "fields": [
+        "kind",
+        "source",
+        "phase",
+        "actorId",
+        "moduleUrl",
+        "message",
+        "stack",
+        "filename",
+        "lineno"
+      ]
+    },
+    {
+      "kind": "frame",
+      "ok": null,
+      "fields": [
+        "kind",
+        "actorId",
+        "activationGeneration",
+        "frame"
+      ]
+    }
+  ],
+  "workerRequestKinds": [
+    "attachHeartbeatSab",
+    "dispose",
+    "frame",
+    "activate",
+    "cancelJob",
+    "turn",
+    "startJob",
+    "stepJob",
+    "takeSegmentedDownloadChunk",
+    "checkpoint",
+    "restore",
+    "codec"
+  ],
+  "workerReplyKinds": [
+    "trap",
+    "worker-fault",
+    "heartbeat",
+    "result",
+    "result",
+    "result"
+  ],
+  "hostFramePayloadKinds": [
+    "effect-request",
+    "effect-emit",
+    "ui-patch-emit"
+  ],
+  "hostReplyKinds": [
+    "effect-complete",
+    "effect-error"
+  ],
+  "hostEffectKinds": [
+    "storage-read",
+    "storage-write",
+    "storage-delete",
+    "blob-load",
+    "blob-write",
+    "blob-read",
+    "http-fetch",
+    "artifact-read",
+    "artifact-write",
+    "link-resolve",
+    "registry-query",
+    "io-compose",
+    "io-run",
+    "cache-derive",
+    "cache-read",
+    "invoke-extension",
+    "open-window",
+    "open-dialog",
+    "dispatch-action",
+    "spawn-plugin-instance",
+    "request-file-open",
+    "request-media-frames",
+    "request-capability",
+    "spawn-job"
+  ],
+  "mixedTrace": [
+    "frame:effect-request",
+    "result:r2:success",
+    "frame:effect-emit",
+    "frame:ui-patch-emit",
+    "result:r1:success"
+  ],
+  "currentFaultTraces": {
+    "postThenThrow": [
+      "result-success",
+      "worker-fault",
+      "result-fault"
+    ],
+    "errorNormalizationThrows": [
+      "worker-fault"
+    ],
+    "semanticallyAccepted": false
+  },
+  "excluded": [
+    "collection backings and entries",
+    "closure environments and callback registrations",
+    "Promises and reaction graphs",
+    "variable payloads, errors and platform event roots",
+    "worker and guest instantiation",
+    "platform message queue",
+    "neutral records and admission cells",
+    "new receiver, dispatch, quarantine and parser owners",
+    "live traffic admission, retirement and latency"
+  ]
+}

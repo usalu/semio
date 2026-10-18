@@ -9,7 +9,7 @@ import glob from "fast-glob";
 import { normalize as oracleNormalize, join as oracleJoin, dirname as oracleDirname, isAbsolute as oracleAbsolute } from "pathe";
 import { rustSourceDirectionEdges, rustSourceTargets, rustSourceTargetProblem, type RustSourceOwnership, type RustSourceDirectionEdge, type RustSourceInputNode, type RustSourceInputProblem } from "../../🕸️dependencies/🧭️direction/🦀️source/🟦️.ts";
 import type { DependencyDirectionRule } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
-import { inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof } from "../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { inspectRustSourceDirection, inspectRustSourceInputs, type RustSourceInputFailure } from "../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../.."), read = (path: string): any => JSON.parse(readFileSync(join(library, path), "utf8"));

@@ -1,6 +1,6 @@
 //! 🛋️ `create-space` payload. Brings a new room onto a storey; a bounded space stores only its seed point, its outline, area and volume are inferred from the walls around it.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Space}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Space}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateSpace {
     pub space: Space,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateSpace {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateSpace
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSpace> + From<crate::standards::v1::subsets::any::schema::mutations::delete_space::DeleteSpace>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "space", kind: "create-space", record: "CreateSpace" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_space::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_space::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create space \"{}\"", self.space.name), &format!("Raum \"{}\" anlegen", self.space.name))

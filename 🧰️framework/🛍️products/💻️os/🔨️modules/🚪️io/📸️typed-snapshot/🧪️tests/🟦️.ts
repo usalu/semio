@@ -28,8 +28,8 @@ test("registered Snapshot hops share original physical receiving and retain resu
 
 test("whole typed-file settlement keeps original allocation authority through receiving and close",()=>{
  const authority=fixture.settlementAuthority;const independent=new Database(":memory:");try{expect(independent.query("SELECT ? < ? AND ? > 0 AS unrelated_native_slack").get(authority.coldReservationBytes,authority.nativePrefixBytes,authority.coldReservationBytes)).toEqual({unrelated_native_slack:1});}finally{independent.close();}
- const source=readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url));const start=source.indexOf("pub(crate) struct TypedFileSettlement");const end=source.indexOf("fn typed_file_validation",start);expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);const settlement=source.slice(start,end);
- expect(settlement.includes("SqliteSnapshotReceivingControl")).toBe(true);expect(settlement.includes("control.receiving_scope()")).toBe(true);
+ const settlement=readFileSync(new URL("../../../🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/⚖️settlement/🦀️.rs",import.meta.url),"utf8");expect(settlement.indexOf("pub struct TypedFileSettlement")).toBeGreaterThan(0);
+ expect(settlement.includes("SqliteSnapshotReceivingControl")).toBe(true);expect(settlement.includes("artifact::receiving::settle(&mut self.control.borrow_mut(),self.remaining,self.before,owned)")).toBe(true);
  const laws=read("./🦀️.rs");for(const name of["original_allocation_decoding","original_allocation_encoding","TypedFileSettlement","nativePrefixBytes","coldReservationBytes","observe_backing","has_retirement_owner"])expect(laws.includes(name)).toBe(true);
  expect(read("../../../🏪️store/📜️space-history/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs").includes("typed_file_original_allocation_laws")).toBe(true);
 });
@@ -56,8 +56,8 @@ test("registered export refusal policies preserve distinct original frame admiss
 });
 
 test("registered file dependency preserves original mounted close loan and complete causes",()=>{
- const source=readModuleTreeSource(new URL("../../../🔌️plugin/🧵️instance/🦀️.rs",import.meta.url)),start=source.indexOf("/// 🎟️ Advances one genuine original owner under the complete caller grant."),end=source.indexOf("fn close_terminal_is_empty",start);expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);const boundary=source.slice(start,end);
- for(const name of["cx:&mut semio_framework_job::StepContext","loan:RetainedCloneGrant","crate::PluginLifecycleFailure","original_lifecycle_step(cx,loan,demand","self.close_ladder_step(same,grant)"])expect(boundary).toContain(name);
+ const source=readModuleTreeSource(new URL("../../../🔌️plugin/🧵️instance/🔌️plugin-app-impl/🦀️.rs",import.meta.url)),start=source.indexOf("/// 🎟️ Advances one genuine original owner under the complete caller grant."),end=source.indexOf("fn close_terminal_is_empty",start);expect(start).toBeGreaterThan(0);expect(end).toBeGreaterThan(start);const boundary=source.slice(start,end);
+ for(const name of["cx:&mut semio_framework_job::StepContext","loan:RetainedCloneGrant","semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure","original_lifecycle_step(cx,loan,demand","self.close_ladder_step(same,grant)"])expect(boundary).toContain(name);
  expect(boundary).not.toContain("into_message()");expect(boundary).not.toContain("plugin_sdk_fault");
  const receiver=read("../../../🔌️plugin/🏇️mounted-owner/🦀️.rs");expect(receiver).toContain("advance_lifecycle");
 });

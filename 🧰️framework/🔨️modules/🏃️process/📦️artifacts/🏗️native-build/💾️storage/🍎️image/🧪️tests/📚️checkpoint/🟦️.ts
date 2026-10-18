@@ -4,7 +4,8 @@ import type {ResourceLeaseControl} from "../../../../../../🔒️leases/🟦️
 import {scriptInvocationEnvironment,type ScriptInvocation} from "../../../../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {captureOwnedCommandV1} from "../../../../../../🎛️owned-execution/🟦️.ts";
 import {captureOwnedProcess} from "../../../../../../📥️capture/🟦️.ts";
-import {checkpointNativeStorageV1,acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,nativeStorageStateV1,nativeStorageEventV1,nativeStorageUsedBytesV1} from "../../../🟦️.ts";
+import{checkpointNativeStorageV1,acquireNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1}from"../../../🟦️.ts";
+import{nativeStorageStateV1,nativeStorageEventV1,nativeStorageUsedBytesV1}from"../../../📜️journal/🟦️.ts";
 import {openNativeImageStorageV1,retireNativeImageStorageV1} from "../../🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../🌐️platform/📋️contract/🟦️.ts";
 

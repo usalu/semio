@@ -10,6 +10,7 @@ use semio_s_artifact_procedural_3d_geometry::infer_geometry;
 use semio_s_artifact_procedural_3d_geometry::GeometryInput;
 use crate::topology::compute_generation3d_topology;
 use ::semio_framework_schema::ArtifactSchema;
+use semio_s_artifact_procedural_3d_geometry::Generation3dGeometryRecord;
 //#region 🔖️Inference
 /// 💡️ Everything inferable from a generation3d snapshot. One field per named inference under
 /// `💡️inferences/` (currently: `topology`, backed by the `🧭topology/` slug dir).

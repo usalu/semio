@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ .storybook/🧪️tests/🧪️browser-runner/🟦️.ts
 // Specs: Run Playwright end-to-end coverage against the built workspace Storybook.
-// Summary: `bun nx run workspace:test-storybook` builds, serves `storybook-static/` via `script.ts dev storybook-static`, then runs the owner-scoped Storybook cases with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
+// Summary: `bun repo run workspace:test-storybook` builds, serves `storybook-static/` via `script.ts dev storybook-static`, then runs the owner-scoped Storybook cases with `PLAYWRIGHT_BASE_URL` set; this config does not start its own server.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
 
@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { playwrightTestTimeoutMs } from "@semio-tech/repo-lib";
+import { playwrightTestTimeoutMs } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎚️levels/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const workspaceRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");

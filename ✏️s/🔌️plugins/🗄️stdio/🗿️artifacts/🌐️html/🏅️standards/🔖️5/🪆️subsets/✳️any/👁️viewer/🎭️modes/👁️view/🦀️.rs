@@ -1,7 +1,6 @@
 //! 👁️ `html` view (any) — the `view` mode: a single
 //! full-pane Main window, the only mode this thin surface declares.
 
-use crate::viewer::html::modes::view::windows::main;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
@@ -24,7 +23,7 @@ pub fn layout() -> WindowLayout {
             kind: "stack".into(),
             size: None,
             active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: None }],
+            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: semio_s_artifact_stdio_html_inferences::viewer::html::modes::view::windows::main::WINDOW_KIND_ID.into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: None }],
         }),
     }
 }

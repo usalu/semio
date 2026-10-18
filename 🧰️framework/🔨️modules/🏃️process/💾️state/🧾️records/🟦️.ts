@@ -2,7 +2,7 @@ import{requireNativeImageMetadataV1,syncNativeImageMetadataV1,type NativeImageMe
 import{lstat,open,link,unlink,type FileHandle}from"node:fs/promises";
 import{constants,type Stats}from"node:fs";
 import{dirname,resolve}from"node:path";
-import{withArtifactDescriptorV1,artifactReadFlagsV1}from"@semio-tech/framework/filesystem/observation/descriptor";
+import{withArtifactDescriptorV1,artifactReadFlagsV1}from"../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
 import{checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl}from"../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";

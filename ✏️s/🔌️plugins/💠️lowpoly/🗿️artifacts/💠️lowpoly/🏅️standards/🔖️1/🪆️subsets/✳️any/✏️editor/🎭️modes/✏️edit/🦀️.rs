@@ -67,7 +67,7 @@ mod tests;
 /// 🎛️ Collects every window-chrome measure from the app-level `🛠️options/*` shared by both windows
 /// (Model + UV expose an identical set — see this file's top-level doc comment).
 pub fn lowpoly_window_measures(config: &LowpolyConfig, labels: &LowpolyLabels, select: &semio_s_artifact_lowpoly_lowpoly_options::select::SelectState) -> Vec<WindowMeasure> {
-    use semio_s_artifact_lowpoly_lowpoly_options;
+    use semio_s_artifact_lowpoly_lowpoly_options as options;
     vec![
         options::show_edges::measure(config, labels),
         options::sun::measure(config, labels),

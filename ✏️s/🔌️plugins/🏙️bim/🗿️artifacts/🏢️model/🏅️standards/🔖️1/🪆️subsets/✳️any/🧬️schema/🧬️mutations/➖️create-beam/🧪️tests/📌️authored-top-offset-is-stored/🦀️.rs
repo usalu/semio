@@ -5,12 +5,13 @@ use crate::standards::v1::subsets::any::schema::mutations::create_beam::CreateBe
 use crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Beam, ModelSnapshot, Point2}, mutations::ModelMutation};
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_authored_top_offset_is_stored_and_a_taller_storey_changes_nothing_stored() {
-    let before: ModelSnapshot = from_json_str(BEFORE, JsonMemberPolicy::Reject).expect("before snapshot decodes");
+    let before: ModelSnapshot = from_json_str((*BEFORE), JsonMemberPolicy::Reject).expect("before snapshot decodes");
     let created = Beam { phase: crate::standards::v1::subsets::any::schema::snapshot::Phase::New, storey: "st-ground".into(), beam_type: "bt-30x50".into(), axis: Axis::Line { start: Point2 { x: 0.0, y: 3.0 }, end: Point2 { x: 4.0, y: 3.0 } }, top_offset: -0.2, end_top_offset: None, name: "New".into() };
     let stored = apply_model_mutation(&before, &ModelMutation::CreateBeam(CreateBeam { id: "b-new".into(), beam: created.clone() })).expect("the beam is created");
     assert_eq!(stored.beams["b-new"].top_offset, -0.2);

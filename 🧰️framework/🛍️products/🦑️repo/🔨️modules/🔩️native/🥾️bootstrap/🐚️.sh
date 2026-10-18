@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 # #region 🔖️Header
 # Zero-touch macOS/Linux bootstrap: the native C/C++ toolchain (apt-get, dnf, pacman, zypper or Homebrew), Bun, the Node.js
-# Nx runs on (`package.json` engines.node), rustup with the `rust-toolchain.toml` pin, Go, .NET, and uv,
+# the build tool runs on (`package.json` engines.node), rustup with the `rust-toolchain.toml` pin, Go, .NET, and uv,
 # then `workspace:setup` (which installs packages).
 # 🧭️Invoke from a fresh clone: `bash "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh" setup` (full
 # bootstrap); `bun ./📜️script.ts setup native` routes here once Bun exists.

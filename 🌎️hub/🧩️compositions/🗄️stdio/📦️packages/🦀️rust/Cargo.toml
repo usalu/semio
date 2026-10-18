@@ -24,6 +24,7 @@ semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️mod
 semio-framework-schema-registry = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-schema = { workspace = true }
+semio-s-artifact-stdio-html-mutations = { path = "../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-plugin-stdio = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }

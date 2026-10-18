@@ -1,6 +1,6 @@
 use super::*;
-use crate::tui::cell::{diff, Cell, CellBuffer, DiffRun};
-use crate::tui::geometry::{Pos, Rect, Size};
+use crate::cell::{diff, Cell, CellBuffer, DiffRun};
+use crate::geometry::{Pos, Rect, Size};
 use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 use unicode_segmentation::UnicodeSegmentation;
 use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};

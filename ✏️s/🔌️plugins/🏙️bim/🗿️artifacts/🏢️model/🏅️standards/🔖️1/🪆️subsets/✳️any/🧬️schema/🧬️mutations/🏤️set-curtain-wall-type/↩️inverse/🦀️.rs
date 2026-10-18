@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetCurtainWallType`: an absolute `SetCurtainWallType` restoring the base value of exactly the fields the forward really changes, none when the curtain wall type is absent or nothing changes.
 
-use super::SetCurtainWallType;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type::SetCurtainWallType;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetCurtainWallType, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetCurtainWallType, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type::SetCurtainWallType>,
+{
     let Some(record) = base.curtain_wall_types.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetCurtainWallType, base: &ModelSnapshot) -> Vec<ModelM
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetCurtainWallType(SetCurtainWallType::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetCurtainWallType::from_patch(payload.id.clone(), restore))]
 }

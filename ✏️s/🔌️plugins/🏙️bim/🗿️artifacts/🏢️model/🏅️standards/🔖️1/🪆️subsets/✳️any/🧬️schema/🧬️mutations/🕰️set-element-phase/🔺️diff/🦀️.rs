@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetElementPhase`: a one-field patch of the phase slot in whichever collection holds the element. An opening carries no phase of its own, it takes the phase of its host, so the host is the one to set.
 //! Nothing derived is written: which elements a view phase shows and the quantities per phase follow by inference.
 
-use super::super::elements;
-use super::SetElementPhase;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

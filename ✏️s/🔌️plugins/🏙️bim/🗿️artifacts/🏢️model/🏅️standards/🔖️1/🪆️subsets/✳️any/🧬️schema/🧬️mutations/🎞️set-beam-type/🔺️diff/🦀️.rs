@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetBeamType`: a sparse beam type patch of exactly the provided fields. A provided material
 //! must exist and every provided value must keep the profile a valid cross-section; providing nothing new is a no-op.
 
-use super::SetBeamType;
+use crate::standards::v1::subsets::any::schema::mutations::set_beam_type::SetBeamType;
 use crate::standards::v1::subsets::any::schema::{snapshot::{profile_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

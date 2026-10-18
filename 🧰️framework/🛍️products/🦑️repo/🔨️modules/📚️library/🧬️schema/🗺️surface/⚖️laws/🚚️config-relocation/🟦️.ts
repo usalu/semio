@@ -1,4 +1,4 @@
-import type { BreachRecord } from "../../../../🟦️.ts";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SKIP_DIRS, POLICY_SOURCE_OPERATIONS, policySourceDirectory, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_APP_CONFIG_DIR, POLICY_APP_CONFIG_LEGACY_DIR, POLICY_APP_WASM_LEGACY_DIR } from "../../🧱️contract/🟦️.ts";
 

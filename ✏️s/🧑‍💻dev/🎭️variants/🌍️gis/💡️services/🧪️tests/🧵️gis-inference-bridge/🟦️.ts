@@ -23,7 +23,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { INFERENCE_JOB_TOOLS, approvalRequestSchema, proveMcpInferenceBridgeFixture, proveOsMirrorsHubApprovalAuthority } from "@semio-tech/gis-gismap-js/inference/mcp/testing/oracle";
 import { isValidJsonSchema2020_12 } from "@semio-tech/framework-os-mcp/schema-validation";
 import { requireMcpBinary, spawnRawMcp, type RawMcpProcess } from "@semio-tech/framework-os-mcp";
-import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const hostManifest="🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/Cargo.toml";

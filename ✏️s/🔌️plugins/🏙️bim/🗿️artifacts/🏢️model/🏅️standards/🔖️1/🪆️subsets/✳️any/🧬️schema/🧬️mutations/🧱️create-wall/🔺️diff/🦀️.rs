@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `CreateWall`: one created wall entry. The storey and the wall type must exist, a storey constraint
 //! must name a storey of the same building, an attach of the top or base must name an existing roof, slab or ceiling of the same building, and the axis must have length. No height is stored: it is inferred.
 
-use super::super::elements;
-use super::super::wall_depth::attach_flaw;
-use super::CreateWall;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::wall_depth::attach_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::create_wall::CreateWall;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, TopConstraint}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

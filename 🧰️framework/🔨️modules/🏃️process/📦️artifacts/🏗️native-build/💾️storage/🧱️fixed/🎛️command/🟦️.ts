@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import schemaComponent from"../🧬️schema/🔣️.json";const schema=schemaComponent.definitions.Command;
+import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import schemaComponent from"../🧬️schema/🔣️.json" with{type:"json"};const schema=schemaComponent.definitions.Command;
 /** 🧮️ Validates closed fixed-action planning data without issuing physical authority. */
 export function nativeFixedCommandAllowedV1(value:unknown):boolean{if(validateJsonSchemaSubset(schema.definitions.Request,value,schema).length)throw Error("Closed fixed command request required");const request=value as{phase:string;action:string;writer:boolean;accepted:boolean;activationAccepted:boolean;mapping:string;commands:number};if(!request.writer||!request.accepted)return false;const limits=schema.definitions.Protocol.const;if(request.phase==="body")return request.commands<limits.maximumBodyCommands&&request.action!=="deactivate";return request.commands<limits.maximumCleanupCommands&&["information","inactive","deactivate"].includes(request.action)&&(request.action!=="deactivate"||request.activationAccepted&&request.mapping==="exact-active");}

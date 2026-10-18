@@ -55,6 +55,4 @@ pub fn edges(snapshot: &ModelSnapshot) -> impl Fn(&str) -> Vec<String> + '_ {
     move |id| snapshot.walls.get(id).map(|wall| targets_of(wall).into_iter().map(str::to_string).collect()).unwrap_or_default()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

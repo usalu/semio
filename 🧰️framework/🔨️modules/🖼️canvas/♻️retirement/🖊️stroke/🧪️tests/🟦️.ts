@@ -30,7 +30,7 @@ test("Canvas Stroke original dash custody uses supplied canonical control",()=>{
    }
   }
  }
- const canvas=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8");
+ const canvas=readFileSync(resolve(import.meta.dir,"../../../🎬️scene/🖌️renderer/🖊️stroke-style/🦀️.rs"),"utf8");
  expect(canvas.includes("pub fn dash_pattern(&self) -> &[f64]")).toBe(true);
  expect(canvas.includes("pub fn dash_capacity(&self) -> usize")).toBe(true);
  expect(canvas.includes("pub(crate) fn take_dash_pattern(&mut self) -> Vec<f64>")).toBe(true);

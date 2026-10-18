@@ -1,4 +1,4 @@
-import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
+import { normalizationSourceDeclarations, normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash, randomUUID } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
@@ -8,10 +8,11 @@ import { visit as jsoncVisit } from "jsonc-parser";
 import stringify from "fast-json-stable-stringify";
 import { join as oracleJoin } from "pathe";
 import ts from "typescript";
-import * as discovery from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { createTaxonomyPathMatcher } from "../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
-const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts");
+const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization");
 const source = normalizationSourceDeclarations(path), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🛫️preflight-reference-basis/🔣️.json"), "utf8"));
 const compilers = [
@@ -91,12 +92,12 @@ function environment(compiler: typeof compilers[number]) {
     report: (...args: unknown[]) => { progressRows.push(args); const callback = args[0]; if (typeof callback === "function") callback({ operation: args[1], phase: args[2], completed: args[3], total: args[4], path: args[5] }); },
     readdirSync: (value: string) => { const name = access(value); return [...nodes.keys()].filter((key) => posix.dirname(key) === name).map((key) => posix.basename(key)); },
   };
-  const parserSupport = declarations(["lineLocation", "embeddedArgumentTokens", "EMBEDDED_ARGUMENT_WORD", "EMBEDDED_ESCAPED_ARGUMENT_WORD", "EMBEDDED_ARGUMENT_PATH", "indexedLineContent", "indexedLineStarts", "jsonTokens"]);
+  const parserSupport = declarations(["requireTaxonomyValue", "lineLocation", "embeddedArgumentTokens", "EMBEDDED_ARGUMENT_WORD", "EMBEDDED_ESCAPED_ARGUMENT_WORD", "EMBEDDED_ARGUMENT_PATH", "indexedLineContent", "indexedLineStarts", "jsonTokens"]);
   const jsonTokens = new Function(compile(compiler, parserSupport) + "\nreturn jsonTokens;")();
   dependencies.referenceTokensIncludingUnsupported = (name: string, content: string) => { parsed++; return /\.json$/u.test(name) ? jsonTokens(name, content, "json") : []; };
-  const code = declarations(["taxonomyFixturePayloadPath", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "LEXICAL_OPAQUE_ROOTS", "isExcluded", "lstatOrNull", "generatorPathCompare", "sha256", "canonicalArrayKey", "canonicalValue", "canonicalJson", "absolutePath", "HISTORICAL_TICKET_ROOT_PATTERN", "HISTORICAL_PROMPT_LOG_ROOT_PATTERN", "packageRootManifestBasenames", "historicalEvidenceBoundaryOwns", "historicalDocumentEvidence", "repositoryReferenceCandidatePaths", "referenceCoordinateRoots", "ancestorReferenceCoordinateRoot", "incomingReferenceLexicalAdmission", "referenceCandidatesWithProgress", "textualPath", "splitTokenSuffix", "addUniqueIndex", "referencePathIndex", "resolveReferencePath", "resolveReferenceTokenPath", "preflightReferenceNodeWitness", "observePreflightReferenceNode", "capturePreflightReferenceBasis", "validatePreflightReferenceBasis", "lexicalTargetIncomingReferences", "noFollowAncestors", "lexicalInputOutsideOpaque", "utf8Compare", "historicalLeafExpressions", "fixedContractCandidates", "fixedContractLeafIndex", "fixedContractLeafIndexes", "fixedContractLiteralLeaf", "createLexicalInputSession", "referenceLeaf", "referenceLeafNames", "referenceLeafNameSets"]);
+  const code = declarations(["requireTaxonomyValue", "taxonomyFixturePayloadPath", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "LEXICAL_OPAQUE_ROOTS", "isExcluded", "lstatOrNull", "generatorPathCompare", "sha256", "canonicalArrayKey", "canonicalValue", "canonicalJson", "absolutePath", "HISTORICAL_TICKET_ROOT_PATTERN", "HISTORICAL_PROMPT_LOG_ROOT_PATTERN", "packageRootManifestBasenames", "historicalEvidenceBoundaryOwns", "historicalDocumentEvidence", "repositoryReferenceCandidatePaths", "referenceCoordinateRoots", "ancestorReferenceCoordinateRoot", "incomingReferenceLexicalAdmission", "referenceCandidatesWithProgress", "textualPath", "splitTokenSuffix", "addUniqueIndex", "referencePathIndex", "resolveReferencePath", "resolveReferenceTokenPath", "preflightReferenceNodeWitness", "observePreflightReferenceNode", "capturePreflightReferenceBasis", "validatePreflightReferenceBasis", "lexicalTargetIncomingReferences", "noFollowAncestors", "lexicalInputOutsideOpaque", "utf8Compare", "historicalLeafExpressions", "fixedContractCandidates", "fixedContractLeafIndex", "fixedContractLeafIndexes", "fixedContractLiteralLeaf", "createLexicalInputSession", "referenceLeaf", "referenceLeafNames", "referenceLeafNameSets"]);
   const api: Production = new Function(...Object.keys(dependencies), compile(compiler, code) + "\nreturn { capturePreflightReferenceBasis, validatePreflightReferenceBasis, lexicalTargetIncomingReferences };")(...Object.values(dependencies));
-  const taxonomy = { exclusions: vector.semantics.opaqueRoots.map((name: string) => ({ path: name })), discoverySchema: { testsDirName: discovery.loadCatalogTaxonomy().testsDirName, testFixturesDirName: discovery.loadCatalogTaxonomy().testFixturesDirName, historicalDocumentEvidencePopulations: discovery.loadCatalogTaxonomy().historicalDocumentEvidencePopulations, fixedFilenameContracts: {} }, pathMatcher: discovery.createTaxonomyPathMatcher() }, plan = { id: "frozen-plan" };
+  const taxonomy = { exclusions: vector.semantics.opaqueRoots.map((name: string) => ({ path: name })), discoverySchema: { testsDirName: loadCatalogTaxonomy().testsDirName, testFixturesDirName: loadCatalogTaxonomy().testFixturesDirName, historicalDocumentEvidencePopulations: loadCatalogTaxonomy().historicalDocumentEvidencePopulations, fixedFilenameContracts: {} }, pathMatcher: createTaxonomyPathMatcher() }, plan = { id: "frozen-plan" };
   const capture = () => api.capturePreflightReferenceBasis(repoRoot, taxonomy, vector.fixture.ticketDir, vector.fixture.transactionRoot, plan);
   const query = (row: Query, basis?: Basis, project?: (name: string, bytes: Buffer, mode: number) => { path: string; bytes: Buffer }, progress?: (value: any) => void) => api.lexicalTargetIncomingReferences(repoRoot, new Set(row.targets), row.ignored, taxonomy, vector.fixture.ticketDir, { path: vector.fixture.planAuthorityPath, bytes: Buffer.from(vector.fixture.files[vector.fixture.planAuthorityPath]) }, vector.fixture.transactionRoot, plan, undefined, progress, project, basis);
   return { api, repoRoot, nodes, tracked, untracked, ticketPaths, put, capture, query, taxonomy, plan, accesses, reads, frozen, projections, progressRows, counters: () => ({ repositoryCensuses, planCensuses, parsed }), cancel: () => { cancelled = true; }, nextInode: () => sequence++ };
@@ -327,8 +328,8 @@ test("actual Git markers preserve nested ownership, fake markers and skipped sym
   git(join(repoRoot, "nested"));
   symlinkSync("missing", join(repoRoot, "nested/deep/.git"), "file");
   const dependencies = { posix, resolve, relative, sep, join, dirname, isAbsolute, Buffer, lstatSync, readFileSync, execFileSync, spawnSync, checkCancellation: () => {} };
-  const code = declarations(["taxonomyFixturePayloadPath", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "LEXICAL_OPAQUE_ROOTS", "lstatOrNull", "isExcluded", "generatorPathCompare", "report", "ancestorReferenceCoordinateRoot", "referenceCoordinateRoots", "noFollowAncestors", "lexicalInputOutsideOpaque", "utf8Compare", "createLexicalInputSession"]);
-  const paths = ["nested/deep/consumer.json", "fake/consumer.json"], taxonomy = { exclusions: vector.semantics.opaqueRoots.map((path: string) => ({ path })), discoverySchema: { testsDirName: discovery.loadCatalogTaxonomy().testsDirName, testFixturesDirName: discovery.loadCatalogTaxonomy().testFixturesDirName } };
+  const code = declarations(["requireTaxonomyValue", "taxonomyFixturePayloadPath", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "LEXICAL_OPAQUE_ROOTS", "lstatOrNull", "isExcluded", "generatorPathCompare", "report", "ancestorReferenceCoordinateRoot", "referenceCoordinateRoots", "noFollowAncestors", "lexicalInputOutsideOpaque", "utf8Compare", "createLexicalInputSession"]);
+  const paths = ["nested/deep/consumer.json", "fake/consumer.json"], taxonomy = { exclusions: vector.semantics.opaqueRoots.map((path: string) => ({ path })), discoverySchema: { testsDirName: loadCatalogTaxonomy().testsDirName, testFixturesDirName: loadCatalogTaxonomy().testFixturesDirName } };
   for (const compiler of compilers) {
     const discover = new Function(...Object.keys(dependencies), compile(compiler, code) + "\nreturn referenceCoordinateRoots;")(...Object.values(dependencies));
     const markers: string[] = [];
@@ -343,18 +344,18 @@ test("actual Git markers preserve nested ownership, fake markers and skipped sym
 });
 
 for (const row of vector.physicalCases) test("physical preflight publication boundary: " + row.id, async () => {
-  const api = await import("../../🧹️normalization/🟦️.ts"), fixture = physicalFixture(row.id);
+  const { planTaxonomy } = await import("../../🧹️normalization/🧠️planning/🟦️.ts"), { inventoryTaxonomy } = await import("../../🧹️normalization/🔍️inventory-planning/🟦️.ts"), { applyTaxonomyPlan } = await import("../../🧹️normalization/🚀️apply/🟦️.ts"), fixture = physicalFixture(row.id);
   let evidence: Record<string, unknown> = { caseId: row.id, fixtureSourceHash: fixture.fixtureSourceHash };
   try {
     if (row.mutation === "marker") { fixture.put("outside-marker/consumer.json", "[]\n"); fixture.put("outside-marker/.git", "first fake marker\n"); }
-    const plan = api.planTaxonomy(api.inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
+    const plan = planTaxonomy(inventoryTaxonomy(fixture.options), { baselineCommit: fixture.baselineCommit, excludedTreeDigests: [] });
     expect(plan.unresolved).toEqual([]);
     expect(plan.embeddedTicketRoots).toHaveLength(2);
     expect(plan.embeddedTicketRootRelocations).toHaveLength(3);
     expect(plan.evidenceRemovals).toHaveLength(1);
     const sources = [...plan.embeddedTicketRootRelocations, ...plan.evidenceRemovals].map((entry) => ({ path: entry.sourcePath, bytes: readFileSync(join(fixture.repoRoot, entry.sourcePath)) }));
     let published = 0;
-    const result = api.applyTaxonomyPlan(plan, { ...fixture.options, expectedBaselineCommit: fixture.baselineCommit, injectFailureAt: "after-embedded-root-staging", progress: (event) => {
+    const result = applyTaxonomyPlan(plan, { ...fixture.options, expectedBaselineCommit: fixture.baselineCommit, injectFailureAt: "after-embedded-root-staging", progress: (event) => {
       if (event.phase !== "transaction-attempt-canonical-published") return;
       published++;
       const target = plan.embeddedTicketRoots[0]!.sourceTicketRoot;
@@ -394,7 +395,7 @@ test("the dedicated preflight gate is registered through Nx as an owner route th
 
 test("the exercised production slices remain stable across the dedicated gate", () => {
   const names = ["referenceCoordinateRoots", "preflightReferenceNodeWitness", "observePreflightReferenceNode", "capturePreflightReferenceBasis", "validatePreflightReferenceBasis", "lexicalTargetIncomingReferences", "applyTaxonomyPlan"];
-  const current = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, current, ts.ScriptTarget.Latest, true);
+  const current = normalizationEngineDeclarations(path), tree = ts.createSourceFile(path, current, ts.ScriptTarget.Latest, true);
   const actual = names.map((name) => tree.statements.find((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name)!.getText(tree).replace(/^export /u, "")).join("\n");
   expect(actual).toBe(declarations(names));
   const hash = (value: string) => createHash("sha256").update(value).digest("hex");

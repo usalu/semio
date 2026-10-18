@@ -2,10 +2,10 @@
 //! (the same formula is a no-op), an absent one is created. The component and the parameter of its family exist, the formula parses, uses only parameters of the family and closes no circle under the
 //! overrides of the component; whether it also computes the kind of the parameter is the business of the inference (a diagnostic), not of the diff. The key is free in every other collection.
 
-use super::super::component_rules;
-use super::super::elements;
-use super::super::family_rules;
-use super::SetComponentOverride;
+use crate::standards::v1::subsets::any::schema::mutations::component_rules;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules;
+use crate::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride;
 use crate::standards::v1::subsets::any::schema::{snapshot::{ComponentOverride, ModelSnapshot}, diff::{patches::ComponentOverridePatch, Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -104,8 +104,6 @@ pub struct RuntimeAppCell<PA: PluginApp> {
     /// 🌡️ [`PluginApp::maintenance_under_pressure`] as of the last maintenance step — read by the
     /// reactor turn to decide whether this instance gets a burst of steps instead of one.
     pub maintenance_pressure: AtomicBool,
-    #[cfg(target_arch = "wasm32")]
-    pub maintenance_probe_turns: AtomicU64,
     #[cfg(any(test, target_arch = "wasm32"))]
     pub maintenance_probe_entries: AtomicU64,
     #[cfg(test)]
@@ -125,8 +123,6 @@ impl<PA: PluginApp> RuntimeAppCell<PA> {
             host_crossings: AtomicU32::new(0),
             background_holds: AtomicU32::new(0),
             maintenance_pressure: AtomicBool::new(false),
-            #[cfg(target_arch = "wasm32")]
-            maintenance_probe_turns: AtomicU64::new(0),
             #[cfg(any(test, target_arch = "wasm32"))]
             maintenance_probe_entries: AtomicU64::new(0),
             #[cfg(test)]

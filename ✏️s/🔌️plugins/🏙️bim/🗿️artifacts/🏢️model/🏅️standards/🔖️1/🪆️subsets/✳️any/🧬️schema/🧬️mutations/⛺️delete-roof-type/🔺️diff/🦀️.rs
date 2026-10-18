@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteRoofType`: one deleted roof type entry together with the properties and classifications keyed by the type; refused while a roof still uses the type.
 
-use super::super::cascade;
-use super::DeleteRoofType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_roof_type::DeleteRoofType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

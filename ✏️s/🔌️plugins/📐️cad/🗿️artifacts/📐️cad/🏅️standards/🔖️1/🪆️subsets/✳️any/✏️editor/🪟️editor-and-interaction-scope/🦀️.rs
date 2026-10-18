@@ -1,6 +1,7 @@
 //! 🪟️ Editor implementation of the CAD play app: the world body keys, the interaction scope and the artifact editor trait implementation. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_cad_cad_kit::CAD_INTERACTION_DOMAIN;
 use semio_s_artifact_cad_cad_kit::cad_io;
 use semio_s_artifact_cad_cad_kit::reset_document_effect;

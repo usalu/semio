@@ -1,5 +1,5 @@
 /** 🔖️ Explicit bookmark trees, page labels, named destinations and open actions. */
-import type { PdfOutlineItem,PdfNamedDestination,PdfPageLabelRange,PdfPageLabelStyle,PdfOpenAction } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfOutlineItem, PdfNamedDestination, PdfPageLabelRange, PdfPageLabelStyle, PdfOpenAction } from "../../../../../🧬️schema/📸️snapshot/🎯️navigation/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type Binary64 } from "../../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { writePdfDestination,readPdfDestination,writePdfAction,readPdfAction } from "../🟦️.ts";

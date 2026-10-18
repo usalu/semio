@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(suiteRoot, "../../🧫️fixtures/🛍️app-catalogue-attempt/🔣️.json");
+const fixturePath = resolve(suiteRoot, "../🧫️fixtures/🛍️app-catalogue-attempt/🔣️.json");
 
 type Refresh = { readonly instanceId: number; readonly outcome?: string };
 type Case = {

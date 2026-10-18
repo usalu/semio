@@ -2,9 +2,9 @@
 //! slope limit are positive, the landings are non-negative, and a storey top constraint must name a storey of the same building. Length, rise, slope, landings, solid and
 //! compliance are never stored: they are inferred.
 
-use super::super::elements;
-use super::super::placement::{ramp_issue, refuse_stair};
-use super::CreateRamp;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::placement::{ramp_issue, refuse_stair};
+use crate::standards::v1::subsets::any::schema::mutations::create_ramp::CreateRamp;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

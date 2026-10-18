@@ -1,0 +1,70 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1). Drives a job-hosting
+/// instance directly (host calls these WIT exports on the instance the job was placed on) —
+/// distinct from the `effects::spawn-job`/`cancel-job` a normal actor emits from `poll` to ASK the
+/// host to create one elsewhere.
+///
+/// 🗺️ CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM absorption: the guest exports `io-run`/`io-sniff`
+/// (single-hop, this plugin's own `io_mechanism` registry) become the well-known cold job kinds
+/// `semio.io-run`/`semio.io-sniff` here — `kind = "semio.io-run"`, `input` is the JSON-encoded
+/// `(source, target, io_schema::IoPayload)` tuple the old guest export took as three params,
+/// `job-step::done` carries the JSON-encoded `io_schema::IoPayload` result (`io-run`) or a
+/// single-byte confidence rank (`io-sniff`). `list-io-entries` becomes static descriptor data in
+/// `describe.wit`'s `describe()` payload instead of a callable export.
+interface jobs {
+  use types.{plugin-error};
+  use reactor.{retained-turn-input, retained-grant, retained-progress, actor-call-failure};
+
+  record job-budget {
+    input: retained-turn-input,
+    retained-policy: retained-grant,
+    fuel: u64,
+    deadline-us: u64,
+    cancelled: bool,
+  }
+
+  record job-source {
+    job: u64,
+    kind: string,
+    input: option<list<u8>>,
+    checkpoint: option<list<u8>>,
+  }
+  enum job-output-state { running, done, failed }
+  record job-outcome { job: u64, operation: u64, generation: u64, state: job-output-state, byte-length: u64 }
+  record job-output-chunk { offset: u64, bytes: option<list<u8>>, output-closed: bool }
+  record job-output-call { input: retained-turn-input, spent: retained-progress, work-units-spent: u64, chunk: option<job-output-chunk>, source-closed: bool, refusal: option<actor-call-failure> }
+  record job-output-ack-call { input: retained-turn-input, spent: retained-progress, work-units-spent: u64, acknowledged: bool, source-closed: bool, refusal: option<actor-call-failure> }
+  record job-start-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    admitted: bool,
+    returned-source: option<job-source>,
+    refusal: option<actor-call-failure>,
+  }
+  record job-step-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    outcome: option<job-outcome>,
+    source-closed: bool,
+    refusal: option<actor-call-failure>,
+  }
+  record job-cancel-call {
+    input: retained-turn-input,
+    spent: retained-progress,
+    work-units-spent: u64,
+    admitted: bool,
+    refusal: option<actor-call-failure>,
+  }
+  start-job: async func(source: option<job-source>, budget: job-budget) -> job-start-call;
+  step-job: async func(job: u64, budget: job-budget) -> job-step-call;
+  read-job-output: async func(job: u64, budget: job-budget) -> job-output-call;
+  acknowledge-job-output: async func(job: u64, budget: job-budget) -> job-output-ack-call;
+  cancel-job: async func(job: u64, budget: job-budget) -> job-cancel-call;
+  close-jobs: async func(budget: job-budget) -> job-cancel-call;
+  /// 🧵 Takes one sealed operation-owned download segment. Every `some` is at most 4,096
+  /// bytes; the first `none` is the terminal observation and releases the operation authority.
+  take-segmented-download-chunk: async func(instance-id: u32, operation-id: u64) -> result<option<list<u8>>, plugin-error>;
+}

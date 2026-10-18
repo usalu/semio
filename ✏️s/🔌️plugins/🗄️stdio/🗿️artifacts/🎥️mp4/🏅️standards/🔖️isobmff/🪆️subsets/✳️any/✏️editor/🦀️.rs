@@ -10,7 +10,7 @@ use crate::standards::isobmff::subsets::any::schema::mutations::{insert_sample,r
 use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Sample, Mp4Snapshot};
 #[cfg(test)] use crate::standards::isobmff::subsets::any::schema::snapshot::{Mp4Track};
 use crate::{MP4_DIALECT, STDIO_MP4_DOCUMENT_SCHEMA};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;

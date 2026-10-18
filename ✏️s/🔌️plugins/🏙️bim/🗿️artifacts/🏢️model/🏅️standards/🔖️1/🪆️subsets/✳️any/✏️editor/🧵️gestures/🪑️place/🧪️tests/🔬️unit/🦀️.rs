@@ -1,4 +1,4 @@
-use super::{FAMILY_MISSING, Frame, UTILITY, fit, length, next_system, normalized, system_word};
+use crate::editor::bim::gestures::place::{FAMILY_MISSING, Frame, UTILITY, fit, length, next_system, normalized, system_word};
 use crate::editor::bim::gestures::session::{GestureKey, STOREY_MISSING, Step, ToolEvent};
 use crate::editor::bim::gestures::typed::INVALID;
 use crate::editor::bim::gestures::plane::point2;
@@ -11,6 +11,7 @@ use crate::editor::bim::gestures::session::Modifiers;
 use crate::editor::bim::marks::Shape;
 use crate::editor::bim::fixture::Rig;
 use crate::standards::v1::subsets::any::schema::snapshot::Point2;
+use semio_framework_test_fixtures::fixture_text;
 use std::f64::consts::{FRAC_PI_2, PI};
 
 fn created(step: &Step) -> &Component {
@@ -210,10 +211,10 @@ async fn a_terminal_shows_its_connector_cross_in_the_ghost() {
     assert_eq!(terminal, plain + 2, "two strokes make the cross");
 }
 
-const GESTURE_CASES: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json");
+static GESTURE_CASES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json"));
 
 fn cases(key: &str) -> Vec<serde_json::Value> {
-    let all: serde_json::Value = serde_json::from_str(GESTURE_CASES).expect("the committed cases");
+    let all: serde_json::Value = serde_json::from_str((*GESTURE_CASES)).expect("the committed cases");
     all[key].as_array().unwrap_or_else(|| panic!("cases {key}")).clone()
 }
 

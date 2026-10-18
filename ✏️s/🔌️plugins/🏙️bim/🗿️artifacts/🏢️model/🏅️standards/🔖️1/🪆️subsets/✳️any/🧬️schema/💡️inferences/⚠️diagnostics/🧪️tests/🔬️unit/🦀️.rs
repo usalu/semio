@@ -1,19 +1,52 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use std::collections::BTreeSet;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::stringer_ignored;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::*;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2, SpaceBoundary}, inferences::ModelInference};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
+use semio_framework_test_fixtures::fixture_text;
 
-const CLEAN: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
-const DEFECTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
+static CLEAN: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json"));
+static DEFECTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json"));
 
 fn clean() -> ModelSnapshot {
-    from_json_str(CLEAN, JsonMemberPolicy::Reject).expect("clean house decodes")
+    from_json_str((*CLEAN), JsonMemberPolicy::Reject).expect("clean house decodes")
 }
 
 fn defects() -> ModelSnapshot {
-    from_json_str(DEFECTS, JsonMemberPolicy::Reject).expect("defects decode")
+    from_json_str((*DEFECTS), JsonMemberPolicy::Reject).expect("defects decode")
 }
 
 fn rows(found: &[Diagnostic]) -> Vec<(String, Vec<String>)> {
@@ -258,10 +291,10 @@ async fn diagnostics_determinism_default_and_gating_laws() {
     assert!(recomputed.iter().any(|row| row.code == DiagnosticCode::DegenerateStorey && row.storey.as_deref() == Some("st-far")));
 }
 
-const RAMPS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
+static RAMPS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json"));
 
 fn ramps() -> ModelSnapshot {
-    from_json_str(RAMPS, JsonMemberPolicy::Reject).expect("ramps decode")
+    from_json_str((*RAMPS), JsonMemberPolicy::Reject).expect("ramps decode")
 }
 
 fn ramp_rows(found: &[Diagnostic], code: DiagnosticCode) -> Vec<String> {

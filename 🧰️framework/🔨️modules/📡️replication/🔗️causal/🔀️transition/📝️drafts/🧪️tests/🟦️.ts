@@ -3,6 +3,7 @@ import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {applyPatch} from "fast-json-patch";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 test("📝️ actual history drafts own first-party original arena and displaced keys",()=>{
   const law=JSON.parse(readFileSync(new URL("../🧪️tests/🧫️fixtures/🔣️.json",import.meta.url),"utf8"));
   const database=new Database(":memory:");try{
@@ -11,5 +12,5 @@ test("📝️ actual history drafts own first-party original arena and displaced
     const expected=database.query<{id:string;value:string},[]>("SELECT id,value FROM drafts ORDER BY id COLLATE BINARY").all();expect(expected.map(row=>row.id)).toEqual(law.expectedOrder);expect(expected.map(row=>JSON.parse(row.value))).toEqual(law.expectedOrder.map((id:string)=>original[id]));
     for(const cancel of law.cancelAt){const current=structuredClone(original),prefix=law.expectedOrder.slice(0,Math.min(cancel,law.expectedOrder.length));for(const id of prefix)delete current[id];const patches=Object.keys(current).map(id=>({op:"remove" as const,path:`/${id.replaceAll("~","~0").replaceAll("/","~1")}`}));expect(applyPatch(current,patches,true).newDocument).toEqual({});expect(Object.keys(original).sort()).toEqual(law.expectedOrder);}
   }finally{database.close();}
-  const transition=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8"),store=readFileSync(new URL("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs",import.meta.url),"utf8");expect(transition.includes('pub use input_drafts::HistoryInputDrafts;')).toBe(true);expect(store.includes("drafts: protocol::HistoryInputDrafts")).toBe(true);
+  const transition=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8"),store=readModuleTreeSource(new URL("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📥️lifted/🏪️store/🦀️.rs",import.meta.url));expect(transition.includes('pub use input_drafts::HistoryInputDrafts;')).toBe(true);expect(store.includes("drafts: protocol::HistoryInputDrafts")).toBe(true);
 });

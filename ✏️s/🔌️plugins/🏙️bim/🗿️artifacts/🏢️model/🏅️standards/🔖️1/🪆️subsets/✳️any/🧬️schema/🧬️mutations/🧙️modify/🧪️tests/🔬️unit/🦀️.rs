@@ -1,17 +1,19 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::Point2;
+use crate::standards::v1::subsets::any::schema::mutations::modify::*;
 use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{cut_loop, offset_axis, trim_extend, TrimFlaw};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Layer, LayerFunction, ModelSnapshot, Vertex, WallType};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
+use semio_framework_test_fixtures::fixture_text;
 use serde_json::Value;
 use std::f64::consts::TAU;
 
-const CASES: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧙️modify/🔣️.json");
-const JOINS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+static CASES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧙️modify/🔣️.json"));
+static JOINS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json"));
 
 fn cases() -> Value {
-    serde_json::from_str(CASES).expect("the committed cases are JSON")
+    serde_json::from_str((*CASES)).expect("the committed cases are JSON")
 }
 
 fn number(value: &Value) -> f64 {
@@ -139,7 +141,7 @@ async fn the_copies_of_a_radial_array_are_the_turns_of_the_source() {
 }
 
 fn joined_model(case: &Value) -> ModelSnapshot {
-    let mut snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(JOINS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the joins model decodes");
+    let mut snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*JOINS), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the joins model decodes");
     let template = snapshot.walls.values().next().expect("the joins model has a wall").clone();
     let material = snapshot.materials.keys().next().expect("the joins model has a material").clone();
     snapshot.walls.clear();

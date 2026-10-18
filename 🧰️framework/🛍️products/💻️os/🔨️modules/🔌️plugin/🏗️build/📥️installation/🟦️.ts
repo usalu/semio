@@ -1,7 +1,8 @@
 import {existsSync,readFileSync,readdirSync} from "node:fs";
 import {join} from "node:path";
 import type {PluginBuildTargetV1} from "../../📇️registry/🔎️discovery/🟦️.ts";
-import {hostShimSource,PLUGIN_HOST_SHIM_FILE} from "../../🌐️browser-bundle/🏗️materialization/🟦️.ts";
+import { hostShimSource } from "../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
+import { PLUGIN_HOST_SHIM_FILE } from "../../🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
 import {moduleDirectoryName,parseModuleDirectories} from "../../📇️registry/📦️deployment/🟦️.ts";
 /** 🔎️Reports stale extension artifacts read-only, retaining bytes for the owning producer. `rebuilding`
  * names the extension crates the caller is about to produce and republish in this same run: their install

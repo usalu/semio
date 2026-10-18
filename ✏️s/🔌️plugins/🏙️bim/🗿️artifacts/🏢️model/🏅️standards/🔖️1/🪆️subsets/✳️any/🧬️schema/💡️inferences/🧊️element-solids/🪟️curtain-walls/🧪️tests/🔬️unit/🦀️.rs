@@ -1,4 +1,33 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::CurtainWallType;
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningCut;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::fillers::{door_parts, window_parts};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::profile::{profile_extents, profile_polygon};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_types, dep_value, parts, ElementSolid, SolidBuilder, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::CurtainWall;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::BulgeSeg;
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude, sweep_profile, TriMesh};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::{Affine3, ZPlane};
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::{perp, unit};
+#[allow(unused_imports)]
+use semio_framework_geometry::{Point, Vec2};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::curtain_walls::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::case;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, CurtainPanelOverride, ModelSnapshot, Opening, OpeningKind, Profile};

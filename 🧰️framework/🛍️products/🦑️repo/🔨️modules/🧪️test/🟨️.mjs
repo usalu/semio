@@ -241,8 +241,7 @@ async function testCaseProjects(configFiles, _options, context) {
   const policy = JSON.parse(readFileSync(join(workspaceRoot, policyPath), "utf8"));
   if (featureCandidates.length === 0) return results;
   const libraryModule = new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url);
-  const libraryRevision = createHash("sha256").update(readAuthoritySource(libraryModule)).digest("hex");
-  const { cacheInternals: native, libraryBootstrap,createScriptInputCache } = await import(`${libraryModule.href}?revision=${libraryRevision}`);
+  const { cacheInternals: native, libraryBootstrap, createScriptInputCache } = await (await import(libraryModule.href)).loadCurrentImplementationV1();
   await libraryBootstrap;
   const state = { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
   const javascript = policy.toolchains.javascript;
@@ -337,7 +336,7 @@ async function invokeCurrentImplementationV1(kind, args) {
   const revision = implementationRevision();
   if (revision === loadedRevision) {
     if (kind !== "nodes") return observeDependencies({ receiptPath: join(repositoryBuildGraphWriterDirectoryV1(resolve(args[1].workspaceRoot),"inference"), "test-cases.receipt.json") }, () => testCaseDependencies(...args));
-    const workspaceRoot = resolve(args[2].workspaceRoot), libraryRevision = createHash("sha256").update(readAuthoritySource(new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url))).digest("hex");
+    const workspaceRoot = resolve(args[2].workspaceRoot), libraryRevision = (await import(new URL("../📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs", import.meta.url).href)).currentImplementationRevisionV1();
     return observeInference({ cachePath: join(repositoryBuildGraphWriterDirectoryV1(workspaceRoot,"inference"), "test-cases.json"), key: [revision, libraryRevision, args[0], args[1] ?? null, workspaceRoot] }, () => testCaseProjects(...args));
   }
   const url = new URL(import.meta.url);

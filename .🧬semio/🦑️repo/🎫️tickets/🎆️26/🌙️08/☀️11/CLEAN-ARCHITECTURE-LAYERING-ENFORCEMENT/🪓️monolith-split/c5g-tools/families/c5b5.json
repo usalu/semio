@@ -1,0 +1,12 @@
+{
+ "name": "c5b5",
+ "crates": [
+  "semio-framework-plugin-host-shard",
+  "semio-framework-plugin-host-shard-laws",
+  "semio-framework-plugin-document-media",
+  "semio-framework-plugin-interpreter",
+  "semio-framework-plugin-interpreter-runtime",
+  "semio-framework-plugin-tests-02"
+ ],
+ "note": "CENSUS5-B package 5: the owning crates of the five split files"
+}

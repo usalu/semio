@@ -80,7 +80,9 @@
       "--support-tests",
       "--dependency-tests",
       "--dependency-producer-tests",
-      "--dependency-storage-tests"
+      "--dependency-storage-tests",
+      "--cleanup-tests",
+      "--cleanup-strict"
     ]
   }
 }

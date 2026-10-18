@@ -1,6 +1,6 @@
 //! 🔺️ Diff constructor for `DeleteCurtainWallType`: one deleted curtain wall type entry; refused while a curtain wall still uses the type.
 
-use super::DeleteCurtainWallType;
+use crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall_type::DeleteCurtainWallType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

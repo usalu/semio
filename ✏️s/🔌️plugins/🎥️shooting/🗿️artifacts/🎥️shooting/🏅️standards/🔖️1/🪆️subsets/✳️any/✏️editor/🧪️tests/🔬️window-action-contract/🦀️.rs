@@ -120,7 +120,7 @@ use semio_framework_plugin::WindowMeasure;
 #[allow(unused_imports)]
 use std::collections::HashMap;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
 use crate::{editor::shooting::commands::asset::add_asset, editor::shooting::commands::asset::import_asset, editor::shooting::commands::asset::import_asset_request, editor::shooting::commands::asset::patch_assets, editor::shooting::commands::asset::set_active_asset};
 #[allow(unused_imports)]

@@ -2,8 +2,8 @@
 //! stands on the storey of its wall, so it cannot change its storey unless it changes its wall with it, and a component that changes its family keeps only overrides the new family can evaluate. Moving to
 //! another storey keeps the elevation. Providing only equal values, or no field, is a no-op.
 
-use super::super::component_rules;
-use super::SetComponent;
+use crate::standards::v1::subsets::any::schema::mutations::component_rules;
+use crate::standards::v1::subsets::any::schema::mutations::set_component::SetComponent;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -1,0 +1,221 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+ "keepParentIn": ".",
+ "cap": 950,
+ "aggregator": true,
+ "supportChunk": "🏗️shared-fixtures",
+ "metaDir": {
+  "support": "🏗️shared-fixtures"
+ },
+ "chunks": [
+  {
+   "dir": ".",
+   "leaf": "🟦️.ts"
+  },
+  {
+   "dir": "🏗️shared-fixtures",
+   "units": [
+    93,
+    94,
+    95,
+    96,
+    97,
+    98,
+    99,
+    100,
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111,
+    112,
+    113,
+    114,
+    115,
+    116,
+    117,
+    118,
+    119,
+    120,
+    121,
+    122,
+    123,
+    124,
+    125,
+    126,
+    127,
+    128,
+    129,
+    130,
+    131,
+    132,
+    133,
+    134,
+    135,
+    136,
+    137,
+    138,
+    139
+   ]
+  },
+  {
+   "dir": "🧳️generated-outputs",
+   "ranges": [
+    [
+     9,
+     14
+    ]
+   ]
+  },
+  {
+   "dir": "📦️package-language-handoff",
+   "ranges": [
+    [
+     15,
+     15
+    ]
+   ]
+  },
+  {
+   "dir": "🎫️ticket-protection",
+   "ranges": [
+    [
+     16,
+     17
+    ]
+   ]
+  },
+  {
+   "dir": "🔗️registry-and-cargo-providers",
+   "ranges": [
+    [
+     18,
+     24
+    ]
+   ]
+  },
+  {
+   "dir": "🗂️workspace-taxonomy-authority",
+   "ranges": [
+    [
+     25,
+     31
+    ]
+   ]
+  },
+  {
+   "dir": "🧩️policy-laws",
+   "ranges": [
+    [
+     32,
+     34
+    ]
+   ]
+  },
+  {
+   "dir": "🛠️dev-tooling",
+   "ranges": [
+    [
+     35,
+     45
+    ]
+   ]
+  },
+  {
+   "dir": "🔬️micro-commit",
+   "ranges": [
+    [
+     46,
+     46
+    ]
+   ]
+  },
+  {
+   "dir": "🌐️static-sites-and-boundaries",
+   "ranges": [
+    [
+     47,
+     49
+    ]
+   ]
+  },
+  {
+   "dir": "📝️commit-and-budgets",
+   "ranges": [
+    [
+     50,
+     53
+    ]
+   ]
+  },
+  {
+   "dir": "📖️taxonomy-loading",
+   "ranges": [
+    [
+     54,
+     55
+    ]
+   ]
+  },
+  {
+   "dir": "🧬️mutation-taxonomy",
+   "ranges": [
+    [
+     56,
+     64
+    ]
+   ]
+  },
+  {
+   "dir": "🔭️package-discovery",
+   "ranges": [
+    [
+     65,
+     72
+    ]
+   ]
+  },
+  {
+   "dir": "🎨️artifact-path-projection",
+   "ranges": [
+    [
+     73,
+     92
+    ]
+   ]
+  },
+  {
+   "dir": "🧱️taxonomy-normalization",
+   "ranges": [
+    [
+     140,
+     140
+    ]
+   ]
+  },
+  {
+   "dir": "🧾️generator-preview-and-dispositions",
+   "ranges": [
+    [
+     141,
+     143
+    ]
+   ]
+  },
+  {
+   "dir": "🧿️mutation-ownership",
+   "ranges": [
+    [
+     144,
+     146
+    ]
+   ]
+  }
+ ]
+}

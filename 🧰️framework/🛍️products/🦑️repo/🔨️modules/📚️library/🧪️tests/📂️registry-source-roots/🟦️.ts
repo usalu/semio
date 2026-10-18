@@ -3,7 +3,8 @@ import Ajv from "ajv";
 import { parse } from "@iarna/toml";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseRegistrySourceRoots, registryArtifactSourceRoots, type RegistryCatalogInputView } from "../../🔍️discovery/🟦️.ts";
+import { parseRegistrySourceRoots, type RegistryCatalogInputView } from "../../🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
+import { registryArtifactSourceRoots } from "../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
 import schema from "../../🧬️schema/📂️registry-source-roots/🔣️.json";
 import fixture from "../🧫️fixtures/📂️registry-source-roots/🔣️.json";
 

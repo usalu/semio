@@ -1,0 +1,5 @@
+{
+ "name": "hdr-flowunit",
+ "crates": ["semio-s-artifact-flow-flow-unit-tests", "semio-s-artifact-flow-flow-unit-tests-2", "semio-s-artifact-flow-flow-editor", "semio-s-artifact-flow-flow-editor-leaves", "semio-s-artifact-flow-flow-mutations", "semio-s-artifact-flow-flow-viewer", "semio-s-artifact-flow-flow-inferences", "semio-s-artifact-flow-flow-tests", "semio-s-artifact-flow-flow-config", "semio-s-artifact-flow-flow-schema"],
+ "note": "HDR: flow unit harness behind the testkit idiom and half of the hoisted tests in a companion test crate"
+}

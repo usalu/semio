@@ -231,13 +231,6 @@ pub fn artifact_schema_registered() -> bool {
 mod tests;
 //#endregion 🧪️Tests
 
-//#region 🔁️Re-exports
-pub use crate::DrawingArtboard;
-pub use crate::DrawingImageAsset;
-/// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::DrawingLayerNode;
-//#endregion 🔁️Re-exports
-
 /// 📏️ Admits finite vector coordinates and nonnegative arc radii.
 pub fn valid_path_segment(segment: &PathSegment) -> bool {
     match segment {

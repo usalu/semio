@@ -113,7 +113,7 @@ use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSur
 #[allow(unused_imports)]
 use std::collections::{BTreeMap, HashMap};
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
 use crate::editor::rewriting::document::*;
 #[allow(unused_imports)]

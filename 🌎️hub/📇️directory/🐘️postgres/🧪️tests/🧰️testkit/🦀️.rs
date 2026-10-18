@@ -13,7 +13,7 @@ pub struct PostgresFixture {
 }
 
 impl PostgresFixture {
-    pub(super) fn url(&self) -> &str {
+    pub fn url(&self) -> &str {
         &self.database.url
     }
 

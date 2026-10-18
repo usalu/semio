@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateSheet`: one created sheet entry. The id must be free across every collection, then the sheet must be writable (see `sheet_problem`).
 
-use super::super::elements;
-use super::CreateSheet;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_sheet::CreateSheet;
 use crate::standards::v1::subsets::any::schema::{snapshot::{sheet_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

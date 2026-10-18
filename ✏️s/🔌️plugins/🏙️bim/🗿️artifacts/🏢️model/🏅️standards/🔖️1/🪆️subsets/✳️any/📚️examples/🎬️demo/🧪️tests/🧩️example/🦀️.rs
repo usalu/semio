@@ -1,7 +1,8 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::Inference;
-const SNAPSHOT_JSON: &str = include_str!("../../../../🖼️assets/🎬️demo/📸️snapshot.json");
+use semio_framework_test_fixtures::fixture_text;
+static SNAPSHOT_JSON: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../🪆️subsets/✳️any/🖼️assets/🎬️demo/📸️snapshot.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_demo_parses_and_is_the_documented_scene() {
@@ -30,7 +31,7 @@ async fn bless_the_demo_text() {
     if std::env::var_os("BIM_BLESS").is_none() {
         return;
     }
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖼️assets/🎬️demo");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🪆️subsets/✳️any/🖼️assets/🎬️demo");
     let json = std::fs::read_to_string(root.join("📸️snapshot.json")).expect("the demo snapshot source exists");
     let model: ModelSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the demo snapshot decodes");
     std::fs::write(root.join("🗣️.dsl.semio"), print_dsl(&model)).expect("the demo text is written");
@@ -41,7 +42,7 @@ mod shared {
     use crate::examples::demo::{ASSET_DIR, PRIMARY_TEXT};
     use super::SNAPSHOT_JSON;
 
-    const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: SNAPSHOT_JSON };
+    const ASSET: Asset = Asset { dir: ASSET_DIR, text: PRIMARY_TEXT, json: (*SNAPSHOT_JSON) };
 
     #[semio_framework_async_macros::async_test]
     async fn the_demo_round_trips_validates_and_is_closed() {

@@ -67,7 +67,7 @@
           "const": true
         },
         "declarationSource": {
-          "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit"
+          "const": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema"
         },
         "primitiveEncoding": {
           "type": "object",

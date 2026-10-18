@@ -120,6 +120,4 @@ pub fn sheet() -> String {
     )
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,18 +1,22 @@
 import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
+import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
+import { rustTokens as rustSyntaxTokens, rustTokenPairs } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
 import { join as oracleJoin, normalize as oracleNormalize } from "pathe";
 import ts from "typescript";
-import { inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🟦️.ts";
+import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences } from "../../🔍️discovery/🧷️rust-path-references/🟦️.ts";
+import { inspectRustCargoManifest, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
+import { inspectRustNonRepoJoinBaseSpans } from "../../🔍️discovery/🔀️rust-non-repo-join-bases/🟦️.ts";
 
-const root = resolve(import.meta.dir, "../../../../../../.."), ticket = join(root, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️17/END-TO-END-TAXONOMY-NORMALIZATION");
+const root = resolve(import.meta.dir, "../../../../../../.."), ticket = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR?.trim() || join(root, ".🧬semio/🦑️repo/⚡️cache/🧪️tests/rust-writable-path-authority"));
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/✍️rust-writable-path-authority/🔣️.json"), "utf8"));
 const priorPath = join(root, vector.semantics.preservedFiniteCheckpoint.path), prior = readFileSync(priorPath, "utf8"), priorSyntax = ts.createSourceFile(priorPath, prior, ts.ScriptTarget.Latest, true);
-const sourcePath = resolve(import.meta.dir, "../../🧹️normalization/🟦️.ts"), source = normalizationSourceDeclarations(sourcePath), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
+const sourcePath = resolve(import.meta.dir, "../../🧹️normalization"), source = normalizationSourceDeclarations(sourcePath), syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 type Row = { id: string; source: string; targets: string[]; affected: string[]; condition: string; expected: string };
 type Token = { start: number; end: number; value: string; rewriteKind?: string; physicalTargets?: string[]; physicalInterpretation?: string; unsupportedReason?: string };
 const compilers = [
@@ -32,17 +36,17 @@ function harness(compiler: typeof compilers[number], inspectors: Partial<{ inspe
   const helpers = priorSyntax.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? "")).map((node) => node.getText(priorSyntax)).join("\n");
   const reads: string[] = [];
   const dependencies = { root, ticket, vector, runParent: join(ticket, ...vector.retention.parentSegments), extracted,
-    createHash, existsSync, lstatSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync,
+    createHash, canonicalJson, existsSync, lstatSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync,
     readFileSync: (...args: Parameters<typeof readFileSync>) => { reads.push(String(args[0])); return (readFileSync as any)(...args); },
     basename, dirname, isAbsolute, join, parse, posix, relative, resolve, sep, parseToml, oracleJoin, oracleNormalize,
-    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, ...inspectors };
+    inspectRustAssertionMessageSpans, inspectRustCargoManifest, inspectRustJoinArgumentSpans, inspectRustManifestPathCandidates, inspectRustManifestPathReferences, inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustNonRepoJoinBaseSpans, rustSyntaxTokens, rustTokenPairs, ...inspectors };
   const actual = new Function(...Object.keys(dependencies), compiler.compile(helpers) + "\nreturn { fixture, implementation, cargoOracle, leafSpan };")(...Object.values(dependencies));
   return { ...actual, reads };
 }
 
 test("exact writable route and package registrations preserve the canonical semantic leaf", () => {
   const registration = vector.registration, project = JSON.parse(readFileSync(join(root, registration.projectPath), "utf8"));
-  expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", options: { cwd: dirname(registration.projectPath), command: registration.command } });
+  expect(project.targets[registration.target]).toEqual({ executor: "repo:script", options: { cwd: dirname(registration.projectPath), command: registration.command } });
   const routerText = readFileSync(join(root, registration.routerPath), "utf8"), router = ts.createSourceFile(registration.routerPath, routerText, ts.ScriptTarget.Latest, true), branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node) => { if (ts.isIfStatement(node) && node.expression.getText(router) === 'segments[0] === "' + registration.route + '"') branches.push(node); ts.forEachChild(node, visit); };
   visit(router);
@@ -56,7 +60,7 @@ test("exact writable route and package registrations preserve the canonical sema
 
 test("closed writable authority contract preserves the released finite checkpoint exactly", () => {
   
-  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contract"]).toEqual("rust-writable-path-authority-v1");expect(vector["semantics"]).toEqual({"authority":"immutable-editable-source-and-shared-complete-physical-proof","failure":"conservative-unsupported-never-writable-or-complete-empty","batch":"one-shared-source-proof-per-tokenization-call","required":["exact-current-source-bytes","one-cargo-owner","raw-no-follow-cargo-and-module-edges","unshadowed-inherited-environment","all-raw-target-steps-admitted-and-present","cancellation","unique-nonoverlapping-proof-spans"],"preservedFiniteCheckpoint":{"path":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts","sha256":"949e9c2b3166f5d30cde120c3e93f473ca7b55c3b7cc4552d88155796cafb546","tests":74,"assertions":313}});expect(vector["spanIntegrity"]).toEqual(["duplicate-immutable-span","overlapping-immutable-span","same-span-finite-candidate","same-key-shorter-finite-candidate","covering-finite-candidate"]);expect(vector["registration"]).toEqual({"projectPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json","routerPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts","packagePath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json","target":"test-rust-writable-path-authority","command":"bun ./📜️script.ts test rust-writable-path-authority","packageCommand":"nx run @semio-tech/repo-lib:test-rust-writable-path-authority","route":"rust-writable-path-authority","testPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts"});expect(vector["retention"]).toEqual({"parentSegments":["📓️energy-rust-reference-diagnostics","🧭️writable-path-authority","🧾️runs"],"runPrefix":"🔖️"});
+  expect(vector["schemaVersion"]).toEqual(1);expect(vector["contract"]).toEqual("rust-writable-path-authority-v1");expect(vector["semantics"]).toEqual({"authority":"immutable-editable-source-and-shared-complete-physical-proof","failure":"conservative-unsupported-never-writable-or-complete-empty","batch":"one-shared-source-proof-per-tokenization-call","required":["exact-current-source-bytes","one-cargo-owner","raw-no-follow-cargo-and-module-edges","unshadowed-inherited-environment","all-raw-target-steps-admitted-and-present","cancellation","unique-nonoverlapping-proof-spans"],"preservedFiniteCheckpoint":{"path":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥤️rust-finite-target-consumption/🟦️.ts","sha256":"0df8125a8374c82d4407783070410cf99b06d626538c02088b300afcd67f5800","tests":86,"assertions":436}});expect(vector["spanIntegrity"]).toEqual(["duplicate-immutable-span","overlapping-immutable-span","same-span-finite-candidate","same-key-shorter-finite-candidate","covering-finite-candidate"]);expect(vector["registration"]).toEqual({"projectPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json","routerPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts","packagePath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json","target":"test-rust-writable-path-authority","command":"bun ./📜️script.ts test rust-writable-path-authority","packageCommand":"bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-writable-path-authority","route":"rust-writable-path-authority","testPath":"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/✍️rust-writable-path-authority/🟦️.ts"});expect(vector["retention"]).toEqual({"parentSegments":["📓️energy-rust-reference-diagnostics","🧭️writable-path-authority","🧾️runs"],"runPrefix":"🔖️"});
   
   expect(createHash("sha256").update(prior).digest("hex")).toBe(vector.semantics.preservedFiniteCheckpoint.sha256);
   expect(new Set(vector.cases.map((row: Row) => row.id)).size).toBe(vector.cases.length);
@@ -138,7 +142,7 @@ for (const scenario of [
 ]) test("actual rustc independently proves writable counterexample: " + scenario.id, () => {
   const h = harness(compilers[0]!), row = vector.cases.find((item: Row) => item.id === scenario.id), f = h.fixture(row);
   f.put("🧾️native/🦀️.rs", scenario.entry);
-  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "../🧫️fixtures/✍️rust-writable-path-authority/🔣️.json");
+  const binary = join(f.directory, "🧾️native", process.platform === "win32" ? "🔣️.exe" : "🔣️");
   const compile = Bun.spawnSync(["rustc", "--edition=2021", "--crate-name", "writable_path_authority", join(f.directory, "🧾️native/🦀️.rs"), "-o", binary], { cwd: f.directory, env: { ...process.env, CARGO_MANIFEST_DIR: join(f.directory, "pkg") }, stdout: "pipe", stderr: "pipe" });
   expect(compile.exitCode, compile.stderr.toString()).toBe(0);
   const runtime = Bun.spawnSync([binary], { cwd: f.directory, stdout: "pipe", stderr: "pipe" });

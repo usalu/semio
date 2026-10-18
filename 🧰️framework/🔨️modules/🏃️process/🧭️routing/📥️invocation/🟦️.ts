@@ -1,5 +1,5 @@
 import schema from "./🧬️schema/🔣️.json" with { type: "json" };
-import { compileJsonSchemaSubset, compileExactKeysV1, requireRecord } from "@semio-tech/schema-validator-ts";
+import { compileJsonSchemaSubset, compileExactKeysV1, requireRecord } from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {types} from "node:util";
 
 const scriptPolicyContract = compileJsonSchemaSubset(schema);

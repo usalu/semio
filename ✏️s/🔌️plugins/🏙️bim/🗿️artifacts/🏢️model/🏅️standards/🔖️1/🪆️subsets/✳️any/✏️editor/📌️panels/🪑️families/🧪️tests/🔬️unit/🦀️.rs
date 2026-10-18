@@ -1,4 +1,45 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, inferences::ModelInference};
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::components::{placeable, wall_mounted};
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::BIM_LIBRARY_DOMAIN;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
+#[allow(unused_imports)]
+use crate::editor::bim::panels::properties::input_row;
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::ui_node_list;
+#[allow(unused_imports)]
+use semio_framework_plugin::Buildable;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::HasBase;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LabelText;
+use crate::editor::bim::panels::families::*;
 use crate::editor::bim::fixture::{furnished, placed};
 use protocol::Inference;
 use semio_framework_plugin::ViewModel;

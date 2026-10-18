@@ -1,0 +1,159 @@
+{
+  "valid": [
+    {
+      "name": "empty",
+      "value": {}
+    },
+    {
+      "name": "screen scalars",
+      "value": {
+        "width": 1,
+        "height": 4294967295,
+        "backgroundColorIndex": 255,
+        "pixelAspectRatio": 0
+      }
+    },
+    {
+      "name": "cleared palette",
+      "value": {
+        "gct": null
+      }
+    },
+    {
+      "name": "set palette",
+      "value": {
+        "gct": {
+          "sorted": true,
+          "colors": [
+            {
+              "r": 0,
+              "g": 1,
+              "b": 255
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "image rows",
+      "value": {
+        "images": {
+          "removed": [
+            0
+          ],
+          "modified": [
+            {
+              "index": 1,
+              "diff": {
+                "left": 3,
+                "interlace": true,
+                "lct": null,
+                "indices": [
+                  0,
+                  1
+                ]
+              }
+            }
+          ],
+          "added": [
+            {
+              "index": 2,
+              "image": {
+                "left": 0,
+                "top": 0,
+                "width": 2,
+                "height": 1,
+                "interlace": false,
+                "lct": {
+                  "sorted": true,
+                  "colors": [
+                    {
+                      "r": 0,
+                      "g": 1,
+                      "b": 255
+                    }
+                  ]
+                },
+                "indices": [
+                  0,
+                  1
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "name": "negative width",
+      "value": {
+        "width": -1
+      }
+    },
+    {
+      "name": "width above u32",
+      "value": {
+        "width": 4294967296
+      }
+    },
+    {
+      "name": "index above byte",
+      "value": {
+        "backgroundColorIndex": 256
+      }
+    },
+    {
+      "name": "unknown property",
+      "value": {
+        "extra": 1
+      }
+    },
+    {
+      "name": "modified without diff",
+      "value": {
+        "images": {
+          "modified": [
+            {
+              "index": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "palette without colors",
+      "value": {
+        "gct": {
+          "sorted": true
+        }
+      }
+    },
+    {
+      "name": "added image incomplete",
+      "value": {
+        "images": {
+          "added": [
+            {
+              "index": 0,
+              "image": {
+                "left": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "removed index negative",
+      "value": {
+        "images": {
+          "removed": [
+            -1
+          ]
+        }
+      }
+    }
+  ]
+}

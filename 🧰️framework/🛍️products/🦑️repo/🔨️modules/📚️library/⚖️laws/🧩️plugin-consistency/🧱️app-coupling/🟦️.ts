@@ -1,7 +1,7 @@
 /** 🧱️ Wave 4 plugin consistency policy: cargo artifacts, app coupling, JSON fixtures and ops grammar rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
-import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SKIP_DIRS, policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { existsSync, readFileSync, readdirSync, type Dirent } from "node:fs";
 import { join, relative, resolve } from "node:path";

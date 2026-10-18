@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { transformSync } from "esbuild";
 import ts from "typescript";
-import { isDiscoverySkipDirectory } from "../../🔍️discovery/🟦️.ts";
+import { isDiscoverySkipDirectory } from "../../🔍️discovery/🪧️owner-markers/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -15,8 +15,9 @@ const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures
   execution: { target: string; command: string };
 };
 const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8"));
-const discoverySource = readFileSync(join(repoRoot, library, "🔍️discovery/🟦️.ts"), "utf8");
-const discovery = ts.createSourceFile("discovery.ts", discoverySource, ts.ScriptTarget.Latest, true);
+const discoveryRoot = join(repoRoot, library, "🔍️discovery");
+const discoverySource = readdirSync(discoveryRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => join(discoveryRoot, entry.name, "🟦️.ts")).filter((path) => existsSync(path)).map((path) => readFileSync(path, "utf8")).join("\n");
+const discovery = ts.createSourceFile("discovery.ts", readFileSync(join(discoveryRoot, "🪧️owner-markers", "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
 const declaration = (name: string): string => {
   const rows = discovery.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name);
   if (rows.length !== 1) throw new Error(`Expected exactly one ${name} implementation`);
@@ -25,7 +26,7 @@ const declaration = (name: string): string => {
 const constant = (name: string): string => {
   const rows = discovery.statements.filter(ts.isVariableStatement).filter((node) => node.declarationList.declarations.some((row) => row.name.getText(discovery) === name));
   if (rows.length !== 1) throw new Error(`Expected exactly one ${name} constant`);
-  return rows[0]!.getText(discovery);
+  return rows[0]!.getText(discovery).replace(/^export\s+/u, "");
 };
 const code = `${constant("DISCOVERY_SKIP_DIRS")}\n${constant("CARGO_TARGET_DIR_PATTERN")}\n${declaration("isDiscoverySkipDirectory").replace(/^export\s+/u, "")}\nreturn isDiscoverySkipDirectory;`;
 const compilers = (): string[] => [new Bun.Transpiler({ loader: "ts" }).transformSync(code), transformSync(code, { loader: "ts", target: "es2022" }).code];

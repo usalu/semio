@@ -4,7 +4,7 @@
 //! absolute elevation of every storey on the site follows the site elevation by inference (`storey-levels`).
 //! Whole-list ruling: the boundary is ONE closed plot polygon, so a provided boundary replaces the boundary as one field.
 
-use super::SetSite;
+use crate::standards::v1::subsets::any::schema::mutations::set_site::SetSite;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationOutcome, OutcomeCode};
 

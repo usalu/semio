@@ -2,7 +2,9 @@
 //! `set-classification-system` mutation, what a new template or system is, and the kinds a template applies to as text. The definitions of a template and the entry table of a system are edited by the
 //! `editTemplate` and `editClassification` commands, row by row; the classification browser assigns codes.
 
-use super::{partial, Created, FieldRow, InferredRow};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::editor::bim::entities::{properties};
+use crate::editor::bim::entities::{partial, Created, FieldRow, InferredRow};
 use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ClassificationSystemPatch}, snapshot::{ClassificationSystem, ModelSnapshot, PropertyTemplate, TemplateTarget}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
@@ -88,6 +90,4 @@ pub fn create_classification_system(_: &ModelSnapshot, id: &str, _parent: &str, 
 }
 //#endregion 🔖️Create
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

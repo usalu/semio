@@ -8,6 +8,8 @@ use semio_framework_value::ValueRefusalKind;
 use semio_s_artifact_draw_drawing_model::snapshot::{DrawingSnapshot, retire_decoded_drawing_snapshot};
 use store::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,Projection,Reconstruction,FloatColumn,FloatRow,insert_ieee754}};
 use std::collections::BTreeMap;
+use crate::DrawingTransform;
+use crate::DrawingTraceParams;
 const SCHEMA:&str=include_str!("🗄️.sql");
 fn ordinal(value:usize)->Result<i64,ValueError>{i64::try_from(value).map_err(|e|ValueError::new(ValueRefusalKind::InvalidValue,e.to_string()))}
 fn scalar(p:&mut Projection<'_,'_>,value:f64)->Result<i64,ValueError>{insert_ieee754(p,"draw_scalar",&[Cell::Real(value)],&[FloatColumn::Binary64(1)])}

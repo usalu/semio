@@ -24,7 +24,7 @@ import { DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1, type ArtifactFronti
 import { artifactFrontierIsGenesisForV1, artifactFrontierIsEditedForV1 } from "@semio-tech/framework/directory/schema";
 import type { TestBrowserHostRootsV1 } from "@semio-tech/s-dev-catalog-ts/browser-host";
 import { withTestBrowserHostV1 } from "@semio-tech/s-dev-catalog-ts/browser-host/staging";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { issueLocalCredential } from "../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";

@@ -2,7 +2,7 @@
 // The Rust sibling asserts it against the live builder AND the live solve; this half asserts the
 // fixture is internally coherent, so a hand-edit that no Rust test happens to cover still fails.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import outcome from "../🧫️fixtures/🧩️example/🔣️.json";
 

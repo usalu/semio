@@ -1,11 +1,11 @@
-use crate::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::config::MapWindowConfig;
 use semio_framework_plugin::SurfaceKind;
 #[allow(unused_imports)]
-use crate::editor::gis2d::terminology::Gis2dPlayLabels;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::Gis2dPlayLabels;
 #[allow(unused_imports)]
-use crate::{editor::gis2d::constants_and_io::Gis2dInteractionSnapshot, editor::gis2d::constants_and_io::GIS_MAP_LAYER_IDS};
+use semio_s_artifact_gis_gismap_gis2d::{editor::gis2d::constants_and_io::Gis2dInteractionSnapshot, editor::gis2d::constants_and_io::GIS_MAP_LAYER_IDS};
 #[allow(unused_imports)]
-use crate::tile_coordinates::gis_policy::gis_map_scene_descriptor_json;
+use semio_s_artifact_gis_gismap_gis2d::tile_coordinates::gis_policy::gis_map_scene_descriptor_json;
 #[allow(unused_imports)]
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as ContractSurfaceKind;
 #[allow(unused_imports)]
@@ -28,11 +28,11 @@ use semio_framework_plugin::WindowOptions;
 use semio_framework_surface::tiled_map::clamp_map_layer_weight;
 #[allow(unused_imports)]
 use std::collections::HashMap;
-use crate::editor::gis2d::modes::edit::windows::map::*;
-use crate::editor::gis2d::terminology::gis2d_labels;
-use crate::editor::gis2d::unit_tests::context::{app, close, main_window_measures, render as render_body, render_tiled_map_scene, Gis2dApp};
-use crate::editor::gis2d::{GIS2D_FEATURE_GRANULARITY, GIS2D_INTERACTION_DOMAIN};
-use crate::GisMapSnapshot;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map::*;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::terminology::gis2d_labels;
+use crate::unit_tests::context::{app, close, main_window_measures, render as render_body, render_tiled_map_scene, Gis2dApp};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::{GIS2D_FEATURE_GRANULARITY, GIS2D_INTERACTION_DOMAIN};
+use semio_s_artifact_gis_gismap_gis2d::GisMapSnapshot;
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{PluginApp, INTERACTION_HOVER_ACTION_ID, INTERACTION_SELECT_ACTION_ID};
 

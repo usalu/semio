@@ -1,6 +1,6 @@
 import type { PdfAdmittedStreamRole } from "../../🪪️stream-roles/🟦️.ts";
 /** 🧹️ Direct remove-object TypeScript payload. */
-import type { ObjRef } from '../../📸️snapshot/🟦️.ts';
+import type { ObjRef } from '../../📸️snapshot/🧩️cos/🟦️.ts';
 export interface RemoveObjectMutation {
   mutation: 'removeObject';
   id: ObjRef;

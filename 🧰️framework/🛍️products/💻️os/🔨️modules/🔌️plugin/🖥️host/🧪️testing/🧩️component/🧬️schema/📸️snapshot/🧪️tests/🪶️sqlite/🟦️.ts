@@ -14,7 +14,7 @@ test("published Count snapshot schema admits exactly the complete i32 owner",()=
  for(const value of [{count:-2147483649},{count:2147483648},{count:0.5},{count:"1"},{count:null},{count:0,extra:1},{}])expect(validate(value)).toBe(false);
 });
 test("independent SQLite and closed neutral Count corpus preserve every stored field",()=>{
- const fixturePath=join(snapshot,"🧫️fixtures/🪶️sqlite/🔣️.json");expect(existsSync(fixturePath)).toBe(true);
+ const fixturePath=join(snapshot,"../../🧪️tests/🧫️fixtures/📸️snapshot/🪶️sqlite/🔣️.json");expect(existsSync(fixturePath)).toBe(true);
  const fixture=JSON.parse(readFileSync(fixturePath,"utf8")) as {owner:string;counts:number[];rows:number[][];refused:{id:string;count:unknown}[];table:string;columns:string[];identity:number;encodings:string[]};
  const sql=readFileSync(join(snapshot,"🪶️sqlite/🗄️.sql"),"utf8");
  for(const [index,count] of fixture.counts.entries()){

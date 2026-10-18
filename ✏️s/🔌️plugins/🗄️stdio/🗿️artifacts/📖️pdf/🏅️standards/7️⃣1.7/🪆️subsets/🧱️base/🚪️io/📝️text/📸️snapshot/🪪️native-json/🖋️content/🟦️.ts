@@ -1,6 +1,7 @@
 import {pdfImageBodyFromNativeJson} from "../🖼️resource/🟦️.ts";
 /** 🖋️ Explicit native content JSON admission into the canonical owned PDF operator model. */
-import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInlineImage, Binary64 } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfOp, PdfTextString, PdfTextArrayItem, PdfPropertyList, PdfInlineImage } from "../../../../../🧬️schema/📸️snapshot/🖋️content/🟦️.ts";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import { record, array, text, boolean, integer, integers, real, reals, pdfDictionaryFromNativeJson, pdfCosFromNativeJson, pdfColorFromNativeJson, filters } from "../🟦️.ts";
 
 /** 📐️ Admit a finite native six-component matrix as six exact owned IEEE words. */

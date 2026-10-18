@@ -1,0 +1,5146 @@
+[
+ {
+  "idx": 0,
+  "kind": "func",
+  "name": "TestRepoMetaDirUsesSemioRoot",
+  "recv": "",
+  "start": 39,
+  "end": 50
+ },
+ {
+  "idx": 1,
+  "kind": "func",
+  "name": "TestMain",
+  "recv": "",
+  "start": 56,
+  "end": 59
+ },
+ {
+  "idx": 2,
+  "kind": "func",
+  "name": "findTestRepoRoot",
+  "recv": "",
+  "start": 61,
+  "end": 88
+ },
+ {
+  "idx": 3,
+  "kind": "func",
+  "name": "firstJSONLine",
+  "recv": "",
+  "start": 90,
+  "end": 99
+ },
+ {
+  "idx": 4,
+  "kind": "func",
+  "name": "writeExecutableFile",
+  "recv": "",
+  "start": 101,
+  "end": 106
+ },
+ {
+  "idx": 5,
+  "kind": "func",
+  "name": "execCommandWithTimeout",
+  "recv": "",
+  "start": 108,
+  "end": 127
+ },
+ {
+  "idx": 6,
+  "kind": "func",
+  "name": "parseTicketOpenResult",
+  "recv": "",
+  "start": 129,
+  "end": 155
+ },
+ {
+  "idx": 7,
+  "kind": "func",
+  "name": "parseGoalCreateID",
+  "recv": "",
+  "start": 157,
+  "end": 175
+ },
+ {
+  "idx": 8,
+  "kind": "func",
+  "name": "TestInteractionUnmarshalAuthorShapes",
+  "recv": "",
+  "start": 177,
+  "end": 216
+ },
+ {
+  "idx": 9,
+  "kind": "func",
+  "name": "TestContributorDiscovery",
+  "recv": "",
+  "start": 218,
+  "end": 300
+ },
+ {
+  "idx": 10,
+  "kind": "func",
+  "name": "TestMcpBootstrapAssetsStayRepoRelative",
+  "recv": "",
+  "start": 302,
+  "end": 445
+ },
+ {
+  "idx": 11,
+  "kind": "func",
+  "name": "TestGoalPathToComposeID",
+  "recv": "",
+  "start": 447,
+  "end": 468
+ },
+ {
+  "idx": 12,
+  "kind": "func",
+  "name": "TestComposeIDToGoalPath",
+  "recv": "",
+  "start": 470,
+  "end": 483
+ },
+ {
+  "idx": 13,
+  "kind": "func",
+  "name": "TestContributorComposeIDRoundTrip",
+  "recv": "",
+  "start": 485,
+  "end": 504
+ },
+ {
+  "idx": 14,
+  "kind": "func",
+  "name": "TestTicketMarshalJSONGoalToComposeID",
+  "recv": "",
+  "start": 506,
+  "end": 536
+ },
+ {
+  "idx": 15,
+  "kind": "func",
+  "name": "TestTicketUnmarshalJSONComposeIDToGoalPath",
+  "recv": "",
+  "start": 538,
+  "end": 567
+ },
+ {
+  "idx": 16,
+  "kind": "func",
+  "name": "TestGoalMarshalJSONParentToComposeID",
+  "recv": "",
+  "start": 569,
+  "end": 591
+ },
+ {
+  "idx": 17,
+  "kind": "func",
+  "name": "TestTicketGoalRoundTripThroughJSON",
+  "recv": "",
+  "start": 593,
+  "end": 624
+ },
+ {
+  "idx": 18,
+  "kind": "func",
+  "name": "parseTicketCloseStatus",
+  "recv": "",
+  "start": 628,
+  "end": 643
+ },
+ {
+  "idx": 19,
+  "kind": "func",
+  "name": "parseTicketReopenStatus",
+  "recv": "",
+  "start": 645,
+  "end": 660
+ },
+ {
+  "idx": 20,
+  "kind": "func",
+  "name": "testEngineFactory",
+  "recv": "",
+  "start": 662,
+  "end": 677
+ },
+ {
+  "idx": 21,
+  "kind": "func",
+  "name": "getTestExecutor",
+  "recv": "",
+  "start": 679,
+  "end": 691
+ },
+ {
+  "idx": 22,
+  "kind": "func",
+  "name": "TestExhaustiveBundlesNonEmpty",
+  "recv": "",
+  "start": 695,
+  "end": 717
+ },
+ {
+  "idx": 23,
+  "kind": "func",
+  "name": "TestExhaustiveContributorsNonEmpty",
+  "recv": "",
+  "start": 719,
+  "end": 740
+ },
+ {
+  "idx": 24,
+  "kind": "func",
+  "name": "TestExhaustiveTicketsNonEmpty",
+  "recv": "",
+  "start": 742,
+  "end": 763
+ },
+ {
+  "idx": 25,
+  "kind": "func",
+  "name": "TestExhaustivePoliciesNonEmpty",
+  "recv": "",
+  "start": 765,
+  "end": 786
+ },
+ {
+  "idx": 26,
+  "kind": "func",
+  "name": "TestExhaustiveStatutesNonEmpty",
+  "recv": "",
+  "start": 788,
+  "end": 809
+ },
+ {
+  "idx": 27,
+  "kind": "func",
+  "name": "TestPolicyStatutesHaveMetadata",
+  "recv": "",
+  "start": 811,
+  "end": 823
+ },
+ {
+  "idx": 28,
+  "kind": "func",
+  "name": "TestExhaustiveFoldersNonEmpty",
+  "recv": "",
+  "start": 825,
+  "end": 846
+ },
+ {
+  "idx": 29,
+  "kind": "func",
+  "name": "TestExhaustiveFilesNonEmpty",
+  "recv": "",
+  "start": 848,
+  "end": 869
+ },
+ {
+  "idx": 30,
+  "kind": "func",
+  "name": "TestExhaustiveBreachsNonEmpty",
+  "recv": "",
+  "start": 871,
+  "end": 895
+ },
+ {
+  "idx": 31,
+  "kind": "func",
+  "name": "TestExhaustiveTicketTitleValidation",
+  "recv": "",
+  "start": 897,
+  "end": 957
+ },
+ {
+  "idx": 32,
+  "kind": "func",
+  "name": "TestBuildTechnologyLinkArgs",
+  "recv": "",
+  "start": 959,
+  "end": 970
+ },
+ {
+  "idx": 33,
+  "kind": "func",
+  "name": "TestExhaustiveFilterTicketWorkspaceFiles",
+  "recv": "",
+  "start": 972,
+  "end": 995
+ },
+ {
+  "idx": 34,
+  "kind": "func",
+  "name": "TestExhaustiveNormalizeTicketFileInput",
+  "recv": "",
+  "start": 997,
+  "end": 1024
+ },
+ {
+  "idx": 35,
+  "kind": "func",
+  "name": "TestMatchesIgnorePatternDirectoryCoverage",
+  "recv": "",
+  "start": 1026,
+  "end": 1047
+ },
+ {
+  "idx": 36,
+  "kind": "func",
+  "name": "TestGlobByExtensionSkipsIgnoredDirectoryRoot",
+  "recv": "",
+  "start": 1049,
+  "end": 1071
+ },
+ {
+  "idx": 37,
+  "kind": "func",
+  "name": "TestStreamAndListTicketsIgnoreNestedWorkspaceFiles",
+  "recv": "",
+  "start": 1073,
+  "end": 1120
+ },
+ {
+  "idx": 38,
+  "kind": "func",
+  "name": "TestExhaustiveNodesAndEdgesQuick",
+  "recv": "",
+  "start": 1122,
+  "end": 1235
+ },
+ {
+  "idx": 39,
+  "kind": "func",
+  "name": "TestExhaustiveNodesAndEdges",
+  "recv": "",
+  "start": 1239,
+  "end": 1436
+ },
+ {
+  "idx": 40,
+  "kind": "func",
+  "name": "TestExhaustiveNodeQuery",
+  "recv": "",
+  "start": 1438,
+  "end": 1482
+ },
+ {
+  "idx": 41,
+  "kind": "func",
+  "name": "TestExhaustiveSectionsEdges",
+  "recv": "",
+  "start": 1484,
+  "end": 1568
+ },
+ {
+  "idx": 42,
+  "kind": "func",
+  "name": "TestExhaustiveDefinitionsEdges",
+  "recv": "",
+  "start": 1570,
+  "end": 1649
+ },
+ {
+  "idx": 43,
+  "kind": "func",
+  "name": "TestExhaustiveDefinitionKind",
+  "recv": "",
+  "start": 1651,
+  "end": 1713
+ },
+ {
+  "idx": 44,
+  "kind": "func",
+  "name": "executeCommand",
+  "recv": "",
+  "start": 1717,
+  "end": 1732
+ },
+ {
+  "idx": 45,
+  "kind": "func",
+  "name": "executeCommandMd",
+  "recv": "",
+  "start": 1734,
+  "end": 1747
+ },
+ {
+  "idx": 46,
+  "kind": "type",
+  "name": "recordingGraphQLExecutor",
+  "recv": "",
+  "start": 1749,
+  "end": 1751
+ },
+ {
+  "idx": 47,
+  "kind": "method",
+  "name": "Execute",
+  "recv": "recordingGraphQLExecutor",
+  "start": 1753,
+  "end": 1756
+ },
+ {
+  "idx": 48,
+  "kind": "func",
+  "name": "TestSyncCommandRunsGitHubSynchronization",
+  "recv": "",
+  "start": 1758,
+  "end": 1824
+ },
+ {
+  "idx": 49,
+  "kind": "func",
+  "name": "toolOutputText",
+  "recv": "",
+  "start": 1826,
+  "end": 1832
+ },
+ {
+  "idx": 50,
+  "kind": "var",
+  "name": "relativeTimePattern",
+  "recv": "",
+  "start": 1834,
+  "end": 1834
+ },
+ {
+  "idx": 51,
+  "kind": "func",
+  "name": "normalizeRelativeTimes",
+  "recv": "",
+  "start": 1836,
+  "end": 1838
+ },
+ {
+  "idx": 52,
+  "kind": "func",
+  "name": "TestExhaustiveCodebaseCommand",
+  "recv": "",
+  "start": 1842,
+  "end": 1854
+ },
+ {
+  "idx": 53,
+  "kind": "func",
+  "name": "TestAnalyzeCommand",
+  "recv": "",
+  "start": 1858,
+  "end": 1864
+ },
+ {
+  "idx": 54,
+  "kind": "func",
+  "name": "TestAnalyzeFile",
+  "recv": "",
+  "start": 1866,
+  "end": 1871
+ },
+ {
+  "idx": 55,
+  "kind": "func",
+  "name": "TestAnalyzeReadsBreachCacheJSON",
+  "recv": "",
+  "start": 1875,
+  "end": 1912
+ },
+ {
+  "idx": 56,
+  "kind": "func",
+  "name": "TestFixCommand",
+  "recv": "",
+  "start": 1914,
+  "end": 1923
+ },
+ {
+  "idx": 57,
+  "kind": "func",
+  "name": "TestFileHeaderId",
+  "recv": "",
+  "start": 1925,
+  "end": 2019
+ },
+ {
+  "idx": 58,
+  "kind": "func",
+  "name": "TestDeriveFileKind",
+  "recv": "",
+  "start": 2021,
+  "end": 2081
+ },
+ {
+  "idx": 59,
+  "kind": "func",
+  "name": "TestFileKindEmoji",
+  "recv": "",
+  "start": 2083,
+  "end": 2109
+ },
+ {
+  "idx": 60,
+  "kind": "func",
+  "name": "TestFixApplyAutofixes",
+  "recv": "",
+  "start": 2111,
+  "end": 2179
+ },
+ {
+  "idx": 61,
+  "kind": "func",
+  "name": "TestFormatterPlansCoverRegisteredLanguages",
+  "recv": "",
+  "start": 2181,
+  "end": 2193
+ },
+ {
+  "idx": 62,
+  "kind": "func",
+  "name": "TestApplyAutofixesRunsFormatterAfterEdit",
+  "recv": "",
+  "start": 2195,
+  "end": 2262
+ },
+ {
+  "idx": 63,
+  "kind": "func",
+  "name": "TestApplyAutofixesFormatterFallbackNormalizesText",
+  "recv": "",
+  "start": 2264,
+  "end": 2299
+ },
+ {
+  "idx": 64,
+  "kind": "func",
+  "name": "TestFixSectionMissingEndName",
+  "recv": "",
+  "start": 2301,
+  "end": 2332
+ },
+ {
+  "idx": 65,
+  "kind": "func",
+  "name": "TestFixSectionNameMismatch",
+  "recv": "",
+  "start": 2334,
+  "end": 2365
+ },
+ {
+  "idx": 66,
+  "kind": "func",
+  "name": "TestFixSectionEmpty",
+  "recv": "",
+  "start": 2367,
+  "end": 2398
+ },
+ {
+  "idx": 67,
+  "kind": "func",
+  "name": "TestFixInlineComment",
+  "recv": "",
+  "start": 2400,
+  "end": 2431
+ },
+ {
+  "idx": 68,
+  "kind": "func",
+  "name": "TestFixBlockComment",
+  "recv": "",
+  "start": 2433,
+  "end": 2464
+ },
+ {
+  "idx": 69,
+  "kind": "func",
+  "name": "TestFixJSDocComment",
+  "recv": "",
+  "start": 2466,
+  "end": 2497
+ },
+ {
+  "idx": 70,
+  "kind": "func",
+  "name": "TestFixMultipleBreachsSameFile",
+  "recv": "",
+  "start": 2499,
+  "end": 2540
+ },
+ {
+  "idx": 71,
+  "kind": "func",
+  "name": "TestFixImprovedCommentLogic",
+  "recv": "",
+  "start": 2542,
+  "end": 2623
+ },
+ {
+  "idx": 72,
+  "kind": "func",
+  "name": "TestFixConfigIgnored",
+  "recv": "",
+  "start": 2625,
+  "end": 2645
+ },
+ {
+  "idx": 73,
+  "kind": "func",
+  "name": "TestScanCommentsGo",
+  "recv": "",
+  "start": 2647,
+  "end": 2752
+ },
+ {
+  "idx": 74,
+  "kind": "func",
+  "name": "TestScanCommentsPython",
+  "recv": "",
+  "start": 2754,
+  "end": 2851
+ },
+ {
+  "idx": 75,
+  "kind": "func",
+  "name": "TestScanCommentsCSharp",
+  "recv": "",
+  "start": 2853,
+  "end": 2929
+ },
+ {
+  "idx": 76,
+  "kind": "func",
+  "name": "TestScanCommentsTypeScript",
+  "recv": "",
+  "start": 2931,
+  "end": 2993
+ },
+ {
+  "idx": 77,
+  "kind": "func",
+  "name": "TestScanCommentsShell",
+  "recv": "",
+  "start": 2995,
+  "end": 3025
+ },
+ {
+  "idx": 78,
+  "kind": "func",
+  "name": "TestScanCommentsRust",
+  "recv": "",
+  "start": 3027,
+  "end": 3060
+ },
+ {
+  "idx": 79,
+  "kind": "func",
+  "name": "TestScanCommentsAutofix",
+  "recv": "",
+  "start": 3062,
+  "end": 3176
+ },
+ {
+  "idx": 80,
+  "kind": "func",
+  "name": "TestEmojiVariationAutofix",
+  "recv": "",
+  "start": 3178,
+  "end": 3284
+ },
+ {
+  "idx": 81,
+  "kind": "func",
+  "name": "TestFixNonAutofixableNotFixed",
+  "recv": "",
+  "start": 3286,
+  "end": 3336
+ },
+ {
+  "idx": 82,
+  "kind": "func",
+  "name": "TestExhaustiveFixViaGraphQL",
+  "recv": "",
+  "start": 3338,
+  "end": 3369
+ },
+ {
+  "idx": 83,
+  "kind": "func",
+  "name": "TestFixViaRepoContext",
+  "recv": "",
+  "start": 3371,
+  "end": 3392
+ },
+ {
+  "idx": 84,
+  "kind": "func",
+  "name": "TestFixIdempotent",
+  "recv": "",
+  "start": 3394,
+  "end": 3420
+ },
+ {
+  "idx": 85,
+  "kind": "func",
+  "name": "TestFixNestedSections",
+  "recv": "",
+  "start": 3422,
+  "end": 3455
+ },
+ {
+  "idx": 86,
+  "kind": "func",
+  "name": "TestFixExtractFileFromScope",
+  "recv": "",
+  "start": 3457,
+  "end": 3474
+ },
+ {
+  "idx": 87,
+  "kind": "func",
+  "name": "TestFixStatuteMeta",
+  "recv": "",
+  "start": 3476,
+  "end": 3512
+ },
+ {
+  "idx": 88,
+  "kind": "func",
+  "name": "TestFindMatchingSectionStartName",
+  "recv": "",
+  "start": 3514,
+  "end": 3535
+ },
+ {
+  "idx": 89,
+  "kind": "func",
+  "name": "TestIsTestFunctionName",
+  "recv": "",
+  "start": 3537,
+  "end": 3568
+ },
+ {
+  "idx": 90,
+  "kind": "func",
+  "name": "TestDefinitionKindTestEmoji",
+  "recv": "",
+  "start": 3570,
+  "end": 3577
+ },
+ {
+  "idx": 91,
+  "kind": "func",
+  "name": "TestDefinitionKindTestCode",
+  "recv": "",
+  "start": 3579,
+  "end": 3590
+ },
+ {
+  "idx": 92,
+  "kind": "func",
+  "name": "TestDefinitionKindTestIsValid",
+  "recv": "",
+  "start": 3592,
+  "end": 3596
+ },
+ {
+  "idx": 93,
+  "kind": "func",
+  "name": "TestBuildDefinitionIDTestKind",
+  "recv": "",
+  "start": 3598,
+  "end": 3623
+ },
+ {
+  "idx": 94,
+  "kind": "func",
+  "name": "TestDetectBundleLanguage",
+  "recv": "",
+  "start": 3625,
+  "end": 3684
+ },
+ {
+  "idx": 95,
+  "kind": "func",
+  "name": "TestUnflattenTestName",
+  "recv": "",
+  "start": 3686,
+  "end": 3707
+ },
+ {
+  "idx": 96,
+  "kind": "func",
+  "name": "TestResolveTestScopes",
+  "recv": "",
+  "start": 3709,
+  "end": 3728
+ },
+ {
+  "idx": 97,
+  "kind": "func",
+  "name": "TestCollectGoTestsInSection",
+  "recv": "",
+  "start": 3730,
+  "end": 3769
+ },
+ {
+  "idx": 98,
+  "kind": "func",
+  "name": "TestResolveTestFunctionName",
+  "recv": "",
+  "start": 3771,
+  "end": 3798
+ },
+ {
+  "idx": 99,
+  "kind": "func",
+  "name": "TestTestCommandHelp",
+  "recv": "",
+  "start": 3800,
+  "end": 3808
+ },
+ {
+  "idx": 100,
+  "kind": "type",
+  "name": "testExportContext",
+  "recv": "",
+  "start": 3814,
+  "end": 3824
+ },
+ {
+  "idx": 101,
+  "kind": "method",
+  "name": "GetRootDir",
+  "recv": "testExportContext",
+  "start": 3826,
+  "end": 3826
+ },
+ {
+  "idx": 102,
+  "kind": "method",
+  "name": "GetTechnologies",
+  "recv": "testExportContext",
+  "start": 3827,
+  "end": 3827
+ },
+ {
+  "idx": 103,
+  "kind": "method",
+  "name": "GetBundles",
+  "recv": "testExportContext",
+  "start": 3828,
+  "end": 3828
+ },
+ {
+  "idx": 104,
+  "kind": "method",
+  "name": "GetFolders",
+  "recv": "testExportContext",
+  "start": 3829,
+  "end": 3829
+ },
+ {
+  "idx": 105,
+  "kind": "method",
+  "name": "GetFiles",
+  "recv": "testExportContext",
+  "start": 3830,
+  "end": 3830
+ },
+ {
+  "idx": 106,
+  "kind": "method",
+  "name": "GetSections",
+  "recv": "testExportContext",
+  "start": 3831,
+  "end": 3831
+ },
+ {
+  "idx": 107,
+  "kind": "method",
+  "name": "GetDefinitions",
+  "recv": "testExportContext",
+  "start": 3832,
+  "end": 3832
+ },
+ {
+  "idx": 108,
+  "kind": "method",
+  "name": "GetCheckpoints",
+  "recv": "testExportContext",
+  "start": 3833,
+  "end": 3833
+ },
+ {
+  "idx": 109,
+  "kind": "method",
+  "name": "GetContributors",
+  "recv": "testExportContext",
+  "start": 3834,
+  "end": 3834
+ },
+ {
+  "idx": 110,
+  "kind": "method",
+  "name": "GetGoals",
+  "recv": "testExportContext",
+  "start": 3835,
+  "end": 3835
+ },
+ {
+  "idx": 111,
+  "kind": "method",
+  "name": "GetTickets",
+  "recv": "testExportContext",
+  "start": 3836,
+  "end": 3838
+ },
+ {
+  "idx": 112,
+  "kind": "method",
+  "name": "GetPolicies",
+  "recv": "testExportContext",
+  "start": 3839,
+  "end": 3839
+ },
+ {
+  "idx": 113,
+  "kind": "method",
+  "name": "GetDrafts",
+  "recv": "testExportContext",
+  "start": 3840,
+  "end": 3840
+ },
+ {
+  "idx": 114,
+  "kind": "method",
+  "name": "GetTodos",
+  "recv": "testExportContext",
+  "start": 3841,
+  "end": 3841
+ },
+ {
+  "idx": 115,
+  "kind": "method",
+  "name": "GetStatutes",
+  "recv": "testExportContext",
+  "start": 3842,
+  "end": 3842
+ },
+ {
+  "idx": 116,
+  "kind": "method",
+  "name": "Analyze",
+  "recv": "testExportContext",
+  "start": 3843,
+  "end": 3845
+ },
+ {
+  "idx": 117,
+  "kind": "method",
+  "name": "Fix",
+  "recv": "testExportContext",
+  "start": 3846,
+  "end": 3846
+ },
+ {
+  "idx": 118,
+  "kind": "method",
+  "name": "GoalCreate",
+  "recv": "testExportContext",
+  "start": 3847,
+  "end": 3847
+ },
+ {
+  "idx": 119,
+  "kind": "method",
+  "name": "GoalChange",
+  "recv": "testExportContext",
+  "start": 3848,
+  "end": 3848
+ },
+ {
+  "idx": 120,
+  "kind": "method",
+  "name": "GoalClose",
+  "recv": "testExportContext",
+  "start": 3849,
+  "end": 3849
+ },
+ {
+  "idx": 121,
+  "kind": "method",
+  "name": "GoalReopen",
+  "recv": "testExportContext",
+  "start": 3850,
+  "end": 3850
+ },
+ {
+  "idx": 122,
+  "kind": "method",
+  "name": "GoalDelete",
+  "recv": "testExportContext",
+  "start": 3851,
+  "end": 3851
+ },
+ {
+  "idx": 123,
+  "kind": "method",
+  "name": "TodoCreate",
+  "recv": "testExportContext",
+  "start": 3852,
+  "end": 3852
+ },
+ {
+  "idx": 124,
+  "kind": "method",
+  "name": "TodoChange",
+  "recv": "testExportContext",
+  "start": 3853,
+  "end": 3853
+ },
+ {
+  "idx": 125,
+  "kind": "method",
+  "name": "TodoDelete",
+  "recv": "testExportContext",
+  "start": 3854,
+  "end": 3854
+ },
+ {
+  "idx": 126,
+  "kind": "method",
+  "name": "DraftCreate",
+  "recv": "testExportContext",
+  "start": 3855,
+  "end": 3855
+ },
+ {
+  "idx": 127,
+  "kind": "method",
+  "name": "DraftDelete",
+  "recv": "testExportContext",
+  "start": 3856,
+  "end": 3856
+ },
+ {
+  "idx": 128,
+  "kind": "method",
+  "name": "TicketOpen",
+  "recv": "testExportContext",
+  "start": 3857,
+  "end": 3857
+ },
+ {
+  "idx": 129,
+  "kind": "method",
+  "name": "TicketClose",
+  "recv": "testExportContext",
+  "start": 3858,
+  "end": 3858
+ },
+ {
+  "idx": 130,
+  "kind": "method",
+  "name": "TicketReopen",
+  "recv": "testExportContext",
+  "start": 3859,
+  "end": 3859
+ },
+ {
+  "idx": 131,
+  "kind": "method",
+  "name": "TicketChange",
+  "recv": "testExportContext",
+  "start": 3860,
+  "end": 3860
+ },
+ {
+  "idx": 132,
+  "kind": "method",
+  "name": "TicketDelete",
+  "recv": "testExportContext",
+  "start": 3861,
+  "end": 3861
+ },
+ {
+  "idx": 133,
+  "kind": "method",
+  "name": "FolderCreate",
+  "recv": "testExportContext",
+  "start": 3862,
+  "end": 3862
+ },
+ {
+  "idx": 134,
+  "kind": "method",
+  "name": "FolderMove",
+  "recv": "testExportContext",
+  "start": 3863,
+  "end": 3863
+ },
+ {
+  "idx": 135,
+  "kind": "method",
+  "name": "FolderDelete",
+  "recv": "testExportContext",
+  "start": 3864,
+  "end": 3864
+ },
+ {
+  "idx": 136,
+  "kind": "method",
+  "name": "FileCreate",
+  "recv": "testExportContext",
+  "start": 3865,
+  "end": 3865
+ },
+ {
+  "idx": 137,
+  "kind": "method",
+  "name": "FileMove",
+  "recv": "testExportContext",
+  "start": 3866,
+  "end": 3866
+ },
+ {
+  "idx": 138,
+  "kind": "method",
+  "name": "FileDelete",
+  "recv": "testExportContext",
+  "start": 3867,
+  "end": 3867
+ },
+ {
+  "idx": 139,
+  "kind": "method",
+  "name": "SectionCreate",
+  "recv": "testExportContext",
+  "start": 3868,
+  "end": 3870
+ },
+ {
+  "idx": 140,
+  "kind": "method",
+  "name": "SectionMove",
+  "recv": "testExportContext",
+  "start": 3871,
+  "end": 3873
+ },
+ {
+  "idx": 141,
+  "kind": "method",
+  "name": "SectionDelete",
+  "recv": "testExportContext",
+  "start": 3874,
+  "end": 3874
+ },
+ {
+  "idx": 142,
+  "kind": "method",
+  "name": "Integrate",
+  "recv": "testExportContext",
+  "start": 3875,
+  "end": 3877
+ },
+ {
+  "idx": 143,
+  "kind": "method",
+  "name": "Extract",
+  "recv": "testExportContext",
+  "start": 3878,
+  "end": 3880
+ },
+ {
+  "idx": 144,
+  "kind": "method",
+  "name": "ContributorAdd",
+  "recv": "testExportContext",
+  "start": 3881,
+  "end": 3883
+ },
+ {
+  "idx": 145,
+  "kind": "method",
+  "name": "ContributorRemove",
+  "recv": "testExportContext",
+  "start": 3884,
+  "end": 3884
+ },
+ {
+  "idx": 146,
+  "kind": "method",
+  "name": "SyncManagement",
+  "recv": "testExportContext",
+  "start": 3885,
+  "end": 3885
+ },
+ {
+  "idx": 147,
+  "kind": "func",
+  "name": "TestExportToEventLogSchema",
+  "recv": "",
+  "start": 3887,
+  "end": 3966
+ },
+ {
+  "idx": 148,
+  "kind": "func",
+  "name": "TestPostgresSchemaIncludesKitVersionControlTables",
+  "recv": "",
+  "start": 3968,
+  "end": 4008
+ },
+ {
+  "idx": 149,
+  "kind": "func",
+  "name": "TestExportToEventLogEmpty",
+  "recv": "",
+  "start": 4010,
+  "end": 4032
+ },
+ {
+  "idx": 150,
+  "kind": "func",
+  "name": "TestPolicyListCommand",
+  "recv": "",
+  "start": 4036,
+  "end": 4063
+ },
+ {
+  "idx": 151,
+  "kind": "func",
+  "name": "TestPolicyTreeCommand",
+  "recv": "",
+  "start": 4065,
+  "end": 4088
+ },
+ {
+  "idx": 152,
+  "kind": "func",
+  "name": "TestPolicyCheckCommand",
+  "recv": "",
+  "start": 4090,
+  "end": 4095
+ },
+ {
+  "idx": 153,
+  "kind": "func",
+  "name": "TestExhaustivePolicyBreachListCommand",
+  "recv": "",
+  "start": 4097,
+  "end": 4105
+ },
+ {
+  "idx": 154,
+  "kind": "func",
+  "name": "TestFixtureBreachsGroupedInline",
+  "recv": "",
+  "start": 4107,
+  "end": 4135
+ },
+ {
+  "idx": 155,
+  "kind": "func",
+  "name": "TestFixtureBreachsByLanguage",
+  "recv": "",
+  "start": 4137,
+  "end": 4196
+ },
+ {
+  "idx": 156,
+  "kind": "func",
+  "name": "TestSectionMissingSummaryAndRequirements",
+  "recv": "",
+  "start": 4198,
+  "end": 4225
+ },
+ {
+  "idx": 157,
+  "kind": "func",
+  "name": "TestSectionWithSummaryAndRequirements",
+  "recv": "",
+  "start": 4227,
+  "end": 4252
+ },
+ {
+  "idx": 158,
+  "kind": "func",
+  "name": "TestDefinitionMissingSummaryAndRequirements",
+  "recv": "",
+  "start": 4254,
+  "end": 4281
+ },
+ {
+  "idx": 159,
+  "kind": "func",
+  "name": "TestDefinitionWithSummaryAndRequirements",
+  "recv": "",
+  "start": 4283,
+  "end": 4308
+ },
+ {
+  "idx": 160,
+  "kind": "func",
+  "name": "TestSectionDocLinesExemptsDocComments",
+  "recv": "",
+  "start": 4310,
+  "end": 4335
+ },
+ {
+  "idx": 161,
+  "kind": "func",
+  "name": "TestDefinitionNativeDocstring",
+  "recv": "",
+  "start": 4337,
+  "end": 4432
+ },
+ {
+  "idx": 162,
+  "kind": "func",
+  "name": "TestDefinitionNativeDocstringAutofix",
+  "recv": "",
+  "start": 4434,
+  "end": 4494
+ },
+ {
+  "idx": 163,
+  "kind": "func",
+  "name": "TestPythonTripleQuoteDocstringAutofix",
+  "recv": "",
+  "start": 4496,
+  "end": 4547
+ },
+ {
+  "idx": 164,
+  "kind": "func",
+  "name": "TestPythonTripleQuoteDocstringMerge",
+  "recv": "",
+  "start": 4549,
+  "end": 4597
+ },
+ {
+  "idx": 165,
+  "kind": "func",
+  "name": "TestPythonTripleQuoteDocstringExemptFromCommentBan",
+  "recv": "",
+  "start": 4599,
+  "end": 4626
+ },
+ {
+  "idx": 166,
+  "kind": "func",
+  "name": "TestDefinitionJSDocExemptFromCommentBan",
+  "recv": "",
+  "start": 4628,
+  "end": 4655
+ },
+ {
+  "idx": 167,
+  "kind": "func",
+  "name": "TestSectionHeaderIdAndUri",
+  "recv": "",
+  "start": 4657,
+  "end": 4676
+ },
+ {
+  "idx": 168,
+  "kind": "func",
+  "name": "TestDefinitionHeaderIdAndUri",
+  "recv": "",
+  "start": 4678,
+  "end": 4690
+ },
+ {
+  "idx": 169,
+  "kind": "func",
+  "name": "TestRequirementsBreach",
+  "recv": "",
+  "start": 4692,
+  "end": 4958
+ },
+ {
+  "idx": 170,
+  "kind": "func",
+  "name": "TestDocsBreach",
+  "recv": "",
+  "start": 4960,
+  "end": 5090
+ },
+ {
+  "idx": 171,
+  "kind": "func",
+  "name": "TestFormatHeaderStructure",
+  "recv": "",
+  "start": 5092,
+  "end": 5118
+ },
+ {
+  "idx": 172,
+  "kind": "func",
+  "name": "TestFormatHeaderEmptyRequirements",
+  "recv": "",
+  "start": 5120,
+  "end": 5129
+ },
+ {
+  "idx": 173,
+  "kind": "func",
+  "name": "TestFormatHeaderAllLanguages",
+  "recv": "",
+  "start": 5131,
+  "end": 5163
+ },
+ {
+  "idx": 174,
+  "kind": "func",
+  "name": "TestTerritory",
+  "recv": "",
+  "start": 5165,
+  "end": 5292
+ },
+ {
+  "idx": 175,
+  "kind": "func",
+  "name": "TestPolicyDefAllKinds",
+  "recv": "",
+  "start": 5294,
+  "end": 5332
+ },
+ {
+  "idx": 176,
+  "kind": "func",
+  "name": "TestSystemPolicy",
+  "recv": "",
+  "start": 5334,
+  "end": 5446
+ },
+ {
+  "idx": 177,
+  "kind": "func",
+  "name": "TestBuildTerritoryTree",
+  "recv": "",
+  "start": 5448,
+  "end": 5539
+ },
+ {
+  "idx": 178,
+  "kind": "func",
+  "name": "TestRegisteredPoliciesHaveGroups",
+  "recv": "",
+  "start": 5541,
+  "end": 5552
+ },
+ {
+  "idx": 179,
+  "kind": "func",
+  "name": "TestExhaustivePolicyGroupsGraphQL",
+  "recv": "",
+  "start": 5554,
+  "end": 5588
+ },
+ {
+  "idx": 180,
+  "kind": "func",
+  "name": "TestBundleListCommand",
+  "recv": "",
+  "start": 5592,
+  "end": 5619
+ },
+ {
+  "idx": 181,
+  "kind": "func",
+  "name": "TestExhaustiveBundleTreeCommand",
+  "recv": "",
+  "start": 5621,
+  "end": 5629
+ },
+ {
+  "idx": 182,
+  "kind": "func",
+  "name": "TestFolderListCommand",
+  "recv": "",
+  "start": 5633,
+  "end": 5644
+ },
+ {
+  "idx": 183,
+  "kind": "func",
+  "name": "TestFolderTreeCommand",
+  "recv": "",
+  "start": 5646,
+  "end": 5653
+ },
+ {
+  "idx": 184,
+  "kind": "func",
+  "name": "TestFolderCreateMoveDelete",
+  "recv": "",
+  "start": 5655,
+  "end": 5669
+ },
+ {
+  "idx": 185,
+  "kind": "func",
+  "name": "TestFileListCommand",
+  "recv": "",
+  "start": 5673,
+  "end": 5682
+ },
+ {
+  "idx": 186,
+  "kind": "func",
+  "name": "TestFileTreeCommand",
+  "recv": "",
+  "start": 5684,
+  "end": 5691
+ },
+ {
+  "idx": 187,
+  "kind": "func",
+  "name": "TestFileCreateMoveDelete",
+  "recv": "",
+  "start": 5693,
+  "end": 5707
+ },
+ {
+  "idx": 188,
+  "kind": "func",
+  "name": "TestApplyRenameCasingsReplacesAllVariants",
+  "recv": "",
+  "start": 5713,
+  "end": 5720
+ },
+ {
+  "idx": 189,
+  "kind": "func",
+  "name": "TestApplyRenameCasingsKeepsUnrelatedContent",
+  "recv": "",
+  "start": 5722,
+  "end": 5728
+ },
+ {
+  "idx": 190,
+  "kind": "func",
+  "name": "TestToolRenameRewritesFilesAndFilenames",
+  "recv": "",
+  "start": 5730,
+  "end": 5791
+ },
+ {
+  "idx": 191,
+  "kind": "func",
+  "name": "TestToolRenameRejectsEmptyAndIdenticalTokens",
+  "recv": "",
+  "start": 5793,
+  "end": 5803
+ },
+ {
+  "idx": 192,
+  "kind": "func",
+  "name": "TestToolRenameScopeLimitsWalk",
+  "recv": "",
+  "start": 5805,
+  "end": 5850
+ },
+ {
+  "idx": 193,
+  "kind": "func",
+  "name": "TestSectionListCommand",
+  "recv": "",
+  "start": 5854,
+  "end": 5881
+ },
+ {
+  "idx": 194,
+  "kind": "func",
+  "name": "TestSectionTreeCommand",
+  "recv": "",
+  "start": 5883,
+  "end": 5888
+ },
+ {
+  "idx": 195,
+  "kind": "func",
+  "name": "TestDefinitionListCommand",
+  "recv": "",
+  "start": 5892,
+  "end": 5898
+ },
+ {
+  "idx": 196,
+  "kind": "func",
+  "name": "TestTicketListCommand",
+  "recv": "",
+  "start": 5902,
+  "end": 5909
+ },
+ {
+  "idx": 197,
+  "kind": "func",
+  "name": "TestTicketOpenNoticketKeyword",
+  "recv": "",
+  "start": 5911,
+  "end": 5919
+ },
+ {
+  "idx": 198,
+  "kind": "func",
+  "name": "TestTicketOpenContinueKeyword",
+  "recv": "",
+  "start": 5921,
+  "end": 5956
+ },
+ {
+  "idx": 199,
+  "kind": "func",
+  "name": "TestGoalCreateValidation",
+  "recv": "",
+  "start": 5960,
+  "end": 6002
+ },
+ {
+  "idx": 200,
+  "kind": "func",
+  "name": "TestGoalCreateAndCleanup",
+  "recv": "",
+  "start": 6004,
+  "end": 6025
+ },
+ {
+  "idx": 201,
+  "kind": "func",
+  "name": "TestExhaustiveGoalDocument",
+  "recv": "",
+  "start": 6027,
+  "end": 6143
+ },
+ {
+  "idx": 202,
+  "kind": "func",
+  "name": "TestGoalList",
+  "recv": "",
+  "start": 6145,
+  "end": 6166
+ },
+ {
+  "idx": 203,
+  "kind": "func",
+  "name": "TestGoalsMcpResource",
+  "recv": "",
+  "start": 6168,
+  "end": 6203
+ },
+ {
+  "idx": 204,
+  "kind": "func",
+  "name": "TestContributorListCommand",
+  "recv": "",
+  "start": 6207,
+  "end": 6216
+ },
+ {
+  "idx": 205,
+  "kind": "func",
+  "name": "TestGetArtifactID_Root",
+  "recv": "",
+  "start": 6220,
+  "end": 6226
+ },
+ {
+  "idx": 206,
+  "kind": "func",
+  "name": "TestGetArtifactID_Years",
+  "recv": "",
+  "start": 6228,
+  "end": 6234
+ },
+ {
+  "idx": 207,
+  "kind": "func",
+  "name": "TestGetArtifactID_Year",
+  "recv": "",
+  "start": 6236,
+  "end": 6242
+ },
+ {
+  "idx": 208,
+  "kind": "func",
+  "name": "TestGetArtifactID_Months",
+  "recv": "",
+  "start": 6244,
+  "end": 6251
+ },
+ {
+  "idx": 209,
+  "kind": "func",
+  "name": "TestGetArtifactID_Month",
+  "recv": "",
+  "start": 6253,
+  "end": 6260
+ },
+ {
+  "idx": 210,
+  "kind": "func",
+  "name": "TestGetArtifactID_Days",
+  "recv": "",
+  "start": 6262,
+  "end": 6269
+ },
+ {
+  "idx": 211,
+  "kind": "func",
+  "name": "TestGetArtifactID_Day",
+  "recv": "",
+  "start": 6271,
+  "end": 6278
+ },
+ {
+  "idx": 212,
+  "kind": "func",
+  "name": "TestGetArtifactID_Hours",
+  "recv": "",
+  "start": 6280,
+  "end": 6287
+ },
+ {
+  "idx": 213,
+  "kind": "func",
+  "name": "TestGetArtifactID_Hour",
+  "recv": "",
+  "start": 6289,
+  "end": 6296
+ },
+ {
+  "idx": 214,
+  "kind": "func",
+  "name": "TestGetArtifactID_Minutes",
+  "recv": "",
+  "start": 6298,
+  "end": 6305
+ },
+ {
+  "idx": 215,
+  "kind": "func",
+  "name": "TestGetArtifactID_Minute",
+  "recv": "",
+  "start": 6307,
+  "end": 6314
+ },
+ {
+  "idx": 216,
+  "kind": "func",
+  "name": "TestGetArtifactID_Seconds",
+  "recv": "",
+  "start": 6316,
+  "end": 6323
+ },
+ {
+  "idx": 217,
+  "kind": "func",
+  "name": "TestGetArtifactID_Second",
+  "recv": "",
+  "start": 6325,
+  "end": 6332
+ },
+ {
+  "idx": 218,
+  "kind": "func",
+  "name": "TestGetArtifactID_Codebase",
+  "recv": "",
+  "start": 6334,
+  "end": 6340
+ },
+ {
+  "idx": 219,
+  "kind": "func",
+  "name": "TestGetArtifactID_Technologies",
+  "recv": "",
+  "start": 6342,
+  "end": 6348
+ },
+ {
+  "idx": 220,
+  "kind": "func",
+  "name": "TestGetArtifactID_Technology",
+  "recv": "",
+  "start": 6350,
+  "end": 6368
+ },
+ {
+  "idx": 221,
+  "kind": "func",
+  "name": "TestGetArtifactID_Bundles",
+  "recv": "",
+  "start": 6370,
+  "end": 6377
+ },
+ {
+  "idx": 222,
+  "kind": "func",
+  "name": "TestGetArtifactID_Bundle",
+  "recv": "",
+  "start": 6379,
+  "end": 6401
+ },
+ {
+  "idx": 223,
+  "kind": "func",
+  "name": "TestGetArtifactID_Folders",
+  "recv": "",
+  "start": 6403,
+  "end": 6421
+ },
+ {
+  "idx": 224,
+  "kind": "func",
+  "name": "TestGetArtifactID_Folder",
+  "recv": "",
+  "start": 6423,
+  "end": 6442
+ },
+ {
+  "idx": 225,
+  "kind": "func",
+  "name": "TestGetArtifactID_Files",
+  "recv": "",
+  "start": 6444,
+  "end": 6462
+ },
+ {
+  "idx": 226,
+  "kind": "func",
+  "name": "TestGetArtifactID_File",
+  "recv": "",
+  "start": 6464,
+  "end": 6483
+ },
+ {
+  "idx": 227,
+  "kind": "func",
+  "name": "TestGetArtifactID_Line",
+  "recv": "",
+  "start": 6485,
+  "end": 6492
+ },
+ {
+  "idx": 228,
+  "kind": "func",
+  "name": "TestGetArtifactID_Range",
+  "recv": "",
+  "start": 6494,
+  "end": 6501
+ },
+ {
+  "idx": 229,
+  "kind": "func",
+  "name": "TestGetArtifactID_Sections",
+  "recv": "",
+  "start": 6503,
+  "end": 6510
+ },
+ {
+  "idx": 230,
+  "kind": "func",
+  "name": "TestGetArtifactID_Section",
+  "recv": "",
+  "start": 6512,
+  "end": 6530
+ },
+ {
+  "idx": 231,
+  "kind": "func",
+  "name": "TestGetArtifactID_Definitions",
+  "recv": "",
+  "start": 6532,
+  "end": 6539
+ },
+ {
+  "idx": 232,
+  "kind": "func",
+  "name": "TestGetArtifactID_Definition",
+  "recv": "",
+  "start": 6541,
+  "end": 6548
+ },
+ {
+  "idx": 233,
+  "kind": "func",
+  "name": "TestGetArtifactID_Goals",
+  "recv": "",
+  "start": 6550,
+  "end": 6567
+ },
+ {
+  "idx": 234,
+  "kind": "func",
+  "name": "TestGetArtifactID_Goal",
+  "recv": "",
+  "start": 6569,
+  "end": 6586
+ },
+ {
+  "idx": 235,
+  "kind": "func",
+  "name": "TestGetArtifactID_Tickets",
+  "recv": "",
+  "start": 6588,
+  "end": 6606
+ },
+ {
+  "idx": 236,
+  "kind": "func",
+  "name": "TestGetArtifactID_Ticket",
+  "recv": "",
+  "start": 6608,
+  "end": 6626
+ },
+ {
+  "idx": 237,
+  "kind": "func",
+  "name": "TestGetArtifactID_Drafts",
+  "recv": "",
+  "start": 6628,
+  "end": 6635
+ },
+ {
+  "idx": 238,
+  "kind": "func",
+  "name": "TestGetArtifactID_Draft",
+  "recv": "",
+  "start": 6637,
+  "end": 6644
+ },
+ {
+  "idx": 239,
+  "kind": "func",
+  "name": "TestGetArtifactID_Todos",
+  "recv": "",
+  "start": 6646,
+  "end": 6653
+ },
+ {
+  "idx": 240,
+  "kind": "func",
+  "name": "TestGetArtifactID_Todo",
+  "recv": "",
+  "start": 6655,
+  "end": 6662
+ },
+ {
+  "idx": 241,
+  "kind": "func",
+  "name": "TestGetArtifactID_Policies",
+  "recv": "",
+  "start": 6664,
+  "end": 6681
+ },
+ {
+  "idx": 242,
+  "kind": "func",
+  "name": "TestGetArtifactID_Policy",
+  "recv": "",
+  "start": 6683,
+  "end": 6700
+ },
+ {
+  "idx": 243,
+  "kind": "func",
+  "name": "TestGetArtifactID_Contributors",
+  "recv": "",
+  "start": 6702,
+  "end": 6708
+ },
+ {
+  "idx": 244,
+  "kind": "func",
+  "name": "TestGetArtifactID_Contributor",
+  "recv": "",
+  "start": 6710,
+  "end": 6716
+ },
+ {
+  "idx": 245,
+  "kind": "func",
+  "name": "TestGetArtifactID_Checkpoints",
+  "recv": "",
+  "start": 6718,
+  "end": 6724
+ },
+ {
+  "idx": 246,
+  "kind": "func",
+  "name": "TestGetArtifactID_Checkpoint",
+  "recv": "",
+  "start": 6726,
+  "end": 6744
+ },
+ {
+  "idx": 247,
+  "kind": "func",
+  "name": "TestGetArtifactID_Interaction",
+  "recv": "",
+  "start": 6746,
+  "end": 6766
+ },
+ {
+  "idx": 248,
+  "kind": "func",
+  "name": "TestGetArtifactID_Sessions",
+  "recv": "",
+  "start": 6768,
+  "end": 6788
+ },
+ {
+  "idx": 249,
+  "kind": "func",
+  "name": "TestGetArtifactID_Session",
+  "recv": "",
+  "start": 6790,
+  "end": 6814
+ },
+ {
+  "idx": 250,
+  "kind": "func",
+  "name": "TestGetArtifactURI_Sessions",
+  "recv": "",
+  "start": 6816,
+  "end": 6822
+ },
+ {
+  "idx": 251,
+  "kind": "func",
+  "name": "TestGetArtifactURI_Session",
+  "recv": "",
+  "start": 6824,
+  "end": 6841
+ },
+ {
+  "idx": 252,
+  "kind": "func",
+  "name": "TestSessionIdToUri",
+  "recv": "",
+  "start": 6843,
+  "end": 6859
+ },
+ {
+  "idx": 253,
+  "kind": "func",
+  "name": "TestSessionUriToId",
+  "recv": "",
+  "start": 6861,
+  "end": 6877
+ },
+ {
+  "idx": 254,
+  "kind": "func",
+  "name": "TestSessionKindEmoji",
+  "recv": "",
+  "start": 6879,
+  "end": 6896
+ },
+ {
+  "idx": 255,
+  "kind": "func",
+  "name": "TestSessionGetID",
+  "recv": "",
+  "start": 6898,
+  "end": 6927
+ },
+ {
+  "idx": 256,
+  "kind": "func",
+  "name": "TestSessionGetURI",
+  "recv": "",
+  "start": 6929,
+  "end": 6942
+ },
+ {
+  "idx": 257,
+  "kind": "func",
+  "name": "TestNormalizeTicketSessionID",
+  "recv": "",
+  "start": 6944,
+  "end": 6967
+ },
+ {
+  "idx": 258,
+  "kind": "func",
+  "name": "TestGetArtifactID_Breach",
+  "recv": "",
+  "start": 6969,
+  "end": 6979
+ },
+ {
+  "idx": 259,
+  "kind": "func",
+  "name": "TestGoalArtifactID",
+  "recv": "",
+  "start": 6981,
+  "end": 6998
+ },
+ {
+  "idx": 260,
+  "kind": "func",
+  "name": "TestSpecExactIDs",
+  "recv": "",
+  "start": 7000,
+  "end": 7082
+ },
+ {
+  "idx": 261,
+  "kind": "func",
+  "name": "TestPropagateParentIDs",
+  "recv": "",
+  "start": 7084,
+  "end": 7126
+ },
+ {
+  "idx": 262,
+  "kind": "func",
+  "name": "TestFlat",
+  "recv": "",
+  "start": 7128,
+  "end": 7151
+ },
+ {
+  "idx": 263,
+  "kind": "func",
+  "name": "verifyTreeDocument",
+  "recv": "",
+  "start": 7153,
+  "end": 7172
+ },
+ {
+  "idx": 264,
+  "kind": "func",
+  "name": "TestExhaustiveMonorepoTreeEntityIDs",
+  "recv": "",
+  "start": 7174,
+  "end": 7275
+ },
+ {
+  "idx": 265,
+  "kind": "func",
+  "name": "TestExhaustiveGoalTreeEntityIDs",
+  "recv": "",
+  "start": 7277,
+  "end": 7310
+ },
+ {
+  "idx": 266,
+  "kind": "func",
+  "name": "TestExhaustiveContributorTreeEntityIDs",
+  "recv": "",
+  "start": 7312,
+  "end": 7337
+ },
+ {
+  "idx": 267,
+  "kind": "func",
+  "name": "TestExhaustiveCheckpointTreeEntityIDs",
+  "recv": "",
+  "start": 7339,
+  "end": 7364
+ },
+ {
+  "idx": 268,
+  "kind": "func",
+  "name": "TestEntityKinds",
+  "recv": "",
+  "start": 7366,
+  "end": 7381
+ },
+ {
+  "idx": 269,
+  "kind": "func",
+  "name": "TestAllEntityEmojisProjectsTheFrameworkCatalog",
+  "recv": "",
+  "start": 7383,
+  "end": 7448
+ },
+ {
+  "idx": 270,
+  "kind": "func",
+  "name": "TestArtifactKinds",
+  "recv": "",
+  "start": 7450,
+  "end": 7460
+ },
+ {
+  "idx": 271,
+  "kind": "func",
+  "name": "TestDiffableKinds",
+  "recv": "",
+  "start": 7462,
+  "end": 7476
+ },
+ {
+  "idx": 272,
+  "kind": "func",
+  "name": "TestRelatedToFileKinds",
+  "recv": "",
+  "start": 7478,
+  "end": 7492
+ },
+ {
+  "idx": 273,
+  "kind": "func",
+  "name": "TestTechnologyListIDs",
+  "recv": "",
+  "start": 7494,
+  "end": 7522
+ },
+ {
+  "idx": 274,
+  "kind": "func",
+  "name": "TestBundleListIDs",
+  "recv": "",
+  "start": 7524,
+  "end": 7566
+ },
+ {
+  "idx": 275,
+  "kind": "func",
+  "name": "TestSectionListIDs",
+  "recv": "",
+  "start": 7568,
+  "end": 7598
+ },
+ {
+  "idx": 276,
+  "kind": "func",
+  "name": "TestContributorListIDs",
+  "recv": "",
+  "start": 7600,
+  "end": 7635
+ },
+ {
+  "idx": 277,
+  "kind": "func",
+  "name": "TestGoalListIDs",
+  "recv": "",
+  "start": 7637,
+  "end": 7661
+ },
+ {
+  "idx": 278,
+  "kind": "func",
+  "name": "TestExhaustiveTicketListIDs",
+  "recv": "",
+  "start": 7663,
+  "end": 7686
+ },
+ {
+  "idx": 279,
+  "kind": "func",
+  "name": "TestDraftListIDs",
+  "recv": "",
+  "start": 7688,
+  "end": 7704
+ },
+ {
+  "idx": 280,
+  "kind": "func",
+  "name": "TestExhaustiveMonorepoTreeFullIDDocument",
+  "recv": "",
+  "start": 7706,
+  "end": 7802
+ },
+ {
+  "idx": 281,
+  "kind": "func",
+  "name": "TestExhaustiveGoalTreeIDs",
+  "recv": "",
+  "start": 7804,
+  "end": 7845
+ },
+ {
+  "idx": 282,
+  "kind": "func",
+  "name": "TestExhaustiveContributorTreeIDs",
+  "recv": "",
+  "start": 7847,
+  "end": 7887
+ },
+ {
+  "idx": 283,
+  "kind": "func",
+  "name": "TestExhaustiveCheckpointTreeIDs",
+  "recv": "",
+  "start": 7889,
+  "end": 7927
+ },
+ {
+  "idx": 284,
+  "kind": "func",
+  "name": "TestAllSpecIDExamples",
+  "recv": "",
+  "start": 7929,
+  "end": 8044
+ },
+ {
+  "idx": 285,
+  "kind": "func",
+  "name": "TestGraphQLRepoQuery",
+  "recv": "",
+  "start": 8048,
+  "end": 8057
+ },
+ {
+  "idx": 286,
+  "kind": "func",
+  "name": "TestGraphQLBundlesQuery",
+  "recv": "",
+  "start": 8059,
+  "end": 8067
+ },
+ {
+  "idx": 287,
+  "kind": "func",
+  "name": "TestGraphQLPoliciesQuery",
+  "recv": "",
+  "start": 8069,
+  "end": 8077
+ },
+ {
+  "idx": 288,
+  "kind": "func",
+  "name": "TestExhaustiveGraphQLTicketsQuery",
+  "recv": "",
+  "start": 8079,
+  "end": 8090
+ },
+ {
+  "idx": 289,
+  "kind": "func",
+  "name": "TestExhaustiveGraphQLAnalyzeQuery",
+  "recv": "",
+  "start": 8092,
+  "end": 8103
+ },
+ {
+  "idx": 290,
+  "kind": "func",
+  "name": "TestGraphQLContributorsQuery",
+  "recv": "",
+  "start": 8105,
+  "end": 8113
+ },
+ {
+  "idx": 291,
+  "kind": "func",
+  "name": "TestGraphQLFixMutation",
+  "recv": "",
+  "start": 8115,
+  "end": 8123
+ },
+ {
+  "idx": 292,
+  "kind": "func",
+  "name": "executeTreeCommand",
+  "recv": "",
+  "start": 8127,
+  "end": 8137
+ },
+ {
+  "idx": 293,
+  "kind": "func",
+  "name": "TestExhaustiveTreeCommands",
+  "recv": "",
+  "start": 8139,
+  "end": 8227
+ },
+ {
+  "idx": 294,
+  "kind": "func",
+  "name": "TestExhaustiveCliE2E_TicketLifecycle_Syntaxes_NoManagement",
+  "recv": "",
+  "start": 8229,
+  "end": 8328
+ },
+ {
+  "idx": 295,
+  "kind": "func",
+  "name": "TestExhaustiveCliE2E_GoalLifecycle_Syntaxes_NoManagement",
+  "recv": "",
+  "start": 8330,
+  "end": 8375
+ },
+ {
+  "idx": 296,
+  "kind": "func",
+  "name": "TestExhaustiveCliE2E_MiscCommands_NoSideEffects",
+  "recv": "",
+  "start": 8377,
+  "end": 8411
+ },
+ {
+  "idx": 297,
+  "kind": "func",
+  "name": "TestCliWrongArgs_TicketOpen",
+  "recv": "",
+  "start": 8413,
+  "end": 8436
+ },
+ {
+  "idx": 298,
+  "kind": "func",
+  "name": "TestCliWrongArgs_TicketClose",
+  "recv": "",
+  "start": 8438,
+  "end": 8456
+ },
+ {
+  "idx": 299,
+  "kind": "func",
+  "name": "TestCliWrongArgs_TicketReopen",
+  "recv": "",
+  "start": 8458,
+  "end": 8477
+ },
+ {
+  "idx": 300,
+  "kind": "func",
+  "name": "TestCliWrongArgs_TicketChange",
+  "recv": "",
+  "start": 8479,
+  "end": 8496
+ },
+ {
+  "idx": 301,
+  "kind": "func",
+  "name": "TestCliWrongArgs_GoalOpen",
+  "recv": "",
+  "start": 8498,
+  "end": 8518
+ },
+ {
+  "idx": 302,
+  "kind": "func",
+  "name": "TestCliWrongArgs_GoalClose",
+  "recv": "",
+  "start": 8520,
+  "end": 8537
+ },
+ {
+  "idx": 303,
+  "kind": "func",
+  "name": "TestCliWrongArgs_GoalReopen",
+  "recv": "",
+  "start": 8539,
+  "end": 8558
+ },
+ {
+  "idx": 304,
+  "kind": "func",
+  "name": "TestCliWrongArgs_GoalChange",
+  "recv": "",
+  "start": 8560,
+  "end": 8576
+ },
+ {
+  "idx": 305,
+  "kind": "func",
+  "name": "TestCliWrongArgs_PolicyCheck",
+  "recv": "",
+  "start": 8578,
+  "end": 8594
+ },
+ {
+  "idx": 306,
+  "kind": "func",
+  "name": "TestCliWrongArgs_FolderOperations",
+  "recv": "",
+  "start": 8596,
+  "end": 8615
+ },
+ {
+  "idx": 307,
+  "kind": "func",
+  "name": "TestCliWrongArgs_FileOperations",
+  "recv": "",
+  "start": 8617,
+  "end": 8636
+ },
+ {
+  "idx": 308,
+  "kind": "func",
+  "name": "TestCliWrongArgs_SectionOperations",
+  "recv": "",
+  "start": 8638,
+  "end": 8658
+ },
+ {
+  "idx": 309,
+  "kind": "func",
+  "name": "TestCliWrongArgs_DefinitionOperations",
+  "recv": "",
+  "start": 8660,
+  "end": 8674
+ },
+ {
+  "idx": 310,
+  "kind": "func",
+  "name": "TestCliWrongArgs_ContributorOperations",
+  "recv": "",
+  "start": 8676,
+  "end": 8693
+ },
+ {
+  "idx": 311,
+  "kind": "func",
+  "name": "TestCliWrongArgs_GraphQL",
+  "recv": "",
+  "start": 8695,
+  "end": 8712
+ },
+ {
+  "idx": 312,
+  "kind": "func",
+  "name": "TestCliWrongArgs_TodoOperations",
+  "recv": "",
+  "start": 8714,
+  "end": 8736
+ },
+ {
+  "idx": 313,
+  "kind": "func",
+  "name": "TestCliWrongArgs_TopLevelOperations",
+  "recv": "",
+  "start": 8738,
+  "end": 8760
+ },
+ {
+  "idx": 314,
+  "kind": "func",
+  "name": "TestCliWrongArgs_ErrorMessages",
+  "recv": "",
+  "start": 8762,
+  "end": 8821
+ },
+ {
+  "idx": 315,
+  "kind": "func",
+  "name": "TestExhaustiveCliJsonPureData",
+  "recv": "",
+  "start": 8823,
+  "end": 8874
+ },
+ {
+  "idx": 316,
+  "kind": "func",
+  "name": "TestCliJsonErrorsToStderr",
+  "recv": "",
+  "start": 8876,
+  "end": 8912
+ },
+ {
+  "idx": 317,
+  "kind": "func",
+  "name": "TestFormatResult_Section",
+  "recv": "",
+  "start": 8916,
+  "end": 8944
+ },
+ {
+  "idx": 318,
+  "kind": "func",
+  "name": "TestFormatResult_Definition",
+  "recv": "",
+  "start": 8946,
+  "end": 8975
+ },
+ {
+  "idx": 319,
+  "kind": "func",
+  "name": "TestFormatResult_Bundle",
+  "recv": "",
+  "start": 8977,
+  "end": 8997
+ },
+ {
+  "idx": 320,
+  "kind": "func",
+  "name": "TestFormatResult_Folder",
+  "recv": "",
+  "start": 8999,
+  "end": 9018
+ },
+ {
+  "idx": 321,
+  "kind": "func",
+  "name": "TestFormatResult_File",
+  "recv": "",
+  "start": 9020,
+  "end": 9038
+ },
+ {
+  "idx": 322,
+  "kind": "func",
+  "name": "TestFormatResult_Additional",
+  "recv": "",
+  "start": 9040,
+  "end": 9156
+ },
+ {
+  "idx": 323,
+  "kind": "func",
+  "name": "assertValidMarkdownLink",
+  "recv": "",
+  "start": 9158,
+  "end": 9184
+ },
+ {
+  "idx": 324,
+  "kind": "func",
+  "name": "TestFormatMarkdownResult_MutationKeys",
+  "recv": "",
+  "start": 9186,
+  "end": 9275
+ },
+ {
+  "idx": 325,
+  "kind": "func",
+  "name": "TestFormatMarkdownResult_SingleEntities",
+  "recv": "",
+  "start": 9277,
+  "end": 9331
+ },
+ {
+  "idx": 326,
+  "kind": "func",
+  "name": "TestFormatMarkdownResult_Lists",
+  "recv": "",
+  "start": 9333,
+  "end": 9418
+ },
+ {
+  "idx": 327,
+  "kind": "func",
+  "name": "TestCollectEntityProps_MultilineEscaped",
+  "recv": "",
+  "start": 9420,
+  "end": 9457
+ },
+ {
+  "idx": 328,
+  "kind": "func",
+  "name": "TestFormatMarkdownResult_Analyze",
+  "recv": "",
+  "start": 9459,
+  "end": 9484
+ },
+ {
+  "idx": 329,
+  "kind": "func",
+  "name": "TestFormatMarkdownResult_Fix",
+  "recv": "",
+  "start": 9486,
+  "end": 9498
+ },
+ {
+  "idx": 330,
+  "kind": "func",
+  "name": "TestFormatMarkdownResult_FileWithSections",
+  "recv": "",
+  "start": 9500,
+  "end": 9534
+ },
+ {
+  "idx": 331,
+  "kind": "func",
+  "name": "TestFormatMarkdownResult_NoJSONFallback",
+  "recv": "",
+  "start": 9536,
+  "end": 9553
+ },
+ {
+  "idx": 332,
+  "kind": "func",
+  "name": "TestFormatResult_MutationKeys",
+  "recv": "",
+  "start": 9555,
+  "end": 9619
+ },
+ {
+  "idx": 333,
+  "kind": "func",
+  "name": "TestRenderEntityMarkdownLink_AllKinds",
+  "recv": "",
+  "start": 9621,
+  "end": 9691
+ },
+ {
+  "idx": 334,
+  "kind": "func",
+  "name": "TestInferEntityKind",
+  "recv": "",
+  "start": 9693,
+  "end": 9735
+ },
+ {
+  "idx": 335,
+  "kind": "func",
+  "name": "TestExhaustiveMarkdownOutput",
+  "recv": "",
+  "start": 9737,
+  "end": 9810
+ },
+ {
+  "idx": 336,
+  "kind": "func",
+  "name": "TestExhaustiveLifecycleCommands",
+  "recv": "",
+  "start": 9812,
+  "end": 9971
+ },
+ {
+  "idx": 337,
+  "kind": "func",
+  "name": "TestExhaustiveListCommands",
+  "recv": "",
+  "start": 9973,
+  "end": 10110
+ },
+ {
+  "idx": 338,
+  "kind": "func",
+  "name": "TestExhaustiveSectionCommands",
+  "recv": "",
+  "start": 10112,
+  "end": 10228
+ },
+ {
+  "idx": 339,
+  "kind": "func",
+  "name": "TestExhaustiveStreamingList",
+  "recv": "",
+  "start": 10230,
+  "end": 10282
+ },
+ {
+  "idx": 340,
+  "kind": "func",
+  "name": "TestTicketLifecycle_NoManagement",
+  "recv": "",
+  "start": 10284,
+  "end": 10438
+ },
+ {
+  "idx": 341,
+  "kind": "func",
+  "name": "TestExtractSessionIDFromInput",
+  "recv": "",
+  "start": 10440,
+  "end": 10471
+ },
+ {
+  "idx": 342,
+  "kind": "func",
+  "name": "TestExtractTranscriptAndLLMFromNestedInput",
+  "recv": "",
+  "start": 10473,
+  "end": 10490
+ },
+ {
+  "idx": 343,
+  "kind": "func",
+  "name": "TestTrackHookInOpenTicketUsesStableSessionIDs",
+  "recv": "",
+  "start": 10492,
+  "end": 10578
+ },
+ {
+  "idx": 344,
+  "kind": "func",
+  "name": "TestArtifactIDAndURI",
+  "recv": "",
+  "start": 10580,
+  "end": 10963
+ },
+ {
+  "idx": 345,
+  "kind": "func",
+  "name": "TestIdToUri",
+  "recv": "",
+  "start": 10965,
+  "end": 11001
+ },
+ {
+  "idx": 346,
+  "kind": "func",
+  "name": "TestUriToId",
+  "recv": "",
+  "start": 11003,
+  "end": 11040
+ },
+ {
+  "idx": 347,
+  "kind": "func",
+  "name": "TestPathToUriPath",
+  "recv": "",
+  "start": 11042,
+  "end": 11059
+ },
+ {
+  "idx": 348,
+  "kind": "func",
+  "name": "TestPathFromUriPath",
+  "recv": "",
+  "start": 11061,
+  "end": 11077
+ },
+ {
+  "idx": 349,
+  "kind": "func",
+  "name": "TestSectionIdValueToUriPath",
+  "recv": "",
+  "start": 11079,
+  "end": 11097
+ },
+ {
+  "idx": 350,
+  "kind": "func",
+  "name": "TestDefinitionIdValueToUriPath",
+  "recv": "",
+  "start": 11099,
+  "end": 11117
+ },
+ {
+  "idx": 351,
+  "kind": "func",
+  "name": "TestParseSectionUriPath",
+  "recv": "",
+  "start": 11119,
+  "end": 11147
+ },
+ {
+  "idx": 352,
+  "kind": "func",
+  "name": "TestStatuteIdToUriPath",
+  "recv": "",
+  "start": 11149,
+  "end": 11167
+ },
+ {
+  "idx": 353,
+  "kind": "func",
+  "name": "TestStatuteUriPathToId",
+  "recv": "",
+  "start": 11169,
+  "end": 11187
+ },
+ {
+  "idx": 354,
+  "kind": "func",
+  "name": "TestTitleizeSlug",
+  "recv": "",
+  "start": 11189,
+  "end": 11211
+ },
+ {
+  "idx": 355,
+  "kind": "func",
+  "name": "TestStatutePathToIdValue",
+  "recv": "",
+  "start": 11213,
+  "end": 11232
+ },
+ {
+  "idx": 356,
+  "kind": "func",
+  "name": "TestStatuteIdValueToPath",
+  "recv": "",
+  "start": 11234,
+  "end": 11253
+ },
+ {
+  "idx": 357,
+  "kind": "func",
+  "name": "TestStatutePathIdValueRoundTrip",
+  "recv": "",
+  "start": 11255,
+  "end": 11273
+ },
+ {
+  "idx": 358,
+  "kind": "func",
+  "name": "TestIdUriRoundTrip",
+  "recv": "",
+  "start": 11275,
+  "end": 11308
+ },
+ {
+  "idx": 359,
+  "kind": "func",
+  "name": "TestMcpToolsSchemas",
+  "recv": "",
+  "start": 11310,
+  "end": 11372
+ },
+ {
+  "idx": 360,
+  "kind": "func",
+  "name": "TestExhaustiveQueryFlag",
+  "recv": "",
+  "start": 11376,
+  "end": 11581
+ },
+ {
+  "idx": 361,
+  "kind": "func",
+  "name": "TestExhaustiveQueryFuzzyMatch",
+  "recv": "",
+  "start": 11583,
+  "end": 11630
+ },
+ {
+  "idx": 362,
+  "kind": "func",
+  "name": "TestExhaustiveCacheIndexAndTreeQuery",
+  "recv": "",
+  "start": 11632,
+  "end": 11729
+ },
+ {
+  "idx": 363,
+  "kind": "func",
+  "name": "TestExhaustiveQueryEmptyReturnsAll",
+  "recv": "",
+  "start": 11731,
+  "end": 11762
+ },
+ {
+  "idx": 364,
+  "kind": "func",
+  "name": "TestExhaustiveStatuteCommands",
+  "recv": "",
+  "start": 11764,
+  "end": 11815
+ },
+ {
+  "idx": 365,
+  "kind": "func",
+  "name": "TestExhaustiveCheckpointCommands",
+  "recv": "",
+  "start": 11817,
+  "end": 11875
+ },
+ {
+  "idx": 366,
+  "kind": "func",
+  "name": "setupToolTest",
+  "recv": "",
+  "start": 11879,
+  "end": 11887
+ },
+ {
+  "idx": 367,
+  "kind": "func",
+  "name": "TestToolTechnologyList",
+  "recv": "",
+  "start": 11889,
+  "end": 11905
+ },
+ {
+  "idx": 368,
+  "kind": "func",
+  "name": "TestExhaustiveToolTechnologyTree",
+  "recv": "",
+  "start": 11907,
+  "end": 11916
+ },
+ {
+  "idx": 369,
+  "kind": "func",
+  "name": "TestToolContributorList",
+  "recv": "",
+  "start": 11918,
+  "end": 11927
+ },
+ {
+  "idx": 370,
+  "kind": "func",
+  "name": "TestToolGoalList",
+  "recv": "",
+  "start": 11929,
+  "end": 11938
+ },
+ {
+  "idx": 371,
+  "kind": "func",
+  "name": "TestExhaustiveToolTicketList",
+  "recv": "",
+  "start": 11940,
+  "end": 11952
+ },
+ {
+  "idx": 372,
+  "kind": "func",
+  "name": "TestToolDraftList",
+  "recv": "",
+  "start": 11954,
+  "end": 11960
+ },
+ {
+  "idx": 373,
+  "kind": "func",
+  "name": "TestToolFolderList",
+  "recv": "",
+  "start": 11962,
+  "end": 11971
+ },
+ {
+  "idx": 374,
+  "kind": "func",
+  "name": "TestExhaustiveToolFolderTree",
+  "recv": "",
+  "start": 11973,
+  "end": 11982
+ },
+ {
+  "idx": 375,
+  "kind": "func",
+  "name": "TestToolFileList",
+  "recv": "",
+  "start": 11984,
+  "end": 11993
+ },
+ {
+  "idx": 376,
+  "kind": "func",
+  "name": "TestExhaustiveToolFileTree",
+  "recv": "",
+  "start": 11995,
+  "end": 12004
+ },
+ {
+  "idx": 377,
+  "kind": "func",
+  "name": "TestToolSectionList",
+  "recv": "",
+  "start": 12006,
+  "end": 12012
+ },
+ {
+  "idx": 378,
+  "kind": "func",
+  "name": "TestToolSectionTree",
+  "recv": "",
+  "start": 12014,
+  "end": 12020
+ },
+ {
+  "idx": 379,
+  "kind": "func",
+  "name": "TestToolDefinitionList",
+  "recv": "",
+  "start": 12022,
+  "end": 12028
+ },
+ {
+  "idx": 380,
+  "kind": "func",
+  "name": "TestToolPolicyList",
+  "recv": "",
+  "start": 12030,
+  "end": 12036
+ },
+ {
+  "idx": 381,
+  "kind": "func",
+  "name": "TestToolPolicyCheck",
+  "recv": "",
+  "start": 12038,
+  "end": 12044
+ },
+ {
+  "idx": 382,
+  "kind": "func",
+  "name": "TestToolAnalyzeScope",
+  "recv": "",
+  "start": 12046,
+  "end": 12052
+ },
+ {
+  "idx": 383,
+  "kind": "func",
+  "name": "TestToolFixScope",
+  "recv": "",
+  "start": 12054,
+  "end": 12060
+ },
+ {
+  "idx": 384,
+  "kind": "func",
+  "name": "TestToolFolderCRUD",
+  "recv": "",
+  "start": 12062,
+  "end": 12088
+ },
+ {
+  "idx": 385,
+  "kind": "func",
+  "name": "TestToolFileCRUD",
+  "recv": "",
+  "start": 12090,
+  "end": 12111
+ },
+ {
+  "idx": 386,
+  "kind": "func",
+  "name": "TestExhaustiveToolTicketLifecycle",
+  "recv": "",
+  "start": 12113,
+  "end": 12147
+ },
+ {
+  "idx": 387,
+  "kind": "func",
+  "name": "TestParseTicketPath",
+  "recv": "",
+  "start": 12149,
+  "end": 12182
+ },
+ {
+  "idx": 388,
+  "kind": "func",
+  "name": "TestExhaustiveMcpTicketCloseAutoResolve",
+  "recv": "",
+  "start": 12184,
+  "end": 12214
+ },
+ {
+  "idx": 389,
+  "kind": "func",
+  "name": "TestExhaustiveMcpTicketCloseWithFullYearPath",
+  "recv": "",
+  "start": 12216,
+  "end": 12244
+ },
+ {
+  "idx": 390,
+  "kind": "func",
+  "name": "TestToolDraftLifecycle",
+  "recv": "",
+  "start": 12246,
+  "end": 12267
+ },
+ {
+  "idx": 391,
+  "kind": "func",
+  "name": "TestRepoContextTodoChange",
+  "recv": "",
+  "start": 12269,
+  "end": 12327
+ },
+ {
+  "idx": 392,
+  "kind": "func",
+  "name": "TestToolGoalUri",
+  "recv": "",
+  "start": 12329,
+  "end": 12348
+ },
+ {
+  "idx": 393,
+  "kind": "func",
+  "name": "TestExhaustiveParityGoalList",
+  "recv": "",
+  "start": 12350,
+  "end": 12394
+ },
+ {
+  "idx": 394,
+  "kind": "func",
+  "name": "TestExhaustiveParityContributorList",
+  "recv": "",
+  "start": 12396,
+  "end": 12426
+ },
+ {
+  "idx": 395,
+  "kind": "func",
+  "name": "TestExhaustiveParityTicketList",
+  "recv": "",
+  "start": 12428,
+  "end": 12458
+ },
+ {
+  "idx": 396,
+  "kind": "func",
+  "name": "TestParityDraftList",
+  "recv": "",
+  "start": 12460,
+  "end": 12495
+ },
+ {
+  "idx": 397,
+  "kind": "func",
+  "name": "TestExhaustiveParityTechnologyList",
+  "recv": "",
+  "start": 12497,
+  "end": 12528
+ },
+ {
+  "idx": 398,
+  "kind": "func",
+  "name": "TestExhaustiveParityTechnologyTree",
+  "recv": "",
+  "start": 12530,
+  "end": 12572
+ },
+ {
+  "idx": 399,
+  "kind": "func",
+  "name": "TestExhaustiveParityPolicyList",
+  "recv": "",
+  "start": 12574,
+  "end": 12604
+ },
+ {
+  "idx": 400,
+  "kind": "func",
+  "name": "TestTreeNodeKindConstants",
+  "recv": "",
+  "start": 12610,
+  "end": 12641
+ },
+ {
+  "idx": 401,
+  "kind": "func",
+  "name": "TestTreeFilterIsKindVisible",
+  "recv": "",
+  "start": 12643,
+  "end": 12698
+ },
+ {
+  "idx": 402,
+  "kind": "func",
+  "name": "TestTreeFilterMatchesSubKind",
+  "recv": "",
+  "start": 12700,
+  "end": 12756
+ },
+ {
+  "idx": 403,
+  "kind": "func",
+  "name": "TestTreeFilterMatchesDate",
+  "recv": "",
+  "start": 12758,
+  "end": 12808
+ },
+ {
+  "idx": 404,
+  "kind": "func",
+  "name": "TestTreeFilterMatchesStatus",
+  "recv": "",
+  "start": 12810,
+  "end": 12847
+ },
+ {
+  "idx": 405,
+  "kind": "func",
+  "name": "TestTreeFilterMatchesContributor",
+  "recv": "",
+  "start": 12849,
+  "end": 12883
+ },
+ {
+  "idx": 406,
+  "kind": "func",
+  "name": "TestFilterMonorepoTree",
+  "recv": "",
+  "start": 12885,
+  "end": 13059
+ },
+ {
+  "idx": 407,
+  "kind": "func",
+  "name": "TestSearchMonorepoTree",
+  "recv": "",
+  "start": 13061,
+  "end": 13135
+ },
+ {
+  "idx": 408,
+  "kind": "func",
+  "name": "TestSearchMonorepoTreeWithCache",
+  "recv": "",
+  "start": 13137,
+  "end": 13205
+ },
+ {
+  "idx": 409,
+  "kind": "func",
+  "name": "TestRenderMonorepoTree",
+  "recv": "",
+  "start": 13207,
+  "end": 13351
+ },
+ {
+  "idx": 410,
+  "kind": "func",
+  "name": "TestExhaustiveBuildMonorepoTree",
+  "recv": "",
+  "start": 13353,
+  "end": 13539
+ },
+ {
+  "idx": 411,
+  "kind": "func",
+  "name": "TestCollapseFilteredKinds",
+  "recv": "",
+  "start": 13541,
+  "end": 13596
+ },
+ {
+  "idx": 412,
+  "kind": "func",
+  "name": "TestSortTreeChildren",
+  "recv": "",
+  "start": 13598,
+  "end": 13629
+ },
+ {
+  "idx": 413,
+  "kind": "func",
+  "name": "TestTreeCommandFlags",
+  "recv": "",
+  "start": 13631,
+  "end": 13674
+ },
+ {
+  "idx": 414,
+  "kind": "func",
+  "name": "TestTreeNodeKindToEntityKindCoversAll",
+  "recv": "",
+  "start": 13676,
+  "end": 13711
+ },
+ {
+  "idx": 415,
+  "kind": "func",
+  "name": "TestUnifiedRenderingGoalIdentity",
+  "recv": "",
+  "start": 13713,
+  "end": 13863
+ },
+ {
+  "idx": 416,
+  "kind": "func",
+  "name": "TestUnifiedRenderingTicketIdentity",
+  "recv": "",
+  "start": 13865,
+  "end": 13958
+ },
+ {
+  "idx": 417,
+  "kind": "func",
+  "name": "TestUnifiedRenderingSectionIdentity",
+  "recv": "",
+  "start": 13960,
+  "end": 14060
+ },
+ {
+  "idx": 418,
+  "kind": "func",
+  "name": "TestUnifiedRenderingAllKindIdentity",
+  "recv": "",
+  "start": 14062,
+  "end": 14145
+ },
+ {
+  "idx": 419,
+  "kind": "func",
+  "name": "TestCollectEntityPropsConsistency",
+  "recv": "",
+  "start": 14147,
+  "end": 14366
+ },
+ {
+  "idx": 420,
+  "kind": "func",
+  "name": "TestSingleLineOutput",
+  "recv": "",
+  "start": 14368,
+  "end": 14577
+ },
+ {
+  "idx": 421,
+  "kind": "func",
+  "name": "TestNoDoubleDashInMarkdownOutput",
+  "recv": "",
+  "start": 14579,
+  "end": 14678
+ },
+ {
+  "idx": 422,
+  "kind": "func",
+  "name": "TestExhaustiveMigrateAuthorFieldsToString",
+  "recv": "",
+  "start": 14684,
+  "end": 14750
+ },
+ {
+  "idx": 423,
+  "kind": "func",
+  "name": "TestFixHeaderWithShebang",
+  "recv": "",
+  "start": 14752,
+  "end": 14812
+ },
+ {
+  "idx": 424,
+  "kind": "func",
+  "name": "TestFolderPolicyEmptyFolder",
+  "recv": "",
+  "start": 14814,
+  "end": 14845
+ },
+ {
+  "idx": 425,
+  "kind": "func",
+  "name": "TestPathEmojiStatutesLanguageNeutralFixture",
+  "recv": "",
+  "start": 14847,
+  "end": 14872
+ },
+ {
+  "idx": 426,
+  "kind": "func",
+  "name": "TestFolderPolicyEmptyFolderAutofix",
+  "recv": "",
+  "start": 14874,
+  "end": 14896
+ },
+ {
+  "idx": 427,
+  "kind": "func",
+  "name": "TestFolderPolicySkipsExcludedDirs",
+  "recv": "",
+  "start": 14898,
+  "end": 14917
+ },
+ {
+  "idx": 428,
+  "kind": "func",
+  "name": "TestFilePolicyGodfile",
+  "recv": "",
+  "start": 14919,
+  "end": 14951
+ },
+ {
+  "idx": 429,
+  "kind": "func",
+  "name": "TestFilePolicyGodfileSupportsGlobPatterns",
+  "recv": "",
+  "start": 14953,
+  "end": 14988
+ },
+ {
+  "idx": 430,
+  "kind": "func",
+  "name": "TestFilePolicyGodfileSkipsComposeRepo",
+  "recv": "",
+  "start": 14990,
+  "end": 15008
+ },
+ {
+  "idx": 431,
+  "kind": "func",
+  "name": "TestFilePolicyGodfileSkipsNestedNodeModules",
+  "recv": "",
+  "start": 15010,
+  "end": 15031
+ },
+ {
+  "idx": 432,
+  "kind": "func",
+  "name": "TestSetRootDirResetsGitignoreCache",
+  "recv": "",
+  "start": 15033,
+  "end": 15046
+ },
+ {
+  "idx": 433,
+  "kind": "func",
+  "name": "TestBuildBinaryArtifactsGitIgnored",
+  "recv": "",
+  "start": 15048,
+  "end": 15075
+ },
+ {
+  "idx": 434,
+  "kind": "func",
+  "name": "TestSetRootDirCanonicalizesToRepoRoot",
+  "recv": "",
+  "start": 15077,
+  "end": 15095
+ },
+ {
+  "idx": 435,
+  "kind": "func",
+  "name": "TestRenderPromptTemplateUsesRepoMetaRoot",
+  "recv": "",
+  "start": 15097,
+  "end": 15131
+ },
+ {
+  "idx": 436,
+  "kind": "func",
+  "name": "TestFindRepoRootPrefersMonorepoMarkerOverLocalGoMod",
+  "recv": "",
+  "start": 15133,
+  "end": 15149
+ },
+ {
+  "idx": 437,
+  "kind": "func",
+  "name": "TestGetCacheDirUsesMonorepoRoot",
+  "recv": "",
+  "start": 15151,
+  "end": 15171
+ },
+ {
+  "idx": 438,
+  "kind": "func",
+  "name": "TestFilePolicyNoGodfile",
+  "recv": "",
+  "start": 15173,
+  "end": 15186
+ },
+ {
+  "idx": 439,
+  "kind": "func",
+  "name": "TestFolderPolicyRegistered",
+  "recv": "",
+  "start": 15188,
+  "end": 15206
+ },
+ {
+  "idx": 440,
+  "kind": "func",
+  "name": "TestFilePolicyRegistered",
+  "recv": "",
+  "start": 15208,
+  "end": 15226
+ },
+ {
+  "idx": 441,
+  "kind": "func",
+  "name": "TestComposePolicyRegistered",
+  "recv": "",
+  "start": 15228,
+  "end": 15246
+ },
+ {
+  "idx": 442,
+  "kind": "func",
+  "name": "TestComposePolicyNoUiDependency",
+  "recv": "",
+  "start": 15248,
+  "end": 15335
+ },
+ {
+  "idx": 443,
+  "kind": "func",
+  "name": "TestValidateHookEvent",
+  "recv": "",
+  "start": 15337,
+  "end": 15387
+ },
+ {
+  "idx": 444,
+  "kind": "func",
+  "name": "TestHookEventKind",
+  "recv": "",
+  "start": 15389,
+  "end": 15426
+ },
+ {
+  "idx": 445,
+  "kind": "func",
+  "name": "TestIsToolBlocked",
+  "recv": "",
+  "start": 15428,
+  "end": 15506
+ },
+ {
+  "idx": 446,
+  "kind": "func",
+  "name": "TestSplitCommandSegments",
+  "recv": "",
+  "start": 15508,
+  "end": 15534
+ },
+ {
+  "idx": 447,
+  "kind": "func",
+  "name": "TestIsCommandSegmentBlocked",
+  "recv": "",
+  "start": 15536,
+  "end": 15610
+ },
+ {
+  "idx": 448,
+  "kind": "func",
+  "name": "TestRunHookAgentEvents",
+  "recv": "",
+  "start": 15612,
+  "end": 15665
+ },
+ {
+  "idx": 449,
+  "kind": "func",
+  "name": "TestRunHookToolBlocking",
+  "recv": "",
+  "start": 15667,
+  "end": 15683
+ },
+ {
+  "idx": 450,
+  "kind": "func",
+  "name": "TestRunHookToolAllowed",
+  "recv": "",
+  "start": 15685,
+  "end": 15698
+ },
+ {
+  "idx": 451,
+  "kind": "func",
+  "name": "TestRunHookUnknownEvent",
+  "recv": "",
+  "start": 15700,
+  "end": 15711
+ },
+ {
+  "idx": 452,
+  "kind": "func",
+  "name": "TestHookClientForMcpKindMapsIDEEntrypoints",
+  "recv": "",
+  "start": 15713,
+  "end": 15730
+ },
+ {
+  "idx": 453,
+  "kind": "func",
+  "name": "TestResolveMcpTicketClient",
+  "recv": "",
+  "start": 15732,
+  "end": 15751
+ },
+ {
+  "idx": 454,
+  "kind": "func",
+  "name": "TestCurrentMcpLLMsAllowed",
+  "recv": "",
+  "start": 15753,
+  "end": 15759
+ },
+ {
+  "idx": 455,
+  "kind": "func",
+  "name": "TestWriteWarningfUsesStderr",
+  "recv": "",
+  "start": 15761,
+  "end": 15782
+ },
+ {
+  "idx": 456,
+  "kind": "func",
+  "name": "TestRunHookForRejectsGenericKind",
+  "recv": "",
+  "start": 15784,
+  "end": 15789
+ },
+ {
+  "idx": 457,
+  "kind": "func",
+  "name": "TestRunHookThinkingEvents",
+  "recv": "",
+  "start": 15791,
+  "end": 15846
+ },
+ {
+  "idx": 458,
+  "kind": "func",
+  "name": "TestAllHookEventsCompleteness",
+  "recv": "",
+  "start": 15848,
+  "end": 15879
+ },
+ {
+  "idx": 459,
+  "kind": "func",
+  "name": "TestHookCommandCLI",
+  "recv": "",
+  "start": 15881,
+  "end": 15925
+ },
+ {
+  "idx": 460,
+  "kind": "func",
+  "name": "TestHookCommandToolBlocking",
+  "recv": "",
+  "start": 15927,
+  "end": 15949
+ },
+ {
+  "idx": 461,
+  "kind": "func",
+  "name": "TestHookCommandJSONOutput",
+  "recv": "",
+  "start": 15951,
+  "end": 15973
+ },
+ {
+  "idx": 462,
+  "kind": "func",
+  "name": "TestConfigureCommandDoesNotGenerateConfigFiles",
+  "recv": "",
+  "start": 15975,
+  "end": 16032
+ },
+ {
+  "idx": 463,
+  "kind": "func",
+  "name": "TestMicroCommitPostCommitHookResetsTemplates",
+  "recv": "",
+  "start": 16034,
+  "end": 16101
+ },
+ {
+  "idx": 464,
+  "kind": "func",
+  "name": "TestExtractToolNameFromStdin",
+  "recv": "",
+  "start": 16103,
+  "end": 16124
+ },
+ {
+  "idx": 465,
+  "kind": "func",
+  "name": "TestExtractHookEventNameFromStdin",
+  "recv": "",
+  "start": 16126,
+  "end": 16147
+ },
+ {
+  "idx": 466,
+  "kind": "func",
+  "name": "TestVSCodeEventFromHookEvent",
+  "recv": "",
+  "start": 16149,
+  "end": 16187
+ },
+ {
+  "idx": 467,
+  "kind": "func",
+  "name": "TestFormatVSCodeHookOutput",
+  "recv": "",
+  "start": 16189,
+  "end": 16287
+ },
+ {
+  "idx": 468,
+  "kind": "func",
+  "name": "TestHookCommandCopilotChatVSCodeOutput",
+  "recv": "",
+  "start": 16289,
+  "end": 16353
+ },
+ {
+  "idx": 469,
+  "kind": "func",
+  "name": "TestBlockedToolPatterns",
+  "recv": "",
+  "start": 16355,
+  "end": 16396
+ },
+ {
+  "idx": 470,
+  "kind": "func",
+  "name": "testLoggingConfigFull",
+  "recv": "",
+  "start": 16398,
+  "end": 16400
+ },
+ {
+  "idx": 471,
+  "kind": "func",
+  "name": "testLoggingConfigSession",
+  "recv": "",
+  "start": 16402,
+  "end": 16404
+ },
+ {
+  "idx": 472,
+  "kind": "func",
+  "name": "writeRepoLoggingConfig",
+  "recv": "",
+  "start": 16406,
+  "end": 16417
+ },
+ {
+  "idx": 473,
+  "kind": "func",
+  "name": "TestRepoConfig",
+  "recv": "",
+  "start": 16419,
+  "end": 16510
+ },
+ {
+  "idx": 474,
+  "kind": "func",
+  "name": "TestHookLogging",
+  "recv": "",
+  "start": 16512,
+  "end": 16627
+ },
+ {
+  "idx": 475,
+  "kind": "func",
+  "name": "TestSessionJsonTracksPlan",
+  "recv": "",
+  "start": 16629,
+  "end": 16779
+ },
+ {
+  "idx": 476,
+  "kind": "func",
+  "name": "TestMergeTicketAgentPlanSteps",
+  "recv": "",
+  "start": 16781,
+  "end": 16954
+ },
+ {
+  "idx": 477,
+  "kind": "func",
+  "name": "TestHookLoggingToolBlocked",
+  "recv": "",
+  "start": 16956,
+  "end": 17005
+ },
+ {
+  "idx": 478,
+  "kind": "func",
+  "name": "TestHookLoggingStdinInput",
+  "recv": "",
+  "start": 17007,
+  "end": 17066
+ },
+ {
+  "idx": 479,
+  "kind": "func",
+  "name": "TestDeriveRepoOpFromMCPTool",
+  "recv": "",
+  "start": 17068,
+  "end": 17115
+ },
+ {
+  "idx": 480,
+  "kind": "func",
+  "name": "TestDeriveRepoOpFromCLICommand",
+  "recv": "",
+  "start": 17117,
+  "end": 17145
+ },
+ {
+  "idx": 481,
+  "kind": "func",
+  "name": "TestLogRepoOperationHookMCPTool",
+  "recv": "",
+  "start": 17147,
+  "end": 17254
+ },
+ {
+  "idx": 482,
+  "kind": "func",
+  "name": "TestLogRepoOperationHookCLI",
+  "recv": "",
+  "start": 17256,
+  "end": 17340
+ },
+ {
+  "idx": 483,
+  "kind": "func",
+  "name": "TestRunHookAgentToolStartingDerivedRepoEvents",
+  "recv": "",
+  "start": 17342,
+  "end": 17388
+ },
+ {
+  "idx": 484,
+  "kind": "func",
+  "name": "setupTicketDir",
+  "recv": "",
+  "start": 17389,
+  "end": 17414
+ },
+ {
+  "idx": 485,
+  "kind": "func",
+  "name": "setupImportantTicket",
+  "recv": "",
+  "start": 17418,
+  "end": 17456
+ },
+ {
+  "idx": 486,
+  "kind": "func",
+  "name": "TestTicketImportantPathCanonical",
+  "recv": "",
+  "start": 17458,
+  "end": 17467
+ },
+ {
+  "idx": 487,
+  "kind": "func",
+  "name": "TestTicketUnmarshalRequiresExplicitValidStatus",
+  "recv": "",
+  "start": 17469,
+  "end": 17489
+ },
+ {
+  "idx": 488,
+  "kind": "func",
+  "name": "TestCreateReadAndRenameTicketUseCanonicalImportantPath",
+  "recv": "",
+  "start": 17491,
+  "end": 17536
+ },
+ {
+  "idx": 489,
+  "kind": "func",
+  "name": "TestCreateTicketNeverOverwritesExistingImportantDocument",
+  "recv": "",
+  "start": 17538,
+  "end": 17557
+ },
+ {
+  "idx": 490,
+  "kind": "func",
+  "name": "TestTicketLifecycleRejectsInvalidStatusWithoutMutation",
+  "recv": "",
+  "start": 17559,
+  "end": 17585
+ },
+ {
+  "idx": 491,
+  "kind": "func",
+  "name": "TestFinishTicketImportantLifecycle",
+  "recv": "",
+  "start": 17587,
+  "end": 17671
+ },
+ {
+  "idx": 492,
+  "kind": "func",
+  "name": "TestReopenTicketImportantLifecycle",
+  "recv": "",
+  "start": 17673,
+  "end": 17718
+ },
+ {
+  "idx": 493,
+  "kind": "func",
+  "name": "writeSparseTicketArtifact",
+  "recv": "",
+  "start": 17722,
+  "end": 17738
+ },
+ {
+  "idx": 494,
+  "kind": "func",
+  "name": "TestTicketGeneratedOutputRetention",
+  "recv": "",
+  "start": 17741,
+  "end": 17756
+ },
+ {
+  "idx": 495,
+  "kind": "func",
+  "name": "TestTicketGeneratedOutputRoots",
+  "recv": "",
+  "start": 17759,
+  "end": 17776
+ },
+ {
+  "idx": 496,
+  "kind": "func",
+  "name": "TestFinishTicketPurgesOversizedArtifacts",
+  "recv": "",
+  "start": 17778,
+  "end": 17839
+ },
+ {
+  "idx": 497,
+  "kind": "func",
+  "name": "TestPurgeAllOversizedTicketArtifacts",
+  "recv": "",
+  "start": 17841,
+  "end": 17895
+ },
+ {
+  "idx": 498,
+  "kind": "func",
+  "name": "readTicketJSON",
+  "recv": "",
+  "start": 17897,
+  "end": 17908
+ },
+ {
+  "idx": 499,
+  "kind": "func",
+  "name": "getLogFiles",
+  "recv": "",
+  "start": 17910,
+  "end": 17924
+ },
+ {
+  "idx": 500,
+  "kind": "func",
+  "name": "assertNoHookLogFiles",
+  "recv": "",
+  "start": 17926,
+  "end": 17932
+ },
+ {
+  "idx": 501,
+  "kind": "func",
+  "name": "TestTrackHookAllEventsLogged",
+  "recv": "",
+  "start": 17934,
+  "end": 18035
+ },
+ {
+  "idx": 502,
+  "kind": "func",
+  "name": "TestTrackHookSearchingPattern",
+  "recv": "",
+  "start": 18037,
+  "end": 18088
+ },
+ {
+  "idx": 503,
+  "kind": "func",
+  "name": "TestTrackHookBlockedEvent",
+  "recv": "",
+  "start": 18090,
+  "end": 18147
+ },
+ {
+  "idx": 504,
+  "kind": "func",
+  "name": "TestTrackHookTerminalEvents",
+  "recv": "",
+  "start": 18149,
+  "end": 18221
+ },
+ {
+  "idx": 505,
+  "kind": "func",
+  "name": "TestTrackHookTranscriptInSession",
+  "recv": "",
+  "start": 18223,
+  "end": 18241
+ },
+ {
+  "idx": 506,
+  "kind": "func",
+  "name": "TestTrackHookCodeEditedLogsToFile",
+  "recv": "",
+  "start": 18243,
+  "end": 18309
+ },
+ {
+  "idx": 507,
+  "kind": "func",
+  "name": "TestHookCommandStdinPiped",
+  "recv": "",
+  "start": 18311,
+  "end": 18338
+ },
+ {
+  "idx": 508,
+  "kind": "func",
+  "name": "TestExtractCommandFromStdin",
+  "recv": "",
+  "start": 18340,
+  "end": 18362
+ },
+ {
+  "idx": 509,
+  "kind": "func",
+  "name": "TestExtractCommandFromStdinBlocking",
+  "recv": "",
+  "start": 18364,
+  "end": 18380
+ },
+ {
+  "idx": 510,
+  "kind": "func",
+  "name": "TestClassifyTool",
+  "recv": "",
+  "start": 18382,
+  "end": 18438
+ },
+ {
+  "idx": 511,
+  "kind": "func",
+  "name": "TestClassifyCommandKind",
+  "recv": "",
+  "start": 18440,
+  "end": 18652
+ },
+ {
+  "idx": 512,
+  "kind": "func",
+  "name": "TestResolveHookEventCommandReclassification",
+  "recv": "",
+  "start": 18654,
+  "end": 18898
+ },
+ {
+  "idx": 513,
+  "kind": "func",
+  "name": "TestParseTestInfoFromCommand",
+  "recv": "",
+  "start": 18900,
+  "end": 18948
+ },
+ {
+  "idx": 514,
+  "kind": "func",
+  "name": "TestExtractTestSegmentFromCommand",
+  "recv": "",
+  "start": 18950,
+  "end": 18980
+ },
+ {
+  "idx": 515,
+  "kind": "func",
+  "name": "TestResolveTestFilesFromCommand",
+  "recv": "",
+  "start": 18982,
+  "end": 19154
+ },
+ {
+  "idx": 516,
+  "kind": "func",
+  "name": "TestResolveAllTestDefinitionIDs",
+  "recv": "",
+  "start": 19156,
+  "end": 19254
+ },
+ {
+  "idx": 517,
+  "kind": "func",
+  "name": "TestExtractTestStartingFromInputResolvesTestIDs",
+  "recv": "",
+  "start": 19256,
+  "end": 19444
+ },
+ {
+  "idx": 518,
+  "kind": "func",
+  "name": "TestExtractTestEndedFromInputResolvesFiles",
+  "recv": "",
+  "start": 19446,
+  "end": 19471
+ },
+ {
+  "idx": 519,
+  "kind": "func",
+  "name": "TestResolveHookEvent",
+  "recv": "",
+  "start": 19473,
+  "end": 19582
+ },
+ {
+  "idx": 520,
+  "kind": "func",
+  "name": "TestResolvePreToolUse",
+  "recv": "",
+  "start": 19584,
+  "end": 19605
+ },
+ {
+  "idx": 521,
+  "kind": "func",
+  "name": "TestResolvePostToolUse",
+  "recv": "",
+  "start": 19607,
+  "end": 19628
+ },
+ {
+  "idx": 522,
+  "kind": "func",
+  "name": "TestPopulateEventDataAgentStarting",
+  "recv": "",
+  "start": 19630,
+  "end": 19659
+ },
+ {
+  "idx": 523,
+  "kind": "func",
+  "name": "TestPopulateEventDataAgentStartingSubagentParentFromContextUsesSession",
+  "recv": "",
+  "start": 19661,
+  "end": 19679
+ },
+ {
+  "idx": 524,
+  "kind": "func",
+  "name": "TestPopulateEventDataAgentStartingSubagentUsesAgentIDAsSession",
+  "recv": "",
+  "start": 19681,
+  "end": 19702
+ },
+ {
+  "idx": 525,
+  "kind": "func",
+  "name": "TestPopulateEventDataAgentStartingParentFromContext",
+  "recv": "",
+  "start": 19704,
+  "end": 19723
+ },
+ {
+  "idx": 526,
+  "kind": "func",
+  "name": "TestPopulateEventDataAgentEnded",
+  "recv": "",
+  "start": 19725,
+  "end": 19751
+ },
+ {
+  "idx": 527,
+  "kind": "func",
+  "name": "TestPopulateEventDataPromptSubmitting",
+  "recv": "",
+  "start": 19753,
+  "end": 19776
+ },
+ {
+  "idx": 528,
+  "kind": "func",
+  "name": "TestPopulateEventDataCompacting",
+  "recv": "",
+  "start": 19778,
+  "end": 19798
+ },
+ {
+  "idx": 529,
+  "kind": "func",
+  "name": "TestPopulateEventDataToolStarting",
+  "recv": "",
+  "start": 19800,
+  "end": 19831
+ },
+ {
+  "idx": 530,
+  "kind": "func",
+  "name": "TestPopulateEventDataToolEnded",
+  "recv": "",
+  "start": 19833,
+  "end": 19857
+ },
+ {
+  "idx": 531,
+  "kind": "func",
+  "name": "TestPopulateEventDataPlanUpdating",
+  "recv": "",
+  "start": 19859,
+  "end": 19888
+ },
+ {
+  "idx": 532,
+  "kind": "func",
+  "name": "TestPopulateEventDataCodeSearching",
+  "recv": "",
+  "start": 19890,
+  "end": 19910
+ },
+ {
+  "idx": 533,
+  "kind": "func",
+  "name": "TestPopulateEventDataCodeEditing",
+  "recv": "",
+  "start": 19912,
+  "end": 19938
+ },
+ {
+  "idx": 534,
+  "kind": "func",
+  "name": "TestPopulateEventDataCodeEditingWithAll",
+  "recv": "",
+  "start": 19940,
+  "end": 19957
+ },
+ {
+  "idx": 535,
+  "kind": "func",
+  "name": "TestPopulateEventDataCodeEdited",
+  "recv": "",
+  "start": 19959,
+  "end": 19982
+ },
+ {
+  "idx": 536,
+  "kind": "func",
+  "name": "TestCodeEditEndedRunsFormatter",
+  "recv": "",
+  "start": 19984,
+  "end": 20035
+ },
+ {
+  "idx": 537,
+  "kind": "func",
+  "name": "TestPopulateEventDataTerminalStarting",
+  "recv": "",
+  "start": 20037,
+  "end": 20057
+ },
+ {
+  "idx": 538,
+  "kind": "func",
+  "name": "TestPopulateEventDataTerminalEnded",
+  "recv": "",
+  "start": 20059,
+  "end": 20090
+ },
+ {
+  "idx": 539,
+  "kind": "func",
+  "name": "TestPopulateEventDataVersionCheckpointEnded",
+  "recv": "",
+  "start": 20092,
+  "end": 20113
+ },
+ {
+  "idx": 540,
+  "kind": "func",
+  "name": "TestPopulateEventDataVersionCheckpointStartingFromFile",
+  "recv": "",
+  "start": 20115,
+  "end": 20137
+ },
+ {
+  "idx": 541,
+  "kind": "func",
+  "name": "TestPopulateEventDataRawField",
+  "recv": "",
+  "start": 20139,
+  "end": 20167
+ },
+ {
+  "idx": 542,
+  "kind": "func",
+  "name": "TestPopulateEventDataNoInputNoRaw",
+  "recv": "",
+  "start": 20169,
+  "end": 20184
+ },
+ {
+  "idx": 543,
+  "kind": "func",
+  "name": "TestPopulateEventDataToolNameFromStdin",
+  "recv": "",
+  "start": 20186,
+  "end": 20203
+ },
+ {
+  "idx": 544,
+  "kind": "func",
+  "name": "TestPopulateEventDataCodeSearchWithExclude",
+  "recv": "",
+  "start": 20205,
+  "end": 20222
+ },
+ {
+  "idx": 545,
+  "kind": "func",
+  "name": "TestExtractPlanStepsFromInput",
+  "recv": "",
+  "start": 20224,
+  "end": 20260
+ },
+ {
+  "idx": 546,
+  "kind": "func",
+  "name": "TestExtractSearchFromInput",
+  "recv": "",
+  "start": 20262,
+  "end": 20392
+ },
+ {
+  "idx": 547,
+  "kind": "func",
+  "name": "TestExtractToolInputMapFromData",
+  "recv": "",
+  "start": 20394,
+  "end": 20446
+ },
+ {
+  "idx": 548,
+  "kind": "func",
+  "name": "TestExtractToolInputFromStdinNativeFormat",
+  "recv": "",
+  "start": 20448,
+  "end": 20470
+ },
+ {
+  "idx": 549,
+  "kind": "func",
+  "name": "TestExtractSearchDefinitionReadsFromInput",
+  "recv": "",
+  "start": 20472,
+  "end": 20496
+ },
+ {
+  "idx": 550,
+  "kind": "func",
+  "name": "TestRunHookSearchStartingIncludesDefinitions",
+  "recv": "",
+  "start": 20498,
+  "end": 20523
+ },
+ {
+  "idx": 551,
+  "kind": "func",
+  "name": "TestBuildDefinitionReadsFullFileReturnsFileID",
+  "recv": "",
+  "start": 20525,
+  "end": 20552
+ },
+ {
+  "idx": 552,
+  "kind": "func",
+  "name": "TestBuildDefinitionReadsUsesRepoRelativePaths",
+  "recv": "",
+  "start": 20554,
+  "end": 20580
+ },
+ {
+  "idx": 553,
+  "kind": "func",
+  "name": "TestRunHookPreReadCodeDefinitionIDsAreRepoRelative",
+  "recv": "",
+  "start": 20582,
+  "end": 20610
+ },
+ {
+  "idx": 554,
+  "kind": "func",
+  "name": "TestShouldExecuteSearchCommand",
+  "recv": "",
+  "start": 20612,
+  "end": 20631
+ },
+ {
+  "idx": 555,
+  "kind": "func",
+  "name": "TestExtractCodeEditFromInput",
+  "recv": "",
+  "start": 20633,
+  "end": 20663
+ },
+ {
+  "idx": 556,
+  "kind": "func",
+  "name": "TestExtractToolInputFromStdin",
+  "recv": "",
+  "start": 20665,
+  "end": 20693
+ },
+ {
+  "idx": 557,
+  "kind": "func",
+  "name": "TestExtractToolResponseFromStdin",
+  "recv": "",
+  "start": 20695,
+  "end": 20717
+ },
+ {
+  "idx": 558,
+  "kind": "func",
+  "name": "TestExtractTerminalEndedFromInput",
+  "recv": "",
+  "start": 20719,
+  "end": 20752
+ },
+ {
+  "idx": 559,
+  "kind": "func",
+  "name": "TestExtractChatFromInput",
+  "recv": "",
+  "start": 20754,
+  "end": 20775
+ },
+ {
+  "idx": 560,
+  "kind": "func",
+  "name": "TestExtractReportFromInput",
+  "recv": "",
+  "start": 20777,
+  "end": 20805
+ },
+ {
+  "idx": 561,
+  "kind": "func",
+  "name": "TestExtractCheckpointMessageFromInput",
+  "recv": "",
+  "start": 20807,
+  "end": 20831
+ },
+ {
+  "idx": 562,
+  "kind": "func",
+  "name": "TestExtractCheckpointSHAFromInput",
+  "recv": "",
+  "start": 20833,
+  "end": 20847
+ },
+ {
+  "idx": 563,
+  "kind": "func",
+  "name": "TestExtractParentFromInput",
+  "recv": "",
+  "start": 20849,
+  "end": 20884
+ },
+ {
+  "idx": 564,
+  "kind": "func",
+  "name": "TestHookResultJSONFields",
+  "recv": "",
+  "start": 20886,
+  "end": 20918
+ },
+ {
+  "idx": 565,
+  "kind": "func",
+  "name": "TestHookResultOmitEmpty",
+  "recv": "",
+  "start": 20920,
+  "end": 20933
+ },
+ {
+  "idx": 566,
+  "kind": "func",
+  "name": "TestNativeHookEventMappingWithRealData",
+  "recv": "",
+  "start": 20935,
+  "end": 21145
+ },
+ {
+  "idx": 567,
+  "kind": "func",
+  "name": "TestNativeHookEventMappingFromRealLogFiles",
+  "recv": "",
+  "start": 21147,
+  "end": 21243
+ },
+ {
+  "idx": 568,
+  "kind": "func",
+  "name": "TestCheckpointInAllAgentEvents",
+  "recv": "",
+  "start": 21245,
+  "end": 21309
+ },
+ {
+  "idx": 569,
+  "kind": "func",
+  "name": "TestCheckpointInAllVersionEvents",
+  "recv": "",
+  "start": 21311,
+  "end": 21358
+ },
+ {
+  "idx": 570,
+  "kind": "func",
+  "name": "TestVersionHooksDoNotWriteSessionLogs",
+  "recv": "",
+  "start": 21360,
+  "end": 21402
+ },
+ {
+  "idx": 571,
+  "kind": "func",
+  "name": "TestCheckpointInLoggedEventJSON",
+  "recv": "",
+  "start": 21404,
+  "end": 21475
+ },
+ {
+  "idx": 572,
+  "kind": "func",
+  "name": "TestEventIDsUseComposeRepoFormat",
+  "recv": "",
+  "start": 21477,
+  "end": 21517
+ },
+ {
+  "idx": 573,
+  "kind": "func",
+  "name": "TestExhaustiveMermaidLocByTechnologiesBundlesFoldersFiles",
+  "recv": "",
+  "start": 21521,
+  "end": 21560
+ },
+ {
+  "idx": 574,
+  "kind": "func",
+  "name": "TestExhaustiveMermaidLocByLanguage",
+  "recv": "",
+  "start": 21562,
+  "end": 21589
+ },
+ {
+  "idx": 575,
+  "kind": "func",
+  "name": "TestExhaustiveMermaidLocByContributors",
+  "recv": "",
+  "start": 21591,
+  "end": 21608
+ },
+ {
+  "idx": 576,
+  "kind": "func",
+  "name": "TestExhaustiveMermaidCommandLocByTechnologiesBundlesFoldersFiles",
+  "recv": "",
+  "start": 21610,
+  "end": 21627
+ },
+ {
+  "idx": 577,
+  "kind": "func",
+  "name": "TestExhaustiveMermaidCommandLocByLanguage",
+  "recv": "",
+  "start": 21629,
+  "end": 21646
+ },
+ {
+  "idx": 578,
+  "kind": "func",
+  "name": "TestMermaidEscapeLabel",
+  "recv": "",
+  "start": 21648,
+  "end": 21655
+ },
+ {
+  "idx": 579,
+  "kind": "func",
+  "name": "TestProviderRegistry",
+  "recv": "",
+  "start": 21659,
+  "end": 21682
+ },
+ {
+  "idx": 580,
+  "kind": "func",
+  "name": "TestGetManagementProvider",
+  "recv": "",
+  "start": 21684,
+  "end": 21692
+ },
+ {
+  "idx": 581,
+  "kind": "func",
+  "name": "TestGoalIDForFilesystem",
+  "recv": "",
+  "start": 21694,
+  "end": 21712
+ },
+ {
+  "idx": 582,
+  "kind": "func",
+  "name": "TestGhExtractIssueURL",
+  "recv": "",
+  "start": 21714,
+  "end": 21729
+ },
+ {
+  "idx": 583,
+  "kind": "func",
+  "name": "TestNullManagementProvider",
+  "recv": "",
+  "start": 21731,
+  "end": 21843
+ },
+ {
+  "idx": 584,
+  "kind": "func",
+  "name": "TestAllEditorProviders",
+  "recv": "",
+  "start": 21845,
+  "end": 21862
+ },
+ {
+  "idx": 585,
+  "kind": "func",
+  "name": "TestGetEditorProvider",
+  "recv": "",
+  "start": 21864,
+  "end": 21878
+ },
+ {
+  "idx": 586,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderKind",
+  "recv": "",
+  "start": 21880,
+  "end": 21885
+ },
+ {
+  "idx": 587,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderConfigure",
+  "recv": "",
+  "start": 21887,
+  "end": 21892
+ },
+ {
+  "idx": 588,
+  "kind": "func",
+  "name": "initTestGitRepo",
+  "recv": "",
+  "start": 21894,
+  "end": 21923
+ },
+ {
+  "idx": 589,
+  "kind": "func",
+  "name": "TestComputeCompositeFingerprintIgnoresUntrackedFiles",
+  "recv": "",
+  "start": 21925,
+  "end": 21947
+ },
+ {
+  "idx": 590,
+  "kind": "func",
+  "name": "TestComputeCompositeFingerprintFallsBackWhenRecursiveSubmoduleStatusFails",
+  "recv": "",
+  "start": 21949,
+  "end": 21986
+ },
+ {
+  "idx": 591,
+  "kind": "func",
+  "name": "initTestGitRepoWithRemote",
+  "recv": "",
+  "start": 21988,
+  "end": 22022
+ },
+ {
+  "idx": 592,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderCurrentCheckpoint",
+  "recv": "",
+  "start": 22024,
+  "end": 22038
+ },
+ {
+  "idx": 593,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderCurrentBranch",
+  "recv": "",
+  "start": 22040,
+  "end": 22054
+ },
+ {
+  "idx": 594,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderCheckpoint",
+  "recv": "",
+  "start": 22056,
+  "end": 22077
+ },
+ {
+  "idx": 595,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderStageAll",
+  "recv": "",
+  "start": 22079,
+  "end": 22098
+ },
+ {
+  "idx": 596,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderStagedFiles",
+  "recv": "",
+  "start": 22100,
+  "end": 22126
+ },
+ {
+  "idx": 597,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderCheckin",
+  "recv": "",
+  "start": 22128,
+  "end": 22147
+ },
+ {
+  "idx": 598,
+  "kind": "func",
+  "name": "TestGitVersionControlProviderCheckout",
+  "recv": "",
+  "start": 22149,
+  "end": 22189
+ },
+ {
+  "idx": 599,
+  "kind": "func",
+  "name": "TestVersionHookEventsDispatch",
+  "recv": "",
+  "start": 22191,
+  "end": 22218
+ },
+ {
+  "idx": 600,
+  "kind": "func",
+  "name": "TestIsLicenseText",
+  "recv": "",
+  "start": 22222,
+  "end": 22242
+ },
+ {
+  "idx": 601,
+  "kind": "func",
+  "name": "TestIsHeaderMetaLine",
+  "recv": "",
+  "start": 22244,
+  "end": 22269
+ },
+ {
+  "idx": 602,
+  "kind": "func",
+  "name": "TestExtractMarkdownSection",
+  "recv": "",
+  "start": 22271,
+  "end": 22289
+ },
+ {
+  "idx": 603,
+  "kind": "func",
+  "name": "TestExtractFileHeaderSummary",
+  "recv": "",
+  "start": 22291,
+  "end": 22299
+ },
+ {
+  "idx": 604,
+  "kind": "func",
+  "name": "TestExtractFileHeaderSummaryReturnsActualSummary",
+  "recv": "",
+  "start": 22301,
+  "end": 22306
+ },
+ {
+  "idx": 605,
+  "kind": "func",
+  "name": "TestExtractFileHeaderRequirementsNoLicense",
+  "recv": "",
+  "start": 22308,
+  "end": 22313
+ },
+ {
+  "idx": 606,
+  "kind": "func",
+  "name": "TestExtractSectionLeadCommentsSkipsLicense",
+  "recv": "",
+  "start": 22315,
+  "end": 22326
+ },
+ {
+  "idx": 607,
+  "kind": "func",
+  "name": "TestExtractSectionLeadCommentsSkipsRegionMarkers",
+  "recv": "",
+  "start": 22328,
+  "end": 22345
+ },
+ {
+  "idx": 608,
+  "kind": "func",
+  "name": "TestGenerateTechnologyRequirements",
+  "recv": "",
+  "start": 22347,
+  "end": 22365
+ },
+ {
+  "idx": 609,
+  "kind": "func",
+  "name": "TestGenerateTechnologyDocs",
+  "recv": "",
+  "start": 22367,
+  "end": 22385
+ },
+ {
+  "idx": 610,
+  "kind": "func",
+  "name": "TestGenerateTechnologyTodos",
+  "recv": "",
+  "start": 22387,
+  "end": 22399
+ },
+ {
+  "idx": 611,
+  "kind": "func",
+  "name": "TestGenerateTechnologyRequirementsInvalidTechnology",
+  "recv": "",
+  "start": 22401,
+  "end": 22406
+ },
+ {
+  "idx": 612,
+  "kind": "func",
+  "name": "TestGenerateTechnologyDocsInvalidTechnology",
+  "recv": "",
+  "start": 22408,
+  "end": 22413
+ },
+ {
+  "idx": 613,
+  "kind": "func",
+  "name": "TestGenerateTechnologyTodosInvalidTechnology",
+  "recv": "",
+  "start": 22415,
+  "end": 22420
+ },
+ {
+  "idx": 614,
+  "kind": "func",
+  "name": "TestGenerateTechnologyRequirementsCompose",
+  "recv": "",
+  "start": 22422,
+  "end": 22437
+ },
+ {
+  "idx": 615,
+  "kind": "func",
+  "name": "TestGenerateTechnologyDocsCompose",
+  "recv": "",
+  "start": 22439,
+  "end": 22451
+ },
+ {
+  "idx": 616,
+  "kind": "func",
+  "name": "TestGenerateTechnologyRequirementsComposeRepo",
+  "recv": "",
+  "start": 22453,
+  "end": 22465
+ },
+ {
+  "idx": 617,
+  "kind": "func",
+  "name": "TestExtractSearchFromInputLineNumbers",
+  "recv": "",
+  "start": 22467,
+  "end": 22519
+ },
+ {
+  "idx": 618,
+  "kind": "func",
+  "name": "TestExtractSearchFromInputCompleteFileRange",
+  "recv": "",
+  "start": 22521,
+  "end": 22542
+ },
+ {
+  "idx": 619,
+  "kind": "func",
+  "name": "TestSectionNewlineAfterRegion",
+  "recv": "",
+  "start": 22544,
+  "end": 22787
+ },
+ {
+  "idx": 620,
+  "kind": "func",
+  "name": "TestResolvePlanSourceCursorPlanID",
+  "recv": "",
+  "start": 22789,
+  "end": 22814
+ },
+ {
+  "idx": 621,
+  "kind": "func",
+  "name": "TestResolvePlanSourceKiroSpecID",
+  "recv": "",
+  "start": 22816,
+  "end": 22839
+ },
+ {
+  "idx": 622,
+  "kind": "func",
+  "name": "TestMoveTicketPlanIntoFolderFile",
+  "recv": "",
+  "start": 22841,
+  "end": 22865
+ },
+ {
+  "idx": 623,
+  "kind": "func",
+  "name": "TestMoveTicketPlanIntoFolderSpecDir",
+  "recv": "",
+  "start": 22867,
+  "end": 22903
+ },
+ {
+  "idx": 624,
+  "kind": "func",
+  "name": "TestApplyTicketPlanFromIDsCursor",
+  "recv": "",
+  "start": 22905,
+  "end": 22930
+ },
+ {
+  "idx": 625,
+  "kind": "func",
+  "name": "TestStripPlanFrontmatter",
+  "recv": "",
+  "start": 22932,
+  "end": 22941
+ },
+ {
+  "idx": 626,
+  "kind": "func",
+  "name": "TestFormatPlanCommentFile",
+  "recv": "",
+  "start": 22943,
+  "end": 22965
+ },
+ {
+  "idx": 627,
+  "kind": "func",
+  "name": "TestFormatPlanCommentSpecDir",
+  "recv": "",
+  "start": 22967,
+  "end": 22988
+ },
+ {
+  "idx": 628,
+  "kind": "type",
+  "name": "captureCommentProvider",
+  "recv": "",
+  "start": 22990,
+  "end": 22996
+ },
+ {
+  "idx": 629,
+  "kind": "method",
+  "name": "AddComment",
+  "recv": "captureCommentProvider",
+  "start": 22998,
+  "end": 23004
+ },
+ {
+  "idx": 630,
+  "kind": "func",
+  "name": "TestPostTicketPlanComment",
+  "recv": "",
+  "start": 23006,
+  "end": 23035
+ },
+ {
+  "idx": 631,
+  "kind": "func",
+  "name": "TestPostTicketPlanCommentLive",
+  "recv": "",
+  "start": 23037,
+  "end": 23069
+ },
+ {
+  "idx": 632,
+  "kind": "func",
+  "name": "TestLocCommand",
+  "recv": "",
+  "start": 23071,
+  "end": 23274
+ },
+ {
+  "idx": 633,
+  "kind": "func",
+  "name": "TestParseMcpClientKind",
+  "recv": "",
+  "start": 23276,
+  "end": 23304
+ },
+ {
+  "idx": 634,
+  "kind": "func",
+  "name": "TestMcpCommandKinds",
+  "recv": "",
+  "start": 23306,
+  "end": 23330
+ },
+ {
+  "idx": 635,
+  "kind": "func",
+  "name": "TestMicroCommitCommandExists",
+  "recv": "",
+  "start": 23332,
+  "end": 23347
+ },
+ {
+  "idx": 636,
+  "kind": "func",
+  "name": "TestMcpStdioInitializeHandshake",
+  "recv": "",
+  "start": 23349,
+  "end": 23388
+ },
+ {
+  "idx": 637,
+  "kind": "func",
+  "name": "TestAllowedLLMsCoverage",
+  "recv": "",
+  "start": 23390,
+  "end": 23415
+ },
+ {
+  "idx": 638,
+  "kind": "func",
+  "name": "TestResolveAllowedEffort",
+  "recv": "",
+  "start": 23417,
+  "end": 23442
+ },
+ {
+  "idx": 639,
+  "kind": "func",
+  "name": "TestExtractEffortFromArgs",
+  "recv": "",
+  "start": 23444,
+  "end": 23463
+ },
+ {
+  "idx": 640,
+  "kind": "func",
+  "name": "TestTicketGetEffort",
+  "recv": "",
+  "start": 23465,
+  "end": 23480
+ },
+ {
+  "idx": 641,
+  "kind": "func",
+  "name": "TestTicketEffortLifecycle",
+  "recv": "",
+  "start": 23482,
+  "end": 23541
+ },
+ {
+  "idx": 642,
+  "kind": "func",
+  "name": "TestGraphQLEffortMutationsAndQueries",
+  "recv": "",
+  "start": 23543,
+  "end": 23637
+ }
+]

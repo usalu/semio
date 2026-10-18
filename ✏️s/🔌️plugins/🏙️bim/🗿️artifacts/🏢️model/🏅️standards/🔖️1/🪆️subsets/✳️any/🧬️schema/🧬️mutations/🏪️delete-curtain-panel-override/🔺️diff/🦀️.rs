@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteCurtainPanelOverride`: the override leaves in one sparse diff (see the shared cascade); the cell is filled by the default panel of the type again.
 
-use super::super::cascade;
-use super::DeleteCurtainPanelOverride;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -1,6 +1,9 @@
 //! ↩️ Concrete create-workset inverse mutations.
-use super::CreateWorkset;
-use crate::*;
-pub fn inverse(payload: &CreateWorkset, _base: &ModelSnapshot) -> Vec<ModelMutation> {
-    vec![ModelMutation::DeleteWorkset(super::super::delete_workset::DeleteWorkset { id: payload.id.clone() })]
+use crate::standards::v1::subsets::any::schema::mutations::create_workset::CreateWorkset;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+pub fn inverse<Op>(payload: &CreateWorkset, _base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_workset::DeleteWorkset>,
+{
+    vec![Op::from(crate::standards::v1::subsets::any::schema::mutations::delete_workset::DeleteWorkset { id: payload.id.clone() })]
 }

@@ -1,0 +1,9 @@
+{
+ "name": "teaching",
+ "crates": [
+  "teaching-proctor",
+  "teaching-proctor-base",
+  "teaching-proctor-domain"
+ ],
+ "note": "OHH group, own crates only"
+}

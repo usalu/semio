@@ -1,6 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "FreshSnapshotProtocol":{"const":{"version":1,"fields":["name","directory","present","declaration","folder","backing","receipt","root","mounted"],"maximumFieldMask":511,"mappingOrder":"existing-image-order-and-observed-entity-order","factsComparison":"original-short-circuit-after-mapping-equality","scope":"cached-current-observations-without-new-io-or-authority"}},
+    "FreshSnapshotRefusal":{"type":"object","required":["version","purpose","mappingChanged","factsCompared","factsChanged","changedFieldMask","authority"],"properties":{"version":{"const":1},"purpose":{"const":"fresh-protected-snapshot-refusal"},"mappingChanged":{"type":"boolean"},"factsCompared":{"type":"boolean"},"factsChanged":{"type":"boolean"},"changedFieldMask":{"type":"integer","minimum":0,"maximum":511},"authority":{"const":false}},"additionalProperties":false},
+    "FreshSnapshotCases":{"const":[{"id":"equal","effect":"none","field":null,"mappingChanged":false,"factsCompared":true,"factsChanged":false,"changedFieldMask":0,"accepted":true},{"id":"fact-name","effect":"fact","field":"name","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":1,"accepted":false},{"id":"fact-directory","effect":"fact","field":"directory","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":2,"accepted":false},{"id":"fact-present","effect":"fact","field":"present","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":4,"accepted":false},{"id":"fact-declaration","effect":"fact","field":"declaration","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":8,"accepted":false},{"id":"fact-folder","effect":"fact","field":"folder","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":16,"accepted":false},{"id":"fact-backing","effect":"fact","field":"backing","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":32,"accepted":false},{"id":"fact-receipt","effect":"fact","field":"receipt","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":64,"accepted":false},{"id":"fact-root","effect":"fact","field":"root","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":128,"accepted":false},{"id":"fact-mounted","effect":"fact","field":"mounted","mappingChanged":false,"factsCompared":true,"factsChanged":true,"changedFieldMask":256,"accepted":false},{"id":"mapping","effect":"mapping","field":null,"mappingChanged":true,"factsCompared":false,"factsChanged":false,"changedFieldMask":0,"accepted":false},{"id":"entity-order","effect":"entity-order","field":null,"mappingChanged":true,"factsCompared":false,"factsChanged":false,"changedFieldMask":0,"accepted":false},{"id":"unrelated","effect":"unrelated","field":null,"mappingChanged":false,"factsCompared":true,"factsChanged":false,"changedFieldMask":0,"accepted":true},{"id":"mapping-short-circuit","effect":"mapping-short-circuit","field":null,"mappingChanged":true,"factsCompared":false,"factsChanged":false,"changedFieldMask":0,"accepted":false},{"id":"mapping-tie-order","effect":"mapping-tie-order","field":null,"mappingChanged":true,"factsCompared":false,"factsChanged":false,"changedFieldMask":0,"accepted":false}]},
     "Census": {
       "type": "object",
       "required": [
@@ -1125,7 +1128,11 @@
             "--catalog-identity-strict",
             "--publish-prepared-ordinary",
             "--logical-observation-source",
-            "--logical-observation-strict"
+            "--logical-observation-strict",
+            "--logical-observation-regression",
+            "--retained-inactive-source",
+            "--retained-inactive-strict",
+            "--retained-inactive-regression"
           ]
         },
         "argumentCount": {
@@ -1173,7 +1180,11 @@
                 "--catalog-identity-source",
                 "--catalog-identity-strict",
                 "--logical-observation-source",
-                "--logical-observation-strict"
+                "--logical-observation-strict",
+                "--logical-observation-regression",
+                "--retained-inactive-source",
+                "--retained-inactive-strict",
+                "--retained-inactive-regression"
               ]
             },
             "argumentCount": {
@@ -2101,6 +2112,143 @@
           "accepted": false,
           "purpose": null,
           "ordinary": null
+        }
+      ]
+    },
+    "LogicalDiagnosticCases": {
+      "const": [
+        {
+          "effect": "captured",
+          "accepted": true,
+          "throws": false
+        },
+        {
+          "effect": "missing",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "cause-getter",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "message-getter",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "field-getter",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "extra",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "reason",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "overlong",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "unfrozen",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "prototype",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "error-proxy",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "cause-proxy",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "field-proxy",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "symbol",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "hidden",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "non-error",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "wrong-message",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "emit-undefined",
+          "accepted": false,
+          "throws": true
+        },
+        {
+          "effect": "emit-frozen",
+          "accepted": false,
+          "throws": true
+        },
+        {
+          "effect": "undefined-primary",
+          "accepted": false,
+          "throws": false
+        },
+        {
+          "effect": "frozen-primary",
+          "accepted": false,
+          "throws": false
+        }
+      ]
+    },
+    "LogicalDiagnosticCatchCases": {
+      "const": [
+        {
+          "primary": "error",
+          "sink": "undefined"
+        },
+        {
+          "primary": "error",
+          "sink": "frozen"
+        },
+        {
+          "primary": "undefined",
+          "sink": "undefined"
+        },
+        {
+          "primary": "undefined",
+          "sink": "frozen"
+        },
+        {
+          "primary": "frozen",
+          "sink": "undefined"
+        },
+        {
+          "primary": "frozen",
+          "sink": "frozen"
         }
       ]
     }

@@ -1,6 +1,7 @@
 //! 🕹️ Play app of the generation2d editor: the play app type and its `ArtifactEditor` implementation. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Generation2dPlayApp
 /// 🧪️ Unit struct apart from `eval_session`: every former runtime field lives in [`Generation2dConfig`],

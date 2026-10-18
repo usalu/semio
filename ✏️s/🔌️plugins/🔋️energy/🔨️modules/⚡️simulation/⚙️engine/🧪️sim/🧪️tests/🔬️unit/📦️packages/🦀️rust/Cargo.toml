@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-plugin-energy-engine-sim-unit-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion white-box laws of the energy simulation engine job"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-s-plugin-energy-engine-sim = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-job = { workspace = true }
+semio-s-plugin-energy-engine-calendar = { workspace = true }
+semio-s-plugin-energy-engine-kernel = { workspace = true }
+semio-s-plugin-energy-engine-meters = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-output = { workspace = true }
+semio-s-plugin-energy-engine-precompute = { workspace = true }
+semio-s-plugin-energy-engine-results = { workspace = true }
+semio-s-plugin-energy-engine-schedule = { workspace = true }
+semio-s-plugin-energy-engine-sim-wire = { workspace = true }
+semio-s-plugin-energy-engine-site = { workspace = true }
+semio-s-plugin-energy-engine-sizing = { workspace = true }

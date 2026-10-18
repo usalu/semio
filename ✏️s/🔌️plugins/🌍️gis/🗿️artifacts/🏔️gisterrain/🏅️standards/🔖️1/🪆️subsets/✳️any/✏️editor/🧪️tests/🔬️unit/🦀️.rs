@@ -86,7 +86,7 @@ use semio_framework_plugin::SelectionSpec;
 #[allow(unused_imports)]
 use pack::snapshot::ArtifactPack;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::gis3d::{GIS3D_EXAGGERATION_MINIMUM, GIS3D_EXAGGERATION_MAXIMUM, GIS3D_EXAGGERATION_STAGED_DEFAULT, GIS3D_RETAINED_TOOL_IDS, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, gis3d_retained_extent, Gis3dCommandJobFactory};
 pub mod context {
     use crate::editor::gis3d::*;

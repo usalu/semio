@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `RemoveElementClassification`: the classification of a holder in one system leaves; when it was the holder's last the whole entry is deleted so that no empty classification set remains.
 //! Refused: an unknown holder or a holder without a classification in that system.
 
-use super::super::elements;
-use super::RemoveElementClassification;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::remove_element_classification::RemoveElementClassification;
 use crate::standards::v1::subsets::any::schema::{diff::{ClassificationSetPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

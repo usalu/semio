@@ -8,6 +8,10 @@ export function inferReadOnlyBuildProjectSourcesV1(json:unknown,root:string,work
 export function discoverNativeBuildOwnersV1(configFiles:readonly string[],workspaceRoot:string,context:BuildInferenceContextV1):Promise<{files:string[];nativeCache:Map<string,unknown>;nativeClosures:Map<string,unknown>}>;
 export function discoverBuildOwnerAdmissionFactsV1(owner:import("../🚪️admission/🟦️.ts").BuildOwnerRegistryV1["owners"][number],targets:readonly string[],registry:import("../🚪️admission/🟦️.ts").BuildOwnerRegistryV1,context:BuildInferenceContextV1,inputNames?:readonly string[]):Promise<import("../🚪️admission/🟦️.ts").BuildOwnerAdmissionFactsV1&{project:GeneratedProjectV1&{name:string}}>;
 export function readBuildOwnerRegistrySourceV1(workspaceRoot:string):string;
+/** 🔏️ Names the revision of the Source this module has on disk right now. */
+export function currentImplementationRevisionV1():string;
+/** 🔁️ Resolves the implementation of the Source this module has on disk right now, loading its revision graph when the Source changed. */
+export function loadCurrentImplementationV1():Promise<BuildInferenceImplementationV1>;
 export function dependencyResolutionAuthority(...args:readonly unknown[]):unknown;
 export function createDependencies(...args:readonly unknown[]):unknown;
 export function createMetadata(...args:readonly unknown[]):unknown;
@@ -24,6 +28,8 @@ export interface GeneratedProjectV1{readonly targets:Readonly<Record<string,Gene
 export type GeneratedNodesV1=readonly(readonly[string,Readonly<{projects:Readonly<Record<string,GeneratedProjectV1>>;externalNodes?:Readonly<Record<string,unknown>>;unavailable?:readonly import("../🟦️.ts").BuildUnavailableProjectV1[]}>])[];
 export type ScriptInputContextV1=Readonly<Record<string,unknown>>&({readonly invocation?:undefined;readonly phaseControl?:undefined}|{readonly invocation:ScriptInvocation;readonly phaseControl:ResourceLeaseControl});
 export type BuildInferenceContextV1=ScriptInputContextV1&Readonly<{workspaceRoot:string}>;
+/** 🔁️ Names the callable members of one revision of the inference module. */
+export interface BuildInferenceImplementationV1{readonly revision:string;readonly cacheInternals:BuildInferenceInternalsV1;readonly libraryBootstrap:Promise<unknown>;createScriptInputCache(context?:ScriptInputContextV1):ScriptInputCacheV1}
 export interface ScriptInputCacheV1{readonly files:Map<string,unknown>;readonly closures:Map<string,unknown>;readonly commandDependencies:Map<string,unknown>;readonly modules:Set<string>;readonly resources:Set<string>;readonly context:ScriptInputContextV1}
 export interface BuildInferenceEdgeV1{readonly source:string;readonly target:string;readonly type:string;readonly sourceFile?:string}
 export interface BuildProjectFileV1{readonly file:string;readonly hash?:string}

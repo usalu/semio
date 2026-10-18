@@ -5,13 +5,14 @@ import Ajv from "ajv";
 import differenceWith from "lodash/differenceWith.js";
 import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
+import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Token = Readonly<{ id: string; adapter: string; start: number; end: number; value: string; rewriteKind?: string; physicalInterpretation?: string; physicalTargets?: readonly string[]; unsupportedReason?: string }>;
 type Scenario = Readonly<{ id: string; supported: readonly string[]; unsupported: readonly string[]; retained: readonly string[] }>;
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
 const inputBytes = readFileSync(join(import.meta.dir, "../🧫️fixtures/🎟️reference-coverage-selection/🔣️.json")), vector = JSON.parse(inputBytes.toString("utf8"));
-const normalizerPath = join(library, "🧹️normalization/🟦️.ts"), normalizerBytes = readFileSync(normalizerPath);
-const tree = ts.createSourceFile(normalizerPath, normalizerBytes.toString("utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+const normalizerPath = join(library, "🧹️normalization"), normalizerBytes = normalizationEngineDeclarations(normalizerPath);
+const tree = ts.createSourceFile(normalizerPath, normalizerBytes, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 const declaration = (name: string): string => {
   const declarations = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === name);
   expect(declarations, name).toHaveLength(1);
@@ -123,7 +124,7 @@ test("reference coverage gate is registered through its exact default-budget rou
 });
 
 afterAll(() => {
-  const current = ts.createSourceFile(normalizerPath, readFileSync(normalizerPath, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const current = ts.createSourceFile(normalizerPath, normalizationEngineDeclarations(normalizerPath), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   for (const name of names) {
     const node = current.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === name);
     expect(node?.getText(current), name + " changed during the gate").toBe(bodies[name]);

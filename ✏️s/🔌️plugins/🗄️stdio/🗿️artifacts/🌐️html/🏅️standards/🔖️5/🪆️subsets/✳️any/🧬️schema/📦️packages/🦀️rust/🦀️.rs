@@ -28,7 +28,6 @@ pub mod standards {
                     #[path = "../../🦀️.rs"]
                     mod component;
                     pub use component::*;
-                    pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot;
                 }
             }
         }

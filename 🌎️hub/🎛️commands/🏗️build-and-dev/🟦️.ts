@@ -15,7 +15,8 @@ import { dirname, join } from "node:path";
 import { spawn, type ChildProcess } from "node:child_process";
 import { buildRepositoryCargoArtifacts, workspaceCargoVersion } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { packageNativeRelease, signExecutableForDistribution } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🟦️.ts";
-import { OS_HUB_PORT, OS_HUB_PORT_ENV, runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { OS_HUB_PORT, OS_HUB_PORT_ENV } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
+import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { deliverNativeCredentialEnvelope } from "../../🔐️auth/📤️credential-delivery/🟦️.ts";
@@ -33,7 +34,7 @@ import { type LocalAdminRelay, type LocalBrowserRelay, startLocalAdminRelay, sta
 
 /** ⏳️ Proves the two launch-route boundaries a fresh `OS_HUB_DATA` boot depends on: an unset
  * `SEMIO_BUILD_BUDGET_MS` (the repository's unlimited budget, `0`) never presents as an already expired
- * deadline, and a missing staged executable is staged through its own Nx target before it is reported. */
+ * deadline, and a missing staged executable is staged through its own build target before it is reported. */
 export class LocalBootstrapLaunchCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("local-bootstrap-launch-check accepts no arguments");
@@ -126,7 +127,7 @@ export class LocalBootstrapLaunchCheckScript extends BundleScript {
  * this the same way it owns `build-dev`, so `📋️project.json` names only this package's `📜️script.ts`. */
 export class BuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("Select build through Nx without additional arguments");
+    if (args.length) throw new Error("Select build through the build tool without additional arguments");
     await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--release", "--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build", sourcesRecord: HUB_BINARY_SOURCES_FILE });
     signExecutableForDistribution(join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"));
   }
@@ -139,7 +140,7 @@ export class BuildScript extends BundleScript {
  * `bun ./📜️script.ts publish os-hub`. */
 export class PublishScript extends BundleScript {
   run(args: string[]): void {
-    if (args.length) throw new Error("Select publish through Nx without additional arguments");
+    if (args.length) throw new Error("Select publish through the build tool without additional arguments");
     packageNativeRelease({
       binary: join(this.root, "dist", "build", process.platform === "win32" ? "os-hub.exe" : "os-hub"),
       name: "os-hub",
@@ -149,12 +150,12 @@ export class PublishScript extends BundleScript {
   }
 }
 
-/** 🏗️ Stages the dev-profile `os-hub` binary as a cached Nx package deliverable, mirroring
+/** 🏗️ Stages the dev-profile `os-hub` binary as a cached package deliverable, mirroring
  * `framework-renderer-wgpu:native-build`'s `dist/native-<profile>` pattern, so `DevScript` execs a
  * built artifact instead of running `cargo build` inline on every launch. */
 export class BuildDevScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("Select build-dev through Nx without additional arguments");
+    if (args.length) throw new Error("Select build-dev through the build tool without additional arguments");
     await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["--bin", "os-hub"], this.repoRoot, {producer:"artifact",invocation:this.invocation,consume:verifyCapturedCargoArtifactsV1,network:repositoryCargoNetworkV1(this.invocation,this.repoRoot), control: scriptCompilerAdmissionControlV1(this.invocation, "cargo:build", 0),  output: "dist/build-dev", sourcesRecord: HUB_BINARY_SOURCES_FILE });
   }
 }

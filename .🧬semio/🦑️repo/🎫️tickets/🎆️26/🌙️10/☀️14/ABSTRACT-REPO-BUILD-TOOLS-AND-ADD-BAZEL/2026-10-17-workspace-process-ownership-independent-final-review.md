@@ -1,0 +1,9 @@
+# Workspace Process Ownership: Independent Final Review
+
+Nine current files match the final manifest by sequential nofollow descriptor/name seven-fact SHA hold, including the read-only launch file; the removed global process-sweep runtime file is absent. Receipt `🗑️generated/workspace-process-ownership-ten-independent-hold.json`. No cleanup, process table, signal or Native operation was executed.
+
+CleanScript.run invokes closed entry decoding before filesystem/cache/process observations. Unsupported former stray-process spelling and generic unknown entries refuse instead of falling into workspace removal. Normal cleanup no longer imports/calls automatic process sweeping; the deleted owner had no authentic retained process authority. The moved active-Nx regular expression remains only a conservative cache-prune safety signal in the process-table owner, with no kill path. Clean skill guidance no longer instructs generic live dev-process termination. Actual Core owned-child termination is unchanged and remains responsible for its own real descendants.
+
+Peer final cleanup tests8laws160assertions and four-root strict zero are attributed Source results, including actual CleanScript AST effect traces plus Ajv/SQLite/portable process-table cases. Stale Windows fixture path/schema failures are retained in the implementation report. No cleanup process or ps command ran as a test oracle. Existing executable guidance remains through canonical launch/script owners; no compatibility termination entry is retained.
+
+This removes a concrete unsafe Source concurrency mechanism without claiming it caused earlier Products863,Tools13831,Dependencies20897 or Generic50580 signals. Past kill attribution remains unknown. No material issue remains in this scoped ownership correction; Source role/caller closures may need fresh capture before final public qualification.

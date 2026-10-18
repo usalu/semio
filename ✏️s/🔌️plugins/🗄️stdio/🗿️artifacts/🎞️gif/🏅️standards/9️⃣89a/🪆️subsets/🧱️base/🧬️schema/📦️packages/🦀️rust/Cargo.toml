@@ -47,6 +47,8 @@ semio-s-artifact-stdio-gif-snapshot = { path = "../../📸️snapshot/📦️pac
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-gif-inferences = { path = "../../../../../../7️⃣87a/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-stdio-gif-mutations = { path = "../../../../../../7️⃣87a/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

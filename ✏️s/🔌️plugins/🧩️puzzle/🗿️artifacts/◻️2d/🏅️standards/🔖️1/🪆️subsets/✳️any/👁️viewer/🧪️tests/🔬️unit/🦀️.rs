@@ -35,7 +35,7 @@ use semio_framework_plugin::Viewer;
 #[allow(unused_imports)]
 use semio_framework_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::puzzle2d::*;
 
 #[test]

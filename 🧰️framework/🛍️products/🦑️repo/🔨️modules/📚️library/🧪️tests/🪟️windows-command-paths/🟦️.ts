@@ -13,13 +13,13 @@ import Ajv from "ajv";
 import ts from "typescript";
 import { assertOwnerOnly, ownerOnlyAclArguments, parseWhoamiUserSid, protectOwnerOnly, sddlOwnerOnlyViolations, type OwnerOnlyHost } from "../../🏃️process/🔐️owner-only/🟦️.ts";
 import { parsePosixProcessTable, parseWindowsProcessTable, processTableSnapshot, WINDOWS_PROCESS_TABLE_ARGUMENTS } from "../../🏃️process/📋️process-table/🟦️.ts";
-import { ACTIVE_SEMIO_TECH_BUILD } from "../../🧼️workspace-cleanup/🧟️stray-processes/🟦️.ts";
+import { ACTIVE_SEMIO_TECH_BUILD } from "../../🏃️process/📋️process-table/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
 const load = (path: string): any => JSON.parse(readFileSync(join(libraryRoot, path), "utf8"));
-const ownerOnly = load("🧫️fixtures/🔐️owner-only/🔣️.json");
-const processTable = load("🧫️fixtures/📋️process-table/🔣️.json");
+const ownerOnly = load("🧪️tests/🧫️fixtures/🔐️owner-only/🔣️.json");
+const processTable = load("🧪️tests/🧫️fixtures/📋️process-table/🔣️.json");
 const python = Bun.which("python3") ?? Bun.which("python");
 const powershell = Bun.which("pwsh") ?? Bun.which("powershell.exe");
 
@@ -112,7 +112,7 @@ describe("owner-only files", () => {
 describe("process table", () => {
   test("validates the language-neutral process-table fixture", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(load("🧬️schema/📋️process-table/🔣️.json"));
-    expect(validate(processTable), JSON.stringify(validate.errors)).toBe(true);
+    for (const row of [...processTable.posix.rows, ...processTable.windows.flatMap((value: { rows: unknown[] }) => value.rows)]) expect(validate(row), JSON.stringify(validate.errors)).toBe(true);
   });
 
   test("parses POSIX ps and Windows Get-CimInstance output to the same row shape", () => {

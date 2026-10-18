@@ -1,4 +1,4 @@
-use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_document_examples::schema::diff::*;
 use protocol::{DiffBinary,DiffText};
 
 /// 🧪️ `DiffCodec` round-trip laws — exercises the recursive enum tree (`DocBlockDiff`'s

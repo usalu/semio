@@ -31,7 +31,8 @@ import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../📃️UiDocumentStore/🟦️
 import { activationReasonForAppId } from "@semio-tech/framework";
 import { descriptorPackageAssets, fetchDescriptorManifest } from "@semio-tech/framework";
 import { type PluginWasmHandle as KernelPluginWasmHandle } from "@semio-tech/framework";
-import { settleFailedInstanceOpen, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { settleFailedInstanceOpen } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts";
+import { type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
 import { OwnedUiInstance } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import { hopTrace } from "@semio-tech/framework/trace";
 import { driveInboundRequest, INBOUND_REQUEST_TURN_BUDGET } from "../../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";

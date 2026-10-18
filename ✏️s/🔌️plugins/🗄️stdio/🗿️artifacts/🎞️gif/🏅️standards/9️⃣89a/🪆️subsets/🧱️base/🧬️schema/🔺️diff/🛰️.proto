@@ -1,6 +1,19 @@
 syntax = "proto3";
 package semio.s_stdio_gif.diff;
-message GifDiff {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+import "s_stdio_gif/snapshot.proto";
+
+message GifColorTableSlot { optional semio.s_stdio_gif.snapshot.GifColorTable value = 1; }
+message GifTransparentIndexSlot { optional uint32 value = 1; }
+message GifPlainTextSlot { optional semio.s_stdio_gif.snapshot.GifPlainText value = 1; }
+message GifLoopCountSlot { optional uint32 value = 1; }
+message GifFrameDiff { optional uint32 left = 1; optional uint32 top = 2; optional uint32 width = 3; optional uint32 height = 4; optional bool interlace = 5; optional GifColorTableSlot lct = 6; optional bytes indices = 7; optional uint32 delay_cs = 8; optional semio.s_stdio_gif.snapshot.GifDisposal disposal = 9; optional GifTransparentIndexSlot transparent_index = 10; optional bool user_input = 11; optional GifPlainTextSlot plain_text = 12; }
+message GifFrameModified { uint32 index = 1; GifFrameDiff diff = 2; }
+message GifFrameAdded { uint32 index = 1; semio.s_stdio_gif.snapshot.GifFrame frame = 2; }
+message GifFramesDiff { repeated uint32 removed = 1; repeated GifFrameModified modified = 2; repeated GifFrameAdded added = 3; }
+message GifCommentModified { uint32 index = 1; string text = 2; }
+message GifCommentAdded { uint32 index = 1; string text = 2; }
+message GifCommentsDiff { repeated uint32 removed = 1; repeated GifCommentModified modified = 2; repeated GifCommentAdded added = 3; }
+message GifAppExtensionModified { uint32 index = 1; semio.s_stdio_gif.snapshot.GifAppExtension extension = 2; }
+message GifAppExtensionAdded { uint32 index = 1; semio.s_stdio_gif.snapshot.GifAppExtension extension = 2; }
+message GifAppExtensionsDiff { repeated uint32 removed = 1; repeated GifAppExtensionModified modified = 2; repeated GifAppExtensionAdded added = 3; }
+message GifDiff { optional uint32 width = 1; optional uint32 height = 2; optional GifColorTableSlot gct = 3; optional uint32 background_color_index = 4; optional uint32 pixel_aspect_ratio = 5; optional GifLoopCountSlot loop_count = 6; optional GifFramesDiff frames = 7; optional GifCommentsDiff comments = 8; optional GifAppExtensionsDiff app_extensions = 9; }

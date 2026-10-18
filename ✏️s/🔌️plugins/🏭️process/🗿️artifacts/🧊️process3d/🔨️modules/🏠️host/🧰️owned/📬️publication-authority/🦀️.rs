@@ -1,19 +1,29 @@
 //! 📬️ process3d publication authority: the fixed publication lease registry, admission, refresh, validation and release of the app and the document publication authority, and the test-only hostile lease hooks.
 
-use super::*;
+extern crate semio_framework_os_kernel as store;
+
+use semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::{PROCESS3D_MAXIMUM_DOMAIN_ITEMS};
+use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
+use semio_framework_plugin::ArtifactOwnedDisposer as _;
+
+pub const PROCESS3D_MOUNTED_CONTROL_CREDITS: usize = 1;
+
+pub const PROCESS3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
+
+pub const PROCESS3D_PUBLICATION_SLOTS: usize = 4;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct Process3dPublicationLease {
-    pub(super) operation: u64,
-    pub(super) generation: u64,
-    pub(super) base_revision: u64,
-    pub(super) parent_revision: u64,
-    pub(super) live_revision: u64,
-    pub(super) maximum_items: usize,
-    pub(super) maximum_output_pages: usize,
-    pub(super) maximum_controls: usize,
-    pub(super) closing: bool,
-    pub(super) terminal: bool,
+pub struct Process3dPublicationLease {
+    pub operation: u64,
+    pub generation: u64,
+    pub base_revision: u64,
+    pub parent_revision: u64,
+    pub live_revision: u64,
+    pub maximum_items: usize,
+    pub maximum_output_pages: usize,
+    pub maximum_controls: usize,
+    pub closing: bool,
+    pub terminal: bool,
 }
 
 impl semio_framework_job_registry::FixedOperationOwner for Process3dPublicationLease {
@@ -156,7 +166,7 @@ pub fn process3d_admit_app_publication_authority(operation: semio_framework_job:
     Ok(())
 }
 
-pub(super) fn process3d_validate_atomic_lease(lease: Process3dPublicationLease, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
+pub fn process3d_validate_atomic_lease(lease: Process3dPublicationLease, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), &'static str> {
     if lease.operation != operation.0 {
         return Err("process3d-publication.wrong-operation");
     }
@@ -319,7 +329,7 @@ fn process3d_publication_hostiles() -> &'static std::sync::Mutex<[Option<Process
 #[cfg(any(test, feature = "testkit"))]
 #[derive(Clone, Copy)]
 struct Process3dPublicationHostileLease {
-    pub(super) operation: u64,
+    pub operation: u64,
     hostile: Process3dPublicationHostile,
     observed: Option<&'static str>,
 }

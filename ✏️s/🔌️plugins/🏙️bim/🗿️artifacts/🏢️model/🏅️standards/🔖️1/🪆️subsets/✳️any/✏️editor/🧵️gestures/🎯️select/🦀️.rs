@@ -5,9 +5,10 @@
 //! dragging slides it along its host or onto another wall (`move-opening`, with the new host when it lands on another wall). In the section window the top line of every storey is a handle: dragging it sets the
 //! storey height (`set-storey-height`) and every wall, opening and stair that follows the storey follows by inference.
 
-use super::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
-use super::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
-use super::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::editor::bim::gestures::session::{Modifiers, Surface};
+use crate::editor::bim::gestures::opening::{cut_outline, fitted_offset, nearest_host, HostHit};
+use crate::editor::bim::gestures::plane::{axis_ends, axis_length, axis_of, axis_point_at, bounds, bulge_through, dist, flatten, from_point2, point2, same, P};
+use crate::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::editor::bim::entities::kind_holding;
 use crate::editor::bim::modes::edit::windows::plan;
@@ -132,8 +133,8 @@ fn dragged_axis(snapshot: &ModelSnapshot, wall: &str, kind: HandleKind, to: P) -
     let axis = &snapshot.walls.get(wall)?.axis;
     let (start, end) = axis_ends(axis);
     match kind {
-        HandleKind::Start => (!same(to, end)).then(|| axis_of(to, end, super::plane::axis_bulge(axis))),
-        HandleKind::End => (!same(to, start)).then(|| axis_of(start, to, super::plane::axis_bulge(axis))),
+        HandleKind::Start => (!same(to, end)).then(|| axis_of(to, end, crate::editor::bim::gestures::plane::axis_bulge(axis))),
+        HandleKind::End => (!same(to, start)).then(|| axis_of(start, to, crate::editor::bim::gestures::plane::axis_bulge(axis))),
         HandleKind::Curve => Some(axis_of(start, end, bulge_through(start, to, end).unwrap_or(0.0))),
     }
 }
@@ -178,7 +179,7 @@ fn marquee_targets(ctx: &ToolContext<'_>, start: P, end: P) -> Vec<(String, Stri
 impl Select {
     fn down(&mut self, ctx: &mut ToolContext<'_>, pointer: &Pointer) -> Step {
         let reach = pointer.tolerance * PICK_PIXELS;
-        if let super::session::Surface::Section { start, end } = &ctx.surface {
+        if let crate::editor::bim::gestures::session::Surface::Section { start, end } = &ctx.surface {
             let length = dist(*start, *end);
             let [u, v] = pointer.at;
             let hit = ctx.inference.storey_levels.iter().find(|(_, level)| (v - level.top_elevation).abs() <= reach && u >= -SECTION_REACH - reach && u <= length + SECTION_REACH + reach).map(|(storey, level)| (storey.clone(), level.top_elevation));
@@ -321,7 +322,7 @@ impl Tool for Select {
             Mode::Handle { wall, kind, current } => {
                 if let Some(axis) = dragged_axis(ctx.snapshot, wall, *kind, *current) {
                     let (start, end) = axis_ends(&axis);
-                    marks.push(Mark::path(&flatten(start, end, super::plane::axis_bulge(&axis), FLATTEN_TOLERANCE), false, Style::Ghost));
+                    marks.push(Mark::path(&flatten(start, end, crate::editor::bim::gestures::plane::axis_bulge(&axis), FLATTEN_TOLERANCE), false, Style::Ghost));
                     marks.push(Mark::dot(*current, Style::Handle));
                 }
             }
@@ -362,11 +363,9 @@ impl Tool for Select {
 
 fn section_length(ctx: &ToolContext<'_>) -> Option<f64> {
     match &ctx.surface {
-        super::session::Surface::Section { start, end } => Some(dist(*start, *end)),
+        crate::editor::bim::gestures::session::Surface::Section { start, end } => Some(dist(*start, *end)),
         _ => None,
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

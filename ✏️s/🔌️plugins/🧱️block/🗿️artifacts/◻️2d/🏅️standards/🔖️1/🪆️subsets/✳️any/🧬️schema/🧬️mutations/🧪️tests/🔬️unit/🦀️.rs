@@ -221,6 +221,32 @@ async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
 // `assert_fatal_never_applies`, `assert_outcome_deterministic`, `assert_policy_matrix` exist as
 // of this lane's pass) — pending lane 1-D, tracked in `📓️w3-f-block-puzzle-report.md`.
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
+use semio_s_artifact_block_2d_model::Block2dSnapshot;
+use semio_s_artifact_block_2d_mut_node_kind::rename_node_kind::rename_node_kind;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_label::change_node_kind_label;
+use semio_s_artifact_block_2d_mut_node_kind::update_presentation::update_presentation;
+use semio_s_artifact_block_2d_mut_handles::create_handle::create_handle;
+use semio_s_artifact_block_2d_mut_handles::move_handle::move_handle;
+use semio_s_artifact_block_2d_mut_handles::delete_handle::delete_handle;
+use semio_s_artifact_block_2d_mut_meta::add_compatibility_rule::add_compatibility_rule;
+use semio_s_artifact_block_2d_mut_meta::remove_compatibility_rule::remove_compatibility_rule;
+use semio_s_artifact_block_2d_mut_meta::add_attribute::add_attribute;
+use semio_s_artifact_block_2d_mut_meta::remove_attribute::remove_attribute;
+use semio_s_artifact_block_2d_mut_meta::add_author::add_author;
+use semio_s_artifact_block_2d_mut_meta::remove_author::remove_author;
+use semio_s_artifact_block_2d_mut_meta::move_camera2d::move_camera2d;
+use semio_s_artifact_block_2d_mut_meta::scale_camera2d::scale_camera2d;
+use semio_s_artifact_block_2d_mut_meta::change_meta_description::change_meta_description;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_variant::change_node_kind_variant;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_description::change_node_kind_description;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_icon::change_node_kind_icon;
+use semio_s_artifact_block_2d_mut_node_kind::change_node_kind_unit::change_node_kind_unit;
+use semio_s_artifact_block_2d_mut_handles::change_handle_kind_default_wire_kind::change_handle_kind_default_wire_kind;
+use semio_s_artifact_block_2d_mut_handles::change_handle_handle_kind::change_handle_handle_kind;
+use semio_s_artifact_block_2d_mut_handles::create_handle::create_handle_at;
+use semio_s_artifact_block_2d_mut_meta::add_compatibility_rule::add_compatibility_rule_at;
+use semio_s_artifact_block_2d_mut_meta::add_attribute::add_attribute_at;
+use semio_s_artifact_block_2d_mut_meta::add_author::add_author_at;
 
 #[semio_framework_async_macros::async_test]
 async fn missing_target_is_error_per_verb_family() {

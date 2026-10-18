@@ -111,7 +111,7 @@ impl GuestArtifactComponent {
 /// now comes from the component for EVERY package (ticket 26/09/18 slice TC3b) — the compiled-in
 /// stdio/gis/vcs genesis table it replaced could only ever answer for three packages.
 pub struct GuestArtifactCodecBinding {
-    pub(super) component: Arc<GuestArtifactComponent>,
+    pub component: Arc<GuestArtifactComponent>,
     pub(super) artifact_schema: String,
 }
 
@@ -122,7 +122,7 @@ impl GuestArtifactCodecBinding {
     /// checkpoint is what says "still moving", and without these an honest interpreter would look
     /// exactly like a wedged one. A caller that stops waiting ends the interpretation at its next
     /// step ([`interpret_off_worker`]).
-    pub(super) async fn genesis(&self, document_id: &str, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
+    pub async fn genesis(&self, document_id: &str, context: &OperationContext<'_>) -> Result<ArtifactPair, AuthorityError> {
         self.component.verified(context).await?;
         let compiled = self.component.compiled(context).await?;
         let (runtime, schema, document_id, guest) = (Arc::clone(&self.component.runtime), self.artifact_schema.clone(), document_id.to_string(), Arc::clone(&compiled));

@@ -11,7 +11,13 @@
     "dispatches",
     "windowsMetadata",
     "windowsCandidates",
-    "observerChecks"
+    "observerChecks",
+    "windowsDirectoryBase",
+    "windowsDirectoryCases",
+    "windowsReadBindingCases",
+    "retainedInactiveCases",
+    "retainedInactiveLifecycleCases",
+    "retainedInactiveTerminalCases"
   ],
   "properties": {
     "version": {
@@ -368,6 +374,218 @@
           },
           "stats": {
             "const": 18
+          }
+        }
+      }
+    },
+    "windowsDirectoryBase": {
+      "type": "object"
+    },
+    "windowsDirectoryCases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "admit"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "high-half",
+              "mode",
+              "numeric",
+              "short",
+              "uppercase",
+              "leading-zero",
+              "bad-volume",
+              "extra",
+              "accessor",
+              "proxy",
+              "proto"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "windowsReadBindingCases": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "admit"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mutation": {
+            "enum": [
+              "none",
+              "root-only",
+              "journals-only",
+              "unknown",
+              "duplicate",
+              "missing-name",
+              "extra-name",
+              "root-getter",
+              "root-proxy",
+              "name-getter",
+              "names-proxy",
+              "binding-proxy",
+              "proto"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "retainedInactiveCases": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "platform",
+          "fault",
+          "admit",
+          "initialState"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "platform": {
+            "enum": [
+              "darwin",
+              "linux",
+              "win32"
+            ]
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "inactive",
+              "reorder",
+              "extra",
+              "pending"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          },
+          "initialState": {
+            "enum": [
+              "mounted",
+              "inactive"
+            ]
+          }
+        }
+      }
+    },
+    "retainedInactiveLifecycleCases": {
+      "type": "array",
+      "minItems": 11,
+      "maxItems": 11,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fault",
+          "admit",
+          "remount",
+          "unresolved"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "final-detach",
+              "final-inactive",
+              "terminal-cas",
+              "pending-clear",
+              "settled",
+              "undefined",
+              "frozen",
+              "cleanup-attach",
+              "release",
+              "close"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
+          },
+          "remount": {
+            "type": "boolean"
+          },
+          "unresolved": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "retainedInactiveTerminalCases": {
+      "type": "array",
+      "minItems": 15,
+      "maxItems": 15,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "fault",
+          "admit"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fault": {
+            "enum": [
+              "none",
+              "purpose",
+              "mapping",
+              "commands",
+              "pending",
+              "unqualified",
+              "before",
+              "after",
+              "durable",
+              "receipt",
+              "stamp",
+              "bytes",
+              "root-sync",
+              "host-sync",
+              "empty"
+            ]
+          },
+          "admit": {
+            "type": "boolean"
           }
         }
       }

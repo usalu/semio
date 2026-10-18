@@ -1,16 +1,17 @@
 //! 🔬️ The overlay layer: menu, dialog, palette and tooltip stack above the scene, trap focus while modal, dismiss on
 //! Escape or an outside press, and give focus back (R14, R19; fleet-plan §4.2 T-B).
 
-use crate::tui::dialog::DialogState;
-use crate::tui::engine::Tui;
-use crate::tui::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Size};
-use crate::tui::layout::{Constraint, Dimension, Direction};
-use crate::tui::menu::MenuItem;
-use crate::tui::palette::{PaletteItem, PaletteState};
-use crate::tui::scene::{Node, NodeContent, NodeId};
-use crate::tui::theme::Theme;
-use crate::tui::widget::{ListState, WidgetSignal, WidgetState};
+use semio_framework_ui_tui_widgets::dialog::DialogState;
+use semio_framework_ui_tui_engine::Tui;
+use semio_framework_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Size};
+use semio_framework_ui_tui_frame::layout::{Constraint, Dimension, Direction};
+use semio_framework_ui_tui_widgets::menu::MenuItem;
+use semio_framework_ui_tui_widgets::palette::{PaletteItem, PaletteState};
+use semio_framework_ui_tui_frame::scene::{Node, NodeContent, NodeId};
+use semio_framework_ui_tui_core::theme::Theme;
+use semio_framework_ui_tui_widgets::widget::{ListState, WidgetState};
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 use ui_styling::appearance::AppearanceName;
 
 fn key(key: Key) -> Event {

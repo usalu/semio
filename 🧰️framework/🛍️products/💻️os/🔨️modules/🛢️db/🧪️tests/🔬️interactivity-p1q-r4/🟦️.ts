@@ -1,4 +1,4 @@
-import { interactivityP1qR4Failures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
+import { interactivityP1qR4Failures } from "../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🧮️b1b6-p1q-r4/🟦️.ts";
 
 /** 🔟️ The exact ten retained-source texts `interactivityP1qR4Failures` accepts, positionally. */
 type P1qR4Sources = [string, string, string, string, string, string, string, string, string, string];

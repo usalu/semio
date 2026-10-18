@@ -1,4 +1,14 @@
-use super::*;
+use crate::editor::bim::modes::edit::windows::{plan, section, world};
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::LabelOf;
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::sheet;
+#[allow(unused_imports)]
+use semio_framework_plugin::UtilityDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::UtilityRef;
+use crate::editor::bim::utilities::*;
 
 #[semio_framework_async_macros::async_test]
 async fn every_utility_is_unique_and_armed_in_at_least_one_window() {

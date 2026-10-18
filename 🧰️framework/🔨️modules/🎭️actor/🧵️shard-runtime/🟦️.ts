@@ -12,7 +12,10 @@
 // #endregion 🧲️Header
 
 // #region 🔌️Imports
-import { ShardClient, type ShardBudget, type ShardClientOptions, type ShardWorkerLike } from "../📮️shard-client/🟦️.ts";
+import { ShardClient } from "../📮️shard-client/🟦️.ts";
+import { type ShardBudget } from "../📮️shard-client/📜️wire/🟦️.ts";
+import { type ShardClientOptions } from "../📮️shard-client/⚙️options/🟦️.ts";
+import { type ShardWorkerLike } from "../📮️shard-client/🚨️quota/🟦️.ts";
 import { stampShardWorkerDiagnostics } from "../🩺️diagnostics/🟦️.ts";
 // #endregion 🔌️Imports
 

@@ -1,6 +1,7 @@
 //! 🔗️ Graph view and artifact editor of the WFC 3D editor: the slot graph view, the editor type with its `ArtifactEditor` implementation, command emission and the body renderer. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️GraphView
 /// 🕸️ The `wfc-graph` window's whole view of this document — the projection lives HERE, not in the

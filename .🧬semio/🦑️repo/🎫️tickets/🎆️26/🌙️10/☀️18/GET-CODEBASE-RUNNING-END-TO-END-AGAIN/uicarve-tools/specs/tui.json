@@ -1,0 +1,496 @@
+{
+ "tree": "tui",
+ "roots": [
+  "crate"
+ ],
+ "crates": {
+  "core": {
+   "pkg": "semio-framework-ui-tui-core",
+   "id": "ui-tui-core",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧱️core",
+   "desc": "semio tui core: geometry, theme, events, text model, cell buffer, rows and the widget signal types",
+   "mounts": [
+    {
+     "name": "geometry",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📐️geometry/🦀️.rs"
+    },
+    {
+     "name": "theme",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🎨️theme/🦀️.rs"
+    },
+    {
+     "name": "event",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📡️event/🦀️.rs"
+    },
+    {
+     "name": "text",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📝️text/🦀️.rs"
+    },
+    {
+     "name": "cell",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔲️cell/🦀️.rs"
+    },
+    {
+     "name": "rows",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📜️rows/🦀️.rs"
+    },
+    {
+     "name": "signal",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔔️signal/🦀️.rs"
+    }
+   ]
+  },
+  "vt": {
+   "pkg": "semio-framework-ui-tui-vt",
+   "id": "ui-tui-vt",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt",
+   "root": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🦀️.rs",
+   "desc": "semio tui virtual terminal: parser, screen, pane, history, key encoder"
+  },
+  "terminal": {
+   "pkg": "semio-framework-ui-tui-terminal",
+   "id": "ui-tui-terminal",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📺️terminal",
+   "desc": "semio tui terminal I/O: ANSI codec, backend capabilities, native raw-mode backend and pty (feature native)",
+   "mounts": [
+    {
+     "name": "ansi",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔡️ansi/🦀️.rs"
+    },
+    {
+     "name": "backend",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🔌️backend/🦀️.rs"
+    },
+    {
+     "name": "pty",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🚇️pty/🦀️.rs",
+     "cfg": "#[cfg(feature = \"native\")]"
+    },
+    {
+     "name": "windows_abi",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🪟️windows/🦀️.rs",
+     "cfg": "#[cfg(all(feature = \"native\", windows))]",
+     "vis": ""
+    }
+   ]
+  },
+  "widgets": {
+   "pkg": "semio-framework-ui-tui-widgets",
+   "id": "ui-tui-widgets",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧩️widgets",
+   "desc": "semio tui widget states and the element widgets",
+   "mounts": [
+    {
+     "name": "widget",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🪀️widget/🦀️.rs"
+    },
+    {
+     "name": "chip",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪙️Chip/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "divider",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/➖️Divider/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "input",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/✏️Input/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "label",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🏷️Label/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "list",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📃️List/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "log",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪵️Log/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "select",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔽️Select/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "table",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📊️Table/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "tabs",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📑️Tabs/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "dialog",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💬️Dialog/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "menu",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "palette",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/⌨️Command/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "tooltip",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/💡️ChromeControlHint/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "tree",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "scrollable",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📜️Scrollable/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "progress",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/📶️Progress/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "toggle",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔀️Toggle/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "wizard",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🧙️Wizard/🎯️targets/⌨️tui/🦀️.rs"
+    }
+   ]
+  },
+  "frame": {
+   "pkg": "semio-framework-ui-tui-frame",
+   "id": "ui-tui-frame",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏛️frame",
+   "desc": "semio tui scene graph, layout solver, window chrome and the window frame elements",
+   "mounts": [
+    {
+     "name": "chrome",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🖥️chrome/🦀️.rs"
+    },
+    {
+     "name": "layout",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📏️layout/🦀️.rs"
+    },
+    {
+     "name": "scene",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🎬️scene/🦀️.rs"
+    },
+    {
+     "name": "footer",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "navbar",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🎯️targets/⌨️tui/🦀️.rs"
+    },
+    {
+     "name": "window",
+     "file": "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🪟️Window/🎯️targets/⌨️tui/🦀️.rs"
+    }
+   ]
+  },
+  "engine": {
+   "pkg": "semio-framework-ui-tui-engine",
+   "id": "ui-tui-engine",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine",
+   "root": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/⚙️engine/🦀️.rs",
+   "desc": "semio tui retained-mode engine"
+  },
+  "laws": {
+   "pkg": "semio-framework-ui-tui-laws",
+   "id": "ui-tui-laws",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🥣️companion",
+   "desc": "semio tui cross-crate laws: engine behaviour, overlays, pointer routing, chrome anatomy, render equivalence and the legacy unit corpus",
+   "tests_only": true,
+   "mounts": [
+    {
+     "name": "tests",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️unit/🦀️.rs",
+     "cfg": "#[cfg(test)]",
+     "vis": ""
+    },
+    {
+     "name": "text_elements",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️text-elements/🦀️.rs",
+     "cfg": "#[cfg(test)]",
+     "vis": ""
+    },
+    {
+     "name": "render_equivalence",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️render-equivalence/🦀️.rs",
+     "cfg": "#[cfg(test)]",
+     "vis": ""
+    },
+    {
+     "name": "engine_behaviour",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️engine/🦀️.rs",
+     "cfg": "#[cfg(test)]",
+     "vis": ""
+    },
+    {
+     "name": "chrome_anatomy",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️chrome/🦀️.rs",
+     "cfg": "#[cfg(test)]",
+     "vis": ""
+    },
+    {
+     "name": "overlays",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️overlays/🦀️.rs",
+     "cfg": "#[cfg(test)]",
+     "vis": ""
+    },
+    {
+     "name": "pointer_routing",
+     "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🧪️tests/🔬️pointer-routing/🦀️.rs",
+     "cfg": "#[cfg(test)]",
+     "vis": ""
+    }
+   ]
+  },
+  "host": {
+   "pkg": "semio-framework-ui-tui-host",
+   "id": "ui-tui-host",
+   "dir": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏃️host",
+   "root": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/🏃️host/🦀️.rs",
+   "desc": "semio tui wasm host for browser terminals (feature bindgen)"
+  }
+ },
+ "rules": [
+  {
+   "from": "tui::geometry",
+   "crate": "core",
+   "to": "geometry"
+  },
+  {
+   "from": "tui::theme",
+   "crate": "core",
+   "to": "theme"
+  },
+  {
+   "from": "tui::event",
+   "crate": "core",
+   "to": "event"
+  },
+  {
+   "from": "tui::text",
+   "crate": "core",
+   "to": "text"
+  },
+  {
+   "from": "tui::cell",
+   "crate": "core",
+   "to": "cell"
+  },
+  {
+   "from": "tui::rows",
+   "crate": "core",
+   "to": "rows"
+  },
+  {
+   "from": "tui::widget::WidgetSignal",
+   "crate": "core",
+   "to": "signal::WidgetSignal"
+  },
+  {
+   "from": "tui::widget::CursorShape",
+   "crate": "core",
+   "to": "signal::CursorShape"
+  },
+  {
+   "from": "tui::widget::CursorSpec",
+   "crate": "core",
+   "to": "signal::CursorSpec"
+  },
+  {
+   "from": "tui::vt",
+   "crate": "vt",
+   "to": ""
+  },
+  {
+   "from": "tui::widget::Scrollbar",
+   "crate": "vt",
+   "to": "pane::Scrollbar"
+  },
+  {
+   "from": "tui::widget::SelectionMode",
+   "crate": "vt",
+   "to": "pane::SelectionMode"
+  },
+  {
+   "from": "tui::widget::TerminalSearch",
+   "crate": "vt",
+   "to": "pane::TerminalSearch"
+  },
+  {
+   "from": "tui::widget::TerminalSelection",
+   "crate": "vt",
+   "to": "pane::TerminalSelection"
+  },
+  {
+   "from": "tui::widget::TerminalState",
+   "crate": "vt",
+   "to": "pane::TerminalState"
+  },
+  {
+   "from": "tui::ansi",
+   "crate": "terminal",
+   "to": "ansi"
+  },
+  {
+   "from": "tui::backend",
+   "crate": "terminal",
+   "to": "backend"
+  },
+  {
+   "from": "tui::pty",
+   "crate": "terminal",
+   "to": "pty"
+  },
+  {
+   "from": "tui::component::windows_abi",
+   "crate": "terminal",
+   "to": "windows_abi"
+  },
+  {
+   "from": "tui::widget",
+   "crate": "widgets",
+   "to": "widget"
+  },
+  {
+   "from": "tui::chip",
+   "crate": "widgets",
+   "to": "chip"
+  },
+  {
+   "from": "tui::divider",
+   "crate": "widgets",
+   "to": "divider"
+  },
+  {
+   "from": "tui::input",
+   "crate": "widgets",
+   "to": "input"
+  },
+  {
+   "from": "tui::label",
+   "crate": "widgets",
+   "to": "label"
+  },
+  {
+   "from": "tui::list",
+   "crate": "widgets",
+   "to": "list"
+  },
+  {
+   "from": "tui::log",
+   "crate": "widgets",
+   "to": "log"
+  },
+  {
+   "from": "tui::select",
+   "crate": "widgets",
+   "to": "select"
+  },
+  {
+   "from": "tui::table",
+   "crate": "widgets",
+   "to": "table"
+  },
+  {
+   "from": "tui::tabs",
+   "crate": "widgets",
+   "to": "tabs"
+  },
+  {
+   "from": "tui::dialog",
+   "crate": "widgets",
+   "to": "dialog"
+  },
+  {
+   "from": "tui::menu",
+   "crate": "widgets",
+   "to": "menu"
+  },
+  {
+   "from": "tui::palette",
+   "crate": "widgets",
+   "to": "palette"
+  },
+  {
+   "from": "tui::tooltip",
+   "crate": "widgets",
+   "to": "tooltip"
+  },
+  {
+   "from": "tui::tree",
+   "crate": "widgets",
+   "to": "tree"
+  },
+  {
+   "from": "tui::scrollable",
+   "crate": "widgets",
+   "to": "scrollable"
+  },
+  {
+   "from": "tui::progress",
+   "crate": "widgets",
+   "to": "progress"
+  },
+  {
+   "from": "tui::toggle",
+   "crate": "widgets",
+   "to": "toggle"
+  },
+  {
+   "from": "tui::wizard",
+   "crate": "widgets",
+   "to": "wizard"
+  },
+  {
+   "from": "tui::chrome",
+   "crate": "frame",
+   "to": "chrome"
+  },
+  {
+   "from": "tui::layout",
+   "crate": "frame",
+   "to": "layout"
+  },
+  {
+   "from": "tui::scene",
+   "crate": "frame",
+   "to": "scene"
+  },
+  {
+   "from": "tui::footer",
+   "crate": "frame",
+   "to": "footer"
+  },
+  {
+   "from": "tui::navbar",
+   "crate": "frame",
+   "to": "navbar"
+  },
+  {
+   "from": "tui::window",
+   "crate": "frame",
+   "to": "window"
+  },
+  {
+   "from": "tui::signal",
+   "crate": "core",
+   "to": "signal"
+  },
+  {
+   "from": "tui::engine",
+   "crate": "engine",
+   "to": ""
+  },
+  {
+   "from": "tui::host",
+   "crate": "host",
+   "to": ""
+  }
+ ]
+}

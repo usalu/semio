@@ -1,11 +1,41 @@
-use super::*;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_framework_plugin::DslValue;
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::bim_window_action;
+#[allow(unused_imports)]
+use crate::render::world::{mesh_data, overview_orbit, world_bounds};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidGroup};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::issues::message;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::{FamilyIssue, FamilySolidMesh, FamilyValue, IssueOwner};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::SolidShape;
+#[allow(unused_imports)]
+use semio_framework_plugin::TableCell;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiTreeActionPlacement;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiTreeItemAction;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::{Label, LocalizedLabel};
+use crate::editor::bim::modes::edit::windows::family::{text, row};
+use crate::editor::bim::modes::edit::windows::family::*;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const TABLE: &str = include_str!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
+static TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json"));
 
 fn model() -> ModelSnapshot {
-    from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes")
+    from_json_str((*TABLE), JsonMemberPolicy::Reject).expect("the table decodes")
 }
 
 fn json(rows: &[DslValue]) -> String {

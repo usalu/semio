@@ -1,4 +1,4 @@
-import { normalizationSourceDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
+import { normalizationSourceDeclarations, normalizationSourceFiles } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -8,8 +8,8 @@ import stableStringify from "fast-json-stable-stringify";
 import { getNodeValue, parse as parseJson, parseTree, type ParseError } from "jsonc-parser";
 import ts from "typescript";
 
-const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts");
-const sourcePreimage = readFileSync(sourcePath), source = normalizationSourceDeclarations(sourcePath), tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
+const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization");
+const sourcePreimage = Buffer.concat([...normalizationSourceFiles(sourcePath).values()]), source = normalizationSourceDeclarations(sourcePath), tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🚚️readme-move-source-authority/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🚚️readme-move-source-authority/🔣️.json"), "utf8"));
 const sha = (value: string | Uint8Array): string => createHash("sha256").update(value).digest("hex");
@@ -333,7 +333,7 @@ declare function resumeGeneratorInputRecord(root: string, authority: object, jou
 });
 
 test("test preparation leaves normalizer bytes unchanged and never materializes synthetic paths", () => {
-  expect(sha(readFileSync(sourcePath))).toBe(sha(sourcePreimage));
+  expect(sha(Buffer.concat([...normalizationSourceFiles(sourcePath).values()]))).toBe(sha(sourcePreimage));
   expect(vector.scope).toBe("in-memory-only");
   expect(vector.phaseCases).toHaveLength(13);
 });

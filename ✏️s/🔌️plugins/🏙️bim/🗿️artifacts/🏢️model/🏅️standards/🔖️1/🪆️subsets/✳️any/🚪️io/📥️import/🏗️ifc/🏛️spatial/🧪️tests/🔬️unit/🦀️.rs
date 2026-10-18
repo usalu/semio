@@ -1,4 +1,14 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::Phase;
+use semio_s_artifact_stdio_contract::part21::Part21Value;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{reals, text, Doc};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Building, Point2, Site, Storey};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::*;
 use semio_s_artifact_stdio_contract::part21::Part21Decimal;
 
 fn real(value: f64) -> Part21Value {

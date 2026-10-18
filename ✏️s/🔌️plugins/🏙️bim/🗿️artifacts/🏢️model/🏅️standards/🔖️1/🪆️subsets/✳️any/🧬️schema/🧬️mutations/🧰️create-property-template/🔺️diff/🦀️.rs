@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreatePropertyTemplate`: one created template entry. The id must be free in every collection, the template needs a name no other template has, kinds it lists at most once and sound,
 //! uniquely named property definitions (a default and every allowed value of the kind of the property and within its own range). Which elements the template applies to is not checked here: it is inferred.
 
-use super::super::elements;
-use super::CreatePropertyTemplate;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate;
 use crate::standards::v1::subsets::any::schema::{snapshot::{template_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

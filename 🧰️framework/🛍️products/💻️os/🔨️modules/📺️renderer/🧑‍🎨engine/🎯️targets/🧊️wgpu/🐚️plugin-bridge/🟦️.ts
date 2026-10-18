@@ -88,11 +88,15 @@ import {
 import { AppChannelClient, AppChannelRequestSequence, type AppFrameValue, type WindowConfigPackEntry, decodeAppFrame, decodeDocumentArchiveBytes, encodeDocumentArchiveBytes, decodeFaultFromWire, decodeInvocationResultPacks, decodePackValue, decodePackWire, encodePackValue, faultDisplayMessage, packValueFromBase64, packWireNatural, viewContextWireValue } from "@semio-tech/framework-os";
 import { decodeCausalEnvelopeBatch } from "@semio-tech/framework-replication";
 import { DOCUMENT_BACKBONE_BINDING_SCHEMA_V1, encodeDocumentBackboneControlV1, requireDocumentBackboneReceiptV1, splitDocumentBackboneControlTurnV1 } from "../../../../../../../../🔨️modules/🛰️backbone/🔗️binding/🟦️.ts";
-import { createShardCommandIngressPages, settleFailedInstanceOpen, ShardClient, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { createShardCommandIngressPages, SHARD_COMMAND_MAXIMUM_PAGES, type ShardCommandIngressPage, type ShardEventEnvelope } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { settleFailedInstanceOpen } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts";
+import { ShardClient } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import type { ActorCodecRequest, ActorCodecSuccess } from "../../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
 import { createPooledActorRuntime, DEFAULT_SHARD_BUDGET, type PooledActorRuntime } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts"
 import { SHARD_WORKER_URL } from "../../../../../../../../🔨️modules/🎭️actor/🧵️shard-runtime/🟦️.ts";
-import type { OwnedUiPatchAcknowledgementEntry, ShardInstanceLifecycleLease, ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import type { OwnedUiPatchAcknowledgementEntry } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts";
+import type { ShardInstanceLifecycleLease } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🔐️activation/🟦️.ts";
+import type { ShardWorkerLike } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts";
 import { WORKER_STEP_BUDGET_MS } from "../⏱️turn-budget/🟦️.ts";
 import { rendererResidentLedger } from "../../../../../../../../🔨️modules/🖼️canvas/💾️renderer-resident/🟦️.ts";
 import { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";

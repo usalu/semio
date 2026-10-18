@@ -42,7 +42,7 @@ use semio_framework_plugin::NoPresence;
 use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_stdio_contract::editing;
 
 //#region 🔖️Command

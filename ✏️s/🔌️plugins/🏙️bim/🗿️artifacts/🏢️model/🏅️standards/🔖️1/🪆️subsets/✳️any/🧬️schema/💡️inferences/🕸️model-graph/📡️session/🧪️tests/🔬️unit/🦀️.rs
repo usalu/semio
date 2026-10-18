@@ -1,12 +1,25 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use protocol::InferenceError;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_computed;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::projection::{apply, project, rebuild_diagnostics, retract};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelGraph, ModelNode, ModelValue, READS};
+#[allow(unused_imports)]
+use protocol::{step_field_update, DiffRegions, MutationDiff, FieldChange, FieldDelta, FieldUpdate, InferenceCache, InferenceCacheConfig, InferenceWorkFailure, InferenceFault, InferenceSession, TouchedPaths};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::session::*;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Point2}, diff::{Entry, ModelDiff, patches::{ProjectPatch, StoreyPatch, WallPatch}}};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
 
 fn house() -> ModelSnapshot {
-    from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("the snapshot decodes")
+    from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("the snapshot decodes")
 }
 
 fn fresh(snapshot: &ModelSnapshot) -> ModelInference {

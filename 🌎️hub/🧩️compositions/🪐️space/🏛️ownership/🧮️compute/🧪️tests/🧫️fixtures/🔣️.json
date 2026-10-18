@@ -2,7 +2,7 @@
   "version": 1,
   "id": "hub-space",
   "source": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🦀️.rs",
-  "manifest": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml",
+  "manifest": "🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/📦️packages/🦀️rust/Cargo.toml",
   "bindings": [
     "EngineHandles"
   ]

@@ -23,7 +23,7 @@ imperative_engine = { path = "../../../../../../../../../../../../🔨️modules
 imperative_extension_sdk = { path = "../../../../../../../../../../../../🔨️modules/📜️imperative/🧩️extension_sdk/📦️packages/🦀️rust", package = "semio-s-imperative-extension-sdk" }
 neural_engine = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 pack = { package = "semio-framework-pack", path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }

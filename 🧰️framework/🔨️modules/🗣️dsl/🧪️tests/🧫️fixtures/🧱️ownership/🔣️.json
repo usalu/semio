@@ -120,7 +120,7 @@
     },
     {
       "owner": "🧰️framework/🔨️modules/🕸️graph",
-      "manifest": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml",
+      "manifest": "🧰️framework/🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust/Cargo.toml",
       "source": "🧰️framework/🔨️modules/🕸️graph/🗣️dsl/🦀️.rs",
       "root": "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/🦀️.rs",
       "boundary": "language-only"

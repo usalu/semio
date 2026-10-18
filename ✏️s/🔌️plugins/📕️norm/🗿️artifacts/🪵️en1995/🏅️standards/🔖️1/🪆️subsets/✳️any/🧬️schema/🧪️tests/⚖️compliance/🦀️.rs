@@ -11,7 +11,7 @@ fn report_of(snap: &En1995Snapshot) -> CheckReport {
 }
 
 fn bundled_examples() -> Vec<(String, En1995Snapshot)> {
-    semio_s_artifact_norm_en1995_model::examples()
+    semio_s_artifact_norm_en1995_examples::examples()
         .into_iter()
         .map(|example| {
             let snap = semio_s_artifact_norm_en1995_io::text::snapshot::decode_en1995_dsl(&example.document()).unwrap_or_else(|e| panic!("{}: {e}", example.id()));

@@ -65,7 +65,7 @@ test("eager policy vocabulary avoids workspace output reads while default lookup
     if (!local) throw new Error(`Missing eager policy declaration ${name}`);
     return local;
   });
-  const discovery = ts.createSourceFile("discovery.ts", readFileSync(join(root, library, "🔍️discovery/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const discovery = ts.createSourceFile("discovery.ts", readFileSync(join(root, library, "🔍️discovery/🔐️taxonomy-authority/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const helpers = discovery.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && ["canonicalFilenamesForKind", "canonicalPrimaryFilenameForKind"].includes(node.name?.text ?? ""));
   expect(helpers).toHaveLength(2);
   const input = [...helpers.map((node) => node.getText(discovery).replace(/^export /u, "")), ...declarations.map(({ node, syntax }) => `const ${node.getText(syntax)};`)].join("\n");

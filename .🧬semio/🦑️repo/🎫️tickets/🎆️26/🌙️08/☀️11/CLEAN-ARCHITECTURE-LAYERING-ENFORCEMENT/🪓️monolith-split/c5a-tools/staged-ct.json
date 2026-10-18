@@ -1,0 +1,15 @@
+{
+ "tag": "ct",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs",
+ "folders": [
+  "👶️child-grant-and-maintenance-fixtures",
+  "⌨️test-command-and-test-app-type",
+  "📋️clipboard-and-retained-command-fixtures",
+  "🎛️test-app-artifact-app",
+  "🗝️keyed-dispatch-fixtures",
+  "🗃️contract-registries-and-reserved-helpers",
+  "🏃️contract-app-drivers",
+  "👥️interaction-presence-and-child-fixtures"
+ ]
+}

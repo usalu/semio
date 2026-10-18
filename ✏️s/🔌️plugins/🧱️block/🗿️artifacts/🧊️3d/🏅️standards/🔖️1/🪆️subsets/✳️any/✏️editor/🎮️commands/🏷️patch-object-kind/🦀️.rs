@@ -5,6 +5,12 @@ use semio_s_artifact_block_3d_model::Block3dSnapshot;
 use semio_s_artifact_block_3d_editor_config::{Block3dConfig, Block3dConfigMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_block_3d_mut_object_kind::rename_object_kind::rename_object_kind;
+use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_label::change_object_kind_label;
+use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_variant::change_object_kind_variant;
+use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_description::change_object_kind_description;
+use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_icon::change_object_kind_icon;
+use semio_s_artifact_block_3d_mut_object_kind::change_object_kind_unit::change_object_kind_unit;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "patchObjectKind")]

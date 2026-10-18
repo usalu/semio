@@ -1,6 +1,8 @@
 //! 🧪️ Arcs as cubics: the curves stay on the circle of the bulge to a few parts in ten thousand, chain from the start to the end of the segment and bulge to the side the sign says.
 
-use super::*;
+#[allow(unused_imports)]
+use std::f64::consts::FRAC_PI_2;
+use crate::standards::v1::subsets::any::io::export::sheets::pdf::arcs::*;
 
 fn at(start: Point, cubic: &Cubic, t: f64) -> Point {
     let (a, b, c) = (cubic.0, cubic.1, cubic.2);

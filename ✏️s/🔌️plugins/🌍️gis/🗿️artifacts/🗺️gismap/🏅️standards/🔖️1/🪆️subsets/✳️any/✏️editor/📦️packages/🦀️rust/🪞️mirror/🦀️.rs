@@ -148,9 +148,6 @@ pub mod editor {
             #[path = "../../../🎮️commands/👁️view/🦀️.rs"]
             pub mod view;
 
-        #[cfg(test)]
-        #[path = "../../../🎮️commands/🧪️tests/🔬️unit/🦀️.rs"]
-        mod leaf_tests;
         }
         #[path = "."]
         pub mod modes {
@@ -163,9 +160,6 @@ pub mod editor {
                     #[path = "."]
                     pub mod map {
                         pub use semio_s_artifact_gis_gismap_gismap::editor::gis2d::modes::edit::windows::map::*;
-                        #[cfg(test)]
-                        #[path = "../../../🎭️modes/✏️edit/🪟️windows/🗺️map/🧪️tests/🔬️unit/🦀️.rs"]
-                        pub mod tests;
                         #[path = "."]
                         pub mod config {
                             pub use semio_s_artifact_gis_gismap_config::editor::gis2d::modes::edit::windows::map::config::*;
@@ -185,9 +179,6 @@ pub mod editor {
             #[path = "../../../📌️panels/🔍️inspection/🦀️.rs"]
             pub mod inspection;
 
-        #[cfg(test)]
-        #[path = "../../../📌️panels/🧪️tests/🔬️unit/🦀️.rs"]
-        mod leaf_tests;
         }
     }
 }

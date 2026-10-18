@@ -1,7 +1,7 @@
 mod capability_tests {
     use super::*;
-    use crate::tui::geometry::Pos;
-    use crate::tui::widget::{CursorShape, CursorSpec};
+    use semio_framework_ui_tui_core::geometry::Pos;
+    use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec};
 
     const PATCH: &str = "\x1b[3;4H\x1b[0;38;2;255;0;0;48;2;0;0;0mX";
 

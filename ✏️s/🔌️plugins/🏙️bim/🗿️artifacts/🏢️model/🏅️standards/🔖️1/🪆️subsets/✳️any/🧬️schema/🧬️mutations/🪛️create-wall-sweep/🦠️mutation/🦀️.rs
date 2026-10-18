@@ -1,6 +1,6 @@
 //! 🪛️ `create-wall-sweep` payload. Brings a new sweep onto one face of a wall: a profile run along the face (a baseboard, a cornice, a drip rail) at a height above the wall base, optionally set into the wall; its solid, length and areas are inferred.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, WallSweep}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, WallSweep}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateWallSweep {
     pub wall_sweep: WallSweep,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateWallSweep {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateWallSweep
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateWallSweep> + From<crate::standards::v1::subsets::any::schema::mutations::delete_wall_sweep::DeleteWallSweep>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "wall-sweep", kind: "create-wall-sweep", record: "CreateWallSweep" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create wall sweep \"{}\"", self.wall_sweep.name), &format!("Wandprofil \"{}\" anlegen", self.wall_sweep.name))

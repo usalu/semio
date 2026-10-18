@@ -36,6 +36,7 @@ semio-framework-repo-languages = { path = "../../../../../🗣️languages/📦�
 semio-framework-repo-mcp = { path = "../../../../../🔌️mcp/📦️packages/🦀️rust" }
 semio-framework-repo-metrics = { path = "../../../../../📊️metrics/📦️packages/🦀️rust" }
 semio-framework-repo-model = { path = "../../../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-model-entity = { path = "../../../../../📐️model/🪪️entity/📦️packages/🦀️rust" }
 semio-framework-repo-providers = { path = "../../../../../🧩️providers/📦️packages/🦀️rust" }
 semio-framework-repo-statutes = { path = "../../../../../📜️statutes/📦️packages/🦀️rust" }
 semio-framework-repo-test-runner = { path = "../../../../../🏃️test-runner/📦️packages/🦀️rust" }

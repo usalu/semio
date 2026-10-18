@@ -1,4 +1,21 @@
-use super::*;
+use crate::editor::bim::modes::edit::windows::plan;
+use crate::editor::bim::utilities::DEFAULT_UTILITY;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_framework_plugin::{Emit, NoConfigMutation};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::kind_holding;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::session::ToolEvent;
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::select_effect;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Fault, NoConfig};
+use crate::editor::bim::commands::canvas_pointer_down::*;
 use crate::editor::bim::fixture::context::view;
 use crate::editor::bim::fixture::support::{demo, run};
 use crate::editor::bim::modes::edit::windows::section;

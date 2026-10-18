@@ -45,6 +45,7 @@ semio-s-artifact-cad-cad-io = { workspace = true }
 semio-s-artifact-cad-cad-model = { workspace = true }
 semio-s-artifact-cad-cad-model-diff = { workspace = true }
 semio-s-artifact-cad-cad-mutations = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 
 [dev-dependencies]
 semio-framework-io-sqlite-snapshot-testing-backing = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/📦️packages/🦀️rust" }
@@ -57,7 +58,6 @@ semio-framework-tool-machine = { workspace = true }
 semio-s-artifact-cad-cad-testing = { workspace = true }
 base64_codec = { workspace = true }
 semio-framework = { workspace = true }
-semio-framework-2d = { workspace = true }
 semio-framework-3d-brep-engine = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }

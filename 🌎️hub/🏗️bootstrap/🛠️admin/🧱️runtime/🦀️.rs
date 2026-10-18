@@ -643,7 +643,7 @@ pub fn admin_space_summary_view(summary: semio_hub_directory_contract::model::Ad
 
 pub struct AdminSpaceDetailResponse {
     pub(crate) view: SpaceView,
-    pub(crate) members: AdminPageV1<MemberView>,
+    pub members: AdminPageV1<MemberView>,
 }
 
 impl ToValue for AdminSpaceDetailResponse {

@@ -22,12 +22,14 @@
       "type": "integer",
       "minimum": 0,
       "x-semio-ui": {
-        "widget": "number",
+        "widget": "stepper",
         "role": "value",
         "label": {
           "en": "Lines",
           "de": "Zeilen"
         },
+        "step": 1,
+        "precision": 0,
         "group": "log",
         "order": 10
       }

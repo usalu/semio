@@ -32,7 +32,7 @@ test("guest SQLite rejection carries all eight intrinsic causes independently of
       expect(Buffer.from(row.diagnostics)).toEqual(diagnostics);
     }
   } finally { database.close(); }
-  const wit = readFileSync(resolve(import.meta.dir, "../../../📜️.wit"), "utf8");
+  const wit = readFileSync(resolve(import.meta.dir, "../../../📜️codec.wit"), "utf8");
   const cases = wit.match(/enum value-refusal-kind\s*\{([^}]+)\}/)?.[1].split(",").map(value => value.trim()).filter(Boolean);
   expect(cases).toEqual(fixture.kinds.map(kind => kind.replace(/[A-Z]/g, letter => `-${letter.toLowerCase()}`)));
   expect(wit.match(/record snapshot-rejection\s*\{([^}]+)\}/)?.[1]).toMatch(/kind:\s*value-refusal-kind/);
@@ -58,7 +58,7 @@ test("guest SQLite caller native grant preserves five independent axes and rejec
   expect(validate(withoutNative)).toBe(false);
   expect(native.maximum_copy_bytes).not.toBe(native.maximum_capacity_bytes);
   expect(native.maximum_release_bytes).not.toBe(native.maximum_capacity_bytes);
-  const wit=readFileSync(resolve(import.meta.dir,"../../../📜️.wit"),"utf8");
+  const wit=readFileSync(resolve(import.meta.dir,"../../../📜️codec.wit"),"utf8");
   expect(wit.match(/sqlite-export: async func\([^;]+;/)?.[0]).toContain("native: retained-clone-grant");
   expect(wit.match(/sqlite-import: async func\([^;]+;/)?.[0]).toContain("native: retained-clone-grant");
 });
@@ -112,7 +112,7 @@ test("actual original scalar metadata is closed and independently reproduces its
 
 
 test("original retirement projection measures proposed charge without consuming original receipt",()=>{
- const base=resolve(import.meta.dir,"../../../../../🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control");const read=(path:string)=>JSON.parse(readFileSync(resolve(base,path),"utf8"));const fixture=read("🧫️fixtures/📥️input/🔣️.json");const validate=new Ajv({strict:true,allErrors:true}).compile(read("🧬️schema/📥️input/🔣️.json"));expect(validate(fixture)).toBe(true);for(const name of Object.keys(fixture.checkpointProjection)){const absent=structuredClone(fixture);delete absent.checkpointProjection[name];expect(validate(absent)).toBe(false);}const extra=structuredClone(fixture);extra.checkpointProjection.consumerAuthority=true;expect(validate(extra)).toBe(false);
+ const base=resolve(import.meta.dir,"../../../../../🌿️vcs/🚪️io/💾️binary/🪪️entity-identity/🎛️control");const read=(path:string)=>JSON.parse(readFileSync(resolve(base,path),"utf8"));const fixture=read("🧪️tests/🧫️fixtures/📥️input/🔣️.json");const validate=new Ajv({strict:true,allErrors:true}).compile(read("🧬️schema/📥️input/🔣️.json"));expect(validate(fixture)).toBe(true);for(const name of Object.keys(fixture.checkpointProjection)){const absent=structuredClone(fixture);delete absent.checkpointProjection[name];expect(validate(absent)).toBe(false);}const extra=structuredClone(fixture);extra.checkpointProjection.consumerAuthority=true;expect(validate(extra)).toBe(false);
  const law=fixture.checkpointProjection;const projection={kind:"original-retirement-measurement",maximum:law.originalMaximumBytes,owned:0,finished:false,reserved_return:0,phase_start_owned:0,phase_start_reserved_return:0,received_output:0,received_input:0,received_retirement:law.hostCharge+law.proposedCharge};const check=new Ajv({strict:true,allErrors:true}).compile(read("🔎️measurement/🧬️schema/🔣️.json"));expect(check(projection)).toBe(true);expect(check({...projection,consumerAuthority:true})).toBe(false);expect(new Ajv({strict:true,allErrors:true}).compile(read("🧬️schema/🧾️receipt/🔣️.json"))(projection)).toBe(false);const db=new Database(":memory:");try{db.exec("CREATE TABLE measurement(actual INTEGER,proposed INTEGER)");db.prepare("INSERT INTO measurement VALUES(?,?)").run(law.hostCharge,law.proposedCharge);expect(db.query("SELECT actual,actual+proposed AS projected FROM measurement").get()).toEqual({actual:law.actualRetirement,projected:law.projectedRetirement});}finally{db.close();}
  const source=readFileSync(resolve(base,"🦀️.rs"),"utf8");expect(source).toContain("pub fn project_retirement_charge(");const measured=readFileSync(resolve(base,"🔎️measurement/🦀️.rs"),"utf8");expect(measured).toContain("OriginalOperationProjection<'a>");expect(measured).not.toContain("Deserialize");expect(measured).not.toContain("NativeEncodeControl");
 });
@@ -124,7 +124,7 @@ test("original snapshot input cancellation contract retains measured backing and
 
 
 test("authored snapshot owner and input transitions remain actual Rust syntax",async()=>{
- await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(resolve(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",import.meta.dir)),"out/tree-sitter-rust.wasm")));const root=resolve(import.meta.dir,"../../../../🖥️host");try{for(const path of ["🦀️.rs","🚪️io/🪶️snapshot/🦀️.rs","🚪️io/🪶️snapshot/📨️metadata/🦀️.rs","🚪️io/🎛️operation/📥️input/🦀️.rs","🧪️tests/🛂️receiving/🦀️.rs","🧪️tests/🔬️owned-instance-open/🦀️.rs","🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs","🧪️tests/🔬️owned-runtime/🦀️.rs","🧪️tests/🔬️mock-guest-runtime/🦀️.rs","📥️ui-patch/🧪️tests/🧪️component/🦀️.rs"]){const tree=parser.parse(readFileSync(resolve(root,path),"utf8"));expect(tree).not.toBeNull();const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];const errors=visit(tree!.rootNode).filter(node=>node.type==="ERROR"||node.isMissing());for(const error of errors){expect(error.text).toBe("async");}tree!.delete();}}finally{parser.delete();}
+ await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(resolve(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",import.meta.dir)),"out/tree-sitter-rust.wasm")));const root=resolve(import.meta.dir,"../../../../🖥️host");try{for(const path of ["🦀️.rs","🚪️io/🪶️snapshot/🦀️.rs","🚪️io/🪶️snapshot/📨️metadata/🦀️.rs","🧪️tests/🛂️receiving/🦀️.rs","🧪️tests/🔬️owned-instance-open/🦀️.rs","🧪️tests/🔬️owned-instance-open/🪶️lease/🦀️.rs","🧪️tests/🔬️mock-guest-runtime/🦀️.rs","📥️ui-patch/🧪️tests/🧪️component/🦀️.rs"]){const tree=parser.parse(readFileSync(resolve(root,path),"utf8"));expect(tree).not.toBeNull();const visit=(node:Parser.SyntaxNode):Parser.SyntaxNode[]=>[node,...node.namedChildren.flatMap(visit)];const errors=visit(tree!.rootNode).filter(node=>node.type==="ERROR"||node.isMissing());for(const error of errors){expect(error.text).toBe("async");}tree!.delete();}}finally{parser.delete();}
 });
 
 

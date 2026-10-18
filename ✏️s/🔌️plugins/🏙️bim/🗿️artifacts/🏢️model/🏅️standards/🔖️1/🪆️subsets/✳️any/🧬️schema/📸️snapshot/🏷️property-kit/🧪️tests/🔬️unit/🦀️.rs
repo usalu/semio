@@ -1,4 +1,8 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::values::{ClassificationItem, PropertyDef, TemplateTarget};
+use crate::standards::v1::subsets::any::schema::snapshot::entities::ClassificationSystem;
+#[allow(unused_imports)]
+use std::collections::BTreeSet;
+use crate::standards::v1::subsets::any::schema::snapshot::property_kit::*;
 use crate::standards::v1::subsets::any::schema::snapshot::values::*;
 use crate::standards::v1::subsets::any::schema::snapshot::property_kit_values::*;
 

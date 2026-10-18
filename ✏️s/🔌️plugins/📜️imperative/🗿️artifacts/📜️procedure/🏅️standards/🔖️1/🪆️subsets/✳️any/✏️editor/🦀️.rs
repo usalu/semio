@@ -55,7 +55,7 @@ use semio_framework_plugin::TopologyNode;
 // ArtifactEditor/Editor/etc but left these three under `app::`, already reachable via
 // `semio_framework::*` elsewhere) — see `crate::PROCEDURE_DIALECT`'s own
 // definition for the qualified form this file only reads back through that constant.
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use store::{pack::snapshot::ArtifactPack, };
 
 /// 🏷️ Admits semantic labels for the imperative editor.

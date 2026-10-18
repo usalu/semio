@@ -95,7 +95,7 @@ describe("🎨️ Icon SVG face lighting", () => {
         const identity = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1];
         const shadow = device.createTexture({ size: [1, 1], format: "depth32float", usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.RENDER_ATTACHMENT });
         const groups = [
-          device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: globals, size: 240 } }] }),
+          device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [{ binding: 0, resource: { buffer: globals, size: 256 } }] }),
           device.createBindGroup({ layout: pipeline.getBindGroupLayout(1), entries: [
             { binding: 0, resource: shadow.createView() }, { binding: 1, resource: device.createSampler({ compare: "less-equal" }) },
           ] }),

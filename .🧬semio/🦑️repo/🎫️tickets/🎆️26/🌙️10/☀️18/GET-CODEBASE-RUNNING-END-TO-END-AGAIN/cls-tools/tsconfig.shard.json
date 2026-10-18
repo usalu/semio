@@ -1,0 +1,7 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "incremental": false, "types": ["node"], "typeRoots": ["/Users/ueli/Documents/semio/node_modules/@types"] },
+  "include": [],
+  "exclude": [],
+  "files": ["/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts"]
+}

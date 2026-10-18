@@ -56,7 +56,7 @@ use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use semio_framework_tool_machine::{node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 #[path = "🎛️command-vocabulary/🦀️.rs"]
 mod command_vocabulary;

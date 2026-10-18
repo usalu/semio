@@ -4,7 +4,7 @@ pub struct DagMemberStoreProducer;
 
 use crate::os_store::{ArtifactOwnedValueRetirementFactory,ArtifactStoreCursorDisposer,ErasedSnapshotRetirement,document_store_owners::MemberStoreProducer,document_store_owners::DocumentStoreOwners,SnapshotRetirementFactory};
 use crate::{DagMutation,DagSnapshot};
-use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{OwnedValueRetirementFactory,SharedValueRetirementFactory}};
+use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},factory::{OwnedValueRetirementFactory,SharedValueRetirementFactory}};
 use std::sync::Arc;
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]

@@ -94,7 +94,7 @@ fn norm_late_owned_model()->(SemioModelSnapshot,SqliteDatabase,SqliteDatabaseLim
 
 #[test]
 fn sqlite_snapshot_semio_model_nonempty_reconstruction_exact_backing_admission(){
- use crate::snapshot_test_backing::measure;
+ use semio_framework_io_sqlite_snapshot_testing_backing::measure;
  let(source,database,limits,_)=norm_late_owned_model();let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,limits);
  let(result,observed)=measure(||SemioModelSnapshot::from_sqlite_database(&database,&mut control));let restored=result.unwrap();
  assert!(observed.bytes>0&&observed.requests>0);assert_eq!(limits.max_allocation_bytes-control.allocation_remaining_bytes(),observed.bytes,"every concrete reconstruction request admitted");
@@ -111,7 +111,7 @@ fn sqlite_snapshot_semio_model_nonempty_reconstruction_exact_backing_admission()
 
 #[test]
 fn sqlite_snapshot_semio_model_nonempty_reconstruction_late_schema_cancel_cleanup(){
- use crate::snapshot_test_backing::{measure,active_request_bytes};
+ use semio_framework_io_sqlite_snapshot_testing_backing::{measure,active_request_bytes};
  let(source,database,limits,contract)=norm_late_owned_model();let completed=contract["cancellation"]["completed"].as_u64().unwrap()as usize;let total=contract["cancellation"]["total"].as_u64().unwrap()as usize;
  for interior in[false,true]{
   let mut reached=false;let mut backing_at_cancel=0;let mut callback=|event:SqliteSnapshotProgress|{

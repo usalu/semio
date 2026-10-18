@@ -114,5 +114,5 @@ test("original proposal operation collection admits real octet rows and funded h
 test("original wire source boundaries retain independent rows and reuse paid cursor state",()=>{
  const policy=fixture.sourceBoundaryGrant;expect(policy.maximumItems).toBe(1);expect(policy.maximumCopyBytes).toBe(4096);
  for(const row of fixture.sourceBatches){const actual=row.sources.map((source:any)=>[...Buffer.concat([Buffer.from(source.header),Buffer.from(JSON.stringify(source.body))])]);expect(actual).toEqual(row.expected);for(let index=0;index<row.sources.length;index++)expect(actual[index].slice(row.sources[index].header.length)).toEqual([...new TextEncoder().encode(JSON.stringify(row.sources[index].body))]);}
- const source=readFileSync(join(base,"🦀️.rs"),"utf8");expect(source).toContain("pub fn begin_next_source");expect(source).toContain("self.pack.begin_next_source");expect(source).toContain("self.json.begin_next_source");expect(source).toContain("self.text.begin_next_source");
+ const source=readFileSync(join(base,"🦀️.rs"),"utf8");expect(source).toContain("source_identity: Option<(usize, usize, usize, usize, usize, u8)>");expect(source).toContain("prepared operation source changed before completion");expect(source).toContain("self.source_identity = Some(identity);");expect(source).not.toContain("begin_next_source");
 });

@@ -14,23 +14,17 @@ use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use crate::standards::v1::subsets::any::io::export::energy::target::EnergyModel;
 
-#[path = "🧬️target/🦀️.rs"]
-pub mod target;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::target;
 
-#[path = "🧱️library/🦀️.rs"]
-pub mod library;
+pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::io::export::energy::library;
 
-#[path = "🔗️pairs/🦀️.rs"]
-pub mod pairs;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::pairs;
 
-#[path = "🏗️build/🦀️.rs"]
-pub mod build;
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::build;
 
-#[path = "📖️document/🦀️.rs"]
-pub mod document;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::energy::document;
 
-#[path = "📊️table/🦀️.rs"]
-pub mod table;
+pub use semio_s_artifact_bim_model_modify::standards::v1::subsets::any::io::export::energy::table;
 
 /// 🪪️ The dialect this leaf writes: the energy model artifact.
 pub const ENERGY_DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId::ANY };
@@ -116,6 +110,4 @@ impl Serializer<ModelSnapshot> for ModelIntoEnergy {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

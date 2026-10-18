@@ -1,0 +1,140 @@
+{
+ "file": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧾️register-operators/🦀️.rs",
+ "function": "register",
+ "children": [
+  {
+   "dir": "🧊️schemas-primitives-and-curves",
+   "doc": "🧊️ Schemas, primitives and curves: the brep schemas with the deconstruct operator, the 3d primitive solids and the curve operators. See [`super`].",
+   "funcs": [
+    {
+     "name": "register_schemas_and_deconstruct",
+     "emoji": "📦",
+     "doc": "Registers the geometry, topology, brep and text schemas and the brep deconstruct operator.",
+     "from": 7,
+     "to": 39
+    },
+    {
+     "name": "register_primitive_solids",
+     "emoji": "🧱",
+     "doc": "Registers the box, sphere, cylinder, cone, torus and convex hull operators.",
+     "from": 41,
+     "to": 101
+    },
+    {
+     "name": "register_curves",
+     "emoji": "〰",
+     "doc": "Registers the line, circle, arc, ellipse, polyline, rectangle, polygon, interpolate, approximate and helix operators.",
+     "from": 103,
+     "to": 212
+    }
+   ]
+  },
+  {
+   "dir": "🪡️surfaces-and-sweeps",
+   "doc": "🪡️ Surfaces and sweeps: the surface constructors and the extrude, revolve, loft, sweep, pipe and helical sweep operators. See [`super`].",
+   "funcs": [
+    {
+     "name": "register_surfaces",
+     "emoji": "🛹",
+     "doc": "Registers the plane, planar face, nurbs grid, coons, offset and thicken surface operators.",
+     "from": 214,
+     "to": 286
+    },
+    {
+     "name": "register_sweeps",
+     "emoji": "🌀",
+     "doc": "Registers the solid extrude and the extrude, revolve, loft, sweep, pipe and helical sweep operators.",
+     "from": 288,
+     "to": 378
+    }
+   ]
+  },
+  {
+   "dir": "🧮️booleans-transforms-and-solid-features",
+   "doc": "🧮️ Booleans, transforms and solid features: the boolean, transform, pattern, fillet, chamfer, shell, draft and defeature operators. See [`super`].",
+   "funcs": [
+    {
+     "name": "register_booleans",
+     "emoji": "➗",
+     "doc": "Registers the fuse, cut, intersect and compound cut operators.",
+     "from": 380,
+     "to": 405
+    },
+    {
+     "name": "register_transforms_and_patterns",
+     "emoji": "🔄",
+     "doc": "Registers the translate, rotate, scale, mirror, copy and pattern operators.",
+     "from": 407,
+     "to": 516
+    },
+    {
+     "name": "register_solid_features",
+     "emoji": "🛠",
+     "doc": "Registers the fillet, chamfer, shell, draft, offset solid and defeature operators.",
+     "from": 518,
+     "to": 643
+    }
+   ]
+  },
+  {
+   "dir": "🔍️intersection-and-evaluation-operators",
+   "doc": "🔍️ Intersection and evaluation operators: the section, split and intersection operators and the curve and surface evaluation operators. See [`super`].",
+   "funcs": [
+    {
+     "name": "register_intersections",
+     "emoji": "✂",
+     "doc": "Registers the section, split, curve curve, curve surface and surface surface intersection operators.",
+     "from": 645,
+     "to": 713
+    },
+    {
+     "name": "register_evaluations",
+     "emoji": "📍",
+     "doc": "Registers the curve and surface point, tangent, domain, curvature, normal and closest parameter operators.",
+     "from": 715,
+     "to": 825
+    }
+   ]
+  },
+  {
+   "dir": "📐️measurement-utility-and-topology-operators",
+   "doc": "📐️ Measurement, utility and topology operators: the measure operators, the vertex, sew, heal and nurbs conversion utilities and the shell, compound, explode and label topology operators. See [`super`].",
+   "funcs": [
+    {
+     "name": "register_measurements",
+     "emoji": "📏",
+     "doc": "Registers the volume, area, length, center of mass, bounding box, distance, closest point, classify and validate operators.",
+     "from": 827,
+     "to": 902
+    },
+    {
+     "name": "register_utilities",
+     "emoji": "🧰",
+     "doc": "Registers the vertex, face from wire, sew, heal and convert to nurbs operators.",
+     "from": 904,
+     "to": 952
+    },
+    {
+     "name": "register_topology",
+     "emoji": "🕸",
+     "doc": "Registers the shells, compound, explode and label operators.",
+     "from": 954,
+     "to": 999
+    }
+   ]
+  },
+  {
+   "dir": "📂️io-operators",
+   "doc": "📂️ IO operators: the step, stl, obj and dwg import and export operators. See [`super`].",
+   "funcs": [
+    {
+     "name": "register_io",
+     "emoji": "💾",
+     "doc": "Registers the step, stl, obj and dwg export and import operators.",
+     "from": 1001,
+     "to": 1088
+    }
+   ]
+  }
+ ]
+}

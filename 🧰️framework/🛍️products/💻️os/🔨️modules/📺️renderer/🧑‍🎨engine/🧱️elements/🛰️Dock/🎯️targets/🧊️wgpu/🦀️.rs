@@ -60,7 +60,7 @@ impl DockStackTab {
     }
 }
 
-fn dock_tab_ids(windows: &[DockStackTab]) -> Vec<String> {
+pub fn dock_tab_ids(windows: &[DockStackTab]) -> Vec<String> {
     windows.iter().map(|tab| tab.window_id.clone()).collect()
 }
 
@@ -262,7 +262,7 @@ impl DockState {
 
     /// 📑️ How many action chips each tab reserves width for — the one [`dock_tab_actions`] answer, so
     /// a measured tab width can never disagree with the painted chip run.
-    fn tab_action_count(&self) -> usize {
+    pub fn tab_action_count(&self) -> usize {
         dock_tab_actions(self.show_maximize(), false).len()
     }
 
@@ -1170,7 +1170,7 @@ pub fn dock_cap_depth(theme: &Theme) -> f32 {
     theme.control_height + theme.padding_standard * 2.0
 }
 
-fn stack_tab_bar_rect(bounds: Rect, theme: &Theme) -> Rect {
+pub fn stack_tab_bar_rect(bounds: Rect, theme: &Theme) -> Rect {
     Rect::new(bounds.x, bounds.y, bounds.w, dock_cap_depth(theme))
 }
 
@@ -1234,7 +1234,7 @@ fn dock_tab_chrome_width(theme: &Theme, action_count: usize) -> f32 {
 
 /// 📑️ The label a tab actually paints and the chip width it occupies, capped at
 /// [`MODE_DOCK_TAB_MAX_WIDTH_PX`] with a CSS-`truncate`-style ellipsis.
-fn dock_tab_chip(atlas: &mut FontAtlas, theme: &Theme, label: &str, action_count: usize) -> (String, f32) {
+pub fn dock_tab_chip(atlas: &mut FontAtlas, theme: &Theme, label: &str, action_count: usize) -> (String, f32) {
     let chrome = dock_tab_chrome_width(theme, action_count);
     let full = dock_tab_content_width(atlas, theme, label) + dock_tab_action_width(theme) * action_count as f32;
     if full <= MODE_DOCK_TAB_MAX_WIDTH_PX {
@@ -1348,7 +1348,7 @@ fn collect_stack_corner_tab_bars(node: &DockNode, bounds: Rect, path: &[usize], 
 
 /// 🪟️ Wgpu-local adapter: builds the balanced fallback layout via
 /// `ui_wgpu::wgpu::even_window_layout` and converts it to a runtime `DockNode`.
-fn even_layout(window_ids: &[String]) -> DockNode {
+pub fn even_layout(window_ids: &[String]) -> DockNode {
     dock_from_window_layout(&even_window_layout(window_ids).root)
 }
 
@@ -1370,7 +1370,7 @@ fn first_window_id(node: &DockNode) -> Option<String> {
     }
 }
 
-fn find_stack_path(node: &DockNode, window_id: &str, path: &mut DockPath) -> Option<DockPath> {
+pub fn find_stack_path(node: &DockNode, window_id: &str, path: &mut DockPath) -> Option<DockPath> {
     match node {
         DockNode::Stack { windows, .. } if windows.iter().any(|tab| tab.window_id == window_id) => Some(path.clone()),
         DockNode::Row(children) | DockNode::Column(children) => {
@@ -1387,7 +1387,7 @@ fn find_stack_path(node: &DockNode, window_id: &str, path: &mut DockPath) -> Opt
     }
 }
 
-fn node_at<'a>(node: &'a DockNode, path: &[usize]) -> Option<&'a DockNode> {
+pub fn node_at<'a>(node: &'a DockNode, path: &[usize]) -> Option<&'a DockNode> {
     let mut current = node;
     for index in path {
         current = match current {
@@ -1473,7 +1473,7 @@ pub fn remove_window_from_layout(root: &DockNode, window_id: &str) -> Option<Doc
 /// and a structural-kind change (e.g. `Stack` -> `Row`) just adopts `next` outright since there's no
 /// shared identity to preserve. Mirrors the intent of `ui/js/react/index.tsx`'s keyed reconciliation
 /// helpers (`mapLayoutStacks` family) for this crate's `DockNode` shape. See `DockState::apply_layout_diff`.
-fn diff_dock_node(old: &DockNode, next: DockNode) -> DockNode {
+pub fn diff_dock_node(old: &DockNode, next: DockNode) -> DockNode {
     match (old, &next) {
         (DockNode::Stack { windows: old_windows, active: old_active }, DockNode::Stack { windows: next_windows, active: next_active }) => {
             if old_windows == next_windows {
@@ -1983,23 +1983,23 @@ pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: &WindowSil
 //#endregion WindowSilhouetteGeometry
 
 struct StackCapTabLayout {
-    window_id: String,
-    label: String,
+    pub window_id: String,
+    pub label: String,
     icon_id: String,
-    rect: Rect,
+    pub rect: Rect,
 }
 
 struct StackCapGroupLayout {
-    tabs: Vec<StackCapTabLayout>,
+    pub tabs: Vec<StackCapTabLayout>,
 }
 
 struct StackCapLayout {
-    groups: Vec<StackCapGroupLayout>,
+    pub groups: Vec<StackCapGroupLayout>,
     top_spans: Vec<WindowSilhouetteSpan>,
     bottom_spans: Vec<WindowSilhouetteSpan>,
 }
 
-fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect, action_count: usize) -> StackCapLayout {
+pub fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, icon_ids: &HashMap<String, String>, atlas: &mut FontAtlas, theme: &Theme, bounds: Rect, action_count: usize) -> StackCapLayout {
     let tab_h = dock_cap_depth(theme);
     let mut groups = Vec::new();
     let mut top_spans = Vec::new();
@@ -2039,7 +2039,7 @@ fn layout_stack_cap(windows: &[DockStackTab], labels: &HashMap<String, String>, 
     StackCapLayout { groups, top_spans, bottom_spans }
 }
 
-fn stack_window_silhouette(bounds: Rect, theme: &Theme, layout: &StackCapLayout) -> WindowSilhouette {
+pub fn stack_window_silhouette(bounds: Rect, theme: &Theme, layout: &StackCapLayout) -> WindowSilhouette {
     let top_depth = if layout.top_spans.is_empty() { 0.0 } else { dock_cap_depth(theme) };
     let bottom_depth = if layout.bottom_spans.is_empty() { 0.0 } else { dock_cap_depth(theme) };
     WindowSilhouette::from_measured_edges(bounds, layout.top_spans.clone(), layout.bottom_spans.clone(), top_depth, bottom_depth)
@@ -2137,19 +2137,5 @@ fn dock_text(ctx: &mut DockRenderContext<'_>, text: &str, x: f32, y: f32, size: 
 
 //#endregion DockFreeFunctions
 
-//#region DockTests
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../🧪️tests/🪟️app-mode-layouts/🦀️.rs"]
-mod app_mode_layout_tests;
 
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../🧪️tests/🪟️window-template-drag/🦀️.rs"]
-mod window_template_drag_tests;
 
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../🧪️tests/🎯️stack-drop-destination/🦀️.rs"]
-mod stack_drop_destination_tests;
-#[cfg(all(test, not(target_arch = "wasm32")))]
-#[path = "../../🧪️tests/🔬️wgpu-unit/🦀️.rs"]
-mod unit_tests;
-//#endregion DockTests

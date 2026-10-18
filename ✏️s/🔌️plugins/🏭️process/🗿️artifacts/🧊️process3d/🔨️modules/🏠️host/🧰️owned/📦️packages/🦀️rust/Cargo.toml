@@ -16,9 +16,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["semio-s-artifact-process-process3d-host-retained-cursors/testkit", "semio-s-artifact-process-process3d-host-publication-authority/testkit"]
 
 [dependencies]
+semio-s-artifact-process-process3d-host-publication-authority = { workspace = true }
+semio-s-artifact-process-process3d-host-retained-cursors = { workspace = true }
 semio-framework-job-publication = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job-registry = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
 
@@ -39,6 +41,8 @@ semio-s-artifact-stdio-semio-brep = { workspace = true }
 semio-s-artifact-stdio-semio-flow = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-process-process3d-host-publication-authority = { workspace = true, features = ["testkit"] }
+semio-s-artifact-process-process3d-host-retained-cursors = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }

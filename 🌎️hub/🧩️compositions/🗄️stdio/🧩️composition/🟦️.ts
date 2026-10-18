@@ -115,7 +115,7 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
       const authority = packageManifest.package?.metadata?.semio?.composition;
       if (!authority || Object.keys(authority).join(",") !== "manifest" || typeof authority.manifest !== "string") throw new Error(`Present Stdio artifact has no declared composition contribution: ${entry.name}`);
       const contribution = admitCompositionContributionV1(JSON.parse(capture(resolve(dirname(packagePath), authority.manifest))));
-      if (Object.keys(packageManifest.features ?? {}).some((feature) => feature !== "default" && feature !== "testing")) throw new Error(`Contribution Cargo owner carries a consumer-selected feature: ${entry.name}`);
+      if (Object.keys(packageManifest.features ?? {}).some((feature) => feature !== "default" && feature !== "testkit")) throw new Error(`Contribution Cargo owner carries a consumer-selected feature: ${entry.name}`);
       if (contribution.package !== packageManifest.package.name) throw new Error(`Contribution package does not match its physical Cargo owner: ${entry.name}`);
       const prefixes = symbolPrefixes(contribution);
       if (contribution.apps.some((app) => !prefixes.some((prefix) => app.type.startsWith(prefix)) || !prefixes.some((prefix) => app.factory.startsWith(prefix)))) throw new Error(`Contribution app symbols escape their Cargo owners: ${entry.name}`);

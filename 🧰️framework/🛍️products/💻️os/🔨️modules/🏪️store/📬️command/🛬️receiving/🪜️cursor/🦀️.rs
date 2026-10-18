@@ -1,7 +1,8 @@
 //! 🪜️ One-item command and envelope continuations borrow the unchanged original native source on every turn.
-use super::{invalid,lane,ArtifactCommand,HistoryLane,SupersedeInput,Author,MutationId,TransactionRef,protocol};
+use super::{invalid,lane,ArtifactCommand,HistoryLane,SupersedeInput,Author,MutationId,TransactionRef};
 use protocol::{OpBinaryReceiving,OpBinaryReceivingCursor,codec::RetainedWireFieldDecode};
-use semio_framework_job::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued,OriginalNativeDecodeOutcome,OriginalTurnFailure,StepContext};
+use semio_framework_job::{OriginalTurnFailure,StepContext};
+use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodeIssued,OriginalNativeDecodeOutcome};
 use semio_framework_value::{NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand,SharedUtf8,ValueError,ValueRefusalKind,retirement::{RetireOwned,RetirementCursor,RetirementStep,controlled::ControlledRetirement}};
 use std::mem::ManuallyDrop;
 

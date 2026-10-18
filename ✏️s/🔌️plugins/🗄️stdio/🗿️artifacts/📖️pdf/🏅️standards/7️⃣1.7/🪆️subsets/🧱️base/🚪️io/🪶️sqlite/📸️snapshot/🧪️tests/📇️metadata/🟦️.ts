@@ -19,7 +19,7 @@ test("PDF dates and document info preserve all native fields without wire normal
 },{timeout:30_000});
 
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
-import type { PdfDictEntry } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfDictEntry } from "../../../../../🧬️schema/📸️snapshot/🧩️cos/🟦️.ts";
 
 test("PDF UA initial neutral preserves literal raw references and typed marks",async()=>{
   const fixture=JSON.parse(await Bun.file(new URL("../🧫️fixtures/♿️ua-initial/🔣️.json",import.meta.url)).text());
@@ -50,7 +50,7 @@ test("PDF X real initial profile preserves typed artifact references and native 
   const header=Buffer.from(bytes);expect(header.readUInt32BE(0)).toBe(3024);expect(header.toString("ascii",36,40)).toBe("acsp");expect(header.toString("ascii",16,20)).toBe("RGB ");expect(header.readUInt32BE(128)).toBe(16);
   for(let tag=0;tag<16;tag++){const offset=header.readUInt32BE(132+tag*12+4),length=header.readUInt32BE(132+tag*12+8);expect(offset).toBeGreaterThanOrEqual(324);expect(offset+length).toBeLessThanOrEqual(3024);}
   const ref=(num:number)=>({kind:"ref" as const,num,gen:0}),name=(value:string)=>({kind:"name" as const,value});
-  const objects:import("../../../../../🧬️schema/📸️snapshot/🟦️.ts").PdfObject[]=[
+  const objects:import("../../../../../🧬️schema/📸️snapshot/🧩️cos/🟦️.ts").PdfObject[]=[
     {kind:"dict",value:[{key:"Type",value:name("Catalog")},{key:"Pages",value:ref(4)},{key:"OutputIntents",value:{kind:"array",value:[ref(2)]}}]},
     {kind:"dict",value:[{key:"Type",value:name("OutputIntent")},{key:"S",value:name("GTS_PDFX")},{key:"OutputConditionIdentifier",value:{kind:"str",value:Array.from(new TextEncoder().encode("sRGB2014"))}},{key:"DestOutputProfile",value:ref(3)}]},
     {kind:"stream",dict:[{key:"N",value:{kind:"int",value:3n}}],data:profile,filters:[]},
@@ -80,7 +80,7 @@ test("PDF VT real initial profile preserves one page and genuine DPart reference
   const header=Buffer.from(bytes);expect(header.readUInt32BE(0)).toBe(3024);expect(header.toString("ascii",36,40)).toBe("acsp");expect(header.toString("ascii",16,20)).toBe("RGB ");expect(header.readUInt32BE(128)).toBe(16);
   for(let tag=0;tag<16;tag++){const offset=header.readUInt32BE(132+tag*12+4),length=header.readUInt32BE(132+tag*12+8);expect(offset).toBeGreaterThanOrEqual(324);expect(offset+length).toBeLessThanOrEqual(3024);}
   const ref=(num:number)=>({kind:"ref" as const,num,gen:0}),name=(value:string)=>({kind:"name" as const,value});
-  const objects:import("../../../../../🧬️schema/📸️snapshot/🟦️.ts").PdfObject[]=[
+  const objects:import("../../../../../🧬️schema/📸️snapshot/🧩️cos/🟦️.ts").PdfObject[]=[
     {kind:"dict",value:[{key:"Type",value:name("Catalog")},{key:"Pages",value:ref(4)},{key:"OutputIntents",value:{kind:"array",value:[ref(2)]}}]},
     {kind:"dict",value:[{key:"Type",value:name("OutputIntent")},{key:"S",value:name("GTS_PDFX")},{key:"OutputConditionIdentifier",value:{kind:"str",value:Array.from(new TextEncoder().encode("sRGB2014"))}},{key:"DestOutputProfile",value:ref(3)}]},
     {kind:"stream",dict:[{key:"N",value:{kind:"int",value:3n}}],data:profile,filters:[]},

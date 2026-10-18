@@ -1,4 +1,44 @@
-use super::*;
+use crate::editor::bim::entities::kind_of;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::{fields_of, ordered_storeys, EntityKind, ENTITIES};
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_text, ui_value_map, ui_value_text, BIM_EDITOR_CONTROLLER_ID};
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use semio_framework_plugin::Buildable;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::HasBase;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::Trigger;
+#[allow(unused_imports)]
+use semio_framework_plugin::{row_action, row_target, RowActionPlacement};
+#[allow(unused_imports)]
+use semio_framework_plugin::UiFixedMap;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiText;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::FRAMEWORK_PANEL_TAB_ARTIFACT_ID;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+use crate::editor::bim::panels::outliner::{movable};
+use crate::editor::bim::panels::outliner::*;
 use semio_framework_plugin::ViewModel;
 use semio_framework_ui_locale::{Locale, Terminology};
 

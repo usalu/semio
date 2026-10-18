@@ -5,6 +5,6 @@ import { describe, expect, it } from "bun:test";
 const here = dirname(fileURLToPath(import.meta.url));
 describe("nonconforming", () => {
   it("ships primary asset", () => {
-    expect(readFileSync(join(here, "../../../../🖼️assets/🎬️nonconforming/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
+    expect(readFileSync(join(here, "../../../../🖼️assets/🌶️nonconforming/🗣️.dsl.semio"), "utf8").length).toBeGreaterThan(8);
   });
 });

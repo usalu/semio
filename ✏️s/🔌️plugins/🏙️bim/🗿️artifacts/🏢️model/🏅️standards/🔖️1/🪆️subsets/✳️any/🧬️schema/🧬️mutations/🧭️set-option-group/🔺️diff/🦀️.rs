@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative set-option-group diff.
-use super::SetOptionGroup;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::mutations::set_option_group::SetOptionGroup;
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetOptionGroup, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let Some(record) = base.option_groups.get(&payload.id) else { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Record is missing.", [payload.id.clone()]); };

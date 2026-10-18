@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { applyPatch } from "fast-json-patch";
 
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-const law = read("../🧫️fixtures/🔣️.json");
+const law = read("./🧫️fixtures/🔣️.json");
 const rank: Record<string, number> = { info: 0, warning: 1, error: 2, fatal: 3 };
 const bytes = (text: string) => Buffer.byteLength(text);
 type Message = { level: string; code: string; message: string; target: string[]; opIndex: number | null };

@@ -738,7 +738,8 @@
         "operation": {
           "enum": [
             "publish",
-            "retire"
+            "retire",
+            "retain-inactive"
           ]
         },
         "directory": {
@@ -807,7 +808,8 @@
         "operation": {
           "enum": [
             "publish",
-            "retire"
+            "retire",
+            "retain-inactive"
           ]
         },
         "directory": {
@@ -1442,6 +1444,35 @@
             "strict-no-purpose",
             "extra-journal",
             "unexpected-text"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "RetainedInactiveCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "effect",
+        "accepted"
+      ],
+      "properties": {
+        "effect": {
+          "enum": [
+            "complete",
+            "zero-journal",
+            "namespace-command",
+            "pool-command",
+            "foreign-directory",
+            "producer-missing",
+            "producer-sha",
+            "fixture-unknown",
+            "child-descendant",
+            "foreign-kernel",
+            "extra-input",
+            "stream-purpose"
           ]
         },
         "accepted": {

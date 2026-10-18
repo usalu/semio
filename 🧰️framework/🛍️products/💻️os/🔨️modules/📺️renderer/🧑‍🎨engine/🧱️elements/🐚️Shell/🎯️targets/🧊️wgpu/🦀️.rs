@@ -173,6 +173,7 @@ pub use semio_framework_os_renderer_wgpu_shell_view_paint::*;
 pub use semio_framework_os_renderer_wgpu_shell_view_chrome::*;
 pub use semio_framework_os_renderer_wgpu_shell_view_overlays::*;
 pub use semio_framework_os_renderer_wgpu_shell_view_panels::*;
+#[cfg(target_arch = "wasm32")]
 pub(crate) use semio_framework_os_renderer_wgpu_host_base::host_io_call;
 pub(crate) use shell_vocab::shell_chrome_string;
 //#endregion 📥️RendererWp4Staging

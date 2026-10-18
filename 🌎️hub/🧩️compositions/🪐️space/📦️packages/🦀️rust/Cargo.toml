@@ -43,3 +43,5 @@ semio-framework-pack-json = { path = "../../../../../🧰️framework/🔨️mod
 pack = { workspace = true }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework = { workspace = true }
+semio-s-artifact-draw-drawing-examples = { workspace = true }
+semio-s-artifact-draw-drawing-model = { workspace = true }

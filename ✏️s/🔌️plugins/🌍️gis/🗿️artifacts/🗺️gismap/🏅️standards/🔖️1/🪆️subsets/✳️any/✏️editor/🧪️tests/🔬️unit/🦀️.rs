@@ -1,9 +1,9 @@
-use crate::editor::gis2d::commands::{example, features, view};
-use crate::editor::gis2d::modes::edit::windows::map;
-use crate::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
-use crate::standards::v1::subsets::any::schema::mutations::GisMapMutation;
-use crate::{GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
-use crate::standards::v1::subsets::any::artifact_declaration::{artifact_kind};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::{example, features, view};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::modes::edit::windows::map;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::panels::{artifact as document_panel, catalogue as catalogue_panel, inspection as inspection_panel};
+use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::schema::mutations::GisMapMutation;
+use semio_s_artifact_gis_gismap_gis2d::{GisMapSnapshot, MapFeature, GIS_MAP_SCHEMA};
+use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::artifact_declaration::{artifact_kind};
 use semio_framework_plugin::ActionDefinition;
 use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::ArtifactEditor;
@@ -19,13 +19,13 @@ use semio_framework_plugin::MediaPayload;
 use semio_framework_plugin::MediaType;
 use semio_framework_plugin::WindowMeasure;
 use pack::snapshot::ArtifactPack;
-use crate::editor::gis2d::commands::example::set_active_example;
-use crate::editor::gis2d::commands::features::{patch_positions, patch_route, patch_routes};
-use crate::editor::gis2d::commands::inference::propose_bounds_region;
-use crate::editor::gis2d::commands::shell::open_source;
-use crate::editor::gis2d::commands::view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
-use crate::editor::gis2d::*;
-use crate::standards::v1::subsets::any::io::text::snapshot::{default_document, empty_gis_map_snapshot};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::example::set_active_example;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::features::{patch_positions, patch_route, patch_routes};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::inference::propose_bounds_region;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::shell::open_source;
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::commands::view::{fit_world, focus_feature, set_camera, set_layer_stroke_scale, set_lod_mode, set_render_mode, set_vector_style, toggle_layer_visibility};
+use semio_s_artifact_gis_gismap_gis2d::editor::gis2d::*;
+use semio_s_artifact_gis_gismap_gis2d::standards::v1::subsets::any::io::text::snapshot::{default_document, empty_gis_map_snapshot};
 
 pub mod context {
     use super::*;
@@ -156,7 +156,7 @@ pub mod context {
     }
 }
 
-use crate::editor::gis2d::unit_tests::context::{app, close, gis2d_app_manifest_for_tests, render, Gis2dApp};
+use crate::unit_tests::context::{app, close, gis2d_app_manifest_for_tests, render, Gis2dApp};
 use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp, VcsArtifactApp};
 
 #[test]
@@ -185,7 +185,7 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
 #[semio_framework_async_macros::async_test]
 async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_once() {
     let snapshot = empty_gis_map_snapshot();
-    let envelope = store::os_store::document_materialize::create_document_envelope(crate::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_gis_gismap_gis2d::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
         .await
         .expect("GIS Map preparation-law Store opens");
@@ -194,9 +194,9 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
         panic!("GIS store refused its exact owner catalog: {error}");
     }
     let factory = gis_map_parent_one_item_preparation_factory();
-    let mutation = GisMapMutation::CreatePosition(crate::mutations::create_position::CreatePosition {
+    let mutation = GisMapMutation::CreatePosition(semio_s_artifact_gis_gismap_gis2d::mutations::create_position::CreatePosition {
         index: 0,
-        item: crate::MapFeature { id: "preparation-law".into(), data: semio_framework_value::DslValue::Null },
+        item: semio_s_artifact_gis_gismap_gis2d::MapFeature { id: "preparation-law".into(), data: semio_framework_value::DslValue::Null },
     });
     let mut publication = store
         .begin_apply_batch(
@@ -290,7 +290,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
     }))
     .expect("schema-first GIS fixture envelope");
     let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut retirement = crate::host::owned::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
+    let mut retirement = semio_s_artifact_gis_gismap_gis2d::host::owned::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         match retirement.close_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {
@@ -472,7 +472,7 @@ async fn the_manifest_stitches_every_taxonomy_node() {
     for body_key in [document_panel::GIS2D_PLAY_BODY_ARTIFACT, catalogue_panel::GIS2D_PLAY_BODY_CATALOGUE, inspection_panel::GIS2D_PLAY_BODY_INSPECTION] {
         assert!(definition.panel_tabs.iter().any(|tab| tab.body_key.as_deref() == Some(body_key)), "panel tab {body_key} is stitched into the manifest");
     }
-    assert!(definition.artifact_kinds.iter().any(|kind| kind.id == crate::GISMAP_DIALECT.artifact_kind));
+    assert!(definition.artifact_kinds.iter().any(|kind| kind.id == semio_s_artifact_gis_gismap_gis2d::GISMAP_DIALECT.artifact_kind));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -529,12 +529,12 @@ async fn media_ports_declare_features_in_and_map_out() {
 async fn gis2d_io_declares_the_features_in_and_map_out_ports() {
     let io = gis2d_io();
     assert_eq!(io.artifact_schema, GIS_MAP_SCHEMA);
-    assert_eq!(io.artifact.id, crate::GISMAP_DIALECT.artifact_kind);
+    assert_eq!(io.artifact.id, semio_s_artifact_gis_gismap_gis2d::GISMAP_DIALECT.artifact_kind);
     let ports = io.all_ports().await;
     assert!(ports.iter().any(|port| port.id == "features:in" && port.direction == semio_framework_plugin::MediaPortDirection::In));
     let map_out = ports.iter().find(|port| port.id == "map:out").expect("map:out declared");
     assert_eq!(map_out.direction, semio_framework_plugin::MediaPortDirection::Out);
-    assert_eq!(map_out.kind_id.as_deref(), Some(crate::GISMAP_DIALECT.artifact_kind));
+    assert_eq!(map_out.kind_id.as_deref(), Some(semio_s_artifact_gis_gismap_gis2d::GISMAP_DIALECT.artifact_kind));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -615,7 +615,7 @@ async fn layer_verbs_stage_every_declared_map_layer() {
 async fn the_layer_stack_is_the_gis_policy_toggle_list() {
     use semio_framework_surface::tiled_map::MapPolicy;
     let stack: Vec<&str> = GIS_MAP_LAYER_IDS.iter().map(|(layer_id, _, _)| *layer_id).collect();
-    let toggles: Vec<&str> = crate::tile_coordinates::gis_policy::gis_map_policy().descriptor().layer_toggles.iter().map(|toggle| toggle.key.as_str()).collect();
+    let toggles: Vec<&str> = semio_s_artifact_gis_gismap_gis2d::tile_coordinates::gis_policy::gis_map_policy().descriptor().layer_toggles.iter().map(|toggle| toggle.key.as_str()).collect();
     assert_eq!(stack, toggles);
 }
 
@@ -633,4 +633,4 @@ async fn the_retained_tool_surface_proofs_and_publication_contracts_cover_every_
 }
 //#endregion 🎬️StageableActionVocabulary
 
-semio_framework_plugin::history_edit_acceptance_law!("gis", crate::editor::gis2d::Gis2dPlayApp, || semio_framework_plugin::App { definition: crate::editor::gis2d::create_gis2d_app(), examples: Vec::new() }, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("gis", semio_s_artifact_gis_gismap_gis2d::editor::gis2d::Gis2dPlayApp, || semio_framework_plugin::App { definition: semio_s_artifact_gis_gismap_gis2d::editor::gis2d::create_gis2d_app(), examples: Vec::new() }, "../../../../🏅️standards/🔖️1/🪆️subsets/✳️any");

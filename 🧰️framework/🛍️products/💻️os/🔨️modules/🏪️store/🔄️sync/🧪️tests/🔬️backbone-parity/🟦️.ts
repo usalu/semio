@@ -3,7 +3,8 @@ import Ajv from "ajv";
 import { HISTORY_TRANSITION_DIFF_SCHEMA, encodeClientFrame, encodePresencePeer, type MutationEnvelope, type ServerFrame, type WireFrontierSummary, type WireMutationEnvelope } from "@semio-tech/framework-replication";
 import { decodeBackboneMessage, type ArtifactActorConfig } from "../../../../../🟦️.ts";
 import * as vitest from "vitest";
-import { documentWorkerTestDependenciesV1, type ArtifactState, type BackboneWorkerTestDependencies } from "../../../👷️worker/🟦️.ts";
+import { documentWorkerTestDependenciesV1, type BackboneWorkerTestDependencies } from "../../../👷️worker/🟦️.ts";
+import { type ArtifactState } from "../../../👷️worker/🧾️document-state/🟦️.ts";
 
 type Vitest = typeof import("vitest");
 

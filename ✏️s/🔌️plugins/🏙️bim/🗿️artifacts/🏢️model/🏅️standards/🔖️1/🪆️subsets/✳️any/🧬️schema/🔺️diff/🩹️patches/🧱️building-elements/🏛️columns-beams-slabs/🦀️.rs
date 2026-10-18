@@ -1,6 +1,7 @@
 //! 🏛️ Structural patches of the building elements: the column, beam and slab sparse patches. See [`super`].
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*};
+use crate::standards::v1::subsets::any::schema::diff::algebra::*;
 
 /// 🩹 Sparse patch of [`Column`]: an absent field is untouched.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

@@ -1,7 +1,7 @@
 /** 🧪️ Validates explicit host preferences against the shared neutral schema and Ajv. */
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import { parseResolvedPluginViewState, VIEW_CONTEXT_LONG_STRING_CHARS, VIEW_CONTEXT_LONG_STRING_FIELDS } from "../../../🟦️.ts";
+import { parseResolvedPluginViewState, VIEW_CONTEXT_LONG_STRING_CHARS, VIEW_CONTEXT_LONG_STRING_FIELDS } from "../../../👁️view-state-and-public-invocation/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import fixture from "../🧫️fixtures/🪟️resolved-host-context/🔣️.json";
 

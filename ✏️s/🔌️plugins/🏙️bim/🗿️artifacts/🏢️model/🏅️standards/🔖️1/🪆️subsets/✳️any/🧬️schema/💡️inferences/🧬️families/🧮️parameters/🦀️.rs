@@ -1,8 +1,9 @@
 //! 🧮️ `parameters`: the resolved parameters of one family. The authored formulas (and, for a placed instance, its override formulas) are parsed, ordered by their dependencies and evaluated by
 //! `semio_framework_expression::evaluate_all_declared`; a parameter that does not parse, has the wrong kind, takes part in a cycle or depends on one that failed becomes an issue, never a stored value.
 
-use super::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
-use super::{ParameterValue, ResolvedParameter};
+use crate::standards::v1::subsets::any::schema::snapshot::FamilyCategory;
+use crate::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, FamilyIssueCode, IssueOwner};
+use crate::standards::v1::subsets::any::schema::inferences::families::{ParameterValue, ResolvedParameter};
 use crate::standards::v1::subsets::any::schema::snapshot::{FamilyParameter, ModelSnapshot, ParameterKind};
 use semio_framework_expression::{evaluate_all_declared, parse, print, Expr, Kind, Value};
 use std::collections::{BTreeMap, BTreeSet};
@@ -103,6 +104,4 @@ pub fn resolve(snapshot: &ModelSnapshot, family: &str, overrides: &BTreeMap<Stri
     resolution
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

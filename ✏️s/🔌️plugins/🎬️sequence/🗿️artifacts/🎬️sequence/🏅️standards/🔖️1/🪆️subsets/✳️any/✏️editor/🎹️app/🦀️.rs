@@ -6,7 +6,7 @@ use crate::editor::sequence::panels::inspection as inspection_panel;
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppActionRegistry, AppDefinition, AppIo, ArtifactEditor, ArtifactView, ConfigView, ContextMenuItemSpec, ContextMenuRequest, DomainTopology, DraftView, DslValue, Editor, Emit, Fault, GranularityDefinition, HierarchyProvider, HoverSpec, InteractionDefinition, InteractionRef, InteractionTopology, Media, MediaError, MediaPayload, MergeMode, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, SelectionMethod, SelectionMode, SelectionSpec, TopologyNode};
 use std::collections::BTreeMap;
 use semio_framework_artifact_reference::Dialect;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 use crate::{SEQUENCE_DOCUMENT_SCHEMA, SequenceSnapshot, SequenceStep, SequenceWorkingScene, StepParams};

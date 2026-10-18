@@ -14,8 +14,7 @@ use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_s_artifact_stdio_json::schema::snapshot::JsonValue;
 use std::collections::BTreeMap;
 
-#[path = "🧱️codec/🦀️.rs"]
-pub mod codec;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::json::codec;
 
 use crate::standards::v1::subsets::any::io::export::json::codec::{array, count, document_text, items_of, member, number, number_of, object, read_value, string, text_of};
 
@@ -105,6 +104,4 @@ impl Serializer<ModelSnapshot> for ModelIntoJson {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

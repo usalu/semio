@@ -9,7 +9,6 @@
 //! variants are derived projections. Unmodeled XML parts use `XmlDocument`; binary media
 //! retain their genuine content bytes in `opc`.
 
-use crate::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_PPTX_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDocument, XmlNode};
 use semio_s_artifact_stdio_zip::opc::OpcPackage;

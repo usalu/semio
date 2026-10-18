@@ -2,7 +2,8 @@
 //! drawn from the [`StoreyAnnotations`] value the `Annotation(storey)` node derived, never from the snapshot, so a plan shows the printed number of the current geometry. A text is placed by the middle
 //! of its baseline ([`TextAnchor`]) and carries its height, which the drawing of the plan scales with the paper (model metres of the style), so a plan at 1:50 and at 1:100 each keep their sheet text size.
 
-use super::{PlanKind, PlanStyle, PlanText, PlanVertex, Sheet};
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{measure};
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanStyle, PlanText, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{AnchorLayout, DimensionLayout, LeaderLayout, StoreyAnnotations, StyleMarks, TextAnchor};
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Terminator};
 use semio_framework_geometry::Point;

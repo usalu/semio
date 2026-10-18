@@ -12,6 +12,7 @@ use semio_framework_plugin::kernel::Effect;
 use semio_framework_pack_json::Value;
 use std::cell::RefCell;
 use std::collections::HashSet;
+use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::Puzzle2dScene;
 
 //#region 🔖️ActionContext
 /// 🎬️ Everything one `🎮️commands/*` arm may read or write. The prologue/epilogue around the dispatch

@@ -3,7 +3,7 @@
 //! Whole-list ruling: the phase names are ONE ordered vocabulary of the project (exported as one IFC phase string, referenced by
 //! no element: a wall's phase is the fixed `Phase` enum), so the list replaces as one field.
 
-use super::SetProjectInfo;
+use crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo;
 use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

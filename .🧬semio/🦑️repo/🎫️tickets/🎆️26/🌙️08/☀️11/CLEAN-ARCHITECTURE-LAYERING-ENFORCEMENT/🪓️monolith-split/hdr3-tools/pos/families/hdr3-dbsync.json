@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-dbsync",
+ "crates": ["semio-framework-os-kernel-db-sync", "semio-framework-os-kernel-db-sync-laws"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-os-kernel-db-sync"]},
+ "note": "HDR-3: db sync codec/wal laws moved to a companion"
+}

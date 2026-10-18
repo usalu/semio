@@ -6,7 +6,8 @@ import userEvent from "@testing-library/user-event";
 import { computeAccessibleDescription } from "dom-accessibility-api";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { type Answer, type Hint, type MatchingAnswer, type SheetClassificationTask, type SheetMatchingTask, type SortingAnswer } from "@semio-tech/quiz";
-import { ClassificationTaskView, MatchingTaskView, SortingTaskView, TaskView, classificationHintText, formatScore, hintTerm, quizText } from "@semio-tech/quiz-react";
+import { ClassificationTaskView, MatchingTaskView, SortingTaskView, classificationHintText, formatScore, hintTerm, quizText } from "@semio-tech/quiz-react";
+import { TaskView } from "../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx";
 import { CLIMATES, en, HINT_QUESTIONS, hinted, HOUSES, LAMPS, MASSES, NBSP, PLACES, POWERS, TEMPERATURES, text } from "../🪞️challenge-views-kit/🟦️.ts";
 
 afterEach(() => {

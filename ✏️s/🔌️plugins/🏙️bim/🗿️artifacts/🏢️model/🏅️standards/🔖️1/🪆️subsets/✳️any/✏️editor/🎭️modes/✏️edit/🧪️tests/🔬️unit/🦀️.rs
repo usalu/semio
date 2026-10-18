@@ -1,4 +1,13 @@
-use super::*;
+use crate::editor::bim::modes::edit::windows::{plan, schedule, section, world};
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use semio_framework_plugin::create_default_layout;
+#[allow(unused_imports)]
+use semio_framework_plugin::ModeDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowLayout;
+use crate::editor::bim::modes::edit::*;
 
 #[semio_framework_async_macros::async_test]
 async fn the_mode_has_a_stable_id() {

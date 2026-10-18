@@ -172,6 +172,6 @@ impl WidgetJob for OriginalFixedOutputJob{fn step(&mut self,_fuel:usize)->Widget
 impl RetireOwned for OriginalFixedOutputJob{fn retirement(mut self)->Box<dyn RetirementCursor>{self.transferred=true;unsafe{ManuallyDrop::take(&mut self.state)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{self.state.retirement_birth_bytes()}fn controlled_retirement_supported()->bool{true}fn retirement_element_copy_bytes()->usize{size_of::<Self>()}}
 impl Drop for OriginalFixedOutputJob{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"math value job reached Drop before original paid output or retirement closure");if self.terminal_is_empty()&&!self.transferred{unsafe{ManuallyDrop::drop(&mut self.state)}}}}
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 #[path="../../🔢️math-values/🧪️tests/🎟️original/🦀️.rs"]
-pub(crate) mod tests;
+pub mod tests;

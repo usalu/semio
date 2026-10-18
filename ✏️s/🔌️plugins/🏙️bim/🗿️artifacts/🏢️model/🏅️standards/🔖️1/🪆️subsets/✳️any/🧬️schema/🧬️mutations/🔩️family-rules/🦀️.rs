@@ -133,6 +133,4 @@ pub fn parameters_in_order<'a>(base: &'a ModelSnapshot, family: &str) -> Vec<&'a
     names.iter().filter_map(|name| rows.get(name.as_str()).copied()).collect()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -148,8 +148,8 @@ impl BrowserFrameClose<'_>{
             return Ok(false);
         }
         if *self.close_phase == 0 {
-            let Some(host) = self.host.as_ref() else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"renderer host disappeared before shared asset retirement").into()) };
-            if !host.runtime.close_renderer_asset_step() {
+            let Some(host) = self.host.as_mut() else { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"renderer host disappeared before shared asset retirement").into()) };
+            if !host.close_asset_decode_step(cx)? || !host.runtime.close_renderer_asset_step(cx)? {
                 return Ok(false);
             }
             *self.close_phase = 1;
@@ -472,8 +472,12 @@ impl BrowserRendererWorker {
     #[wasm_bindgen(js_name = assetDecodeStep)]
     pub fn asset_decode_step(&mut self) -> Result<String, JsValue> {
         self.ensure_live()?;
-        let host = self.host.as_ref().ok_or_else(|| js_error("closed", "asset decoder has no live host"))?;
-        serde_json::to_string(&host.runtime.asset_decode_step()).map_err(|error| js_error("asset-decode-result", &error.to_string()))
+        let host = self.host.as_mut().ok_or_else(|| js_error("closed", "asset decoder has no live host"))?;
+        let turn = match host.with_asset_decode_context(|runtime, cx| runtime.asset_decode_step(cx)).map_err(|failure| js_error("asset-decode-step", &format!("{failure:?}")))? {
+            Some(turn) => turn,
+            None => host.runtime.asset_decode_deferred_turn(),
+        };
+        serde_json::to_string(&turn).map_err(|error| js_error("asset-decode-result", &error.to_string()))
     }
 
     /// 🎞️ A live frame build and an unapplied runtime completion each owe the shell another

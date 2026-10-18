@@ -2,7 +2,7 @@ import{createNativeWindowsSystemGrantV1}from"../📥️invocation/🟦️.ts";
 import executionPolicy from "../🔣️policy.json";
 import nativeSchema from "../📥️invocation/🧬️schema/🔣️.json";
 import type {NativeOwnerCapabilities} from "../📥️invocation/🟦️.ts";
-import callerSchema from "../../../../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
+import callerSchema from "../../../🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
 import {canonicalArchitectureEnvironment} from "../../../🦀️cargo/🌿️environment/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {readScriptProcessEnvelope,scriptProcessEnvironment,type ScriptProcessEnvelope} from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";

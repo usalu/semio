@@ -9,7 +9,7 @@ use crate::standards::v1_0::subsets::any::schema::mutations::{AviMutation};
 
 use crate::standards::v1_0::subsets::any::schema::snapshot::AviSnapshot;
 use crate::{AVI_DIALECT, STDIO_AVI_DOCUMENT_SCHEMA};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;

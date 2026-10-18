@@ -7,15 +7,15 @@ import ts from "typescript";
 
 type Owner = Readonly<{ path: string; dependencies: readonly string[] }>;
 const root = resolve(import.meta.dir, "../.."), workspace = resolve(root, "../../../../../..");
-const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🏗️source-services/🔣️.json"), "utf8")) as Readonly<{ schemaVersion: 1; owners: readonly Owner[]; denied: readonly string[]; directTypeOwners: readonly Readonly<{ name: string; path: string }>[]; taxonomyLoad: Readonly<{ input: "required"; parser: "private"; facts: readonly string[] }> }>;
+const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🏗️source-services/🔣️.json"), "utf8")) as Readonly<{ schemaVersion: 1; owners: readonly Owner[]; denied: readonly string[]; directTypeOwners: readonly Readonly<{ name: string; path: string }>[]; taxonomyLoad: Readonly<{ input: "required"; parser: "private"; facts: readonly string[] }> }>;
 
 const paths = fixture.owners.map((owner) => owner.path);
 const slash = (path: string): string => path.replaceAll("\\", "/");
 
 test("canonical source owner records satisfy an independent closed schema", () => {
   
-  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["owners"]).toEqual([{"path":"🛣️path/🟦️.ts","dependencies":[]},{"path":"📁️input/🟦️.ts","dependencies":[]},{"path":"🏃️operation/🟦️.ts","dependencies":[]},{"path":"🔣️taxonomy/🟦️.ts","dependencies":["🛣️path/🟦️.ts","📁️input/🟦️.ts"]},{"path":"🚪️source-admission/🟦️.ts","dependencies":["🛣️path/🟦️.ts"]},{"path":"🚪️source-admission/📁️io/🟦️.ts","dependencies":["🛣️path/🟦️.ts","📁️input/🟦️.ts","🏃️operation/🟦️.ts","🔣️taxonomy/🟦️.ts","🚪️source-admission/🟦️.ts"]}]);expect(fixture["denied"]).toEqual(["🟦️.ts","🧬️mutation/"]);expect(fixture["directTypeOwners"]).toEqual([{"name":"TaxonomyProgress","path":"🏃️operation/🟦️.ts"},{"name":"TaxonomyNodeKind","path":"🚪️source-admission/🟦️.ts"}]);expect(fixture["taxonomyLoad"]).toEqual({"input":"required","parser":"private","facts":["schema","discoverySchema","exclusions","fileKinds","directoryKinds"]});
-  expect(new Set(paths).size).toBe(6);
+  expect(fixture["schemaVersion"]).toEqual(1);expect(fixture["owners"]).toEqual([{"path":"🛣️path/🟦️.ts","dependencies":[]},{"path":"📁️input/🟦️.ts","dependencies":[]},{"path":"🏃️operation/🟦️.ts","dependencies":[]},{"path":"🔣️taxonomy/📐️kind-specs/🟦️.ts","dependencies":[]},{"path":"🔣️taxonomy/🗃️owned-file-projection/🟦️.ts","dependencies":[]},{"path":"🔣️taxonomy/🧭️path-projection/🟦️.ts","dependencies":[]},{"path":"🔣️taxonomy/🌳️descendants/🟦️.ts","dependencies":[]},{"path":"🔣️taxonomy/🏭️generators-packages/🟦️.ts","dependencies":[]},{"path":"🔣️taxonomy/📚️loaded/🟦️.ts","dependencies":["🔣️taxonomy/🌳️descendants/🟦️.ts","🔣️taxonomy/🏭️generators-packages/🟦️.ts","🔣️taxonomy/📐️kind-specs/🟦️.ts","🔣️taxonomy/🗃️owned-file-projection/🟦️.ts","🔣️taxonomy/🧭️path-projection/🟦️.ts"]},{"path":"🔣️taxonomy/🟦️.ts","dependencies":["📁️input/🟦️.ts","🔣️taxonomy/🌳️descendants/🟦️.ts","🔣️taxonomy/🏭️generators-packages/🟦️.ts","🔣️taxonomy/📐️kind-specs/🟦️.ts","🔣️taxonomy/📚️loaded/🟦️.ts","🔣️taxonomy/🗃️owned-file-projection/🟦️.ts","🔣️taxonomy/🧭️path-projection/🟦️.ts","🛣️path/🟦️.ts"]},{"path":"🚪️source-admission/🟦️.ts","dependencies":["🛣️path/🟦️.ts"]},{"path":"🚪️source-admission/📁️io/🟦️.ts","dependencies":["🏃️operation/🟦️.ts","📁️input/🟦️.ts","🔣️taxonomy/📚️loaded/🟦️.ts","🔣️taxonomy/🟦️.ts","🚪️source-admission/🟦️.ts","🛣️path/🟦️.ts"]}]);expect(fixture["denied"]).toEqual(["🟦️.ts","🧬️mutation/"]);expect(fixture["directTypeOwners"]).toEqual([{"name":"TaxonomyProgress","path":"🏃️operation/🟦️.ts"},{"name":"TaxonomyNodeKind","path":"🚪️source-admission/🟦️.ts"}]);expect(fixture["taxonomyLoad"]).toEqual({"input":"required","parser":"private","facts":["schema","discoverySchema","exclusions","fileKinds","directoryKinds"]});
+  expect(new Set(paths).size).toBe(12);
   for (const owner of fixture.owners) for (const dependency of owner.dependencies) expect(paths).toContain(dependency);
   
   
@@ -63,19 +63,20 @@ test("source service types expose only their canonical declaration owners", () =
 });
 
 test("loaded taxonomy requires a physical input while its parser stays private", () => {
-  const path = join(root, "🔣️taxonomy/🟦️.ts"), source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
-  const loaded = source.statements.filter((node): node is ts.InterfaceDeclaration => ts.isInterfaceDeclaration(node) && node.name.text === "LoadedTaxonomy");
+  const loadedPath = join(root, "🔣️taxonomy/📚️loaded/🟦️.ts"), loadedSource = ts.createSourceFile(loadedPath, readFileSync(loadedPath, "utf8"), ts.ScriptTarget.Latest, true);
+  const loaded = loadedSource.statements.filter((node): node is ts.InterfaceDeclaration => ts.isInterfaceDeclaration(node) && node.name.text === "LoadedTaxonomy");
   expect(loaded).toHaveLength(1);
-  const inputs = loaded[0]!.members.filter((node): node is ts.PropertySignature => ts.isPropertySignature(node) && node.name.getText(source) === "input");
+  const inputs = loaded[0]!.members.filter((node): node is ts.PropertySignature => ts.isPropertySignature(node) && node.name.getText(loadedSource) === "input");
   expect(inputs).toHaveLength(1);
   expect(inputs[0]!.questionToken === undefined ? "required" : "optional").toBe(fixture.taxonomyLoad.input);
+  const path = join(root, "🔣️taxonomy/🟦️.ts"), source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
   const parser = source.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "parseTaxonomy");
   expect(parser).toHaveLength(1);
   expect(parser[0]!.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword) ? "public" : "private").toBe(fixture.taxonomyLoad.parser);
   expect(parser[0]!.type?.getText(source)).toBe("TaxonomyContentFacts");
-  const facts = source.statements.filter((node): node is ts.InterfaceDeclaration => ts.isInterfaceDeclaration(node) && node.name.text === "TaxonomyContentFacts");
+  const facts = loadedSource.statements.filter((node): node is ts.InterfaceDeclaration => ts.isInterfaceDeclaration(node) && node.name.text === "TaxonomyContentFacts");
   expect(facts).toHaveLength(1);
-  expect(facts[0]!.members.map((member) => member.name?.getText(source))).toEqual([...fixture.taxonomyLoad.facts]);
+  expect(facts[0]!.members.map((member) => member.name?.getText(loadedSource))).toEqual([...fixture.taxonomyLoad.facts]);
   const returned = parser[0]!.body!.statements.filter(ts.isReturnStatement);
   expect(returned).toHaveLength(1);
   expect(returned[0]!.expression && ts.isObjectLiteralExpression(returned[0]!.expression)).toBe(true);

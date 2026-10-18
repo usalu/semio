@@ -69,7 +69,7 @@ use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub use crate::editor::shooting::commands::document::set_active_example::{SHOOTING_EXAMPLE_DEFAULT_ID, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT};

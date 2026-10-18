@@ -1,0 +1,36 @@
+{
+ "name": "c6ui-wgpu",
+ "crates": [
+  "semio-framework-ui",
+  "semio-framework-ui-render",
+  "semio-framework-ui-retained-tree",
+  "semio-framework-ui-retained-tree-tree",
+  "semio-framework-ui-declaration",
+  "semio-framework-ui-layout",
+  "semio-framework-ui-contract-builder",
+  "semio-framework-ui-text",
+  "semio-framework-ui-action"
+ ],
+ "features": {
+  "semio-framework-ui": [
+   "wgpu-engine",
+   "testkit",
+   "wgpu"
+  ]
+ },
+ "base": {
+  "rev": "HEAD",
+  "crates": [
+   "semio-framework-ui",
+   "semio-framework-ui-render",
+   "semio-framework-ui-retained-tree",
+   "semio-framework-ui-retained-tree-tree",
+   "semio-framework-ui-declaration",
+   "semio-framework-ui-layout",
+   "semio-framework-ui-contract-builder",
+   "semio-framework-ui-text",
+   "semio-framework-ui-action"
+  ]
+ },
+ "note": "ui wgpu-engine + testkit closure (engine, events, paint unit tests)"
+}

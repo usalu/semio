@@ -229,6 +229,4 @@ pub fn handle(payload: &ExportSheets, doc: &ArtifactView<'_, ModelSnapshot>, _cf
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

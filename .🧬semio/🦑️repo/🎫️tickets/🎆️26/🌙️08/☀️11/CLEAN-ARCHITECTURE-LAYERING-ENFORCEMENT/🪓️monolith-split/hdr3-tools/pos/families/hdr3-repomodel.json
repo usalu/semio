@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-repomodel",
+ "crates": ["semio-framework-repo-model", "semio-framework-repo-model-entity", "semio-framework-repo-cli-event-stream", "semio-framework-repo-tree", "semio-framework-repo-cli-tree-source-and-search", "semio-framework-repo-cli-verbs"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-repo-model", "semio-framework-repo-cli-event-stream", "semio-framework-repo-tree", "semio-framework-repo-cli-tree-source-and-search", "semio-framework-repo-cli-verbs"]},
+ "note": "HDR-3: repo model entity+ansi peeled"
+}

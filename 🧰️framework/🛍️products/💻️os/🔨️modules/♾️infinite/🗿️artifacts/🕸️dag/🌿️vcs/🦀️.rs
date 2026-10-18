@@ -4,7 +4,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 pub use semio_framework_os_kernel::{os_dsl, os_pack, os_spr, os_store};
 use semio_framework_os_infinite_directed_presentation::*;
-use ::graph::manifest::PropertyBag;
+use semio_framework_graph_manifest::PropertyBag;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::HashSet;
 

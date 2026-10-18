@@ -29,7 +29,7 @@ pub(crate) fn add(a: Triple, b: Triple) -> Triple {
 }
 
 /// ➖️ Component-wise difference `a - b`.
-pub(crate) fn sub(a: Triple, b: Triple) -> Triple {
+pub fn sub(a: Triple, b: Triple) -> Triple {
     [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
 }
 
@@ -54,13 +54,13 @@ pub(crate) fn length(a: Triple) -> f64 {
 }
 
 /// 🧭️ The unit vector of `a`, or `None` for the zero vector.
-pub(crate) fn unit(a: Triple) -> Option<Triple> {
+pub fn unit(a: Triple) -> Option<Triple> {
     let size = length(a);
     (size > 0.0 && size.is_finite()).then(|| scale(a, 1.0 / size))
 }
 
 /// 📐️ The angle between two non-zero vectors in `0..=pi`, stable for nearly parallel and nearly opposite vectors.
-pub(crate) fn angle_between(a: Triple, b: Triple) -> Option<f64> {
+pub fn angle_between(a: Triple, b: Triple) -> Option<f64> {
     let (a, b) = (unit(a)?, unit(b)?);
     Some(length(cross(a, b)).atan2(dot(a, b)))
 }
@@ -68,7 +68,7 @@ pub(crate) fn angle_between(a: Triple, b: Triple) -> Option<f64> {
 
 //#region 🔖️Faults
 /// 🚫️ The zero vector has no direction, attributed to the offending port.
-pub(crate) fn zero_vector(port: &str) -> WidgetFault {
+pub fn zero_vector(port: &str) -> WidgetFault {
     WidgetFault::new("generation3d.geometry.zero-vector", "The vector has length zero and therefore no direction.", "Der Vektor hat die Länge null und damit keine Richtung.").at(port)
 }
 

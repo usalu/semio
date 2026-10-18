@@ -1,4 +1,4 @@
-import { inspectRustStructure } from "../../../🔍️discovery/🟦️.ts";
+import { inspectRustStructure } from "../../../🔍️discovery/🏛️rust-structure/🟦️.ts";
 
 /** 🧬️ Finds surface-owned fields in nested authored JSON schemas. */
 export function abstractionOwnershipSchemaFields(schema: Record<string, unknown>): string[] {

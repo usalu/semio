@@ -53,7 +53,7 @@ impl ArtifactCodecBinding {
 }
 
 #[derive(Clone,Debug,PartialEq,Eq,PartialOrd,Ord)]
-pub(crate) struct BindingKey { channel:ArtifactCodecBindingChannel,contributor:String,artifact_kind:Option<String>,apps:Vec<String>,schema:String,dialect:Option<ArtifactDialect> }
+pub struct BindingKey { channel:ArtifactCodecBindingChannel,contributor:String,artifact_kind:Option<String>,apps:Vec<String>,schema:String,dialect:Option<ArtifactDialect> }
 pub(crate) type BindingMap=BTreeMap<BindingKey,ArtifactCodecBinding>;
 static BINDINGS:OnceLock<RwLock<BindingMap>>=OnceLock::new();
 pub fn registry()->&'static RwLock<BindingMap>{BINDINGS.get_or_init(||RwLock::new(BTreeMap::new()))}

@@ -1,0 +1,15 @@
+{
+ "tag": "c3",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-3/🦀️.rs",
+ "folders": [
+  "🔚️close-turn-wire-input-and-no-state-disposers",
+  "🎟️typed-operation-slots",
+  "🛂️continuation-publication-and-host-crossing",
+  "📍️retained-operation-close-and-checkpoint",
+  "🪦️snapshot-retirement-gesture-and-agent-transaction",
+  "🧷️composed-checkpoint-commit",
+  "🧹️child-root-maintenance-and-rates",
+  "↪️reserved-undo-ui-stamping-and-selection"
+ ]
+}

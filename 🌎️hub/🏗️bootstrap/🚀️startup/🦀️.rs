@@ -524,8 +524,8 @@ pub fn artifact_cas_sweep_execute_from_env() -> Result<bool, HubError> {
 }
 
 pub(crate) struct ConfiguredArtifactAuthority {
-    pub(crate) catalog: Arc<VerifiedTrustedCatalog>,
-    pub(crate) authority: Arc<HubArtifactAuthority>,
+    pub catalog: Arc<VerifiedTrustedCatalog>,
+    pub authority: Arc<HubArtifactAuthority>,
 }
 
 pub trait DocumentOpenCatalogAuthorityV1: Send + Sync {

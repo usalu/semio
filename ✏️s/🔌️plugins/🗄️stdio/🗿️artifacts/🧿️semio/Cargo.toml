@@ -71,6 +71,7 @@ members = [
   "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📑️document/📚️examples/🗒️memo/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/📚️examples/🗒️memo/🧪️tests/🔬️laws/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📑️document/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust",
   "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📤️export/📦️packages/🦀️rust",
@@ -417,6 +418,9 @@ path = "../🎒️zip/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-2d]
 path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-2d-compute]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-async]
 path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"

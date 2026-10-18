@@ -17,6 +17,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-command = { path = "../../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }

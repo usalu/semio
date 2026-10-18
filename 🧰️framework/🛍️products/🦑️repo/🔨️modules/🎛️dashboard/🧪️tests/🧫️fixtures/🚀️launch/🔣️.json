@@ -200,5 +200,252 @@
   "runtimeMissing": [
     "BUN_RUNTIME_TRANSPILER_CACHE_PATH",
     "NODE_DISABLE_COMPILE_CACHE"
+  ],
+  "inputOrder": [
+    {
+      "name": "peer-middle",
+      "inputs": [
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-en",
+          "type": "pickString",
+          "description": "mode [EN]",
+          "options": [
+            "en",
+            "de"
+          ],
+          "default": "de"
+        },
+        {
+          "id": "peer-choice",
+          "type": "pickString",
+          "options": [
+            "nx",
+            "bazel"
+          ]
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-en",
+          "type": "promptString",
+          "description": "value [EN]"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-de",
+          "type": "pickString",
+          "description": "mode [DE]",
+          "options": [
+            "en",
+            "de"
+          ],
+          "default": "de"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-de",
+          "type": "promptString",
+          "description": "value [DE]"
+        }
+      ],
+      "patch": []
+    },
+    {
+      "name": "current-owned-order",
+      "inputs": [
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-de",
+          "type": "promptString",
+          "description": "value [DE]"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-de",
+          "type": "pickString",
+          "description": "mode [DE]",
+          "options": [
+            "en",
+            "de"
+          ],
+          "default": "de"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-en",
+          "type": "promptString",
+          "description": "value [EN]"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-en",
+          "type": "pickString",
+          "description": "mode [EN]",
+          "options": [
+            "en",
+            "de"
+          ],
+          "default": "de"
+        }
+      ],
+      "patch": []
+    },
+    {
+      "name": "partial-owned",
+      "inputs": [
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-en",
+          "type": "promptString",
+          "description": "value [EN]"
+        },
+        {
+          "id": "peer-choice",
+          "type": "pickString",
+          "options": [
+            "nx",
+            "bazel"
+          ]
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-de",
+          "type": "promptString",
+          "description": "value [DE]"
+        }
+      ],
+      "patch": [
+        {
+          "op": "add",
+          "path": "/inputs/-",
+          "value": {
+            "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-en",
+            "type": "pickString",
+            "description": "mode [EN]",
+            "options": [
+              "en",
+              "de"
+            ],
+            "default": "de"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/inputs/-",
+          "value": {
+            "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-de",
+            "type": "pickString",
+            "description": "mode [DE]",
+            "options": [
+              "en",
+              "de"
+            ],
+            "default": "de"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stale-owned",
+      "inputs": [
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-en",
+          "type": "pickString",
+          "description": "mode [EN]",
+          "options": [
+            "en",
+            "de"
+          ],
+          "default": "de"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-obsolete-old-en",
+          "type": "promptString"
+        },
+        {
+          "id": "peer-choice",
+          "type": "pickString",
+          "options": [
+            "nx",
+            "bazel"
+          ]
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-en",
+          "type": "promptString",
+          "description": "value [EN]"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-de",
+          "type": "pickString",
+          "description": "mode [DE]",
+          "options": [
+            "en",
+            "de"
+          ],
+          "default": "de"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-de",
+          "type": "promptString",
+          "description": "value [DE]"
+        }
+      ],
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/inputs/1"
+        }
+      ]
+    },
+    {
+      "name": "regenerate-owned",
+      "inputs": [
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-en",
+          "type": "pickString",
+          "description": "mode [EN]",
+          "options": [
+            "en",
+            "de"
+          ],
+          "default": "stale"
+        },
+        {
+          "id": "peer-choice",
+          "type": "pickString",
+          "options": [
+            "nx",
+            "bazel"
+          ]
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-en",
+          "type": "promptString",
+          "description": "value [EN]"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-de",
+          "type": "pickString",
+          "description": "mode [DE]",
+          "options": [
+            "en",
+            "de"
+          ],
+          "default": "de"
+        },
+        {
+          "id": "semio-dashboard-26-09-30-HISTORY-test-text-value-de",
+          "type": "promptString",
+          "description": "value [DE]"
+        }
+      ],
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/inputs/0",
+          "value": {
+            "id": "semio-dashboard-26-09-30-HISTORY-test-choice-mode-en",
+            "type": "pickString",
+            "description": "mode [EN]",
+            "options": [
+              "en",
+              "de"
+            ],
+            "default": "de"
+          }
+        }
+      ]
+    }
   ]
 }

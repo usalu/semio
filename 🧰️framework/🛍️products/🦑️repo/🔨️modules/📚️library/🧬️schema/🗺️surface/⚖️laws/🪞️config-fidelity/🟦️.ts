@@ -1,4 +1,4 @@
-import type { BreachRecord } from "../../../../🟦️.ts";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceDirectory, policySourceText, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { policyExtractRustSchemaFields } from "../../../🔍️field-discovery/🦀️rust/🟦️.ts";

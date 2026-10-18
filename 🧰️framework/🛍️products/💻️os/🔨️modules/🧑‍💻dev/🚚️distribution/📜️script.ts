@@ -16,7 +16,7 @@ import { buildViteArtifact } from "../../../../🦑️repo/🔨️modules/📚�
 import { productionBrowserInputHash } from "./⚙️inputs/🟦️.ts";
 import { buildComponentClosureV1, playgroundComponentClosureV1 } from "../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
 
-/** 🔏️ Supplies Nx with output-affecting environment and ignored configuration bytes. */
+/** 🔏️ Supplies the build tool with output-affecting environment and ignored configuration bytes. */
 class InputsScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Production browser input hashing accepts no arguments");
@@ -24,13 +24,13 @@ class InputsScript extends Script {
   }
 }
 
-/** 🏁️ Completes the selected mode after Nx satisfies its browser build prerequisites. */
+/** 🏁️ Completes the selected mode after the build tool satisfies its browser build prerequisites. */
 class CompleteScript extends Script {
   run(args: string[]): void {
     if (args.length) throw new Error("Distribution completion accepts no arguments");
     const mode = readBuildMode(process.env.SEMIO_BUILD_MODE);
     checkScriptInvocation(this.invocation);
-    console.log(`Nx browser distribution complete: ${mode}`);
+    console.log(`Browser distribution complete: ${mode}`);
   }
 }
 
@@ -52,7 +52,7 @@ class BuildScript extends Script {
     process.once("SIGINT", interrupt); process.once("SIGTERM", terminate);
     try {
       await buildComponentClosureV1(workspace, playgroundComponentClosureV1(variant, "full"), { facet:"browser",invocation:this.invocation,network:repositoryCargoNetworkV1(this.invocation,workspace),control: scriptCompilerAdmissionControlV1(this.invocation, "native:driver", 0) });
-      await buildViteArtifact({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: mode, artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(workspace, "products"), {version:1,mode:mode,renderer:"react",command:"build",engines:"distribution"}), root, workspace, config: contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : join(root, "🏗️builder/🌐️vite/🟦️.ts"), owner: `os-dev:${variant}:react`, signal: this.invocation.control.signal, environment: { ...frameworkOsLockedPrefsEnv({ ...process.env, SEMIO_BRAND: undefined }), SEMIO_PLUGIN: variant, SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: mode, SEMIO_BRAND: undefined, PLAYGROUND_APP_KIND: undefined } });
+      await buildViteArtifact({control:scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), invocation: this.invocation, mode: mode, artifactInputs: frameworkOsViteArtifactInputsV1(repositoryCachePartitionRootV1(workspace, "products"), {version:1,mode:mode,renderer:"react",command:"build",engines:"distribution"}), root, workspace, configLoader: "native", config: contribution ? resolveDevContributionFile(workspace, contribution.viteConfig, contribution.ownerRoot) : join(root, "🏗️builder/🌐️vite/🟦️.ts"), owner: `os-dev:${variant}:react`, signal: this.invocation.control.signal, environment: { ...frameworkOsLockedPrefsEnv({ ...process.env, SEMIO_BRAND: undefined }), SEMIO_PLUGIN: variant, SEMIO_RENDERER: "react", SEMIO_BUILD_MODE: mode, SEMIO_BRAND: undefined, PLAYGROUND_APP_KIND: undefined } });
     } catch (error) { if (!cancelled) throw error; process.exitCode = cancelled === "SIGINT" ? 130 : 143; }
     finally { process.removeListener("SIGINT", interrupt); process.removeListener("SIGTERM", terminate); }
   }

@@ -32,7 +32,7 @@ let bundleLane: Promise<void> = Promise.resolve();
 /** 🧾️ Bundles one browser entry entirely in memory for identical generate/check bytes.
  * Bun labels every bundled module with a banner comment spelling that module's path RELATIVE TO
  * `process.cwd()` — the `root` build option does not govern it — so the identical sources rendered
- * from an Nx target's project cwd and from a repo-root dev lane differ in thousands of comment bytes
+ * from a build target's project cwd and from a repo-root dev lane differ in thousands of comment bytes
  * and the generate/check pair can never agree (measured: 316 differing lines, `🧰️framework/…` against
  * `../../../../../../../../../…`). The render therefore always runs with the process anchored at the
  * workspace root — the one cwd every caller can name — and restores the caller's cwd afterwards.

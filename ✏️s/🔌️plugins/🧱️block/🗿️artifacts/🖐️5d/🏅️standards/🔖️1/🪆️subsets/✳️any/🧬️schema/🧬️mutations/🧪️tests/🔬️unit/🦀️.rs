@@ -275,6 +275,50 @@ async fn dispatch_registers_semantic_descriptors_with_approved_verbs() {
 // 🎫️ 26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS — see
 // `📓️w3-f-block-puzzle-report.md` for the `assert_outcome_policy_matrix` pending-helper note.
 use semio_framework_os_kernel::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
+use semio_s_artifact_block_5d_model::Block5dSnapshot;
+use semio_s_artifact_block_5d_mut_part_kind::rename_part_kind::rename_part_kind;
+use semio_s_artifact_block_5d_mut_part_kind::update_part_2d::update_part_2d;
+use semio_s_artifact_block_5d_mut_part_kind::update_part_3d::update_part_3d;
+use semio_s_artifact_block_5d_mut_representations::create_representation::create_representation;
+use semio_s_artifact_block_5d_mut_representations::delete_representation::delete_representation;
+use semio_s_artifact_block_5d_mut_grip_kinds::create_grip_kind::create_grip_kind;
+use semio_s_artifact_block_5d_mut_grip_kinds::rename_grip_kind::rename_grip_kind;
+use semio_s_artifact_block_5d_mut_grip_kinds::delete_grip_kind::delete_grip_kind;
+use semio_s_artifact_block_5d_mut_grips::create_grip::create_grip;
+use semio_s_artifact_block_5d_mut_grips::move_grip_2d::move_grip_2d;
+use semio_s_artifact_block_5d_mut_grips::move_grip_3d::move_grip_3d;
+use semio_s_artifact_block_5d_mut_grips::resize_grip_3d::resize_grip_3d;
+use semio_s_artifact_block_5d_mut_grips::delete_grip::delete_grip;
+use semio_s_artifact_block_5d_mut_meta::add_compatibility_rule::add_compatibility_rule;
+use semio_s_artifact_block_5d_mut_meta::remove_compatibility_rule::remove_compatibility_rule;
+use semio_s_artifact_block_5d_mut_meta::add_attribute::add_attribute;
+use semio_s_artifact_block_5d_mut_meta::remove_attribute::remove_attribute;
+use semio_s_artifact_block_5d_mut_meta::add_author::add_author;
+use semio_s_artifact_block_5d_mut_meta::remove_author::remove_author;
+use semio_s_artifact_block_5d_mut_cameras::move_camera2d::move_camera2d;
+use semio_s_artifact_block_5d_mut_cameras::scale_camera2d::scale_camera2d;
+use semio_s_artifact_block_5d_mut_cameras::move_camera3d::move_camera3d;
+use semio_s_artifact_block_5d_mut_cameras::scale_camera3d::scale_camera3d;
+use semio_s_artifact_block_5d_mut_meta::change_meta_description::change_meta_description;
+use semio_s_artifact_block_5d_mut_part_kind::change_part_kind_label::change_part_kind_label;
+use semio_s_artifact_block_5d_mut_part_kind::change_part_kind_variant::change_part_kind_variant;
+use semio_s_artifact_block_5d_mut_part_kind::change_part_kind_description::change_part_kind_description;
+use semio_s_artifact_block_5d_mut_part_kind::change_part_kind_icon::change_part_kind_icon;
+use semio_s_artifact_block_5d_mut_part_kind::change_part_kind_unit::change_part_kind_unit;
+use semio_s_artifact_block_5d_mut_representations::change_representation_mesh_url::change_representation_mesh_url;
+use semio_s_artifact_block_5d_mut_representations::add_representation_attribute::add_representation_attribute;
+use semio_s_artifact_block_5d_mut_representations::remove_representation_attribute::remove_representation_attribute;
+use semio_s_artifact_block_5d_mut_grip_kinds::change_grip_kind_label::change_grip_kind_label;
+use semio_s_artifact_block_5d_mut_grip_kinds::change_grip_kind_color::change_grip_kind_color;
+use semio_s_artifact_block_5d_mut_grip_kinds::change_grip_kind_default_rope_kind::change_grip_kind_default_rope_kind;
+use semio_s_artifact_block_5d_mut_grips::change_grip_grip_kind::change_grip_grip_kind;
+use semio_s_artifact_block_5d_mut_representations::create_representation::create_representation_at;
+use semio_s_artifact_block_5d_mut_representations::add_representation_attribute::add_representation_attribute_at;
+use semio_s_artifact_block_5d_mut_grips::create_grip::create_grip_at;
+use semio_s_artifact_block_5d_mut_grip_kinds::create_grip_kind::create_grip_kind_at;
+use semio_s_artifact_block_5d_mut_meta::add_compatibility_rule::add_compatibility_rule_at;
+use semio_s_artifact_block_5d_mut_meta::add_attribute::add_attribute_at;
+use semio_s_artifact_block_5d_mut_meta::add_author::add_author_at;
 
 #[semio_framework_async_macros::async_test]
 async fn missing_target_is_error_per_verb_family() {

@@ -1,7 +1,7 @@
 //! 🧵️ Element vocabulary shared by the multi-element and data leaves: which ids name an element, the placement fields of the
 //! placed kinds (the one record a move, a rotation and their exact inverse all speak), and the name slot of every element kind.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::{BeamPatch, CeilingPatch, ColumnPatch, ComponentPatch, CurtainWallPatch, GridLinePatch, MepElementPatch, OpeningPatch, RailingPatch, RampPatch, RoofPatch, SlabPatch, SpacePatch, StairPatch, WallPatch}, Entry, KeyedDelta, ModelDiff, Patch}, snapshot::{Axis, ModelSnapshot, Point2, Point3, RoofShape, Slope, SpaceBoundary, StairFlight, Vertex}};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::{AreaSchemePatch, BeamPatch, BuildingPatch, CeilingPatch, ColumnPatch, ComponentPatch, CurtainWallPatch, GridLinePatch, MepElementPatch, OpeningPatch, RailingPatch, RampPatch, RoofPatch, SitePatch, SlabPatch, SpacePatch, StairPatch, StoreyPatch, WallPatch, WallSweepPatch, ZonePatch}, Entry, KeyedDelta, ModelDiff, Patch}, snapshot::{Axis, ModelSnapshot, Point2, Point3, RoofShape, Slope, SpaceBoundary, StairFlight, Vertex}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;
 
@@ -545,7 +545,7 @@ macro_rules! named {
     ($base:expr, $id:expr, $name:expr, $($collection:ident => $patch:ident . $slot:ident),+ $(,)?) => {{
         $(
             if let Some(row) = $base.$collection.get($id) {
-                let diff = ModelDiff::$collection($id.to_string(), Entry::Patched(crate::$patch { $slot: Some($name.to_string()), ..Default::default() }));
+                let diff = ModelDiff::$collection($id.to_string(), Entry::Patched($patch { $slot: Some($name.to_string()), ..Default::default() }));
                 return Some((row.$slot.clone(), diff));
             }
         )+
@@ -604,7 +604,7 @@ macro_rules! storeyed {
 
 macro_rules! restoreyed {
     ($base:expr, $id:expr, $storey:expr, $($collection:ident => $patch:ident),+ $(,)?) => {{
-        $( if $base.$collection.contains_key($id) { return Some(ModelDiff::$collection($id.to_string(), Entry::Patched(crate::$patch { storey: Some($storey.to_string()), ..Default::default() }))); } )+
+        $( if $base.$collection.contains_key($id) { return Some(ModelDiff::$collection($id.to_string(), Entry::Patched($patch { storey: Some($storey.to_string()), ..Default::default() }))); } )+
         None
     }};
 }
@@ -656,7 +656,7 @@ macro_rules! phased {
 
 macro_rules! rephased {
     ($base:expr, $id:expr, $phase:expr, $($collection:ident => $patch:ident),+ $(,)?) => {{
-        $( if $base.$collection.contains_key($id) { return Some(ModelDiff::$collection($id.to_string(), Entry::Patched(crate::$patch { phase: Some($phase), ..Default::default() }))); } )+
+        $( if $base.$collection.contains_key($id) { return Some(ModelDiff::$collection($id.to_string(), Entry::Patched($patch { phase: Some($phase), ..Default::default() }))); } )+
         None
     }};
 }

@@ -1,0 +1,11 @@
+{
+ "name": "c5b6",
+ "crates": [
+  "semio-framework-plugin-host-effects",
+  "semio-framework-plugin-host-guest-runtime",
+  "semio-framework-plugin-host-routers",
+  "semio-framework-plugin-host-shard",
+  "semio-framework-plugin-host-post-turn-relay"
+ ],
+ "note": "CENSUS5-B package 6: the owning crates of the five split files"
+}

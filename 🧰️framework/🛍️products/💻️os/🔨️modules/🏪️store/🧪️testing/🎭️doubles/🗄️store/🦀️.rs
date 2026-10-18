@@ -432,7 +432,6 @@ where
 }
 
 
-fixture_canonical_json!(SeverityMutation, ValidatedMutation, TimestampedMutation);
 
 pub struct DemoMemberStoreProducer<M>(pub ::std::marker::PhantomData<fn()->(M)>);
 

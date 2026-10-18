@@ -1,5 +1,6 @@
 import { minimatch } from "minimatch";
-import type { FileKindSpec, Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import type { FileKindSpec } from "../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
+import type { Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 
 //#region 🧬️SourceFileFacts
 export type SourceFileFactRole = FileKindSpec["role"];

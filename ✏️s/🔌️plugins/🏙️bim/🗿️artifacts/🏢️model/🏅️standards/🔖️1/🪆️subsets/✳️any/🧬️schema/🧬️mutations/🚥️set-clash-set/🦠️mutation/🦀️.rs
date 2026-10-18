@@ -1,6 +1,6 @@
 //! 🚥️ `set-clash-set` payload. Sparsely changes a clash set: its name, either selector (replaced as a whole), the tolerance and the clearance. The clashes are inferred and follow.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use crate::standards::v1::subsets::any::schema::{diff::patches::ClashSetPatch, snapshot::ElementSelector};
 
@@ -33,13 +33,16 @@ impl SetClashSet {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetClashSet {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetClashSet
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetClashSet>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "clash-set", kind: "set-clash-set", record: "SetClashSet" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_clash_set::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_clash_set::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change clash set \"{}\"", self.id), &format!("Kollisionssatz \"{}\" ändern", self.id))

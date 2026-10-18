@@ -5,8 +5,8 @@
 //! elevation above the building datum; element vertices are expressed relative to their storey, so the chain of node transforms reproduces the world placement of the solid.
 //! 📎 https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#coordinate-system-and-units
 
-use super::document::{GltfMesh, GltfModel, GltfNode, GltfPrimitive};
-use super::materials::Palette;
+use crate::standards::v1::subsets::any::io::export::gltf::document::{GltfMesh, GltfModel, GltfNode, GltfPrimitive};
+use crate::standards::v1::subsets::any::io::export::gltf::materials::Palette;
 use crate::render::element_name;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
@@ -159,6 +159,4 @@ pub fn build(snapshot: &ModelSnapshot, inferred: &ModelInference) -> (GltfModel,
     (model, notes)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

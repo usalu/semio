@@ -7,8 +7,8 @@ import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { pdfAnnotationNumberColumns } from "../../📌️annotation/🔢️number/🟦️.ts";
 import { writePdfAcroForm,readPdfAcroForm,writePdfOptionalContent,readPdfOptionalContent } from "../../📝️form/🟦️.ts";
 import { exportSqliteDatabase,importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";
-import type { PdfFormField } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
-import { parsePdfFormField,parsePdfOptionalContent } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfFormField } from "../../../../../🧬️schema/📸️snapshot/📝️form/🟦️.ts";
+import { parsePdfFormField, parsePdfOptionalContent } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 
 test("PDF native form admission preserves owned signature and optional order integers",async()=>{const fixture=JSON.parse(await Bun.file(new URL("../../../../📝️text/📸️snapshot/🪪️native-json/📝️form/🧪️tests/🧫️fixtures/🔣️.json",import.meta.url)).text());const field=parsePdfFormField(pdfFieldFromNativeJson(fixture.field));if(field.kind.kind!=="signature")throw new Error("Fixture signature kind");expect(field.kind.value![0]!.value).toEqual({kind:"int",value:4294967295n});expect(parsePdfOptionalContent(pdfOptionalFromNativeJson(fixture.optional)).order![0]).toEqual({kind:"int",value:4294967295n});});
 

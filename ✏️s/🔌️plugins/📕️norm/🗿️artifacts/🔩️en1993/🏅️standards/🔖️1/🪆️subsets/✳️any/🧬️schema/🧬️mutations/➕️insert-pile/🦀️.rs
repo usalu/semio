@@ -14,7 +14,7 @@ impl<Op> protocol::MutationKind<En1993Snapshot, Op> for InsertPile where Op: pro
     Ok({ crate::insert_pile::inverse::inverse(self, base)? 
     })
 }
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert pile at position #{}", self.index.map_or_else(|| "end".to_string(), |index| index.to_string())), &format!("Pfahl an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
+    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel { semio_framework_ui_locale::LocalizedLabel::native(&format!("Insert pile at position #{}", self.index.map_or_else(|| "Ende".to_string(), |index| index.to_string())), &format!("Pfahl an Position #{} einfügen", self.index.map_or_else(|| "end".to_string(), |index| index.to_string()))) }
     fn target(&self) -> Vec<String> { vec![self.index.map_or_else(|| "end".to_string(), |index| index.to_string())] }
 }
 

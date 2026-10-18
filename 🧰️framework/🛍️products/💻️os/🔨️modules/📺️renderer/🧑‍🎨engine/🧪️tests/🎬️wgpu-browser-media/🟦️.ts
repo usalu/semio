@@ -46,7 +46,7 @@ describe("accepted browser media authority", () => {
   it("admits the neutral real-app reservation journey with independent schema and production boot decoding", async () => {
     const { runBrowserMediaAppAcceptance } = await import("../../🎯️targets/🧊️wgpu/🧪️tests/🎬️media-app/🟦️.ts");
     await expect(runBrowserMediaAppAcceptance([])).rejects.toThrow("requires serve, explicit locale and output");
-    const path = resolve(testDirectory, "../../🧫️fixtures/🎬️media-app-acceptance");
+    const path = resolve(testDirectory, "../🧫️fixtures/🎬️media-app-acceptance");
     const journey = JSON.parse(readFileSync(resolve(path, "🔣️.json"), "utf8"));
     for (const specimen of journey.cases) {
       const query = new URLSearchParams({ plugin: journey.plugin, app: specimen.app, example: journey.example, role: journey.role, mode: journey.mode });
@@ -326,8 +326,6 @@ for (const kind of ["audio", "video"] as const) it(`runs the production browser 
   const bundle = await build({ entryPoints: [resolve(testDirectory, "../../🎬️media/🌐️browser/🎛️host/🟦️.ts")], bundle: true, format: "iife", globalName: "MediaHostModule", platform: "browser", target: "chrome120", write: false, logLevel: "silent", define: { "import.meta.vitest": "undefined" } });
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
-  const logs: string[] = [];
-  page.on("console", (message) => { if (message.text().startsWith("[DEBUG]")) logs.push(message.text()); });
   try {
     await page.setContent('<div id="root" style="position:relative;width:800px;height:600px"></div>');
     await page.addScriptTag({ content: bundle.outputFiles[0]!.text });
@@ -372,7 +370,5 @@ for (const kind of ["audio", "video"] as const) it(`runs the production browser 
     expect(await page.getByRole("slider", { name: "Selection end", exact: true }).getAttribute("min")).toBe("201");
     const cleanup = await page.evaluate(() => { const oracle = (window as unknown as { mediaOracle: { host: ReturnType<typeof createBrowserMediaOverlay>; calls: string[]; revoked: () => number } }).mediaOracle; oracle.host.accept([]); oracle.host.dispose();  return { revoked: oracle.revoked(), calls: oracle.calls, audio: document.querySelector<HTMLMediaElement>("audio,video") !== null }; });
     expect(cleanup).toEqual({ revoked: 1, calls: ["submit", "poll", ...Array.from({ length: Math.ceil((video ? Buffer.from(video, "base64").byteLength : 8044) / 4096) }, () => "take")], audio: false });
-    expect(logs).toHaveLength(3);
-    for (const log of logs) console.debug(log);
   } finally { await browser.close(); }
 }, 30_000);

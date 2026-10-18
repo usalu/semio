@@ -1,0 +1,9 @@
+{
+ "name": "rend-nowgpu",
+ "crates": [
+  "semio-framework-os-node-graph",
+  "semio-framework-os-node-graph-component",
+  "semio-framework-os-renderer-camera"
+ ],
+ "note": "OHR group, no baseline"
+}

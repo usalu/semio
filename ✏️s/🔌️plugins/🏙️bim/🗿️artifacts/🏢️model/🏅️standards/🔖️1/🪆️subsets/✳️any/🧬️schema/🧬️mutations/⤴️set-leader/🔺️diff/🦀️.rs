@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetLeader`: a sparse leader patch of exactly the provided fields that differ. The record that results must break none of the create rules: the storey and the style must exist, the anchor names an existing element or a finite point, the offset is finite and the text is not blank.
 //! Providing only equal values, or no field, is a no-op.
 
-use super::super::annotating;
-use super::SetLeader;
+use crate::standards::v1::subsets::any::schema::mutations::annotating;
+use crate::standards::v1::subsets::any::schema::mutations::set_leader::SetLeader;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

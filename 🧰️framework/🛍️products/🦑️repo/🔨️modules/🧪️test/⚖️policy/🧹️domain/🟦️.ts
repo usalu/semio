@@ -1,5 +1,5 @@
 import { REPO_TEST_DOMAIN_REL } from "../../🧱️contract/🟦️.ts";
-import { type BreachRecord } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
 import { existsSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";

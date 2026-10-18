@@ -1,11 +1,34 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, SurfaceKind};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::holders::{holder_of, layers_of, Holder};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::OpeningKind};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::gbxml::codec::{attr, element, leaf, number, quantity};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::gbxml::geometry::{area as polygon_area, offset_in, rect_in, round9, turned, Frame, Rect, P3};
+#[allow(unused_imports)]
+use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoResult};
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+use crate::standards::v1::subsets::any::io::export::gbxml::*;
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSurface;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
 
-const BOX: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/📸️snapshot/🔣️.json");
-const ZONING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏘️zoning/📸️snapshot/🔣️.json");
-const STACK: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🧱️stack/📸️snapshot/🔣️.json");
+static BOX: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏠️box/📸️snapshot/🔣️.json"));
+static ZONING: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🏘️zoning/📸️snapshot/🔣️.json"));
+static STACK: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🌡️energy-envelope/🧱️stack/📸️snapshot/🔣️.json"));
 
 fn load(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("the committed fixture decodes")
@@ -51,7 +74,7 @@ fn surface_types_follow_the_mapping_of_the_contract() {
 
 #[test]
 fn the_box_is_one_space_with_six_surfaces_two_openings_and_its_constructions() {
-    let model = load(BOX);
+    let model = load((*BOX));
     let plan = plan_for(&model);
     assert_eq!((plan.spaces.len(), plan.zones.len(), plan.surfaces.len()), (1, 1, 6));
     assert_eq!(plan.surfaces.iter().map(|row| row.openings.len()).sum::<usize>(), 2);
@@ -68,7 +91,7 @@ fn the_box_is_one_space_with_six_surfaces_two_openings_and_its_constructions() {
 
 #[test]
 fn the_roof_without_a_construction_has_no_construction_reference() {
-    let plan = plan_for(&load(BOX));
+    let plan = plan_for(&load((*BOX)));
     let roof = plan.surfaces.iter().find(|row| row.kind == "Roof").expect("a roof");
     assert_eq!(roof.construction, None);
     assert!(plan.surfaces.iter().filter(|row| row.kind != "Roof").all(|row| row.construction.is_some()));
@@ -76,7 +99,7 @@ fn the_roof_without_a_construction_has_no_construction_reference() {
 
 #[test]
 fn the_document_is_gbxml_7_03_with_metric_units_and_reads_back() {
-    let model = load(BOX);
+    let model = load((*BOX));
     let (text, notes) = export_gbxml(&model).expect("an export");
     assert!(notes.is_empty(), "{notes:?}");
     assert!(text.starts_with("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<gbXML xmlns=\"http://www.gbxml.org/schema\" version=\"7.03\" useSIUnitsForResults=\"true\""), "{}", &text[..200]);
@@ -91,7 +114,7 @@ fn the_document_is_gbxml_7_03_with_metric_units_and_reads_back() {
 
 #[test]
 fn the_polygons_of_a_space_are_closed_and_enclose_its_volume() {
-    let model = load(BOX);
+    let model = load((*BOX));
     let plan = plan_for(&model);
     let (mut sum, mut volume) = ([0.0; 3], 0.0);
     for row in &plan.surfaces {
@@ -108,7 +131,7 @@ fn the_polygons_of_a_space_are_closed_and_enclose_its_volume() {
 
 #[test]
 fn the_window_and_the_door_have_the_areas_of_their_types() {
-    let plan = plan_for(&load(BOX));
+    let plan = plan_for(&load((*BOX)));
     let openings: Vec<&OpeningRow> = plan.surfaces.iter().flat_map(|row| row.openings.iter()).collect();
     let window = openings.iter().find(|row| row.kind == "FixedWindow").expect("window");
     let door = openings.iter().find(|row| row.kind == "NonSlidingDoor").expect("door");
@@ -119,7 +142,7 @@ fn the_window_and_the_door_have_the_areas_of_their_types() {
 
 #[test]
 fn two_rooms_share_their_partition_once() {
-    let plan = plan_for(&load(ZONING));
+    let plan = plan_for(&load((*ZONING)));
     assert_eq!((plan.spaces.len(), plan.zones.len()), (2, 2));
     let shared: Vec<&SurfaceRow> = plan.surfaces.iter().filter(|row| row.spaces.len() == 2).collect();
     assert!(!shared.is_empty(), "the partition between the rooms is shared");
@@ -130,7 +153,7 @@ fn two_rooms_share_their_partition_once() {
 
 #[test]
 fn a_stack_has_underground_walls_a_shared_interior_floor_and_a_roof() {
-    let plan = plan_for(&load(STACK));
+    let plan = plan_for(&load((*STACK)));
     let kinds: Vec<&str> = plan.surfaces.iter().map(|row| row.kind).collect();
     for wanted in ["UndergroundWall", "SlabOnGrade", "InteriorFloor", "Roof", "ExteriorWall"] {
         assert!(kinds.contains(&wanted), "{wanted} in {kinds:?}");
@@ -146,13 +169,13 @@ fn a_model_without_conditions_has_no_envelope_and_is_refused() {
 
 #[test]
 fn the_export_is_deterministic() {
-    let model = load(ZONING);
+    let model = load((*ZONING));
     assert_eq!(export_gbxml(&model).expect("first"), export_gbxml(&model).expect("second"));
 }
 
 #[test]
 fn the_staged_export_ends_with_the_same_document_and_reports_its_progress() {
-    let model = load(ZONING);
+    let model = load((*ZONING));
     let one_shot = export_gbxml(&model).expect("an export").0;
     let staged = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::try_with_inference(None, &model, |inferred| {
         let mut job = StagedGbxml::new();
@@ -176,16 +199,16 @@ fn the_staged_export_ends_with_the_same_document_and_reports_its_progress() {
 
 #[test]
 fn the_table_starts_with_the_counts_of_the_plan() {
-    let table = export_table(&load(BOX)).expect("a table");
+    let table = export_table(&load((*BOX))).expect("a table");
     assert!(table.starts_with("{\"counts\":{\"campuses\":1,\"buildings\":1,\"storeys\":1,\"spaces\":1,\"zones\":1,\"surfaces\":6,\"openings\":2"), "{}", &table[..120.min(table.len())]);
 }
 
-const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🌿️gbxml");
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🌿️gbxml/🏠️house/📸️snapshot/🔣️.json");
+const FIXTURES: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🧪️tests/🧫️fixtures/🌿️gbxml");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🌿️gbxml/🏠️house/📸️snapshot/🔣️.json"));
 
 #[test]
 fn the_committed_files_are_the_current_export() {
-    for (case, model) in [("🏠️box", load(BOX)), ("🏘️zoning", load(ZONING)), ("🧱️stack", load(STACK)), ("🏠️house", load(HOUSE))] {
+    for (case, model) in [("🏠️box", load((*BOX))), ("🏘️zoning", load((*ZONING))), ("🧱️stack", load((*STACK))), ("🏠️house", load((*HOUSE)))] {
         let (text, notes) = export_gbxml(&model).expect("the export");
         assert!(notes.is_empty(), "{case}: {notes:?}");
         let path = format!("{FIXTURES}/{case}/gbxml.xml");

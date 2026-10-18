@@ -124,9 +124,6 @@ afterEach(() => {
 });
 
 describe("🤏️ board 2d pinch math", () => {
-  it("accepts the language-neutral surface pinch contract", () => {
-  });
-
   it("spreading two fingers zooms in about their centroid, within the engine's own bounds", () => {
     const camera = board2dPinchCamera(JSON.stringify({ x: 0, y: 0, zoom: 1 }), { scale: 2, panX: 0, panY: 0, rotation: 0, centroidX: 400, centroidY: 300 }, { w: 800, h: 600 })!;
     expect(camera.zoom).toBeCloseTo(2, 10);

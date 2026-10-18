@@ -25,7 +25,7 @@ test("bitmap controlled native example has independent collection and text exten
 
 type OwningTarget={project:string;manifest:string;target:string;command:string};
 const workspaceRoot=fileURLToPath(new URL("../".repeat(13),import.meta.url));
-function expectOwningTargets(rows:OwningTarget[]){expect(rows.length).toBe(15);for(const expected of rows){const manifest=JSON.parse(readFileSync(join(workspaceRoot,expected.manifest),"utf8")),target=manifest.targets[expected.target];expect(manifest.name).toBe(expected.project);expect(target.executor).toBe("nx:run-commands");expect(target.options.command).toBe(expected.command);expect(target.options.cwd).toBe(dirname(expected.manifest));}}
+function expectOwningTargets(rows:OwningTarget[]){expect(rows.length).toBe(15);for(const expected of rows){const manifest=JSON.parse(readFileSync(join(workspaceRoot,expected.manifest),"utf8")),target=manifest.targets[expected.target];expect(manifest.name).toBe(expected.project);expect(target.executor).toBe("repo:script");expect(target.options.command).toBe(expected.command);expect(target.options.cwd).toBe(dirname(expected.manifest));}}
 test("WFC fifteen exact owning SQLite commands are declared by their owner Nx targets and package routers",()=>{
  expectOwningTargets(fixture.owningSqliteTargets);
  for(const expected of fixture.owningSqliteTargets)expect(readFileSync(join(workspaceRoot,dirname(expected.manifest),"📜️script.ts"),"utf8")).toMatch(/snapshotSqliteTests:\s*\["/u);

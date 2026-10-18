@@ -1,9 +1,10 @@
 //! 🎚️ Persisted local state for one exact BIM sheet window: which sheet it shows and its navigation, in paper millimetres from the top left corner of the sheet. The paper, the viewports and the title block are authored in the sheet.
 
+use crate::editor::bim::kit::path;
 use crate::editor::bim::kit::window_config;
 
 window_config! {
-    window: super::WINDOW_KIND_ID,
+    window: crate::editor::bim::modes::edit::windows::sheet::WINDOW_KIND_ID,
     schema: "bim.sheet-window.config",
     envelope: "s.bim.model.sheet-window.config",
     extension: "bimsheetwindowcfg",

@@ -1,0 +1,87 @@
+package semio:framework@1.0.0;
+
+/// 🌱️ OS-HUB-COLLABORATION-AI-END-TO-END (TC3b, `📓️tc3-catalog-carried-genesis.md` §2.2/§2.3).
+/// The package's OWN document-kind codec, callable by a host that has the component bytes and the
+/// catalog row but links no Rust codec for this package at all. This is what makes any plugin's
+/// artifact kind creatable on a headless hub: `📇️native-openable-provider`'s compiled stdio+gis+vcs
+/// table is a closed set of three, and a hub that only links those three can never resolve a codec
+/// for a fourth package, however complete its trusted catalog is.
+///
+/// 🪪️ `genesis` takes the REAL server-minted `document-id` rather than returning an
+/// id-independent template: a genesis pair's `pack` is `E::initial_snapshot().encode_pack()` and is
+/// indeed id-independent, but its `spr` is `HistoryLog { doc_id, .. }` and belongs to exactly one
+/// document (TC3 §1.1). Asking the guest at creation time, with the id in hand, is both exact and
+/// smaller than staging a template and re-encoding its id host-side.
+///
+/// ⛽️ Every function here is pure: it reads no storage, opens no window, emits no effect, and is
+/// answerable with `pure` imports alone — the same contract `describe` states. A host calls them
+/// with a fuel cap. SQLite calls retain their same instance and ticket through result handoff and
+/// admitted native retirement. The other pure codec functions complete on a transient instance.
+interface codec {
+  enum snapshot-encoding { binary, text }
+  record snapshot-limits {
+    max-file-bytes: u64,
+    max-value-bytes: u64,
+    max-allocation-bytes: u64,
+    max-schema-bytes: u64,
+    max-rows: u64,
+    max-columns: u64,
+    max-tables: u64,
+    max-pages: u64,
+  }
+  /// 📦️ Diagnostic arrays use the first-party value pack; they are transport data, outside the SQLite file.
+  record snapshot-file { bytes: list<u8>, diagnostics: pack }
+  record snapshot-payload { encoding: snapshot-encoding, bytes: list<u8>, diagnostics: pack }
+  enum value-refusal-kind { invalid-value, canceled, ownership-limit, allocation-failed, work-limit, depth-limit, unsupported-owner, invariant-violated }
+  record snapshot-rejection { kind: value-refusal-kind, message: string, diagnostics: pack }
+  record snapshot-demands { items: u64, copy-bytes: u64, capacity-bytes: u64, release-bytes: u64, depth: u64 }
+  record snapshot-retirement { ticket: u64, owned-bytes: u64,
+    refusal: u32, native-pending: bool, output-pending: bool, terminal: bool, demands: snapshot-demands }
+  record snapshot-close-receipt { retirement: snapshot-retirement, progress: retained-clone-progress, refusal: u32 }
+  variant snapshot-file-result { done(snapshot-file), rejected(snapshot-rejection), pending(snapshot-retirement) }
+  variant snapshot-payload-result { done(snapshot-payload), rejected(snapshot-rejection), pending(snapshot-retirement) }
+  /// 🏛️ The exact dialect's handwritten domain SQL declaration.
+  sqlite-schema: async func(dialect: string) -> result<string, plugin-error>;
+  /// 📤️ Projects one native snapshot through its individually declared semantic schema.
+  sqlite-export: async func(dialect: string, encoding: snapshot-encoding, snapshot: list<u8>, limits: snapshot-limits, native: retained-clone-grant) -> result<snapshot-file-result, plugin-error>;
+  /// 📥️ Reconstructs one native snapshot after exact dialect and schema validation.
+  sqlite-import: async func(dialect: string, file: list<u8>, limits: snapshot-limits, native: retained-clone-grant) -> result<snapshot-payload-result, plugin-error>;
+  /// 👓️ Quotes actual retained ownership in this same component invocation.
+  sqlite-take-file: async func(ticket: u64) -> result<snapshot-file-result, plugin-error>;
+  sqlite-take-payload: async func(ticket: u64) -> result<snapshot-payload-result, plugin-error>;
+  sqlite-retirement: async func(copy-bytes: u64) -> result<snapshot-retirement, u32>;
+  /// ♻️ Executes one independently funded turn against the same original receiving ticket.
+  sqlite-close: async func(ticket: u64, native: retained-clone-grant) -> result<snapshot-close-receipt, u32>;
+
+  use types.{plugin-error, pack, retained-clone-grant, retained-clone-progress};
+
+  /// 📦️ One document's authoritative binary pair. `pack` is the snapshot container, `spr` the
+  /// history log; together they are exactly what `store::print_document_pack` writes.
+  record document-pair {
+    pack: list<u8>,
+    spr: list<u8>,
+  }
+
+  /// 🧬️ Structural fingerprint of `artifact-kind`'s snapshot record shape — `pack::record::schema_hash`
+  /// over the editor snapshot's `RecordSpec`, exactly the 32 bytes `ArtifactCodec::pack_schema_hash`
+  /// carries natively. A catalog row's `packSchemaHash` is pinned against this, so a bundle cannot
+  /// name a schema identity the component itself does not own.
+  pack-schema-hash: async func(artifact-kind: string) -> result<list<u8>, plugin-error>;
+
+  /// 🌱️ The canonical empty document of `artifact-kind` at `document-id`: zero edits, zero changes,
+  /// zero checkpoints, zero alternatives, an empty cursor, and the kind's own initial snapshot.
+  genesis: async func(artifact-kind: string, document-id: string) -> result<document-pair, plugin-error>;
+
+  /// 📥️ `(pack, spr) -> (dsl, ops)` text mirror — the host's pair-validation fence. A pair the
+  /// component cannot print back is not a document of this kind.
+  print-mirror: async func(artifact-kind: string, pair: document-pair) -> result<tuple<string, string>, plugin-error>;
+
+  /// 🧩️ Applies one `encode_ops_vec` batch to a pair and returns the next pair. This is the
+  /// host-authoritative edit apply for a package whose codec the host does not link.
+  apply-ops: async func(artifact-kind: string, pair: document-pair, ops: list<u8>) -> result<document-pair, plugin-error>;
+
+  /// 📜️ Folds one `encode-envelopes` ledger stream onto a pair through the replica merge gate and
+  /// returns the next pair. A hub materializes a Check In with it: edit identity and history
+  /// transitions (undo, redo, checkpoints) stay the replicas' own, which `apply-ops` cannot keep.
+  replay-envelopes: async func(artifact-kind: string, pair: document-pair, envelopes: list<u8>) -> result<document-pair, plugin-error>;
+}

@@ -37,7 +37,7 @@ use semio_framework_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_contract::editing;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 #[path = "📬️preparation/🦀️.rs"]
 mod preparation;

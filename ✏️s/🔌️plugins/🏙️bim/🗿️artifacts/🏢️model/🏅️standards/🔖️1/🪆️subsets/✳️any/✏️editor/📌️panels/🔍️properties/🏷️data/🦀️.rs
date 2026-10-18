@@ -1,7 +1,8 @@
 //! 🏷️ The data rows of the properties panel: the effective properties of a holder (own, inherited from its type or by default, with the findings against the templates that apply), the templates that can be applied to it,
 //! its classification per system, the editable property definitions of a property set template and the entry table commands of a classification system. Every row is a labelled input or button: nothing needs a pointer.
 
-use super::{input_row, ROOT};
+use crate::editor::bim::panels::properties::{data};
+use crate::editor::bim::panels::properties::{input_row, ROOT};
 use crate::editor::bim::entities::property_text;
 use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_list, ui_value_map, ui_value_text};
 use crate::editor::bim::terminology::BimLabels;
@@ -166,6 +167,4 @@ pub fn entry_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Vec
 }
 //#endregion 🔖️Entries
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

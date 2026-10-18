@@ -89,6 +89,19 @@ function jsonSchemaSubsetTypeMatches(type: unknown, value: unknown): boolean {
   return true;
 }
 
+/** 🔤️ Counts Unicode characters from UTF16 without constructing an iterator or character array. */
+function jsonSchemaSubsetStringLength(value: string): number {
+  let length = value.length;
+  for (let index = 0; index + 1 < value.length; index++) {
+    const high = value.charCodeAt(index);
+    if (high >= 0xd800 && high <= 0xdbff) {
+      const low = value.charCodeAt(index + 1);
+      if (low >= 0xdc00 && low <= 0xdfff) { length--; index++; }
+    }
+  }
+  return length;
+}
+
 
 /** 🧭️ Resolution context: the document a local `#/…` pointer walks, plus every sibling document a cross-document `$ref` names by `$id`. */
 interface JsonSchemaSubsetScope { readonly root: unknown; readonly documents: ReadonlyMap<string, unknown> }
@@ -155,6 +168,8 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
     const one = Array.isArray(contract.oneOf) ? contract.oneOf.map(member => prepare(member, scope)) : undefined;
     const enums = Array.isArray(contract.enum) ? contract.enum : undefined;
     const pattern = typeof contract.pattern === "string" ? new RegExp(contract.pattern, "u") : undefined;
+    const minimumLength = typeof contract.minLength === "number" ? contract.minLength : undefined;
+    const maximumLength = typeof contract.maxLength === "number" ? contract.maxLength : undefined;
     const items = "items" in contract ? prepare(contract.items, scope) : undefined;
     const contains = "contains" in contract ? prepare(contract.contains, scope) : undefined;
     const required = Array.isArray(contract.required) ? contract.required.filter((key): key is string => typeof key === "string") : [];
@@ -176,9 +191,11 @@ export function compileJsonSchemaSubset(schema: unknown, root: unknown = schema,
       if (one && one.filter(member => member(value, path).length === 0).length !== 1) errors.push(`${path} must match exactly one oneOf branch`);
       if (!jsonSchemaSubsetTypeMatches(contract.type, value)) { errors.push(`${path} must be ${String(contract.type)}`); return errors; }
       if (typeof value === "string") {
-        const length = [...value].length;
-        if (typeof contract.minLength === "number" && length < contract.minLength) errors.push(`${path} must contain at least ${contract.minLength} character(s)`);
-        if (typeof contract.maxLength === "number" && length > contract.maxLength) errors.push(`${path} must contain at most ${contract.maxLength} character(s)`);
+        if (minimumLength !== undefined || maximumLength !== undefined) {
+          const length = jsonSchemaSubsetStringLength(value);
+          if (minimumLength !== undefined && length < minimumLength) errors.push(`${path} must contain at least ${minimumLength} character(s)`);
+          if (maximumLength !== undefined && length > maximumLength) errors.push(`${path} must contain at most ${maximumLength} character(s)`);
+        }
         if (pattern && !pattern.test(value)) errors.push(`${path} must match ${contract.pattern}`);
       }
       if (typeof value === "number" && typeof contract.minimum === "number" && value < contract.minimum) errors.push(`${path} must be at least ${contract.minimum}`);

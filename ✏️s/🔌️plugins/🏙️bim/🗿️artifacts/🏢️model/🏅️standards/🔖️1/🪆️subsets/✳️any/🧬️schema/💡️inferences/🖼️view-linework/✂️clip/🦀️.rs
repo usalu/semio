@@ -1,6 +1,6 @@
 //! ✂️ Clipping of the view pipeline: convex polygons against half-spaces in 3D (the slab a view looks into), and rings, segments and points against the rectangle of a crop in 2D.
 
-use super::frame::Frame;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
 use semio_framework_geometry::vector::{dot3, Xyz};
 
 /// 📐️ The half-space of the points `p` with `dot(p, normal) >= offset`.

@@ -1,6 +1,7 @@
 //! 🕹️ Lowpoly play app: the `LowpolyPlayApp` editor with its media export, its render and the `ArtifactEditor` implementation.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_lowpoly_lowpoly_modes::windows::model::LOWPOLY_PLAY_BODY_MAIN;
 use semio_s_artifact_lowpoly_lowpoly_modes::editor::lowpoly::modes::paint::windows::uv::LOWPOLY_PLAY_BODY_UV;
 use semio_s_artifact_lowpoly_lowpoly_panels::document::LOWPOLY_PLAY_BODY_ARTIFACT;

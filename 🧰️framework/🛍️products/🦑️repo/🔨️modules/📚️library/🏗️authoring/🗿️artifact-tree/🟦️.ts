@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { authorArtifactScaffold, type ArtifactScaffoldLeaf, type ArtifactScaffoldOptions } from "../../🏗️builder/🟦️.ts";
-import { canonicalFilenameForKind, canonicalPrimaryFilenameForKind, loadCatalogTaxonomy as loadTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { canonicalFilenameForKind, canonicalPrimaryFilenameForKind, loadCatalogTaxonomy as loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { policyStripEmoji } from "../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { newScaffoldEmptyFacetMarkdown, newScaffoldRustLeaf, newScaffoldTsLeaf } from "../🧱️contract/🟦️.ts";
 import { scaffoldSubsetCrates } from "../📦️crate-tree/🧱️scaffold/🟦️.ts";

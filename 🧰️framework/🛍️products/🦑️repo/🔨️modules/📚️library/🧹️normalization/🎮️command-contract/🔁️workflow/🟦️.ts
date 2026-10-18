@@ -1,6 +1,11 @@
 import { readFileSync } from "node:fs";
 import { dirname, relative } from "node:path";
-import { applyTaxonomyPlan, inventoryTaxonomy, parseTaxonomyPlan, planTaxonomy, taxonomyPlanDigest, verifyTaxonomy } from "../../🟦️.ts";
+import { applyTaxonomyPlan } from "../../🚀️apply/🟦️.ts";
+import { inventoryTaxonomy } from "../../🔍️inventory-planning/🟦️.ts";
+import { parseTaxonomyPlan } from "../../📃️plan-document/🟦️.ts";
+import { planTaxonomy } from "../../🧠️planning/🟦️.ts";
+import { taxonomyPlanDigest } from "../../🗃️affected-state/🟦️.ts";
+import { verifyTaxonomy } from "../../✅️verification/🟦️.ts";
 import { publishTaxonomyInventoryArtifactShards } from "../../📇️inventory/📦️publication/🟦️.ts";
 import { runMutationTaxonomyCli } from "../../🧬️mutation/🔁️workflow/🟦️.ts";
 import {

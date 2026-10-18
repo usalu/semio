@@ -11,7 +11,7 @@
 //! `DslRecord`-derived structs and `DslScalar`-derived UNIT-only enums implement it). `DiffCodec`
 //! is hand-rolled below, grammar template copied from `SvgDiff`'s.
 
-use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
@@ -651,9 +651,9 @@ fn absorb_children_rows(d1: HtmlChildrenDiff, d2: &HtmlChildrenDiff) -> HtmlChil
 //#region 🧪️Tests
 /// 🧪️ Representative `HtmlDiff` cases built declaratively (empty diff, the recursive element tree with attribute and child rows, a doctype clear and a wholesale root replace) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
 /// conformance-law tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<HtmlDiff> {
+pub fn demo_diff_cases() -> Vec<HtmlDiff> {
     let element = HtmlElementDiff {
         name: Some("main".into()),
         attributes: Some(HtmlAttributesDiff {

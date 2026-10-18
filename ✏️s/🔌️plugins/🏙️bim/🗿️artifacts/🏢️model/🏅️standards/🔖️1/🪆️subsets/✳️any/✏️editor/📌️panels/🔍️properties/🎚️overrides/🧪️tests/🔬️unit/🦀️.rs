@@ -1,4 +1,30 @@
-use super::*;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_label, ui_value_map, ui_value_text};
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::family::vocabulary::{kind_label, value_text};
+#[allow(unused_imports)]
+use crate::editor::bim::panels::properties::input_row;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::family_rules::parameters_in_order;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::issues::message;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::{parameters, IssueOwner};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ParameterKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::editor::bim::panels::properties::overrides::*;
 use crate::editor::bim::fixture::placed;
 use crate::standards::v1::subsets::any::schema::snapshot::ComponentOverride;
 use semio_framework_plugin::{ui_node_list, PanelTreeBuilder, ViewModel};

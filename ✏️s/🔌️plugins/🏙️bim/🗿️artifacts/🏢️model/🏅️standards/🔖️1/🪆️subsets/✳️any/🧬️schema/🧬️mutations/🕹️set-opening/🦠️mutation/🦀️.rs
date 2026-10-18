@@ -1,6 +1,6 @@
 //! 🕹️ `set-opening` payload. Sparsely changes an opening: kind or type, sill override (an assigned null returns to the sill of the type), width and height overrides (an assigned null clears an override), hand and facing flips, name, reveal (an assigned null clears the authored reveal depth, which centres the frame, or the reveal material, which leaves the jambs in the material of the wall layers).
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, OpeningKind}};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff}, snapshot::{ModelSnapshot, OpeningKind}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -28,13 +28,16 @@ pub struct SetOpening {
     pub reveal_material: Option<Assigned<Option<String>>>,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetOpening {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetOpening
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetOpening>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "opening", kind: "set-opening", record: "SetOpening" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_opening::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_opening::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change opening \"{}\"", self.id), &format!("Öffnung \"{}\" ändern", self.id))

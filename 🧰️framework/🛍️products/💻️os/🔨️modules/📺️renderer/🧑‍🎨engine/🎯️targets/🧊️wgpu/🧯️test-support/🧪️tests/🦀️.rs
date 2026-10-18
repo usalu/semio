@@ -10,7 +10,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 static SCRATCH: AtomicU64 = AtomicU64::new(0);
 
 fn fixture() -> Value {
-    serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("module tree fixture parses")
+    serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧯️test-support/🔣️.json")).expect("module tree fixture parses")
 }
 
 fn scratch(label: &str) -> PathBuf {

@@ -1,0 +1,28 @@
+# 🦀️ The Cargo configuration of the image's builder (`$CARGO_HOME/config.toml`, copied in by `Dockerfile`), in place of the
+# repository's `.cargo/config.toml`: that file points `[build] rustc` and `rustc-wrapper` at the compiler ingress, which
+# refuses every compile that a repository launcher (`bun repo cargo`) did not issue, and neither bun nor the ingress script
+# is in the builder, so the repository file stays out of the build context (`Dockerfile.dockerignore`). Only what the
+# proctor build reads is kept, with the values of the repository file: the nightly features the pinned toolchain
+# (`rust-toolchain.toml`) enables, the parallel front end, the self-contained LLD linker of glibc Linux hosts and the release
+# profile. The compiler stays the plain `rustc` of the pinned toolchain. The build directory is the cache mount of the
+# `Dockerfile`; `CARGO_TARGET_DIR` (`/out`) puts the uplifted binary at a fixed path.
+# https://doc.rust-lang.org/cargo/reference/config.html
+[build]
+build-dir = "/cache/build"
+rustflags = ["-Z", "threads=0"]
+
+[unstable]
+embed-metadata = "DoNotEmbed"
+fine-grain-locking = true
+build-dir-new-layout = true
+checksum-freshness = true
+
+[target.'cfg(all(target_os = "linux", target_env = "gnu"))']
+rustflags = ["-Z", "threads=0", "-C", "linker-features=+lld", "-C", "link-self-contained=+linker", "-Z", "unstable-options"]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = "debuginfo"
+incremental = false

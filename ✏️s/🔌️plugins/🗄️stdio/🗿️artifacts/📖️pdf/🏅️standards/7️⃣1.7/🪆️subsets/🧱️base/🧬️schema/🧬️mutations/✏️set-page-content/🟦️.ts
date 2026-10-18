@@ -1,5 +1,8 @@
 /** ✏️ Direct set-page-content TypeScript payload. */
-import type { ObjRef, PdfCcittParameters, PdfColorSpace, PdfDecimal, PdfDictEntry, PdfFunction, PdfInlineImage, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPredictor, PdfPropertyList, PdfStreamFilter, PdfTextArrayItem, PdfTextString } from '../../📸️snapshot/🟦️.ts';
+import type { ObjRef, PdfCcittParameters, PdfDecimal, PdfDictEntry, PdfObject, PdfPredictor, PdfStreamFilter } from '../../📸️snapshot/🧩️cos/🟦️.ts';
+import type { PdfColorSpace, PdfFunction } from '../../📸️snapshot/🌈️color/🟦️.ts';
+import type { PdfInlineImage, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString } from '../../📸️snapshot/🖋️content/🟦️.ts';
+import type { PdfLineCap, PdfLineJoin } from '../../📸️snapshot/🖼️resource/🎚️state/🟦️.ts';
 export interface SetPageContentMutation {
   mutation: 'setPageContent';
   index: number;

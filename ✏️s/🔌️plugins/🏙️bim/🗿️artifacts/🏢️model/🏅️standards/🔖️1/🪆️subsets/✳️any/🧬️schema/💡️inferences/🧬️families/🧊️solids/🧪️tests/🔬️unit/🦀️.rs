@@ -1,6 +1,30 @@
-use super::*;
-use super::super::tests::kit;
-use super::super::parameters::resolve;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SolidAxis, SolidShape};
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::families::issues::{FamilyIssue, FamilyIssueCode};
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilySolidMesh;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::issues::IssueOwner;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBounds, SolidPoint, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{ExprPoint, FamilySolid};
+#[allow(unused_imports)]
+use semio_framework_expression::{evaluate, parse, Kind, Value};
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::BulgeSeg;
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::{self, Vertex};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude_loops, revolve_profile, sweep_profile};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::{Affine3, ZPlane};
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use std::collections::BTreeSet;
+use crate::standards::v1::subsets::any::schema::inferences::families::solids::*;
+use crate::standards::v1::subsets::any::schema::inferences::families::tests::kit;
+use crate::standards::v1::subsets::any::schema::inferences::families::parameters::resolve;
 use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind, ParametricProfile};
 use semio_framework_geometry::mesh::TriMesh;
 use std::f64::consts::PI;

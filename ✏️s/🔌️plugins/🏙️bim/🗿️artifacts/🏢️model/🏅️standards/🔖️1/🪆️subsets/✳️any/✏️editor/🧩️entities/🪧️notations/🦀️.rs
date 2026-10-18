@@ -2,7 +2,8 @@
 //! annotation is, and the pickers (the annotation styles, the tag categories, the line ends and units) the properties panel offers for the reference and choice rows. The values a dimension or a tag
 //! shows (its measured length, its printed text) are inferred rows of the `annotation-layout` inference.
 
-use super::{number, parse_count, parse_number, parse_point, parse_text, partial, point, variant, Created, EntityKind, FieldRow, InferredRow};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::editor::bim::entities::{number, parse_count, parse_number, parse_point, parse_text, partial, point, variant, Created, EntityKind, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::{snapshot::{AnchorEnd, AnnotationAnchor, AnnotationStyle, Dimension, DimensionUnit, Leader, ModelSnapshot, Point2, Tag, TagCategory, Terminator, TextNote, WallSide}, diff::Assigned, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;

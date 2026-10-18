@@ -43,6 +43,4 @@ pub fn handle(payload: &PlaceAt, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: &C
     Ok(Emit::mutations(vec![ModelMutation::PlaceElements(crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements { placements: moved })]))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

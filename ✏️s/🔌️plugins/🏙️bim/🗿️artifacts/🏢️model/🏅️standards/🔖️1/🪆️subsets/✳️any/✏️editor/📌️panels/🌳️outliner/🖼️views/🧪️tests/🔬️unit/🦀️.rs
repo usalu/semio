@@ -1,4 +1,18 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
+#[allow(unused_imports)]
+use crate::editor::bim::panels::outliner::{entity_item, item, leaf};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::kind_of;
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+use crate::editor::bim::panels::outliner::views::{group_of, scale_text};
+use crate::editor::bim::panels::outliner::views::*;
 use crate::editor::bim::panels::outliner::{render, BODY_KEY};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::View};
 use semio_framework_plugin::ViewModel;
@@ -44,7 +58,7 @@ async fn the_groups_of_a_building_follow_the_kind_then_the_level_of_the_storey_t
     assert_eq!(groups.iter().map(|group| group.0).collect::<Vec<_>>(), vec![0, 1, 4], "groups without a view are left out");
     assert_eq!(groups[0].1, vec!["v-low-b", "v-low-z", "v-high-a"], "ground plans by name, then the first floor");
     assert_eq!(groups[2].1, vec!["v-ortho", "v-camera"]);
-    assert_eq!(super::groups(&snapshot, &building), groups, "the order is deterministic");
+    assert_eq!(crate::editor::bim::panels::outliner::views::groups(&snapshot, &building), groups, "the order is deterministic");
 }
 
 #[semio_framework_async_macros::async_test]

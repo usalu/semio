@@ -1,0 +1,6 @@
+{
+ "name": "hdr-p3dhost",
+ "crates": ["semio-s-artifact-process-process3d-host", "semio-s-artifact-process-process3d-host-retained-cursors", "semio-s-artifact-process-process3d-host-publication-authority"],
+ "base": {"rev": "b84bf526c7ba26f99c4054b47da1c1a4d5064e3d", "crates": ["semio-s-artifact-process-process3d-host"]},
+ "note": "HDR-2: retained cursors and publication authority peeled out of the process3d host hub"
+}

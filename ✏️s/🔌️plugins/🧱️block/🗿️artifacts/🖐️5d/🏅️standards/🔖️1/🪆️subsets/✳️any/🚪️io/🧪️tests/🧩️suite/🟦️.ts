@@ -19,7 +19,7 @@ async function read(path: string): Promise<string> {
 describe("block5d io", () => {
   for (const { asset, example, content, fixture } of FIXTURES) {
     test(`${asset}: declared JSON input retains complete canonical fields and stable emitted words`, async () => {
-      const expected = await read(`../../🧫️fixtures/${fixture}`);
+      const expected = await read(`../🧫️fixtures/${fixture}`);
       expect(validate(JSON.parse(expected)),JSON.stringify(validate.errors)).toBe(true);
       const canonical=block5dCanonicalJsonText(expected);
       expect(validate(JSON.parse(canonical)),JSON.stringify(validate.errors)).toBe(true);
@@ -28,7 +28,7 @@ describe("block5d io", () => {
     });
 
     test(`${asset}: actual Text example agrees with the declared JSON semantic input`, async () => {
-      const expected = await read(`../../🧫️fixtures/${fixture}`);
+      const expected = await read(`../🧫️fixtures/${fixture}`);
       const dsl = await read(`../../../📚️examples/${example}/🖼️assets/${content}/🗣️.dsl.semio`);
       expect(block5dToJsonText(block5dFromDslText(dsl))).toBe(block5dCanonicalJsonText(expected));
     });

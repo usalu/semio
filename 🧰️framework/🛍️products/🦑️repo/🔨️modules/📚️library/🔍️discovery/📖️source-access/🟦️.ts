@@ -103,6 +103,11 @@ export function policyReadFileSafe(repoRoot: string, ...parts: string[]): string
   return source.text;
 }
 
+/** 📜️ Reads a WIT package directory as the one text its files declare: every direct `.wit` file in name order, through the symlink-refusing policy read. */
+export function policyReadWitPackageSource(repoRoot: string, relDir: string): string {
+  return policyReaddirSafe(repoRoot, relDir).filter((entry) => !entry.isDirectory && entry.name.endsWith(".wit")).map((entry) => entry.name).sort().map((name) => policyReadFileSafe(repoRoot, relDir, name)).join("\n");
+}
+
 const OS_ENGINE = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine";
 const OS_INFINITE_DIRECTED = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed";
 
@@ -132,11 +137,13 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🚪️io/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/🧱️model/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs",
   "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
   "🧰️framework/🔨️modules/⏳️async/🦀️.rs",
   "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
@@ -150,6 +157,11 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/♻️reconcile/🦀️.rs",
   "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/⏭️cursor/🦀️.rs",
   "🧰️framework/🔨️modules/🖱️ui/🧠️runtime/🧱️primitives/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/🍃️nodes/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🖌️render/🎬️scene/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧩️component/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🛡️limits/🦀️.rs",
+  "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/🦀️.rs",
   "🧰️framework/🔨️modules/🗺️surface/🗺️tiled-map/🦀️.rs",
   "🌎️hub/🏗️bootstrap/🦀️.rs",
   "🌎️hub/🏗️bootstrap/⚙️runtime/🦀️.rs",
@@ -190,7 +202,45 @@ export const POLICY_SPLIT_SOURCE_ROOTS: readonly string[] = [
   "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+  "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
   "✏️s/🔌️plugins/📕️norm/📇️registry/🧬️contract/🖥️app-surface/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/📖️catalog-read/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🔭️capability-open/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🥾️catalog-bootstrap/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔄️sync/🧪️tests/🔬️unit/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔢️index/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📸️snapshot/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📁️fs/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🗃️memory/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🪶️sqlite/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🐘️postgres/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧬️contract/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧪️tests/🔬️unit/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⌨️cli/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔍️query/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🔘️state/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🌐️neo4j/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/📇️io-registry/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🚦️io-driver/🧪️tests/🔬️db-io-retained-fixtures/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/📜️history/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🎫️handle/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🏗️catalog-create/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📝️wal/🧾️log/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗜️compact/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs",
 ];
 
 /** 🌳️ Lists the repo-relative files of a split source's module tree (the root first, then its mounted children) through the symlink-refusing policy read; the crates of the renderer partition are not followed unless `crates: true` is passed, because the canonical test-mount rule of the evidence reader does not know the crate roots' `🧪️tests/🦀️.rs` stubs. */

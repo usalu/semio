@@ -4,9 +4,9 @@
 //! run changes nothing the consumers read (the held inference stays the last complete one) but every node it finished stays in the cache, so the next run only computes what is left.
 //! `update`/`refresh`/`sync` are the same run driven to the end; faults are values (`try_*` returns them, the plain calls keep the last inference and report the fault).
 
-use super::compute::take_computed;
-use super::projection::{apply, project, rebuild_diagnostics, retract};
-use super::{kinds, ModelGraph, ModelNode, ModelValue, READS};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_computed;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::projection::{apply, project, rebuild_diagnostics, retract};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelGraph, ModelNode, ModelValue, READS};
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::{step_field_update, DiffRegions, MutationDiff, FieldChange, FieldDelta, FieldUpdate, InferenceCache, InferenceCacheConfig, InferenceError, InferenceWorkFailure, InferenceFault, InferenceSession, TouchedPaths};
 use std::collections::BTreeMap;
@@ -338,6 +338,4 @@ impl ModelInferenceSession {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

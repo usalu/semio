@@ -1,0 +1,155 @@
+    /// 🧾️ Source rejection, anchors and host lane: generic reducer rejection, the fixture contract anchors, the bounded renderer page and ack and the bounded event sourced host configuration lane.
+
+    /// ⚖️ The generic command is constructed to be ENCODED: `admit_command_wire` admits the command's
+    /// own wire, so the decoder necessarily precedes its admission. What the clause has always stood
+    /// for — no generically constructed command reaches the reducer without the complete pipeline —
+    /// is asserted directly, as the order decoder → gate → reducer entry.
+    #[test]
+    fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
+        let source = [module_source("🧵️retained-command/🔄️full-operation/🦀️.rs"), module_source("👷️job/🛬️lifted/🔄️full-operation/🦀️.rs"), instance_source()].concat();
+        let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
+        let end = source[start..].find("struct TypedCommandFullOperationJobFactory").map(|offset| start + offset).expect("typed full-operation factory");
+        let job = &source[start..end];
+        for stage in ["typed-command-prepare", "typed-command-reducer"] {
+            assert!(job.contains(stage));
+        }
+        for forbidden in ["A::handle", "A::ephemeral", "bounded_command_output_bytes", "serde_json::to_vec", "fault.message.as_bytes().to_vec()", "for child in emit.child_emits", "ActiveToolCommand", "BoundedFirstStepCommandJob"] {
+            assert!(!job.contains(forbidden), "forbidden typed-command shortcut returned: {forbidden}");
+        }
+        let route = source.rfind("async fn dispatch_typed_command_inner").expect("typed command route");
+        let gate = source[route..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("fail-closed full-operation gate");
+        let refresh = source[route..].find("self.refresh_cache().await").expect("deferred legacy preparation census");
+        assert!(gate < refresh, "incomplete typed command must fail before legacy preparation");
+        for decoder in ["let command = Box::new(A::command_from_action(action, source_args).await?)", "let command = A::command_from_action(command_id, Some(args)).await"] {
+            let decoder = source.find(decoder).expect("typed route decoder");
+            let gate = source[decoder..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("typed route full-operation gate") + decoder;
+            let reducer = source[decoder..].find("self.dispatch_typed_command_inner(").expect("typed route reducer entry") + decoder;
+            assert!(gate < reducer, "generic command construction must not reach the reducer before full-operation admission");
+        }
+        let intent = source.find("async fn handle_intent_frame(&mut self, intent: &UiIntent").expect("intent route");
+        let intent_end = source[intent..].find("async fn resume_task_emit").map(|offset| intent + offset).expect("intent route end");
+        let intent_route = &source[intent..intent_end];
+        for forbidden in ["serde_json::to_value", "serde_json::to_vec", "A::command_from_intent"] {
+            assert!(!intent_route.contains(forbidden), "intent route performed pre-admission work: {forbidden}");
+        }
+        assert!(source.contains("pub fn dispatch_typed"), "typed-value route must remain available to the dependency testkit");
+    }
+
+    /// ♻️ The seven per-lane `Closing` arms collapsed into ONE shared
+    /// `MountedTypedCommandFullOperation::granted_retirement_step` (ticket 26/09/09/PROCEDURAL-3D-END-TO-END),
+    /// so the retained one-item retirement seam is that call, not a per-lane `close_step`.
+    ///
+    /// 🧵️ The one-page publisher suspends in EXACTLY one place: the task lane's spawn. Every
+    /// other lane stays synchronous, so the awaits are enumerated and the one that is allowed is
+    /// named by its own call — a new `.await` anywhere in the publisher fails here by name.
+    #[test]
+    fn fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers() {
+        let source = instance_source();
+        let admission_marker = ["async fn admit_command_json_with_", "proof(&self"].concat();
+        let admission_start = source.rfind(&admission_marker).expect("production raw JSON admission");
+        let admission_end = source[admission_start..].find("pub async fn new(app: A, actor").map(|offset| admission_start + offset).expect("admission route end");
+        let admission = &source[admission_start..admission_end];
+        let reserve = admission.find(".begin_exact_wire").expect("maximum extent authority");
+        let encode = admission.find("semio_framework_pack_json::to_json_string(&(verb, wire_args))").expect("bounded wire encoder");
+        let seal = admission.find("finish_admitted_prefix").expect("truthful exact prefix");
+        assert!(reserve < encode && encode < seal);
+
+        let dispatch_start = source.rfind("async fn dispatch_typed_command_inner").expect("production typed dispatch");
+        let dispatch_end = source[dispatch_start..].find("pub fn dispatch_typed").map(|offset| dispatch_start + offset).expect("production dispatch end");
+        let dispatch = &source[dispatch_start..dispatch_end];
+        assert!(dispatch.contains("dispatch_wire_retained_with_spec"));
+        assert!(dispatch.contains("retained_wire.take()"));
+
+        let publisher_start = source.rfind("fn publish_mounted_typed_operation_unit").expect("production one-page publisher");
+        let publisher_end = source[publisher_start..].find("fn require_tool_operation_authority").map(|offset| publisher_start + offset).expect("publisher end");
+        let publisher = &source[publisher_start..publisher_end];
+        for retained_seam in ["pending_artifact_publication", "begin_apply_batch", "advance_apply_batch", "ArtifactStoreOneItemAdvance::Published", "pending_publication_outcome.pending()"] {
+            assert!(publisher.contains(retained_seam), "production publisher lost its retained one-item seam: {retained_seam}");
+        }
+        for forbidden in [".apply_one(", "artifact_mutations.last().cloned()", "config_mutations.last().cloned()", "draft_mutations.last().cloned()", "presence.last().cloned()", "transient.last().cloned()"] {
+            assert!(!publisher.contains(forbidden), "production publisher restored a monolithic or clone-then-pop shortcut: {forbidden}");
+        }
+        let freshness = publisher.find("typed-operation pending publication rejected a stale immutable document root").expect("per-turn document freshness gate");
+        let pending_advance = publisher[freshness..].find("\n            if let Some(pending) = mounted.pending_artifact_publication.as_mut()").map(|offset| freshness + offset).expect("pending publication advance");
+        assert!(freshness < pending_advance, "document freshness must fail closed before every retained lane advance");
+        assert!(publisher[..pending_advance].contains("pending.begin_close()"));
+        assert!(publisher[..pending_advance].contains("self.handoff_mounted_durable_publication(mounted)?"));
+        assert!(!publisher.contains("dispatch_emit_group("));
+        let publisher_awaits: Vec<&str> = publisher.match_indices(".await").map(|(index, _)| publisher[..index].rsplit('\n').next().unwrap_or_default().trim()).collect();
+        assert_eq!(
+            publisher_awaits,
+            vec!["crate::reactor::spawn_task(mounted.meta.instance_id, &mounted.meta, task)"],
+            "the production one-page publisher may suspend only for the task lane's own bounded spawn"
+        );
+        assert!(publisher.contains("typed_effect_outbox.push"));
+        assert!(publisher.contains("typed_event_outbox.push"));
+        assert!(publisher.contains("typed_ui_outbox.push"));
+        assert!(source.contains("mounted.publication_attempt = mounted.publication_attempt.saturating_add(1)"));
+        assert!(source.contains("take_typed_operation_effect"));
+        assert!(source.contains("take_typed_operation_event"));
+        assert!(source.contains("take_typed_operation_ui_scope"));
+
+        let reactor = [module_source("⚛️reactor/🦀️.rs"), module_source("⚛️reactor/🔄️turn/🦀️.rs")].concat();
+        assert!(reactor.contains("output.typed_operation_results.iter()"));
+        assert!(reactor.contains("page.renderer_exchange_bytes()"));
+        assert!(reactor.contains("TypedOperationResultPage::renderer_ack_token"));
+        assert!(reactor.contains("plugin_acknowledge_typed_operation_result(runtime, token)"));
+        assert!(!reactor.contains("typed_operation_results: _"), "the old typed-result drop route must remain unreachable");
+    }
+
+    #[test]
+    fn language_neutral_renderer_page_and_exact_ack_have_bounded_stable_wire_fields() {
+        let token = TypedOperationResultToken { receiver: u32::MAX, operation: u64::MAX, generation: u64::MAX - 1, sequence: u32::MAX, attempt: 2 };
+        let page = TypedOperationResultPage::try_new(token, TypedOperationResultLane::Terminal, &[0x5a; TYPED_OPERATION_RESULT_PAGE_BYTES]).expect("exact renderer page maximum");
+        let wire = page.renderer_exchange_bytes();
+        assert!(wire.starts_with(TypedOperationResultPage::RENDERER_PAGE_MAGIC));
+        assert_eq!(&wire[wire.len() - TYPED_OPERATION_RESULT_PAGE_BYTES..], &[0x5a; TYPED_OPERATION_RESULT_PAGE_BYTES]);
+
+        let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🎭️actor/🧪️tests/🗞️typed-operation-page/🧫️fixtures/🔣️.json")).expect("neutral result lanes");
+        for row in fixture["lanes"].as_array().expect("result lanes") {
+            let lane: TypedOperationResultLane = semio_framework_pack_json::from_json_str(&serde_json::to_string(&row["name"]).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("own lane decoder");
+            let page = TypedOperationResultPage::try_new(token, lane, &[0x5a]).expect("declared result lane");
+            let bytes = page.renderer_exchange_bytes();
+            assert_eq!(bytes[TypedOperationResultPage::RENDERER_PAGE_MAGIC.len() + 25], row["tag"].as_u64().unwrap() as u8);
+        }
+
+        let mut ack = Vec::from(TypedOperationResultPage::RENDERER_ACK_MAGIC);
+        ack.extend_from_slice(&token.receiver.to_le_bytes());
+        ack.extend_from_slice(&token.operation.to_le_bytes());
+        ack.extend_from_slice(&token.generation.to_le_bytes());
+        ack.extend_from_slice(&token.sequence.to_le_bytes());
+        ack.push(token.attempt);
+        assert_eq!(TypedOperationResultPage::renderer_ack_token(&ack), Some(token));
+        ack.push(0);
+        assert_eq!(TypedOperationResultPage::renderer_ack_token(&ack), None);
+    }
+
+    #[test]
+    fn host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate() {
+        let source = instance_source();
+        let start = source.find("pub(crate) async fn dispatch_action").expect("action route");
+        let end = source[start..].find("async fn dispatch_command(").map(|offset| start + offset).expect("command route");
+        let route = &source[start..end];
+        let hook = route.find("A::host_configuration_mutation(action, args)?").expect("host configuration owner hook");
+        let admission = route[hook..].find("self.admit_host_configuration_json(action, args).await?").expect("bounded host admission") + hook;
+        let authority = route[admission..].find("self.require_tool_operation_authority(&admission)?").expect("bounded host authority") + admission;
+        let event = route[authority..].find("Emit::config(vec![config_mutation])").expect("single event-sourced configuration mutation") + authority;
+        let generic_gate = route[event..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("generic retained operation gate") + event;
+        assert!(hook < admission && admission < authority && authority < event && event < generic_gate);
+
+        let command_start = end;
+        let command_end = source[command_start..].find("async fn fill_agent_revisions(").map(|offset| command_start + offset).expect("manifest command route end");
+        let command_route = &source[command_start..command_end];
+        let command_hook = command_route.find("A::host_configuration_mutation(command_id, Some(&args))?").expect("manifest command host configuration owner hook");
+        let command_admission = command_route[command_hook..].find("self.admit_host_configuration_json(command_id, Some(&args)).await?").expect("manifest command bounded host admission") + command_hook;
+        let command_authority = command_route[command_admission..].find("self.require_tool_operation_authority(&admission)?").expect("manifest command bounded host authority") + command_admission;
+        let command_event = command_route[command_authority..].find("Emit::config(vec![config_mutation])").expect("manifest command single event-sourced configuration mutation") + command_authority;
+        let command_generic_gate = command_route[command_event..].find("self.require_complete_tool_operation_pipeline(&admission)?").expect("manifest command generic retained operation gate") + command_event;
+        assert!(command_hook < command_admission && command_admission < command_authority && command_authority < command_event && command_event < command_generic_gate);
+
+        let proof_start = source.find("fn qualified_host_configuration_tool_proof").expect("host configuration proof resolver");
+        let proof_end = source[proof_start..].find("async fn admit_command_wire_with_proof").map(|offset| proof_start + offset).expect("host configuration proof resolver end");
+        let proof = &source[proof_start..proof_end];
+        assert!(proof.contains("QualifiedToolProof::Bounded(proof.clone())"));
+        assert!(!proof.contains("interactive-job.missing-owned-reducer"));
+    }

@@ -1,6 +1,6 @@
 //! 🔤️ Field codecs of the BIM entity table: the text and parse helpers of every field row kind. See [`super`].
 
-use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Baluster, DoorLeaves, EndJoin, Infill, LocationLine, MaterialCategory, ModelSnapshot, OpeningKind, Point2, Profile, RiserKind, RoofShape, StairFlight, StairStringer, StringerKind, Swing, TopConstraint, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Baluster, DoorLeaves, EndJoin, Infill, LocationLine, MaterialCategory, ModelSnapshot, OpeningKind, Point2, Profile, RiserKind, RoofShape, Slope, StairFlight, StairStringer, StringerKind, Swing, TopConstraint, Vertex};
 use semio_framework_plugin::DslValue;
 use semio_framework_value::{FromValue, ToValue};
 use std::collections::BTreeMap;
@@ -343,5 +343,20 @@ pub fn parse_flight(text: &str) -> Option<StairFlight> {
 /// 🧩️ Builds the leaf of a `set-*` mutation that names exactly one parameter: the leaf's own value decoding fills every other slot with "unchanged".
 pub fn partial<L: FromValue, V: ToValue + ?Sized>(id: &str, field: &str, value: &V) -> Option<L> {
     L::from_value(DslValue::object([("id".to_string(), DslValue::String(id.into())), (field.to_string(), value.to_value())])).ok()
+}
+
+/// 📐️ The text of a slope: its fall direction and its angle in radians, empty when the ceiling is level.
+pub fn slope_text(slope: Option<Slope>) -> String {
+    slope.map_or_else(String::new, |slope| format!("{}, {}", number(slope.direction), number(slope.angle)))
+}
+
+/// 📐️ The slope a text names: `direction, angle` in radians, empty for none; text that is neither is no slope at all.
+pub fn parse_slope(text: &str) -> Option<Option<Slope>> {
+    let text = text.trim();
+    if text.is_empty() {
+        return Some(None);
+    }
+    let (direction, angle) = text.split_once(',')?;
+    Some(Some(Slope { direction: parse_number(direction)?, angle: parse_number(angle)? }))
 }
 //#endregion 🔖️Helpers

@@ -265,11 +265,11 @@ type ToolJobReservedSpec = { id: string; job: string; factory: string; line: num
 
 export function toolJobReservedSpecs(source: string): ToolJobReservedSpec[] {
   const specs: ToolJobReservedSpec[] = [];
-  const row = /framework_reserved_job!\(\s*([A-Za-z0-9_]+),\s*([A-Za-z0-9_]+),\s*"([^"]+)",\s*\d+,\s*([\d_]+),\s*([\d_]+),\s*([\d_]+),\s*([\d_]+),\s*lanes:\s*\[([A-Za-z,\s]+)\],?\s*\);/g;
+  const row = /framework_reserved_job!\(\s*([A-Za-z0-9_]+),\s*([A-Za-z0-9_]+),\s*"([^"]+)",\s*\d+,\s*([\d_]+|[A-Za-z_][A-Za-z0-9_:]*(?:\s*\*\s*\d+)?),\s*([\d_]+|[A-Za-z_][A-Za-z0-9_:]*(?:\s*\*\s*\d+)?),\s*([\d_]+|[A-Za-z_][A-Za-z0-9_:]*(?:\s*\*\s*\d+)?),\s*([\d_]+|[A-Za-z_][A-Za-z0-9_:]*(?:\s*\*\s*\d+)?),\s*lanes:\s*\[([A-Za-z,\s]+)\],?\s*\);/g;
   for (const match of source.matchAll(row)) {
-    const values = match.slice(4, 8).map((value) => Number(value!.replaceAll("_", "")));
+    const values = match.slice(4, 8).map((value) => (/^[\d_]+$/u.test(value!) ? Number(value!.replaceAll("_", "")) : Number.NaN));
     const lanes = match[8]!.split(",").map((lane) => lane.trim());
-    if (values.every((value) => Number.isFinite(value) && value > 0) && lanes.every((lane) => ["HostOnly", "Artifact", "Child"].includes(lane)) && new Set(lanes).size === lanes.length) specs.push({ id: match[3]!, job: match[1]!, factory: match[2]!, line: source.slice(0, match.index).split("\n").length, values, lanes });
+    if (values.every((value) => Number.isNaN(value) || (Number.isFinite(value) && value > 0)) && lanes.every((lane) => ["HostOnly", "Artifact", "Child"].includes(lane)) && new Set(lanes).size === lanes.length) specs.push({ id: match[3]!, job: match[1]!, factory: match[2]!, line: source.slice(0, match.index).split("\n").length, values, lanes });
   }
   return specs;
 }

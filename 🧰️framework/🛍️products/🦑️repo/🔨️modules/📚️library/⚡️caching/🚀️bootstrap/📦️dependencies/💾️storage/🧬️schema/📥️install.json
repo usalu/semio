@@ -30,6 +30,9 @@
     }
   },
   "$defs": {
+    "SourceOwnerExportsProtocol":{"const":{"version":1,"purpose":"bounded-bare-package-exports-observation","scope":"manifest-profile-data-without-entry-file-load-or-readiness-authority","maximumDepth":64,"maximumNodes":4096,"maximumKeyUnits":256,"maximumTargetUnits":256,"profiles":{"bun-import":["bun","node-addons","node","import","default"],"bun-require":["bun","node-addons","node","require","default"],"typescript-bundler-import":["types","import","default"]},"unknownConditions":"inactive-in-these-explicit-profiles-only","order":"authored","arrays":"ordered-bun-first-null-or-invalid-target-refusal-and-typescript-null-or-invalid-target-fallback","grammar":"closed-node-compatible-condition-map","rootNull":"exports-absent-profile","subpath":"bare-dot-only-no-main-fallback-when-exports-present","typescriptVersionedConditions":"explicit-unsupported","authority":false}},
+    "SourceOwnerExportsObservation":{"type":"object","additionalProperties":false,"required":["status","target","authority"],"properties":{"status":{"enum":["absent","unmatched","blocked","target","unsupported","invalid"]},"target":{"type":["string","null"]},"authority":{"const":false}}},
+    "SourceOwnerExportsCase":{"type":"object","additionalProperties":false,"required":["id","present","exports","profile","status","target","oracle"],"properties":{"id":{"type":"string","minLength":1},"present":{"type":"boolean"},"exports":{},"profile":{"enum":["bun-import","bun-require","typescript-bundler-import"]},"status":{"enum":["absent","unmatched","blocked","target","unsupported","invalid"]},"target":{"type":["string","null"]},"oracle":{"enum":["bun","typescript","node","node-missing","none"]}}},
     "ProducerPreservationBindingCase": {
       "type": "object",
       "additionalProperties": false,
@@ -670,51 +673,52 @@
       }
     },
     "ProducerCompletionCase": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "mode",
-        "accepted",
-        "bindings"
-      ],
-      "properties": {
-        "mode": {
-          "enum": [
-            "valid",
-            "reversed-plans",
-            "binding-unknown-after-effect",
-            "installer-second",
-            "qualification-second",
-            "ready-second",
-            "binding-after-one",
-            "undefined-after-one",
-            "funding-final",
-            "cancel-ready",
-            "foreign-input",
-            "workspace-file-edge",
-            "preserving-valid",
-            "preserving-after-one",
-            "preserving-ready-second",
-            "preserving-unknown-after-effect",
-            "preserving-capsule-drift",
-            "preserving-payload-metadata-drift",
-            "preserving-unready",
-            "preserving-unready-ready",
-            "preserving-unready-reference",
-            "preserving-unready-stage-fail",
-            "preserving-unready-retain-after-one"
-          ]
-        },
-        "accepted": {
-          "type": "boolean"
-        },
-        "bindings": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 4
-        }
-      }
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mode",
+    "accepted",
+    "bindings"
+  ],
+  "properties": {
+    "mode": {
+      "enum": [
+        "valid",
+        "reversed-plans",
+        "binding-unknown-after-effect",
+        "installer-second",
+        "qualification-second",
+        "ready-second",
+        "binding-after-one",
+        "undefined-after-one",
+        "funding-final",
+        "cancel-ready",
+        "foreign-input",
+        "workspace-file-edge",
+        "preserving-valid",
+        "preserving-after-one",
+        "preserving-ready-second",
+        "preserving-unknown-after-effect",
+        "preserving-capsule-drift",
+        "preserving-payload-metadata-drift",
+        "preserving-unready",
+        "preserving-unready-ready",
+        "preserving-unready-reference",
+        "preserving-unready-stage-fail",
+        "preserving-unready-retain-after-one",
+        "empty-target"
+      ]
     },
+    "accepted": {
+      "type": "boolean"
+    },
+    "bindings": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4
+    }
+  }
+},
     "ProducerCompletionProtocol": {
       "const": {
         "version": 1,
@@ -1942,10 +1946,12 @@
     "InstalledPathProtocol": {
       "const": {
         "version": 1,
-        "maximumPathUnits": 256,
+        "maximumPathUnits": 1024,
         "maximumDepth": 64,
         "maximumEntries": 1048576,
         "maximumDirectoryEntries": 65536,
+        "maximumBindingRewritesPerHandle": 8,
+        "fullFenceInterval": 32,
         "maximumWork": 16777216,
         "progressWorkUnits": 64
       }
@@ -2040,49 +2046,7 @@
         }
       }
     },
-    "CurrentBindingOwnership": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "version",
-        "scopes"
-      ],
-      "properties": {
-        "version": {
-          "const": 1
-        },
-        "scopes": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 4096,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "manifest",
-              "packages"
-            ],
-            "properties": {
-              "manifest": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 256
-              },
-              "packages": {
-                "type": "array",
-                "maxItems": 4095,
-                "uniqueItems": true,
-                "items": {
-                  "type": "string",
-                  "minLength": 1,
-                  "maxLength": 256
-                }
-              }
-            }
-          }
-        }
-      }
-    },
+
     "CurrentBindingCase": {
       "type": "object",
       "additionalProperties": false,
@@ -2152,25 +2116,26 @@
       }
     },
     "SelectedPlanProtocol": {
-      "const": {
-        "maximumRoles": 16,
-        "maximumGenerations": 4096,
-        "directoryRoles": [
-          "j",
-          "bun-cache",
-          "bun-global",
-          "bun-bin",
-          "tmp",
-          "bun-home",
-          "bun-config"
-        ],
-        "fileRoles": [
-          "dependencies.json",
-          "storage-events.jsonl"
-        ],
-        "service": ".fseventsd"
-      }
-    },
+  "const": {
+    "maximumRoles": 16,
+    "maximumGenerations": 4096,
+    "directoryRoles": [
+      "j",
+      "bun-cache",
+      "bun-global",
+      "bun-bin",
+      "tmp",
+      "bun-home",
+      "bun-config",
+      "bootstrap"
+    ],
+    "fileRoles": [
+      "dependencies.json",
+      "storage-events.jsonl"
+    ],
+    "service": ".fseventsd"
+  }
+},
     "SelectedPlanCase": {
       "type": "object",
       "additionalProperties": false,
@@ -3216,6 +3181,8 @@
         "purpose": "stage-current-dependency-producer-inputs",
         "maximumScopes": 64,
         "maximumFiles": 512,
+        "maximumAggregateFiles": 32768,
+        "fileLimit": "per-root",
         "maximumMembers": 4095,
         "rootRole": "j",
         "generationPrefixUnits": 20,
@@ -3682,22 +3649,23 @@
     }
 ,
     "SourceOwnerProtocol": {
-      "const": {
-        "version": 1,
-        "identityTag": "javascript-source-owner-v1",
-        "groupTag": "javascript-source-owner-group-v1",
-        "generationTag": "javascript-source-owner-generation-v1",
-        "maximumScopes": 64,
-        "maximumSources": 4096,
-        "maximumMemberships": 65536,
-        "maximumBytes": 4194304,
-        "sort": "utf8",
-        "owner": "deepest-declared-physical-scope-with-membership",
-        "rootOwner": "self",
-        "runtimeProfile": "declared-provider-identity",
-        "legacyReceipts": false
-      }
-    },
+  "const": {
+    "version": 1,
+    "identityTag": "javascript-source-owner-v1",
+    "groupTag": "javascript-source-owner-group-v1",
+    "generationTag": "javascript-source-owner-generation-v1",
+    "maximumScopes": 64,
+    "maximumSources": 4096,
+    "maximumMemberships": 65536,
+    "maximumBytes": 4194304,
+    "sort": "utf8",
+    "owner": "deepest-declared-physical-scope-with-membership",
+    "rootOwner": "self",
+    "runtimeProfile": "declared-provider-identity",
+    "legacyReceipts": false,
+    "stringEncoding": "unicode-scalar-utf8"
+  }
+},
     "SourceOwnerCase": {
       "type": "object",
       "additionalProperties": false,
@@ -4147,13 +4115,668 @@
             "shared",
             "reordered",
             "unrelated-change",
-            "missing-owner"
+            "missing-owner",
+          "lock-repeat"
           ]
         },
         "accepted": {
           "type": "boolean"
         }
       }
-    }
+    },
+    "SourceOwnerInputGroupProtocol": {
+  "const": {
+    "version": 1,
+    "purpose": "project-current-dependency-input-group",
+    "maximumRoots": 64,
+    "maximumFilesPerRoot": 512,
+    "maximumBytes": 67108864,
+    "modeIdentity": {
+      "sync": "locked",
+      "lock": "lock-rebuild"
+    },
+    "allRootsPreflight": true,
+    "sourceAuthority": false,
+    "executionSeed": "local-source-material-plus-runtime-profile"
+  }
+},
+    "SourceOwnerReadyProtocol": {
+      "const": {
+        "version": 2,
+        "purpose": "current-dependency-source-owner-ready",
+        "runtimeProfile": "declared-provider-identity",
+        "maximumBytes": 4194304,
+        "legacy": false
+      }
+    },
+    "SourceOwnerReady": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "scope",
+        "generation",
+        "ownerRelationSha256",
+        "groupSha256",
+        "recipeSha256",
+        "executionSha256",
+        "members",
+        "bindings",
+        "ownerReferences"
+      ],
+      "properties": {
+        "version": {
+          "const": 2
+        },
+        "purpose": {
+          "const": "current-dependency-source-owner-ready"
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "ownerRelationSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "groupSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "recipeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "executionSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "members": {
+          "type": "array",
+          "maxItems": 4095,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "member",
+              "slot",
+              "owner",
+              "ownerGeneration"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "member": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "slot": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4094
+              },
+              "owner": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "ownerGeneration": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "bindings": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sourceDirectory",
+              "targetDirectory"
+            ],
+            "properties": {
+              "sourceDirectory": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "targetDirectory": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              }
+            }
+          }
+        },
+        "ownerReferences": {
+          "type": "array",
+          "maxItems": 63,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "generation"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "generation": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "SourceOwnerReadyCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "owned",
+            "borrowed",
+            "legacy",
+            "duplicate-source",
+            "duplicate-slot",
+            "missing-owner",
+            "foreign-owner-generation",
+            "extra",
+            "provider-missing"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SourceOwnerExecutionProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "observe-current-source-owner-declared-execution",
+        "profile": "declared-provider-identity",
+        "maximumEdges": 65536,
+        "maximumObservations": 131072,
+        "maximumManifestBytes": 1048576,
+        "maximumBytes": 4194304,
+        "ancestorFields": [
+          "dev",
+          "ino",
+          "mode"
+        ],
+        "selectedFields": [
+          "dev",
+          "ino",
+          "mode",
+          "nlink",
+          "size",
+          "mtimeNs",
+          "ctimeNs"
+        ],
+        "maximumLinkHops": 64,
+        "maximumWork": 4194304,
+        "progressWork": 64,
+        "unsupported": "refuse",
+        "authority": false,
+        "sourceResolution": "prospective-unique-owner-bindings",
+        "unownedFallback": "refuse-before-follow",
+        "ambientFallback": "require-missing-to-filesystem-root"
+      }
+    },
+    "SourceOwnerExecutionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "same-instance",
+            "equal-copy",
+            "peer-same",
+            "peer-copy",
+            "version-mismatch",
+            "optional-absent-unowned-parent",
+            "optional-one-sided",
+            "foreign-link",
+            "unknown-condition",
+            "missing-required",
+            "unsupported-imports",
+            "terminal-provider-drift",
+            "unrelated-ancestor-sibling",
+            "cancelled",
+            "undefined-primary",
+            "frozen-primary",
+            "unknown-generation",
+            "descriptor-cap",
+            "source-shadow"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SourceOwnerExecutionInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "owners",
+        "generations",
+        "requested"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "owners": {
+          "$ref": "#/$defs/SourceOwnerInput"
+        },
+        "generations": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "generation"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "generation": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "requested": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
+    },
+    "SourceOwnerExecutionObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "authority",
+        "profile",
+        "runtimeSha256",
+        "relations",
+        "sha256",
+        "scopes"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "current-source-owner-declared-execution"
+        },
+        "authority": {
+          "const": false
+        },
+        "profile": {
+          "const": "declared-provider-identity"
+        },
+        "runtimeSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "relations": {
+          "type": "array",
+          "maxItems": 65536,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "memberScope",
+              "ownerScope",
+              "edges",
+              "manifestSha256"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "memberScope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "ownerScope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "edges": {
+                "type": "array",
+                "maxItems": 65536,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "kind",
+                    "range",
+                    "provider"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "kind": {
+                      "enum": [
+                        "runtime",
+                        "development",
+                        "optional",
+                        "peer"
+                      ]
+                    },
+                    "range": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 256
+                    },
+                    "provider": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "path",
+                            "dev",
+                            "ino",
+                            "mode",
+                            "manifestSha256",
+                            "version"
+                          ],
+                          "properties": {
+                            "path": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            },
+                            "dev": {
+                              "type": "string",
+                              "pattern": "^[0-9]+$"
+                            },
+                            "ino": {
+                              "type": "string",
+                              "pattern": "^[0-9]+$"
+                            },
+                            "mode": {
+                              "type": "string",
+                              "pattern": "^[0-9]+$"
+                            },
+                            "manifestSha256": {
+                              "type": "string",
+                              "pattern": "^[a-f0-9]{64}$"
+                            },
+                            "version": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 256
+                            }
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "manifestSha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "sha256"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "SourceOwnerEndpointCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted",
+        "traps"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "root",
+            "scopes",
+            "scope",
+            "packages"
+          ]
+        },
+        "accepted": {
+          "const": false
+        },
+        "traps": {
+          "const": 0
+        }
+      }
+    },
+    "SourceOwnerGroupCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted",
+        "scopes",
+        "members"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "complete",
+            "reordered",
+            "over-root",
+            "duplicate-scope"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        },
+        "scopes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "members": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 512
+        }
+      }
+    },
+    "SourceOwnerFingerprintCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "ownerStable",
+        "borrowerChanged"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "borrower-added",
+            "optional-present",
+            "remount-identity-data"
+          ]
+        },
+        "ownerStable": {
+          "type": "boolean"
+        },
+        "borrowerChanged": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SourceOwnerStoreProtocol": {
+      "const": {
+        "version": 1,
+        "purpose": "stage-current-store-source-owner-group",
+        "maximumRoots": 64,
+        "maximumFilesPerRoot": 512,
+        "maximumBytes": 67108864,
+        "maximumWork": 4194304,
+        "maximumPathUnits": 256,
+        "maximumDepth": 64,
+        "chunkBytes": 65536,
+        "original": "same",
+        "funder": "actual-store",
+        "image": "actual-store-exclusive",
+        "readyVersion": 2,
+        "sourceBindingOwner": "unique",
+        "legacy": false
+      }
+    },
+    "SourceOwnerStoreCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "accepted"
+      ],
+      "properties": {
+        "mode": {
+          "enum": [
+            "complete",
+            "root-collision",
+            "input-drift",
+            "cancelled",
+            "frozen-primary",
+            "undefined-primary",
+            "delayed-await",
+            "descriptor-cap"
+          ]
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SourceOwnerStoreIssuerCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "admitted"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "missing",
+            "structural",
+            "copied-original",
+            "foreign-root"
+          ]
+        },
+        "admitted": {
+          "const": false
+        }
+      }
+    },
+    "SourceOwnerStoreDispatchCase":{"type":"object","additionalProperties":false,"required":["mode","selection","accepted","command"],"properties":{"mode":{"enum":["sync","lock","foreign"]},"selection":{"enum":["all","scope","invalid"]},"accepted":{"type":"boolean"},"command":{"enum":["sync","lock",null]}}},
+    "SourceOwnerManifestProfileCase":{"type":"object","additionalProperties":false,"required":["mode","document","accepted","edges"],"properties":{"mode":{"type":"string"},"document":{},"accepted":{"type":"boolean"},"edges":{"type":"integer","minimum":0,"maximum":65536}}},
+    "SourceOwnerManifestProfile":{"type":"object","additionalProperties":false,"required":["version","purpose","name","packageVersion","sha256","edges","authority"],"properties":{"version":{"const":1},"purpose":{"const":"current-source-owner-manifest-profile"},"name":{"type":"string"},"packageVersion":{"type":["string","null"]},"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"edges":{"type":"array","maxItems":65536,"items":{"type":"object","additionalProperties":false,"required":["name","kind","range","optional"],"properties":{"name":{"type":"string"},"kind":{"enum":["runtime","development","optional","peer"]},"range":{"type":"string"},"optional":{"type":"boolean"}}}},"authority":{"const":false}}},
+    "SourceOwnerStorePlatformCase":{"type":"object","additionalProperties":false,"required":["platform","storeOpens","accepted"],"properties":{"platform":{"const":"win32"},"storeOpens":{"const":0},"accepted":{"const":false}}},
+      "SourceOwnerLockProtocol":{"const":{"version":1,"purpose":"lock-current-store-source-owners","maximumBytes":8388608,"maximumAggregateBytes":67108864,"maximumRoots":64,"mutableStagePath":"bun.lock","existingRoots":"explicit-current-unready-retention","unknownSiblings":"retain-opaque-charged","readyIssued":false,"sourceBindingsChanged":false,"allOutputsBeforeFirstPublication":true,"sourcePublication":"current-owned-conditional-file","partialFailure":"retain-no-rollback","wholeAllocationRetired":false}},"SourceOwnerStoreLockCase":{"type":"object","additionalProperties":false,"required":["mode","accepted","changed","retained"],"properties":{"mode":{"enum":["complete","subset","missing-lock","unready","ready-collision","selected-alias","foreign-alias","installer-second","output-second","source-drift","publish-after-effect","source-second","undefined","frozen"]},"accepted":{"type":"boolean"},"changed":{"type":"integer","minimum":0,"maximum":2},"retained":{"type":"integer","minimum":0,"maximum":2}}},
+      "SourceOwnerLockOutputProtocol":{"const":{"version":1,"purpose":"current-produced-source-lock-output","maximumBytes":8388608,"chunkBytes":65536,"maximumRootFields":9,"allowedRootFields":["lockfileVersion","configVersion","workspaces","packages","patchedDependencies","overrides","catalog","catalogs","trustedDependencies"],"mutableStageOutput":true,"readyIssued":false,"scopeMembership":"complete-current-installed-members","sourcePublication":"all-qualified-before-first"}},"SourceOwnerLockOutputCase":{"type":"object","additionalProperties":false,"required":["mode","accepted"],"properties":{"mode":{"enum":["valid","workspace-alias","foreign-workspace","foreign-name","unknown-field","invalid-utf8","symbolic-lock","oversize","undefined","frozen","drift-after-read"]},"accepted":{"type":"boolean"}}},
+      "SourceOwnerStoreLifetimeReceipt":{"type":"object","additionalProperties":false,"required":["mode","failed","aborted","originalWireSha256"],"properties":{"mode":{"type":"string"},"failed":{"type":"boolean"},"aborted":{"type":"boolean"},"originalWireSha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}}},
+      "SourceOwnerStoreLifetimeCase":{"type": "object", "additionalProperties": false, "required": ["mode", "failed", "aborted"], "properties": {"mode": {"enum": ["success", "undefined", "frozen", "accepted-drain", "accepted-failure", "release-failure", "reader-frozen"]}, "failed": {"type": "boolean"}, "aborted": {"type": "boolean"}}},
+    "SourceOwnerStoreSyncProtocol":{"const": {"version": 2, "purpose": "sync-current-store-source-owners", "selection": "complete-all-model-requested-owned-bindings", "externalOwners": "current-ready-no-implicit-install", "existingRoots": "exact-v2-ready-or-refuse", "sourceTransition": "preserve-exact-current-endpoint", "readyVersion": 2, "legacy": false, "platforms": ["darwin", "linux"], "lock": "requires-conditional-file-publication",
+        "unsupportedPlatform": "pre-store-open-refusal"}},
+    "SourceOwnerStoreSelection":{"oneOf": [{"type": "object", "additionalProperties": false, "required": ["kind"], "properties": {"kind": {"const": "all"}}}, {"type": "object", "additionalProperties": false, "required": ["kind", "owner"], "properties": {"kind": {"const": "scope"}, "owner": {"type": "string", "minLength": 1, "maxLength": 256}}}]},
+    "SourceOwnerStoreProducerCase":{"type": "object", "additionalProperties": false, "required": ["mode", "accepted", "changed"], "properties": {"mode": {"enum": ["complete", "subset-missing-owner", "installer-second", "ready-second", "publish-after-effect", "root-collision", "offline", "reuse", "subset-ready", "ordinary-after-one",
+            "diagnostic-frozen",
+            "diagnostic-undefined"]}, "accepted": {"type": "boolean"}, "changed": {"type": "integer", "minimum": 0, "maximum": 4}}},
+    "SourceOwnerBootstrapProtocol":{"const":{"version":2,"directory":"bootstrap","scope":".","readyVersion":2,"providerLayout":"canonical-isolated-instance","receipt":"immutable-source-generation-binding-key","maximumReceiptBytes":16384}},
+    "SourceOwnerSelectedReadyCase":{"type":"object","additionalProperties":false,"required":["mode","accepted"],"properties":{"mode":{"enum":["valid","legacy","foreign-member","foreign-binding","relation","recipe","unknown-scope","extra-reference"]},"accepted":{"type":"boolean"}}},
+    "SourceAliasProtocol":{"const":{"version":1,"purpose":"observe-declared-source-node-modules-aliases","authority":false,"maximumTargetBytes":4096,"kinds":["absent","directory","link"],"ancestorFields":["dev","ino","mode"],"selectedFields":["dev","ino","mode","nlink","size","mtimeNs","ctimeNs"],"targetResolution":"lexical-only-no-target-observation"}},
+    "SourceAliasCase":{"type":"object","additionalProperties":false,"required":["mode","accepted"],"properties":{"mode":{"enum":["absent","directory","absolute-owned","relative-owned","outside","dangling","file","ancestor-link","duplicate","cancelled","endpoint-drift","target-drift"]},"accepted":{"type":"boolean"}}}
   }
 }

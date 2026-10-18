@@ -70,7 +70,7 @@ describe("runtime asset delivery to the wgpu renderer", () => {
     const storybook = readFileSync(join(repoRoot, ".storybook/main.ts"), "utf8");
     expect(storybook).toContain("...RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => ({ from: resolve(repoRootPath, directory), to: route }))");
     const server = readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/🌐️server/🟦️.ts"), "utf8");
-    expect(server).toContain("...RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => [route, resolve(options.workspace, directory)] as const)");
+    expect(server.replace(/\s+/gu, "")).toContain("...RUNTIME_ASSET_CHANNELS.map(({ route, directory }) => [route, resolve(options.workspace, directory)] as const)".replace(/\s+/gu, ""));
     for (const channel of RUNTIME_ASSET_CHANNELS) expect(existsSync(join(repoRoot, channel.directory)) || channel.id === "icon-pack", channel.id).toBe(true);
   });
 

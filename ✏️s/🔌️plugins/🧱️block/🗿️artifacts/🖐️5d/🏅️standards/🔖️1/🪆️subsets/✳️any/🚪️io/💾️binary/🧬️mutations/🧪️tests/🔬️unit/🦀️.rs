@@ -2,6 +2,7 @@
 use crate::binary::mutations::*;
 use semio_s_artifact_block_5d_model::{BLOCK_5D_SCHEMA, Block5dSnapshot};
 use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
+use semio_s_artifact_block_5d_mut_part_kind::rename_part_kind::rename_part_kind;
 
 #[semio_framework_async_macros::async_test]
 async fn block5d_document_vcs_replays_granular_operations() {

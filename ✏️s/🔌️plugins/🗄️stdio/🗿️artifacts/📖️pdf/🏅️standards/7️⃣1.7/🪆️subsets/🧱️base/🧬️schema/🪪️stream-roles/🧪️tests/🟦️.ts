@@ -11,7 +11,7 @@ import schema from "../🔣️.json";
 import { valueSchema as valueSchema } from "@semio-tech/framework/value/schema";
 import snapshotSchema from "../../📸️snapshot/🔣️.json";
 import { parsePdfAdmittedStreamRole, resolveIdentity, validateRoleInputs, validateRoleTransition, pageContent } from "../🟦️.ts";
-import type { PdfIndirectObject } from "../../📸️snapshot/🟦️.ts";
+import type { PdfIndirectObject } from "../../📸️snapshot/📄️document/🟦️.ts";
 
 test("PDF roles admit the same logical values as independent JSON Schema", () => {
   const independent = new Ajv({ strict: false }).addSchema(valueSchema).addSchema(snapshotSchema).compile(schema);

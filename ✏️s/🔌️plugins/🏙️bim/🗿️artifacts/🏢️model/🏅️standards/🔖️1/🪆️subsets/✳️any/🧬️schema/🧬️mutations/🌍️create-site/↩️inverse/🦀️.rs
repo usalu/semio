@@ -1,12 +1,15 @@
 //! ↩️ Inverse of `CreateSite`: the concrete `DeleteSite` of the id it created, none when the id was already taken.
 
-use super::CreateSite;
-use super::super::delete_site::DeleteSite;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::create_site::CreateSite;
+use crate::standards::v1::subsets::any::schema::mutations::delete_site::DeleteSite;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &CreateSite, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &CreateSite, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_site::DeleteSite>,
+{
     if base.sites.contains_key(&payload.id) {
         return Vec::new();
     }
-    vec![ModelMutation::DeleteSite(DeleteSite { id: payload.id.clone() })]
+    vec![Op::from(DeleteSite { id: payload.id.clone() })]
 }

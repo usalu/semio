@@ -21,6 +21,4 @@ pub fn resolve_size(snapshot: &ModelSnapshot, opening: &Opening) -> Resolved {
     Resolved { width: opening.width.unwrap_or(kind_width), height: opening.height.unwrap_or(kind_height), sill: opening.sill_override.unwrap_or(kind_sill), type_found }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

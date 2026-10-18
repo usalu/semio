@@ -34,7 +34,7 @@ pub use semio_s_procedural_core_generation_sqlite_native::{
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(id = "procedural.generation3d", layout = "lines")]
-pub(crate) struct Generation3dSnapshotDsl {
+pub struct Generation3dSnapshotDsl {
     schema: String,
     #[dsl(block)]
     camera: CameraJsonDsl,
@@ -50,7 +50,7 @@ pub(crate) struct Generation3dSnapshotDsl {
     generations: Vec<FormGenerationDsl>,
 }
 /// 📐️ Projects the original document text declaration under the retained operation's admission.
-pub(crate) fn generation3d_document_spec_controlled(control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{Generation3dSnapshotDsl::__dsl_spec_controlled(control)}
+pub fn generation3d_document_spec_controlled(control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<semio_framework_dsl_record::RecordSpec,ValueError>{Generation3dSnapshotDsl::__dsl_spec_controlled(control)}
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
 impl pack::snapshot::ArtifactDsl for Generation3dSnapshotDsl {
@@ -76,7 +76,7 @@ impl pack::snapshot::ArtifactDsl for Generation3dSnapshotDsl {
 
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-pub(crate) fn generation3d_document_to_dsl(document: &Generation3dSnapshot) -> Generation3dSnapshotDsl {
+pub fn generation3d_document_to_dsl(document: &Generation3dSnapshot) -> Generation3dSnapshotDsl {
     let host_snapshot = &document.host_snapshot;
     let generation = &document.generation;
     Generation3dSnapshotDsl {
@@ -189,7 +189,7 @@ impl FieldProjectionSource for Generation3dSnapshot {
 }
 //#endregion 🔎️OriginalTextSource
 
-pub(crate) fn generation3d_document_from_dsl(parsed: Generation3dSnapshotDsl) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
+pub fn generation3d_document_from_dsl(parsed: Generation3dSnapshotDsl) -> Result<Generation3dSnapshot, semio_framework_diagnostic::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();

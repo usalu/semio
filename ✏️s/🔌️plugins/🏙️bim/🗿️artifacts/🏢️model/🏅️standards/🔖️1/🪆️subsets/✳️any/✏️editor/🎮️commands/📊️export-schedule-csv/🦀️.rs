@@ -10,7 +10,8 @@ use crate::editor::bim::modes::edit::windows::schedule;
 use crate::editor::bim::dispatch_context::BimDispatchCtx;
 use crate::editor::bim::{BimCommand, BimModelApp};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
-use crate::standards::v1::subsets::any::io::export::csv::{codec, schedule_records};
+use crate::standards::v1::subsets::any::io::export::csv::codec;
+use crate::standards::v1::subsets::any::io::export::csv::schedule_records;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
@@ -169,6 +170,4 @@ pub fn handle(payload: &ExportScheduleCsv, doc: &ArtifactView<'_, ModelSnapshot>
     Ok(download(doc.snapshot, &id, codec::document_text(records.into_iter().map(codec::record).collect())))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

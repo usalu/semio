@@ -22,7 +22,7 @@ export function canonicalErrorProgressSelfTests(): number {
     if (written !== (grant === 0 ? 0 : fixture.expectedBytes)) throw new Error("canonical error-progress grant oracle changed initialized credit");
     checks += 1;
   }
-  const parent = readFileSync(join(base, "🦀️.rs"), "utf8");
+  const parent = readFileSync(join(base, "🦀️.rs"), "utf8") + "\n" + readFileSync(join(base, "../🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs"), "utf8");
   const borrowed = readFileSync(join(base, "🧵️borrowed/🦀️.rs"), "utf8");
   const reader = readFileSync(join(base, "📖️reader/🦀️.rs"), "utf8");
   const native = readFileSync(join(base, "🧳️source/🦀️.rs"), "utf8");
@@ -44,7 +44,7 @@ export function canonicalErrorProgressSelfTests(): number {
       && sealing.includes("Err(error)=>(error.retained_progress(),Some(error))") && sealing.includes("self.ownership=progress;")
       && sealing.includes("iferror.is_some()||!progress.fits(retained){self.cancelled=true;}")
       && sealing.indexOf("self.completed_bytes=completed;") >= 0 && sealing.indexOf("self.completed_bytes=completed;") < sealing.indexOf("ifletSome(error)=error{returnErr(error);}")
-      && sealing.includes("!grant.permits_one()||self.cancelled||self.closing")
+      && sealing.includes("ifself.cancelled||self.closing{returnOk(ArtifactStoreOneItemPreparationStep::Blocked);}") && sealing.includes("if!grant.permits_one(){returnOk(ArtifactStoreOneItemPreparationStep::Blocked);}")
       && compact(native).includes('refusal("canonical original child receipt exceeds caller grant").with_retained_progress(p)'.replaceAll(/\s+/g,""))
       && !/From<ArtifactCanonicalJsonEncodeError> for String/.test(parent + borrowed + reader);
   };
@@ -66,10 +66,12 @@ export function canonicalErrorProgressSelfTests(): number {
 }
 
 import {test,expect} from "bun:test";
+import { moduleFamilyText, pluginFamilyText } from "../../../../🔌️plugin/🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 import Ajv from "ajv/dist/2020";
 import {spawnSync} from "node:child_process";
 import { valueRefusalCodecSchemaUrl } from "@semio-tech/value-ts/testing/fixtures";
 import { readStoreSourceText } from "@semio-tech/framework/test/source-text";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 test("canonical original failure and depth use supplied authority with independent JSON bytes",()=>{
  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");const row=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json"),"utf8"));
  for(const sample of row.depthRows){const bytes=Buffer.from(JSON.stringify(sample.source));expect([...bytes]).toEqual([...new TextEncoder().encode(JSON.stringify(sample.source))]);if(sample.refused)expect(bytes.subarray(0,1).toString()).toBe(sample.expectedPrefix);else expect(bytes.toString()).toBe(sample.expectedJson);}
@@ -96,13 +98,13 @@ test("canonical preparation refusal preserves its original physical authority",(
  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit");const row=JSON.parse(readFileSync(join(base,"🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json"),"utf8"));
  const schema=JSON.parse(readFileSync(valueRefusalCodecSchemaUrl,"utf8"));const admit=new Ajv({strict:true}).compile(schema);expect(admit(row.preparationRefusal)).toBe(true);expect(admit({...row.preparationRefusal,retainedProgress:{...row.preparationRefusal.retainedProgress,copiedBytes:-1}})).toBe(false);
  const wire=JSON.parse(JSON.stringify(row.preparationRefusal));expect(wire).toEqual(row.preparationRefusal);const p=wire.retainedProgress;const g=row.retainedPolicy;expect(p.copiedItems<=g.maximumItems&&p.copiedBytes<=g.maximumCopyBytes&&p.retainedCapacityBytes<=g.maximumCapacityBytes&&p.releasedBytes<=g.maximumReleaseBytes).toBe(true);expect(Buffer.byteLength(row.expectedPrefix)).toBe(p.copiedBytes);
- const source=readFileSync(join(base,"🦀️.rs"),"utf8");const start=source.indexOf("pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant)");expect(start).toBeGreaterThan(0);const header=source.slice(start,source.indexOf("{",start));expect(header).toContain("Result<ArtifactStoreOneItemPreparationStep, ValueError>");const body=toolJobRustBlock(source,source.indexOf("{",start))?.body??"";expect(body).not.toContain("ValueError::into_message");expect(body).toContain("error.retained_progress()");expect(body).toContain("self.cancelled=true");
+ const source=readFileSync(join(base,"../🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs"),"utf8");const start=source.indexOf("pub fn advance(&mut self, grant: ArtifactStoreOneItemGrant)");expect(start).toBeGreaterThan(0);const header=source.slice(start,source.indexOf("{",start));expect(header).toContain("Result<ArtifactStoreOneItemPreparationStep, ValueError>");const body=toolJobRustBlock(source,source.indexOf("{",start))?.body??"";expect(body).not.toContain("ValueError::into_message");expect(body).toContain("error.retained_progress()");expect(body).toContain("self.cancelled=true");
 });
 
 test("original preparation owner retains typed refusal without copying the failure authority",()=>{
  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");const row=JSON.parse(readFileSync(join(base,"🧵️canonical-edit/🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json"),"utf8"));
  const reasonSchema=JSON.parse(readFileSync(valueRefusalCodecSchemaUrl,"utf8"));expect(new Ajv({strict:true}).compile(reasonSchema)(row.preparationRefusal)).toBe(true);expect(JSON.parse(JSON.stringify(row.preparationRefusal))).toEqual(row.preparationRefusal);
- const source=readFileSync(join(base,"🦀️.rs"),"utf8");const publication=readFileSync(join(base,"🎮️one-item/📬️publication/🦀️.rs"),"utf8");
+ const source=moduleFamilyText("🏪️store");const publication=moduleFamilyText("🏪️store");
  for(const name of ["ArtifactStoreOneItemPreparation<P, Mutation>","ArtifactEphemeralOneItemPreparation<P, Mutation>"]){const owner=[source,publication].find(text=>text.includes("pub trait "+name))??"";const start=owner.indexOf("pub trait "+name);const header=owner.slice(start,owner.indexOf("fn checkpoint",start));expect(header).toContain("Result<ArtifactStoreOneItemPreparationStep, ValueError>");}
  const start=source.indexOf("fn advance_preparation(&mut self");const body=toolJobRustBlock(source,source.indexOf("{",start))?.body??"";expect(body).not.toContain("reason.clone()");expect(body).not.toContain("ValueError::into_message");expect(body).toContain("Some(reason)");expect(body).toContain("PreparationRefused");expect(source).toContain("pub fn preparation_refusal(&self) -> Option<&ValueError>");
  const seal=publication.slice(publication.indexOf("pub fn prepare_one_item<"),publication.indexOf("/// 🧵️ Moves the exact edit",publication.indexOf("pub fn prepare_one_item<")));expect(seal).toContain("(ValueError, Edit<Mutation>, Arc<P>)");expect(seal).toContain("Err((error, edit, post_snapshot))");
@@ -135,19 +137,19 @@ test("original one item preparation retains semantic rejection and installed iss
 });
 
 test("original Unit probe and hostile preparation owners keep canonical typed advance",()=>{
- const units=["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs"];const source=units.map(unit=>readFileSync(join(WORKSPACE_ROOT,unit),"utf8")).join("\n");
+ const units=["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs"];const source=units.map(unit=>readModuleTreeSource(join(WORKSPACE_ROOT,unit))).join("\n");
  for(const owner of ["for ProbedRetainedClonePreparation","for RetainedTextEditCursor","for FaultingEphemeralTask","for TerminalPreparation<N>"]){const start=source.indexOf(owner);expect(start).toBeGreaterThan(0);const advance=source.indexOf("fn advance",start);const method=source.slice(advance,source.indexOf("{",advance));expect(method).toContain("ValueError>");expect(method).not.toContain("String>");}
  for(const unit of units){const parsed=spawnSync("rustfmt",["--edition","2021","--config","skip_children=true","--emit","stdout",join(WORKSPACE_ROOT,unit)],{timeout:5000,stdio:["ignore","ignore","pipe"]});expect(parsed.error).toBeUndefined();expect(parsed.status).toBe(0);}
 });
 
 test("original batch preparation refusal retains returned request until granted original cleanup",()=>{
  const base=join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store");const source=readFileSync(join(base,"⚙️engine/🧳️bundle/🦀️.rs"),"utf8");const begin=source.indexOf("match source.begin_next(request,");const refusal=source.slice(begin,source.indexOf("let owner = publication.preparation",begin));expect(refusal).not.toContain("drop(request)");expect(refusal).toContain("publication.refused_base = Some(base)");expect(refusal).toContain("publication.refused_authority = Some(authority)");expect(refusal).toContain("publication.refused_issuers");expect(refusal).toContain("error.with_retained_progress(progress)");
- const publication=readFileSync(join(base,"🎮️one-item/📬️publication/🦀️.rs"),"utf8");const start=publication.indexOf("pub struct ArtifactStoreBatchPublication<");const section=publication.slice(start,publication.indexOf("impl<P, Mutation> Drop for ArtifactStoreBatchPublication",start));expect(section).toContain("refused_base: Option<SnapshotRead<P>>");expect(section).toContain("original.try_return_to_registry_witness()");expect(section).toContain("self.refused_base = Some(original)");expect(section).toContain("self.refused_authority = Some(original)");expect(section).toContain("self.refused_issuers.iter().all(Option::is_none)");
+ const publication=moduleFamilyText("🏪️store");const start=publication.indexOf("pub struct ArtifactStoreBatchPublication<");const section=publication.slice(start,publication.indexOf("impl<P, Mutation> Drop for ArtifactStoreBatchPublication",start));expect(section).toContain("refused_base: Option<SnapshotRead<P>>");expect(section).toContain("original.try_return_to_registry_witness()");expect(section).toContain("self.refused_base = Some(original)");expect(section).toContain("self.refused_authority = Some(original)");expect(section).toContain("self.refused_issuers.iter().all(Option::is_none)");
  const row=JSON.parse(readFileSync(join(base,"🧵️canonical-edit/🧪️tests/🧫️fixtures/🚧️canonical-error-progress.json"),"utf8"));expect(new Ajv({strict:true}).compile(JSON.parse(readFileSync(valueRefusalCodecSchemaUrl,"utf8")))(row.preparationRefusal)).toBe(true);expect(JSON.parse(JSON.stringify(row.preparationRefusal))).toEqual(row.preparationRefusal);
 });
 
 test("bounded config preparation preserves genuine unsupported-owner refusal through its typed contract",()=>{
- const source=readFileSync(join(WORKSPACE_ROOT,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"),"utf8");const start=source.indexOf("store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<C, M> for BoundedConfigPreparation<C, M>");const advance=source.indexOf("fn advance",start);const body=toolJobRustBlock(source,source.indexOf("{",advance))?.body??"";expect(source.slice(advance,source.indexOf("{",advance))).toContain("ValueError>");expect(body).toContain("ValueRefusalKind::UnsupportedOwner");expect(body).toContain("original incremental mutation owner");expect(body).not.toContain(".into()");
+ const source=pluginFamilyText();const start=source.indexOf("store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<C, M> for BoundedConfigPreparation<C, M>");const advance=source.indexOf("fn advance",start);const body=toolJobRustBlock(source,source.indexOf("{",advance))?.body??"";expect(source.slice(advance,source.indexOf("{",advance))).toContain("ValueError>");expect(body).toContain("ValueRefusalKind::UnsupportedOwner");expect(body).toContain("original incremental mutation owner");expect(body).not.toContain(".into()");
 });
 
 test("original canonical source refusal preserves already performed child receipt",()=>{

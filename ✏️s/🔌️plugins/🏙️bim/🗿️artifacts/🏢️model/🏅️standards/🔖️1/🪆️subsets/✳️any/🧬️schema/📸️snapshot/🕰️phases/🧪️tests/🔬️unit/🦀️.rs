@@ -1,4 +1,5 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::values::Phase;
+use crate::standards::v1::subsets::any::schema::snapshot::phases::*;
 
 #[test]
 fn every_phase_round_trips_through_its_key() {

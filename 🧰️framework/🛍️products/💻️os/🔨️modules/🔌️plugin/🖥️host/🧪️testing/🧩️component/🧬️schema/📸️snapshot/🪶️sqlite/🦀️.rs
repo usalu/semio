@@ -31,7 +31,7 @@ fn bound(source: &Snapshot, encoding: SnapshotEncoding, control: &mut SqliteSnap
     control.check_value_bytes(8)?;
     control.checkpoint(SqliteSnapshotPhase::EncodeNative, 1, 1)
 }
-impl store::os_store::serialization::ArtifactSqliteSnapshotHost for Snapshot {
+impl store::serialization::ArtifactSqliteSnapshotHost for Snapshot {
     
     
     

@@ -44,6 +44,7 @@ semio-framework-plugin = { path = "../../../../../../🧰️framework/🛍️pro
 semio-framework-async-macros = { path = "../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-graph-layout-run = { path = "../../../../../../🧰️framework/🔨️modules/🕸️graph/⏯️layout-run/📦️packages/🦀️rust", features = ["testing"] }
 semio-framework-job = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-job-native-decode = { path = "../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-tool-run = { path = "../../../../../../🧰️framework/🔨️modules/⏯️tool-run/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../🧰️framework/📦️packages/🦀️rust" }

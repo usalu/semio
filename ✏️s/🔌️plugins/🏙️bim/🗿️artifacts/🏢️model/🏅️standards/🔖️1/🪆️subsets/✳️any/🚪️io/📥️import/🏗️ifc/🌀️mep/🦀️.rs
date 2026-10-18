@@ -3,11 +3,12 @@
 //! its system is the `IfcSystem` or `IfcDistributionSystem` it is assigned to (supply when it has none).
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowsegment.htm>
 
-use super::components::assignments;
-use super::data::label;
-use super::reader::{text, Doc, Section};
-use super::spatial::authoring_of;
-use super::Import;
+use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema};
+use crate::standards::v1::subsets::any::io::import::ifc::components::assignments;
+use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc, Section};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::authoring_of;
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::mep::RECORD_ROW;
 use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, Point3};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};

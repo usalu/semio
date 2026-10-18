@@ -7,9 +7,11 @@ import Ajv from "ajv";
 import { join as oraclePathJoin } from "pathe";
 import ts from "typescript";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
-import * as rustDiscovery from "../../🔍️discovery/🟦️.ts";
-import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences, inspectRustModuleGraph } from "../../🔍️discovery/🟦️.ts";
-import { applyTaxonomyPlan, inventoryTaxonomy, planTaxonomy } from "../../🧹️normalization/🟦️.ts";
+import { inspectRustAssertionMessageSpans, inspectRustJoinArgumentSpans, inspectRustManifestPathReferences, inspectRustManifestPathCandidates } from "../../🔍️discovery/🧷️rust-path-references/🟦️.ts";
+import { inspectRustModuleGraph } from "../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
+import { applyTaxonomyPlan } from "../../🧹️normalization/🚀️apply/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
+import { planTaxonomy } from "../../🧹️normalization/🧠️planning/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
 //#endregion Imports
 
@@ -106,7 +108,7 @@ test("string collection joins require exact standard receiver provenance", () =>
 });
 
 test("literal predicates keep identifier tokens reachable under strict TypeScript narrowing", () => {
-  const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
+  const path = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧷️rust-path-references/🟦️.ts");
   const source = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
   const types = rustSyntax.statements.filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node)) && ["RustTokenKind", "RustToken"].includes(node.name.text)).map((node) => node.getText(rustSyntax).replace(/^export /u, "")).join("\n");
   for (const name of golden.tokenNarrowing.functions) {
@@ -182,7 +184,7 @@ test("finite manifest candidates prove complete correlated targets without edita
   expect(contract.literal).toBe("unescaped-normal-string-only");
   expect(contract.grammar).toEqual(["exact-standard-manifest-root", "immutable-literal-string-or-tuple-array", "literal-number-boolean-and-full-slice-metadata", "lexical-destructured-for", "exact-array-iter-enumerate", "immutable-join-chain", "known-standard-read-only-macro-use"]);
   expect(new Set(contract.cases.map((row: { id: string }) => row.id)).size).toBe(contract.cases.length);
-  const inspect = rustDiscovery.inspectRustManifestPathCandidates;
+  const inspect = inspectRustManifestPathCandidates;
   expect(typeof inspect).toBe("function");
   for (const row of contract.cases) {
     const candidates = inspect(row.source).filter((candidate) => candidate.value === contract.selectedValue);
@@ -366,7 +368,7 @@ test("independent syn parsing reproduces assertion-message, manifest-path and jo
     expect(JSON.parse(stdout)).toEqual({
       assertionMessages: golden.assertionMessages.cases.map((row: any) => ({ id: row.id, messages: inspectRustAssertionMessageSpans(row.source).map(({ macroName, value }) => ({ macroName, value })) })),
       manifestPaths: golden.manifestPaths.cases.map((row: any) => ({ id: row.id, references: inspectRustManifestPathReferences(row.source).map(({ value, base }) => ({ value, base })) })),
-      manifestCandidates: [...golden.manifestCandidates.cases, ...golden.manifestCandidates.adversarial.cases].map((row: any) => ({ id: row.id, candidates: rustDiscovery.inspectRustManifestPathCandidates(row.source).filter((candidate) => candidate.value === golden.manifestCandidates.selectedValue) })),
+      manifestCandidates: [...golden.manifestCandidates.cases, ...golden.manifestCandidates.adversarial.cases].map((row: any) => ({ id: row.id, candidates: inspectRustManifestPathCandidates(row.source).filter((candidate) => candidate.value === golden.manifestCandidates.selectedValue) })),
       joinArguments: golden.joinArguments.cases.map((row: any) => ({ id: row.id, candidates: inspectRustJoinArgumentSpans(row.source).map(({ value }) => value), allArguments: row.allArguments })),
     });
     passed = true;
@@ -395,7 +397,7 @@ test("rustc independently confirms delimiter strings and actual custom or standa
 }, 120_000);
 
 test("finite candidate helper compiles independently under strict TypeScript", () => {
-  const input = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts"), source = ts.createSourceFile(input, readFileSync(input, "utf8"), ts.ScriptTarget.Latest, true);
+  const input = join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🧷️rust-path-references/🟦️.ts"), source = ts.createSourceFile(input, readFileSync(input, "utf8"), ts.ScriptTarget.Latest, true);
   const names = new Set(["RustTokenKind", "RustToken", "RustManifestPathCandidate", "inspectRustManifestPathCandidates"]);
   const declarations = [...rustSyntax.statements, ...source.statements].filter((node) => (ts.isTypeAliasDeclaration(node) || ts.isInterfaceDeclaration(node) || ts.isFunctionDeclaration(node)) && node.name && names.has(node.name.text));
   expect(declarations).toHaveLength(4);
@@ -445,7 +447,7 @@ for (const row of golden.manifestCandidates.adversarial.cases) test(`finite cand
     const observed = runtime.stdout.toString().trim().split(/\r?\n/u).map((path) => relative(directory, path).replaceAll("\\", "/"));
     expect(observed).toEqual(row.runtimeProof.targets);
     console.log(`Rust adversarial ${row.id}: ${JSON.stringify(observed)}`);
-    const candidates = rustDiscovery.inspectRustManifestPathCandidates(row.source).filter((candidate) => candidate.value === golden.manifestCandidates.selectedValue);
+    const candidates = inspectRustManifestPathCandidates(row.source).filter((candidate) => candidate.value === golden.manifestCandidates.selectedValue);
     expect(candidates.map(({ value, targets }) => ({ value, targets }))).toEqual(row.expected);
     expect(inspectRustManifestPathReferences(row.source).filter((reference) => reference.value === golden.manifestCandidates.selectedValue)).toEqual([]);
     passed = true;

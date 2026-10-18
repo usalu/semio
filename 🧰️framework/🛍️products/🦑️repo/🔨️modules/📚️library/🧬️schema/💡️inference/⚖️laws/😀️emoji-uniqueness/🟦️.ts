@@ -1,4 +1,4 @@
-import type { BreachRecord } from "../../../../🟦️.ts";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { policyLeadingEmojiPrefix } from "../../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import type { PolicyInferenceFamilySource } from "../../🧱️contract/🟦️.ts";
 

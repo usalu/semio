@@ -20,7 +20,7 @@ config, the operator verbs and the tests read them there.
 | `🧪️tests/🐾️pet-cast/🟦️.ts` | the pets fit the quizzes: every species and the ensemble of `../🐾️pets` validate (ajv and the pets product), grounds exist in the quiz files, every quiz and the home screen have a cast; every state is reachable and leads back, tricks and gear have their clips, the chemistry names what exists and looks and rests within sane bounds (see [Pets](#pets)) |
 | `🧱️stack/🟦️.ts` | the local stack: `dev` (proctor and site in one terminal) and the parts the end-to-end gate boots its stacks from |
 | `🎭️e2e/` | the end-to-end gate (`🟦️.ts`), its Playwright projects (`🎚️config`) and the learner the specs drive (`🚶️learner`) |
-| `🚀️deploy/` | `🔣️.json` (hosts, image, port) and its contract (`🧬️schema/🔣️.json`), `Dockerfile` with its build context (`Dockerfile.dockerignore`), `compose.yaml`, `Caddyfile` and the operator verbs (`🟦️.ts`): `publish`, `docker-image-build`, `docker-image-check`, `docker-stack-check`, `docker-stack-bundle`, `docker-image-publish`, `deploy-check` |
+| `🚀️deploy/` | `🔣️.json` (hosts, image, port) and its contract (`🧬️schema/🔣️.json`), `Dockerfile` with its build context (`Dockerfile.dockerignore`) and the builder's own Cargo configuration (`Dockerfile.cargo.toml`, in place of the repository's launcher-gated `.cargo/config.toml`), `compose.yaml`, `Caddyfile` and the operator verbs (`🟦️.ts`): `publish`, `docker-image-build`, `docker-image-check`, `docker-stack-check`, `docker-stack-bundle`, `docker-image-publish`, `deploy-check` |
 
 ## Challenges
 
@@ -81,7 +81,7 @@ The beside stack keeps its proctor data in `.🧬semio/🎓️teaching/proctor-b
 2. The command waits until the proctor answers ready. If the proctor exits first, the command fails and says so.
 3. The site's dev server starts (`dev-site`). A site that already answers on its port is reused the same way.
 4. The proctor this command launched is supervised, each step said in one `[stack]` line. Whenever a Rust source of a
-   crate it is built from changes (cargo's own resolution of the teaching workspace names those crates), it is built
+   crate it is built from changes (the teaching workspace's Cargo manifests name those crates), it is built
    anew while the running one serves and then launched in its place — a build that fails leaves the running one
    serving; whenever the catalog or one of its quizzes changes, it is launched anew; whenever it ends by itself, it is
    launched again after one second, then ever more patiently, at most every half minute. Every such swap is a short

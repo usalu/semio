@@ -16,7 +16,9 @@ import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/�
  * See `📓️ui-turn-patch-batching-2026-09-15.md`.
  */
 import { describe, expect, it } from "vitest";
-import { MAINTENANCE_LANE_DEFAULT_BUDGET, ShardClient, type ShardEventEnvelope, type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { MAINTENANCE_LANE_DEFAULT_BUDGET, type ShardEventEnvelope } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import { ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { type ShardWorkerLike } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🚨️quota/🟦️.ts";
 import { encodeActorInstanceLifecycle } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
 import { encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedUiInstance } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";

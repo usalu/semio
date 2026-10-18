@@ -2,7 +2,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { policyTestModSpans } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
-import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { policyLineOfIndex } from "../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
 import { POLICY_LABELS_TWO_AXIS_ALLOWLIST, POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST } from "../📋️allowlists/🟦️.ts";
 import { policyAppIdFromCrateDir, type PolicyCrateRef, policyExtractFnBody, policyLabelName, policyModAtLine, policyPairRegionSpans, policyParseModSpans, policyParseRegionEvents, policyPascalAppStructName } from "../🏛️foundation/🟦️.ts";

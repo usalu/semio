@@ -1,9 +1,9 @@
 //! 🧪️ Aggregated unit tests of the `commands` leaves, one module per leaf.
 
 mod increment_counter {
-use super::super::increment_counter::*;
-use crate::editor::vcs::unit_tests::context::{app, dispatch};
-use crate::editor::vcs::VcsCommand;
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::increment_counter::*;
+use crate::unit_tests::context::{app, dispatch};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn increment_counter_action_updates_projection() {
@@ -18,9 +18,9 @@ async fn increment_counter_action_updates_projection() {
 }
 
 mod no_operation {
-use super::super::no_operation::*;
-use crate::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel};
-use crate::editor::vcs::VcsCommand;
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::no_operation::*;
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::{canvas_pointer_down, canvas_pointer_move, canvas_pointer_up, canvas_wheel};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn vcs_demo_command_op_text_round_trips() {
@@ -33,9 +33,9 @@ async fn vcs_demo_command_op_text_round_trips() {
 }
 
 mod rename_vcs {
-use super::super::rename_vcs::*;
-use crate::editor::vcs::unit_tests::context::{app, dispatch};
-use crate::editor::vcs::VcsCommand;
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::rename_vcs::*;
+use crate::unit_tests::context::{app, dispatch};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn rename_vcs_command_op_text_round_trips() {
@@ -57,9 +57,9 @@ async fn rename_vcs_command_updates_exactly_its_field() {
 }
 
 mod change_counter {
-use super::super::change_counter::*;
-use crate::editor::vcs::unit_tests::context::{app, dispatch};
-use crate::editor::vcs::VcsCommand;
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::change_counter::*;
+use crate::unit_tests::context::{app, dispatch};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn change_counter_command_op_text_round_trips() {
@@ -81,9 +81,9 @@ async fn change_counter_command_updates_exactly_its_field() {
 }
 
 mod change_status {
-use super::super::change_status::*;
-use crate::editor::vcs::unit_tests::context::{app, dispatch};
-use crate::editor::vcs::VcsCommand;
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::change_status::*;
+use crate::unit_tests::context::{app, dispatch};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn change_status_command_op_text_round_trips() {
@@ -105,9 +105,9 @@ async fn change_status_command_updates_exactly_its_field() {
 }
 
 mod change_notes {
-use super::super::change_notes::*;
-use crate::editor::vcs::unit_tests::context::{app, dispatch};
-use crate::editor::vcs::VcsCommand;
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::commands::change_notes::*;
+use crate::unit_tests::context::{app, dispatch};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::VcsCommand;
 
 #[semio_framework_async_macros::async_test]
 async fn change_notes_command_op_text_round_trips() {

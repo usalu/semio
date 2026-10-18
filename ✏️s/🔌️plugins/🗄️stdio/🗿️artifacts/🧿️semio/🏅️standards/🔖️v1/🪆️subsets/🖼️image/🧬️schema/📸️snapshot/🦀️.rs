@@ -165,7 +165,7 @@ impl Default for SemioImageSnapshot {
 /// tests in `🎹️composer/🦀️.rs`.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_image_snapshot() -> SemioImageSnapshot {
+pub fn demo_image_snapshot() -> SemioImageSnapshot {
     SemioImageSnapshot {
         schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(),
         width: 2,

@@ -45,7 +45,7 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::dec_rgba;
 /// 📐️ `M[to]` (MoveTo) / `L[to]` (LineTo) / `C[c1,c2,to]` (CubicTo) / `Q[c,to]` (QuadTo) /
 /// `A[rx,ry,xRotation,largeArc,sweep,to]` (ArcTo) / `Z` (Close, no payload).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_path_segment(seg: &PathSegment) -> String {
+pub fn enc_path_segment(seg: &PathSegment) -> String {
     match seg {
         PathSegment::MoveTo { to } => format!("M[{}]", enc_point2(to)),
         PathSegment::LineTo { to } => format!("L[{}]", enc_point2(to)),
@@ -59,7 +59,7 @@ pub(crate) fn enc_path_segment(seg: &PathSegment) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_path_segment(s: &str) -> Result<PathSegment, String> {
+pub fn dec_path_segment(s: &str) -> Result<PathSegment, String> {
     if s == "Z" {
         return Ok(PathSegment::Close);
     }
@@ -133,12 +133,12 @@ pub fn dec_node(s: &str) -> Result<DrawNode, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_style(s: &DrawStyle) -> String {
+pub fn enc_style(s: &DrawStyle) -> String {
     format!("[{},{},{},{},{}]", enc_str(&s.name), encode_option(&s.fill, enc_rgba), encode_option(&s.stroke, enc_rgba), encode_option(&s.stroke_width, |v: &f64| NativeF64(*v).to_string()), encode_option(&s.opacity, |v: &f32| NativeF32(*v).to_string()),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_style(s: &str) -> Result<DrawStyle, String> {
+pub fn dec_style(s: &str) -> Result<DrawStyle, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, fill, stroke, stroke_width, opacity] = parts.as_slice() else { return Err(format!("style: expected 5 fields, got {}", parts.len())) };
     Ok(DrawStyle { name: dec_str(name)?, fill: decode_option(fill, dec_rgba)?, stroke: decode_option(stroke, dec_rgba)?, stroke_width: decode_option(stroke_width, parse_f64)?, opacity: decode_option(opacity, parse_f32)? })

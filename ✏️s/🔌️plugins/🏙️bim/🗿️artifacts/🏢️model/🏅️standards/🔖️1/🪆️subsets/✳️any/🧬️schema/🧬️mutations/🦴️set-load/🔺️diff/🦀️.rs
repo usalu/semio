@@ -1,5 +1,5 @@
 //! 🔺️ Sparse declarative set-load diff; no derived state is evaluated.
-use super::SetLoad;
+use crate::standards::v1::subsets::any::schema::mutations::set_load::SetLoad;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetLoad, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

@@ -1,7 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
-import { loadTaxonomy, fileKindIdForSourcePath, semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦️.ts";
+import { loadTaxonomy, fileKindIdForSourcePath } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { inventoryTaxonomySources, type TaxonomySourceInventory } from "../../🚪️source-admission/📁️io/🟦️.ts";
 import { POLICY_MUTATIONS_FACET } from "../🪪️identity/🟦️.ts";
 

@@ -1,8 +1,8 @@
 import{types}from"node:util";
 import nativeSchema from"../../🏗️native-build/💾️storage/🧬️schema/🔣️.json";
-import type{NativeStoragePolicyV1}from"../../🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStoragePolicyV1}from"../../🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 import schema from"../🧬️schema/🔣️.json";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 export interface NativeArtifactCachePolicyV1{version:1;producerFilesystemBytes:number;producerMetadataBytes:number;catalogueMetadataBytes:number;chargeBytes:number;parentMetadataBytes:number;maximumBackingBytes:number;filesystemBytes:number;maximumSlots:number;maximumCatalogBytes:number;maximumEntries:number;maximumDepth:number;maximumPathBytes:number;maximumPending:number;maximumOutputBytes:number;maximumOutputLines:number;namespace:string;workDirectory:string;slotDirectory:string;catalogFile:string;chargeFile:string;intentFile:string;volumeDirectory:string;initialParentFloorBytes:number;minimumAvailableBytes:number;owner:string;workspaceOwner:string;workspaceFile:string;outputDirectory:string}
 const captured=structuredClone(schema);
 /** 📐️ Captures closed finite cache policy DATA; it issues no storage authority. */

@@ -141,9 +141,9 @@ pub const KINDS: &[&str] = &["insert-block", "remove-block", "replace-block", "s
 /// multi-step nested path) — the single source of truth reused by `op_text_binary_roundtrip_law`
 /// below AND by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, so a new variant only needs adding here once.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<MdMutation> {
+pub fn demo_mutation_cases() -> Vec<MdMutation> {
     let base = MdSnapshot { schema: crate::STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "hi".into() }] }] };
     let list_block = MdBlock::List { ordered: true, start: Some(2), tight: false, items: vec![vec![MdBlock::Paragraph { inlines: vec![MdInline::Text { text: "one".into() }] }], vec![MdBlock::BlockQuote { blocks: vec![MdBlock::ThematicBreak] }]] };
     vec![

@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateRule`: one created rule entry. The id must be free across every collection, then the rule must be writable (see `rule_problem`).
 
-use super::super::elements;
-use super::CreateRule;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule;
 use crate::standards::v1::subsets::any::schema::{snapshot::{rule_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

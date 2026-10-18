@@ -4,7 +4,7 @@
 //! framework bulge kernel (`semio-framework-geometry`); this file only decides which of its results is the one a tool means.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::snap;
-use super::WallEnd;
+use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2, Vertex};
 use semio_framework_geometry::bulge::{bulge_from_sweep, intersect, nearest_intersection, BulgeSeg, Extent};

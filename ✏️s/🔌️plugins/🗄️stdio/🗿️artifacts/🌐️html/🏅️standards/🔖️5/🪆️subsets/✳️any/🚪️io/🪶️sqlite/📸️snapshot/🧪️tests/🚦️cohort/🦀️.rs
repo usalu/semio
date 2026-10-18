@@ -1,5 +1,8 @@
 //! 🌐️ Public HTML factory, typed file and external markup controls share the neutral cohort.
 use super::*;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlNode, HtmlAttr, RawTextKind, HtmlSnapshot};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::parse_html_document;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::sqlite::snapshot::{kind, text, component};
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io_schema::IoPayload,semio_framework_os_kernel::io_schema::IoFidelity,semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT,semio_framework_os_kernel::io::io_mechanism::io_route,semio_framework_os_kernel::io::io_mechanism::io_run_with_snapshot_control,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::native_snapshot_sqlite_schema};
 use semio_framework_async_macros::async_test;
 use std::{any::TypeId,io::Write,process::{Command,Stdio}};

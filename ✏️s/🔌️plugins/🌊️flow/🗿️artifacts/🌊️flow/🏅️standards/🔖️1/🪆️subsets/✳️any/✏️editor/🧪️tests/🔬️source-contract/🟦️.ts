@@ -7,6 +7,8 @@ import { applyPatches, enablePatches, produceWithPatches } from "immer";
 import { encodeScalarRecordFixture } from "@semio-tech/framework/pack/value/scalar-witness/testing";
 import { testBuiltTreeRetirementFixture } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🏗️builder/♻️retirement/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { fileURLToPath } from "node:url";
 
 testBuiltTreeRetirementFixture();
 
@@ -21,7 +23,7 @@ testBuiltTreeRetirementFixture();
 
 //#region 🗣️Terminology
 const flowEditorSources = [
-  await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text(),
+  readModuleTreeSource(fileURLToPath(new URL("../../🦀️.rs", import.meta.url))),
   await Bun.file(new URL("../../🎭️modes/✏️edit/🪟️windows/🌊️main/🦀️.rs", import.meta.url)).text(),
   await Bun.file(new URL("../../../🧬️schema/📸️snapshot/🦀️.rs", import.meta.url)).text(),
 ];
@@ -100,7 +102,7 @@ assert(treeFixtureSource.includes("FIXTURE_TREE_MAX_NODES * (semio_framework_ui_
 const hostWire = await Bun.file(new URL("../🧫️fixtures/📡️host-wire/🔣️.json", import.meta.url)).json();
 
 
-const hostCommandSource = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
+const hostCommandSource = readModuleTreeSource(fileURLToPath(new URL("../../🦀️.rs", import.meta.url)));
 const hostCommandRows = [...hostCommandSource.slice(hostCommandSource.indexOf("pub enum FlowCommand"), hostCommandSource.indexOf("// 🧷️ `app_commands!")).matchAll(/"([^"]+)" as "[^"]+" =>/g)].map(match => match[1]);
 assert.equal(new Set(hostWire.cases.map((row: any) => row.id)).size, 6);
 for (const row of hostWire.cases) {
@@ -318,7 +320,7 @@ assert(flowPluginSource.includes(`.package_id("${surfaceOwners.package}")`));
 assert.equal(surfaceOwners.members, viewerOwners.members);
 assert(flowPluginSource.includes(".editor::<crate::editor::flow::FlowPlayApp>"));
 assert(flowPluginSource.includes(".viewer::<crate::viewer::flow::FlowViewer>"));
-const flowEditorSource = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
+const flowEditorSource = readModuleTreeSource(fileURLToPath(new URL("../../🦀️.rs", import.meta.url)));
 assert(flowEditorSource.includes("type Members = semio_s_artifact_stdio_semio::SemioMembers;"), "the editor itself must declare the roster every bundle registers it over");
 
 const flowSurfaceTestSource = await Bun.file(new URL("../../../../../../../../../../../../🌎️hub/🧩️compositions/🌊️flow/🧪️tests/🔬️surface/🦀️.rs", import.meta.url)).text();
@@ -335,7 +337,7 @@ assert(flowSurfaceTestSource.includes("async fn flow_actual_surface_factories_cl
  * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
  */
 const interactiveJob = await Bun.file(new URL("../🧫️fixtures/🧮️interactive-job/🔣️.json", import.meta.url)).json();
-const editorSource = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
+const editorSource = readModuleTreeSource(fileURLToPath(new URL("../../🦀️.rs", import.meta.url)));
 const classifiedRows = [...editorSource.matchAll(/\.action_interactive_job\("([A-Za-z0-9]+)",\s*semio_framework_plugin::InteractiveJobClassification::([A-Za-z]+)\)/g)];
 const classified = new Map(classifiedRows.map((row) => [row[1], row[2]]));
 assert.equal(classified.size, classifiedRows.length, "an action may carry at most one interactive-job classification");

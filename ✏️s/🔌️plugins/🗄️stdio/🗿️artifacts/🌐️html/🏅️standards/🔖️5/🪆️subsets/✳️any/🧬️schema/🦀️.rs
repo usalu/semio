@@ -1,7 +1,7 @@
 //! 🧬️ HtmlArtifact schema — full artifact state, mirrors `HtmlSnapshot` field for field (see
 //! svg's `SvgArtifact` for the precedent this follows).
 
-use crate::standards::v5::subsets::any::schema::snapshot::{HtmlNode, HtmlSnapshot};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlNode, HtmlSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]

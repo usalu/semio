@@ -17,7 +17,10 @@ import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃�
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
 import { TEST_LEVEL_BUDGET_MS,type TestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { runBunxStatus, runCargo, runVitest, runRepositoryTestCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBunxStatus } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
+import { runCargo } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runVitest } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { withBuiltLocalHubHostV1,HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
@@ -167,7 +170,7 @@ function interruptSignal(): { signal: AbortSignal; done: () => void } {
 /** 🚧️ Errors that mean the drill's precondition is absent (no hub listening, nothing published to seed from, no binary)
  * rather than that the hub misbehaved: recorded as `blocked`, never as `fail`. */
 function missingHubPrecondition(error: unknown): boolean {
-  return /no process listens|ECONNREFUSED|Unable to connect|ConnectionRefused|no published trusted catalog|does not exist|Missing Nx-staged/iu.test(String(error instanceof Error ? error.message : error));
+  return /no process listens|ECONNREFUSED|Unable to connect|ConnectionRefused|no published trusted catalog|does not exist|Missing staged/iu.test(String(error instanceof Error ? error.message : error));
 }
 
 /** 💾️ Runs bounded backup/restore rounds between actual candidate Host roots and owned tar children. */
@@ -291,7 +294,7 @@ class ResidencyWatchScript extends BundleScript {
 }
 
 /** 🌅️ `boot-watch [--catalog-root <data root>] [--port <n>] [--restarts <n>] [--residency-bytes <n>] [--interval-ms <n>]
- * [--ready-timeout-ms <n>] [--keep]` — boots the hub (`OS_HUB_BINARY` or the Nx-staged `build-dev` executable) on a fresh
+ * [--ready-timeout-ms <n>] [--keep]` — boots the hub (`OS_HUB_BINARY` or the staged `build-dev` executable) on a fresh
  * root seeded with a copy of a published trusted catalog (default the development hub's `.🧬semio/🌐hub/hub-dev`), cold
  * and then `--restarts` times warm, following `/readyz` `startup.catalog` until it serves and the admin observability
  * `catalog` until every package's codec rows are pinned. Passes when every boot serves and no package is refused. */

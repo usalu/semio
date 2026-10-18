@@ -174,8 +174,8 @@ describe("wgpu prepared raster residency", () => {
 
   it("wires complete packet ownership before every raster allocation", () => {
     const drawTypes = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🏷️types/🦀️.rs"), "utf8");
-    const draw = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🔧️pipeline/🦀️.rs"), "utf8");
-    const prepared = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs"), "utf8");
+    const draw = readModuleTreeSource(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🖼️raster/🦀️.rs"));
+    const prepared = readModuleTreeSource(resolve(uiRoot, "🎯️targets/🧊️wgpu/🎟️prepared/🦀️.rs")) + readModuleTreeSource(resolve(uiRoot, "🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/🦀️.rs"));
     const gpu = readFileSync(resolve(uiRoot, "🎯️targets/🧊️wgpu/🖍️draw/🎮️execution/🦀️.rs"), "utf8");
     const renderer = readModuleTreeSource(resolve(engineRoot, "🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"));
     const canvas = readModuleTreeSource(resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"));

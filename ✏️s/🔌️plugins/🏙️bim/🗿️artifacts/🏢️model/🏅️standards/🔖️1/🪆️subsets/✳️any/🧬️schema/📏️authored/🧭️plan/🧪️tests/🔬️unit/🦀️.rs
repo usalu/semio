@@ -1,4 +1,9 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Point2};
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::BulgeSeg;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+use crate::standards::v1::subsets::any::schema::authored::plan::*;
 
 #[test]
 fn a_line_axis_is_as_long_as_its_chord() {

@@ -17,7 +17,7 @@ path = "🦀️.rs"
 
 [dependencies]
 semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
-semio-framework-2d = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

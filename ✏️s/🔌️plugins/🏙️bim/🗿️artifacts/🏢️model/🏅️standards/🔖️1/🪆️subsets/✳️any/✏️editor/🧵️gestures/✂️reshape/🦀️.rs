@@ -8,10 +8,11 @@
 //!
 //! Every tool shows the result as a ghost before the click, a refused result as a warning.
 
-use super::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, flatten, point2, project, same, P};
-use super::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::editor::bim::gestures::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, flatten, point2, project, same, P};
+use crate::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
 use crate::editor::bim::marks::{Mark, Preview, Style};
-use super::transform::{ghost, outline};
+use crate::editor::bim::gestures::transform::{ghost, outline};
 use crate::editor::bim::modes::edit::windows::plan;
 use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{locate, meeting, offset_axis, trim_extend};
 use crate::standards::v1::subsets::any::schema::mutations::modify::map::{align_gap, bounds};
@@ -134,7 +135,7 @@ impl Reshape {
     fn trim(&mut self, ctx: &ToolContext<'_>, target: &str, pointer: &Pointer) -> Step {
         let Some(wall) = wall_at(ctx, pointer).filter(|wall| wall != target) else { return Step::default() };
         let (Some(row), Some(other)) = (ctx.snapshot.walls.get(&wall), ctx.snapshot.walls.get(target)) else { return Step::default() };
-        let Some(end) = end_to_move(self.kind, &row.axis, &other.axis, pointer.at) else { return Step::refuse(super::session::REJECTED) };
+        let Some(end) = end_to_move(self.kind, &row.axis, &other.axis, pointer.at) else { return Step::refuse(crate::editor::bim::gestures::session::REJECTED) };
         Step::write(ctx, ModelMutation::TrimExtendWall(crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::TrimExtendWall { id: wall, end, target: target.to_string() }))
     }
 
@@ -323,6 +324,4 @@ impl Tool for Reshape {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

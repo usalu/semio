@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative set-workset diff.
-use super::SetWorkset;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::mutations::set_workset::SetWorkset;
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetWorkset, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     let Some(record) = base.worksets.get(&payload.id) else { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Record is missing.", [payload.id.clone()]); };

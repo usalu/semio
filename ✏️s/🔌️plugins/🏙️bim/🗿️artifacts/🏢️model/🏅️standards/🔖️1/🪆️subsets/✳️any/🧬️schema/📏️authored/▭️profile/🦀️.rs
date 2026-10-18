@@ -36,6 +36,4 @@ pub fn profile_extents(outline: &[Point]) -> (f64, f64) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

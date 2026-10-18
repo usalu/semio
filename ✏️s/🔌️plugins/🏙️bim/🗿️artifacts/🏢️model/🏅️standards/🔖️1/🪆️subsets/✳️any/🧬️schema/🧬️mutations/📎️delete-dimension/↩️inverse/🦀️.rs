@@ -1,7 +1,7 @@
 //! ↩️ Inverse of `DeleteDimension`: the concrete `CreateDimension` carrying the full removed record, in storage order through the shared cascade.
 
-use super::super::cascade;
-use super::DeleteDimension;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_dimension::DeleteDimension;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteDimension, base: &ModelSnapshot) -> Vec<Op>

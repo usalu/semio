@@ -1,4 +1,5 @@
-import { loadTaxonomy, type BreachRecord } from "../../../🟦️.ts";
+import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { policyListArtifactDialectDirs } from "../../../🔍️discovery/🗿️artifact/🗣️dialects/🟦️.ts";
 import { policyListPluginArtifactDirs } from "../../../🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts";
 import { policySurfaceRoots } from "../../../🔍️discovery/🗺️surface/🟦️.ts";

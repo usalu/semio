@@ -1,4 +1,4 @@
-import type { BreachRecord } from "../../../../🟦️.ts";
+import type { BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import type { PolicyInferenceSourceIssue } from "../../🧱️contract/🟦️.ts";
 
 /** 🚧️ Converts unavailable no-follow source evidence into visible inference diagnostics. */

@@ -38,14 +38,14 @@ use semio_s_artifact_stdio_semio_base::io::binary::codec::write_child_opt;
 use semio_s_artifact_stdio_semio_base::io::binary::codec::read_child_opt;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
+pub fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
     for v in [t.translation.x, t.translation.y, t.translation.z, t.rotation.x, t.rotation.y, t.rotation.z, t.rotation.w, t.scale.x, t.scale.y, t.scale.z] {
         out.extend_from_slice(&v.to_le_bytes());
     }
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
+pub fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
     use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
     let mut next = || -> Result<f64, String> { Ok(f64::from_le_bytes(reader.read_bytes(8).map_err(|e| e.to_string())?.try_into().map_err(|_| "transform: short read".to_string())?)) };

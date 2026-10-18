@@ -1,6 +1,6 @@
 //! 🔺️ Diff constructor for `SetWallBaseOffset`: a one-field wall patch. The resolved base, top and height are inferred, never written.
 
-use super::SetWallBaseOffset;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_offset::SetWallBaseOffset;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

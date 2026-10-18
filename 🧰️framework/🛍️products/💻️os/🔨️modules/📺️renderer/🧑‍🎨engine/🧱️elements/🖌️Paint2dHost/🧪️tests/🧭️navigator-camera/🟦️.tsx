@@ -12,9 +12,6 @@ vi.mock("../../../🪪️WasmSessionLoader/🟦️.tsx", async (load) => ({ ...a
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); });
 
-it("validates the neutral Navigator camera contract", () => {
-});
-
 it("the mounted React Navigator publishes the authored content camera on wheel", async () => {
   await uiI18n.changeLanguage("en");
   for (const sample of fixture.cases) {

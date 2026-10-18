@@ -1,10 +1,13 @@
 //! ↩️ Inverse of `SetClassificationSystem`: an absolute `SetClassificationSystem` restoring the base value of exactly the fields the forward really changes (a removed source assigned null), none when the system is absent or
 //! nothing changes.
 
-use super::SetClassificationSystem;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetClassificationSystem, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetClassificationSystem, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem>,
+{
     let Some(record) = base.classification_systems.get(&payload.id) else {
         return Vec::new();
     };
@@ -12,5 +15,5 @@ pub fn inverse(payload: &SetClassificationSystem, base: &ModelSnapshot) -> Vec<M
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetClassificationSystem(SetClassificationSystem::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetClassificationSystem::from_patch(payload.id.clone(), restore))]
 }

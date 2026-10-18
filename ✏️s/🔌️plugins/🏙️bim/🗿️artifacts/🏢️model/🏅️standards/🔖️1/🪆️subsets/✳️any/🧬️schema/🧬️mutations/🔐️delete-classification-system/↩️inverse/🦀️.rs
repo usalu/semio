@@ -1,10 +1,10 @@
 //! ↩️ Inverse of `DeleteClassificationSystem`: one concrete `SetElementClassification` per removed classification and, last in storage order so that the store (which replays the vector reversed) recreates the
 //! system first, the `CreateClassificationSystem` carrying the full removed record; none when the system is absent or the cascade is refused.
 
-use super::super::cascade;
-use super::super::create_classification_system::CreateClassificationSystem;
-use super::super::set_element_classification::SetElementClassification;
-use super::DeleteClassificationSystem;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::create_classification_system::CreateClassificationSystem;
+use crate::standards::v1::subsets::any::schema::mutations::set_element_classification::SetElementClassification;
+use crate::standards::v1::subsets::any::schema::mutations::delete_classification_system::DeleteClassificationSystem;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteClassificationSystem, base: &ModelSnapshot) -> Vec<Op>

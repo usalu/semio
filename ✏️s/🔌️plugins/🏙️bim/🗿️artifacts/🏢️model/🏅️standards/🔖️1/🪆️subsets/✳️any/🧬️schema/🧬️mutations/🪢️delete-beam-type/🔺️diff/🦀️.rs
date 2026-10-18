@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteBeamType`: one deleted beam type entry together with the properties and classifications keyed by the type; refused while beams still use it.
 
-use super::super::cascade;
-use super::DeleteBeamType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_beam_type::DeleteBeamType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

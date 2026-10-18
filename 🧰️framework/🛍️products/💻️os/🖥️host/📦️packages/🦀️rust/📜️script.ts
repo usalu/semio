@@ -7,7 +7,9 @@ import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/�
 import { join, resolve } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { runCargo, runVitest, buildRepositoryWasmWebV1 } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { buildRepositoryWasmWebV1 } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🕸️wasm/🔣️policy/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { DocumentRetirementScript, MediaProjectionScript, PersistenceContractScript } from "./🎛️commands/🎞️media-persistence-and-retirement/🟦️.ts";

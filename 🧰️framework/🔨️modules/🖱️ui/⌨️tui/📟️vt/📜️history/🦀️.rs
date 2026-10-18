@@ -1,4 +1,4 @@
-use crate::tui::cell::Cell;
+use semio_framework_ui_tui_core::cell::Cell;
 use std::collections::VecDeque;
 
 /// 📏️ One screen row; `wrapped` says the text continues on the next row without a line break.

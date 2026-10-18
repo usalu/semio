@@ -22,7 +22,6 @@ use semio_framework_os_kernel::os_directory::schema::{DocumentExecutionTargetLea
 use semio_framework_os_kernel::os_directory::{DirectoryCommand, DirectoryCommandErrorCodeV1, DirectoryCommandReceiptV1, DirectoryCommandRequestV1, DirectoryCommandResultV1, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility};
 use semio_framework_os_renderer_wgpu_canvas2d_host::{identity, publish};
 use semio_framework_os_renderer_wgpu_contracts::ShellHubRemoteV1;
-use semio_framework_os_renderer_wgpu_dock as dock;
 use semio_framework_os_renderer_wgpu_doors::directory_door::*;
 use semio_framework_os_renderer_wgpu_engine_registry::engine_surface_law_guard;
 use semio_framework_os_renderer_wgpu_fixtures::shell::{boot_manifest, host_test_shell, paint_component_pointer_documents};

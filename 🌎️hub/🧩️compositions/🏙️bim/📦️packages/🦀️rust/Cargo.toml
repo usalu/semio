@@ -36,6 +36,7 @@ semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"]
 semio-framework-test-fixtures = { path = "../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-plugin-host = { workspace = true }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 semio-framework-os-run = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust", package = "semio-framework-os-run" }

@@ -5,6 +5,7 @@
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingDiff;
 use semio_s_artifact_remodel_remodeling_model_diff::standards::v1::subsets::any::schema::diff::RemodelingParamsDiff;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::update_dense_params::component::UpdateDenseParams;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::UpdateDenseParams, base: &RemodelingSnapshot) -> protocol::MutationOutcome<RemodelingDiff> {

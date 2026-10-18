@@ -1,4 +1,32 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use crate::standards::v1::subsets::any::schema::snapshot::{RiserKind, Stair, StringerKind};
+use semio_framework_geometry::mesh::TriMesh;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{direction, point};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{StairFlightRun, StairLanding, StairRun, StairWinder};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::run_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::StairFlight;
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::Vertex;
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude, extrude_loops, prism_between};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::{Affine3, ZPlane};
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::cross;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::{area_of, landing};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::stairs::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
@@ -8,9 +36,10 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::standal
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::StairPatch}, inferences::ModelInference, snapshot::ModelSnapshot};
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeMap;
 
-const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json");
+static CASE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🪜️stairs-flights/🔣️.json"));
 
 fn geometry(snapshot: &ModelSnapshot, id: &str) -> StairGeometry {
     let levels = compute_storey_levels(snapshot);
@@ -32,13 +61,13 @@ fn volumes(solid: &ElementSolid) -> BTreeMap<String, f64> {
 
 #[semio_framework_async_macros::async_test]
 async fn stairs_reproduce_the_third_party_oracle_table() {
-    let case = case(CASE);
+    let case = case((*CASE));
     assert_matches_oracle(&case, &compute_element_solids(&case.snapshot), SolidFamily::Stair);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn the_riser_law_and_the_step_count_agree_with_the_oracle_and_the_stair_runs() {
-    let case = case(CASE);
+    let case = case((*CASE));
     let runs = compute_stair_runs(&case.snapshot);
     for (id, row) in case.expected.as_object().expect("table").iter().filter(|(_, row)| !row.is_null()) {
         let geometry = geometry(&case.snapshot, id);
@@ -52,7 +81,7 @@ async fn the_riser_law_and_the_step_count_agree_with_the_oracle_and_the_stair_ru
 
 #[semio_framework_async_macros::async_test]
 async fn every_part_of_every_stair_has_the_volume_the_oracle_derives() {
-    let case = case(CASE);
+    let case = case((*CASE));
     let solids = compute_element_solids(&case.snapshot);
     for (id, row) in case.expected.as_object().expect("table").iter().filter(|(_, row)| !row.is_null()) {
         let found = volumes(&solids[id]);
@@ -67,7 +96,7 @@ async fn every_part_of_every_stair_has_the_volume_the_oracle_derives() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_straight_stair_is_a_slab_per_tread_and_a_board_per_closed_riser() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let solids = compute_element_solids(&snapshot);
     let run = geometry(&snapshot, "st-straight").run;
     let (going, rise, thickness, width) = (run.tread, run.riser_height, 0.04, 1.0);
@@ -81,7 +110,7 @@ async fn a_straight_stair_is_a_slab_per_tread_and_a_board_per_closed_riser() {
 
 #[semio_framework_async_macros::async_test]
 async fn nosing_extends_every_tread_against_the_travel_and_open_risers_leave_the_boards_out() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let solids = compute_element_solids(&snapshot);
     let (closed, open) = (&solids["st-closed-stringer"], &solids["st-open-stringer"]);
     let run = geometry(&snapshot, "st-closed-stringer").run;
@@ -113,7 +142,7 @@ async fn the_stringer_band_has_the_analytic_area_of_each_kind() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_plan_footprints_of_the_stringers_follow_the_boards_of_their_flights() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let found = |id: &str| {
         let geometry = geometry(&snapshot, id);
         stringer_footprints(&snapshot.stairs[id], &geometry.run)
@@ -130,7 +159,7 @@ async fn the_plan_footprints_of_the_stringers_follow_the_boards_of_their_flights
 
 #[semio_framework_async_macros::async_test]
 async fn the_stringer_of_a_spiral_stair_is_ignored_and_says_so() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     assert!(stringer_ignored(&snapshot.stairs["st-spiral-stringer"]));
     assert!(["st-spiral", "st-straight", "st-closed-stringer", "st-u-open-deep"].iter().all(|id| !stringer_ignored(&snapshot.stairs[*id])));
     let solids = compute_element_solids(&snapshot);
@@ -143,7 +172,7 @@ async fn the_stringer_of_a_spiral_stair_is_ignored_and_says_so() {
 
 #[semio_framework_async_macros::async_test]
 async fn changing_the_storey_height_changes_the_riser_count_and_the_solid() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let (before, after) = (geometry(&snapshot, "st-straight"), geometry(&raised(&snapshot, "st-ground", 0.4), "st-straight"));
     assert_eq!((before.run.riser_count, after.run.riser_count), (17, 19), "ceil(3.0 / 0.18) and ceil(3.4 / 0.18)");
     assert_eq!((before.steps, after.steps), (16, 18));
@@ -156,7 +185,7 @@ async fn changing_the_storey_height_changes_the_riser_count_and_the_solid() {
 
 #[semio_framework_async_macros::async_test]
 async fn turning_stairs_have_flights_and_a_landing_slab_at_the_landing_level() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     for id in ["st-l-left", "st-u", "st-l-closed-deep", "st-u-open-deep"] {
         let geometry = geometry(&snapshot, id);
         assert_eq!((geometry.run.flights.len(), geometry.run.landings.len()), (2, 1), "{id}");
@@ -178,7 +207,7 @@ fn solid_volume(mesh: &TriMesh) -> f64 {
 
 #[semio_framework_async_macros::async_test]
 async fn a_deeper_landing_pushes_the_second_flight_and_grows_the_slab_only() {
-    let mut deeper = case(CASE).snapshot;
+    let mut deeper = case((*CASE)).snapshot;
     let base = compute_element_solids(&deeper);
     deeper.stairs.get_mut("st-l-left").expect("stair").landing_depth = 1.8;
     let after = compute_element_solids(&deeper);
@@ -190,7 +219,7 @@ async fn a_deeper_landing_pushes_the_second_flight_and_grows_the_slab_only() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_stair_depends_on_its_storey_and_the_storey_its_top_targets() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let plan = solid_steps(&snapshot, SolidFamily::Stair);
     let parents = |id: &str| plan.iter().find(|step| step.key == ModelNode::Solid(SolidKey::of(SolidFamily::Stair, id))).map(|step| step.parents.clone()).expect("planned");
     assert_eq!(parents("st-straight"), vec![ModelNode::Storey("st-ground".into()), ModelNode::StairRun("st-straight".into())]);
@@ -199,7 +228,7 @@ async fn a_stair_depends_on_its_storey_and_the_storey_its_top_targets() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_construction_of_a_stair_is_part_of_its_dependency() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let stair = snapshot.stairs["st-straight"].clone();
     let base = dependency(&stair);
     let changed = |edit: &dyn Fn(&mut Stair)| {
@@ -218,7 +247,7 @@ async fn the_construction_of_a_stair_is_part_of_its_dependency() {
 
 #[test]
 fn editing_the_construction_or_the_landing_of_a_stair_recomputes_it_and_equals_a_fresh_inference() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let mut session = ModelInferenceSession::new();
     session.update(&snapshot, &ModelDiff::default());
     let edits = [
@@ -239,7 +268,7 @@ fn editing_the_construction_or_the_landing_of_a_stair_recomputes_it_and_equals_a
 
 #[semio_framework_async_macros::async_test]
 async fn stairs_without_a_tread_are_absent_and_the_result_is_deterministic() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(inferred, ModelInference::infer(&snapshot).expect("infers"));
     assert!(["st-one-riser", "st-no-rise"].iter().all(|id| !inferred.element_solids.contains_key(*id)));
@@ -249,7 +278,7 @@ async fn stairs_without_a_tread_are_absent_and_the_result_is_deterministic() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_volume_of_a_stair_in_the_take_off_is_the_sum_of_its_parts() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     for id in ["st-straight", "st-closed-stringer", "st-l-closed-deep", "st-u-open-deep", "st-mono-stringer", "st-spiral-stringer"] {
         let summed: f64 = volumes(&inferred.element_solids[id]).values().sum();

@@ -47,12 +47,12 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
@@ -106,12 +106,12 @@ pub(crate) fn dec_edm_preamble(s: &str) -> Result<Ifc2x3EdmPreamble, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_optional_edm_preamble(preamble: &Option<Ifc2x3EdmPreamble>) -> String {
+pub fn enc_optional_edm_preamble(preamble: &Option<Ifc2x3EdmPreamble>) -> String {
     preamble.as_ref().map_or_else(|| "[0]".into(), |value| format!("[1,{}]", enc_edm_preamble(value)))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_optional_edm_preamble(s: &str) -> Result<Option<Ifc2x3EdmPreamble>, String> {
+pub fn dec_optional_edm_preamble(s: &str) -> Result<Option<Ifc2x3EdmPreamble>, String> {
     match split_top_level(strip_brackets(s)?, ',').as_slice() {
         ["0"] => Ok(None),
         ["1", value] => Ok(Some(dec_edm_preamble(value)?)),
@@ -125,7 +125,7 @@ pub(crate) fn parse_u64(s: &str) -> Result<u64, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     split_top_level_iter(s, sep).collect()
 }
 
@@ -159,7 +159,7 @@ pub(crate) fn split_top_level_iter(s: &str, sep: char) -> impl Iterator<Item = &
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
@@ -274,12 +274,12 @@ pub(crate) fn dec_part21_value_list(s: &str) -> Result<Vec<Part21Value>, String>
 /// `part21-value-list`s, matching `4`'s own `enc_ifc_header` positional shape exactly (both
 /// standards' HEADER record is the same 3-tuple-of-raw-value-list Part-21 shape).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_part21_header(h: &Part21Header) -> String {
+pub fn enc_part21_header(h: &Part21Header) -> String {
     format!("[{},{},{}]", enc_part21_value_list(&h.file_description), enc_part21_value_list(&h.file_name), enc_part21_value_list(&h.file_schema))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_part21_header(s: &str) -> Result<Part21Header, String> {
+pub fn dec_part21_header(s: &str) -> Result<Part21Header, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [fd, fname, fs] = parts.as_slice() else { return Err(format!("part21 header: expected 3 fields, got {}", parts.len())) };
     Ok(Part21Header { file_description: dec_part21_value_list(fd)?, file_name: dec_part21_value_list(fname)?, file_schema: dec_part21_value_list(fs)? })
@@ -304,7 +304,7 @@ pub(crate) fn enc_part21_instance_into(inst: &Part21Instance, out: &mut String) 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_part21_instance(s: &str) -> Result<Part21Instance, String> {
+pub fn dec_part21_instance(s: &str) -> Result<Part21Instance, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id_s, entities_s] = parts.as_slice() else {
         return Err(format!("part21 instance: expected 2 fields, got {}", parts.len()));
@@ -324,7 +324,7 @@ pub(crate) fn dec_part21_instance(s: &str) -> Result<Part21Instance, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) {
+pub fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) {
     out.push('[');
     for (index, instance) in list.iter().enumerate() {
         if index != 0 {
@@ -336,7 +336,7 @@ pub(crate) fn enc_instance_list_into(list: &[Part21Instance], out: &mut String) 
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_instance_list(s: &str) -> Result<Vec<Part21Instance>, String> {
+pub fn dec_instance_list(s: &str) -> Result<Vec<Part21Instance>, String> {
     split_top_level_iter(strip_brackets(s)?, ',').filter(|s| !s.is_empty()).map(dec_part21_instance).collect()
 }
 
@@ -451,7 +451,7 @@ use std::fmt::Write as _;
 /// "(" entity-record+ ")"` recognizes at the exchange-file level, restated here for the diff/op
 /// wire's own positional codec. Each entity is `[hexname,[args]]`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_part21_instance(inst: &Part21Instance) -> String {
+pub fn enc_part21_instance(inst: &Part21Instance) -> String {
     let mut out = String::new();
     enc_part21_instance_into(inst, &mut out);
     out

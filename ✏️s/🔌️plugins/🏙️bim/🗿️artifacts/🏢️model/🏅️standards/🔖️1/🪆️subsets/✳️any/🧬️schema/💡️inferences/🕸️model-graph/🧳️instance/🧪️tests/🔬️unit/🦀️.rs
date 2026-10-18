@@ -1,4 +1,23 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use protocol::InferenceError;
+use semio_framework_plugin::ArtifactInstanceOperationOwnerHandle;
+use std::borrow::Cow;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{ModelInferenceSession, UpdateReport};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, RunProgress, SessionRun};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{ordered, Diagnostic, DiagnosticIndex};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceRoom;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+#[allow(unused_imports)]
+use protocol::{InferenceWorkFailure, Mutation, MutationDiff};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::{lend_handle};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::inferences::spaces::SpaceStatus;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
@@ -201,7 +220,7 @@ fn an_engine_fault_shows_the_last_complete_inference_and_a_finding_in_both_langu
     let (snapshot, instance) = (demo(), mounted());
     let complete = with_inference(Some(&instance), &snapshot, Clone::clone);
     assert!(!complete.storey_levels.is_empty());
-    let shown_after = super::lend_handle(&instance, DOCUMENT, |session| shown(session, Err(InferenceError::Cancelled)).into_owned());
+    let shown_after = crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::lend_handle(&instance, DOCUMENT, |session| shown(session, Err(InferenceError::Cancelled)).into_owned());
     assert_eq!(shown_after.storey_levels, complete.storey_levels, "the last complete values stay");
     assert_eq!(shown_after.wall_layout, complete.wall_layout);
     let finding = shown_after.diagnostics.iter().find(|finding| finding.code == DiagnosticCode::InferenceFault).expect("the fault is a finding");

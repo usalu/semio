@@ -38,7 +38,7 @@ mod tests {
 
 mod windows_input_tests {
     use super::*;
-    use crate::tui::component::windows_abi::{INPUT_RECORD_0, COORD, KEY_EVENT_RECORD, WINDOW_BUFFER_SIZE_RECORD};
+    use crate::windows_abi::{INPUT_RECORD_0, COORD, KEY_EVENT_RECORD, WINDOW_BUFFER_SIZE_RECORD};
 
     fn key_record(unit: u16, down: bool, repeat: u16) -> INPUT_RECORD {
         let key = KEY_EVENT_RECORD { bKeyDown: i32::from(down), wRepeatCount: repeat, wVirtualKeyCode: 0, wVirtualScanCode: 0, uChar: unit, dwControlKeyState: 0 };
@@ -112,7 +112,7 @@ mod windows_input_tests {
         assert_eq!(bytes, b"\x1b[Azzz");
         assert!(records_to_bytes(&[resize_record()], &mut decoder, &mut bytes));
         let mut events = Vec::new();
-        let mut parser = crate::tui::ansi::AnsiParser::new();
+        let mut parser = crate::ansi::AnsiParser::new();
         parser.feed(&bytes, &mut events);
         assert_eq!(events.len(), 4);
     }

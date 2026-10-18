@@ -1,4 +1,4 @@
-use super::super::render;
+use crate::editor::bim::panels::properties::render;
 use crate::standards::v1::subsets::any::schema::{snapshot::{ClassificationItem, ClassificationSystem, ModelSnapshot, PropertyDef, PropertyKind, PropertyTemplate, PropertyValue, TemplateTarget}, inferences::ModelInference};
 use semio_framework_ui_locale::Locale;
 use std::collections::BTreeMap;

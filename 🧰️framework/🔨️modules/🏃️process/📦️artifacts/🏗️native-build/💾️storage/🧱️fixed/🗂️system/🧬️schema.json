@@ -29,6 +29,246 @@
           "maxLength": 256
         }
       }
+    },
+    "NativeReadProtocol": {
+      "const": {
+        "version": 1,
+        "maximumPathUnits": 256,
+        "bufferBytes": 65536,
+        "directoryClass": 37,
+        "directoryHeaderBytes": 104,
+        "directoryAlignment": 8,
+        "streamClass": 22,
+        "streamHeaderBytes": 24,
+        "statusSuccess": 0,
+        "statusPending": 259,
+        "statusNoMoreFiles": 2147483654,
+        "statusEndOfFile": 3221225489,
+        "statusCancelled": 3221225760,
+        "diskFileType": 1,
+        "maximumPendingObservations": 1,
+        "maximumHostRecordBytes": 4096,
+        "footerBytes": 512,
+        "maximumPendingHandles": 32
+      }
+    },
+    "NativeReadFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volumeSerial",
+        "fileId",
+        "bytes",
+        "creationTime",
+        "writeTime",
+        "changeTime",
+        "securitySha256",
+        "streamsSha256",
+        "path",
+        "finalPath",
+        "volume",
+        "kind",
+        "links",
+        "attributes",
+        "nativeDevice",
+        "nativeInode",
+        "allocatedBytes"
+      ],
+      "properties": {
+        "volumeSerial": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "fileId": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{32}$"
+        },
+        "bytes": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "creationTime": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,20}$"
+        },
+        "writeTime": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,20}$"
+        },
+        "changeTime": {
+          "type": "string",
+          "pattern": "^-?[0-9]{1,20}$"
+        },
+        "securitySha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "streamsSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 256
+        },
+        "finalPath": {
+          "type": "string",
+          "minLength": 49,
+          "maxLength": 305
+        },
+        "volume": {
+          "type": "string",
+          "minLength": 49,
+          "maxLength": 49
+        },
+        "kind": {
+          "enum": [
+            "file",
+            "directory"
+          ]
+        },
+        "links": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "attributes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "nativeDevice": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "nativeInode": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "allocatedBytes": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        }
+      }
+    },
+    "NativeReadRoot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "root",
+        "volume"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "root": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 256
+        },
+        "volume": {
+          "type": "string",
+          "minLength": 49,
+          "maxLength": 49
+        }
+      }
+    },
+    "NativeReadBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "journalNames"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/definitions/NativeReadRoot"
+        },
+        "journalNames": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[a-z0-9][a-z0-9._-]*$"
+          }
+        }
+      }
+    },
+    "NativeReceiverReadPolicy": {
+      "const": {
+        "version": 1,
+        "purpose": "ordinary-receiver",
+        "mutableRoles": [
+          "backing",
+          "mapped-root"
+        ],
+        "mutableFields": [
+          "writeTime",
+          "changeTime"
+        ],
+        "rootName": "m",
+        "backingName": "fixed.vhd",
+        "callerFieldSelection": false,
+        "authority": false
+      }
+    },
+    "NativeReceiverReadCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "mode",
+        "role",
+        "field",
+        "admit"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mode": {
+          "enum": [
+            "receiver",
+            "strict",
+            "foreign"
+          ]
+        },
+        "role": {
+          "enum": [
+            "backing",
+            "mapped-root",
+            "host",
+            "receipt"
+          ]
+        },
+        "field": {
+          "enum": [
+            "none",
+            "writeTime",
+            "changeTime",
+            "creationTime",
+            "fileId",
+            "volumeSerial",
+            "security",
+            "stream",
+            "cancel",
+            "undefined",
+            "frozen",
+            "close"
+          ]
+        },
+        "admit": {
+          "type": "boolean"
+        }
+      }
     }
-  }
+  },
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/fixed/system/component.json"
 }

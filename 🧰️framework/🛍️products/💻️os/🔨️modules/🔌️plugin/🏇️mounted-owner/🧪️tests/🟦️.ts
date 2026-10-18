@@ -8,6 +8,8 @@ import schema from "../🧬️schema/🔣️.json";
 import fixture from "./🧫️fixtures/🔣️.json";
 import contextSchema from "../🧬️schema/🧾️context/🔣️.json";
 import contextFixture from "./🧫️fixtures/🧾️context/🔣️.json";
+import {pluginFamilyText, pluginSubtreeText} from "../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 type Observation = typeof fixture.vectors[number]["observation"];
 interface MountedOwnerOracleV1 { valid(value:unknown):boolean; policy(value:unknown):boolean; verdict(value:Observation):string }
 type NestedObservation = typeof fixture.nestedJobs[number]["observation"];
@@ -79,17 +81,17 @@ test("actual native verdicts reproduce the complete strict independent mounted o
  expect(results).toEqual(expected);
 });
 test("actual runtime mounted receivers require caller policy and typed scheduling turn",()=>{
- const root=resolve(import.meta.dir,"../../../../../../.."),source=readFileSync(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"),"utf8");
+ const root=resolve(import.meta.dir,"../../../../../../.."),source=pluginFamilyText();
  expect(source.includes("MountedOwnerTurnV1")).toBe(true);
  expect(/fn mounted_job_(?:maintenance|close)_step\([^\n]*maximum_(?:items|bytes)/.test(source)).toBe(false);
  expect(/pub fn new\(mounted_policy:\s*MountedOwnerPolicyV1\)/.test(source)).toBe(true);
  expect(source.includes("PluginRuntime::new();")).toBe(false);
- expect(/mounted_job_maintenance_step\([^;\n]*turn/.test(source)).toBe(true);
- expect(/mounted_job_close_step\([^;\n]*turn/.test(source)).toBe(true);
+ expect(/fn mounted_job_maintenance_step\([^;\n]*cx:\s*&mut semio_framework_job::StepContext/.test(source)).toBe(true);
+ expect(/fn mounted_job_close_step\([^;\n]*cx:\s*&mut semio_framework_job::StepContext/.test(source)).toBe(true);
  expect(source.includes("instance.app.mounted_owner_maintenance_step(&mut turn)")).toBe(true);
  expect(source.includes("instance.app.mounted_owner_close_step(&mut turn)")).toBe(true);
- expect(source.includes("pub mounted_policy: crate::MountedOwnerPolicyV1")).toBe(true);
- expect(source.includes("fn create_app(&self, app_id: &str, actor: protocol::ActorId, mounted_policy: crate::MountedOwnerPolicyV1")).toBe(true);
+ expect(source.includes("pub mounted_policy: MountedOwnerPolicyV1")).toBe(true);
+ expect(source.includes("fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1")).toBe(true);
  expect(source.includes("runtime_lifecycle_grant")).toBe(false);
  expect(source.includes("cx.is_cancelled()")).toBe(true);expect(source.includes("cx.deadline_exceeded()")).toBe(true);
 });
@@ -141,8 +143,10 @@ test("actual native verdicts preserve original mounted actor capture and full ph
 });
 
 test("runtime policy receives the original child failure before propagation",()=>{
- const source=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
- for(const name of ["maintenance_step","close_step"]){expect(source.includes(`match self.${name}(turn.grant()){Ok(step)=>step,Err(error)=>{turn.record(error.retained_progress(),false,false).map_err(ValueError::into_fault)?;return Err(error);}}`)).toBe(true);}
+ const owner=readFileSync(new URL("../🦀️.rs",import.meta.url),"utf8"),app=pluginSubtreeText("🧵️instance","🔌️plugin-app-impl");
+ const recorded=owner.indexOf("self.progress = self.progress.checked_add(actual)?;");expect(recorded).toBeGreaterThan(0);expect(recorded).toBeLessThan(owner.indexOf("let step = result?;"));
+ for(const name of ["maintenance_step","close_step"]){expect(app.includes(`fn mounted_owner_${name}(&mut self,turn:&mut MountedOwnerTurnV1<'_,'_>)`)).toBe(true);}
+ expect((app.match(/turn\.advance_lifecycle\(\|cx,loan\|/g)??[]).length).toBe(2);
 });
 
 test("runtime policy retains actual nested error debit without consuming it twice",()=>{
@@ -168,26 +172,23 @@ test("actual native verdicts preserve measured alias births and physical phase r
 /** 🧾️ Independent scheduling vectors retain the original extension receipt at the actual turn boundary. */
 test("runtime policy forwards original extension retirement currencies into the reactor receiver",()=>{
  mountedContextOracle();
- const root=resolve(import.meta.dir,"../../../../../../.."),plugin=readFileSync(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"),"utf8"),turn=readFileSync(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs"),"utf8");
- expect(plugin.includes("pub fn mounted_owner_policy(&self) -> crate::MountedOwnerPolicyV1 { self.mounted_policy }")).toBe(true);
- expect(plugin.includes("fn extension_retirement_turn(grant: RetainedCloneGrant) -> Result<(bool, PluginLifecycleStep), Fault>")).toBe(true);
+ const root=resolve(import.meta.dir,"../../../../../../.."),plugin=pluginFamilyText(),turn=readModuleTreeSource(resolve(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🦀️.rs"));
+ expect(plugin.includes("pub fn mounted_owner_policy(&self) -> MountedOwnerPolicyV1 { self.mounted_policy }")).toBe(true);
+ expect(plugin.includes("pub fn extension_retirement_turn(cx:&mut semio_framework_job::StepContext<'_>) -> Result<(bool, PluginLifecycleStep), semio_framework_job::OriginalTurnFailure>")).toBe(true);
  expect(plugin.includes("Ok((more_work, step))")).toBe(true);
  expect(turn.includes("runtime.mounted_owner_policy().close")).toBe(true);
- expect(turn.includes("extension_retirement_step.progress()")).toBe(true);
- expect(turn.includes("admit_retained_clone_progress(extension_grant, progress")).toBe(true);
- expect(turn.includes("semio_framework_diagnostic::FaultFrom::to_fault(&error)")).toBe(true);
+ expect(turn.includes("cx.with_retained_loan(extension_grant,|same|semio_framework_plugin_extension::extension_runtime_lift::extension_retirement_turn(same))?")).toBe(true);
  expect(turn.includes("extension_retirement_turn(usize::from")).toBe(false);
 });
 
 /** 🩹️ Independent original phase grants bind one cumulative recipient across reconcile continuations. */
 test("runtime policy forwards one original cumulative reconcile recipient to all job contexts",()=>{
  mountedContextOracle();
- const plugin=resolve(import.meta.dir,"../.."),patches=readFileSync(resolve(plugin,"⚛️reactor/🩹️patches/🦀️.rs"),"utf8"),turn=readFileSync(resolve(plugin,"⚛️reactor/🔄️turn/🦀️.rs"),"utf8");
- expect(patches.includes("pub fn drive_one(&self, retained: RetainedCloneGrant, retained_progress: &mut RetainedCloneProgress)")).toBe(true);
- expect(patches.includes("drive_job_one(&mut state, index, retained, retained_progress)")).toBe(true);
- expect(patches.includes("StepBudget::new(1, u64::MAX, retained)")).toBe(true);
- expect(patches.includes("&mut slot.preview_sequence, retained_progress)")).toBe(true);
+ const plugin=resolve(import.meta.dir,"../.."),patches=readFileSync(resolve(plugin,"⚛️reactor/🩹️patches/🦀️.rs"),"utf8"),turn=readModuleTreeSource(resolve(plugin,"⚛️reactor/🔄️turn/🦀️.rs"));
+ expect(patches.includes("pub fn drive_one(&self, cx: &mut StepContext<'_>)")).toBe(true);
+ expect(patches.includes("drive_job_one(&mut state, index, cx)?")).toBe(true);
+ expect(patches.includes("fn drive_job_one(state: &mut PatchTrackerState, index: usize, cx: &mut StepContext<'_>)")).toBe(true);
  expect(patches.includes("StepBudget::new(1, u64::MAX)")).toBe(false);
- expect(turn.includes("runtime.mounted_owner_policy().maintenance")).toBe(true);
- expect(turn.includes("patches.drive_one(retained, retained_progress)")).toBe(true);
+ expect(pluginFamilyText().includes("original_plugin_turn_grant(ctx.mounted_policy.maintenance, *retained)")).toBe(true);
+ expect(turn.includes("patches.drive_one(cx)?")).toBe(true);
 });

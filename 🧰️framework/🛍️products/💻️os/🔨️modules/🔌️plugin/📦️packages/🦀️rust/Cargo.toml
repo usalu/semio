@@ -107,7 +107,7 @@ semio_framework_ui_scene = { path = "../../../../../../🔨️modules/🖱️ui/
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 # 🪶️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS (26/09/01): default features drop
-# `bitflags` — `world actor`'s WIT (`🧬️schema/📜️.wit`) declares no `flags` type, so wit-bindgen's
+# `bitflags` — `world actor`'s WIT (`🧬️schema/*.wit`) declares no `flags` type, so wit-bindgen's
 # generated code never calls into it; confirmed dead (one leftover generic-instantiation symbol,
 # no real function) in the built `.wasm` before this change. `async`/`std`/`realloc`/`macro-string`
 # stay: `poll` is `async func` in the WIT and genuinely exercises `wit_bindgen::rt::async_support`

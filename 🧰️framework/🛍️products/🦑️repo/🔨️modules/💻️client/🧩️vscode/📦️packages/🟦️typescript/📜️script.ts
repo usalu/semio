@@ -10,7 +10,7 @@ import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️pro
 /** 🧭️ `@semio-tech/repo-vscode` router: `bun ./📜️script.ts <dev|test [level]|build|lint|build-vsix>`. */
 import { CheckScript as CheckGraphqlTypesScript, GenerateScript as GenerateGraphqlTypesScript, PreviewGeneratedScript } from "../../🔗️graphql-types/🏃️execution/🟦️.ts";
 import { TEST_LEVELS } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { runBunx } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runBunx } from "../../../../📚️library/🏃️process/🍞️bun/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 

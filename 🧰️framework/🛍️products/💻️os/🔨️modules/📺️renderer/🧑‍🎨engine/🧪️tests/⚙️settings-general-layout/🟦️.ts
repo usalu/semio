@@ -1,6 +1,6 @@
 /** ⚙️ Neutral and React oracle for General Tree projection and bottom-panel flow. */
 import { readFileSync } from "node:fs";
-import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
+import { readModuleTreeSource, sliceModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -229,7 +229,7 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
     const contract = fixture.upFlowDisclosure;
     expect(upFlowHeaderRect(contract)).toEqual(contract.expectedHeaderRect);
     expect(contract.expectedHeaderRect.y).toBeGreaterThanOrEqual(contract.childRect.y + contract.childRect.h);
-    const treeSource = readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧱️elements", "🌳️Tree", "🟦️.tsx"), "utf8");
+    const treeSource = readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧱️elements", "🌳️Tree", "🌱️section", "🟦️.tsx"), "utf8");
     const start = treeSource.indexOf('{direction === "up" ? (');
     const branch = treeSource.slice(start, treeSource.indexOf("</Collapsible>", start));
     expect(branch.indexOf("{" + contract.react.order[0] + "}")).toBeLessThan(branch.indexOf("{" + contract.react.order[1] + "}"));
@@ -299,7 +299,7 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
   test("React authors the same Tree sections, row controls, and upward panel ownership", () => {
     const panelSource = readModuleTreeSource(join(engineRoot, "🧱️elements", "📌️ChromePanels", "🟦️.tsx"));
     const panelHost = readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🧱️elements", "🖼️Panel", "🟦️.tsx"), "utf8");
-    const reactTarget = readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🎯️targets", "⚛️react", "🟦️.tsx"), "utf8");
+    const panelAnchor = readFileSync(join(frameworkRoot, "🔨️modules", "🖱️ui", "🔨️modules", "⚓️panel-anchor", "🟦️.ts"), "utf8");
     for (const section of fixture.tree.sections) {
       expect(panelSource).toContain(`id: "${section.id}"`);
       expect(panelSource).toContain(`defaultOpen: ${section.defaultOpen}`);
@@ -315,7 +315,7 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
     }
     expect(panelHost).toContain('isBottom ? "flex-col-reverse" : "flex-col"');
     expect(panelHost).toContain(`viewportClassName={isBottom ? "flex min-h-full flex-col ${fixture.stableGeneral.react.viewportJustification}" : undefined}`);
-    const anchorStyle = reactTarget.slice(reactTarget.indexOf("export function anchorPositionStyle"), reactTarget.indexOf("export function chromeHostedOpenPanelPositionStyle"));
+    const anchorStyle = panelAnchor.slice(panelAnchor.indexOf("export function anchorPositionStyle"), panelAnchor.indexOf("export function chromeHostedOpenPanelPositionStyle"));
     expect(anchorStyle).toContain(`${fixture.stableGeneral.react.extentProperty}:`);
     expect(fixture.stableGeneral.react.bondedEdge).toBe("bottom");
     expect(anchorStyle).toContain('style[vertical] = "var(--panel-inset)"');
@@ -393,10 +393,9 @@ describe("⚙️ General Settings Tree and bottom-panel flow", () => {
   });
 
   test("WGPU publishes General directly as Tree rows and uses flow-owned panel geometry", () => {
-    const shellSource = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
-    const start = shellSource.indexOf("pub(crate) fn build_settings_general_ui");
-    const end = shellSource.indexOf("fn driver_rows", start);
-    const general = shellSource.slice(start, end);
+    const shellRoot = join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs");
+    const shellSource = readModuleTreeSource(shellRoot);
+    const general = sliceModuleTreeSource(shellRoot, "fn build_settings_general_ui", "fn driver_rows");
     expect(general).toContain("UiNode::Tree(UiTreeNode");
     expect(general).not.toContain("UiNode::Stack(UiStackNode");
     expect(shellSource).toContain("flowed_anchor_content_rect(anchor.flow().block");

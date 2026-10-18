@@ -38,7 +38,7 @@ pub enum MemberHistoryDictionaryStep {
     Ready,
     Rejected(MemberOpenDiagnostic),
 }
-pub(crate) struct MemberHistoryDictionaryAdmissionError {
+pub struct MemberHistoryDictionaryAdmissionError {
     pub diagnostic: MemberOpenDiagnostic,
     pub input: VerifiedMemberHistoryInput,
 }

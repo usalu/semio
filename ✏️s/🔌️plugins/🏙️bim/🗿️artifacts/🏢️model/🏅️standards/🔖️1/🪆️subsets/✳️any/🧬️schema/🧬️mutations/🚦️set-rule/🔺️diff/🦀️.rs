@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetRule`: a sparse rule patch of exactly the provided fields that differ. The rule that results must be writable (see `rule_problem`); a patch that restates the current values is
 //! `mutation.no-op`.
 
-use super::SetRule;
+use crate::standards::v1::subsets::any::schema::mutations::set_rule::SetRule;
 use crate::standards::v1::subsets::any::schema::{snapshot::{rule_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

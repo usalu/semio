@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteColumnType`: one deleted column type entry together with the properties and classifications keyed by the type; refused while columns still use it.
 
-use super::super::cascade;
-use super::DeleteColumnType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_column_type::DeleteColumnType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

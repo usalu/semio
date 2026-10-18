@@ -3,7 +3,11 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join as systemJoin } from "node:path";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { devToolingEnv, runCmd, defineLint, getWorkspaceRoot, dependencyBoundaryBreachesForBundleDir, type BundleLinter } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv } from "../🏃️process/🌿️environment/🟦️.ts";
+import { runCmd } from "../🏃️process/🟦️.ts";
+import { defineLint, type BundleLinter } from "../🚨️policy/🧩️linters/🟦️.ts";
+import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
+import { dependencyBoundaryBreachesForBundleDir } from "../🚨️policy/🛡️dependency-boundary/🟦️.ts";
 import { runRepoScriptMain } from "../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const join = (...parts: string[]): string => systemJoin(...parts).replaceAll("\\", "/");

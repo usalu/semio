@@ -1,0 +1,14 @@
+{
+ "tag": "vtu",
+ "file": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🔨️modules/🖱️ui/⌨️tui/📟️vt/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "🧫️vt-shared-fixtures-and-corpus-laws",
+  "⌨️vt-key-mouse-paste-and-focus-encoding-laws",
+  "📟️vt-screen-sequence-laws",
+  "📜️vt-history-reflow-and-selection-text-laws",
+  "🖥️vt-pane-input-search-and-browse-laws",
+  "🖱️vt-pane-pointer-selection-and-paint-laws",
+  "🎲️vt-robustness-law"
+ ]
+}

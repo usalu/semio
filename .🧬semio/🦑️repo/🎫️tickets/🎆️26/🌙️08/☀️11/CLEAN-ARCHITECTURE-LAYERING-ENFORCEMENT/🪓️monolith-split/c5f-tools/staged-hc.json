@@ -1,0 +1,13 @@
+{
+ "tag": "hc",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️tests/🔬️guest-cold-relay/🦀️.rs",
+ "folders": [
+  "♻️relay-lifecycle-fixtures-and-test-relay",
+  "🗝️registry-bounds-reaper-and-publication-bounds",
+  "🧰️relay-session-helpers-and-waits",
+  "🪂️dropped-futures-wake-fallback-and-cancellation",
+  "💥️panics-and-cleanup-cancel-failures",
+  "🛣️concurrent-routes-and-poisoned-slot"
+ ]
+}

@@ -1,0 +1,15 @@
+{
+ "tag": "evu",
+ "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-events-unit/🦀️.rs",
+ "root": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-events-unit/🦀️.rs",
+ "folders": [
+  "🎯️event-fixtures-hit-test-capture-and-focus-laws",
+  "🪟️overlay-drag-drop-and-scroll-laws",
+  "✍️edit-state-and-hover-reveal-laws",
+  "🖱️interactivity-and-scene-command-laws",
+  "📍️anchored-placement-and-tooltip-dwell-laws",
+  "⌨️widget-keyboard-laws",
+  "🧭️flow-direction-focus-visible-and-search-moment-laws",
+  "🪞️mirrored-number-and-text-keyboard-laws"
+ ]
+}

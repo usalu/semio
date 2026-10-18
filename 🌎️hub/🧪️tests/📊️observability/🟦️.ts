@@ -21,7 +21,6 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { HUB_OBSERVABILITY_SCHEMA, type HubObservabilityV1 } from "../../📊️observability/🟦️.ts";
-import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const hubRoot = join(dirname(fileURLToPath(import.meta.url)), "../..");
 const read = (...parts: string[]) => JSON.parse(readFileSync(join(hubRoot, ...parts), "utf8"));
@@ -29,10 +28,12 @@ const fixture = read("🧪️tests/🧫️fixtures", "📊️observability-v1", 
 const observability = read("📊️observability", "🧬️schema", "🔣️.json");
 const trustedCatalog = read("🗿️artifact-authority", "🔏️trusted-catalog", "🧬️schema", "🔣️.json");
 const directory = read("..", "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "📇️directory", "🧬️schema", "🔣️.json");
+const componentReceipt = read("..", "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "🖨️describe", "🏷️component-receipt", "🧬️schema", "🔣️.json");
 
-/** 🧪️ Compiles `HubObservabilityV1` with the trusted-catalog module and the directory module it references registered under their own `$id`s. */
+/** 🧪️ Compiles `HubObservabilityV1` with the trusted-catalog, directory and component-receipt modules it references registered under their own `$id`s. */
 function compileBody() {
   const ajv = new Ajv({ allErrors: true, strict: false });
+  ajv.addSchema(componentReceipt);
   ajv.addSchema(directory);
   ajv.addSchema(trustedCatalog);
   const validate = ajv.compile(observability);
@@ -137,10 +138,17 @@ function readmeSection(heading: string): string {
   return readme.slice(start, end < 0 ? undefined : end);
 }
 
-/** 🛣️ The `.route("…")` paths the hub's router registers (the boot server's included). */
+/** 🛣️ The `.route("…")` paths the hub's router registers (the boot server's included), read from every non-test Rust module under `🏗️bootstrap`. */
 function registeredRoutes(): Set<string> {
-  const source = readModuleTreeSource(join(hubRoot, "🏗️bootstrap", "🦀️.rs"));
-  return new Set([...source.matchAll(/\.route\(\s*"([^"]+)"/gu)].map((match) => match[1]!));
+  const routes = new Set<string>();
+  const walk = (directory: string) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      if (entry.isDirectory() && !entry.name.startsWith(".") && !["node_modules", "dist", "target", "🗑️generated", "🧪️tests"].includes(entry.name)) walk(join(directory, entry.name));
+      else if (entry.isFile() && entry.name === "🦀️.rs") for (const match of readFileSync(join(directory, entry.name), "utf8").matchAll(/\.route\(\s*"([^"]+)"/gu)) routes.add(match[1]!);
+    }
+  };
+  walk(join(hubRoot, "🏗️bootstrap"));
+  return routes;
 }
 
 /** 🌐️ Every `"OS_HUB_…"` a non-test hub source reads, plus the process variables of the framework modules the hub hosts,

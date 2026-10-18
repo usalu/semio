@@ -12,14 +12,11 @@ use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use std::collections::BTreeMap;
 
-#[path = "✒️ink/🦀️.rs"]
-pub mod ink;
+pub use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::ink;
 #[path = "📖️pdf/🦀️.rs"]
 pub mod pdf;
-#[path = "🎨️svg/🦀️.rs"]
-pub mod svg;
-#[path = "📊️tables/🦀️.rs"]
-pub mod tables;
+pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::export::sheets::svg;
+pub use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::sheets::tables;
 
 pub use ink::TitleLabels;
 
@@ -89,6 +86,4 @@ impl Serializer<ModelSnapshot> for ModelIntoSheetsPdf {
 #[path = "🧪️tests/🧰️testkit/🦀️.rs"]
 pub mod testkit;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

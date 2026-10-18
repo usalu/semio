@@ -95,6 +95,4 @@ pub fn handle<P: Browse>(payload: &P, doc: &ArtifactView<'_, ModelSnapshot>, _cf
     payload.browse(doc.snapshot, ctx)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

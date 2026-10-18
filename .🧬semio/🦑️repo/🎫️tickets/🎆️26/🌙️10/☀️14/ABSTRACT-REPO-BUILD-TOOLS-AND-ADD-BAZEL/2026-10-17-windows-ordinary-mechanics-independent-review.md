@@ -1,0 +1,9 @@
+# Windows Ordinary Receiver Mechanics Review
+
+All five current inputs independently matched the frozen manifest by bounded nofollow FD reads, SHA256 and FD/name seven-field stamps (259,986 bytes). Receipt: `🗑️generated/windows-ordinary-mechanics-five-independent-hold.json`. This is a sequential point-time Source binding.
+
+The new literal `ordinary-receiver` requires the closed mapped-root binding and exact m basename before library effects. Only the exact expected fixed.vhd backing role and exact mapped volume-root role allow the schema pair writeTime/changeTime to vary. Host/receipt/other roles retain complete equality. Full native identity, security, streams, allocation, size, links and other facts remain exact, including every receiver-mode view.facts call and the final held-descriptor fence. Ordinary dispatch and PUB do not yet select this mode, and default strict comparator remains unchanged.
+
+Bazel reports the actual defining System function under explicit native syscall/async-operation Source ports: 28 cases/1,551 assertions natural0; four-root strict natural0; prior unchanged-default observer four laws/27,162 assertions with independent Python/SQLite natural0. These are attributed peer executions. Prior32 actual Root0 owner workers are a distinct checkpoint, not new real Windows mechanics acceptance.
+
+No material issue found in this contained mechanical seam. It remains insufficient to establish live mount association from a cached DTO: authentic Fixed receiver/cleanup guard, cumulative account, actual pre/post mapping commands and named-root fences must compose before consumer dispatch. Legitimate allocation/size/links/security/streams changes still conservatively refuse; the timestamp pair is not general writable-state permission. No Native/NTFS runtime or broader Windows ordinary publication acceptance is claimed.

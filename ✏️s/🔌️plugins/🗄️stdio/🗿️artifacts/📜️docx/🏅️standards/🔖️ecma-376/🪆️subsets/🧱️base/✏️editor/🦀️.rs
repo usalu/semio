@@ -40,7 +40,7 @@ use {semio_framework_artifact_reference::SubsetId};
 use semio_framework_ui_locale::Label;
 
 #[path = "📬️preparation/🦀️.rs"]
-pub(crate) mod preparation;
+pub mod preparation;
 
 //#region 🔖️Dialect
 /// 🪪️ Artifact coordinate — `s.stdio.docx@ecma-376/*` (the unrestricted `any` subset). Duplicated
@@ -70,7 +70,7 @@ fn build_set_page_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, te
     preparation::prepare_set_run_text(snapshot, address, text).map_err(|message| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.paged-owner-required"), message))
 }
 
-pub(crate) fn build_set_run_formatting_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, bold: bool, italic: bool, underline: bool) -> Result<Option<DocxMutation>, Fault> {
+pub fn build_set_run_formatting_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, bold: bool, italic: bool, underline: bool) -> Result<Option<DocxMutation>, Fault> {
     let current = docx_run_formatting(snapshot, address).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-run-formatting.address"), error.into_message()))?;
     if current == (DocxRunFormatting { bold: Some(bold), italic: Some(italic), underline: Some(underline) }) {
         return Ok(None);
@@ -118,7 +118,7 @@ pub(crate) fn required_docx_xml_address(args: Option<&semio_framework_value::Dsl
     Ok(DocxXmlAddress { part_path: text("partPath")?, node_path, expected_name: text("expectedName")?, revision: text("revision")? })
 }
 
-pub(crate) fn required_docx_bool_argument(args: Option<&semio_framework_value::DslValue>, name: &str) -> Result<bool, Fault> {
+pub fn required_docx_bool_argument(args: Option<&semio_framework_value::DslValue>, name: &str) -> Result<bool, Fault> {
     let semio_framework_value::DslValue::Object(arguments) = args.ok_or_else(|| docx_action_fault("stdio.docx.set-run-formatting.arguments", "set-run-formatting requires an argument object"))? else {
         return Err(docx_action_fault("stdio.docx.set-run-formatting.arguments", "set-run-formatting requires an argument object"));
     };
@@ -487,7 +487,7 @@ impl ArtifactEditor for DocxEditor {
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
         _draft: &DraftView<'_, Self::Draft>,
-        _engines: &semio_framework_2d::compute::EngineHandles,
+        _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<Emit<Self::Mutation>, Fault> {
         match command {
             semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native(DocxEditorCommand::SetPage { address, text }) => {

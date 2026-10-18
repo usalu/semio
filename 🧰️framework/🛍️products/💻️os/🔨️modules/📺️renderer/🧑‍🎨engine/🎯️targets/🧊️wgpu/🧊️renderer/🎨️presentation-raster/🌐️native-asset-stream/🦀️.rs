@@ -59,7 +59,7 @@ pub fn push_renderer_asset_page(fetch: &mut RendererAssetFetchOwner, bytes: &mut
         let page = WorldAssetResponsePage::try_from_owned(source.to_vec()).map_err(|_| "native renderer asset page exceeded fixed credits")?;
         fetch.owner_mut().push_page(page).map_err(|_| "native renderer asset response exceeded its reserved credits")?;
     }
-    let _ = bytes.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
+    let _ = semio_framework_os_renderer_wgpu_host_base::close_renderer_io_payload(bytes);
     Ok(())
 }
 

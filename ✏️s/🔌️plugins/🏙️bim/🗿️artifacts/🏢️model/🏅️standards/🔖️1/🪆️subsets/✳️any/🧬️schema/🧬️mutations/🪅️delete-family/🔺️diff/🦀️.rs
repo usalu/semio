@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `DeleteFamily`: the family, its parameters and its solids leave in one sparse diff, together with the properties and classifications keyed by the family. A family a column type,
 //! beam type, curtain wall type or railing section uses as its profile cannot go: refused as `mutation.target-referenced`.
 
-use super::super::cascade;
-use super::super::family_rules;
-use super::DeleteFamily;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules;
+use crate::standards::v1::subsets::any::schema::mutations::delete_family::DeleteFamily;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

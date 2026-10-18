@@ -11,14 +11,16 @@ import { closeSync, existsSync, lstatSync, mkdirSync, mkdtempSync, openSync, rea
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution";
 import { repoCacheDirectory } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { runRepositoryExactCargoLaws, runCmd, orchestratorBudgetOpts, readStableBuildFile, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runCmd, orchestratorBudgetOpts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { readStableBuildFile } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { assertObservationExpectation, type ObservationExpectation } from "../../🧪️testing/🛂️expectation/🟦️.ts";
 import { webSha256Hex } from "../../🚀️local-relay/🛰️servers/🟦️.ts";
 import { requireHubDatum } from "../../🧪️testing/📖️source-readers/🟦️.ts";
-import { proveTrustedCompiledDependenciesFixture } from "../🏛️trusted-catalog-fixtures/🟦️.ts";
+import { proveTrustedCompiledDependenciesFixture } from "../🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures/🟦️.ts";
 
 type NativeOpenableProjectionReceipt = {
   artifact: string;

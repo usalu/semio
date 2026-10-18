@@ -7,8 +7,8 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Duct_(flow)>, <https://en.wikipedia.org/wiki/Cable_tray>.
 
-use super::super::element_solids::{dep_value, Anonymous, SolidBounds, SolidPoint};
-use super::super::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_value, Anonymous, SolidBounds, SolidPoint};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 use crate::standards::v1::subsets::any::schema::snapshot::{MepShape, MepSystem, ModelSnapshot, Point3};
 use semio_framework_value::DslValue;
 
@@ -219,7 +219,7 @@ fn finite(point: &Point3) -> bool {
     point.x.is_finite() && point.y.is_finite() && point.z.is_finite()
 }
 
-fn distance(a: &Point3, b: &Point3) -> f64 {
+pub fn distance(a: &Point3, b: &Point3) -> f64 {
     (b.x - a.x).hypot(b.y - a.y).hypot(b.z - a.z)
 }
 

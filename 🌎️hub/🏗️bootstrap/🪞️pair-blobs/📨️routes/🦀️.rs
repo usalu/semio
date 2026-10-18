@@ -3,7 +3,7 @@
 use std::sync::Arc;
 use semio_hub_ledgers::pair_blobs::{BlobRecord, CanonicalPairHttpControl, CanonicalPairHttpRequest, DocumentStatusResponse, canonical_pair_error_status, canonical_pair_request_admission, db_io_pages_into_http_bytes};
 use axum::body::Bytes;
-use semio_hub_lag_rebootstrap::{CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, CanonicalPairTerminal, REBOOTSTRAP_DEADLINE_MS, RebootstrapContext, RebootstrapProgress, RebootstrapProgressStage, append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag};
+use semio_hub_lag_rebootstrap::{CANONICAL_CHECKPOINT_PAIR_MEDIA_TYPE, CanonicalPairTerminal, REBOOTSTRAP_DEADLINE_MS, RebootstrapContext, RebootstrapProgress, RebootstrapProgressStage, RebootstrapTransferControl, append_canonical_pair_data, append_canonical_pair_header, append_canonical_pair_terminal, canonical_pair_etag};
 use directory::os_directory::access_policy::DirectoryAccessActionV1;
 use directory::os_directory::DocumentScope;
 use axum::http::{HeaderMap, StatusCode};

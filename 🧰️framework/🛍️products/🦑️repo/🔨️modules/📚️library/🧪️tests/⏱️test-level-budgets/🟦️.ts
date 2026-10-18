@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { TEST_LEVEL_BUDGET_MS } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { PACKAGE_TEST_BUDGET_MS, packageTestBudgetMs } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { PACKAGE_TEST_BUDGET_MS, packageTestBudgetMs } from "../../🏃️process/🦀️cargo/⏱️budget/🟦️.ts";
 
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/⏱️test-level-budgets/🔣️.json", import.meta.url), "utf8"));
 

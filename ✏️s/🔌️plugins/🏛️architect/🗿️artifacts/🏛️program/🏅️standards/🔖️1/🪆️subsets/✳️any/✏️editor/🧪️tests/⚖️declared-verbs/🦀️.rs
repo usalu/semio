@@ -116,7 +116,7 @@ use semio_framework_plugin::ToolJobFactory;
 #[allow(unused_imports)]
 use semio_framework_plugin::ToolJobFactoryError;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::architect::*;
 use semio_framework_plugin::artifact_app_laws::{assert_declared_verbs_honour_their_declarations, declared_verb_agent_divergences, declared_verb_ever_wrote_document, declared_verb_probe};
 

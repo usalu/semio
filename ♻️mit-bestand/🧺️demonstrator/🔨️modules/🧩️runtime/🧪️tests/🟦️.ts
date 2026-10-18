@@ -38,11 +38,12 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   assert.ok(validator.validate({ $ref: schema.$id + "#/$defs/DemonstratorPipelineContract" }, pipeline));
   assert.deepEqual(runtime.DEMONSTRATOR_RUNTIME_TARGETS.map((row: any) => row.variant).sort(), pipeline.variants);
   const project = JSON.parse(readFileSync(join(directory, "../../📋️project.json"), "utf8"));
-  assert.deepEqual(project.targets.build.dependsOn, ["prepare"]);
+  assert.deepEqual(project.targets.build.dependsOn, ["prepare-release", ...pipeline.wasmTargets]);
+  assert.equal(project.targets.prepare, undefined, "Only profile-qualified preparation targets exist");
   assert.deepEqual(project.targets.build.outputs, ["{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/site"]);
   assert.equal(project.targets.build.options.command, `bun ./${pipeline.site.command} build`);
   assert.deepEqual(project.targets["activate-prototype"]?.dependsOn, ["prepare-prototype", pipeline.development.activationTarget]);
-  assert.deepEqual(project.targets["activate-prototype"]?.outputs, ["{projectRoot}/dist/♻️activation/prototype"], "Demonstrator union receipt must restore from Nx cache");
+  assert.deepEqual(project.targets["activate-prototype"]?.outputs, ["{projectRoot}/dist/♻️activation/prototype"], "Demonstrator union receipt must restore from the build cache");
   for (const name of ["serve", "dev"]) {
     assert.equal(project.targets[name]?.continuous, true);
     assert.equal(project.targets[name]?.cache, false);
@@ -59,14 +60,14 @@ export async function testDemonstratorRuntime(workspace: string): Promise<void> 
   const testCommand = readFileSync(join(directory, "../..", pipeline.e2e.testCommand), "utf8");
   for (const forbidden of pipeline.forbiddenOrchestration) assert.equal(testCommand.includes(forbidden), false, `E2E hides ${forbidden}`);
   const workspaceProject = JSON.parse(readFileSync(join(workspace, "📋️project.json"), "utf8"));
-  assert.ok(!workspaceProject.targets["deps-browsers"].dependsOn?.includes("deps-javascript"), "Browser preparation must not replace dependencies used by running Nx consumers");
+  assert.ok(!workspaceProject.targets["deps-browsers"].dependsOn?.includes("deps-javascript"), "Browser preparation must not replace dependencies used by running build consumers");
   const siteCommand = readFileSync(join(directory, "../..", pipeline.site.command), "utf8");
   for (const forbidden of [...pipeline.forbiddenCommandImports, ...pipeline.forbiddenOrchestration]) assert.equal(siteCommand.includes(forbidden), false, `Site build hides ${forbidden}`);
   for (const profile of pipeline.profiles) {
     const preparation = project.targets[`prepare-${profile}`];
     assert.ok(preparation, `Missing Demonstrator ${profile} preparation`);
-    assert.equal(preparation.cache, true, `prepare-${profile} only validates already Nx-materialized bytes and writes nothing`);
-    assert.deepEqual(preparation.dependsOn, pipeline.variants.map((variant: string) => `${pipeline.preparationProject}:prepare-${variant}-react-${profile}`));
+    assert.equal(preparation.cache, true, `prepare-${profile} only validates already build-materialized bytes and writes nothing`);
+    assert.deepEqual(preparation.dependsOn, [...pipeline.variants.map((variant: string) => `${pipeline.preparationProject}:prepare-${variant}-react-${profile}`), ...pipeline.wasmTargets]);
   }
   const { demonstratorRuntimeAssetSources } = await import(pathToFileURL(join(directory, "📦️assets/🟦️.ts")).href);
   for (const profile of pipeline.profiles) {

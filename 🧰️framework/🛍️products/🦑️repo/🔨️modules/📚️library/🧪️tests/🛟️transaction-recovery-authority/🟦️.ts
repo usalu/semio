@@ -3,11 +3,11 @@ import { expect, test } from "bun:test";
 import { readFileSync, writeFileSync, mkdirSync, mkdtempSync, lstatSync, readdirSync, renameSync, symlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { semanticOwnedInputFileSnapshot } from "../../🔍️discovery/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { join, resolve } from "node:path";
 import ts from "typescript";
 
-const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization/🟦️.ts"), source = normalizationSourceDeclarations(sourcePath);
+const library = resolve(import.meta.dir, "../.."), sourcePath = join(library, "🧹️normalization"), source = normalizationSourceDeclarations(sourcePath);
 const tree = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🛟️transaction-recovery-authority/🔣️.json"), "utf8"));
 const functionNames = ["reconcileTransactionOwnedTuples", "validateForwardMoveSourceInputs", "validateForwardGeneratorInputs", "validateResumeTuples"];

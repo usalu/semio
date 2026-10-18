@@ -274,9 +274,9 @@ describe("the development catalog", () => {
 
   it("declares the catalog format the hub's publisher writes and its loader requires", () => {
     const declared = schema.$defs.DevHubCatalogHeaderV1.properties;
-    const publisher = readFileSync(join(REPO, "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🟦️.ts"), "utf8");
-    const start = publisher.indexOf("\nexport async function materializeTrustedCatalogBundle");
-    const body = publisher.slice(start, publisher.indexOf("\nfunction ", start + 1));
+    const publisher = readFileSync(join(REPO, "🌎️hub/🏗️bootstrap/🧾️provenance/🚚️bootstrap-publication/🧱️materialized-bundle/🟦️.ts"), "utf8");
+    const start = publisher.indexOf("\nexport async function withMaterializedTrustedCatalogBundleV1");
+    const body = publisher.slice(start, publisher.indexOf("\nexport function trustedBootstrapReadCurrentBundle", start + 1));
     expect(start).toBeGreaterThan(0);
     expect(body).toContain(`schemaVersion: ${declared.schemaVersion.const},`);
     for (const key of declared.packages.items.required) expect(body, key).toMatch(new RegExp(`\\n\\s+${key}[:,]`, "u"));

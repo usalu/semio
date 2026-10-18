@@ -1,0 +1,53 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📜️script.ts",
+ "keepParentIn": ".",
+ "cap": 950,
+ "chunks": [
+  {
+   "dir": ".",
+   "leaf": "📜️script.ts",
+   "units": [
+    4,
+    8,
+    9
+   ]
+  },
+  {
+   "dir": "🪁️typecheck",
+   "units": [
+    0
+   ]
+  },
+  {
+   "dir": "🚨️dependency-lint",
+   "units": [
+    1,
+    2
+   ]
+  },
+  {
+   "dir": "🗂️schema-read-inventory",
+   "units": [
+    3
+   ]
+  },
+  {
+   "dir": "🖼️repository-ui",
+   "units": [
+    5
+   ]
+  },
+  {
+   "dir": "🧱️fixture-ownership",
+   "units": [
+    6
+   ]
+  },
+  {
+   "dir": "🗺️general-execution-ownership",
+   "units": [
+    7
+   ]
+  }
+ ]
+}

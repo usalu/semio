@@ -19,7 +19,7 @@ path = "🦀️.rs"
 testkit = []
 
 [dependencies]
-semio-framework-2d = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }

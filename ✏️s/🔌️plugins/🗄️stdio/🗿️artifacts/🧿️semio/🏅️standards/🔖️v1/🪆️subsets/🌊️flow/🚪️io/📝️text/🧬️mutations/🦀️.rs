@@ -73,7 +73,7 @@ fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn print_flow_mutation(m: &SemioFlowMutation) -> String {
+pub fn print_flow_mutation(m: &SemioFlowMutation) -> String {
     match m {
         SemioFlowMutation::InsertNode(insert_node::InsertNode { node, at }) => format!("insert-node node={}{}", enc_node(node), enc_at(*at)),
         SemioFlowMutation::RemoveNode(remove_node::RemoveNode { id }) => format!("remove-node id={}", enc_str(id)),

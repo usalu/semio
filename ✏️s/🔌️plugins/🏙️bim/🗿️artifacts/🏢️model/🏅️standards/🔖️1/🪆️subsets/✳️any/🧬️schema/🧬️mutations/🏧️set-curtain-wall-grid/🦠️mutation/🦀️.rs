@@ -1,6 +1,6 @@
 //! 🏧️ `set-curtain-wall-grid` payload. Sets, per direction, the grid rule of one curtain wall that replaces the rule of its type: explicit grid lines (a whole list owned by the curtain wall) or a uniform spacing; assigning nothing clears the override and the wall follows its type again.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::CurtainWallPatch, ModelDiff}, snapshot::{CurtainGrid, ModelSnapshot}, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::CurtainWallPatch, ModelDiff}, snapshot::{CurtainGrid, ModelSnapshot}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -26,13 +26,16 @@ impl SetCurtainWallGrid {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetCurtainWallGrid {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetCurtainWallGrid
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetCurtainWallGrid>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "curtain-wall", kind: "set-curtain-wall-grid", record: "SetCurtainWallGrid" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set the grid of curtain wall \"{}\"", self.id), &format!("Raster von Vorhangfassade \"{}\" setzen", self.id))

@@ -5,7 +5,10 @@ import { tmpdir } from "node:os";
 import Ajv from "ajv";
 import fastGlob from "fast-glob";
 import * as TOML from "@iarna/toml";
-import { cargoPackageRootBuildScriptPath, clearDiscoveryCache, discoverPackageProblems, discoverPackages, implementationLeafBasenameFinding, taxonomyImplementationFilesystemFindings, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { cargoPackageRootBuildScriptPath } from "../../🔍️discovery/📄️implementation-findings/🟦️.ts";
+import { clearDiscoveryCache, discoverPackageProblems, discoverPackages } from "../../🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { implementationLeafBasenameFinding, taxonomyImplementationFilesystemFindings } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
+import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 
 type Finding = Readonly<{ path: string; breachId: string; fileKindId: string | null; expectedBasename: string | null }>;
 type Fixture = Readonly<{

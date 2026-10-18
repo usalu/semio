@@ -22,12 +22,12 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 use framework_schema::ArtifactSchema;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
+pub fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
     if !s.len().is_multiple_of(2) {
         return Err(format!("odd hex length: {s:?}"));
     }
@@ -35,7 +35,7 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_u8(s: &str) -> Result<u8, String> {
+pub fn parse_u8(s: &str) -> Result<u8, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
@@ -45,7 +45,7 @@ pub(crate) fn parse_i8(s: &str) -> Result<i8, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_u16(s: &str) -> Result<u16, String> {
+pub fn parse_u16(s: &str) -> Result<u16, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
@@ -55,12 +55,12 @@ pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
+pub fn parse_f64(s: &str) -> Result<f64, String> {
     s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
 }
 
@@ -68,7 +68,7 @@ pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive
 /// (identical to gif 89a's copy — own copy per artifact, no cross-artifact type sharing).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -91,7 +91,7 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
@@ -126,24 +126,24 @@ pub(crate) fn dec_rgb(s: &str) -> Result<(u16, u16, u16), String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_u32x5(a: &[u32; 5]) -> String {
+pub fn enc_u32x5(a: &[u32; 5]) -> String {
     format!("[{},{},{},{},{}]", a[0], a[1], a[2], a[3], a[4])
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_u32x5(s: &str) -> Result<[u32; 5], String> {
+pub fn dec_u32x5(s: &str) -> Result<[u32; 5], String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let vals: Vec<u32> = parts.iter().map(|p| parse_u32(p)).collect::<Result<_, String>>()?;
     vals.try_into().map_err(|v: Vec<u32>| format!("points-by-return: expected 5 values, got {}", v.len()))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_vlr(v: &LasVlr) -> String {
+pub fn enc_vlr(v: &LasVlr) -> String {
     format!("[{},{},{},{}]", hex_encode(v.user_id.as_bytes()), v.record_id, hex_encode(v.description.as_bytes()), hex_encode(&v.data))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_vlr(s: &str) -> Result<LasVlr, String> {
+pub fn dec_vlr(s: &str) -> Result<LasVlr, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [user_id, record_id, description, data] = parts.as_slice() else {
         return Err(format!("vlr: expected 4 fields, got {}", parts.len()));
@@ -152,7 +152,7 @@ pub(crate) fn dec_vlr(s: &str) -> Result<LasVlr, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_point(p: &LasPoint) -> String {
+pub fn enc_point(p: &LasPoint) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{},{},{},{},{}]",
         p.x,
@@ -173,7 +173,7 @@ pub(crate) fn enc_point(p: &LasPoint) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_point(s: &str) -> Result<LasPoint, String> {
+pub fn dec_point(s: &str) -> Result<LasPoint, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y, z, intensity, return_number, number_of_returns, scan_direction_flag, edge_of_flight_line, classification, scan_angle_rank, user_data, point_source_id, gps_time, rgb] = parts.as_slice() else {
         return Err(format!("point: expected 14 fields, got {}", parts.len()));

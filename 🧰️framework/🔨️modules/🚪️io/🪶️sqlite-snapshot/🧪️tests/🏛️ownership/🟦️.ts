@@ -42,7 +42,7 @@ test("the neutral SQLite owner exposes its complete controlled surface",async()=
 });
 test("the SQLite package has only neutral normal dependencies",()=>{
  const manifest=parseToml(readFileSync(resolve(owner,"📦️packages/🦀️rust/Cargo.toml"),"utf8"));
- expect(Object.keys(manifest.dependencies as Record<string,unknown>)).toEqual(["semio-framework-value"]);
+ expect(Object.keys(manifest.dependencies as Record<string,unknown>).sort()).toEqual(["semio-framework-io-control","semio-framework-io-sqlite-model","semio-framework-value"]);
  expect(readFileSync(resolve(owner,"📦️packages/🦀️rust/🦀️.rs"),"utf8")).not.toContain("semio_framework_os_kernel");
 });
 

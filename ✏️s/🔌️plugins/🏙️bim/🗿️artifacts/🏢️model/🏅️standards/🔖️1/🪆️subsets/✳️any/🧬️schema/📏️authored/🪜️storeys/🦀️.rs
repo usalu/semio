@@ -42,6 +42,4 @@ pub fn elevation(snapshot: &ModelSnapshot, id: &str) -> Option<f64> {
     None
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

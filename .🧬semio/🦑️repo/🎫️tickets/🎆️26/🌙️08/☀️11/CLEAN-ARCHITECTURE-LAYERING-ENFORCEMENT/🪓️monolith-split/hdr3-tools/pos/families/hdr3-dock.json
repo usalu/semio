@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-dock",
+ "crates": ["semio-framework-os-renderer-wgpu-dock", "semio-framework-os-renderer-wgpu-dock-laws"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-os-renderer-wgpu-dock"]},
+ "note": "HDR-3: wgpu dock laws to a companion"
+}

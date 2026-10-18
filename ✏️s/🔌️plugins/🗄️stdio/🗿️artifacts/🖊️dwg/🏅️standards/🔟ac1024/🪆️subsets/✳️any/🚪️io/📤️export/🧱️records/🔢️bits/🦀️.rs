@@ -21,17 +21,17 @@ pub fn push_u64(output: &mut Vec<u8>, value: u64) {
 //#region 🔖️DwgStructuralCodec
 //#region DwgBits
 pub struct DwgBitWriter {
-    bytes: Vec<u8>,
-    bit: u8,
+    pub bytes: Vec<u8>,
+    pub(crate) bit: u8,
 }
 impl DwgBitWriter {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { bytes: Vec::new(), bit: 0 }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_bit(&mut self, value: bool) {
+    pub fn write_bit(&mut self, value: bool) {
         if self.bit == 0 {
             self.bytes.push(0);
         }
@@ -50,47 +50,47 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_b(&mut self, value: bool) {
+    pub fn write_b(&mut self, value: bool) {
         self.write_bit(value);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_bb(&mut self, value: u8) {
+    pub fn write_bb(&mut self, value: u8) {
         self.write_bits(value as u64, 2);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_rc(&mut self, value: u8) {
+    pub fn write_rc(&mut self, value: u8) {
         self.write_bits(value as u64, 8);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_rs(&mut self, value: u16) {
+    pub fn write_rs(&mut self, value: u16) {
         self.write_rc((value & 0xFF) as u8);
         self.write_rc((value >> 8) as u8);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_rl(&mut self, value: u32) {
+    pub(crate) fn write_rl(&mut self, value: u32) {
         self.write_rs((value & 0xFFFF) as u16);
         self.write_rs((value >> 16) as u16);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_rll(&mut self, value: u64) {
+    pub(crate) fn write_rll(&mut self, value: u64) {
         self.write_rl((value & 0xFFFF_FFFF) as u32);
         self.write_rl((value >> 32) as u32);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_rd(&mut self, value: f64) {
+    pub fn write_rd(&mut self, value: f64) {
         let bits = value.to_bits();
         self.write_rl((bits & 0xFFFF_FFFF) as u32);
         self.write_rl((bits >> 32) as u32);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_bs(&mut self, value: u16) {
+    pub fn write_bs(&mut self, value: u16) {
         match value {
             0 => self.write_bb(2),
             256 => self.write_bb(3),
@@ -106,7 +106,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_bl(&mut self, value: u32) {
+    pub fn write_bl(&mut self, value: u32) {
         match value {
             0 => self.write_bb(2),
             v if v <= 0xFF => {
@@ -121,7 +121,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_bd(&mut self, value: f64) {
+    pub fn write_bd(&mut self, value: f64) {
         if value == 0.0 {
             self.write_bb(2);
         } else if value == 1.0 {
@@ -133,7 +133,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_dd(&mut self, value: f64, default: f64) {
+    pub(crate) fn write_dd(&mut self, value: f64, default: f64) {
         let value_bytes = value.to_le_bytes();
         let default_bytes = default.to_le_bytes();
         if value_bytes == default_bytes {
@@ -157,7 +157,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_bt(&mut self, value: f64) {
+    pub(crate) fn write_bt(&mut self, value: f64) {
         if value == 0.0 {
             self.write_b(true);
         } else {
@@ -167,27 +167,27 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_2rd(&mut self, v: [f64; 2]) {
+    pub fn write_2rd(&mut self, v: [f64; 2]) {
         self.write_rd(v[0]);
         self.write_rd(v[1]);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_3bd(&mut self, v: [f64; 3]) {
+    pub fn write_3bd(&mut self, v: [f64; 3]) {
         self.write_bd(v[0]);
         self.write_bd(v[1]);
         self.write_bd(v[2]);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_3rd(&mut self, v: [f64; 3]) {
+    pub(crate) fn write_3rd(&mut self, v: [f64; 3]) {
         self.write_rd(v[0]);
         self.write_rd(v[1]);
         self.write_rd(v[2]);
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_be(&mut self, normal: [f64; 3]) {
+    pub(crate) fn write_be(&mut self, normal: [f64; 3]) {
         if normal == [0.0, 0.0, 1.0] {
             self.write_b(true);
         } else {
@@ -198,7 +198,7 @@ impl DwgBitWriter {
 
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_tu(&mut self, text: &str) {
+    pub fn write_tu(&mut self, text: &str) {
         let units: Vec<u16> = text.encode_utf16().collect();
         self.write_bs(units.len() as u16);
         for unit in units {
@@ -207,7 +207,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn append_bits(&mut self, other: &DwgBitWriter) {
+    pub fn append_bits(&mut self, other: &DwgBitWriter) {
         let mut reader = DwgBitReader::new(&other.bytes);
         for _ in 0..other.bit_len() {
             self.write_bit(reader.read_bit().expect("writer-owned bitstream is complete"));
@@ -215,7 +215,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_ms(&mut self, mut value: u32) {
+    pub fn write_ms(&mut self, mut value: u32) {
         loop {
             let mut chunk = (value & 0x7FFF) as u16;
             value >>= 15;
@@ -230,7 +230,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_umc(&mut self, mut value: u64) {
+    pub(crate) fn write_umc(&mut self, mut value: u64) {
         loop {
             let mut byte = (value & 0x7f) as u8;
             value >>= 7;
@@ -245,7 +245,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_bot(&mut self, value: u16) {
+    pub fn write_bot(&mut self, value: u16) {
         if value <= 0xff {
             self.write_bb(0);
             self.write_rc(value as u8);
@@ -259,7 +259,7 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_handle(&mut self, code: u8, handle: u64) {
+    pub fn write_handle(&mut self, code: u8, handle: u64) {
         let mut bytes = Vec::new();
         let mut v = handle;
         while v != 0 {
@@ -273,14 +273,14 @@ impl DwgBitWriter {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn pad_to_byte(&mut self) {
+    pub fn pad_to_byte(&mut self) {
         while self.bit != 0 {
             self.write_bit(false);
         }
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn bit_len(&self) -> usize {
+    pub fn bit_len(&self) -> usize {
         self.bytes.len() * 8 - if self.bit == 0 { 0 } else { 8 - self.bit as usize }
     }
 }

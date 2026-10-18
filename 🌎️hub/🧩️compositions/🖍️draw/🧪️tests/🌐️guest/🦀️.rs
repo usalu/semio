@@ -3,12 +3,11 @@ use semio_framework_plugin_host::{GuestRuntime,GuestInstance,WasmtimeRuntime,Sha
 use semio_framework_plugin_guest_contract::TurnFault;
 use semio_framework::kernel::{Budget,Event,TurnResult,TurnStatus};
 use semio_framework_actor::ActorId as RuntimeActorId;
-use semio_framework_test_fixtures::manifest_dir;
 use std::path::PathBuf;
 const DRAW_EDITOR_APP:&str="s.draw.drawing@1/*#editor";
 const OPEN_WALL_BUDGET:std::time::Duration=std::time::Duration::from_secs(120);
 fn plugin_wasm(_file:&str)->PathBuf{
-    let root=manifest_dir!().ancestors().find(|path|path.join("nx.json").is_file()).unwrap().to_path_buf();
+    let root=semio_framework_test_fixtures::repo_root!();
     let path=root.join("🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_draw_component.wasm");
     assert!(path.is_file(),"Draw component producer prerequisite is required");path
 }

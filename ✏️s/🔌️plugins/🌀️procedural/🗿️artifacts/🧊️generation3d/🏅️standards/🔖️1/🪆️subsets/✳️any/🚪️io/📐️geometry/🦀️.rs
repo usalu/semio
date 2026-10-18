@@ -5,12 +5,13 @@ use semio_s_artifact_procedural_3d_geometry_compute::ComputeEntry;
 use semio_s_artifact_procedural_3d_geometry_compute::StartFn;
 use semio_s_artifact_procedural_3d_geometry::registry;
 use std::{collections::BTreeMap,sync::{Arc,OnceLock}};
+use semio_s_artifact_procedural_3d_geometry_compute::original::OriginalFixedOutputJob;
 #[path="💾️brep-interchange/🦀️.rs"]
 pub mod brep_interchange;
 #[path="📼️mesh-interchange/🦀️.rs"]
 pub mod mesh_interchange;
 #[path="🥽️mesh-source/🦀️.rs"]
-pub(crate) mod mesh_source;
+pub mod mesh_source;
 /// 🗃️ Physical IO operations, separately admitted from semantic computations.
 pub const TABLES:&[&[ComputeEntry]]=&[brep_interchange::COMPUTES,mesh_interchange::COMPUTES,mesh_source::COMPUTES];
 /// 🏠️ The actual native compute capability composition of the generation3d host.

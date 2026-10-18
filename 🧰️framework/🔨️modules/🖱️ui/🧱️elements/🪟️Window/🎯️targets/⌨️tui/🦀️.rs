@@ -6,11 +6,11 @@
 //! `ChromeState::window_target`) and were promoted to `pub(crate)` there so this sibling module
 //! can reach them.
 
-use crate::tui::cell::{attr, Cell, CellBuffer};
-use crate::tui::chrome::{window_chip_layout, ChromeMode, TabKind, WindowChipLayout, WindowCornerTab, WindowHit, WindowState, WindowTab};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::layout::WindowStackCorner;
-use crate::tui::theme::{Glyph, GlyphSet, Rgb, Role, Surface, Theme};
+use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use crate::chrome::{window_chip_layout, ChromeMode, TabKind, WindowChipLayout, WindowCornerTab, WindowHit, WindowState, WindowTab};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use crate::layout::WindowStackCorner;
+use semio_framework_ui_tui_core::theme::{Glyph, GlyphSet, Rgb, Role, Surface, Theme};
 
 /// 🖋️ The line-drawing set a window outline uses: heavy for the focused stack so focus shows without colour.
 struct Lines {

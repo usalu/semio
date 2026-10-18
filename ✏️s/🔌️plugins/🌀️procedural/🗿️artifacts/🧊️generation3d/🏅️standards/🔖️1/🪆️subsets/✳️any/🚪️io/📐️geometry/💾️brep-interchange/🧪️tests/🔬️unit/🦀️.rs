@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_procedural_3d_geometry_value::WidgetEvaluation;
 use std::sync::Arc;
 use semio_framework_3d_brep_engine::ShapeValue;
 use std::collections::BTreeMap;

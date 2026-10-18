@@ -24,11 +24,11 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
+import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🌐️world3d/🟦️.ts";
 import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(here, "../../🧫️fixtures/🫀️settle-pump/🔣️.json");
+const fixturePath = resolve(here, "../🧫️fixtures/🫀️settle-pump/🔣️.json");
 const gestureSourcePaths = {
   shell: resolve(here, "../../🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs"),
   renderer: resolve(here, "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs"),

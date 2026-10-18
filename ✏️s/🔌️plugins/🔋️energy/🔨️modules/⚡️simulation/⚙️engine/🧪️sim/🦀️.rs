@@ -12,8 +12,6 @@ extern crate semio_s_plugin_energy_engine_results as results;
 extern crate semio_s_plugin_energy_engine_site as site;
 extern crate semio_s_plugin_energy_engine_sizing as sizing;
 extern crate semio_s_plugin_energy_engine_units as units;
-#[cfg(test)]
-extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_plugin_energy_engine_sim_retirement as retirement;
 extern crate semio_s_plugin_energy_engine_sim_wire as wire;
 
@@ -56,6 +54,7 @@ use self::close::*;
 #[path = "🚀️engine/🦀️.rs"]
 mod engine;
 pub use self::engine::*;
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+#[cfg(any(test, feature = "testkit"))]
+pub mod testkit {
+    pub use super::{close::*, engine::*, packets::*, pipeline::*, run::*, state::*};
+}

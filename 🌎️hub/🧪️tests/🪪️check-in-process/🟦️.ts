@@ -17,6 +17,7 @@ import { terminateOwnedChildTree } from "../../../🧰️framework/🔨️module
 import { createHash, randomBytes } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { type ChildProcess } from "node:child_process";
 import { withRepositoryPublishedCargoExecutableV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/📥️published/🟦️.ts";
 import { buildRepositoryCargoArtifacts } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
@@ -26,7 +27,7 @@ import { documentCheckInCanonicalJson, parseDocumentCheckInStatusV1, parseDocume
 import { type DocumentCheckInStatusV1 } from "@semio-tech/framework/directory/schema";
 import { parseDocumentOpenPlanV1, parseDocumentPlanSocketGrantIntentV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { hubSchemaExport } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
@@ -377,10 +378,10 @@ async function proveDocumentCheckInV1(repoRoot: string): Promise<number> {
   }
   const hub = readHubBinSource(repoRoot);
   const job = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📌️check-in/🦀️.rs"), "utf8");
-  const ledger = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs"), "utf8");
-  const store = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+  const ledger = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/⚙️engine/🦀️.rs"));
+  const store = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"));
   const codec = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🦀️.rs"), "utf8");
-  const wit = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit"), "utf8");
+  const wit = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️codec.wit"), "utf8");
   for (const [name, body, markers] of [
     ["hub", hub, ["/spaces/{space_id}/documents/{document_id}/check-ins", "/spaces/{space_id}/documents/{document_id}/check-ins/{request_id}/cancel", "artifact_ledger_tail", "claim_or_read_checkpoint_publication"]],
     ["job", job, ["TrustedArtifactReplayCodec", "materialize_check_in", "DocumentCheckInRefusalV1"]],

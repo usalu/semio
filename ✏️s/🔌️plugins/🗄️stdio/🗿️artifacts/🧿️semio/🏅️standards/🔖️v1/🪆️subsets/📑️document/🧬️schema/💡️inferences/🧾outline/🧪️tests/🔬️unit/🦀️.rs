@@ -1,6 +1,6 @@
-use crate::{schema::snapshot::DocBlock, schema::snapshot::DocRun, schema::snapshot::SemioDocumentSnapshot};
-use crate::schema::inferences::outline::*;
-use crate::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_document_examples::{schema::snapshot::DocBlock, schema::snapshot::DocRun, schema::snapshot::SemioDocumentSnapshot};
+use semio_s_artifact_stdio_semio_document_examples::schema::inferences::outline::*;
+use semio_s_artifact_stdio_semio_document_examples::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
 async fn collects_headings_and_counts_words_and_blocks() {

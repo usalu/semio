@@ -25,7 +25,6 @@ extern crate semio_s_plugin_energy_engine_geometry as geometry;
 
 
 
-use crate::tools;
 use crate::windows::{model as model_window, simulation, structure, zones};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;

@@ -1,9 +1,10 @@
 //! 🔎️ What a view lets through: the category of a drawn primitive or solid, the phase of an element, the primitives each detail level leaves out, and the crop of a plan. These are the
 //! answers to "is this drawn in this view?"; the view's authored fields only parameterise them, nothing here is stored.
 
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanPolyline, PlanRegion, PlanStyle, PlanText, PlanVertex};
-use super::clip::Rect;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::clip::Rect;
 use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, ModelSnapshot, Phase, View, ViewCategory};
 
 /// 🧮️ The category a plan primitive of `kind` belongs to, none for the primitives of a vertical view that take the category of their element.

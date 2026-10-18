@@ -1,5 +1,14 @@
-use super::kit::{house, items, plain, table_of, texts};
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ScheduleKey;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Schedule};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::schedule_kit::{house, items, plain, table_of, texts};
+use crate::standards::v1::subsets::any::schema::inferences::schedules::*;
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::{Phase, PropertyValue, ScheduleCategory, ScheduleColumn, ScheduleField}};
 use protocol::Inference;
 

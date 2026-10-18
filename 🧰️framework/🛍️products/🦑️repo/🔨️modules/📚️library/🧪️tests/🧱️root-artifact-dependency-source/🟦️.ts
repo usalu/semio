@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { basename, dirname, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 type Fixture = Readonly<{
   version: number;
@@ -18,7 +18,7 @@ type Fixture = Readonly<{
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/🧱️root-artifact-dependency-source/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧪️tests/🧫️fixtures/🧱️root-artifact-dependency-source/🔣️.json"), "utf8")) as Fixture;
 
 
 function exportedNames(path: string): ReadonlySet<string> {

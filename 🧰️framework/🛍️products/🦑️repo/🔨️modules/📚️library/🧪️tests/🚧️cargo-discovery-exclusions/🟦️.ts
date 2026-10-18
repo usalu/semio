@@ -6,7 +6,8 @@ import { dirname, join, relative, resolve } from "node:path";
 import { transformSync } from "esbuild";
 import glob from "fast-glob";
 import ts from "typescript";
-import { isDiscoverySkipDirectory, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
+import { isDiscoverySkipDirectory } from "../../🔍️discovery/🪧️owner-markers/🟦️.ts";
+import { taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -59,12 +60,13 @@ for(const name of vector.virtualRoots)test(`native Cargo source recipes preserve
 });
 
 test("registry catalog filesystem excludes opaque names before metadata enumeration", () => {
-  const discovery = ts.createSourceFile("discovery.ts", readFileSync(join(repoRoot, library, "🔍️discovery/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-  const nodes = discovery.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "registryCatalogInputView");
+  const owner = (name: string) => ts.createSourceFile(name, readFileSync(join(repoRoot, library, "🔍️discovery", name, "🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const authority = owner("🔐️taxonomy-authority"), markers = owner("🪧️owner-markers");
+  const nodes = authority.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "registryCatalogInputView");
   expect(nodes).toHaveLength(1);
-  const helpers = ["retryOnEintr", "readdirVanishing"].map(name => discovery.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === name));
+  const helpers = ["retryOnEintr", "readdirVanishing"].map(name => markers.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === name));
   for (const helper of helpers) expect(helper).toBeDefined();
-  const code = helpers.map(helper => helper!.getText(discovery)).join("\n") + "\n" + nodes[0]!.getText(discovery).replace(/^export /u, "");
+  const code = helpers.map(helper => helper!.getText(markers)).join("\n") + "\n" + nodes[0]!.getText(authority).replace(/^export /u, "");
   for (const rootName of vector.virtualRoots) for (const compiled of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), transformSync(code, { loader: "ts", target: "es2022" }).code]) {
     const root = join(repoRoot, rootName), fs = virtualFilesystem(root, true);
     const factory = new Function("lstatSync", "readdirSync", "readFileSync", "resolve", "relative", "dirname", "join", "pathIsExcluded", "registryCatalogGitlinkBoundaries", "isDiscoverySkipDirectory", compiled + "\nreturn registryCatalogInputView;")(fs.api.lstatSync, fs.api.readdirSync, fs.api.readFileSync, resolve, relative, dirname, join, (workspace: string, path: string) => { const local = relative(workspace, path).replaceAll("\\", "/"); return local !== "" && taxonomyRelativePathIsExcluded(local, taxonomy); }, () => new Set<string>(), isDiscoverySkipDirectory);

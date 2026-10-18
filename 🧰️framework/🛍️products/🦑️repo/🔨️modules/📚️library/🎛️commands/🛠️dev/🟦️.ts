@@ -3,7 +3,8 @@
  */
 import { readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { ensureMcpBinary } from "../../../../../💻️os/🔨️modules/🌉️mcp/🟦️.ts";
-import { daemonBudgetOpts, resolveMcpBin, runCmd } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
+import { resolveMcpBin } from "../../🚨️policy/🖥️cli/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { existsSync, statSync } from "node:fs";
 import { join } from "node:path";

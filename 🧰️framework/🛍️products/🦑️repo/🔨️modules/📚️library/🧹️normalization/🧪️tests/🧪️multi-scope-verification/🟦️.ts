@@ -6,7 +6,8 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { type TaxonomyViolation, verifyTaxonomy, verifyTaxonomyScopes } from "../../🟦️.ts";
+import { type TaxonomyViolation } from "../../📜️plan-contracts/🟦️.ts";
+import { verifyTaxonomy, verifyTaxonomyScopes } from "../../✅️verification/🟦️.ts";
 
 const repoRoot = fileURLToPath(new URL("../../../../../../../../", import.meta.url)).replace(/\/$/u, "");
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🧫️multi-scope-verification/🔣️.json", import.meta.url), "utf8")) as { readonly scopes: readonly string[]; readonly moving: readonly string[] };

@@ -99,7 +99,7 @@ describe("scene pointer cancellation contract", () => {
     expect(rendererSource).toContain("claim_scene_pointer_owner(target.clone(), pointer.id)");
     const physicalCancel = rendererSource.slice(rendererSource.indexOf("fn handle_pointer_cancel("), rendererSource.indexOf("fn handle_pointer_wheel("));
     expect(physicalCancel).toContain("self.pointer_capture.release(pointer.id)");
-    expect(physicalCancel).toContain("self.shell.handle_pointer_cancel_for(pointer.id, &mut self.input)");
+    expect(physicalCancel).toContain("PointerCtx::of(&mut self.shell).handle_pointer_cancel_for(pointer.id, &mut self.input)");
     expect(interpreterSource).toContain("surface_generation: u64");
     expect(interpreterSource).toContain("pointer_id: Option<ui_render::PointerId>");
     expect(interpreterSource).toContain("engine.surface_generation(&target.window_id) != Some(target.window_generation)");

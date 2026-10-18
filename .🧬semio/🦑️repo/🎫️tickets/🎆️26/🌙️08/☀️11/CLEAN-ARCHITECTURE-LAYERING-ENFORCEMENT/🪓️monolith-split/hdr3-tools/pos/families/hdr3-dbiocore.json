@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-dbiocore",
+ "crates": ["semio-framework-os-kernel-db-io-core", "semio-framework-os-kernel-db-io-core-laws"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-os-kernel-db-io-core"]},
+ "note": "HDR-3: db io core laws moved to a companion"
+}

@@ -1,6 +1,6 @@
 //! 🌡️ `set-space-conditions` payload. Sparsely sets the thermal conditions of a space (occupancy type and density, heating and cooling set points, ventilation, lighting and equipment power density, schedule profile); the first use creates the record of the space, an assigned null clears a field. The envelope, the areas and the U-values are inferred.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::SpaceConditionsPatch};
 
@@ -56,13 +56,16 @@ impl SetSpaceConditions {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetSpaceConditions {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetSpaceConditions
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetSpaceConditions> + From<crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "space-conditions", kind: "set-space-conditions", record: "SetSpaceConditions" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Set conditions of space \"{}\"", self.id), &format!("Bedingungen des Raums \"{}\" setzen", self.id))

@@ -4,6 +4,7 @@
 //! Missing target ⇒ `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::create_stream::CreateStream;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::delete_stream::component::DeleteStream;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<CreateStream>>(payload: &super::DeleteStream, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

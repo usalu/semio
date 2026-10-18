@@ -43,6 +43,4 @@ pub fn handle(payload: &SearchClassification, doc: &ArtifactView<'_, ModelSnapsh
     Ok(emit)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

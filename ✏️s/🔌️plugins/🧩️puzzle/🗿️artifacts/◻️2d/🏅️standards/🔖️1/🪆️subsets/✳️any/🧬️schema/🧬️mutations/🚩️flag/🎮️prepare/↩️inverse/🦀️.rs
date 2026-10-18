@@ -20,7 +20,7 @@ pub struct Puzzle2dFlagInverseState<T:Puzzle2dFlagIntent> {
     inverse: PagedList<Puzzle2dMutation, {usize::MAX}>,
     pending_close: Option<ControlledRetirement<Puzzle2dMutation>>,
     inverse_close: Option<ControlledRetirement<PagedList<Puzzle2dMutation, {usize::MAX}>>>,
-    phase: u8,
+    pub phase: u8,
     closing: bool,
 }
 

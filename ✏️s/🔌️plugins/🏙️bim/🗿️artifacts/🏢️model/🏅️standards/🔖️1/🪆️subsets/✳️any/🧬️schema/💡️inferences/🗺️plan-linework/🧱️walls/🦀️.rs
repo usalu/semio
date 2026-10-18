@@ -1,6 +1,6 @@
 //! 🧱️ Walls, curtain walls and the openings they host in the plan: poché with opening gaps, layer lines, door and window symbols.
 
-use super::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, PlanVertex, Sheet};
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, Cutting, PlanKind, PlanStyle, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, extents_of, seg};
 use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, PlanRole as Stroke, PlanShape};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;

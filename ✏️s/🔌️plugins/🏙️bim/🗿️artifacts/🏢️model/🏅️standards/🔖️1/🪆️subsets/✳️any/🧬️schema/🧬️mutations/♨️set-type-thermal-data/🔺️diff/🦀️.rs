@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetTypeThermalData`: a sparse patch of the thermal fields of a window type (U-value, g-value, frame fraction) or of a door type (U-value) that differ from the base. Ids are unique across the
 //! model, so the id names at most one of them; a door type has no g-value and no frame fraction. The written values must stay in range (see `window_thermal_problem`); providing only equal values is a no-op.
 
-use super::SetTypeThermalData;
+use crate::standards::v1::subsets::any::schema::mutations::set_type_thermal_data::SetTypeThermalData;
 use crate::standards::v1::subsets::any::schema::{snapshot::{curtain_thermal_problem, door_thermal_problem, window_thermal_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

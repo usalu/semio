@@ -28,5 +28,6 @@ semio-framework-os-store-command = { path = "../../../📬️command/📦️pack
 semio-framework-os-store-projection = { path = "../../../🎞️projection/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-os-store-message-ledger = { path = "../../../📒️ledger/📨️messages/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { path = "../../../../../../../🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }

@@ -12,8 +12,15 @@ import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️pro
 /** 🧭️ Coordinator Next.js package router: `bun ./📜️script.ts build|dev|start|test|policy`. */
 import { join, relative } from "node:path";
 import {writeFile} from "node:fs/promises";
-import type { BundleLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { defineLint, dependencyBoundaryBreachesForBundleDir, devToolingEnv, getWorkspaceRoot, goLevelTestArgs, runBunx, runCanonicalGoTests, runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import type { BundleLinter } from "../../../../📚️library/🚨️policy/🧩️linters/🟦️.ts";
+import { defineLint } from "../../../../📚️library/🚨️policy/🧩️linters/🟦️.ts";
+import { dependencyBoundaryBreachesForBundleDir } from "../../../../📚️library/🚨️policy/🛡️dependency-boundary/🟦️.ts";
+import { devToolingEnv } from "../../../../📚️library/🏃️process/🌿️environment/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../📚️library/🗂️workspaces/🟦️.ts";
+import { goLevelTestArgs } from "../../../../📚️library/🧪️testing/🎚️levels/🟦️.ts";
+import { runBunx } from "../../../../📚️library/🏃️process/🍞️bun/🟦️.ts";
+import { runCanonicalGoTests } from "../../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
+import { runVitest } from "../../../../📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationEnvironment, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepoScriptMain } from "../../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 

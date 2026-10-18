@@ -1,0 +1,1 @@
+{"name": "c6db1-art", "crates": ["semio-framework-os-kernel-db-artifact"], "base": {"rev": "overlay", "crates": ["semio-framework-os-kernel-db-artifact"]}}

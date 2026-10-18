@@ -1,5 +1,5 @@
 /** 🖼️ Handwritten PDF image codecs, intrinsic octets and exact mask/decode relationships. */
-import type { PdfImage,PdfImageBody,PdfImageMask } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfImage, PdfImageBody, PdfImageMask } from "../../../../🧬️schema/📸️snapshot/🖼️resource/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { writePdfColorSpace,readPdfColorSpace,writePdfReals,readPdfReals } from "../🌈️color/🟦️.ts";

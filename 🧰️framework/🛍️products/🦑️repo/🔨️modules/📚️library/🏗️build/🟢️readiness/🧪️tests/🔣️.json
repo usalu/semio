@@ -1,0 +1,264 @@
+{
+  "declarations": [
+    {
+      "name": "a port",
+      "declaration": {
+        "port": 6033
+      },
+      "valid": true
+    },
+    {
+      "name": "a port and its variable",
+      "declaration": {
+        "port": 6033,
+        "portEnv": "SEMIO_TECH_PLAY_PORT"
+      },
+      "valid": true
+    },
+    {
+      "name": "a variable alone",
+      "declaration": {
+        "portEnv": "JOURNEY_PORT",
+        "path": "/health"
+      },
+      "valid": true
+    },
+    {
+      "name": "a printed address",
+      "declaration": {
+        "port": 6061,
+        "printed": true
+      },
+      "valid": true
+    },
+    {
+      "name": "a printed address leaves no room for a path",
+      "declaration": {
+        "port": 6061,
+        "printed": true,
+        "path": "/x"
+      },
+      "valid": false
+    },
+    {
+      "name": "neither port nor variable",
+      "declaration": {
+        "path": "/x"
+      },
+      "valid": false
+    },
+    {
+      "name": "a port outside the range",
+      "declaration": {
+        "port": 70000
+      },
+      "valid": false
+    },
+    {
+      "name": "port zero",
+      "declaration": {
+        "port": 0
+      },
+      "valid": false
+    },
+    {
+      "name": "a variable name with a space",
+      "declaration": {
+        "portEnv": "MY PORT"
+      },
+      "valid": false
+    },
+    {
+      "name": "a path without a leading separator",
+      "declaration": {
+        "port": 6061,
+        "path": "admin"
+      },
+      "valid": false
+    },
+    {
+      "name": "a path with whitespace",
+      "declaration": {
+        "port": 6061,
+        "path": "/a b"
+      },
+      "valid": false
+    },
+    {
+      "name": "an unknown member",
+      "declaration": {
+        "port": 6061,
+        "host": "localhost"
+      },
+      "valid": false
+    }
+  ],
+  "resolutions": [
+    {
+      "name": "the declared port",
+      "declaration": {
+        "port": 6033,
+        "portEnv": "SEMIO_TECH_PLAY_PORT"
+      },
+      "environment": {},
+      "ready": {
+        "port": 6033,
+        "path": ""
+      }
+    },
+    {
+      "name": "the variable wins over the declared port",
+      "declaration": {
+        "port": 6033,
+        "portEnv": "SEMIO_TECH_PLAY_PORT"
+      },
+      "environment": {
+        "SEMIO_TECH_PLAY_PORT": "6043"
+      },
+      "ready": {
+        "port": 6043,
+        "path": ""
+      }
+    },
+    {
+      "name": "an empty variable is no value",
+      "declaration": {
+        "port": 6033,
+        "portEnv": "SEMIO_TECH_PLAY_PORT"
+      },
+      "environment": {
+        "SEMIO_TECH_PLAY_PORT": ""
+      },
+      "ready": {
+        "port": 6033,
+        "path": ""
+      }
+    },
+    {
+      "name": "the path and printed flag are kept",
+      "declaration": {
+        "port": 6061,
+        "path": "/health"
+      },
+      "environment": {},
+      "ready": {
+        "port": 6061,
+        "path": "/health"
+      }
+    },
+    {
+      "name": "a printed address",
+      "declaration": {
+        "port": 6061,
+        "printed": true
+      },
+      "environment": {},
+      "ready": {
+        "port": 6061,
+        "path": "",
+        "printed": true
+      }
+    },
+    {
+      "name": "the variable alone carries the port",
+      "declaration": {
+        "portEnv": "JOURNEY_PORT"
+      },
+      "environment": {
+        "JOURNEY_PORT": "47101"
+      },
+      "ready": {
+        "port": 47101,
+        "path": ""
+      }
+    },
+    {
+      "name": "the variable alone has no value",
+      "declaration": {
+        "portEnv": "JOURNEY_PORT"
+      },
+      "environment": {},
+      "error": "has no value"
+    },
+    {
+      "name": "the variable is not a port",
+      "declaration": {
+        "port": 6033,
+        "portEnv": "P"
+      },
+      "environment": {
+        "P": "http"
+      },
+      "error": "is not a port"
+    },
+    {
+      "name": "the variable is out of range",
+      "declaration": {
+        "port": 6033,
+        "portEnv": "P"
+      },
+      "environment": {
+        "P": "65536"
+      },
+      "error": "is not a port"
+    }
+  ],
+  "answers": [
+    {
+      "name": "a 200 answer",
+      "status": 200,
+      "path": "/",
+      "ready": true
+    },
+    {
+      "name": "a 204 answer",
+      "status": 204,
+      "path": "/",
+      "ready": true
+    },
+    {
+      "name": "a 302 answer is not followed",
+      "status": 302,
+      "path": "/",
+      "ready": true
+    },
+    {
+      "name": "a 399 answer",
+      "status": 399,
+      "path": "/",
+      "ready": true
+    },
+    {
+      "name": "a 400 answer",
+      "status": 400,
+      "path": "/",
+      "ready": false
+    },
+    {
+      "name": "a 404 answer",
+      "status": 404,
+      "path": "/",
+      "ready": false
+    },
+    {
+      "name": "a 503 answer",
+      "status": 503,
+      "path": "/",
+      "ready": false
+    },
+    {
+      "name": "the declared path is the probed path",
+      "status": 200,
+      "path": "/health",
+      "ready": true,
+      "probed": "/health"
+    },
+    {
+      "name": "a query is probed as written",
+      "status": 200,
+      "path": "?ok=1",
+      "ready": true,
+      "probed": "/?ok=1"
+    }
+  ]
+}

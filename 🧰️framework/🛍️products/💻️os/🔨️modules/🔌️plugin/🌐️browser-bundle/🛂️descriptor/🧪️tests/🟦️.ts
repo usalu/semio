@@ -1,13 +1,12 @@
 import {expect,test} from "bun:test";
-import {readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {types} from "@bytecodealliance/jco";
 import ts from "typescript";
 import corpus from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {ACTOR_COMPONENT_EXPORTS,parseActorComponentExports} from "../🟦️.ts";
+import {ACTOR_COMPONENT_EXPORTS,parseActorComponentExports,readActorComponentWit} from "../🟦️.ts";
 
 test("actor exports derive from the owned WIT and independent JCO types",async()=>{
- const wit=fileURLToPath(new URL("../../../🧬️schema/📜️.wit",import.meta.url));
+ const wit=fileURLToPath(new URL("../../../🧬️schema",import.meta.url));
  const generated=await types(wit,{name:"actor-contract",worldName:"actor",instantiation:"async",asyncMode:"jspi"});
  const parsed=ts.createSourceFile("actor.d.ts",new TextDecoder().decode(generated["actor-contract.d.ts"]!),ts.ScriptTarget.Latest,true);
  const actor=parsed.statements.find((node)=>ts.isInterfaceDeclaration(node)&&node.name.text==="Actor") as ts.InterfaceDeclaration;
@@ -19,7 +18,7 @@ test("actor exports derive from the owned WIT and independent JCO types",async()
  }
  expect(expected).toEqual(corpus.expected);
  expect(ACTOR_COMPONENT_EXPORTS).toEqual(expected);
- expect(parseActorComponentExports(readFileSync(wit,"utf8"))).toEqual(expected);
+ expect(parseActorComponentExports(readActorComponentWit(wit))).toEqual(expected);
 });
 const projection=(row:Readonly<Record<string,string[]|undefined>>):Record<string,string[]>=>{const present:Record<string,string[]>={};for(const [name,exports] of Object.entries(row))if(exports!==undefined)present[name]=exports;return present;};
 for(const row of corpus.cases)test("actor WIT projection "+Object.keys(row.expected).join(","),()=>expect(parseActorComponentExports(row.source)).toEqual(projection(row.expected)));

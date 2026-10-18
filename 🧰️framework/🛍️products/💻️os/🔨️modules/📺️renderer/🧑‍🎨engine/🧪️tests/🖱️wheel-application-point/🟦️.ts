@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(suiteRoot, "../../🧫️fixtures/🖱️wheel-application-point/🔣️.json");
+const fixturePath = resolve(suiteRoot, "../🧫️fixtures/🖱️wheel-application-point/🔣️.json");
 
 type Modifiers = { readonly shift: boolean; readonly ctrl: boolean; readonly meta: boolean; readonly alt: boolean };
 type ScrollRow = { readonly kind: "scroll"; readonly x: number; readonly y: number; readonly deltaX: number; readonly deltaY: number; readonly modifiers: Modifiers };

@@ -1,4 +1,19 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::fault;
+#[allow(unused_imports)]
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use crate::editor::bim::{BimCommand, BimModelApp};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+#[allow(unused_imports)]
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::commands::analyse_model::*;
 use crate::editor::bim::fixture::support::{ctx, demo, run};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 

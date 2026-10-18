@@ -1,10 +1,10 @@
 //! 🗂️ The rows of a schedule: which elements a schedule covers ([`candidates`]: the category, the storey scope and the phase scope, all decided by authored values), the authored facts the cells read
 //! ([`AuthoredView`], built once per schedule and the only way the table reads the snapshot) and the cell of one key for one source row ([`Reader::cell`]).
 
-use super::super::super::effective_properties::EffectiveProperties;
-use super::super::super::finishes::FinishQuantity;
-use super::super::super::quantities::{ElementQuantity, LayerQuantity};
-use super::ScheduleCell;
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishQuantity;
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, LayerQuantity};
+use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleCell;
 use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, ModelSnapshot, OpeningKind, Phase, PropertyValue, Schedule, ScheduleCategory, ScheduleField, ScheduleKey, Swing};
 use std::collections::BTreeMap;
 

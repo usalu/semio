@@ -8,7 +8,7 @@ use crate::standards::riff_pcm::subsets::any::schema::mutations::{patch_data,set
 
 use crate::standards::riff_pcm::subsets::any::schema::snapshot::{WavData, WavSnapshot};
 use crate::{STDIO_WAV_DOCUMENT_SCHEMA, WAV_DIALECT};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactBoundedFirstStepProof;

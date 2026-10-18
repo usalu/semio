@@ -26,7 +26,7 @@ const SURFACE_ID: &str = "bim.edit.sheet2d/sheet";
 const FRAMING_PADDING: f64 = 32.0;
 const PAPER: Rgba = [1.0, 1.0, 1.0, 1.0];
 const EDGE: Rgba = [0.55, 0.57, 0.62, 1.0];
-const INK: Rgba = [0.05, 0.05, 0.08, 1.0];
+pub const INK: Rgba = [0.05, 0.05, 0.08, 1.0];
 const MUTED: Rgba = [0.27, 0.27, 0.3, 1.0];
 const ACCENT: Rgba = [0.1, 0.45, 0.95, 1.0];
 const WARNING: Rgba = [0.9, 0.2, 0.2, 1.0];
@@ -222,6 +222,4 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
 }
 //#endregion 🔖️Render
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

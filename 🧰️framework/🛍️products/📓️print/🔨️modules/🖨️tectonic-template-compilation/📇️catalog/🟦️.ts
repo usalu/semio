@@ -12,7 +12,7 @@ for (const document of catalog.documents) {
   ids.add(document.id); paths.add(document.texPath);
 }
 
-/** 📇️ Lists the authored document owners used by the compiler and Nx inference. */
+/** 📇️ Lists the authored document owners used by the compiler and build-graph inference. */
 export function printDocuments(): readonly PrintDocument[] { return catalog.documents; }
 
 /** 📚️ Lists the exact shared macro-library roots materialized for every compiler invocation. */

@@ -47,6 +47,4 @@ pub fn handle<P: Cursor>(_payload: &P, doc: &ArtifactView<'_, ModelSnapshot>, _c
     run_cursor(ctx, doc, P::DELTA)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

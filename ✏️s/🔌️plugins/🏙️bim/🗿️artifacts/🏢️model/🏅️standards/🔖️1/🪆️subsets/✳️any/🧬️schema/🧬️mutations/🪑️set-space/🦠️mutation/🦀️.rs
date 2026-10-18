@@ -1,6 +1,6 @@
 //! 🪑️ `set-space` payload. Sets any of a room's number, name, boundary, usage, zone and floor, wall and ceiling finish (an assigned null leaves the zone or removes a finish); absent fields stay untouched and the number stays unique within the storey.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff, patches::SpacePatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, SpaceBoundary}};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, ModelDiff, patches::SpacePatch}, snapshot::{ModelSnapshot, SpaceBoundary}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -48,13 +48,16 @@ impl SetSpace {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetSpace {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetSpace
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetSpace>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "space", kind: "set-space", record: "SetSpace" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_space::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_space::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit space \"{}\"", self.id), &format!("Raum \"{}\" ändern", self.id))

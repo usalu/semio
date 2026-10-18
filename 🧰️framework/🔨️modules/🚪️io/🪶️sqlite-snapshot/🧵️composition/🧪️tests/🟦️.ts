@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import corpus from "../🧫️fixtures/🔣️.json";
+import corpus from "./🧫️fixtures/🔣️.json";
 import { composeSqliteSchema } from "../../🟦️.ts";
 
 test("schema composition matches the language-neutral corpus and UTF-8 byte lengths", () => {

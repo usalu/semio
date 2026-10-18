@@ -1,0 +1,3 @@
+#!/bin/zsh
+"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/wbs-tools/vb.sh" play "/Users/ueli/Documents/semio/🏢️semio-tech/🎡️play" "/Users/ueli/Documents/semio/🏢️semio-tech/🎡️play/🏗️builder/🌐️vite/🟦️.ts" prototype 900
+"/Users/ueli/Documents/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🪓️monolith-split/wbs-tools/vb.sh" demonstrator "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator" "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/🏗️builder/🌐️vite/🟦️.ts" prototype 900

@@ -1,10 +1,5 @@
-import {
-  DIAGRAM_LAYOUT_CODEC_KIND,
-  createDiagramLayoutWorkerJob,
-  type DiagramLayoutDescriptor,
-  type DiagramLayoutIngressPage,
-  type DiagramLayoutWorkerJob,
-} from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts";
+import { DIAGRAM_LAYOUT_CODEC_KIND, type DiagramLayoutDescriptor, type DiagramLayoutIngressPage } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/📜️wire/🟦️.ts";
+import { createDiagramLayoutWorkerJob, type DiagramLayoutWorkerJob } from "../../../../../../../../🔨️modules/🖱️ui/🧱️elements/🕸️Diagram/📐️layout/🟦️.ts";
 import {
   INTERACTIVE_JOB_INPUT_BYTE_CAPACITY,
   INTERACTIVE_JOB_INPUT_ITEM_CAPACITY,

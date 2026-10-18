@@ -2,7 +2,7 @@
 //! the inferred sweep, the joins with columns and the quantities follow by inference.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flaw;
-use super::SetBeamAxis;
+use crate::standards::v1::subsets::any::schema::mutations::set_beam_axis::SetBeamAxis;
 use crate::standards::v1::subsets::any::schema::{diff::{patches::BeamPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

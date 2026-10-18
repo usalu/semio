@@ -1,4 +1,8 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::Profile;
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_geometry::loops;
+use crate::standards::v1::subsets::any::schema::authored::profile::*;
 
 #[test]
 fn profiles_flatten_to_centred_counter_clockwise_outlines() {

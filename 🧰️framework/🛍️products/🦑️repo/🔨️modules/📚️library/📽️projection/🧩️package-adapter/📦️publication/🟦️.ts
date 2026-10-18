@@ -1,6 +1,6 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { semanticPackageAdapterPreview } from "../../../🔍️discovery/🟦️.ts";
+import { semanticPackageAdapterPreview } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 
 /** 🧩️ Emits or verifies exactly the schema-owned JCO Cargo library adapter. */

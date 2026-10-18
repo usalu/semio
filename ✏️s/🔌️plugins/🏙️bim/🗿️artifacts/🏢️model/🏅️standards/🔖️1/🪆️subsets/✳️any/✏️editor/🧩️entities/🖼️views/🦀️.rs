@@ -1,7 +1,7 @@
 //! 🖼️ The view rows of the entity table: how an authored view reads off the snapshot, how an edited value becomes a `set-view` mutation, and what a new view is. A view is created as the plan of
 //! a storey here; the other kinds are created by the `createView` command, which knows how to place a section, an elevation or a camera.
 
-use super::{container, number, parse_count, parse_number, parse_optional_number, parse_point, parse_text, partial, point, variant, Created, FieldRow};
+use crate::editor::bim::entities::{container, number, parse_count, parse_number, parse_optional_number, parse_point, parse_text, partial, point, variant, Created, FieldRow};
 use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{DetailLevel, ModelSnapshot, Phase, Point2, View, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
 

@@ -1,8 +1,8 @@
 //! 🔤️ Tags, text notes and leaders: the text a tag reads from its element (name, type, number or size) and where each text and leader sits. A tag and a leader are placed by an offset from the
 //! reference point of what they name, so they follow the element when it moves; a text note is placed where it was put.
 
-use super::anchors::{reference_point, resolve, Reason};
-use super::{marks_of, print, text_width, Inputs, LeaderLayout, NoteLayout, StyleMarks, TagLayout, TextAnchor};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{reference_point, resolve, Reason};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{marks_of, print, text_width, Inputs, LeaderLayout, NoteLayout, StyleMarks, TagLayout, TextAnchor};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::extents_of;
 use crate::standards::v1::subsets::any::schema::authored::sizes::resolve_size;
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;

@@ -36,6 +36,4 @@ pub fn bim_viewer_labels(view_state: &semio_framework_plugin::ViewModel) -> &'st
 }
 //#endregion 🔖️Labels
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

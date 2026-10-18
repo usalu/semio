@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `CreateRailing`: one created railing entry. The storey and the material must exist, the path needs at
 //! least two finite points that are not all the same (a hosted railing has none: it names a stair, ramp or slab edge of the same building instead), height and post spacing are positive lengths, the rail and post sections, the baluster row and the infill are sound. Posts, rails and extent are inferred.
 
-use super::super::elements;
-use super::super::placement::{host_issue, refuse_stair};
-use super::CreateRailing;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::placement::{host_issue, refuse_stair};
+use crate::standards::v1::subsets::any::schema::mutations::create_railing::CreateRailing;
 use crate::standards::v1::subsets::any::schema::{snapshot::{railing_construction_problem, ModelSnapshot, Point2}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

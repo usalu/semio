@@ -15,7 +15,5 @@ pub fn source() -> ExampleSource {
 }
 
 //#region 🧩️Modules
-#[cfg(test)]
-#[path = "🧪️tests/🧩️example/🦀️.rs"]
-mod tests;
+
 //#endregion 🧩️Modules

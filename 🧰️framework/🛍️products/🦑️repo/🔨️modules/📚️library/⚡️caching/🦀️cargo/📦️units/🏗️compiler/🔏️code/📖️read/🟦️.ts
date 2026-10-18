@@ -1,0 +1,28 @@
+import{requireIssuedResourceControlInvocationV1}from"./../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import{createHash,randomUUID}from"node:crypto";
+import{lstat,readFile,readdir}from"node:fs/promises";
+import{join,resolve}from"node:path";
+import{acquireQueuedResourceLease,checkResourceLeaseControl,type ResourceLeaseControl}from"./../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
+import{withRepositoryCacheStoreV1}from"./../../../../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
+import{requireNativeStoragePathV1}from"./../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
+import{validateJsonSchemaSubset}from"./../../../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import type{NxAuthorizerSourceManifestV1}from"./../../../../../🚀️bootstrap/🛠️tools/🔏️authorizers/🟦️.ts";
+import type{ScriptInvocation}from"./../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🟦️.ts";
+import schema from"../🧬️schema/🔣️.json";
+import receiptSchema from"../🧬️schema/📜️receipt.json";
+const hash=(bytes:Uint8Array|string)=>createHash("sha256").update(bytes).digest("hex");
+
+/** 🧊️ Actual sealed compiler code and its own Source receipt, independent of the unrelated Nx SDK generation. */
+export interface RustUnitCodeV1 {readonly version:1;readonly digest:string;readonly sourceDigest:string;readonly program:string;readonly programDigest:string;readonly programBytes:number;readonly receipt:string;readonly receiptDigest:string;readonly receiptBytes:number}
+/** 🎟️ Admits only canonical compiler-code artifacts inside the first-party tools partition. */
+export function readRustUnitCodeV1(value:unknown):RustUnitCodeV1 {if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed Rust compiler code receipt required");const code=value as RustUnitCodeV1,prefix=".cache/b/t/m/rc/"+code.digest+"/";if(code.program!==prefix+"entry.mjs"||code.receipt!==prefix+"receipt.json"||code.digest!==hash(JSON.stringify({sourceDigest:code.sourceDigest,programDigest:code.programDigest})))throw Error("Original Rust compiler code identity required");return code;}
+/** 📜️ Authenticates a complete captured code receipt without accepting current mutable Source as historical evidence. */
+export function readRustUnitCodeReceiptV1(value:unknown):Readonly<{version:1;source:NxAuthorizerSourceManifestV1;sourceDigest:string;sourceSha256:string;compiler:Readonly<Record<string,string|boolean>>;programDigest:string;programBytes:number}>{
+ if(validateJsonSchemaSubset(receiptSchema,value).length)throw Error("Closed sealed Rust code receipt required");const receipt=value as ReturnType<typeof readRustUnitCodeReceiptV1>,paths=receipt.source.sources.map(row=>row.path),portable=(path:string)=>!path.startsWith("/")&&!/[\\:\u0000-\u001f]/u.test(path)&&path.split("/").every(part=>part!==""&&part!=="."&&part!=="..");if(!portable(receipt.source.entry)||!paths.includes(receipt.source.entry)||paths.some((path,index)=>!portable(path)||index>0&&paths[index-1]!>=path)||hash(JSON.stringify(receipt.source)+"\n")!==receipt.sourceSha256||hash(JSON.stringify({source:receipt.sourceSha256,compiler:receipt.compiler}))!==receipt.sourceDigest)throw Error("Original sealed Rust code Source identity changed");return receipt;
+}
+/** 🔎️ Retains the actual tools image and exact immutable code reader for bounded artifact inspection. */
+export async function withRepositoryRustUnitCodeReaderV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,value:unknown,body:(held:Readonly<{code:RustUnitCodeV1;receipt:ReturnType<typeof readRustUnitCodeReceiptV1>;bytes:Uint8Array;recheck:()=>Promise<void>}>)=>Promise<T>):Promise<T>{
+ requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);const code=readRustUnitCodeV1(value),root=resolve(workspace);return withRepositoryCacheStoreV1(root,"tools",invocation,phaseControl,async(store,control)=>{const directory=requireNativeStoragePathV1(store.root,join(root,code.program,"..")),reader=await acquireQueuedResourceLease({directory:join(root,".cache/b/l/m/data"),resource:"rust-code:"+directory,mode:"shared",owner:randomUUID(),control,signal:control.signal});try{
+ const read=async(path:string,digest:string,maximum:number)=>{const file=requireNativeStoragePathV1(store.root,join(root,path)),before=await lstat(file);if(!before.isFile()||before.isSymbolicLink()||before.nlink!==1||before.size!==maximum)throw Error("Original sealed Rust code physical identity changed");const bytes=await readFile(file),after=await lstat(file);if(after.dev!==before.dev||after.ino!==before.ino||after.size!==before.size||after.nlink!==1||hash(bytes)!==digest)throw Error("Original sealed Rust code bytes changed");return bytes;},recheck=async()=>{await store.recheck();if((await readdir(directory)).sort().join(",")!=="entry.mjs,receipt.json")throw Error("Original sealed Rust code inventory changed");await read(code.program,code.programDigest,code.programBytes);await read(code.receipt,code.receiptDigest,code.receiptBytes);};await recheck();const bytes=await read(code.program,code.programDigest,code.programBytes),receipt=readRustUnitCodeReceiptV1(JSON.parse((await read(code.receipt,code.receiptDigest,code.receiptBytes)).toString("utf8")));if(receipt.programDigest!==code.programDigest||receipt.programBytes!==code.programBytes||receipt.sourceDigest!==code.sourceDigest)throw Error("Original sealed Rust code receipt disagrees with artifact identity");const result=await body(Object.freeze({code,receipt,bytes,recheck}));await recheck();return result;
+ }finally{reader.release();}});
+}

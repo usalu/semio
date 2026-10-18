@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateGridLine`: one created grid line entry. The id must be free and the building must exist; the
 //! label is non-blank and unique within the building, the line has finite end points and a length.
 
-use super::super::elements;
-use super::CreateGridLine;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_grid_line::CreateGridLine;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

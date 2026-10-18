@@ -1,0 +1,14 @@
+{
+ "tag": "b03",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs",
+ "folders": [
+  "🧳️retained-clone-preparation-fixtures",
+  "♻️retained-clone-preparation-lifecycle-laws",
+  "📚️batch-publication-and-stamped-clock-laws",
+  "💨️ephemeral-one-item-publication-laws",
+  "📸️group-envelope-read-canonical-revision-and-remote-ingest-laws",
+  "⚔️modify-vs-delete-quarantine-and-testkit-wiring-laws",
+  "🛡️conflict-robustness-and-composition-pin-laws"
+ ]
+}

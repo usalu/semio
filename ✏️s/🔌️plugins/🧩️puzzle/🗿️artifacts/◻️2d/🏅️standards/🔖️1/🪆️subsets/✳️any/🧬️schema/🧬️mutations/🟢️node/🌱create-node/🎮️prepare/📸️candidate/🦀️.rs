@@ -20,11 +20,11 @@ pub struct Puzzle2dCreateNodeCandidateState {
     node_clone: RetainedFieldCursor<Puzzle2dNode>,
     plan: Option<Puzzle2dCreateNodePlan>,
     candidate: Option<Puzzle2dSnapshot>,
-    pending: Option<Puzzle2dNode>,
+    pub pending: Option<Puzzle2dNode>,
     insertion: Option<PagedListEditCursor>,
     candidate_close: Option<ControlledRetirement<Puzzle2dSnapshot>>,
     pending_close: Option<ControlledRetirement<Puzzle2dNode>>,
-    phase: u8,
+    pub phase: u8,
     closing: bool,
 }
 

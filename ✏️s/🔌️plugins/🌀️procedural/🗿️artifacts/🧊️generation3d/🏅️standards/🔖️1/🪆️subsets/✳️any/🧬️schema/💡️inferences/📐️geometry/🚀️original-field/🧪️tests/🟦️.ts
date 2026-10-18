@@ -58,7 +58,7 @@ test("original mesh edge graph publishes all three ports and agrees with indepen
 
 test("original plane surface graph agrees with independent Three frame point and normal",()=>{
  expect(new Ajv({strict:true}).validate(surfaceSchema,surface)).toBe(true);const frame=surface.frame;const matrix=new Matrix4().makeBasis(new Vector3().fromArray(frame.x),new Vector3().fromArray(frame.y),new Vector3().fromArray(frame.z)).setPosition(new Vector3().fromArray(frame.origin));
- expect([...new Vector3(2,3,0).applyMatrix4(matrix).toArray()]).toEqual(surface.expected.point);expect([...new Vector3().fromArray(frame.x).cross(new Vector3().fromArray(frame.y)).normalize().toArray()]).toEqual(surface.expected.normal);
+ expect([...new Vector3(2,3,0).applyMatrix4(matrix).toArray()]).toEqual(surface.expected.point);expect([...new Vector3().fromArray(frame.x).cross(new Vector3().fromArray(frame.y)).normalize().toArray().map(component=>component+0)]).toEqual(surface.expected.normal);
 });
 
 test("original analytic BRep translations agree with independent Three and retain labels",()=>{

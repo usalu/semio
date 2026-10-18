@@ -1,4 +1,17 @@
-use super::*;
+use crate::editor::bim::kit::fault;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::standards::v1::subsets::any::schema::snapshot::ClassificationSystem;
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::{BIM_LIBRARY_DOMAIN, CLASSIFICATION_ENTRY};
+#[allow(unused_imports)]
+use crate::editor::bim::kit::select_effect;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, mutations::ModelMutation};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, NoConfig, NoConfigMutation};
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::commands::search_classification::*;
 use crate::editor::bim::fixture::support::{ctx, demo, run};
 use crate::standards::v1::subsets::any::schema::snapshot::ClassificationItem;
 

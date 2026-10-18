@@ -3,13 +3,13 @@
 //! matches the whole path of a node, so a leaf is found by the names of its folders. Signals carry item indices.
 //! Wired as a crate-root sibling module of `crate::tui::widget` (see that mod's `pub use crate::tui::tree::{TreeItem, TreeState};`).
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::event::{mods, Key, KeyEvent, MouseEvent};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::rows::{navigate_to, paint_scroll_bar, row_style, FilterIndex, Pointer, Rows};
-use crate::tui::text::{display_width, elide, Elision};
-use crate::tui::theme::{Glyph, Role, Surface, Theme};
-use crate::tui::widget::{CursorShape, CursorSpec, WidgetSignal};
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseEvent};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::rows::{navigate_to, paint_scroll_bar, row_style, FilterIndex, Pointer, Rows};
+use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
+use semio_framework_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 
 const NONE: u32 = u32::MAX;
 

@@ -1,14 +1,15 @@
 //! 🔬️ Engine behaviour: the focus tree, the cursor, hover, capture, click counting, wheel routing, context menus,
 //! timed tooltips, fresh hit-testing, zoom visibility and splitter/tab drags (D07 D09 D10 D25 D32 D37, R14).
 
-use crate::tui::chrome::{shell, window_chip_layout, ChromeLabels, ChromeState, FooterState, NavbarState, Shell, TabKind, WindowState};
-use crate::tui::engine::Tui;
-use crate::tui::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Size};
-use crate::tui::layout::{create_default_layout, push_window_to_stack, reorder_stack_tab, resize_split, solve_window_layout, zoom_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutWindowNode};
-use crate::tui::scene::{Node, NodeContent, NodeId};
-use crate::tui::theme::Theme;
-use crate::tui::widget::{Align, InputState, LabelState, ListState, TabsState, WidgetSignal, WidgetState, WizardState};
+use semio_framework_ui_tui_frame::chrome::{shell, window_chip_layout, ChromeLabels, ChromeState, FooterState, NavbarState, Shell, TabKind, WindowState};
+use semio_framework_ui_tui_engine::Tui;
+use semio_framework_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Size};
+use semio_framework_ui_tui_frame::layout::{create_default_layout, push_window_to_stack, reorder_stack_tab, resize_split, solve_window_layout, zoom_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutWindowNode};
+use semio_framework_ui_tui_frame::scene::{Node, NodeContent, NodeId};
+use semio_framework_ui_tui_core::theme::Theme;
+use semio_framework_ui_tui_widgets::widget::{Align, InputState, LabelState, ListState, TabsState, WidgetState, WizardState};
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 use ui_styling::appearance::AppearanceName;
 
 fn mouse(kind: MouseKind, x: u16, y: u16) -> Event {
@@ -42,7 +43,7 @@ fn tabs() -> WidgetState {
 }
 
 fn label() -> WidgetState {
-    WidgetState::Label(LabelState { text: "static".into(), align: Align::Left, role: crate::tui::theme::Role::Foreground })
+    WidgetState::Label(LabelState { text: "static".into(), align: Align::Left, role: semio_framework_ui_tui_core::theme::Role::Foreground })
 }
 
 //#region 🎯 Focus tree
@@ -234,7 +235,7 @@ fn two_stacks(labels: bool) -> (Tui, Shell, WindowLayout, Vec<NodeId>) {
     for (id, title) in [("w3", "beta"), ("w4", "gamma")] {
         push_window_to_stack(&mut layout, "w1", WindowLayoutWindowNode { window_kind_id: id.into(), title: Some(title.into()), corner: None });
     }
-    crate::tui::layout::activate_stack_tab(&mut layout, "w1");
+    semio_framework_ui_tui_frame::layout::activate_stack_tab(&mut layout, "w1");
     let mut built = shell(&mut tui.scene, NavbarState { left: vec![], center: vec![], right: vec![] }, FooterState { hints: vec![], status: String::new() }, &layout);
     let canvas = built.canvas;
     for id in ["w3", "w4"] {
@@ -303,7 +304,7 @@ fn dragging_a_tab_onto_another_reports_a_move_on_release() {
     let NodeContent::Chrome(ChromeState::Window(state)) = &tui.scene.node(w1).content else { panic!("window") };
     assert_eq!(state.drop_target, None);
     assert!(reorder_stack_tab(&mut layout, "w1", 0, 2));
-    let stack = crate::tui::layout::stack_hosting(&layout, "w1").unwrap();
+    let stack = semio_framework_ui_tui_frame::layout::stack_hosting(&layout, "w1").unwrap();
     assert_eq!(stack.children.iter().map(|c| c.window_kind_id.as_str()).collect::<Vec<_>>(), vec!["w3", "w4", "w1"]);
 }
 
@@ -382,7 +383,7 @@ fn an_elided_tab_shows_its_full_title_as_a_tooltip_and_a_node_tooltip_works_anyw
 
 #[test]
 fn focus_changes_and_window_focus_events_reach_the_widget_as_on_focus() {
-    use crate::tui::widget::TerminalState;
+    use semio_framework_ui_tui_vt::pane::TerminalState;
     let mut pane = TerminalState::new(Size { width: 20, height: 5 }, 100);
     pane.feed(b"\x1b[?1004h");
     let (mut tui, ids) = row_of(vec![(WidgetState::Terminal(pane), 30), (list("b"), 10)]);
@@ -402,7 +403,7 @@ fn focus_changes_and_window_focus_events_reach_the_widget_as_on_focus() {
 
 #[test]
 fn a_pressed_terminal_keeps_receiving_the_drag_and_release_outside_its_rect() {
-    use crate::tui::widget::TerminalState;
+    use semio_framework_ui_tui_vt::pane::TerminalState;
     let (mut tui, ids) = row_of(vec![(WidgetState::Terminal(TerminalState::new(Size { width: 20, height: 5 }, 100)), 20), (list("b"), 30)]);
     tui.dispatch(&down(3, 1));
     assert_eq!(tui.focus(), Some(ids[0]));
@@ -423,9 +424,9 @@ fn a_wheel_that_changes_widget_state_without_a_signal_still_repaints() {
 
 #[test]
 fn the_engine_tick_animates_progress_widgets_and_running_tabs() {
-    use crate::tui::chrome::WindowStackTabState;
-    use crate::tui::theme::Status;
-    use crate::tui::widget::ProgressState;
+    use semio_framework_ui_tui_frame::chrome::WindowStackTabState;
+    use semio_framework_ui_tui_core::theme::Status;
+    use semio_framework_ui_tui_widgets::widget::ProgressState;
     let (mut tui, _ids) = row_of(vec![(WidgetState::Progress(ProgressState::indeterminate("working")), 30)]);
     assert!(tui.render().0.is_empty());
     tui.tick(0);
@@ -440,7 +441,7 @@ fn the_engine_tick_animates_progress_widgets_and_running_tabs() {
     let (mut tui, _built, _layout, windows) = two_stacks(false);
     let w1 = windows[0];
     if let Some(ChromeState::Window(state)) = tui.scene.node_mut(w1).chrome() {
-        state.stack_tabs[0] = WindowStackTabState::new("alpha", crate::tui::layout::WindowStackCorner::TopLeft).with_status(Some(Status::Running));
+        state.stack_tabs[0] = WindowStackTabState::new("alpha", semio_framework_ui_tui_frame::layout::WindowStackCorner::TopLeft).with_status(Some(Status::Running));
     }
     tui.tick(0);
     tui.render();
@@ -454,7 +455,7 @@ fn the_engine_tick_animates_progress_widgets_and_running_tabs() {
 
 #[test]
 fn shell_set_status_mirrors_into_every_tab_strip_of_the_stack() {
-    use crate::tui::theme::Status;
+    use semio_framework_ui_tui_core::theme::Status;
     let (mut tui, built, _layout, windows) = two_stacks(false);
     built.set_status(&mut tui.scene, "w3", Some(Status::Failure));
     for window in &windows[..1] {
@@ -494,7 +495,7 @@ fn hidden_children_reserve_neither_size_nor_gaps() {
             }, &children).unwrap();
             oracle.compute_layout(parent, taffy::geometry::Size { width: AvailableSpace::Definite(40.0), height: AvailableSpace::Definite(22.0) }).unwrap();
             tui.layout();
-            if hidden.contains(&1) { assert_eq!(tui.scene.rect(grandchild), crate::tui::geometry::Rect::default()); }
+            if hidden.contains(&1) { assert_eq!(tui.scene.rect(grandchild), semio_framework_ui_tui_core::geometry::Rect::default()); }
             for (id, child) in nodes.iter().zip(children) {
                 let expected = oracle.layout(child).unwrap();
                 let actual = tui.scene.rect(*id);

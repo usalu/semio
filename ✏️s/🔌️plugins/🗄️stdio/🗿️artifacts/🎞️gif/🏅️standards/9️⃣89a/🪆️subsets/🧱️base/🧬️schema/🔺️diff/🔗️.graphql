@@ -1,5 +1,12 @@
-# 🧬️ GifDiff
-type GifDiff {
-  schema: String
-  bytes: String
-}
+enum GifDisposal { UNSPECIFIED DO_NOT_DISPOSE RESTORE_TO_BACKGROUND RESTORE_TO_PREVIOUS }
+type GifFrameDiff { left: Int top: Int width: Int height: Int interlace: Boolean lct: GifColorTable indices: [Int!] delayCs: Int disposal: GifDisposal transparentIndex: Int userInput: Boolean plainText: GifPlainText }
+type GifFrameModified { index: Int! diff: GifFrameDiff! }
+type GifFrameAdded { index: Int! frame: GifFrame! }
+type GifFramesDiff { removed: [Int!] modified: [GifFrameModified!] added: [GifFrameAdded!] }
+type GifCommentModified { index: Int! text: String! }
+type GifCommentAdded { index: Int! text: String! }
+type GifCommentsDiff { removed: [Int!] modified: [GifCommentModified!] added: [GifCommentAdded!] }
+type GifAppExtensionModified { index: Int! extension: GifAppExtension! }
+type GifAppExtensionAdded { index: Int! extension: GifAppExtension! }
+type GifAppExtensionsDiff { removed: [Int!] modified: [GifAppExtensionModified!] added: [GifAppExtensionAdded!] }
+type GifDiff { width: Int height: Int gct: GifColorTable backgroundColorIndex: Int pixelAspectRatio: Int loopCount: Int frames: GifFramesDiff comments: GifCommentsDiff appExtensions: GifAppExtensionsDiff }

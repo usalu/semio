@@ -52,7 +52,7 @@ type goDispatchVector struct {
 
 func readGoDispatchVector(t *testing.T) goDispatchVector {
 	t.Helper()
-	path := filepath.Join(rootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "⌨️cli", "🧫️fixtures", "🚦️test-dispatch", "🔣️.json")
+	path := filepath.Join(rootDir, "🧰️framework", "🛍️products", "🦑️repo", "🔨️modules", "💻️client", "⌨️cli", "🧪️tests", "🧫️fixtures", "🚦️test-dispatch", "🔣️.json")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatal(err)

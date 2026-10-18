@@ -25,7 +25,7 @@
       "dependsOn": [
         {
           "projects": [
-            "@semio-tech/draw-plugin"
+            "semio-hub-draw-component"
           ],
           "target": "component"
         }

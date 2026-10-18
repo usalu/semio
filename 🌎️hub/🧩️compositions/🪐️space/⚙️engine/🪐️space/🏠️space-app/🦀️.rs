@@ -1,6 +1,7 @@
 //! 🏠️ The studio app instance: bounded retained command jobs, config store preparation and the artifact app implementation.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️SpaceApp
 /// 🧪️ Unit app instance — config lives in `SpaceConfig`; remote presence stays unavailable until

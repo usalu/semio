@@ -1,11 +1,11 @@
-use crate::{standards::v5::subsets::any::schema::diff::HtmlChildAdded, standards::v5::subsets::any::schema::diff::HtmlChildrenDiff, standards::v5::subsets::any::schema::diff::HtmlDiff, standards::v5::subsets::any::schema::diff::HtmlNodeDiff};
-use crate::{standards::v5::subsets::any::schema::snapshot::element_attr, standards::v5::subsets::any::schema::snapshot::node_at, standards::v5::subsets::any::schema::snapshot::HtmlNode, standards::v5::subsets::any::schema::snapshot::HtmlSnapshot};
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff::{HtmlChildAdded, HtmlChildrenDiff, HtmlDiff, HtmlNodeDiff};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{element_attr, node_at, HtmlNode, HtmlSnapshot};
 use protocol::Mutation;
-use crate::apply_mutation;
+use semio_s_artifact_stdio_contract::apply_mutation;
 use crate::standards::v5::subsets::any::schema::mutations::*;
-use crate::standards::v5::subsets::any::schema::diff::{HtmlChildAdded as HtmlChildAddedT, HtmlNodeDiff as HtmlNodeDiffT};
-use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
-use crate::standards::v5::subsets::any::io::text::snapshot::{write_html_document};
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff::{HtmlChildAdded as HtmlChildAddedT, HtmlNodeDiff as HtmlNodeDiffT};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, RawTextKind, STDIO_HTML_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::write_html_document;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 

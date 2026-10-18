@@ -3,7 +3,7 @@ use super::*;
 fn normalized(value:&mut serde_json::Value){match value {serde_json::Value::Number(number)=>*number=serde_json::Number::from_f64(number.as_f64().unwrap()).unwrap(),serde_json::Value::Array(values)=>for value in values{normalized(value)},serde_json::Value::Object(values)=>for value in values.values_mut(){normalized(value)},_=>{}}}
 #[test]
 fn actual_playbook_factory_matches_portable_form_corpus(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🌊️flow/📝️forms/🧬️schema/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🌊️flow/📝️forms/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let producer=PlaybookFlowFormProducer;
  let fields=corpus["widgets"].as_array().unwrap().iter().filter_map(|widget|{
   let id=widget["id"].as_str().unwrap();

@@ -22,7 +22,7 @@ import { FlowProvider } from "@semio-tech/ui-react";
 import { treeTextFlowFixture as readingFlow } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 
 it("interprets the neutral compact Tree and preserves checkbox identity, authority, and disability", () => {
-  const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/📏️window-measures/🔣️.json"), "utf8"));
+  const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/📏️window-measures/🔣️.json"), "utf8"));
   const root = law.windows[0].expectedOverlay;
   for (const disabled of [false, true]) {
     const nodes: any[] = [];
@@ -60,7 +60,7 @@ it("interprets the neutral compact Tree and preserves checkbox identity, authori
 });
 
 it("renders the neutral Window Options tree with compact rows and closed child retirement", () => {
-  const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json"), "utf8"));
+  const law = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../🧫️fixtures/🌳️window-measures-tree-parity/🔣️.json"), "utf8"));
   const view = render(renderWindowMeasuresTree(law.measures, () => undefined));
   const rows = Array.from(view.container.querySelectorAll("[data-slot='window-measure-tree-row']"));
   expect(rows.map(row => row.querySelector("[data-slot='tree-label']")?.textContent)).toEqual(law.expected.labels);

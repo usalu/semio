@@ -9,7 +9,7 @@ type Measure = { measure: "cut"; tool: Solid; pose: Pose } | { measure: "drill";
 type Fixture = { scene: { stock: { solid: Solid; pose: Pose }; steps: { id: string; enabled: boolean; measure: Measure }[] }; volumes: number[]; volumeTolerance: number; circularSegments: number; poseScalarBits: { step: number; coordinate: number; bits: string }[] };
 
 test("Timber replay has five independent Manifold volume witnesses", async () => {
-  const root = resolve(import.meta.dir, "../🧫️fixtures/🪵️timber-replay"), fixture: Fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
+  const root = resolve(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/💡️inferences/🪵️timber-replay"), fixture: Fixture = JSON.parse(readFileSync(resolve(root, "🔣️.json"), "utf8"));
   for (const row of fixture.poseScalarBits) {
     const scalar = new DataView(new ArrayBuffer(8));
     scalar.setFloat64(0, fixture.scene.steps[row.step]!.measure.pose.position[row.coordinate]!);

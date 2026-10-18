@@ -1,22 +1,42 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, CeilingType, Slope};
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::{self, Vertex};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::ZPlane;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings::*;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::solid_steps;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_text;
 
-const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🔲️ceilings-holes-slope/🔣️.json");
+static CASE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🔲️ceilings-holes-slope/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn ceilings_reproduce_the_third_party_oracle_table() {
-    let case = case(CASE);
+    let case = case((*CASE));
     assert_matches_oracle(&case, &compute_element_solids(&case.snapshot), SolidFamily::Ceiling);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_ceiling_with_a_hole_has_the_net_area_times_the_layer_thickness() {
-    let solids = compute_element_solids(&case(CASE).snapshot);
+    let solids = compute_element_solids(&case((*CASE)).snapshot);
     assert!(close((24.0 - 1.0) * 0.0625, solids["c-holed"].volume, 1e-12), "6 x 4 less a 1 x 1 hole, board 0.0125 + wool 0.05");
     assert!(close(5.0 * 4.0 * 0.02, solids["c-sloped"].volume, 1e-12), "a slope does not change the volume: the thickness stays vertical");
     let net = 16.0 + 2.0 * std::f64::consts::PI - std::f64::consts::PI * 0.25;
@@ -25,7 +45,7 @@ async fn a_ceiling_with_a_hole_has_the_net_area_times_the_layer_thickness() {
 
 #[semio_framework_async_macros::async_test]
 async fn layers_hang_downward_from_the_drop_below_the_storey_top_first_layer_topmost() {
-    let solids = compute_element_solids(&case(CASE).snapshot);
+    let solids = compute_element_solids(&case((*CASE)).snapshot);
     let holed = &solids["c-holed"];
     assert_eq!(holed.groups.iter().map(|g| (g.part.as_str(), g.material.as_str(), g.layer)).collect::<Vec<_>>(), vec![(parts::LAYER, "m-board", 0), (parts::LAYER, "m-wool", 1)]);
     let (low0, high0, volume0) = group_extent(holed, 0);
@@ -37,7 +57,7 @@ async fn layers_hang_downward_from_the_drop_below_the_storey_top_first_layer_top
 
 #[semio_framework_async_macros::async_test]
 async fn a_slope_tilts_the_plane_about_the_uphill_edge() {
-    let solids = compute_element_solids(&case(CASE).snapshot);
+    let solids = compute_element_solids(&case((*CASE)).snapshot);
     let sloped = &solids["c-sloped"];
     let fall = 5.0 * 0.05f64.tan();
     assert!(close(2.9, sloped.bounds.max.z, 1e-12), "the uphill edge keeps its drop: storey top - offset");
@@ -50,7 +70,7 @@ async fn a_slope_tilts_the_plane_about_the_uphill_edge() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_span_and_the_underside_follow_the_same_plane() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let levels = crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels(&snapshot);
     let (holed, sloped) = (&snapshot.ceilings["c-holed"], &snapshot.ceilings["c-sloped"]);
     assert_eq!(span(&snapshot, holed, &levels["st-ground"]), (2.7 - 0.0625, 2.7));
@@ -64,7 +84,7 @@ async fn the_span_and_the_underside_follow_the_same_plane() {
 
 #[semio_framework_async_macros::async_test]
 async fn raising_a_storey_lifts_its_ceilings_and_those_of_the_storeys_above() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let (before, after) = (compute_element_solids(&snapshot), compute_element_solids(&raised(&snapshot, "st-ground", 0.4)));
     for id in ["c-holed", "c-sloped"] {
         assert!(close(after[id].bounds.max.z - before[id].bounds.max.z, 0.4, 1e-9), "{id} hangs from the top of the storey that grew");
@@ -84,7 +104,7 @@ async fn raising_a_storey_lifts_its_ceilings_and_those_of_the_storeys_above() {
 
 #[semio_framework_async_macros::async_test]
 async fn ceilings_without_layers_or_type_are_absent_and_the_result_is_deterministic() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(inferred, ModelInference::infer(&snapshot).expect("infers"));
     assert!(["c-bare", "c-unknown-type"].iter().all(|id| !inferred.element_solids.contains_key(*id)));
@@ -94,13 +114,13 @@ async fn ceilings_without_layers_or_type_are_absent_and_the_result_is_determinis
     assert_eq!(thickness(&snapshot, &snapshot.ceilings["c-unknown-type"]), 0.0);
 }
 
-const TAKEOFF: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔲️ceilings/🔲️takeoff/📸️snapshot/🔣️.json");
-const TAKEOFF_TABLE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔲️ceilings/🔲️takeoff/💡️inference/🔲️ceilings/🔣️.json");
+static TAKEOFF: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔲️ceilings/🔲️takeoff/📸️snapshot/🔣️.json"));
+static TAKEOFF_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔲️ceilings/🔲️takeoff/💡️inference/🔲️ceilings/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_take_off_and_the_span_reproduce_the_shapely_oracle_table() {
-    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(TAKEOFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the take-off model decodes");
-    let table: serde_json::Value = serde_json::from_str(TAKEOFF_TABLE).expect("the oracle table");
+    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*TAKEOFF), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the take-off model decodes");
+    let table: serde_json::Value = serde_json::from_str((*TAKEOFF_TABLE)).expect("the oracle table");
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(table.as_object().expect("rows").len(), snapshot.ceilings.len());
     for (id, ceiling) in &snapshot.ceilings {

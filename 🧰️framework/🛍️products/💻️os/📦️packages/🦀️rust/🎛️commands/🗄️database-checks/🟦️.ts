@@ -7,7 +7,8 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️module
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
@@ -394,8 +395,8 @@ export class DatabaseShutdownCheckScript extends BundleScript {
       }
       assert.deepEqual({ terminal, authorityRetained, emitCount }, row.expected, row.name);
     }
-    const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
-    const artifact = readFileSync(join(owner, "..", "🗿️artifact", "🦀️.rs"), "utf8");
+    const source = readModuleTreeSource(join(owner, "🦀️.rs"));
+    const artifact = readModuleTreeSource(join(owner, "..", "🗿️artifact", "🦀️.rs"));
     assert(source.includes("closing_authority: Option<") && source.includes("pub async fn shutdown_step(&mut self"));
     assert(source.includes("DatabaseShutdownProgress::Blocked(DatabaseShutdownBlock::Authorities"));
     assert(source.includes("shutdown_emit_started") && !source.includes("shutdown_graph_complete"));

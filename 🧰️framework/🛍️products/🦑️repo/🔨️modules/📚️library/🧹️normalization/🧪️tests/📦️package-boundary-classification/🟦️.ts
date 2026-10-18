@@ -3,11 +3,16 @@ import { testLevelAtLeast } from "../../../../../../../🔨️modules/🏃️pro
 import Ajv from "ajv/dist/2020";
 import { describe, expect, test } from "bun:test";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
+import { isAbsolute, join, relative, resolve, sep } from "node:path";
 import { tmpdir } from "node:os";
 import ts from "typescript";
-import { classifyPackageSource, classifyPackageSourceDisposition, clearDiscoveryCache, discoverPackageProblems, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, loadCatalogTaxonomy, type PackageGlueGrammarSpec, type PackageSourceRole, type PackageSourceDisposition } from "../../../🔍️discovery/🟦️.ts";
-import { fixedContractScopeSpecificityRank, inventoryTaxonomy, inventoryTaxonomyWithCapturedSourceRead, type FixedContractScopeKind } from "../../🟦️.ts";
+import { classifyPackageSource, classifyPackageSourceDisposition, type PackageSourceRole } from "../../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
+import { clearDiscoveryCache, discoverPackageProblems, fixedSourceDispositionDecision } from "../../../🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { fixedFilenameContractIdsForPath } from "../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type PackageGlueGrammarSpec, type PackageSourceDisposition } from "../../../🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
+import { fixedContractScopeSpecificityRank, type FixedContractScopeKind } from "../../📏️fixed-contracts/🟦️.ts";
+import { inventoryTaxonomy, inventoryTaxonomyWithCapturedSourceRead } from "../../🔍️inventory-planning/🟦️.ts";
 
 //#endregion 🔌️Adapters
 
@@ -26,10 +31,9 @@ const validator = new Ajv({ strict: true, allErrors: true });
 
 
 function fixedScriptControlRoot(prefix: string): string {
-  const ticketGenerated = resolve(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️01/KIND-ONLY-BASENAMES-ACROSS-THE-TAXONOMY-TREE/🗑️generated");
-  const base = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR?.trim() || join(ticketGenerated, "sol-fixed-script-semantic-enforcement/test-artifacts"));
-  const ticketRelative = relative(ticketGenerated, base);
-  if (ticketRelative === ".." || ticketRelative.startsWith(`..${sep}`)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must remain inside the active ticket generated directory");
+  const base = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR?.trim() || join(repoRoot, ".🧬semio/🦑️repo/⚡️cache/🧪️tests/fixed-script-semantic-enforcement"));
+  const baseRelative = relative(repoRoot, base);
+  if (baseRelative === ".." || baseRelative.startsWith(`..${sep}`) || isAbsolute(baseRelative)) throw new Error("SEMIO_TEST_ARTIFACT_DIR must remain inside the repository");
   let current = repoRoot;
   for (const segment of relative(repoRoot, base).split(sep).filter(Boolean)) {
     current = join(current, segment);
@@ -795,7 +799,7 @@ describe("package boundary glue-content classification", () => {
     const project = JSON.parse(readFileSync(join(libraryPackageRoot, "📋️project.json"), "utf8"));
     const libraryPackage = JSON.parse(readFileSync(join(libraryPackageRoot, "package.json"), "utf8"));
     expect(project.targets["test-package-body-policy"].options.command).toBe("bun ./📜️script.ts test package-body-policy");
-    expect(libraryPackage.scripts["test-package-body-policy"]).toBe("nx run @semio-tech/repo-lib:test-package-body-policy");
+    expect(libraryPackage.scripts["test-package-body-policy"]).toBe("bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-package-body-policy");
   });
 
   test("the remaining package-purity fixture stays registered as frozen history", () => {

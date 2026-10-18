@@ -6,7 +6,18 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, runCmd, runCmdStatus, runNodeBinStatus, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { describeDevPortOccupant, devServerUrl, isDevPortInUse } from "../../../../../../🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { getRepoMetaDir } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
+import { loadFrameworkOsPlaygroundCatalog } from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🟦️.ts";
+import { wgpuDevPlayUrl } from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🧊️wgpu-dev/🟦️.ts";
+import { runBunxStatus } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🍞️bun/🟦️.ts";
+import { runProbe } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
+import { runVitest } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
+import { spawnDaemon, type SpawnDaemonHandle } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/👹️daemon/🟦️.ts";
+import { runViteBunxDev } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts";
+import { frameworkOsLockedPrefsEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -29,7 +40,7 @@ import { renderScaleFixtureArtifacts } from "@semio-tech/framework-os/testing/sc
 class BenchPluginsScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [renderer, ...segments] = args;
-    if ((renderer!=="native"&&renderer!=="react"&&renderer!=="wgpu") || segments.some((segment) => segment === "--renderer" || segment.startsWith("--renderer="))) throw new Error("Select the renderer through the Nx benchmark target");
+    if ((renderer!=="native"&&renderer!=="react"&&renderer!=="wgpu") || segments.some((segment) => segment === "--renderer" || segment.startsWith("--renderer="))) throw new Error("Select the renderer through the benchmark build target");
     const pluginCount = Number(benchFlag(segments, "count", "50"));
     const extensionsPerPlugin = Number(benchFlag(segments, "extensions", "50"));
     const shardCount = Number(benchFlag(segments, "shards", "8"));

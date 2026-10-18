@@ -1,12 +1,13 @@
 //! 🔗️ `flip-wall` / `follows-by-inference`: flipping reverses the stored axis and changes no extent of the `wall-layout` inference;
 //! flipping twice restores the axis exactly.
 
-use super::FlipWall;
+use crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_framework_test_fixtures::fixture_text;
 
-const BEFORE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪞️flip-wall/🌀️reverses-an-arc/📸️snapshot/⬅️before/🔣️.json");
+static BEFORE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🪞️flip-wall/🌀️reverses-an-arc/📸️snapshot/⬅️before/🔣️.json"));
 
 fn flip(snapshot: &ModelSnapshot, id: &str) -> ModelSnapshot {
     apply_model_mutation(snapshot, &ModelMutation::FlipWall(FlipWall { id: id.into() })).expect("the flip applies")
@@ -14,7 +15,7 @@ fn flip(snapshot: &ModelSnapshot, id: &str) -> ModelSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn a_flipped_wall_keeps_its_extent_and_flips_back() {
-    let before = decode(BEFORE);
+    let before = decode((*BEFORE));
     for id in ["w-south", "w-arc"] {
         let once = flip(&before, id);
         assert_ne!(once.walls[id].axis, before.walls[id].axis);

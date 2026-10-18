@@ -2,7 +2,7 @@ import { test,expect } from "bun:test";
 import { readFileSync } from "node:fs";
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch } from "fast-json-patch";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 test("original session construction pays each physical family and closes only born owners",()=>{

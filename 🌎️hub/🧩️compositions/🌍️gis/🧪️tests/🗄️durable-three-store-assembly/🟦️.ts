@@ -3,8 +3,9 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../🧰️framework
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 
 /** 🏗️ Proves the exact fixed-three GIS assembly outcomes, typed factory ports, and private Store bind. */
@@ -35,7 +36,7 @@ export async function proveGisDurableThreeStoreAssembly(repoRoot: string): Promi
   if (fixture.cancellationCases.some((row: any) => row.journalBegins !== 0 || row.terminalStores !== 3) || fixture.rejectionCases.some((row: any) => row.terminalStores !== 3)) {
     throw new Error("GIS durable assembly terminal owner trace changed");
   }
-  const storeSource = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs"), "utf8");
+  const storeSource = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs"));
   const assembly = storeSource.slice(storeSource.indexOf("pub struct DurableOwnedThreeStoreMapAssemblyV1"), storeSource.indexOf("impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreBoundV1"));
   for (const marker of ["DurableOwnedMapMemberAdmissionV1", "AdmittingParent", "AdmittingDrawing", "AdmittingValue", "PreparingParent", "PreparingDrawing", "PreparingValue", "take_assembly_prepared", "bind_store_owned", "mount_map", "take_mounted_host", "take_terminal_owners"]) {
     if (!assembly.includes(marker)) throw new Error(`Store durable assembly missing ${marker}`);

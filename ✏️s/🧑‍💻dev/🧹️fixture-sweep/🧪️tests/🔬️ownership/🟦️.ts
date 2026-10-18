@@ -2,9 +2,10 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 
 const sweepRoot = fileURLToPath(new URL("../..", import.meta.url));
 const sourcePath = "✏️s/🧑‍💻dev/🧹️fixture-sweep";
@@ -62,13 +63,7 @@ export function assertFixtureSweepLawCoverage(receipts: readonly FixtureSweepRec
 }
 
 function repoRoot(): string {
-  let root = sweepRoot;
-  while (!existsSync(join(root, "nx.json"))) {
-    const parent = dirname(root);
-    assert.notEqual(parent, root, "repository root is required");
-    root = parent;
-  }
-  return root;
+  return findWorkspaceRoot(sweepRoot);
 }
 
 function exampleInventory(root: string): { directories: string[]; files: string[] } {

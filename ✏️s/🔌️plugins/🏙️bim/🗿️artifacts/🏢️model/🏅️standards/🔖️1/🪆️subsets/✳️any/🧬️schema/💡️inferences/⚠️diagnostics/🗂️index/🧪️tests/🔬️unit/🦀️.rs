@@ -1,12 +1,17 @@
-use super::*;
+use std::collections::BTreeSet;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::index::*;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{render, row_of, LOCALES};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_diagnostics;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const DEFECTS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
-const CLEAN: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
-const SOURCE: &str = include_str!("../../../🦀️.rs");
+static DEFECTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json"));
+static CLEAN: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json"));
+static SOURCE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../⚠️diagnostics/🦀️.rs"));
 
 fn snapshot(text: &str) -> ModelSnapshot {
     from_json_str(text, JsonMemberPolicy::Reject).expect("fixture decodes")
@@ -23,7 +28,7 @@ fn finding(code: DiagnosticCode, elements: &[&str], storey: Option<&str>) -> Dia
 #[semio_framework_async_macros::async_test]
 async fn the_index_of_no_findings_is_the_default() {
     assert_eq!(DiagnosticIndex::of(&[]), DiagnosticIndex::default());
-    assert_eq!(DiagnosticIndex::of(&compute_diagnostics(&snapshot(CLEAN))), DiagnosticIndex::default());
+    assert_eq!(DiagnosticIndex::of(&compute_diagnostics(&snapshot((*CLEAN)))), DiagnosticIndex::default());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -67,7 +72,7 @@ async fn the_counts_agree_with_the_findings_by_severity_category_code_and_storey
 
 #[semio_framework_async_macros::async_test]
 async fn the_index_of_the_defect_model_names_every_element_a_finding_names() {
-    let found = compute_diagnostics(&snapshot(DEFECTS));
+    let found = compute_diagnostics(&snapshot((*DEFECTS)));
     let index = DiagnosticIndex::of(&found);
     let named: BTreeSet<&String> = found.iter().flat_map(|row| row.elements.iter()).collect();
     assert_eq!(index.elements.keys().collect::<BTreeSet<_>>(), named);
@@ -79,7 +84,7 @@ async fn the_index_of_the_defect_model_names_every_element_a_finding_names() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_index_is_deterministic_and_independent_of_the_order_of_findings() {
-    let found = compute_diagnostics(&snapshot(DEFECTS));
+    let found = compute_diagnostics(&snapshot((*DEFECTS)));
     let mut reversed = found.clone();
     reversed.reverse();
     assert_eq!(DiagnosticIndex::of(&found), DiagnosticIndex::of(&reversed));
@@ -97,7 +102,7 @@ async fn the_category_is_the_domain_of_the_slug_and_every_category_has_codes() {
 }
 
 fn variants_in_source() -> Vec<String> {
-    let body = SOURCE.split("pub enum DiagnosticCode {").nth(1).and_then(|rest| rest.split("\n}").next()).expect("enum body");
+    let body = (*SOURCE).split("pub enum DiagnosticCode {").nth(1).and_then(|rest| rest.split("\n}").next()).expect("enum body");
     body.lines().map(|line| line.trim().trim_end_matches(',').to_string()).filter(|line| !line.is_empty()).collect()
 }
 
@@ -147,31 +152,31 @@ mod graph {
 
     #[semio_framework_async_macros::async_test]
     async fn the_graph_projects_the_index_of_the_ordered_findings() {
-        for text in [CLEAN, DEFECTS] {
+        for text in [(*CLEAN), (*DEFECTS)] {
             let model = snapshot(text);
             let inferred = ModelInference::infer(&model).expect("infers");
             assert_eq!(inferred.diagnostic_index, DiagnosticIndex::of(&inferred.diagnostics));
             assert_eq!(inferred.diagnostic_index.total.total() as usize, inferred.diagnostics.len());
         }
-        assert!(!ModelInference::infer(&snapshot(DEFECTS)).expect("infers").diagnostic_index.elements.is_empty());
+        assert!(!ModelInference::infer(&snapshot((*DEFECTS))).expect("infers").diagnostic_index.elements.is_empty());
         assert_eq!(ModelInference::infer(&ModelSnapshot::default()).expect("infers").diagnostic_index, DiagnosticIndex::default());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn the_index_node_has_every_findings_node_as_parent_and_reads_nothing_else() {
-        let model = snapshot(DEFECTS);
+        let model = snapshot((*DEFECTS));
         let steps = plan::build(&model, kinds::closure(kinds::DIAGNOSTIC_INDEX));
         let index = steps.iter().find(|step| step.key == ModelNode::DiagnosticIndex).expect("the index node");
         let findings: Vec<&ModelNode> = steps.iter().filter(|step| step.key.kind() == NodeKind::Diagnostics).map(|step| &step.key).collect();
         assert_eq!(index.parents.iter().collect::<Vec<_>>(), findings, "the parents are exactly the findings nodes");
         assert!(steps.iter().position(|step| step.key == ModelNode::DiagnosticIndex) > steps.iter().rposition(|step| step.key.kind() == NodeKind::Diagnostics), "the findings come first");
         assert!(steps.iter().all(|step| !matches!(step.key.kind(), NodeKind::Plan | NodeKind::Quantity | NodeKind::Schedule)), "a selection plans the findings and their ancestors only");
-        assert_eq!(dependency(&model, &ModelNode::DiagnosticIndex), dependency(&snapshot(CLEAN), &ModelNode::DiagnosticIndex), "the node reads no snapshot collection of its own");
+        assert_eq!(dependency(&model, &ModelNode::DiagnosticIndex), dependency(&snapshot((*CLEAN)), &ModelNode::DiagnosticIndex), "the node reads no snapshot collection of its own");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn the_selection_of_the_index_projects_it_and_the_selection_of_the_findings_alone_does_not() {
-        let model = snapshot(DEFECTS);
+        let model = snapshot((*DEFECTS));
         let with_index = infer_selected::<{ kinds::DIAGNOSTIC_INDEX }>(&model);
         assert_eq!(with_index.diagnostic_index, DiagnosticIndex::of(&compute_diagnostics(&model)));
         assert_eq!(infer_selected::<{ kinds::DIAGNOSTICS }>(&model).diagnostic_index, DiagnosticIndex::default(), "an unwanted kind stays empty");
@@ -179,7 +184,7 @@ mod graph {
 
     #[semio_framework_async_macros::async_test]
     async fn the_index_is_cache_transparent_and_a_diff_that_touches_nothing_the_graph_reads_serves_it_gated() {
-        let model = snapshot(DEFECTS);
+        let model = snapshot((*DEFECTS));
         let uncached = ModelInference::infer(&model).expect("infers").diagnostic_index;
         let mut session = ModelInferenceSession::new();
         let cold = session.update(&model, &ModelDiff::default()).diagnostic_index.clone();
@@ -193,7 +198,7 @@ mod graph {
 
     #[semio_framework_async_macros::async_test]
     async fn fixing_a_defect_updates_the_index_to_a_fresh_inference_and_recomputes_it_at_most_once() {
-        let model = snapshot(DEFECTS);
+        let model = snapshot((*DEFECTS));
         let mut session = ModelInferenceSession::new();
         session.refresh(&model);
         assert!(session.inference().diagnostic_index.elements.contains_key("w-missing-type"));

@@ -17,7 +17,7 @@ import { describe, expect, it } from "vitest";
 import { testHostPanelStateSchema } from "../../🧱️elements/🐚️Shell/🧬️schema/📌️panel-state/🧪️tests/🔬️unit/🟦️.ts";
 
 const suiteRoot = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(suiteRoot, "../../🧫️fixtures/🪟️action-window-scope/🔣️.json");
+const fixturePath = resolve(suiteRoot, "../🧫️fixtures/🪟️action-window-scope/🔣️.json");
 
 type Pair = readonly [string, string];
 type Case = {

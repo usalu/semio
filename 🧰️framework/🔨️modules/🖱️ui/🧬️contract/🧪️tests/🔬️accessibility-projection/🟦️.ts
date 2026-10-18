@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import assert from "node:assert/strict";
 const {JSDOM}=require("jsdom")as{JSDOM:new(markup:string)=>{window:{document:Document;close():void}}};
 const {computeAccessibleDescription}=require("dom-accessibility-api")as{computeAccessibleDescription(element:Element):string};
-import type { Component, UiNodeRecord } from "../../../../🛂️manifest/🟦️.ts";
+import type { Component, UiNodeRecord } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { uiAccessibilityAnnouncedV1, uiAccessibilityIsFocusableV1, uiAccessibilityProjectionNodeV1, uiAccessibilityRoleV1, uiAccessibilityValueV1, uiProgressFractionV1 } from "../../🖼️presentation/♿️accessibility/🟦️.ts";
 
 type RoleRow = { readonly id: string; readonly component: Component; readonly activatable: boolean; readonly role: string; readonly focusable: boolean };

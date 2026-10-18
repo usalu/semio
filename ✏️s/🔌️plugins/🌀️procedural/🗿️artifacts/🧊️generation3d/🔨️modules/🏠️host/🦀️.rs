@@ -46,11 +46,11 @@ use semio_s_artifact_procedural_3d_mut_generations::select_generation::SelectGen
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
 //#region 🔖️RetainedMountedIngress
-const GENERATION3D_OWNER_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
-const GENERATION3D_RETAINED_STACK_CAPACITY: usize = 64;
-const GENERATION3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
-const GENERATION3D_MAXIMUM_DOMAIN_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
-const GENERATION3D_MUTATION_VARIANT_COUNT: usize = 22;
+pub const GENERATION3D_OWNER_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub const GENERATION3D_RETAINED_STACK_CAPACITY: usize = 64;
+pub const GENERATION3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
+pub const GENERATION3D_MAXIMUM_DOMAIN_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+pub const GENERATION3D_MUTATION_VARIANT_COUNT: usize = 22;
 pub const GENERATION3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
 pub const GENERATION3D_MOUNTED_CONTROL_CREDITS: usize = 1;
 const GENERATION3D_PUBLICATION_SLOTS: usize = 4;
@@ -450,7 +450,7 @@ pub fn generation3d_retained_catalog_is_complete() -> bool {
 }
 
 #[derive(semio_framework_value::RetireOwned)]
-enum Generation3dReplayDisplaced {
+pub enum Generation3dReplayDisplaced {
     Widget(semio_framework_artifact_flow_flow::Widget),
     Widgets(Vec<semio_framework_artifact_flow_flow::Widget>),
     Layouts(semio_framework_artifact_flow_flow::OrderedMap<semio_framework_artifact_flow_flow::WidgetLayout>),
@@ -476,14 +476,14 @@ fn generation3d_retire_displaced_cold(value: Generation3dReplayDisplaced) {
 }
 
 /// 🪜️ Pays one Flow frontier turn out of the frontier's own quoted currencies — the mounted-pack session ladder this serves still counts items and bytes, so it cannot forward a caller grant.
-fn generation3d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement) -> Result<(), semio_framework_value::ValueError> {
+pub fn generation3d_close_flow_frontier(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement) -> Result<(), semio_framework_value::ValueError> {
     let copy = flow.next_copy_byte_demand()?;
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: flow.next_capacity_byte_demand(copy)?, maximum_release_bytes: flow.next_release_byte_demand()?, maximum_depth: flow.next_depth_demand()?.max(1) };
     flow.step(grant).map(|_| ())
 }
 
 /// 🅿️ Parks one string list on an EMPTY Flow frontier; the callers only park once the previous owner is fully retired.
-fn generation3d_park_flow_strings(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement, values: Vec<String>) {
+pub fn generation3d_park_flow_strings(flow: &mut semio_framework_artifact_flow_flow::retained::FlowRetirement, values: Vec<String>) {
     if flow.push(semio_framework_artifact_flow_flow::retained::FlowOwner::Strings(values)).is_err() {
         unreachable!("an empty Flow frontier admits one owner");
     }
@@ -518,7 +518,7 @@ fn generation3d_replay_transforms(snapshot: &mut Generation3dSnapshot, targets: 
 
 /// 🔁️ Direct semantic replay table. It consumes the retained mutation and writes only the
 /// addressed field or collection; no VCS diff/apply or whole-snapshot replacement is reachable.
-fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Option<Generation3dReplayDisplaced>, &'static str> {
+pub fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapshot, mutation: &Generation3dMutation) -> Result<Option<Generation3dReplayDisplaced>, &'static str> {
     let retired = match mutation {
         Generation3dMutation::CreateWidget(payload) => {
             if snapshot.host_snapshot.widgets.iter().any(|entry| semio_s_artifact_procedural_3d_model::widget_id(entry) == semio_s_artifact_procedural_3d_model::widget_id(&payload.widget)) {
@@ -707,7 +707,7 @@ fn generation3d_apply_initialization_mutation(snapshot: &mut Generation3dSnapsho
     };
     Ok(retired)
 }
-fn generation3d_copy_string(source: &str) -> Result<String, &'static str> {
+pub fn generation3d_copy_string(source: &str) -> Result<String, &'static str> {
     let mut target = String::new();
     target.try_reserve_exact(source.len()).map_err(|_| "generation3d-initializer.string-preflight")?;
     for character in source.chars() {
@@ -747,7 +747,7 @@ fn generation3d_copy_json(source: &semio_framework_value::DslValue, depth: usize
         }
     })
 }
-fn generation3d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget) -> Result<semio_framework_artifact_flow_flow::Widget, &'static str> {
+pub fn generation3d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget) -> Result<semio_framework_artifact_flow_flow::Widget, &'static str> {
     Ok(match source {
         semio_framework_artifact_flow_flow::Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
             let mut inputs = Vec::new();
@@ -791,7 +791,7 @@ fn generation3d_copy_widget(source: &semio_framework_artifact_flow_flow::Widget)
         }
     })
 }
-fn generation3d_copy_synapse(source: &semio_framework_artifact_flow_flow::SynapseSpec) -> Result<semio_framework_artifact_flow_flow::SynapseSpec, &'static str> {
+pub fn generation3d_copy_synapse(source: &semio_framework_artifact_flow_flow::SynapseSpec) -> Result<semio_framework_artifact_flow_flow::SynapseSpec, &'static str> {
     Ok(semio_framework_artifact_flow_flow::SynapseSpec {
         id: generation3d_copy_string(&source.id)?,
         from: generation3d_copy_string(&source.from)?,
@@ -800,7 +800,7 @@ fn generation3d_copy_synapse(source: &semio_framework_artifact_flow_flow::Synaps
         to_port: generation3d_copy_string(&source.to_port)?,
     })
 }
-fn generation3d_copy_generation(source: &semio_framework_artifact_playbook_playbook::FormGeneration) -> Result<semio_framework_artifact_playbook_playbook::FormGeneration, &'static str> {
+pub fn generation3d_copy_generation(source: &semio_framework_artifact_playbook_playbook::FormGeneration) -> Result<semio_framework_artifact_playbook_playbook::FormGeneration, &'static str> {
     Ok(semio_framework_artifact_playbook_playbook::FormGeneration { id: generation3d_copy_string(&source.id)?, name: generation3d_copy_string(&source.name)?, values: source.values.clone() })
 }
 //#endregion 🔖️RetainedMountedIngress

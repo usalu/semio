@@ -1,4 +1,27 @@
-use super::*;
+use crate::editor::bim::kit::fault;
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::views::unique_name;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::{id_taken, kind_of, ordered_storeys, EntityKind, ENTITIES};
+#[allow(unused_imports)]
+use crate::editor::bim::interaction::{BIM_ELEMENT_DOMAIN, BIM_LIBRARY_DOMAIN};
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{select_effect, IdMint};
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{View, ViewKind};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::commands::create_entity::*;
 use crate::editor::bim::fixture::support::{applied, ctx, demo, german, run};
 
 fn create(kind: &str, parent: &str, name: &str, selected: &[&str], german_view: bool) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {

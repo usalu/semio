@@ -206,6 +206,4 @@ impl Coordinate for RestoreViewpoint {
 }
 //#endregion 🔖️Handlers
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

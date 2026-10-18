@@ -1,4 +1,19 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::modify::{AlignAxis, AlignEdge, WallEnd};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::{axis_bulge, axis_ends, axis_length, axis_point_at, axis_tangent_at, flatten, point2, project, same, P};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS};
+#[allow(unused_imports)]
+use crate::editor::bim::marks::{Mark, Preview, Style};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::transform::{ghost, outline};
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::plan;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{locate, meeting, offset_axis, trim_extend};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::modify::map::{align_gap, bounds};
+use crate::editor::bim::gestures::reshape::*;
 use crate::editor::bim::marks::Shape;
 use crate::editor::bim::fixture::{room, Rig};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Beam, Phase, Point2, Slab, Vertex, Wall}, mutations::ModelMutation};

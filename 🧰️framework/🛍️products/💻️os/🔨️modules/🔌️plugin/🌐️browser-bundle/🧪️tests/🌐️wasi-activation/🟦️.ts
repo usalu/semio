@@ -14,7 +14,7 @@ import type { GuestLogLine } from "../../🌐️wasi/🟦️.ts";
 /** 🗣️ Exercises installed and vendored CLI streams against the neutral fragmented-line trace. */
 export async function testPreview2GuestLogVendoring(repoRoot: string): Promise<void> {
   const fixture = JSON.parse(readFileSync(join(testSourceDirectory, "🔣️.json"), "utf8"));
-  const { ensurePreview2ShimVendorAt, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease } = await import("../../🏗️materialization/🟦️.ts");
+  const { ensurePreview2ShimVendorAt, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease } = await import("../../🏗️materialization/🩹️preview2-shim-patches/🟦️.ts");
   const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
   assert(artifactBase !== undefined && artifactBase.includes("🗑️generated"));
   mkdirSync(artifactBase, { recursive: true });

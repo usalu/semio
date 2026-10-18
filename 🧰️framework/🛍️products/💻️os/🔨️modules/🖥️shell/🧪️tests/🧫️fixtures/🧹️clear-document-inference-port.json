@@ -61,14 +61,11 @@
     "syncStatusByDocument": {},
     "inferencePortByDocument": {
       "doc-1": {
-        "phase": "applied",
-        "jobId": "11111111111111111111111111111111",
-        "cursor": 3,
-        "completed": 3,
-        "total": 3,
-        "proposalHash": null,
-        "cancelRequested": false,
-        "code": null
+        "owner": "neutral-owner",
+        "serviceId": "neutral.service",
+        "payload": {
+          "complete": true
+        }
       }
     },
     "mergePolicy": "manual",

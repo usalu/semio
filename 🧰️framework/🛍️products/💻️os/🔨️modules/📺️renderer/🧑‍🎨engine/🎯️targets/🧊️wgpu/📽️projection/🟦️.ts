@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { canonicalJson } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
-import { loadCatalogTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile, registryCatalogInputView, resolveWorkspaceTaxonomyAuthority, validateTaxonomy, type RegistryCatalogInputView } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy, registryCatalogInputView, validateTaxonomy } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🎁️package-projection/🟦️.ts";
+import { resolveWorkspaceTaxonomyAuthority } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧭️workspace-taxonomy-locator/🟦️.ts";
+import { type RegistryCatalogInputView } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
 
 /** 🌐️ Builds browser artifacts entirely in memory from exact no-follow source or projected inputs. */
 export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown, options: { readonly taxonomy?: ReturnType<typeof loadCatalogTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void; readonly entryIds?: readonly string[] } = {}): Promise<{ readonly nodes: readonly { readonly path: string; readonly content: string; readonly mode: number; readonly inclusion: "tracked" | "ignored" }[]; readonly inputs: readonly string[]; readonly entryInputs: readonly { readonly id: string; readonly outputPath: string; readonly inputs: readonly string[] }[] }> {
@@ -36,7 +39,8 @@ export async function renderWgpuBrowserBundles(repoRoot: string, input: unknown,
         const binding = profile.workspaceImports[request.path];
         if (binding) {
           const manifest = JSON.parse(read(binding.manifestPath));
-          if (manifest.name !== request.path || manifest.exports?.["."] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error("WGPU browser workspace manifest drift: " + request.path);
+          const packageName = request.path.split("/").slice(0, request.path.startsWith("@") ? 2 : 1).join("/"), subpath = "." + request.path.slice(packageName.length);
+          if (manifest.name !== packageName || manifest.exports?.[subpath] !== "./" + relative(dirname(binding.manifestPath), binding.entryPath).replaceAll("\\", "/")) throw new Error("WGPU browser workspace manifest drift: " + request.path);
         }
         const path = request.path === entryAbsolute ? entryPath : request.path.startsWith(".") ? relative(repoRoot, resolve(repoRoot, dirname(request.importer), request.path)).replaceAll("\\", "/") : binding?.entryPath;
         if (!path || !allowed.has(path)) throw new Error("WGPU browser import is not schema-owned: " + request.path + " in " + request.importer);
@@ -79,7 +83,7 @@ export function loadWgpuPackageTaxonomy(repoRoot: string): ReturnType<typeof loa
   return taxonomy;
 }
 
-/** 🏗️ Renders all canonical artifacts or one exclusive Nx producer from the same package authority. */
+/** 🏗️ Renders all canonical artifacts or one exclusive build producer from the same package authority. */
 export async function renderWgpuPackageArtifacts(repoRoot: string, options: { readonly taxonomy?: ReturnType<typeof loadCatalogTaxonomy>; readonly view?: RegistryCatalogInputView; readonly isCancelled?: () => boolean; readonly progress?: (event: { readonly phase: "module-input" | "bundle"; readonly completed: number; readonly total: number }) => void; readonly producerTarget?: string } = {}) {
   const taxonomy: ReturnType<typeof loadCatalogTaxonomy> = options.taxonomy ?? (options.producerTarget ? JSON.parse(readFileSync(resolveWorkspaceTaxonomyAuthority(repoRoot).taxonomyPath, "utf8")) : loadWgpuPackageTaxonomy(repoRoot)), contract = taxonomy.generatorContracts["wgpu-frame-worker"];
   if (!contract?.packageGeneration) throw new Error("WGPU package generation lacks exact current catalog authority");

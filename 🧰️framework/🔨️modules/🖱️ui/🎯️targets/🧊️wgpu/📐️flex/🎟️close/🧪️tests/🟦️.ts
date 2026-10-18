@@ -1,6 +1,6 @@
 /** 📏️ Native retained storage depth remains independently funded beneath its original parent. */
 import{test,expect}from"bun:test";import Ajv from"ajv";import{Database}from"bun:sqlite";import{readFileSync}from"node:fs";
-import schema from"../🧬️schema/🔣️.json";import fixture from"./🧫️fixtures/🔣️.json";
+import schema from"../🧬️schema/🔣️.json";import fixture from"../../../../../🧪️tests/🧫️fixtures/🧲️flex-close/🔣️.json";
 test("original layout close quotes the native paged depth without raising its caller",()=>{
  const valid=new Ajv({strict:true}).compile(schema);expect(valid(fixture)).toBe(true);expect(valid({...fixture,parentDepth:0})).toBe(false);
  const db=new Database(":memory:");try{for(let i=0;i<fixture.storageDepths.length;i++){expect(db.query("SELECT ?+? AS depth").get(fixture.storageDepths[i],fixture.parentDepth)).toEqual({depth:fixture.quotedDepths[i]})}}finally{db.close()}

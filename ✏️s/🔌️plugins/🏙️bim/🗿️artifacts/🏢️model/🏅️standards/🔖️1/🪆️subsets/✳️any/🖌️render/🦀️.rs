@@ -6,16 +6,12 @@
 
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-#[path = "🪟️window-config/🦀️.rs"]
-pub mod window_config;
+pub use semio_s_artifact_bim_model_tests::render::window_config;
 #[path = "🧊️world/🦀️.rs"]
 pub mod world;
-#[path = "🗺️plan/🦀️.rs"]
-pub mod plan;
-#[path = "🌡️envelope/🦀️.rs"]
-pub mod envelope;
-#[path = "🦴️structure/🦀️.rs"]
-pub mod structure;
+pub use semio_s_artifact_bim_model_plan_linework::render::plan;
+pub use semio_s_artifact_bim_model_modify::render::envelope;
+pub use semio_s_artifact_bim_model_modify::render::structure;
 
 //#region 🔖️Storeys
 /// 🏢️ One storey in stacking order for pickers, plan selection and visibility toggles.

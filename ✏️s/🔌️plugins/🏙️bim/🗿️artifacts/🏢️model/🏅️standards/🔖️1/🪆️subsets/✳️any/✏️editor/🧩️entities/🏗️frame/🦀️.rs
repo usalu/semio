@@ -3,8 +3,11 @@
 //! or panel override is, and the pickers (curtain wall types, materials, door and window types) of the reference rows. The grid and the panels are text: `spacing 1.5` or `lines 1, 2.5`, and
 //! `glass`, `empty`, `solid material`, `door type` or `window type`.
 
-use super::ceilings::parse_slope;
-use super::{first, number, parse_number, parse_optional_number, parse_profile, parse_text, partial, profile_text, Created, EntityKind, FieldRow, InferredRow};
+use crate::standards::v1::subsets::any::schema::{snapshot::Axis, snapshot::TopConstraint, inferences::ModelInference};
+use crate::standards::v1::subsets::any::schema::snapshot::{MaterialCategory, Phase, Point2, Rgb};
+use crate::editor::bim::entities::create_rows::Created;
+use crate::editor::bim::entities::field_codecs::{first, number, parse_number, parse_optional_number, parse_profile, parse_slope, parse_text, partial, profile_text};
+use crate::editor::bim::entities::row_types::{EntityKind, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::{CurtainGrid, CurtainPanel, CurtainPanelOverride, CurtainWallType, ModelSnapshot, Profile}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
@@ -89,7 +92,7 @@ pub fn write_tilt(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutat
 
 /// 📐️ Sets the axis of a beam: `x, y → x, y` for a line, `x, y → x, y ⌒ bulge` for an arc.
 pub fn write_beam_axis(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    Some(ModelMutation::SetBeamAxis(crate::standards::v1::subsets::any::schema::mutations::set_beam_axis::SetBeamAxis { id: id.into(), axis: super::parse_axis(value)? }))
+    Some(ModelMutation::SetBeamAxis(crate::standards::v1::subsets::any::schema::mutations::set_beam_axis::SetBeamAxis { id: id.into(), axis: crate::editor::bim::entities::field_codecs::parse_axis(value)? }))
 }
 
 /// 📐️ Sets the top offset of the end of a beam: empty makes the beam level again.
@@ -257,6 +260,4 @@ pub const CURTAIN_PANEL_OVERRIDE: EntityKind = EntityKind {
 };
 //#endregion 🔖️Kinds
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

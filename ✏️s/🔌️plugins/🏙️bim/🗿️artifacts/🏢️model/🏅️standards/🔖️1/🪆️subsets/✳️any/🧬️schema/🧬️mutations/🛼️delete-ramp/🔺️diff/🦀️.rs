@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `DeleteRamp`: the ramp leaves in one sparse diff together with the railings hosted by it and its properties and classifications (see the shared cascade).
 //! The outcome carries a cascade note when more than the ramp leaves.
 
-use super::super::cascade;
-use super::DeleteRamp;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_ramp::DeleteRamp;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

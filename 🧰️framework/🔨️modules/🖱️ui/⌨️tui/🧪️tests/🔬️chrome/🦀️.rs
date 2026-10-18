@@ -1,10 +1,10 @@
 //! 🔬️ Window anatomy, tab strip, compact chrome, ellipsis and the navbar/footer bands (R02 R06 R08 R13 R16 R17 R23).
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::chrome::{window_chip_layout, ChromeMode, ChromeState, FooterState, KeyHint, NavItem, NavbarState, TabKind, WindowState};
-use crate::tui::geometry::{Pos, Rect, Size};
-use crate::tui::theme::{Role, Theme};
-use crate::tui::widget::WidgetSignal;
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_frame::chrome::{window_chip_layout, ChromeMode, ChromeState, FooterState, KeyHint, NavItem, NavbarState, TabKind, WindowState};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_framework_ui_tui_core::theme::{Role, Theme};
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 use ui_styling::appearance::AppearanceName;
 
 fn paint(state: WindowState, width: u16, height: u16) -> (CellBuffer, ChromeState) {
@@ -153,7 +153,7 @@ fn short_terminals_get_one_row_chrome_with_the_tabs_on_the_border() {
     state.peers = 2;
     let rect = Rect::new(0, 0, 50, 6);
     assert_eq!(window_chip_layout(&state, rect).mode, ChromeMode::Compact);
-    assert_eq!(crate::tui::chrome::window_content_padding(&state, rect), [1, 1, 1, 1]);
+    assert_eq!(semio_framework_ui_tui_frame::chrome::window_content_padding(&state, rect), [1, 1, 1, 1]);
     let (buf, window) = paint(state, 50, 6);
     let top = row(&buf, 0);
     assert!(top.starts_with('\u{250c}') && top.ends_with('\u{2510}'), "{top:?}");
@@ -238,12 +238,12 @@ fn the_footer_status_keeps_a_share_of_the_row_and_cut_hints_end_in_an_ellipsis()
 
 #[test]
 fn controls_and_status_are_drawn_from_the_glyph_set_and_keep_their_columns() {
-    use crate::tui::layout::WindowStackCorner;
-    use crate::tui::theme::{GlyphSet, Status};
+    use semio_framework_ui_tui_frame::layout::WindowStackCorner;
+    use semio_framework_ui_tui_core::theme::{GlyphSet, Status};
     let mut state = WindowState::new("host").with_stack_tab_states(
         vec![
-            crate::tui::chrome::WindowStackTabState::new("done", WindowStackCorner::TopLeft).with_status(Some(Status::Success)),
-            crate::tui::chrome::WindowStackTabState::new("busy", WindowStackCorner::TopLeft).with_status(Some(Status::Running)),
+            semio_framework_ui_tui_frame::chrome::WindowStackTabState::new("done", WindowStackCorner::TopLeft).with_status(Some(Status::Success)),
+            semio_framework_ui_tui_frame::chrome::WindowStackTabState::new("busy", WindowStackCorner::TopLeft).with_status(Some(Status::Running)),
         ],
         1,
     );

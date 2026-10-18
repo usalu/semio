@@ -1,6 +1,10 @@
 //! 🧵️ process3d retained cursors: the incremental capability, machine, pose, child, measure, step, string and solid cursors that decode one record per grant.
 
-use super::*;
+extern crate semio_framework_os_kernel as store;
+use semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::{PROCESS3D_MAXIMUM_DOMAIN_ITEMS};
+use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
+use semio_framework_plugin::ArtifactOwnedDisposer as _;
+use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 
 impl Process3dRetainedCapabilityCursor {
     fn take_recipe(&mut self) -> Result<MeasureRecipe, String> {
@@ -29,7 +33,7 @@ impl Process3dRetainedCapabilityCursor {
         }
     }
 
-    pub(super) fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<Capability>, String> {
+    pub fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<Capability>, String> {
         match self.phase {
             0 => {
                 let Some(value) = self.string.step(reader)? else { return Ok(None) };
@@ -137,7 +141,7 @@ impl Process3dRetainedCapabilityCursor {
         Ok(None)
     }
 
-    pub(super) fn take_partial(&mut self) -> Capability {
+    pub fn take_partial(&mut self) -> Capability {
         if self.string.has_partial() {
             let partial = self.string.take_partial();
             match self.phase {
@@ -177,7 +181,7 @@ impl Process3dRetainedMachineCursor {
         }
     }
 
-    pub(super) fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<WorkshopMachine>, String> {
+    pub fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<WorkshopMachine>, String> {
         match self.phase {
             0 => {
                 let Some(value) = self.string.step(reader)? else { return Ok(None) };
@@ -237,7 +241,7 @@ impl Process3dRetainedMachineCursor {
         Ok(None)
     }
 
-    pub(super) fn take_partial(&mut self) -> WorkshopMachine {
+    pub fn take_partial(&mut self) -> WorkshopMachine {
         if self.string.has_partial() {
             let partial = self.string.take_partial();
             match self.phase {
@@ -257,69 +261,69 @@ impl Process3dRetainedMachineCursor {
 }
 
 #[derive(Default)]
-pub(super) struct Process3dRetainedCapabilityCursor {
-    pub(super) phase: u8,
-    pub(super) string: Process3dRetainedStringCursor,
-    pub(super) id: Option<String>,
-    pub(super) label: Option<String>,
-    pub(super) icon_id: Option<String>,
+pub struct Process3dRetainedCapabilityCursor {
+    pub phase: u8,
+    pub string: Process3dRetainedStringCursor,
+    pub id: Option<String>,
+    pub label: Option<String>,
+    pub icon_id: Option<String>,
     recipe_tag: u8,
     recipe_fields: [Option<String>; 3],
-    pub(super) recipe: Option<MeasureRecipe>,
-    pub(super) expected: usize,
-    pub(super) index: usize,
+    pub recipe: Option<MeasureRecipe>,
+    pub expected: usize,
+    pub index: usize,
     parameter_id: Option<String>,
     parameter_label: Option<String>,
-    pub(super) parameters: Vec<CapabilityParameter>,
+    pub parameters: Vec<CapabilityParameter>,
     rule_tag: u8,
     rule_quantity: Option<StockQuantity>,
     rule_parameter: Option<String>,
-    pub(super) rules: Vec<CapabilityRule>,
+    pub rules: Vec<CapabilityRule>,
 }
 
 #[derive(Default)]
-pub(super) struct Process3dRetainedMachineCursor {
-    pub(super) phase: u8,
-    pub(super) string: Process3dRetainedStringCursor,
-    pub(super) id: Option<String>,
-    pub(super) label: Option<String>,
-    pub(super) icon_id: Option<String>,
-    pub(super) catalog_id: Option<String>,
-    pub(super) expected: usize,
-    pub(super) index: usize,
-    pub(super) capabilities: Vec<Capability>,
-    pub(super) capability: Option<Process3dRetainedCapabilityCursor>,
+pub struct Process3dRetainedMachineCursor {
+    pub phase: u8,
+    pub string: Process3dRetainedStringCursor,
+    pub id: Option<String>,
+    pub label: Option<String>,
+    pub icon_id: Option<String>,
+    pub catalog_id: Option<String>,
+    pub expected: usize,
+    pub index: usize,
+    pub capabilities: Vec<Capability>,
+    pub capability: Option<Process3dRetainedCapabilityCursor>,
 }
 
 #[derive(Default)]
-pub(super) struct Process3dRetainedPoseCursor {
-    pub(super) index: usize,
+pub struct Process3dRetainedPoseCursor {
+    pub index: usize,
     values: [f64; 7],
 }
 
 impl Process3dRetainedPoseCursor {
-    pub(super) fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<Pose>, String> {
+    pub fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<Pose>, String> {
         self.values[self.index] = reader.read_f64_le().map_err(|error| error.to_string())?;
         self.index += 1;
         Ok((self.index == self.values.len()).then(|| Pose { position: [self.values[0], self.values[1], self.values[2]], axis: [self.values[3], self.values[4], self.values[5]], angle: self.values[6] }))
     }
 
-    pub(super) fn take_partial(&mut self) -> Pose {
+    pub fn take_partial(&mut self) -> Pose {
         self.index = 0;
         Pose { position: [self.values[0], self.values[1], self.values[2]], axis: [self.values[3], self.values[4], self.values[5]], angle: self.values[6] }
     }
 }
 
 #[derive(Default)]
-pub(super) struct Process3dRetainedChildCursor {
-    pub(super) phase: u8,
-    pub(super) child_id: Option<String>,
-    pub(super) target: Option<semio_framework_artifact_reference::ArtifactRef>,
-    pub(super) string: Process3dRetainedStringCursor,
+pub struct Process3dRetainedChildCursor {
+    pub phase: u8,
+    pub child_id: Option<String>,
+    pub target: Option<semio_framework_artifact_reference::ArtifactRef>,
+    pub string: Process3dRetainedStringCursor,
 }
 
 impl Process3dRetainedChildCursor {
-    pub(super) fn step<S>(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
+    pub fn step<S>(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         if self.phase == 0 {
@@ -336,7 +340,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         Ok(Some(store::os_store::artifact_child::ArtifactChild::new(self.child_id.take().unwrap_or_default(), self.target.take().expect("Process3d retained child target exists"))))
     }
 
-    pub(super) fn take_partial<S>(&mut self) -> store::os_store::artifact_child::ArtifactChild<S> {
+    pub fn take_partial<S>(&mut self) -> store::os_store::artifact_child::ArtifactChild<S> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         if self.phase == 0 && self.child_id.is_none() {
@@ -351,12 +355,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 }
 
-pub(super) struct Process3dRetainedMeasureCursor {
-    pub(super) phase: Process3dRetainedMeasurePhase,
-    pub(super) tag: u8,
-    pub(super) radius: f64,
-    pub(super) depth: f64,
-    pub(super) solid: Option<WorkingSolid>,
+pub struct Process3dRetainedMeasureCursor {
+    pub phase: Process3dRetainedMeasurePhase,
+    pub tag: u8,
+    pub radius: f64,
+    pub depth: f64,
+    pub solid: Option<WorkingSolid>,
     solid_cursor: Process3dRetainedSolidCursor,
     pose_cursor: Process3dRetainedPoseCursor,
 }
@@ -368,7 +372,7 @@ impl Default for Process3dRetainedMeasureCursor {
 }
 
 impl Process3dRetainedMeasureCursor {
-    pub(super) fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<ProcessMeasure>, String> {
+    pub fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<ProcessMeasure>, String> {
         match self.phase {
             Process3dRetainedMeasurePhase::Tag => {
                 self.tag = reader.read_u8().map_err(|error| error.to_string())?;
@@ -407,7 +411,7 @@ impl Process3dRetainedMeasureCursor {
         Ok(None)
     }
 
-    pub(super) fn take_partial(&mut self) -> ProcessMeasure {
+    pub fn take_partial(&mut self) -> ProcessMeasure {
         let pose = self.pose_cursor.take_partial();
         let solid = self.solid.take().unwrap_or_else(|| self.solid_cursor.take_partial());
         match self.tag {
@@ -418,14 +422,14 @@ impl Process3dRetainedMeasureCursor {
     }
 }
 
-pub(super) struct Process3dRetainedStepCursor {
-    pub(super) phase: Process3dRetainedStepPhase,
-    pub(super) id: Option<String>,
-    pub(super) label: Option<String>,
-    pub(super) enabled: bool,
+pub struct Process3dRetainedStepCursor {
+    pub phase: Process3dRetainedStepPhase,
+    pub id: Option<String>,
+    pub label: Option<String>,
+    pub enabled: bool,
     origin_machine: Option<String>,
     origin_capability: Option<String>,
-    pub(super) string: Process3dRetainedStringCursor,
+    pub string: Process3dRetainedStringCursor,
     measure_cursor: Process3dRetainedMeasureCursor,
 }
 
@@ -436,7 +440,7 @@ impl Default for Process3dRetainedStepCursor {
 }
 
 impl Process3dRetainedStepCursor {
-    pub(super) fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<ProcessStep>, String> {
+    pub fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<ProcessStep>, String> {
         match self.phase {
             Process3dRetainedStepPhase::Id => {
                 let Some(id) = self.string.step(reader)? else { return Ok(None) };
@@ -488,7 +492,7 @@ impl Process3dRetainedStepCursor {
         Ok(None)
     }
 
-    pub(super) fn take_partial(&mut self) -> ProcessStep {
+    pub fn take_partial(&mut self) -> ProcessStep {
         let partial = self.string.take_partial();
         match self.phase {
             Process3dRetainedStepPhase::Id if self.id.is_none() => self.id = Some(partial),
@@ -507,12 +511,12 @@ impl Process3dRetainedStepCursor {
     }
 }
 
-pub(super) struct Process3dRetainedStringCursor {
-    pub(super) length: usize,
+pub struct Process3dRetainedStringCursor {
+    pub length: usize,
     shift: u32,
     remaining: Option<usize>,
-    pub(super) bytes: Vec<u8>,
-    pub(super) maximum_bytes: usize,
+    pub bytes: Vec<u8>,
+    pub maximum_bytes: usize,
 }
 
 impl Default for Process3dRetainedStringCursor {
@@ -522,8 +526,8 @@ impl Default for Process3dRetainedStringCursor {
 }
 
 impl Process3dRetainedStringCursor {
-    #[cfg(test)]
-    pub(super) fn with_maximum_bytes(maximum_bytes: usize) -> Self {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn with_maximum_bytes(maximum_bytes: usize) -> Self {
         let mut cursor = Self::default();
         cursor.maximum_bytes = maximum_bytes;
         cursor
@@ -536,7 +540,7 @@ impl Process3dRetainedStringCursor {
         String::from_utf8(std::mem::take(&mut self.bytes)).map_err(|error| error.to_string())
     }
 
-    pub(super) fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
+    pub fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<String>, String> {
         if let Some(remaining) = self.remaining {
             let byte = reader.read_u8().map_err(|error| error.to_string())?;
             self.bytes.push(byte);
@@ -563,15 +567,15 @@ impl Process3dRetainedStringCursor {
         }
     }
 
-    pub(super) fn take_partial(&mut self) -> String {
+    pub fn take_partial(&mut self) -> String {
         self.finish().unwrap_or_default()
     }
 
-    pub(super) fn terminal_is_empty(&self) -> bool {
+    pub fn terminal_is_empty(&self) -> bool {
         self.length == 0 && self.shift == 0 && self.remaining.is_none() && self.bytes.is_empty()
     }
 
-    pub(super) fn has_partial(&self) -> bool {
+    pub fn has_partial(&self) -> bool {
         self.length != 0 || self.shift != 0 || self.remaining.is_some() || !self.bytes.is_empty()
     }
 }
@@ -584,15 +588,15 @@ impl Drop for Process3dRetainedStringCursor {
 
 #[derive(Default)]
 struct Process3dRetainedSolidCursor {
-    pub(super) tag: Option<u8>,
-    pub(super) index: usize,
+    pub tag: Option<u8>,
+    pub index: usize,
     values: [f64; 3],
     text: Option<String>,
-    pub(super) string: Process3dRetainedStringCursor,
+    pub string: Process3dRetainedStringCursor,
 }
 
 impl Process3dRetainedSolidCursor {
-    pub(super) fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<WorkingSolid>, String> {
+    pub fn step(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<WorkingSolid>, String> {
         let Some(tag) = self.tag else {
             let tag = reader.read_u8().map_err(|error| error.to_string())?;
             if tag > 5 {
@@ -621,7 +625,7 @@ impl Process3dRetainedSolidCursor {
         Ok(Some(self.take_partial()))
     }
 
-    pub(super) fn take_partial(&mut self) -> WorkingSolid {
+    pub fn take_partial(&mut self) -> WorkingSolid {
         let tag = self.tag.take().unwrap_or(0);
         self.index = 0;
         if tag >= 3 && self.text.is_none() {

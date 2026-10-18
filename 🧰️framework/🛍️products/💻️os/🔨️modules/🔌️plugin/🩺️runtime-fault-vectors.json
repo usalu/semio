@@ -17,7 +17,6 @@
     {"variant": "checkout", "code": "plugin.internal.checkout", "class": "plugin-internal", "detail": "the cleanup job session produced no checkout after a step"},
     {"variant": "checked-out-job", "code": "plugin.internal.checked-out-job", "class": "plugin-internal", "detail": "the checked out cleanup job body was unreachable"},
     {"variant": "take-outcome", "code": "plugin.internal.take-outcome", "class": "plugin-internal", "detail": "the cleanup job session produced no step outcome"},
-    {"variant": "clock-cooperative", "code": "plugin.internal.clock-cooperative", "class": "clock", "detail": "cooperative maintenance requires an installed monotonic clock"},
     {"variant": "owner-poisoned", "code": "plugin.internal.owner-poisoned", "class": "plugin-internal", "detail": "the instance owner lock was poisoned by a panicking turn"},
     {"variant": "instance-poisoned", "code": "plugin.internal.instance-poisoned", "class": "plugin-internal", "detail": "the app instance lock was poisoned by a panicking turn"},
     {"variant": "instance-not-drained", "code": "plugin.internal.instance-not-drained", "class": "plugin-internal", "detail": "the app instance still held terminal state at retirement"},

@@ -2,7 +2,7 @@ import { pdfAnnotationFromNativeJson,pdfAnnotationKindFromNativeJson } from "../
 /** 📌️ Independent SQL queries verify appearance states, border geometry and ownership. */
 import { expect,test } from "bun:test";
 import { Database } from "bun:sqlite";
-import { parsePdfAnnotation,parsePdfAnnotationKind } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import { parsePdfAnnotation, parsePdfAnnotationKind } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PdfProjection,PdfReader } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { writePdfAppearance,readPdfAppearance,writePdfBorder,readPdfBorder } from "../../📌️annotation/🎭️appearance/🟦️.ts";

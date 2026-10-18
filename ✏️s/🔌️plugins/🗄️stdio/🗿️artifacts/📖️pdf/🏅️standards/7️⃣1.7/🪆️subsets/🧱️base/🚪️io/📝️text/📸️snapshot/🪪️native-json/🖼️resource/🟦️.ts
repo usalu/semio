@@ -1,6 +1,10 @@
 import { parseArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 /** 🖼️ Explicit native JSON admission into the single owned PDF resource domain. */
-import type { PdfImage,PdfImageBody,PdfImageMask,PdfCcittParameters,PdfExtGState,PdfSoftMask,PdfFormXObject,PdfTransparencyGroup,PdfShading,PdfShadingKind,PdfPattern,PdfPatternKind,PdfLineCap,PdfLineJoin,Binary64 } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfImage, PdfImageBody, PdfImageMask } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🟦️.ts";
+import type { PdfCcittParameters } from "../../../../../🧬️schema/📸️snapshot/🧩️cos/🟦️.ts";
+import type { PdfExtGState, PdfSoftMask, PdfFormXObject, PdfTransparencyGroup, PdfLineCap, PdfLineJoin } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🎚️state/🟦️.ts";
+import type { PdfShading, PdfShadingKind, PdfPattern, PdfPatternKind } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🌈️shading/🟦️.ts";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import { record,array,text,boolean,integer,integers,real,reals,four,pdfDictionaryFromNativeJson,pdfFunctionFromNativeJson,pdfColorFromNativeJson } from "../🟦️.ts";
 import { pdfMatrixFromNativeJson,pdfOperationFromNativeJson } from "../🖋️content/🟦️.ts";
 

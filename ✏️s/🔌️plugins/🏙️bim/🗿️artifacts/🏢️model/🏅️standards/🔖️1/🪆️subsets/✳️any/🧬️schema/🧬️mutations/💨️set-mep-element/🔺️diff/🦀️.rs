@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetMepElement`: a sparse MEP element patch of exactly the provided fields that differ. The element that results must break none of the create rules. Whole-list ruling: the path
 //! is ONE centre line, so a provided path replaces the path as one field. Providing only equal values, or no field, is a no-op.
 
-use super::super::component_rules;
-use super::SetMepElement;
+use crate::standards::v1::subsets::any::schema::mutations::component_rules;
+use crate::standards::v1::subsets::any::schema::mutations::set_mep_element::SetMepElement;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -1,8 +1,8 @@
 //! 🪧️ `place-elements` payload. Writes absolute placement fields onto placed elements, one sparse patch per element; the exact inverse of a move or a rotation, because it restores the base placements without any floating-point back transformation.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
-use super::super::elements::Placement;
+use crate::standards::v1::subsets::any::schema::mutations::elements::Placement;
 use std::collections::BTreeMap;
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -12,13 +12,16 @@ pub struct PlaceElements {
     pub placements: BTreeMap<String, Placement>,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for PlaceElements {
+impl<Op> MutationKind<ModelSnapshot, Op> for PlaceElements
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<PlaceElements>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "elements", kind: "place-elements", record: "PlaceElements" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::place_elements::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::place_elements::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Place {} element(s)", self.placements.len()), &format!("{} Element(e) platzieren", self.placements.len()))

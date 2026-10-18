@@ -1,11 +1,14 @@
 //! ↩️ Inverse of `SetColumnTilt`: an absolute `SetColumnTilt` back to the base tilt (plumb when none), none when the column is absent.
 
-use super::SetColumnTilt;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::SetColumnTilt;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &SetColumnTilt, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetColumnTilt, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::SetColumnTilt>,
+{
     match base.columns.get(&payload.id) {
-        Some(column) => vec![ModelMutation::SetColumnTilt(SetColumnTilt { id: payload.id.clone(), tilt: column.tilt })],
+        Some(column) => vec![Op::from(SetColumnTilt { id: payload.id.clone(), tilt: column.tilt })],
         None => Vec::new(),
     }
 }

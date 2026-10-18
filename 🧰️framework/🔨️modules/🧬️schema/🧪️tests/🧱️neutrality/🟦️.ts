@@ -223,11 +223,13 @@ test("three catalog registrations use canonical registry identity without kernel
     const directory = manifest.slice(0, -"Cargo.toml".length);
     const entry = JSON.parse(read(directory + "package.json"));
     const project = JSON.parse(read(directory + "📋️project.json"));
-    expect(entry.nx.includedScripts).toEqual([]);
+    expect(entry.nx).toBeUndefined();
     expect(project.name).toBe(entry.name);
-    expect(project.targets.test.executor).toBe("nx:run-commands");
+    expect(project.targets.test.executor).toBe("repo:script");
     expect(project.targets.test.options.command).toBe("bun ./📜️script.ts test");
-    expect(entry.scripts.test.split(/\s+/).filter((part: string) => part !== "bun" && part !== "--skip-nx-cache")).toEqual(["repo", "run", project.name + ":test"]);
+    const script = entry.scripts.test.split(/\s+/).filter((part: string) => part !== "bun" && part !== "--skip-cache");
+    expect(script.slice(0, 2)).toEqual(["--cwd", JSON.stringify(relative(join(root, directory), root).replaceAll("\\", "/"))]);
+    expect(script.slice(2)).toEqual(["repo", "run", project.name + ":test"]);
   }
 });
 

@@ -7,7 +7,7 @@ test("canonical identity assembly copies native fields through paid UTF8 pages",
   const root = new URL("../", import.meta.url);
   const fixtureRoot = new URL("../../../../../🛍️products/💻️os/🔨️modules/🏪️store/📦️prepared/🪪️identity/", root);
   const read = (path: string) => JSON.parse(readFileSync(new URL(path, fixtureRoot), "utf8"));
-  const fixture = read("🧫️fixtures/🔣️.json");
+  const fixture = read("🧪️tests/🧫️fixtures/🔣️.json");
   expect(new Ajv2020({ strict: true }).compile(read("🧬️schema/🔣️.json"))(fixture)).toBe(true);
   const original = [fixture.actor.repeat(fixture.repeat), fixture.id, fixture.id];
   const db = new Database(":memory:");

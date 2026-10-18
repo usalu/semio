@@ -3,7 +3,7 @@
 //! by the curtain wall: a provided list replaces the list as a whole, its lines have no identity of their own. Cells, panels and overrides follow by inference.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::grid_flaw;
-use super::SetCurtainWallGrid;
+use crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid::SetCurtainWallGrid;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

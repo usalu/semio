@@ -1,7 +1,7 @@
 /**
  * 🧬️ The `ShellState` god object is fifteen component structs and a composer, and nothing else.
  *
- * Language-agnostic oracle: `🧫️fixtures/🧬️shell-components/🔣️.json` (the component table of the renderer partition
+ * Language-agnostic oracle: `🧪️tests/🧫️fixtures/🧬️shell-components/🔣️.json` (the component table of the renderer partition
  * plan, 7.3). Two independent readers of the Rust source must agree with it and with each other: the shipped
  * tree-sitter Rust grammar (third-party) and the repository's own Rust tokenizer. The law reads the whole Shell
  * module tree through `readModuleTreeSource`, so it keeps holding after the components move into their crates.
@@ -16,7 +16,7 @@ import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚�
 import { rustFindTopLevel, rustTokenPairs, rustTokens } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixture = JSON.parse(readFileSync(resolve(here, "../../🧫️fixtures/🧬️shell-components/🔣️.json"), "utf8")) as {
+const fixture = JSON.parse(readFileSync(resolve(here, "../🧫️fixtures/🧬️shell-components/🔣️.json"), "utf8")) as {
   readonly composerFields: readonly { readonly field: string; readonly struct: string }[];
   readonly components: readonly { readonly struct: string; readonly fields: readonly string[] }[];
 };

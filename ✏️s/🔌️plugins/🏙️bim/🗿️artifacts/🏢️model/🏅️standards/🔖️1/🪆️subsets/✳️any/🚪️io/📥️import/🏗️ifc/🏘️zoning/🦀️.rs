@@ -3,10 +3,11 @@
 //! space is the material its `Semio_Authoring` names, else the material of the same name that `Pset_SpaceCoveringRequirements` names. A file that was not exported by this model brings no
 //! density, so its zones start without occupancy; a covering that names no known material is reported, not invented.
 
-use super::data::{label, number};
-use super::reader::{opt_text, refs, text};
-use super::spatial::{authoring_of, single_values};
-use super::Import;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number};
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, refs, text};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, single_values};
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, Zone};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
@@ -97,6 +98,4 @@ pub fn read(i: &mut Import<'_>) {
     schemes(i);
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

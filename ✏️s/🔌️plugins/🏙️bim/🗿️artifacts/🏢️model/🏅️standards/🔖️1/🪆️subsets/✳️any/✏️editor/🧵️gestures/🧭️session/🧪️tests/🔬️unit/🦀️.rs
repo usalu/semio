@@ -1,4 +1,26 @@
-use super::*;
+use crate::editor::bim::marks::{Mark, Preview, Style};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, mutations::ModelMutation};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::P;
+#[allow(unused_imports)]
+use crate::editor::bim::marks::Shape;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::snap::{snap, SnapHit, SnapKind, SnapRequest};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::id_taken;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::IdMint;
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::LabelText;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::gestures::session::*;
 use crate::editor::bim::fixture::{model, room};
 
 #[semio_framework_async_macros::async_test]

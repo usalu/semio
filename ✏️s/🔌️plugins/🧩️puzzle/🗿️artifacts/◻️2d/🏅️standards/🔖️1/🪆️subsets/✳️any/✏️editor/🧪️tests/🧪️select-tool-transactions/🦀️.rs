@@ -6,7 +6,7 @@
 //! streamed laws drive a gesture across several dispatches of one window: its ticks live in the window's open
 //! transaction (previewed, never history) until one commit, and every host abort drops it with zero trace.
 
-use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN};
+use crate::editor::puzzle2d::snapshot::{PUZZLE2D_GRANULARITY_NODE, PUZZLE2D_INTERACTION_DOMAIN, board_snapshot_nodes, board_snapshot_edges};
 use crate::editor::puzzle2d::engine::board_host::drain_board_events_json;
 use crate::editor::puzzle2d::config::Puzzle2dConfig;
 use crate::editor::puzzle2d::engine::{BoardHost, Point};
@@ -131,7 +131,7 @@ use semio_framework_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use std::collections::{HashMap, HashSet};
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 #[allow(unused_imports)]

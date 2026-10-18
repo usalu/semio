@@ -1,0 +1,17 @@
+{
+ "tag": "c1x",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs",
+ "folders": [
+  "🧱️composed-parent-snapshot-and-recursive-mutation",
+  "🔓️decode-authority-and-field-decoders",
+  "🌳️field-catalog-parent-app-and-branch-snapshot",
+  "🧵️recursive-wire-open-and-producer",
+  "🚀️ready-parent-initialization",
+  "🔧️replacement-fixtures-and-recursive-documents",
+  "📦️document-archive-and-replacement-publication",
+  "🏁️replacement-close-cancellation-and-nested-window",
+  "🗂️recursive-archive-rejection-and-stale-authority",
+  "📨️envelope-decode-ladder"
+ ]
+}

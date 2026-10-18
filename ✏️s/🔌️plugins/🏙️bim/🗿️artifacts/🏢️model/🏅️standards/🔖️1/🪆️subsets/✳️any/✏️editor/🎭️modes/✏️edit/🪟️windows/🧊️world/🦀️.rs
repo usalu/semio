@@ -222,9 +222,7 @@ pub fn render_over(snapshot: &ModelSnapshot, inference: &ModelInference, config:
 }
 //#endregion 🔖️Scene
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 fn lowest_storey(snapshot: &ModelSnapshot) -> Option<String> {
     snapshot.buildings.keys().find_map(|building| crate::editor::bim::entities::ordered_storeys(snapshot, building).into_iter().next())

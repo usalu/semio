@@ -1,0 +1,5 @@
+# Rust20935: Independent Admission Refusal Proof
+
+Closed saved log/terminal/stage trace pass sequential nofollow descriptor/name seven-fact SHA checks; receipt `🗑️generated/rust20935-independent-refusal-hold.json`. Actual terminal1/null in237.503417ms. Refusal is Resource lease timed out for native-fixed-image:<global Leases directory>, before selected Rust accepted stage. Trace has only terminal-failure; helper terminal reports success=false/ownedCustodyClosed=true.
+
+This is actual shared admission contention permitted to refuse by the unchanged coordination protocol. The scoped Source order supports no selected Rust publication effects before that admission; it does not imply no temporary metadata coordination work anywhere or prove current payload. A fresh independently issued later Rust attempt must reauthenticate everything, not renew this failed attempt or change timeouts/caps. Separate Dependencies20897 and Tools13831 outcomes remain unqualified here. No Native/protected reads or process actions were performed.

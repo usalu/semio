@@ -134,10 +134,10 @@ export function defineOwnedBuildConfigFactory<T extends OwnedBuildConfigFactory>
 //#region 🧭️HostAdmission
 const HOST_PLUGIN_DATA_MEMBERS: ReadonlySet<string> = new Set(["name", "enforce", "apply"]);
 
-/** 🧭️ Whether an owned plugin has the shape Vite's plugin host reads: a name, and every other member is either data the host defines (`enforce`, `apply`) or a hook function (`transformIndexHtml` may also be a `{ handler }` object). */
+/** 🧭️ Whether an owned plugin has the shape Vite's plugin host reads: a name, and every other member is either data the host defines (`enforce`, `apply`) or a hook function (any hook may also be a `{ handler }` object, the form Tailwind's `transform` takes). */
 function hasHostPluginShape(plugin: OwnedBuildPlugin): plugin is OwnedBuildPlugin & Plugin {
   if (typeof plugin.name !== "string" || plugin.name === "") return false;
-  return Object.entries(plugin).every(([member, value]) => HOST_PLUGIN_DATA_MEMBERS.has(member) || typeof value === "function" || (member === "transformIndexHtml" && typeof value === "object" && value !== null && "handler" in value && typeof value.handler === "function"));
+  return Object.entries(plugin).every(([member, value]) => HOST_PLUGIN_DATA_MEMBERS.has(member) || typeof value === "function" || (typeof value === "object" && value !== null && "handler" in value && typeof value.handler === "function"));
 }
 
 /** 🚪️ Hands owned plugins to a Vite plugin list. The plugins are checked at run time against the shape the host reads, so the admission is a narrowing, not an unchecked cast; a plugin that does not fit is refused with its name. */

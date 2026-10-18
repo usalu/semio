@@ -8,7 +8,7 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️mod
 import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { blake3Hex } from "../../../../../../../📦️packages/🟦️typescript/🔏️hash/🟦️.ts";
 import { MemberHistoryIdentitySourceScript, MemberHistoryIdScript, MemberHistoryInputScript } from "../🪪️member-history-identity/🟦️.ts";

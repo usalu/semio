@@ -1,18 +1,81 @@
-use super::compute::{take_computed, take_hashed};
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use std::sync::Arc;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::{take_computed, take_hashed};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Opening, Point2, Wall}, diff::{Entry, ModelDiff, patches::WallPatch}};
+use semio_framework_test_fixtures::fixture_text;
 use std::time::Instant;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const FULL: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+static FULL: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json"));
 
 fn line(from: (f64, f64), to: (f64, f64)) -> Axis {
     Axis::Line { start: Point2 { x: from.0, y: from.1 }, end: Point2 { x: to.0, y: to.1 } }
 }
 
 fn big_model(rows: usize, columns: usize, windows: usize) -> ModelSnapshot {
-    let mut snapshot: ModelSnapshot = from_json_str(FULL, JsonMemberPolicy::Reject).expect("the snapshot decodes");
+    let mut snapshot: ModelSnapshot = from_json_str((*FULL), JsonMemberPolicy::Reject).expect("the snapshot decodes");
     let template: Wall = snapshot.walls["w-south"].clone();
     let window = snapshot.openings["o-win-1"].clone();
     snapshot.walls.clear();
@@ -82,16 +145,18 @@ fn one_wall_move_in_511_walls_and_64_windows_updates_in_under_15_ms() {
 }
 
 mod annotations {
-    use super::super::compute::take_hashed;
-    use super::super::*;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     use crate::standards::v1::subsets::any::schema::{diff::{patches::{AnnotationStylePatch, ColumnPatch, DimensionPatch, OpeningPatch, ProjectPatch, StoreyPatch, TextNotePatch, WallTypePatch}, Entry, ModelDiff}, snapshot::Point2};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
+    static ROOM: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json"));
 
     fn room() -> ModelSnapshot {
-        from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes")
+        from_json_str((*ROOM), JsonMemberPolicy::Reject).expect("the room decodes")
     }
 
     fn settle(session: &mut ModelInferenceSession, snapshot: &ModelSnapshot) {
@@ -187,13 +252,15 @@ mod annotations {
 }
 
 mod ceilings {
-    use super::super::compute::take_hashed;
-    use super::super::*;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     use crate::standards::v1::subsets::any::schema::{snapshot::{Ceiling, CeilingType, Layer, LayerFunction, Point2, Vertex}, diff::{patches::{CeilingPatch, CeilingTypePatch, ProjectPatch}, Entry, ModelDiff}};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+    static HOUSE: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json"));
 
     fn corner(x: f64, y: f64) -> Vertex {
         Vertex { point: Point2 { x, y }, bulge: 0.0 }
@@ -204,7 +271,7 @@ mod ceilings {
     }
 
     fn hung_house() -> ModelSnapshot {
-        let mut snapshot: ModelSnapshot = from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("the house decodes");
+        let mut snapshot: ModelSnapshot = from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("the house decodes");
         let material = snapshot.materials.keys().next().cloned().expect("a material");
         snapshot.ceiling_types.insert("ct-board".into(), CeilingType { name: "Board".into(), layers: vec![layer(&material, 0.0625)] });
         snapshot.ceilings.insert("ce-hall".into(), Ceiling { storey: "st-ground".into(), ceiling_type: "ct-board".into(), boundary: vec![corner(-50.0, -50.0), corner(50.0, -50.0), corner(50.0, 50.0), corner(-50.0, 50.0)], holes: Vec::new(), offset: 0.6, slope: None, name: "Hall".into() });
@@ -285,16 +352,18 @@ mod ceilings {
 }
 
 mod wall_depth {
-    use super::super::compute::take_hashed;
-    use super::super::*;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::{ProjectPatch, RoofPatch, SlabPatch, WallPatch}}, snapshot::{RoofShape, Slope}};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const ATTIC: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json");
+    static ATTIC: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧗️wall-depth/🏠️attic/📸️snapshot/🔣️.json"));
 
     fn attic() -> ModelSnapshot {
-        from_json_str(ATTIC, JsonMemberPolicy::Reject).expect("the attic decodes")
+        from_json_str((*ATTIC), JsonMemberPolicy::Reject).expect("the attic decodes")
     }
 
     fn settle(session: &mut ModelInferenceSession, snapshot: &ModelSnapshot) {
@@ -391,16 +460,18 @@ mod wall_depth {
 }
 
 mod sheets {
-    use super::super::compute::take_hashed;
-    use super::super::*;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     use protocol::Inference;
     use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::{ProjectPatch, SheetPatch, StoreyPatch, ViewportPatch}}, snapshot::{Point2, Sheet, Viewport}};
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const FULL: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
+    static FULL: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json"));
 
     fn placed() -> ModelSnapshot {
-        let mut snapshot: ModelSnapshot = from_json_str(FULL, JsonMemberPolicy::Reject).expect("the house decodes");
+        let mut snapshot: ModelSnapshot = from_json_str((*FULL), JsonMemberPolicy::Reject).expect("the house decodes");
         snapshot.sheets.insert("sh-plans".into(), Sheet::standard("A-101", "Plans"));
         snapshot.sheets.insert("sh-elevations".into(), Sheet::standard("A-301", "Elevations"));
         snapshot.viewports.insert("vp-ground".into(), Viewport::standard("sh-plans", "v-plan-st-ground", Point2 { x: 30.0, y: 30.0 }));
@@ -504,15 +575,17 @@ mod sheets {
 }
 
 mod coordination {
-    use super::super::*;
+    use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
     use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Issue, IssuePriority, IssueStatus, Point2, Rule, RuleKind, RuleScope, RuleSeverity}, diff::{patches::{BeamPatch, ClashSetPatch, ProjectPatch}, Entry, ModelDiff}};
     use protocol::Inference;
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-    const FRAME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
+    static FRAME: std::sync::LazyLock<&str> = std::sync::LazyLock::new(|| super::fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json"));
 
     fn frame() -> ModelSnapshot {
-        let mut snapshot: ModelSnapshot = from_json_str(FRAME, JsonMemberPolicy::Reject).expect("the frame decodes");
+        let mut snapshot: ModelSnapshot = from_json_str((*FRAME), JsonMemberPolicy::Reject).expect("the frame decodes");
         snapshot.rules.insert("rl-door".into(), Rule { name: "Door".into(), kind: RuleKind::MinDoorWidth, limit: 0.9, severity: RuleSeverity::Warning, scope: RuleScope::all() });
         snapshot
     }

@@ -2,8 +2,8 @@
 //! name is filled and unique within the building, each kind owns exactly its fields (see `view_problem`), the numbers are positive and finite and the hidden categories are
 //! unique and in category order.
 
-use super::super::elements;
-use super::CreateView;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView;
 use crate::standards::v1::subsets::any::schema::{snapshot::{view_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

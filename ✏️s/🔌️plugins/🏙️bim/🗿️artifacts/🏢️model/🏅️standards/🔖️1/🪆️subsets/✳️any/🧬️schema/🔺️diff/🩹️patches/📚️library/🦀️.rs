@@ -1,6 +1,7 @@
 //! 📚️ Sparse patches of the library records: property templates, classification systems, space conditions, families, components, MEP elements, materials and the element types.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*};
+use crate::standards::v1::subsets::any::schema::diff::algebra::*;
 
 /// 🩹 Sparse patch of [`PropertyTemplate`]: an absent field is untouched.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

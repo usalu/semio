@@ -27,6 +27,4 @@ pub fn handle(payload: &FlipWalls, doc: &ArtifactView<'_, ModelSnapshot>, _cfg: 
     Ok(Emit::mutations(walls.into_iter().map(|id| ModelMutation::FlipWall(crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall { id: id.clone() })).collect()))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

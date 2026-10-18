@@ -1,8 +1,22 @@
-use super::codec::read_records;
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::schedules::{RowKind, ScheduleCell, ScheduleTable};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::Schedule;
+#[allow(unused_imports)]
+use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+#[allow(unused_imports)]
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
+use crate::standards::v1::subsets::any::io::export::csv::codec::read_records;
+use crate::standards::v1::subsets::any::io::export::csv::*;
 use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::preset;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_text;
 
 fn demo() -> (ModelSnapshot, ModelInference) {
     let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
@@ -69,13 +83,13 @@ fn the_report_lists_every_schedule_then_the_diagnostics_and_is_deterministic() {
     assert_eq!(records[diagnostics + 1][0], "severity");
 }
 
-const DEFECTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
+static DEFECTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json"));
 
 /// 📁️ The directory of the committed exports of the findings of the defect house: the files the python `csv` and `json` modules read back in the export case.
-const EXPORT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export");
+const EXPORT_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📤️export");
 
 fn defects() -> ModelInference {
-    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(DEFECTS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the defect house decodes");
+    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*DEFECTS), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the defect house decodes");
     ModelInference::infer(&snapshot).expect("infers")
 }
 

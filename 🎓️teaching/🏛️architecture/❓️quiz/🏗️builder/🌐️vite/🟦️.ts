@@ -7,17 +7,10 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildPlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import {
-  playgroundStaticSiteBuildOptions,
-  semioEmojiIndexHtmlVitePlugin,
-  semioHostHtmlVitePlugin,
-  semioHostTitleText,
-  semioReferencedAssetsVitePlugin,
-  semioServeCloseVitePlugin,
-  semioServeUpgradeVitePlugin,
-  semioViteBuild,
-  type SemioHostHtmlSpec,
-} from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundStaticSiteBuildOptions, semioViteBuild } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioHostTitleText, type SemioHostHtmlSpec } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
+import { semioReferencedAssetsVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets/🟦️.ts";
+import { semioServeCloseVitePlugin, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 import catalog from "../../🔣️.json" with { type: "json" };
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };
 // #endregion 🔌️Adapters

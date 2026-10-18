@@ -16,6 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+pack = { workspace = true }
+semio-framework-pixels = { workspace = true }
 semio-s-artifact-layout-layout-editor-commands-2 = { workspace = true }
 machine = { workspace = true }
 semio-framework = { workspace = true }

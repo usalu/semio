@@ -1,4 +1,8 @@
-use super::*;
+use db_io_core::*;
+use db_io_core::testkit::*;
+use db_ids::DbError;
+use std::sync::Mutex;
+use std::task::{Context, Poll, Waker};
 use semio_framework_test_fixtures::fixture_text;
 
 use std::{sync::Arc, sync::atomic::AtomicUsize, sync::atomic::Ordering};
@@ -16,7 +20,7 @@ impl std::task::Wake for Counter {
 
 #[test]
 fn wal_writer_release_signal_preserves_exact_waits_across_writer_and_backend_reuse() {
-    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../../../../🔐️writer/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     let expected = &fixture["releaseSignal"];
     let counter = Arc::new(Counter(AtomicUsize::new(0)));
     let waker = Waker::from(counter.clone());

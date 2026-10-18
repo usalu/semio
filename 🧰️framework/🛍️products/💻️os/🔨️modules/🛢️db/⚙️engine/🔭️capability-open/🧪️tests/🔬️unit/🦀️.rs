@@ -773,7 +773,7 @@ fn admit_fixture_blocker(pool: &WorkerPool, lane: Lane, mut job: semio_framework
 //#region 🔖️Source laws
 #[test]
 fn retained_retry_owners_release_their_guard_before_resubmission() {
-    for (name, source) in [("db_engine_capability_open", include_str!("../../🦀️.rs"))] {
+    for (name, source) in [("db_engine_capability_open", concat!(include_str!("../../🎟️open-admission/🦀️.rs"), include_str!("../../🔑️open-results-and-rejections/🦀️.rs"), include_str!("../../🧱️open-state-and-lease/🦀️.rs"), include_str!("../../⚙️open-state-operations/🦀️.rs"), include_str!("../../📬️open-future-and-terminal-handles/🦀️.rs"), include_str!("../../🦀️.rs")))] {
         let lines: Vec<&str> = source.lines().collect();
         for (index, line) in lines.iter().enumerate() {
             let trimmed = line.trim_start().trim_start_matches("} else ");

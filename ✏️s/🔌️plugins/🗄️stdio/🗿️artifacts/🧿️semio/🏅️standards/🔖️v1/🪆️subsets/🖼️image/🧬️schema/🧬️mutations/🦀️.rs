@@ -127,7 +127,7 @@ pub fn inverse_semio_image_mutation(mutation: &SemioImageMutation, base: &SemioI
 /// file's own `op_text_binary_roundtrip_law`.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioImageMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioImageMutation> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn frame(seed: u8, len: usize) -> SemioImageFrame {
         SemioImageFrame { delay_ms: 100, rgba8: vec![seed; len] }

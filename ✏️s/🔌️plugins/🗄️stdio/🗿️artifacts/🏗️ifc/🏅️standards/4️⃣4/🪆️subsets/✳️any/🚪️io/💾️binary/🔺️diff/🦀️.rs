@@ -70,7 +70,7 @@ pub(crate) fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
 /// here (unlike the top-level `IfcDiff`/`IfcMutation` frames, `IfcValue` itself is fully flat/
 /// spec-expressible per variant).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
+pub fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
     match v {
         IfcValue::Unset => out.push(0),
         IfcValue::Derived => out.push(1),
@@ -107,7 +107,7 @@ pub(crate) fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcValue, String> {
+pub fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcValue, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(IfcValue::Unset),
@@ -128,7 +128,7 @@ pub(crate) fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<If
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_ifc_value_list_bin(vs: &[IfcValue], out: &mut Vec<u8>) {
+pub fn enc_ifc_value_list_bin(vs: &[IfcValue], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, vs.len() as u64);
     for v in vs {
         enc_ifc_value_bin(v, out);
@@ -136,7 +136,7 @@ pub(crate) fn enc_ifc_value_list_bin(vs: &[IfcValue], out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_ifc_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcValue>, String> {
+pub fn dec_ifc_value_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcValue>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_ifc_value_bin(reader)).collect()
 }
@@ -175,7 +175,7 @@ pub(crate) fn dec_complex_list_bin(reader: &mut store::ByteReader<'_>) -> Result
 
 /// 📦️ `id | name | args | complex` — positional, mirrors [`enc_entity`]'s own field order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity_bin(e: &IfcEntity, out: &mut Vec<u8>) {
+pub fn enc_entity_bin(e: &IfcEntity, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, e.id);
     write_str_bin(out, &e.name);
     enc_ifc_value_list_bin(&e.args, out);
@@ -183,7 +183,7 @@ pub(crate) fn enc_entity_bin(e: &IfcEntity, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntity, String> {
+pub fn dec_entity_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcEntity, String> {
     let id = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let name = read_str_bin(reader)?;
     let args = dec_ifc_value_list_bin(reader)?;
@@ -354,7 +354,7 @@ use protocol::{MutationApplyError, MutationApplyResult, MutationDiff};
 
 // 🚫️async: EEEEhE️EntityBinaryCodecs
 /// 🧪️ P2-FG1EEE EE1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity_list_bin(list: &[IfcEntity], out: &mut Vec<u8>) {
+pub fn enc_entity_list_bin(list: &[IfcEntity], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for e in list {
         enc_entity_bin(e, out);
@@ -362,7 +362,7 @@ pub(crate) fn enc_entity_list_bin(list: &[IfcEntity], out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcEntity>, String> {
+pub fn dec_entity_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcEntity>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_entity_bin(reader)).collect()
 }

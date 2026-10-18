@@ -25,7 +25,7 @@ use semio_framework_plugin::NoTransientMutation;
 use semio_framework_plugin::ViewEmit;
 use semio_framework_plugin::Viewer;
 use semio_framework_plugin::ViewerApp;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions, so its typed command channel has exactly one inert variant.

@@ -54,7 +54,7 @@ use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use serde_json::Value;
 use pack::snapshot::ArtifactPack;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const GIS3D_PLAY_APP_ID: &str = "gis3d-play";

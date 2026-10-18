@@ -4,10 +4,12 @@
 //! posts and the `Height` of its base quantities (else one metre). Whatever has no such flight or polyline is reported by the unsupported-class note.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgelements/lexical/ifcstair.htm>
 
-use super::data::label;
-use super::reader::{real, text, Doc, Section};
-use super::spatial::{authoring_of, phase_of, quantity};
-use super::Import;
+use crate::standards::v1::subsets::any::io::export::ifc::{codec, Schema};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{real, text, Doc, Section};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, phase_of, quantity};
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::schema::snapshot::{Infill, Point2, Profile, Railing, RiserKind, Stair, StairFlight, StairStringer, StringerKind, TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
@@ -109,6 +111,4 @@ pub fn read(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

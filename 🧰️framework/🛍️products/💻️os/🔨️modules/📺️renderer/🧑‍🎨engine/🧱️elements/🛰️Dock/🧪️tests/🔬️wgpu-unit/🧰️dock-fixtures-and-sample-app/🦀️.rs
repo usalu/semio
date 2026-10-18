@@ -1,5 +1,9 @@
 /// 🧰️ Dock fixtures and sample app: the tab and stack builders and the sample app definition with its windows, layouts and panels.
 
+fn tab(id: &str) -> DockStackTab {
+    DockStackTab::new(id)
+}
+
 fn tabs(ids: &[&str]) -> Vec<DockStackTab> {
     ids.iter().map(|id| DockStackTab::new(*id)).collect()
 }

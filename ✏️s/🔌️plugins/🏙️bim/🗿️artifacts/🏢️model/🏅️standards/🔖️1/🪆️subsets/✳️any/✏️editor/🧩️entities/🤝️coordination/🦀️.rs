@@ -2,7 +2,9 @@
 //! pickers (rule check, severity, status, priority) the properties panel offers. A selector or a scope is edited as text of `key=value,value` parts separated by semicolons (`classes=beam,column;
 //! storeys=st-0`); an empty text selects everything. The clash counts and the rule findings are inferred rows of the `clash-sets` and `rule-results` inferences.
 
-use super::{number, parse_number, parse_text, partial, variant, Created, EntityKind, FieldRow, InferredRow};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::standards::v1::subsets::any::schema::snapshot::Point2;
+use crate::editor::bim::entities::{number, parse_number, parse_text, partial, variant, Created, EntityKind, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::{snapshot::{ClashSet, ElementClass, ElementSelector, Issue, IssueComment, IssuePriority, IssueStatus, ModelSnapshot, Phase, Rule, RuleKind, RuleScope, RuleSeverity, DEFAULT_TOLERANCE, RULE_KINDS}, mutations::ModelMutation};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
@@ -238,7 +240,7 @@ pub fn latest_moment(snapshot: &ModelSnapshot) -> String {
         .map_or_else(|| "1970-01-01".to_string(), str::to_string)
 }
 
-fn author(snapshot: &ModelSnapshot) -> String {
+pub fn author(snapshot: &ModelSnapshot) -> String {
     if snapshot.project.author.trim().is_empty() { "unknown".to_string() } else { snapshot.project.author.clone() }
 }
 
@@ -352,6 +354,4 @@ pub const ISSUE_COMMENT: EntityKind = EntityKind {
 };
 //#endregion 🔖️Kinds
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

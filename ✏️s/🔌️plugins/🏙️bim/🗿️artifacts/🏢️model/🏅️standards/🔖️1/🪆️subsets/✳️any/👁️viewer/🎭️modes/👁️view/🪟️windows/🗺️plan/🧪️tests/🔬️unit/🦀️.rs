@@ -1,4 +1,12 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::render::plan::scene;
+#[allow(unused_imports)]
+use crate::viewer::bim::terminology::BimViewerLabels;
+#[allow(unused_imports)]
+use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, UiAssemblyResult, WindowKindDefinition, WindowMeasure, WindowOptions};
+use crate::viewer::bim::modes::view::windows::plan::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use crate::viewer::bim::terminology::bim_viewer_labels;
 use crate::viewer::bim::viewer_action;

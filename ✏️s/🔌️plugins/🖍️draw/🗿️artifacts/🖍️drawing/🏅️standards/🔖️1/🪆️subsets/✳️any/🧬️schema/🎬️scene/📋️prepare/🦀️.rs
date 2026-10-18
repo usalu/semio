@@ -38,6 +38,9 @@ pub use selection::{scene_selection_relation,SceneSelectionRelation};
 use crate::booleans::{DocumentBooleanInput, DocumentBooleanJob, DocumentBooleanProgress, DocumentBooleanRetirement};
 use crate::text::{DocumentTextJob, DocumentTextRetirement};
 use crate::trace::{DocumentTraceInput, DocumentTraceJob, DocumentTraceProgress, DocumentTraceRetirement};
+use crate::font_family::DrawingFontFamily;
+use crate::booleans::DocumentBooleanLimits;
+use crate::trace::DocumentTraceLimits;
 #[derive(Clone,Copy,Debug)]
 pub struct DocumentSceneLimits{pub max_nodes:usize,pub max_depth:usize,pub max_segments:usize,pub max_references:usize,pub max_source_bytes:usize}
 impl Default for DocumentSceneLimits{fn default()->Self{Self{max_nodes:1024,max_depth:32,max_segments:65536,max_references:32768,max_source_bytes:268439552}}}
@@ -234,8 +237,8 @@ enum VectorChildRetirement{Preparation(DocumentSceneRetirement),Trace(DocumentTr
 impl VectorChildRetirement{fn advance(&mut self,grant:usize)->Result<WorkRetirementProgress,DocumentSceneError>{match self{Self::Preparation(job)=>job.advance(grant),Self::Trace(job)=>job.advance(grant),Self::Text(job)=>job.advance(grant),Self::Boolean(job)=>job.advance(grant)}}}
 /// 🎬️ Resolves one stable source while retaining text and authored paint metadata.
 pub struct DocumentVectorJob<'a>{
- source:Option<DocumentVectorSource<'a>>,preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,algorithms:Option<DocumentBooleanJob>,progress:DocumentVectorProgress,
- output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,limits:DocumentAlgorithmLimits,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>,
+ pub source:Option<DocumentVectorSource<'a>>,preparation:Option<DocumentSceneCursor>,traces:Option<DocumentTraceJob>,texts:Option<DocumentTextJob>,algorithms:Option<DocumentBooleanJob>,progress:DocumentVectorProgress,
+ pub output:Option<DocumentScenePlan>,failure:Option<DocumentSceneError>,cancelled:bool,limits:DocumentAlgorithmLimits,closing:Option<VectorChildRetirement>,discard:Option<ScenePlanCloseJob>,handoff:Option<DocumentScenePlan>,retired_children:Vec<VectorChildRetirement>,retired_plans:Vec<ScenePlanCloseJob>,
 }
 impl<'a> DocumentVectorJob<'a>{
  pub fn new(document:&'a DrawingSnapshot,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->Result<Self,DocumentSceneError>{Self::from_source(DocumentVectorSource::Borrowed(document),limits,algorithms)}
@@ -297,7 +300,7 @@ struct DocumentVectorOwners{children:Vec<VectorChildRetirement>,plans:Vec<SceneP
 /// 🔐️ Actual private byte ownership closes before the exact source read returns to its registry.
 pub struct DocumentVectorRetirement<'a>{source:Option<DocumentVectorSource<'a>>,owner:ControlledRetirement<DocumentVectorOwners>,work:u64}
 impl DocumentVectorRetirement<'_>{
- fn private_is_empty(&self)->bool{self.owner.terminal_is_empty()}
+ pub fn private_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  pub fn terminal_is_empty(&self)->bool{self.private_is_empty()&&self.source.is_none()}
  pub fn snapshot_authority_matches(&self,generation:u64,revision:[u8;32])->bool{match &self.source{Some(DocumentVectorSource::SnapshotRead(read))=>read.commit_authority_matches(generation,revision),_=>false}}
  pub fn take_snapshot_read(&mut self)->Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>{if !self.private_is_empty(){return None;}match self.source.take(){Some(DocumentVectorSource::SnapshotRead(read))=>Some(read),other=>{self.source=other;None}}}

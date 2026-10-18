@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 
 import userEvent from "@testing-library/user-event";
 import { describe, expect, test } from "vitest";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { buildOsCommands } from "../../🧱️elements/🛠️ShellHelpers/🎛️command-registry/🟦️.tsx";
 import {
   keyboardEventMatchesChord,
@@ -76,11 +77,11 @@ describe("⌨️ OS command shortcut ownership", () => {
   });
 
   test("WGPU routes matched OS commands locally and leaves argument commands staged", () => {
-    const shell = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     expect(shell).not.toContain('(\"os.toggleFullscreen\", \"mod+shift+f\")');
     expect(shell).not.toContain("let fullscreen_chord =");
-    expect(shell).toContain("self.apply_os_command(&entry.definition.id, None).await?");
-    expect(shell).toContain("self.overlay_state = OverlayState::Search");
-    expect(shell).toContain("self.dispatch_command(invocation).await?");
+    expect(shell).toContain("self.as_actions().apply_os_command(&entry.definition.id, None).await?");
+    expect(shell).toContain("self.input.overlay_state = OverlayState::Search");
+    expect(shell).toContain("self.as_actions().dispatch_command(invocation).await?");
   });
 });

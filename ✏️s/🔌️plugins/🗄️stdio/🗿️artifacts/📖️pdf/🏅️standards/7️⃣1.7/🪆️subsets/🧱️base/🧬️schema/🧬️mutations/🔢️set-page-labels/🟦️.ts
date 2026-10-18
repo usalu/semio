@@ -1,5 +1,5 @@
 /** 🔢️ Direct set-page-labels TypeScript payload. */
-import type { PdfPageLabelRange, PdfPageLabelStyle } from '../../📸️snapshot/🟦️.ts';
+import type { PdfPageLabelRange, PdfPageLabelStyle } from '../../📸️snapshot/🎯️navigation/🟦️.ts';
 export interface SetPageLabelsMutation {
   mutation: 'setPageLabels';
   labels: PdfPageLabelRange[];

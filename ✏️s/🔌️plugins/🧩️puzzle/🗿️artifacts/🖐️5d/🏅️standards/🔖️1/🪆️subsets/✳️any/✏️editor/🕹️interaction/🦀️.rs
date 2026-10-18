@@ -306,25 +306,25 @@ macro_rules! puzzle5d_command_variants {
             /// 🏷️ The action id this variant was declared under — used both for `command_id()`
             /// (command-log labeling / registry kind-discipline) and to reconstruct the exact
             /// `action: &str` `handle_action_impl` dispatches on.
-            fn action_id(&self) -> &'static str {
+            pub fn action_id(&self) -> &'static str {
                 match self {
                     $(Puzzle5dCommand::$Variant { .. } => $id),*
                 }
             }
 
-            fn window_id(&self) -> Option<&str> {
+            pub fn window_id(&self) -> Option<&str> {
                 match self {
                     $(Puzzle5dCommand::$Variant { window_id, .. } => window_id.as_deref()),*
                 }
             }
 
-            fn args(&self) -> Option<&semio_framework_pack_json::Value> {
+            pub fn args(&self) -> Option<&semio_framework_pack_json::Value> {
                 match self {
                     $(Puzzle5dCommand::$Variant { args, .. } => args.as_ref()),*
                 }
             }
 
-            fn try_from_action(action: &str, args: Option<semio_framework_pack_json::Value>, window_id: Option<String>) -> Option<Self> {
+            pub fn try_from_action(action: &str, args: Option<semio_framework_pack_json::Value>, window_id: Option<String>) -> Option<Self> {
                 match action {
                     $($id => Some(Puzzle5dCommand::$Variant { window_id, args })),*,
                     _ => None,

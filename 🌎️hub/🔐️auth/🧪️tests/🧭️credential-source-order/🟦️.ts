@@ -121,7 +121,7 @@ export function nativeCredentialSourceOrderConforms(source: NativeCredentialSour
     session.length === 1 &&
     session[0]!.includes("await runNativeBinary(") &&
     binary.length === 1 &&
-    binary[0]!.includes("await runTool(") &&
+    binary[0]!.includes("await runOwnedCommand(") &&
     ownerTargetCommand(source.project, "dev-secure-native") === "bun ./📜️script.ts dev secure-native"
   );
 }
@@ -196,7 +196,7 @@ export function mcpCredentialSourceOrderConforms(source: McpCredentialSourcePopu
 export function proveNativeCredentialSourceOrder(repoRoot: string): void {
   const population: NativeCredentialSourcePopulation = {
     entrypoint: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"), "utf8"),
-    credential: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8"),
+    credential: readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), { crates: false }),
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts"), "utf8"),
     project: readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8"),
   };
@@ -209,7 +209,7 @@ export function proveMcpCredentialSourceOrder(repoRoot: string): void {
     entrypoint: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏗️bootstrap/🦀️.rs"), "utf8"),
     workspace: readMcpGatewaySource(repoRoot),
     remote: readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/🏠️workspace/🔗️remote/🦀️.rs"), { crates: false }),
-    directory: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8"),
+    directory: readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), { crates: false }),
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust/📜️script.ts"), "utf8"),
     project: readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/📋️project.json"), "utf8"),
   };

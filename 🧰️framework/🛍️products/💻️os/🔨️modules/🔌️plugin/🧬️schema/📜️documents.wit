@@ -1,0 +1,30 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §2). Document/transaction/
+/// blob identity carried on `effects::artifact-read`/`document-write`/`blob-load`/`blob-write` and
+/// their `event.completed` answers.
+///
+/// ⚠️ Same `resource` deviation as `capabilities.wit`/`ui.wit`: `document`/`transaction`/`blob` are
+/// plain id-carrying records, not WIT `resource`s — reads/writes happen through effects+events
+/// (async request/response over `poll`) or through the `host-async` imports, never through a
+/// resource method call: `world actor` imports only `pure` and `host-async` (B1 world-collapse),
+/// and neither of them IS this interface, so a `resource` here would have no host-callable methods.
+interface documents {
+  use types.{revision};
+
+  record document-ref {
+    document: u64,
+    lane: string,
+    revision: revision,
+  }
+
+  record transaction-ref {
+    transaction: u64,
+    document: u64,
+  }
+
+  record blob-ref {
+    blob: u64,
+    size: u64,
+  }
+}

@@ -16,6 +16,7 @@ workspace = true
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-geometry = { workspace = true }
 semio-s-artifact-stdio-semio-value-algebra = { workspace = true }
 semio-s-artifact-stdio-semio-table-probability = { workspace = true }
 semio-s-artifact-stdio-semio-table-statistics = { workspace = true }

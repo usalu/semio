@@ -72,6 +72,4 @@ pub fn handle<P: Shifts>(payload: &P, doc: &ArtifactView<'_, ModelSnapshot>, _cf
     shift(doc.snapshot, payload.ids(), &ctx.selected, P::STEPS)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

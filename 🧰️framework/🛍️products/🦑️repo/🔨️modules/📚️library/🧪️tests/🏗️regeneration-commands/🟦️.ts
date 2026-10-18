@@ -6,7 +6,8 @@ import ts from "typescript";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { parseTaxonomyPlan, taxonomyPlanDigest } from "../../🧹️normalization/🟦️.ts";
+import { parseTaxonomyPlan } from "../../🧹️normalization/📃️plan-document/🟦️.ts";
+import { taxonomyPlanDigest } from "../../🧹️normalization/🗃️affected-state/🟦️.ts";
 
 /** 🏗️ Serialized generator plans retain the neutral launcher in both execution and verification vectors. */
 test("neutral regeneration commands round-trip with independent schema and canonical JSON oracles", () => {

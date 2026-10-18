@@ -1,12 +1,15 @@
 //! \u21A9\uFE0F Inverse of \u00B6DeleteSchedule\u00B6: the concrete \u00B6CreateSchedule\u00B6 of the removed definition, none when the schedule is absent.
 
-use super::super::create_schedule::CreateSchedule;
-use super::DeleteSchedule;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::create_schedule::CreateSchedule;
+use crate::standards::v1::subsets::any::schema::mutations::delete_schedule::DeleteSchedule;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &DeleteSchedule, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &DeleteSchedule, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::create_schedule::CreateSchedule>,
+{
     match base.schedules.get(&payload.id) {
-        Some(schedule) => vec![ModelMutation::CreateSchedule(CreateSchedule { id: payload.id.clone(), schedule: schedule.clone() })],
+        Some(schedule) => vec![Op::from(CreateSchedule { id: payload.id.clone(), schedule: schedule.clone() })],
         None => Vec::new(),
     }
 }

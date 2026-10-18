@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteRule`: the rule leaves in one sparse diff together with its properties and classifications (see the shared cascade).
 
-use super::super::cascade;
-use super::DeleteRule;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

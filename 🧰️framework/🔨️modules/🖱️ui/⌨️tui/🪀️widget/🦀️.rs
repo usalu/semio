@@ -1,83 +1,38 @@
-use crate::tui::cell::CellBuffer;
-use crate::tui::chip::paint_chip;
-use crate::tui::dialog::{dialog_on_key, dialog_on_mouse, dialog_set_hover, paint_dialog, DialogState};
-use crate::tui::divider::paint_divider;
-use crate::tui::event::{KeyEvent, MouseEvent};
-use crate::tui::geometry::{Rect, Size};
-use crate::tui::input::{input_cursor, input_on_key, input_on_mouse, input_on_paste, paint_input};
-use crate::tui::label::paint_label;
-use crate::tui::list::{list_on_key, list_on_mouse, list_set_hover, list_tick, paint_list};
-use crate::tui::log::{log_on_key, log_on_mouse, paint_log};
-use crate::tui::menu::{menu_on_key, menu_on_mouse, menu_set_hover, paint_menu, MenuState};
-use crate::tui::palette::{palette_cursor, palette_on_key, palette_on_mouse, palette_set_hover, paint_palette, PaletteState};
-use crate::tui::progress::{paint_progress, progress_tick};
-use crate::tui::scrollable::{paint_scrollable, scrollable_on_key, scrollable_on_mouse};
-use crate::tui::select::{paint_select, select_on_key, select_on_mouse};
-use crate::tui::table::{paint_table, table_on_key, table_on_mouse, table_set_hover};
-use crate::tui::tabs::{paint_tabs, tabs_on_key, tabs_on_mouse, tabs_set_hover};
-use crate::tui::text::display_width;
-use crate::tui::theme::{Role, Theme};
-use crate::tui::toggle::{paint_toggle, toggle_on_key, toggle_on_mouse, toggle_set_hover};
-use crate::tui::tooltip::{paint_tooltip, TooltipState};
-use crate::tui::tree::{paint_tree, tree_cursor, tree_on_key, tree_on_mouse, tree_on_paste, tree_set_hover};
-use crate::tui::wizard::{paint_wizard, wizard_cursor, wizard_on_key, wizard_on_mouse, wizard_on_paste, wizard_set_hover};
+use semio_framework_ui_tui_core::cell::CellBuffer;
+use crate::chip::paint_chip;
+use crate::dialog::{dialog_on_key, dialog_on_mouse, dialog_set_hover, paint_dialog, DialogState};
+use crate::divider::paint_divider;
+use semio_framework_ui_tui_core::event::{KeyEvent, MouseEvent};
+use semio_framework_ui_tui_core::geometry::{Rect, Size};
+use crate::input::{input_cursor, input_on_key, input_on_mouse, input_on_paste, paint_input};
+use crate::label::paint_label;
+use crate::list::{list_on_key, list_on_mouse, list_set_hover, list_tick, paint_list};
+use crate::log::{log_on_key, log_on_mouse, paint_log};
+use crate::menu::{menu_on_key, menu_on_mouse, menu_set_hover, paint_menu, MenuState};
+use crate::palette::{palette_cursor, palette_on_key, palette_on_mouse, palette_set_hover, paint_palette, PaletteState};
+use crate::progress::{paint_progress, progress_tick};
+use crate::scrollable::{paint_scrollable, scrollable_on_key, scrollable_on_mouse};
+use crate::select::{paint_select, select_on_key, select_on_mouse};
+use semio_framework_ui_tui_core::signal::{CursorSpec, WidgetSignal};
+use crate::table::{paint_table, table_on_key, table_on_mouse, table_set_hover};
+use crate::tabs::{paint_tabs, tabs_on_key, tabs_on_mouse, tabs_set_hover};
+use semio_framework_ui_tui_core::text::display_width;
+use semio_framework_ui_tui_core::theme::{Role, Theme};
+use crate::toggle::{paint_toggle, toggle_on_key, toggle_on_mouse, toggle_set_hover};
+use crate::tooltip::{paint_tooltip, TooltipState};
+use crate::tree::{paint_tree, tree_cursor, tree_on_key, tree_on_mouse, tree_on_paste, tree_set_hover};
+use semio_framework_ui_tui_vt::pane::TerminalState;
+use crate::wizard::{paint_wizard, wizard_cursor, wizard_on_key, wizard_on_mouse, wizard_on_paste, wizard_set_hover};
 
-pub use crate::tui::input::InputState;
-pub use crate::tui::list::ListState;
-pub use crate::tui::log::{LogScroll, LogState};
-pub use crate::tui::progress::ProgressState;
-pub use crate::tui::scrollable::ScrollableState;
-pub use crate::tui::table::{TableAlign, TableColumn, TableRow, TableState};
-pub use crate::tui::toggle::ToggleState;
-pub use crate::tui::tree::{TreeItem, TreeState};
-pub use crate::tui::wizard::WizardState;
-
-/// 📣️ A widget- or window-chrome-level result of handling input, surfaced to the app.
-#[derive(Clone, Debug, PartialEq)]
-pub enum WidgetSignal {
-    Activated(usize),
-    SelectionChanged(usize),
-    ValueChanged(String),
-    Toggled(bool),
-    TabChanged(usize),
-    NavigateBack,
-    Hovered(Option<usize>),
-    ContextMenu { pos: crate::tui::geometry::Pos, item: Option<usize> },
-    Copy(String),
-    OpenUrl(String),
-    /// 📤 Bytes the embedded terminal encoded for its child; the host forwards them to the PTY.
-    TerminalInput(Vec<u8>),
-    /// ❌ The stack tab index whose close control was pressed.
-    WindowClose(usize),
-    /// 🔲 The stack tab index the maximize control belongs to.
-    WindowMaximize(usize),
-    /// ➕ The stack tab index the new-tab control belongs to.
-    WindowNewTab(usize),
-    WindowTabActivated(usize),
-    /// 🔆 Keyboard focus moved into the emitting window.
-    WindowFocus,
-    TabMoved { from: usize, to: usize },
-    /// ↕️ `path` names the splitter inside its window layout, `delta` the cells the pointer moved along the axis since the last report.
-    SplitterDragged { path: Vec<usize>, delta: i16 },
-    /// 🙈 The emitting overlay was closed without a choice (Escape or a click outside).
-    Dismissed,
-}
-
-/// 🖋️ How the terminal draws its text cursor.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum CursorShape {
-    Block,
-    Underline,
-    Bar,
-}
-
-/// 📍️ Where and how the terminal cursor shows while a widget holds focus.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub struct CursorSpec {
-    pub pos: crate::tui::geometry::Pos,
-    pub shape: CursorShape,
-    pub blink: bool,
-}
+pub use crate::input::InputState;
+pub use crate::list::ListState;
+pub use crate::log::{LogScroll, LogState};
+pub use crate::progress::ProgressState;
+pub use crate::scrollable::ScrollableState;
+pub use crate::table::{TableAlign, TableColumn, TableRow, TableState};
+pub use crate::toggle::ToggleState;
+pub use crate::tree::{TreeItem, TreeState};
+pub use crate::wizard::WizardState;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Align {
@@ -123,8 +78,6 @@ pub struct ChipState {
 }
 
 
-/// 🖥️ The embedded terminal pane lives with the VT it drives; the widget layer only hosts it.
-pub use crate::tui::vt::pane::{Scrollbar, SelectionMode, TerminalSearch, TerminalSelection, TerminalState};
 
 /// 🧩️ The concrete state of any core widget.
 pub enum WidgetState {
@@ -175,10 +128,10 @@ impl WidgetState {
     /// 📐️ The size an overlay wants inside `viewport` (zero for ordinary widgets).
     pub fn overlay_size(&self, viewport: Size) -> Size {
         match self {
-            WidgetState::Menu(m) => crate::tui::menu::menu_size(m, viewport),
-            WidgetState::Dialog(d) => crate::tui::dialog::dialog_size(d, viewport),
-            WidgetState::Palette(p) => crate::tui::palette::palette_size(p, viewport),
-            WidgetState::Tooltip(t) => crate::tui::tooltip::tooltip_size(t, viewport),
+            WidgetState::Menu(m) => crate::menu::menu_size(m, viewport),
+            WidgetState::Dialog(d) => crate::dialog::dialog_size(d, viewport),
+            WidgetState::Palette(p) => crate::palette::palette_size(p, viewport),
+            WidgetState::Tooltip(t) => crate::tooltip::tooltip_size(t, viewport),
             _ => Size { width: 0, height: 0 },
         }
     }
@@ -252,7 +205,7 @@ impl WidgetState {
             WidgetState::Tree(t) => tree_on_paste(t, &text),
             WidgetState::Palette(p) => {
                 for c in text.chars() {
-                    palette_on_key(p, &KeyEvent { key: crate::tui::event::Key::Char(c), mods: 0 });
+                    palette_on_key(p, &KeyEvent { key: semio_framework_ui_tui_core::event::Key::Char(c), mods: 0 });
                 }
                 Some(WidgetSignal::ValueChanged(p.query.clone()))
             }
@@ -269,7 +222,7 @@ impl WidgetState {
     }
 
     /// 👆️ Moves the hover to `pos` inside `rect` or clears it; true when the widget must repaint.
-    pub fn set_hover(&mut self, rect: Rect, pos: Option<crate::tui::geometry::Pos>) -> bool {
+    pub fn set_hover(&mut self, rect: Rect, pos: Option<semio_framework_ui_tui_core::geometry::Pos>) -> bool {
         match self {
             WidgetState::Tabs(t) => tabs_set_hover(t, rect, pos),
             WidgetState::List(l) => list_set_hover(l, rect, pos),

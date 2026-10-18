@@ -1,7 +1,8 @@
 //! 🗂️ The index of the findings: for every element the codes that name it and its worst severity, and the counts of the model by severity, category, code and storey. The index is a pure function of the ordered findings
 //! (derived from derived), so it is projected next to `diagnostics` and never stored. The category of a code is the domain of its slug (`clash.wall-wall` is in the category `clash`), so a new code needs no table row.
 
-use super::{Diagnostic, DiagnosticCode, Severity};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Values
@@ -114,6 +115,4 @@ impl DiagnosticIndex {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

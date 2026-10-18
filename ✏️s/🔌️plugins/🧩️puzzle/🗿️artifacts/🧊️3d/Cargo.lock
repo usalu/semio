@@ -584,7 +584,6 @@ name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d-booleans",
- "semio-framework-2d-compute",
  "semio-framework-2d-engine",
  "semio-framework-2d-path-flatten",
  "semio-framework-2d-path-stroke",
@@ -2923,7 +2922,7 @@ version = "0.1.0"
 dependencies = [
  "js-sys",
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-action-bus",
  "semio-framework-artifact-reference",
  "semio-framework-async",
@@ -3411,7 +3410,7 @@ dependencies = [
 name = "semio-s-artifact-puzzle-3d-precompute"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
@@ -3536,7 +3535,7 @@ name = "semio-s-artifact-puzzle-3d-viewer"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-os-kernel",
  "semio-framework-plugin",

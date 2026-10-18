@@ -2,7 +2,7 @@
 //! a record cannot be written. Pure, total and read-only: a refusal names the field below the record and carries the message.
 //! 📎 https://www.iso.org/standard/65708.html (ISO 6946, thermal transmittance) and https://gbxml.org/schema_doc/7.03/GreenBuildingXML_Ver7.03.html
 
-use super::entities::{CurtainWallType, DoorType, SpaceConditions, WindowType};
+use crate::standards::v1::subsets::any::schema::snapshot::entities::{CurtainWallType, DoorType, SpaceConditions, WindowType};
 
 //#region 🔖️Limits
 /// 🌡️ The lowest set point a space accepts, in degrees Celsius.
@@ -108,6 +108,4 @@ pub fn door_thermal_problem(door: &DoorType) -> Option<Problem> {
     (!u_value_ok(door.u_value)).then_some(("u_value", "A thermal transmittance is a positive number up to 10 watts per square metre and kelvin."))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

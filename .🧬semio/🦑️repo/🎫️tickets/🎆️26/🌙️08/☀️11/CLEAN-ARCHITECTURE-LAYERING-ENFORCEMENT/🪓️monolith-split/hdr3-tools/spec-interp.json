@@ -1,0 +1,5 @@
+{"owner": "semio-framework-plugin-interpreter", "suffix": "core-laws", "kind": "plain", "testkit": true,
+ "new_root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🧪️tests/🔬️laws/🦀️.rs",
+ "moves": [
+  {"mount_file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🦀️.rs", "module_path": "", "mount_name": "core_laws", "as": "core_laws"}
+ ]}

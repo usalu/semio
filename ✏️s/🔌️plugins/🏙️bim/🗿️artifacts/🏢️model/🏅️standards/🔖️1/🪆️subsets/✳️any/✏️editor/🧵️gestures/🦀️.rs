@@ -7,48 +7,28 @@
 //! `transform`, `split`), `typed` (the keyboard twin of the pointer: typed points and, through `run_cursor`, the arrow-key cursor), `overlay` (marks to canvas records). This node owns the registry of tools, the owner and `run` and `run_typed`, the entries the
 //! pointer and keyboard commands call.
 
-#[path = "📏️annotate/🦀️.rs"]
-pub mod annotate;
-#[path = "🧩️area/🦀️.rs"]
-pub mod area;
-#[path = "🧱️chain/🦀️.rs"]
-pub mod chain;
-#[path = "🏗️frame/🦀️.rs"]
-pub mod frame;
-#[path = "🦴️structure/🦀️.rs"]
-pub mod structure;
-#[path = "🪟️opening/🦀️.rs"]
-pub mod opening;
-#[path = "🫧️overlay/🦀️.rs"]
-pub mod overlay;
-#[path = "📐️plane/🦀️.rs"]
-pub mod plane;
-#[path = "📍️point/🦀️.rs"]
-pub mod point;
-#[path = "🎯️select/🦀️.rs"]
-pub mod select;
-#[path = "🧭️session/🦀️.rs"]
-pub mod session;
-#[path = "🧲️snap/🦀️.rs"]
-pub mod snap;
-#[path = "🔪️split/🦀️.rs"]
-pub mod split;
-#[path = "🧷️sweep/🦀️.rs"]
-pub mod sweep;
-#[path = "🚚️transform/🦀️.rs"]
-pub mod transform;
-#[path = "👯️duplicate/🦀️.rs"]
-pub mod duplicate;
-#[path = "✂️reshape/🦀️.rs"]
-pub mod reshape;
-#[path = "⌨️typed/🦀️.rs"]
-pub mod typed;
-#[path = "🪑️place/🦀️.rs"]
-pub mod place;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::annotate;
+pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::area;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::chain;
+pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::frame;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::structure;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::opening;
+pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::overlay;
+pub use semio_s_artifact_bim_model_storey_levels::editor::bim::gestures::plane;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::point;
+pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::select;
+pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::session;
+pub use semio_s_artifact_bim_model_dispatch_context::editor::bim::gestures::snap;
+pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::split;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::sweep;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::transform;
+pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::duplicate;
+pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::reshape;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::typed;
+pub use semio_s_artifact_bim_model_move_storey::editor::bim::gestures::place;
 #[path = "🌀️route/🦀️.rs"]
 pub mod route;
-#[path = "🖼️viewports/🦀️.rs"]
-pub mod viewports;
+pub use semio_s_artifact_bim_model_coordination::editor::bim::gestures::viewports;
 
 use crate::editor::bim::gestures::plane::P;
 use crate::editor::bim::gestures::session::{GestureKey, Modifiers, Pointer, Step, Surface, Tool, ToolContext, ToolEvent};
@@ -456,10 +436,6 @@ pub fn run_keyed(ctx: &mut BimDispatchCtx, doc: &ArtifactView<'_, ModelSnapshot>
 }
 //#endregion 🔖️Run
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🧷️app/🦀️.rs"]
-mod app_tests;
+
+

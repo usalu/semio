@@ -2,6 +2,10 @@
 use super::*;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(any(test, feature = "testkit"))]
+pub struct ComponentSurfaceCloseToken(#[doc(hidden)] pub u64);
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[cfg(not(any(test, feature = "testkit")))]
 pub struct ComponentSurfaceCloseToken(u64);
 
 #[derive(Clone)]

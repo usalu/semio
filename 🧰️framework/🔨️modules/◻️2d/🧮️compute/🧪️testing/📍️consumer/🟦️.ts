@@ -10,8 +10,8 @@ import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 export function verifyComputeConsumer(descriptor:ComputeConsumerDescriptor,access:ComputeConsumerAccess):{directDependency:true;bindings:readonly ComputeFamilyName[]}{
  if(validateJsonSchemaSubset(schema,descriptor).length)throw Error("Invalid compute consumer descriptor");
  const source=access.read(descriptor.source);
- for(const name of descriptor.bindings)if(!source.includes("semio_framework_2d::compute::"+name))throw Error("Missing compute binding "+name);
+ for(const name of descriptor.bindings)if(!source.includes("semio_framework_2d_compute::"+name))throw Error("Missing compute binding "+name);
  if(/\b(?:store|semio_framework_os_kernel)::Engine(?:Handles|Cache|Key|Handle|Fault|Rep)?\b|\bKernelEngineHandle\b/.test(source))throw Error("Foreign compute facade");
- if(!access.dependencies(access.read(descriptor.manifest)).includes("semio-framework-2d"))throw Error("Missing direct compute dependency");
+ if(!access.dependencies(access.read(descriptor.manifest)).includes("semio-framework-2d-compute"))throw Error("Missing direct compute dependency");
  return {directDependency:true,bindings:[...descriptor.bindings]};
 }

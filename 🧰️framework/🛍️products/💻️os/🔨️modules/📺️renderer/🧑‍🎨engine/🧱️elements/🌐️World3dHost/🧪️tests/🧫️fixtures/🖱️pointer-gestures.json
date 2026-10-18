@@ -402,7 +402,7 @@
     "cameraArgsBuilder": "worldCameraSetCameraDispatchArgs",
     "targetsBuilder": "world3dInstanceInteractionTargets",
     "selectionTargetsAreASet": "const targets = [...new Set(ids)].map((id) => ({ granularity, id }));",
-    "mergeVocabularyFixture": "🧰️framework/🔨️modules/🕹️interaction/🧫️fixtures/🎯️merge-modes.json",
+    "mergeVocabularyFixture": "🧰️framework/🔨️modules/🕹️interaction/🧪️tests/🧫️fixtures/🎯️merge-modes.json",
     "mergeIsNotTranslated": "export function world3dSelectionActionArgs(domainId: string, granularity: string, ids: readonly string[], merge: MergeMode) {",
     "deletedMergeBuilders": [
       "instanceMergeArg",

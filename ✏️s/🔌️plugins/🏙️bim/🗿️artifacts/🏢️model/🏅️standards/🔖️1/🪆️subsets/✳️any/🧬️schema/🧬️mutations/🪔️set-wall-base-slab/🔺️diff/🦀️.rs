@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `SetWallBaseSlab`: a one-field wall patch assigning (or clearing) the slab the base of the wall is attached to. The slab must exist in the building of the wall and the chain of attach references must
 //! not loop (authored reads only); restating the current base slab is a no-op. The resolved base height follows by inference.
 
-use super::super::wall_depth::attach_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::wall_depth::attach_flaw;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::Flaw;
-use super::SetWallBaseSlab;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_slab::SetWallBaseSlab;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

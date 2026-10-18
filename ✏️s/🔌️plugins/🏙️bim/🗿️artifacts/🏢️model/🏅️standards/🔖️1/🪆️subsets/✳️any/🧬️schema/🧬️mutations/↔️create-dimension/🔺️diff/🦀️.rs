@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `CreateDimension`: one created dimension entry. The id is free in every collection. The storey and the style must exist, there are at least two anchors that name existing elements or finite points, the direction and offset are finite and a lock is a positive length.
 //! Everything the dimension shows is inferred from the current geometry of what it names, never stored.
 
-use super::super::annotating;
-use super::super::elements;
-use super::CreateDimension;
+use crate::standards::v1::subsets::any::schema::mutations::annotating;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_dimension::CreateDimension;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

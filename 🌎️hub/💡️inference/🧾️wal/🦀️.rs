@@ -191,11 +191,11 @@ struct VerifierState {
     active: AtomicUsize,
     close_steps: AtomicU64,
     #[cfg(any(test, feature = "testkit"))]
-    replay_gate: Option<Arc<tokio::sync::Semaphore>>,
+    pub replay_gate: Option<Arc<tokio::sync::Semaphore>>,
     #[cfg(any(test, feature = "testkit"))]
-    hashing_gate: Option<Arc<tokio::sync::Semaphore>>,
+    pub hashing_gate: Option<Arc<tokio::sync::Semaphore>>,
     #[cfg(any(test, feature = "testkit"))]
-    hashing_steps: AtomicU64,
+    pub hashing_steps: AtomicU64,
 }
 
 pub struct InferenceWalVerifierV1 {

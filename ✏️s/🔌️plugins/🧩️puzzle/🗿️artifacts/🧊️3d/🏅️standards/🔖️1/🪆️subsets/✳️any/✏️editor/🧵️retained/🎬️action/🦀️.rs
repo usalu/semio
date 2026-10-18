@@ -34,6 +34,7 @@ use {semio_framework_pack_json::object, semio_framework_pack_json::to_string, se
 use std::collections::HashSet;
 use semio_s_artifact_puzzle_3d_model::puzzle3d_vortex_full_id;
 use {semio_s_artifact_puzzle_3d_retained_document::PUZZLE3D_RELOCATE_VORTICES_PER_OBJECT, semio_s_artifact_puzzle_3d_editor_session as session};
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 /// 🧯️ ONE bounded, localized notice as a terminal `Emit` — how a retained placement work whose gesture
 /// produced nothing tells the user WHY, instead of the bare `Emit::default()` every refusal path used

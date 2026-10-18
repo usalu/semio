@@ -1,19 +1,22 @@
 //! ↩️ Inverse of `SetSpaceConditions`: `RemoveSpaceConditions` when the forward creates the record, else an absolute `SetSpaceConditions` restoring the base value of exactly the fields the forward really changes.
 
-use super::SetSpaceConditions;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
-use super::super::remove_space_conditions::RemoveSpaceConditions;
+use crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions;
 
-pub fn inverse(payload: &SetSpaceConditions, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetSpaceConditions, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions> + From<crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions>,
+{
     if !base.spaces.contains_key(&payload.id) {
         return Vec::new();
     }
     let Some(record) = base.space_conditions.get(&payload.id) else {
-        return vec![ModelMutation::RemoveSpaceConditions(RemoveSpaceConditions { id: payload.id.clone() })];
+        return vec![Op::from(RemoveSpaceConditions { id: payload.id.clone() })];
     };
     let restore = payload.patch().minimal(record).restoring(record);
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetSpaceConditions(SetSpaceConditions::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetSpaceConditions::from_patch(payload.id.clone(), restore))]
 }

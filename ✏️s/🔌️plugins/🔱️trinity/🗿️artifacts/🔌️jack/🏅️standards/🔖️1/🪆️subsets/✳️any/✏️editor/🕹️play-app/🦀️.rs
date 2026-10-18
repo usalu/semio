@@ -1,6 +1,7 @@
 //! 🕹️ Jack play app: the `TrinityJackPlayApp` editor and its `ArtifactEditor` implementation.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::jack::commands;
 
 //#region 🔖️TrinityJackPlayApp

@@ -1,8 +1,26 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::Ramp;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::point;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::vertical_of;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::{corner_join, BulgeSeg};
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::Vertex as Corner;
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::cross;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::*;
 use crate::standards::v1::subsets::any::io::text::inferences::ramp_runs::table_json;
 use crate::standards::v1::subsets::any::schema::snapshot::{TopConstraint, Vertex};
 use semio_framework_geometry::loops;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_ramp_runs;
+use semio_framework_test_fixtures::fixture_text;
 
 const EPS: f64 = 1e-9;
 
@@ -179,15 +197,15 @@ fn the_run_table_is_canonical_json_of_every_ramp() {
     assert!((table["rp"]["run_length"].as_f64().expect("a number") - 7.0).abs() < 1e-9);
 }
 
-const RAMPS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
-const RAMPS_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/💡️inference/🛝️ramp-runs/🔣️.json");
+static RAMPS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json"));
+static RAMPS_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/💡️inference/🛝️ramp-runs/🔣️.json"));
 
 fn ramps() -> ModelSnapshot {
-    semio_framework_pack_json::from_json_str(RAMPS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the ramps model decodes")
+    semio_framework_pack_json::from_json_str((*RAMPS), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the ramps model decodes")
 }
 
 fn with_hosted_railings() -> ModelSnapshot {
-    let mut document: serde_json::Value = serde_json::from_str(RAMPS).expect("json");
+    let mut document: serde_json::Value = serde_json::from_str((*RAMPS)).expect("json");
     let railing = |host: &str| {
         serde_json::json!({
             "storey": "st-ground", "path": [], "height": 1.0, "post_spacing": 1.2,
@@ -203,7 +221,7 @@ fn with_hosted_railings() -> ModelSnapshot {
 fn the_subject_reproduces_the_third_party_oracle_table() {
     let runs = compute_ramp_runs(&ramps());
     assert!(!runs.contains_key("r-orphan"), "a ramp on a missing storey has no run");
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems(RAMPS_TABLE, &table_json(&runs));
+    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*RAMPS_TABLE), &table_json(&runs));
     assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
 }
 

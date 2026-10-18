@@ -155,6 +155,23 @@
     "terminal-failure",
     "cohort-limit",
     "sibling-drain",
-    "path-code-units"
-  ]
+    "path-code-units",
+    "terminal-stream",
+    "result-undefined",
+    "result-frozen",
+    "result-child-drain",
+    "result-missing"
+  ],
+  "terminalResults": {
+    "required": true,
+    "exactlyOnce": true,
+    "beforeCohortSettlement": true,
+    "authoredResultOrder": true,
+    "genuineChild": true,
+    "acceptedChildDrain": true
+  },
+  "fixtureOutput": {
+    "fileBytes": 2048,
+    "cohortFileBytes": 12288
+  }
 }

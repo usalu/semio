@@ -61,7 +61,7 @@ use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowEngagementInput;
 use semio_framework_plugin::WindowEngagementStatus;
 use pack::snapshot::ArtifactPack;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use std::collections::HashMap;
 use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::DRAWING_PLAY_BODY_COMPOSITE;
 use semio_s_artifact_draw_drawing_editor_tool::modes::edit::windows::canvas::DRAWING_PLAY_WINDOW_CANVAS;
@@ -69,6 +69,7 @@ use semio_s_artifact_draw_drawing_editor_interaction::panels::catalogue::DRAWING
 use semio_s_artifact_draw_drawing_editor_interaction::panels::layers::DRAWING_PLAY_BODY_LAYERS;
 use semio_s_artifact_draw_drawing_editor_interaction::panels::properties::DRAWING_PLAY_BODY_PROPERTIES;
 use semio_s_artifact_draw_drawing_editor::{drawing_io};
+use semio_s_artifact_draw_drawing_editor_interaction::DRAWING_POINT_GRANULARITY;
 
 /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector-bound vocabulary
 /// that is dispatched by the canvas/panels, never surfaced as a standalone command palette entry.

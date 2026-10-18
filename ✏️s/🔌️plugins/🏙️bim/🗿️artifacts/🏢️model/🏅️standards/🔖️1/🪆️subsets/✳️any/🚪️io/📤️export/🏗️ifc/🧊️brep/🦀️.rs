@@ -77,6 +77,4 @@ pub fn brep_definition(ifc: &mut Ifc, mesh: &TriMesh) -> Option<u64> {
 }
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

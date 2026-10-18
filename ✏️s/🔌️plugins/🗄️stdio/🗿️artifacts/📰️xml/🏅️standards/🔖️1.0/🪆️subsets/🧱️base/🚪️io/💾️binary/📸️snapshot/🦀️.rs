@@ -59,7 +59,7 @@ use crate::XmlSnapshot;
 
 use super::node_wire_codec::{enc_xml_node_bin, write_str_lp, enc_declaration_bin, enc_doctype_bin, enc_prolog_bin, dec_xml_node_bin, read_str_lp, dec_declaration_bin, dec_doctype_bin, dec_prolog_bin};
 
-pub(crate) fn encode_snapshot_binary(snapshot: &XmlSnapshot, output: &mut Vec<u8>) {
+pub fn encode_snapshot_binary(snapshot: &XmlSnapshot, output: &mut Vec<u8>) {
     write_str_lp(output, &snapshot.schema);
     output.push(u8::from(snapshot.doc.root.is_some()));
     if let Some(root) = &snapshot.doc.root {
@@ -77,7 +77,7 @@ pub(crate) fn encode_snapshot_binary(snapshot: &XmlSnapshot, output: &mut Vec<u8
     enc_prolog_bin(&snapshot.doc.epilog, output);
 }
 
-pub(crate) fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
+pub fn decode_snapshot_binary(reader: &mut store::ByteReader<'_>) -> Result<XmlSnapshot, String> {
     let schema = read_str_lp(reader)?;
     let root = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_xml_node_bin(reader)?) } else { None };
     let doctype = if reader.read_u8().map_err(|error| error.to_string())? != 0 { Some(dec_doctype_bin(reader)?) } else { None };
@@ -95,7 +95,7 @@ mod node_wire_codec {
 use crate::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
+pub fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, prolog.len() as u64);
     for node in prolog {
         enc_xml_node_bin(node, out);
@@ -103,7 +103,7 @@ pub(crate) fn enc_prolog_bin(prolog: &Vec<XmlNode>, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
+pub fn dec_prolog_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<XmlNode>, String> {
     let count = reader.read_varint_u64().map_err(|error| error.to_string())? as usize;
     (0..count).map(|_| dec_xml_node_bin(reader)).collect()
 }
@@ -125,17 +125,17 @@ pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
+pub fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, doctype.prolog_position);
     write_str_lp(out, &doctype.name);
     match &doctype.external_id {
@@ -164,7 +164,7 @@ pub(crate) fn enc_doctype_bin(doctype: &XmlDoctype, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
+pub fn dec_doctype_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDoctype, String> {
     let prolog_position = reader.read_varint_u64().map_err(|error| error.to_string())?;
     let name = read_str_lp(reader)?;
     let external_id = match reader.read_u8().map_err(|error| error.to_string())? {
@@ -208,7 +208,7 @@ pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
+pub fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
     write_str_lp(out, &d.version);
     out.push(if d.encoding.is_some() { 1 } else { 0 });
     if let Some(encoding) = &d.encoding {
@@ -222,7 +222,7 @@ pub(crate) fn enc_declaration_bin(d: &XmlDeclaration, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDeclaration, String> {
+pub fn dec_declaration_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlDeclaration, String> {
     let version = read_str_lp(reader)?;
     let encoding = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };
     let standalone = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(reader.read_u8().map_err(|e| e.to_string())? != 0) } else { None };
@@ -247,7 +247,7 @@ pub fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
+pub fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {

@@ -49,11 +49,14 @@ describe("scope-safe Shell presence", () => {
   it("validates the neutral two-space fixture and independent runtime-key derivation", () => {
     const ajv = new Ajv({ strict: true, allErrors: true }).addSchema(presenceSchema);
     const binding = ajv.compile({ $ref: `${presenceSchema.$id}#/$defs/ScopedPresenceBindingV1` });
-    const close = ajv.compile({ $ref: `${presenceSchema.$id}#/$defs/ScopedPresenceCloseV1` });
     const rejection = ajv.compile({ $ref: `${presenceSchema.$id}#/$defs/ScopedPresenceRejectionV1` });
     const validate = (value: typeof fixture): boolean =>
-      value.cases.every((row) => binding(row)) && close(value.close) && value.rejected.every((row) => rejection(row));
-    expect(validate(fixture), JSON.stringify([binding.errors, close.errors, rejection.errors])).toBe(true);
+      value.cases.every((row) => binding(row)) && value.rejected.every((row) => rejection(row));
+    expect(validate(fixture), JSON.stringify([binding.errors, rejection.errors])).toBe(true);
+    const keys = fixture.cases.map((row) => row.runtimeKey);
+    expect(keys).toContain(fixture.close.clearsRuntimeKey);
+    expect(keys).toContain(fixture.close.preservesRuntimeKey);
+    expect(fixture.close.clearsRuntimeKey).not.toBe(fixture.close.preservesRuntimeKey);
     expect(fixture.cases.map((row) => documentRuntimeKeyV1({ kind: "hub", dataClass: "persistedShared", ...row.scope }))).toEqual(fixture.cases.map((row) => row.runtimeKey));
     expect(fixture.routes).toEqual(fixture.cases.map((row) => `actor://${row.runtimeKey}`));
   });

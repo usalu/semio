@@ -1,10 +1,11 @@
 //! 🗺️ The plan and ceiling plan of a view: the `plan-linework` of its storey cut at the height the view resolves, looked at from above (a plan) or from below (a ceiling plan, which draws what lies above the
 //! cut as projection and what lies below it dashed), then filtered by the categories, phase and detail level of the view and cropped to its crop rectangle.
 
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{plan_at, Inputs, PlanLinework, PlanStyle, PlanVertex, Sheet};
-use super::clip::Rect;
-use super::filters::{crop_plan, lets_through};
-use super::ViewLinework;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::clip::Rect;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::filters::{crop_plan, lets_through};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use crate::standards::v1::subsets::any::schema::snapshot::{view_cut_height, ModelSnapshot, View, ViewKind};
 use semio_framework_geometry::Point;
 

@@ -1,0 +1,10 @@
+import snapshot from "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🧬️mutations/📋️register-row/🌱️create/👥️stakeholder-creates-a/📸️snapshot/➡️after/🔣️.json";
+import { programArtifactFromJson } from "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🔣️json/🟦️.ts";
+const { programSnapshotToSqliteDatabase, programSnapshotFromSqliteDatabase } = await import(process.env.ARCH_LEAF!);
+const j = (v: unknown) => JSON.stringify(v, (_k, x) => typeof x === "bigint" ? x.toString() + "n" : x && typeof x === "object" && !Array.isArray(x) ? Object.fromEntries(Object.entries(x).sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0)) : x);
+const expected = programArtifactFromJson(snapshot as any);
+const db = await programSnapshotToSqliteDatabase(expected);
+const actual = await programSnapshotFromSqliteDatabase(db);
+if (j(actual) !== j(expected)) throw new Error("architect sqlite round trip differs");
+console.log(new Bun.CryptoHasher("sha256").update(j(db)).digest("hex"));
+console.log(JSON.stringify({ tables: db.tables.length, rows: db.tables.reduce((n: number, t: any) => n + t.rows.length, 0), roundTrip: true }));

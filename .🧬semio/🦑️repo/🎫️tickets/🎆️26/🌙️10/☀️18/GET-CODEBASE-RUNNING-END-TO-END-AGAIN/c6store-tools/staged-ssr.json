@@ -1,0 +1,13 @@
+{
+ "tag": "ssr",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🦀️.rs",
+ "folders": [
+  "🧰️supersede-replay-harness-fixtures",
+  "🧫️supersede-corpus-and-interior-supersede-laws",
+  "🔂️replica-convergence-cancellation-and-prefix-ring-laws",
+  "🪢️fold-site-hydration-and-oversize-message-laws",
+  "🌲️trunk-history-shape-and-command-decode-laws",
+  "↩️retraction-and-bounded-history-read-laws"
+ ]
+}

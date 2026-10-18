@@ -4,7 +4,7 @@
 //! and every other `{name}` a number of `Diagnostic::values`. The key of a code is `bim.diagnostic.<slug>`; locales are `en` and `de`, there
 //! is no default locale.
 
-use super::{Diagnostic, DiagnosticCode, Severity};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode, Severity};
 
 /// 🌐️ The locales of the diagnostic texts, English first.
 pub const LOCALES: [&str; 2] = ["en", "de"];

@@ -10,7 +10,7 @@ fn delta(before:RetainedCloneProgress,after:RetainedCloneProgress)->RetainedClon
 fn remaining(stock:RetainedCloneGrant,spent:RetainedCloneProgress)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:stock.maximum_items-spent.copied_items,maximum_copy_bytes:stock.maximum_copy_bytes-spent.copied_bytes,maximum_capacity_bytes:stock.maximum_capacity_bytes-spent.retained_capacity_bytes,maximum_release_bytes:stock.maximum_release_bytes-spent.released_bytes,maximum_depth:stock.maximum_depth}}
 #[test]
 fn original_browser_nonempty_output_same_media_system_denials_and_full_paid_close(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let stock:RetainedCloneGrant=serde_json::from_value(law["caller"]["stock"].clone()).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🌐️browser-worker/📤️output/🔣️.json")).unwrap();let stock:RetainedCloneGrant=serde_json::from_value(law["caller"]["stock"].clone()).unwrap();
  for copy in [1,3,64]{
   ORIGINAL_CLOCK.with(|clock|clock.set(law["caller"]["clockUs"].as_u64().unwrap()));let(operation,generation)=(OperationId(law["caller"]["operation"].as_u64().unwrap()),Generation(law["caller"]["generation"].as_u64().unwrap()));let mut recipient=RetainedCloneProgress::default();let mut born=0;let mut freed=0;
   let((cancel,progress),heap)=observe(||CancelToken::admit_root(remaining(stock,recipient)).unwrap().unwrap());recipient=recipient.checked_add(progress).unwrap();born+=heap.requested_bytes;freed+=heap.released_bytes;

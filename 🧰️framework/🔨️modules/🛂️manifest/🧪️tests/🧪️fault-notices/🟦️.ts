@@ -7,7 +7,8 @@ import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 import { toolRunSchema } from "@semio-tech/framework-tool-run-ts/testing/fixtures";
 import { FRAMEWORK_FAULT_NOTICE_LABELS, faultNotice, HISTORY_NOTICE_LABELS } from "@semio-tech/framework-kernel/notice-labels";
 import fixture from "../🧫️fixtures/🧫️fault-notices/🔣️.json";
-import { SHELL_LOCALES, SHELL_TERMINOLOGIES, faultNoticePlaceholders, fillFaultNotice, isFaultNoticeCode, validateFaultNotices, type FaultNoticeDefinition, type FaultNoticeError, type ShellLocale, type ShellTerminology } from "../../🟦️.ts";
+import { SHELL_LOCALES, SHELL_TERMINOLOGIES, type ShellLocale, type ShellTerminology } from "../../🟦️.ts";
+import { faultNoticePlaceholders, fillFaultNotice, isFaultNoticeCode, validateFaultNotices, type FaultNoticeDefinition, type FaultNoticeError } from "../../🔁️host-effects-choices-and-fault-notices/🟦️.ts";
 
 const MANIFEST_SCHEMA = "https://json.schemas.assets.semio-tech.com/framework/manifest/schema.json";
 const ajv = semioSchemaAjvV1({ allErrors: true });

@@ -120,9 +120,11 @@ mod bridge {
 //#endregion 🔖️Bridge
 
 //#region 🔖️Source laws
+const CONTRACT_SOURCE: &str = concat!(include_str!("../../🏷️ids-command-and-messages/🦀️.rs"), include_str!("../../🗺️pathmap-diff-and-bridge/🦀️.rs"), include_str!("../../⚔️conflict-records/🦀️.rs"), include_str!("../../🧾️receipts-and-checkpoints/🦀️.rs"), include_str!("../../🛡️durable-group-recovery/🦀️.rs"), include_str!("../../🦀️.rs"));
+
 #[test]
 fn retained_retry_owners_release_their_guard_before_resubmission() {
-    for (name, source) in [("db_artifact_contract", include_str!("../../🦀️.rs"))] {
+    for (name, source) in [("db_artifact_contract", CONTRACT_SOURCE)] {
         let lines: Vec<&str> = source.lines().collect();
         for (index, line) in lines.iter().enumerate() {
             let trimmed = line.trim_start().trim_start_matches("} else ");
@@ -144,7 +146,7 @@ fn retained_retry_owners_release_their_guard_before_resubmission() {
 
 #[test]
 fn durable_group_witness_api_exposes_store_owned_recovery_without_record_access() {
-    let source = include_str!("../../🦀️.rs");
+    let source = CONTRACT_SOURCE;
     let witness_api = &source[source.find("pub struct ArtifactCommittedDurableGroupDecisionV1").unwrap()..source.find("pub async fn committed_durable_group_decision_from_transaction").unwrap()];
     assert!(witness_api.contains("into_store_owned_recovery") && witness_api.contains("take_rejected_terminal"));
     assert!(!witness_api.contains("fn record(&self)") && !witness_api.contains("fn into_record("));

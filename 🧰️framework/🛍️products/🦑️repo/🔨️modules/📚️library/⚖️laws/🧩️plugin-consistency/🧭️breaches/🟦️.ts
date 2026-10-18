@@ -1,7 +1,8 @@
 /** 🧭️ Wave 4 plugin consistency policy: the full breach run over every rule.
  * @see 📜️script.ts
  */
-import { getWorkspaceRoot, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { policyArtifactSchemaBreaches } from "../../../🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts";
 import { policyAppSchemaBreaches } from "../../../🧬️schema/🗺️surface/⚖️laws/📋️aggregate/🟦️.ts";
 import { policyInferenceFamilyBreaches } from "../../../🧬️schema/💡️inference/⚖️laws/📋️aggregate/🟦️.ts";
@@ -16,12 +17,15 @@ import { policyArtifactAppLawDelegateBreaches, policyLabelsStructBreaches, polic
 import { policyCompositionBreaches, policyDissolvedKernelsBreaches } from "../🧊️dissolved-kernels/🟦️.ts";
 import { policyDiscoverCrateDirs } from "../🏛️foundation/🟦️.ts";
 import { policyContributionTargetBreaches, policyDeadExampleLeafBreaches, policyHandcraftedSpecP3Breaches, policyMutationArtifactEngineBreaches, policyPluginDependencyParityBreaches } from "../✍️handcrafted-mutation/🟦️.ts";
-import { policyMutationOutcomeMergePolicyBreaches } from "../🎯️mutation-outcome/🟦️.ts";
+import { policyMutationOutcomeMergePolicyBreaches } from "../🎯️mutation-outcome/📐️merge-policy-law/🟦️.ts";
 import { policyApaBreaches } from "../🔌️plugin-architecture/🟦️.ts";
 import { policySchemaOverhaulPCBreaches } from "../📐️schema-overhaul-pc/🟦️.ts";
 import { policySchemaOverhaulS2Breaches, policySniffRealityBreaches } from "../🧬️schema-overhaul-s2/🟦️.ts";
 import { policyContributedSurfaceTargetBreaches, policyOsConfigShapeBreaches, policySubsetConformanceBreaches, policySubsetSurfaceCompletenessBreaches, policyViewerPurityBreaches } from "../🪆️subset-conformance/🟦️.ts";
-import { policyBannedNameStemBreaches, policyComponentFileBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginBuilderBreaches, policyPluginRootShapeBreaches, policySemioArtifactExamplesBreaches, policySprNamingBreaches, policyTaxonomyBarrelShapeBreaches, policyTaxonomyDirsBreaches, policyTaxonomyLibShapeBreaches, policyWindowCompletenessBreaches } from "../🗺️taxonomy-shape/🟦️.ts";
+import { policyBannedNameStemBreaches, policyEmojiPrefixBreaches, policyPluginBuilderBreaches, policyPluginRootShapeBreaches, policySprNamingBreaches } from "../🗺️taxonomy-shape/🏷️naming/🟦️.ts";
+import { policyComponentFileBreaches, policySemioArtifactExamplesBreaches } from "../🗺️taxonomy-shape/📚️examples/🟦️.ts";
+import { policyModeCompletenessBreaches, policyTaxonomyDirsBreaches, policyWindowCompletenessBreaches } from "../🗺️taxonomy-shape/🟦️.ts";
+import { policyTaxonomyBarrelShapeBreaches, policyTaxonomyLibShapeBreaches } from "../🗺️taxonomy-shape/🧱️lib-and-barrel-shape/🟦️.ts";
 
 //#region 🔖️Policy
 //#region 🔖️PolicyExport

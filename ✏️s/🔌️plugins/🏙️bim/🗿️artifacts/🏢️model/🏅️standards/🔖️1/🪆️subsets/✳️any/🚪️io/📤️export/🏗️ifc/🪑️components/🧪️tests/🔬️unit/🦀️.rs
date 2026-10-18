@@ -1,4 +1,24 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::brep::{body_kind, mesh_item};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::data::{define, property_set};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::writer::label;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::writer::{en, opt_text, refs, unset, V};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::context::{Export, Quantity};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::components::{overrides_of, ComponentPlacement};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, FamilyParameter, FamilySolid};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::TriMesh;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::io::export::ifc::components::*;
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{components, count, document, document_in, quantity, rows, string, tags, target};
 use crate::standards::v1::subsets::any::io::export::ifc::Schema;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -173,7 +193,7 @@ fn a_component_of_a_missing_family_is_noted_and_not_written() {
     assert!(!tags(&document, "IFCBUILDINGELEMENTPROXY").contains(&"cmp-pillar".to_string()));
 }
 
-const COMPONENTS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🏗️ifc/🪑️components");
+const COMPONENTS_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🪑️components");
 
 fn read_components(name: &str) -> Vec<u8> {
     std::fs::read(format!("{COMPONENTS_DIR}/{name}")).unwrap_or_else(|error| panic!("{name}: {error}. Run the test with BIM_BLESS=1 to write the file, then `python 🐍️.py write` of the export case."))

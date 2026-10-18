@@ -1,7 +1,8 @@
 //! 🧷️ The wall depth rows of the entity table: the wall sweep kind (a profile run along one face of a wall) with its pickers and its create default, the base slab and attached top rows of a wall (the pickers of the
 //! slab its base follows and of the roof, slab or ceiling its top follows) and the reveal rows of an opening. Every write is a sparse `set-wall-sweep`, `set-wall-base-slab`, `set-wall-top` or `set-opening` mutation.
 
-use super::{first, number, parse_number, parse_optional_number, parse_profile, parse_text, partial, profile_text, ramps, rename_element, variant, zoning, Created, FieldRow};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::editor::bim::entities::{first, number, parse_number, parse_optional_number, parse_profile, parse_text, partial, profile_text, ramps, rename_element, variant, zoning, Created, FieldRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep;
 use crate::standards::v1::subsets::any::schema::mutations::set_wall_base_slab::SetWallBaseSlab;
@@ -128,6 +129,4 @@ pub fn create_wall_sweep(snapshot: &ModelSnapshot, id: &str, parent: &str, name:
 }
 //#endregion 🔖️Sweep
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

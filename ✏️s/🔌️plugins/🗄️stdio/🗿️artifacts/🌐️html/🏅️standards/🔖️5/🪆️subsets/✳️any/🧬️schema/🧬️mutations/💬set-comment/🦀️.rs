@@ -1,6 +1,8 @@
 //! 💬️ `set-comment` — authored as its own mutation leaf. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{NodePath, HtmlSnapshot, node_at, HtmlNode};
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff::{diff_at_path, HtmlNodeDiff};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

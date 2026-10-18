@@ -168,7 +168,7 @@ pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
 /// `ops_grammar_conformance_law`/`protocol_walk_law`.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
         SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::DeleteVertex(semio_s_artifact_stdio_semio_brep::schema::mutations::delete_vertex::DeleteVertex { id: "v-absent".into() }) }),
         SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::DeleteMesh(semio_s_artifact_stdio_semio_mesh::schema::mutations::delete_mesh::DeleteMesh { id: "mesh-absent".into() }) }),

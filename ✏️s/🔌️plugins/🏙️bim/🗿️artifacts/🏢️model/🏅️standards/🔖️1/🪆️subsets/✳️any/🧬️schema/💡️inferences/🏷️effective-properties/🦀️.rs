@@ -235,7 +235,7 @@ pub fn instances_of(snapshot: &ModelSnapshot, type_id: &str) -> Vec<String> {
 //#endregion 🔖️Holders
 
 //#region 🔖️Rules
-fn finding(template: &str, set: &str, property: &str, issue: Issue) -> Finding {
+pub fn finding(template: &str, set: &str, property: &str, issue: Issue) -> Finding {
     Finding { template: template.to_string(), set: set.to_string(), property: property.to_string(), issue }
 }
 
@@ -413,6 +413,4 @@ pub fn table_json(rows: &BTreeMap<String, EffectiveProperties>) -> String {
 }
 //#endregion 🔖️Projection
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

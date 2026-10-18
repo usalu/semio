@@ -1,116 +1,23 @@
 #!/usr/bin/env bun
-import{createIssuedResourceControlV1}from"../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
-import{scriptCompilerAdmissionControlV1 as exactCargoCallerControlV1}from"../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
-import { typecheckRepositoryProjectV1 } from "../../🏗️build/🟦️typescript/🟦️.ts";
-import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️laws/🟦️.ts";
-import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
-/** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
-import { join, resolve } from "node:path";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { artifactIoArchitectureBreaches } from "../../🚪️io/🏛️architecture/🟦️.ts";
-import { dependencyDirectionEdges, dependencyDirectionSourceInventory, dependencyDirectionStrictRules, type DependencyDirectionGraphScope } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
-import { loadDependencyDirectionPolicy } from "../../🕸️dependencies/🧭️direction/🚀️bootstrap/🟦️.ts";
+import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import { receiveScriptProcessInvocation, BundleScript, ScriptRouter, scriptInvocationBudget, runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { join } from "node:path";
+import { mkdirSync } from "node:fs";
 import { verifyRustSourceDirection } from "../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 import { verifyCargoDependencyDirection } from "../../🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts";
 import { runRepositoryCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
-import {buildBudgetMs} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { devToolingEnv, runBunx } from "./🟦️.ts";
-import { runRepositoryExactCargoLaws, runRepositoryTestCommand, configuredRepositoryCargoPreparationPolicyV1 } from "../../🟦️.ts";
-import { BundleScript, ScriptRouter, scriptInvocationBudget, checkScriptInvocation, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { runRepositoryTestCommand } from "../../🧪️testing/🎛️repository-command/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { runTransactionV2 } from "../../🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts";
 import { GoTestScript } from "../../🧪️execution/🐹️go/🟦️.ts";
 import { WorkspacePublicationScript } from "../../🗂️workspaces/🏃️execution/🟦️.ts";
-
-/** 🪁️ Type-checks every `🦑️repo` product TypeScript source.
- *
- * Two programs, because the coordinator is a Next.js application: `next-env.d.ts` pulls in Next's global
- * augmentation of `NodeJS.ProcessEnv` (which makes `NODE_ENV` required), so compiling it together with the
- * repository tooling would reject every `env: { … }` literal the tooling passes to `spawnSync`. The
- * coordinator therefore keeps its own `tsconfig.json` next to its `next.config.ts`, and both are checked. */
-class TypecheckScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "../../../../tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
-    await typecheckRepositoryProjectV1({ workspace: this.repoRoot, invocation: this.invocation, control:createIssuedResourceControlV1(this.invocation,"typecheck:entry",0), cwd: this.root, project: "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000 });
-  }
-}
-
-
-/** 🧱️ Enforces the complete current framework graph without baselines or source-form exemptions. */
-async function verifyDependencyDirection(invocation: ScriptInvocation, repoRoot: string, env: NodeJS.ProcessEnv, sourceRole?: "framework-neutral"): Promise<void> {
-  checkScriptInvocation(invocation);
-  const snapshot = loadDependencyDirectionPolicy(repoRoot, { onProgress: progress => console.log(`[canonical-architecture] policy ${progress.phase}; sources=${progress.sources}`) });
-  const { policy, taxonomy, workspacePackages } = snapshot, rules = dependencyDirectionStrictRules(snapshot);
-  const artifactRoot = env.SEMIO_TEST_ARTIFACT_DIR!;
-  mkdirSync(artifactRoot, { recursive: true });
-  const output = mkdtempSync(join(artifactRoot, "canonical-direction-"));
-  try {
-    const configPath = join(output, "🔣️config.json"), reportPath = join(output, "🔣️graph.json");
-    writeFileSync(configPath, JSON.stringify({ forbidden: rules, options: policy.options }));
-    const areas = (sourceRole ? taxonomy.dependencyDirections.roles[sourceRole]!.ownerPaths : Object.keys(taxonomy.areaLayers)).filter((area) => existsSync(join(repoRoot, area)));
-    const rootSources = sourceRole ? [] : readdirSync(repoRoot, { withFileTypes: true }).filter((entry) => (entry.isFile() || entry.isSymbolicLink()) && /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(entry.name)).map((entry) => entry.name);
-    if (!areas.some((area) => Object.entries(taxonomy.areaLayers).some(([root, layer]) => layer === "framework" && (area === root || area.startsWith(`${root}/`))))) throw new Error("Canonical architecture requires a taxonomy framework area");
-    const scope: DependencyDirectionGraphScope = { workspaceRoots: Object.keys(taxonomy.areaLayers), workspacePackages, excludedPaths: policy.options.exclude.path, nonFollowedPaths: [policy.options.doNotFollow.path], expectedSources: [] };
-    const expectedSources = dependencyDirectionSourceInventory(repoRoot, [...areas, ...rootSources], scope);
-    if (!expectedSources.length) throw new Error("Canonical architecture has no followed TypeScript/JavaScript source inventory");
-    const patternCount = rules.reduce((count, rule) => count + rule.from.path.length + (rule.from.pathNot?.length ?? 0) + rule.to.path.length + (rule.to.pathNot?.length ?? 0), 0);
-    console.log(`[canonical-architecture] resolving present-owner TypeScript/JavaScript dependencies; scope=${sourceRole ?? "all"}; inventoriedSources=${expectedSources.length}; strictRules=${rules.length}; ownershipPatterns=${patternCount}`);
-    await runRepositoryCommand(invocation,process.execPath, [join(repoRoot, "node_modules/dependency-cruiser/bin/dependency-cruise.mjs"), ...areas, ...rootSources, "--config", configPath, "--progress", "performance-log", "--output-type", "json", "--output-to", reportPath], repoRoot, "canonical-architecture", {version:1,maximumElapsedMilliseconds:240000,output:{maximumBytes:134217728,maximumLines:65536}}, { env });
-    const edges = dependencyDirectionEdges(JSON.parse(readFileSync(reportPath, "utf8")), rules, { ...scope, expectedSources });
-    if (edges.length) throw new Error(`Canonical ${sourceRole ?? "all"} TypeScript/JavaScript architecture found ${edges.length} forbidden semantic dependencies:\n${edges.map((edge) => `${edge.rule}: ${edge.from} → ${edge.to}`).join("\n")}`);
-    console.log(`[canonical-architecture] scope=${sourceRole ?? "all"} present-owner TypeScript/JavaScript dependency direction passed`);
-  } catch (error) {
-    const reportPath = join(output, "🔣️graph.json");
-    if (existsSync(reportPath)) writeFileSync(join(artifactRoot, "canonical-direction-failure.json"), readFileSync(reportPath));
-    throw error;
-  } finally { rmSync(output, { recursive: true, force: true }); }
-}
-
-class LintScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments.length === 1 && segments[0] === "artifact-io-ownership") {
-      let checked = 0;
-      const breaches = artifactIoArchitectureBreaches(this.repoRoot, undefined, undefined, { progress: event => { if (++checked % 1000 === 0 || event.phase === "complete") console.log(`[artifact-io-ownership] ${event.phase}; checked=${checked}; ${event.path}`); } });
-      if (breaches.length) throw Error(`Artifact I/O ownership found ${breaches.length} breaches:\n${breaches.map(row => `${row.kind}: ${row.scope}`).join("\n")}`);
-      console.log("[artifact-io-ownership] all artifact schema and native codec ownership boundaries passed");
-      return;
-    }
-    if (segments.length === 1 && ["styling-pixels", "styling-colors"].includes(segments[0]!)) {
-      const { loadWorkspaceStylingSourceV1 } = await import("../../🎨️styling/📇️source/🟦️.ts");
-      const { collectStylingViolationsV1 } = await import("../../../../../../🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts");
-      const kind = segments[0] === "styling-pixels" ? "px" : "color";
-      const violations = collectStylingViolationsV1(loadWorkspaceStylingSourceV1(this.repoRoot), kind);
-      if (violations.length) throw Error(`Workspace styling found ${violations.length} ${kind} violations:\n${violations.map(row => `${row.file}:${row.line} [${row.kind}] ${row.text}`).join("\n")}`);
-      console.log(`[workspace-styling] ${kind}: current source ownership passed`);
-      return;
-    }
-    if (segments.length === 1 && segments[0] === "framework-neutral-product-direction") { await verifyDependencyDirection(this.invocation,this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "framework-neutral-product-direction"), "framework-neutral"); return; }
-    if (segments.length === 1 && segments[0] === "rust-source-direction") { await verifyRustSourceDirection(this.repoRoot, join(repoTestArtifactEnvironment(this.repoRoot, "rust-source-direction").SEMIO_TEST_ARTIFACT_DIR!, "rust-source-direction.json")); return; }
-    if (segments.length === 1 && segments[0] === "cargo-dependency-direction") { await verifyCargoDependencyDirection(this.repoRoot,this.invocation,createIssuedResourceControlV1(this.invocation,"cargo:direction-entry",0)); return; }
-    if (segments.length !== 1 || segments[0] !== "dependency-direction") throw new Error("Expected lint dependency-direction");
-    await verifyDependencyDirection(this.invocation,this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "dependency-direction"));
-  }
-}
-
-/** 🗂️ Produces original reader evidence with caller-owned reporting and interruptible discovery. */
-class SchemaReadInventoryScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments.length && (segments.length !== 2 || segments[0] !== "--report")) throw new Error("Expected schema-read-inventory [--report <path>]");
-    const { inventorySchemaValidationReads } = await import("../../🔍️discovery/🟦️.ts"), controller = new AbortController(), cancel = (): void => controller.abort(new Error("Schema reader inventory cancelled"));
-    process.once("SIGINT", cancel);
-    try {
-      const index = await inventorySchemaValidationReads(this.repoRoot, undefined, { checkCancellation: () => { if (controller.signal.aborted) throw controller.signal.reason; }, onProgress: row => { if (row.completed === 0 || row.completed % 1024 === 0 || row.phase === "inspect" && row.completed === row.total) console.log(`[schema-read-inventory] ${row.phase} completed=${row.completed} total=${row.total ?? "unknown"}`); } });
-      if (segments.length) {
-        const target = resolve(this.repoRoot, segments[1]!);
-        if (target.length > 256 || [...target].length > 256) throw new Error("Schema reader report path exceeds 256 characters");
-        mkdirSync(resolve(target, ".."), { recursive: true }); writeFileSync(target, JSON.stringify(index, null, 2) + "\n");
-      }
-    } finally { process.removeListener("SIGINT", cancel); }
-  }
-}
+import { TypecheckScript } from "../../🎛️commands/🪁️typecheck/🟦️.ts";
+import { LintScript, verifyDependencyDirection } from "../../🎛️commands/🕸️dependency-lint/🟦️.ts";
+import { SchemaReadInventoryScript } from "../../🎛️commands/🗂️schema-read-inventory/🟦️.ts";
+import { RepositoryUiScript } from "../../🎛️commands/🖼️repository-ui/🟦️.ts";
+import { FixtureOwnershipTestScript } from "../../🎛️commands/🧱️fixture-ownership/🟦️.ts";
+import { GeneralExecutionOwnershipScript } from "../../🎛️commands/🗺️general-execution-ownership/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -152,9 +59,9 @@ class TestScript extends BundleScript {
       return;
     }
     if(segments[0]==="nx-owner-arguments-probe"){console.log("[DEBUG] ownerArgumentReceipt="+JSON.stringify({arguments:segments.slice(1),carrierPresent:process.env.SEMIO_OWNER_ARGUMENTS!==undefined}));return;}
-    if(segments.length===1&&segments[0]==="nx-native-child-issuance"){await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-native-child-issuance"),budgetMs:TEST_LEVEL_BUDGET_MS.quick});return;}
+    if(segments.length===1&&segments[0]==="nx-native-child-issuance"){await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/📥️native-caller/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-native-child-issuance"),budgetMs:TEST_LEVEL_BUDGET_MS.quick});return;}
 
-    if(segments.length===1&&segments[0]==="nx-owner-arguments"){const {level}=resolveTestLevel([],"quick");await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-owner-arguments"),budgetMs:TEST_LEVEL_BUDGET_MS[level]});return;}
+    if(segments.length===1&&segments[0]==="nx-owner-arguments"){const {level}=resolveTestLevel([],"quick");await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧪️tests/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"nx-owner-arguments"),budgetMs:TEST_LEVEL_BUDGET_MS[level]});return;}
 
     if (segments.length === 1 && segments[0] === "generator-preview-receiving") {
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts"), "--test-name-pattern", "requires every owned generator|admits only explicit same-project preview|rejects missing, external, and non-canonical generator preview|bounds explicit preview resources|the actual empty General publisher|routes native generator previews|accepts the canonical language-neutral manifest|rejects noncanonical, noisy, unsafe, duplicate, and malformed manifests"], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "generator-preview-receiving"), budgetMs: 300_000 });
@@ -979,68 +886,7 @@ if (segments[0] === "mutation-case-pair") {
   }
 }
 
-/** 🧪️ Supplies repository-owned tool and cache policy to a selected owner's test command. */
-/** 🖱️ Dispatches the actual repository UI owner. */
-class RepositoryUiScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const { runOwnedCommand } = await import("../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts");
-    await runOwnedCommand(process.execPath, [join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🖱️ui/📜️script.ts"), ...segments], this.repoRoot, "repo-ui", 0, { env: process.env });
-  }
-}
-
-/** 🧱️ Verifies portable ownership witnesses before their native contract consumers. */
-class FixtureOwnershipTestScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if(segments.length)throw Error("test-fixture-ownership accepts no arguments");
-    await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🧪️tests/🧱️fixture-ownership/🟦️.ts")], { cwd: this.repoRoot });
-    
-    
-    
-    
-    
-      const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },progress: event => console.log(`fixture-ownership ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`),groups: [
-          { package: "semio-framework-surface-paint", target: { kind: "lib" }, laws: [
-            "paint_stroke_refuses_locked_layers_and_locked_ancestors",
-          ] },
-          { package: "semio-framework-artifact-flow-flow-model", target: { kind: "lib" }, laws: [
-            "authored_slider_labels_survive_json_dag_and_chrome",
-          ] },
-          { package: "semio-framework-os-flow-host", target: { kind: "lib" }, laws: [
-            "slider_ghost_descriptor_requires_authored_label",
-          ] },
-          { package: "semio-framework-os-kernel", target: { kind: "lib" }, laws: [
-            "execution_target_status_vocabulary_matches_the_corpus",
-            "execution_target_lease_compares_every_plan_and_verified_byte_field",
-          ] },
-          { package: "semio-framework-os-mcp", target: { kind: "lib" }, laws: [
-            "a_503_inference_unavailable_becomes_a_retryable_plugin_unavailable_that_names_the_missing_binding",
-            "a_retained_local_wait_is_interrupted_by_its_own_operation_label_and_by_nothing_else",
-            "every_inference_job_tool_is_denied_without_its_scope_and_admitted_by_inference_execute",
-            "a_job_handle_is_readable_only_by_its_own_session_and_its_own_authenticated_subject",
-            "a_booting_hub_roster_is_unavailable_never_empty",
-            "the_four_capabilities_are_direct_object_typed_gateway_tools_with_bilingual_descriptions",
-            "authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revocation_removes_it",
-            "a_catalog_refresh_fetches_each_descriptor_once_and_the_next_refresh_none",
-            "a_hub_workspace_catalog_follows_a_new_descriptor_authority_generation",
-            "authenticated_hub_workspace_resources_are_snapshot_only_scoped_and_fail_closed_when_stale",
-            "authenticated_hub_discovery_uses_retained_selection_and_never_installed_fallback",
-            "inference_approval_encoding_consumes_the_framework_owned_contract",
-          ] },
-        ]});
-      console.log(`fixture-ownership: ${receipts.reduce((count, receipt) => count + receipt.assertions, 0)} exact native laws passed`);
-    
-  }
-}
-
-
-/** 🗺️ Verifies exact manifest-policy admission and the General command ownership closure. */
-class GeneralExecutionOwnershipScript extends BundleScript {
- async run(segments:string[]):Promise<void>{
- if(segments.length)throw Error("test-general-execution-ownership accepts no arguments");
- await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/🗺️owner-test-manifests/🟦️.ts"),join(this.repoRoot,"🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🧪️tests/📤️progress/🟦️.ts")],{cwd:this.repoRoot,env:repoTestArtifactEnvironment(this.repoRoot,"general-execution-ownership"),budgetMs:60000});
- }
-}
-
+/** 🧭️ `@semio-tech/repo-lib` router: `bun ./📜️script.ts <typecheck|test [level]|workspaces <--write|--check>>`. */
 const router = new ScriptRouter(import.meta.dir)
   .registerLazy("test-tool-run-policy-source",async()=> (await import("../../🔍️discovery/📋️policy/⏯️tool-run/📜️script.ts")).ToolRunPolicySourceScript)
   .register("test-fixture-ownership",FixtureOwnershipTestScript).register("test-general-execution-ownership",GeneralExecutionOwnershipScript)

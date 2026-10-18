@@ -12,11 +12,11 @@
 //! An opening with an authored reveal wears its reveal material on the jambs, the head and the sill between the front face and the reveal depth; the layers are split at that depth,
 //! and the faces of the cut inside the reveal become their own group (`reveal`), so the volume of the wall does not change.
 
-use super::super::super::opening_frames::OpeningFrame;
-use super::super::super::wall_layout::attach::ElevationPoint;
-use super::super::super::wall_layout::{face_ends, fraction, WallLayout};
-use super::super::plan_kit::{point, seg};
-use super::super::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{point, seg};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall};
 use semio_framework_geometry::bulge::{nearest_intersection, BulgeSeg, Extent};
 use semio_framework_geometry::mesh::{extrude_between_faces, ElevationFace, TriMesh};
@@ -211,10 +211,6 @@ pub fn dependency(snapshot: &ModelSnapshot, wall: &Wall) -> DslValue {
 }
 //#endregion 🔖️Solid
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🏔️attached/🦀️.rs"]
-mod attached;
+
+

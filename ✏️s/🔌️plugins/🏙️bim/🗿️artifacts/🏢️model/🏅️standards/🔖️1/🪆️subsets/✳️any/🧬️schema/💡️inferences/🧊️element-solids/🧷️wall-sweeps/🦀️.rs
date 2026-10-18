@@ -5,11 +5,11 @@
 //! above the base of the wall (the base profile of an attached base included) and its innermost point `inset` metres inside the face plane, so an inset of zero stands the profile on the face. Every run of the path is a closed body with flat
 //! end caps (a sweep is cut square at the face ends and at openings; it is not mitered around corners). The material of the sweep is the only material of its solid.
 
-use super::super::super::wall_layout::{face_ends, WallLayout};
-use super::super::plan_kit::seg;
-use super::super::walls::Cut;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::Cut;
 use crate::standards::v1::subsets::any::schema::authored::profile::profile_polygon;
-use super::super::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, Anonymous, ElementSolid, SolidBuilder, SolidFamily, CHORD_TOLERANCE};
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Wall, WallSide, WallSweep};
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_geometry::triangulation::triangulate;
@@ -193,6 +193,4 @@ pub fn dependency(_snapshot: &ModelSnapshot, sweep: &WallSweep) -> DslValue {
 }
 //#endregion 🔖️Solid
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

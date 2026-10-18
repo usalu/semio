@@ -1,8 +1,10 @@
 /** 🌊️ Portable concrete Flow law ownership checked against actual native law declarations. */
 import assert from "node:assert/strict";
-import { readFileSync, existsSync } from "node:fs";
-import { resolve, dirname, join } from "node:path";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { readModuleTreeSource } from "../../../../../🧰️framework/🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 const owner = fileURLToPath(new URL("../..", import.meta.url));
 export function flowCompositionLaws() {
   const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8"));
@@ -15,10 +17,9 @@ export function testFlowCompositionOwnership() {
     const source = readFileSync(join(owner, `🧪️tests/${directory}/🦀️.rs`), "utf8");
     assert.deepEqual([...source.matchAll(/#\[test\]\s*fn (\w+)/g)].map(match => match[1]), group.laws);
   }
-  let repo = owner;
-  while (!existsSync(join(repo, "nx.json"))) repo = dirname(repo);
+  const repo = findWorkspaceRoot(owner);
   const framework = join(repo, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow");
   assert(!readFileSync(join(framework, "📦️packages/🦀️rust/Cargo.toml"), "utf8").includes("semio-s-plugin-flow-extension-"));
-  assert(!readFileSync(join(framework, "🖥️host/🧪️tests/🔬️unit/🦀️.rs"), "utf8").includes("install_first_party_light"));
+  assert(!readModuleTreeSource(join(framework, "🖥️host/🧪️tests/🔬️unit/🦀️.rs")).includes("install_first_party_light"));
   console.log(`Flow composition ownership: ${laws.reduce((sum, group) => sum + group.laws.length, 0)} exact native laws`);
 }

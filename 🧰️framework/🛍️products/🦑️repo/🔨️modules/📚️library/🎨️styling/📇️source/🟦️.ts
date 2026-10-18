@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { discoverCatalogPackages, loadCatalogTaxonomy, registryCatalogInputView } from "../../🔍️discovery/🟦️.ts";
+import { discoverCatalogPackages } from "../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
+import { loadCatalogTaxonomy, registryCatalogInputView } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { admitStylingScanScopeV1, type StylingSourceV1 } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🛡️verification/🟦️.ts";
 
 /** 📇️Supplies explicit current source owners and read-only indexed source candidates. */

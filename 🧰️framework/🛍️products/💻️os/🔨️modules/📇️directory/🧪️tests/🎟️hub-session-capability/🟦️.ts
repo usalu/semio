@@ -111,7 +111,8 @@ export async function registerHubSessionCapabilityTests(vitest: Vitest, dependen
 
     it("keeps the private session port out of malicious plugin shard source, and leaves no broker-proof lane behind", async () => {
       const { readFile } = await import("node:fs/promises");
-      const pluginShard = await readFile(new URL("./🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts", source.url), "utf8");
+      const materialization = ["🟦️.ts", "🧾️contract/🟦️.ts", "🔤️guestslim-fonts/🟦️.ts", "🩹️preview2-shim-patches/🟦️.ts", "🧵️shard-worker-source/🟦️.ts", "🌉️component-bridge-source/🟦️.ts", "🪶️wasm-opt/🟦️.ts", "🧬️jco-module-rewrites/🟦️.ts", "🪢️host-shim-source/🟦️.ts"];
+      const pluginShard = (await Promise.all(materialization.map((leaf) => readFile(new URL(`./🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/${leaf}`, source.url), "utf8")))).join("\n");
       const shellHostFiles = [
         "🟦️.tsx",
         "⚡️host-effects/🟦️.ts",
@@ -146,7 +147,7 @@ export async function registerHubSessionCapabilityTests(vitest: Vitest, dependen
         "🧾️space-artifact-creation/🟦️.ts",
       ];
       const shellHost = (await Promise.all(shellHostFiles.map((file) => readFile(new URL("./🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/" + file, source.url), "utf8")))).join("\n");
-      const worker = await readFile(new URL("./🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url), "utf8");
+      const worker = (await import("@semio-tech/framework-compiler-ts/syntax/module-tree")).readModuleTreeSource(new URL("./🔨️modules/🏪️store/👷️worker/🟦️.ts", source.url));
       expect(pluginShard).not.toContain("semio-hub-session-port");
       expect(pluginShard).not.toContain("authorization");
       for (const retired of ["semio-browser-broker-port", "x-semio-browser-broker", "#semio-broker=", "localBrowserBrokerProof"]) {

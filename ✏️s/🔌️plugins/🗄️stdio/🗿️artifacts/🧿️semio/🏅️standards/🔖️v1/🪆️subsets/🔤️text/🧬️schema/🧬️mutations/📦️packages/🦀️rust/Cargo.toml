@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-diagnostic = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -26,6 +29,7 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-text-model = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-stdio-semio-text-model = { workspace = true, features = ["testkit"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

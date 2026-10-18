@@ -1,14 +1,14 @@
 //#region 🧾️TypedContract
-import type * as Contract from "../../../../../🛂️manifest/🟦️.ts";
+import type { AccessibilitySpec, ActionBinding, Activity, Align, Component, DropOverlaySpec, EdgeSpace, GridTrack, Justify, KeyValueEntry, LayoutSpec, MenuRef, RowAction, RowTarget, SelectItem, Sizing, SpaceToken, StyleSpec, TreeWindow, UiNodeRecord, UiNumberBound, UiNumberLimits as ContractUiNumberLimits, UiSurfaceKind, UiValue } from "../../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import type { NumericIndexGrant } from "../../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
 import { RetainedUiWireValueCursor, type RetainedUiWireStep } from "../🟦️.ts";
 import { UiSurfaceBytes, type UiSurfaceByteRetirement } from "../🔢️bytes/🟦️.ts";
 import { takeOwnedNativeBuffer } from "../🔒️transport/🟦️.ts";
 
 export interface UiSurfaceByteView { readonly length: number; byteAt(index: number): number }
-export type RetainedUiComponent = Exclude<Contract.Component, { type: "surface" }> | { readonly type: "surface"; readonly kind: Contract.UiSurfaceKind; readonly docSchema: string; readonly doc: { readonly bytes: UiSurfaceByteView }; readonly bindings: Contract.ActionBinding[] };
-export type RetainedUiNodeRecord = Omit<Required<Contract.UiNodeRecord>, "component"> & { readonly component: RetainedUiComponent };
-export type RetainedUiTypedValues = { component: RetainedUiComponent; node: RetainedUiNodeRecord; layout: Contract.LayoutSpec; style: Contract.StyleSpec; activity: { readonly activity: Contract.Activity; readonly disabled: boolean }; accessibility: Contract.AccessibilitySpec; bindings: Contract.ActionBinding[]; menu: Contract.MenuRef | null; children: number[] };
+export type RetainedUiComponent = Exclude<Component, { type: "surface" }> | { readonly type: "surface"; readonly kind: UiSurfaceKind; readonly docSchema: string; readonly doc: { readonly bytes: UiSurfaceByteView }; readonly bindings: ActionBinding[] };
+export type RetainedUiNodeRecord = Omit<Required<UiNodeRecord>, "component"> & { readonly component: RetainedUiComponent };
+export type RetainedUiTypedValues = { component: RetainedUiComponent; node: RetainedUiNodeRecord; layout: LayoutSpec; style: StyleSpec; activity: { readonly activity: Activity; readonly disabled: boolean }; accessibility: AccessibilitySpec; bindings: ActionBinding[]; menu: MenuRef | null; children: number[] };
 export type Profile = keyof RetainedUiTypedValues;
 type Field = "component" | "layout" | "style" | "accessibility" | "bindings" | "menu" | "children";
 type NodeFields = { [K in Field]: OwnedUiPayload<RetainedUiTypedValues[K]> };
@@ -29,8 +29,8 @@ function natural(value: unknown, max = Number.MAX_SAFE_INTEGER): number { const 
 function optional<T>(value: unknown, read: (value: unknown) => T): T | null { return value == null ? null : read(value); }
 function choice<const T extends string>(value: unknown, choices: readonly T[]): T { for (const candidate of choices) if (value === candidate) return candidate; throw new Error("Unknown UI schema discriminator"); }
 function defaulted<T>(value: unknown, fallback: T, read: (value: unknown) => T): T { return value === undefined ? fallback : read(value); }
-const space = (value: unknown): Contract.SpaceToken => choice(value, ["none", "xs", "sm", "md", "lg", "xl", "xxl"]);
-export const activity = (value: unknown): Contract.Activity => choice(value, ["waiting", "loading", "idle", "finished"]);
+const space = (value: unknown): SpaceToken => choice(value, ["none", "xs", "sm", "md", "lg", "xl", "xxl"]);
+export const activity = (value: unknown): Activity => choice(value, ["waiting", "loading", "idle", "finished"]);
 //#endregion 🧾️TypedContract
 
 //#region 📚️PayloadOwnership
@@ -218,7 +218,7 @@ export class UiNodeRetirement {
 //#endregion 🗂️DirectNodeFields
 
 //#region 🏗️TypedBuilder
-type JsonFrame = { index: number; count: number; parent: JsonFrame | null } & ({ input: readonly unknown[]; output: Contract.UiValue[]; keys: null } | { input: Readonly<Record<string, unknown>>; output: { [key: string]: Contract.UiValue }; keys: readonly string[] });
+type JsonFrame = { index: number; count: number; parent: JsonFrame | null } & ({ input: readonly unknown[]; output: UiValue[]; keys: null } | { input: Readonly<Record<string, unknown>>; output: { [key: string]: UiValue }; keys: readonly string[] });
 
 export class Builder {
   owned: Owned | null = null;
@@ -274,9 +274,9 @@ export class Builder {
     Object.preventExtensions(output); return this.own(output);
   }
 
-  *value(value: unknown): Program<Contract.UiValue> {
+  *value(value: unknown): Program<UiValue> {
     let input = value;
-    let output: Contract.UiValue | undefined;
+    let output: UiValue | undefined;
     for (;;) {
       yield 64;
       if (input === null || typeof input === "boolean" || typeof input === "string") output = input;
@@ -288,7 +288,7 @@ export class Builder {
         const count = Array.isArray(source) ? source.length : keys!.length;
         if (count > 256) throw new Error("UI value exceeds native slots");
         yield 64 + count * 8;
-        if (Array.isArray(source)) this.json = { input: source, output: new Array<Contract.UiValue>(count), keys: null, index: 0, count, parent: this.json };
+        if (Array.isArray(source)) this.json = { input: source, output: new Array<UiValue>(count), keys: null, index: 0, count, parent: this.json };
         else if (isRecord(source)) this.json = { input: source, output: {}, keys: keys!, index: 0, count, parent: this.json };
         if (count) { input = this.jsonInput(this.json!); continue; }
         output = this.finishJson();
@@ -306,9 +306,9 @@ export class Builder {
   }
 
   jsonInput(frame: JsonFrame): unknown { return frame.keys === null ? frame.input[frame.index] : frame.input[frame.keys[frame.index]!]; }
-  finishJson(): Contract.UiValue { const frame = this.json!; this.json = frame.parent; frame.parent = null; if (Array.isArray(frame.output)) Object.defineProperty(frame.output, "length", { writable: false }); Object.preventExtensions(frame.output); return this.own(frame.output); }
+  finishJson(): UiValue { const frame = this.json!; this.json = frame.parent; frame.parent = null; if (Array.isArray(frame.output)) Object.defineProperty(frame.output, "length", { writable: false }); Object.preventExtensions(frame.output); return this.own(frame.output); }
 
-  *binding(value: unknown): Program<Contract.ActionBinding> {
+  *binding(value: unknown): Program<ActionBinding> {
     const v = yield* this.record(value, ["trigger", "action", "args", "capability"]);
     const action = yield* this.record(v.action, ["scope", "name", "version"]);
     const address = this.fixed({ scope: text(action.scope), name: text(action.name), version: natural(action.version, 65535) });
@@ -318,8 +318,8 @@ export class Builder {
     return this.fixed({ trigger: choice(v.trigger, ["activate", "change", "commit", "delta", "drop", "submit", "abort", "repeatLast", "hoverPreview"]), action: address, args, capability: optional(v.capability, text) });
   }
 
-  *bindings(value: unknown): Program<Contract.ActionBinding[]> { return yield* this.list(value, item => this.binding(item), 32); }
-  *menu(value: unknown): Program<Contract.MenuRef | null> { yield 32; if (value === null) return null; const v = yield* this.record(value, ["id", "args"]); const args = v.args == null ? null : yield* this.value(v.args); yield 64; return this.fixed({ id: text(v.id), args }); }
+  *bindings(value: unknown): Program<ActionBinding[]> { return yield* this.list(value, item => this.binding(item), 32); }
+  *menu(value: unknown): Program<MenuRef | null> { yield 32; if (value === null) return null; const v = yield* this.record(value, ["id", "args"]); const args = v.args == null ? null : yield* this.value(v.args); yield 64; return this.fixed({ id: text(v.id), args }); }
 
   *component(value: unknown): Program<RetainedUiComponent> {
     yield 64;
@@ -327,7 +327,7 @@ export class Builder {
     switch (value.type) {
       case "container": {
         const v = yield* this.record(value, ["type", "role", "label", "description", "required", "error", "defaultOpen", "dropOverlay"]);
-        let dropOverlay: Contract.DropOverlaySpec | null = null;
+        let dropOverlay: DropOverlaySpec | null = null;
         if (v.dropOverlay != null) { const d = yield* this.record(v.dropOverlay, ["title", "hint", "accept"]); dropOverlay = this.fixed({ title: text(d.title), hint: text(d.hint), accept: optional(d.accept, text) }); yield 128; }
         return this.fixed({ type: "container", role: defaulted(v.role, "plain", v => choice(v, ["plain", "section", "group", "field", "form", "toolbar"])), label: optional(v.label, text), description: optional(v.description, text), required: optional(v.required, boolean), error: optional(v.error, text), defaultOpen: optional(v.defaultOpen, boolean), dropOverlay });
       }
@@ -365,11 +365,11 @@ export class Builder {
   }
 
   /** 🪟️ A tree container's materialised slice (`TreeSectionProps.window`/`TreeItemProps.window`) — `null` for an unwindowed container. */
-  *treeWindow(value: unknown): Program<Contract.TreeWindow | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["total", "offset", "rowExtent"]); return this.fixed({ total: number(v.total), offset: number(v.offset), rowExtent: choice(v.rowExtent, ["standard", "compactText", "compactSmallControl", "compactControl"]) }); }
+  *treeWindow(value: unknown): Program<TreeWindow | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["total", "offset", "rowExtent"]); return this.fixed({ total: number(v.total), offset: number(v.offset), rowExtent: choice(v.rowExtent, ["standard", "compactText", "compactSmallControl", "compactControl"]) }); }
   *textItem(value: unknown): Program<string> { yield 16; return text(value); }
   *numberItem(value: unknown): Program<number> { yield 16; return number(value); }
   /** 🚧️ A numeric control's hard range (`UiNumberLimits`), each bound `{value, exclusive, refusal}` — `null` when the control declares none. */
-  *numberLimits(value: unknown): Program<Contract.UiNumberLimits | null> {
+  *numberLimits(value: unknown): Program<ContractUiNumberLimits | null> {
     yield 32;
     if (value == null) return null;
     const v = yield* this.record(value, ["min", "max"]);
@@ -378,28 +378,28 @@ export class Builder {
     return this.fixed({ min, max });
   }
   /** 🧱️ One hard bound of a numeric control — `null` for an open side. */
-  *numberBound(value: unknown): Program<Contract.UiNumberBound | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["value", "exclusive", "refusal"]); return this.fixed({ value: number(v.value), exclusive: defaulted(v.exclusive, false, boolean), refusal: optional(v.refusal, text) }); }
-  *selectItem(value: unknown): Program<Contract.SelectItem> { const v = yield* this.record(value, ["value", "label"]); return this.fixed({ value: text(v.value), label: text(v.label) }); }
-  *entry(value: unknown): Program<Contract.KeyValueEntry> { const v = yield* this.record(value, ["label", "value"]); return this.fixed({ label: text(v.label), value: text(v.value) }); }
-  *rowAction(value: unknown): Program<Contract.RowAction> { const v = yield* this.record(value, ["icon", "label", "verb", "placement", "disabled", "reason"]); yield 32; return this.fixed({ icon: text(v.icon), label: optional(v.label, text), verb: text(v.verb), placement: defaulted(v.placement, "row", v => choice(v, ["row", "menu"])), disabled: defaulted(v.disabled, false, boolean), reason: optional(v.reason, text) }); }
+  *numberBound(value: unknown): Program<UiNumberBound | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["value", "exclusive", "refusal"]); return this.fixed({ value: number(v.value), exclusive: defaulted(v.exclusive, false, boolean), refusal: optional(v.refusal, text) }); }
+  *selectItem(value: unknown): Program<SelectItem> { const v = yield* this.record(value, ["value", "label"]); return this.fixed({ value: text(v.value), label: text(v.label) }); }
+  *entry(value: unknown): Program<KeyValueEntry> { const v = yield* this.record(value, ["label", "value"]); return this.fixed({ label: text(v.label), value: text(v.value) }); }
+  *rowAction(value: unknown): Program<RowAction> { const v = yield* this.record(value, ["icon", "label", "verb", "placement", "disabled", "reason"]); yield 32; return this.fixed({ icon: text(v.icon), label: optional(v.label, text), verb: text(v.verb), placement: defaulted(v.placement, "row", v => choice(v, ["row", "menu"])), disabled: defaulted(v.disabled, false, boolean), reason: optional(v.reason, text) }); }
   /** 🎯️ A row's ONE action target (`TreeItemProps.target`/`TableRowProps.target`) — `null` for a row without verbs. */
-  *rowTarget(value: unknown): Program<Contract.RowTarget | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["scope", "version", "args", "activation"]); if (v.args != null && (!isRecord(v.args) || Array.isArray(v.args))) throw new Error("Row target arguments must be a map"); const args = v.args == null ? null : (yield* this.value(v.args)) as { readonly [key: string]: Contract.UiValue }; yield 128; return this.fixed({ scope: text(v.scope), version: natural(v.version, 65535), args, activation: optional(v.activation, text) }); }
+  *rowTarget(value: unknown): Program<RowTarget | null> { yield 32; if (value == null) return null; const v = yield* this.record(value, ["scope", "version", "args", "activation"]); if (v.args != null && (!isRecord(v.args) || Array.isArray(v.args))) throw new Error("Row target arguments must be a map"); const args = v.args == null ? null : (yield* this.value(v.args)) as { readonly [key: string]: UiValue }; yield 128; return this.fixed({ scope: text(v.scope), version: natural(v.version, 65535), args, activation: optional(v.activation, text) }); }
 
-  *sizing(value: unknown): Program<Contract.Sizing> { yield 32; if (value === "hug" || value === "fill") return value; const v = yield* this.record(value, ["fixed"]); return this.fixed({ fixed: space(v.fixed) }); }
-  *edges(value: unknown): Program<Contract.EdgeSpace> {
+  *sizing(value: unknown): Program<Sizing> { yield 32; if (value === "hug" || value === "fill") return value; const v = yield* this.record(value, ["fixed"]); return this.fixed({ fixed: space(v.fixed) }); }
+  *edges(value: unknown): Program<EdgeSpace> {
     yield 32;
     if (!isRecord(value) || Object.keys(value).length !== 1) throw new Error("Expected exactly one edge-space variant");
     if (Object.hasOwn(value, "all")) return this.fixed({ all: space(value.all) });
     if (Object.hasOwn(value, "symmetric")) { const v = yield* this.record(value.symmetric, ["vertical", "horizontal"]); return this.fixed({ symmetric: this.fixed({ vertical: space(v.vertical), horizontal: space(v.horizontal) }) }); }
     const v = yield* this.record(value.each, ["top", "right", "bottom", "left"]); return this.fixed({ each: this.fixed({ top: space(v.top), right: space(v.right), bottom: space(v.bottom), left: space(v.left) }) });
   }
-  *track(value: unknown): Program<Contract.GridTrack> { yield 32; if (value === "auto" || value === "minContent" || value === "maxContent") return value; if (!isRecord(value) || Object.keys(value).length !== 1) throw new Error("Expected exactly one grid-track variant"); if (Object.hasOwn(value, "fraction")) return this.fixed({ fraction: natural(value.fraction, 255) }); const v = yield* this.record(value, ["fixed"]); return this.fixed({ fixed: space(v.fixed) }); }
+  *track(value: unknown): Program<GridTrack> { yield 32; if (value === "auto" || value === "minContent" || value === "maxContent") return value; if (!isRecord(value) || Object.keys(value).length !== 1) throw new Error("Expected exactly one grid-track variant"); if (Object.hasOwn(value, "fraction")) return this.fixed({ fraction: natural(value.fraction, 255) }); const v = yield* this.record(value, ["fixed"]); return this.fixed({ fixed: space(v.fixed) }); }
 
-  *layout(value: unknown): Program<Contract.LayoutSpec> {
+  *layout(value: unknown): Program<LayoutSpec> {
     yield 64;
     if (!isRecord(value)) throw new Error("Expected UI layout");
-    const align = (value: unknown): Contract.Align => choice(value, ["start", "center", "end", "stretch", "baseline"]);
-    const justify = (value: unknown): Contract.Justify => choice(value, ["start", "center", "end", "spaceBetween", "spaceAround", "spaceEvenly"]);
+    const align = (value: unknown): Align => choice(value, ["start", "center", "end", "stretch", "baseline"]);
+    const justify = (value: unknown): Justify => choice(value, ["start", "center", "end", "spaceBetween", "spaceAround", "spaceEvenly"]);
     switch (value.kind) {
       case "leaf": { const v = yield* this.record(value, ["kind", "width", "height"]); const width = yield* this.sizing(v.width); const height = yield* this.sizing(v.height); yield 128; return this.fixed({ kind: "leaf", width, height }); }
       case "stack": { const v = yield* this.record(value, ["kind", "axis", "gap", "padding", "align", "justify", "grow", "wrap"]); const padding = yield* this.edges(v.padding); yield 128; return this.fixed({ kind: "stack", axis: choice(v.axis, ["horizontal", "vertical"]), gap: space(v.gap), padding, align: align(v.align), justify: justify(v.justify), grow: boolean(v.grow), wrap: boolean(v.wrap) }); }
@@ -411,8 +411,8 @@ export class Builder {
     }
   }
 
-  *style(value: unknown): Program<Contract.StyleSpec> { const v = yield* this.record(value, ["variant", "size", "density", "tone", "emphasis"]); return this.fixed({ variant: defaulted(v.variant, "solid", v => choice(v, ["solid", "outline", "ghost", "plain"])), size: defaulted(v.size, "md", v => choice(v, ["xs", "sm", "md", "lg", "xl"])), density: defaulted(v.density, "standard", v => choice(v, ["compact", "standard", "touch"])), tone: defaulted(v.tone, "neutral", v => choice(v, ["neutral", "primary", "secondary", "tertiary", "info", "success", "warning", "danger"])), emphasis: defaulted(v.emphasis, "regular", v => choice(v, ["subtle", "regular", "strong"])) }); }
-  *accessibility(value: unknown): Program<Contract.AccessibilitySpec> { const v = yield* this.record(value, ["label", "description", "live", "shortcut", "hidden"]); return this.fixed({ label: optional(v.label, text), description: optional(v.description, text), live: defaulted(v.live, "off", v => choice(v, ["off", "polite", "assertive"])), shortcut: optional(v.shortcut, text), hidden: defaulted(v.hidden, false, boolean) }); }
+  *style(value: unknown): Program<StyleSpec> { const v = yield* this.record(value, ["variant", "size", "density", "tone", "emphasis"]); return this.fixed({ variant: defaulted(v.variant, "solid", v => choice(v, ["solid", "outline", "ghost", "plain"])), size: defaulted(v.size, "md", v => choice(v, ["xs", "sm", "md", "lg", "xl"])), density: defaulted(v.density, "standard", v => choice(v, ["compact", "standard", "touch"])), tone: defaulted(v.tone, "neutral", v => choice(v, ["neutral", "primary", "secondary", "tertiary", "info", "success", "warning", "danger"])), emphasis: defaulted(v.emphasis, "regular", v => choice(v, ["subtle", "regular", "strong"])) }); }
+  *accessibility(value: unknown): Program<AccessibilitySpec> { const v = yield* this.record(value, ["label", "description", "live", "shortcut", "hidden"]); return this.fixed({ label: optional(v.label, text), description: optional(v.description, text), live: defaulted(v.live, "off", v => choice(v, ["off", "polite", "assertive"])), shortcut: optional(v.shortcut, text), hidden: defaulted(v.hidden, false, boolean) }); }
   *activity(value: unknown): Program<RetainedUiTypedValues["activity"]> { const v = yield* this.record(value, ["activity", "disabled"]); return this.fixed({ activity: activity(v.activity), disabled: boolean(v.disabled) }); }
   *childIds(value: unknown): Program<number[]> { return yield* this.list(value, function* (item) { yield 32; return natural(item); }, 128); }
   *node(value: unknown): Program<RetainedUiNodeRecord> {

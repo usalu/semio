@@ -269,9 +269,9 @@ pub fn sparse_against(base: &WavSnapshot, diff: WavDiff) -> WavDiff {
 //#region 🔖️Tests
 /// 🧪️ Representative `WavDiff` cases built declaratively (empty diff and the pad-byte lanes) — the single source of truth reused by `diff_codec_text_binary_roundtrip_law` and the
 /// conformance-law tests.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<WavDiff> {
+pub fn demo_diff_cases() -> Vec<WavDiff> {
     vec![WavDiff::default(), WavDiff { fmt_pad_byte: Some(1), data_pad_byte: Some(0), ..Default::default() }]
 }
 

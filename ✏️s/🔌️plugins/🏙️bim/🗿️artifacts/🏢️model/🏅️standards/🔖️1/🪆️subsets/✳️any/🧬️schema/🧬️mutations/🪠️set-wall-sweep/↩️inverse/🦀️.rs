@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetWallSweep`: an absolute `SetWallSweep` restoring the base value of exactly the fields the forward really changes, none when the sweep is absent or nothing changes.
 
-use super::SetWallSweep;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_sweep::SetWallSweep;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetWallSweep, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetWallSweep, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_wall_sweep::SetWallSweep>,
+{
     let Some(record) = base.wall_sweeps.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetWallSweep, base: &ModelSnapshot) -> Vec<ModelMutatio
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetWallSweep(SetWallSweep::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetWallSweep::from_patch(payload.id.clone(), restore))]
 }

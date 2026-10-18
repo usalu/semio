@@ -1,6 +1,6 @@
 //! ↔️ `create-dimension` payload. Brings a new dimension onto a storey plan: two or more anchors (free points or elements of the model) measured along a direction; its values and text are inferred from the geometry of the anchors.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{Dimension, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{Dimension, ModelSnapshot}, diff::ModelDiff};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateDimension {
     pub dimension: Dimension,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateDimension {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateDimension
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateDimension> + From<crate::standards::v1::subsets::any::schema::mutations::delete_dimension::DeleteDimension>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "dimension", kind: "create-dimension", record: "CreateDimension" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_dimension::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_dimension::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create dimension \"{}\"", self.dimension.name), &format!("Bemaßung \"{}\" anlegen", self.dimension.name))

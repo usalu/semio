@@ -1,0 +1,5 @@
+{
+ "name": "c6fw-job",
+ "crates": ["semio-framework-job", "semio-framework-job-worker"],
+ "note": "c6fw census 6 P16: the owning crates of the two job split files"
+}

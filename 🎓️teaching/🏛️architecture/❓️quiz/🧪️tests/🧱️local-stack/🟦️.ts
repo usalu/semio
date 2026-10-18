@@ -8,7 +8,8 @@
  * for the format it reads), sets the launcher's own disposable folder aside and starts fresh, saying so once, and leaves
  * a folder the developer named alone, with one message that says how to go on — the dev command ends over it with that
  * line and status 1, not with a stack trace. The proctor the dev command runs is supervised: built anew for a changed
- * Rust source of a crate it is built from (cargo's own resolution is the oracle for which those are), launched anew for
+ * Rust source of a crate it is built from (the Cargo reference's rules for workspaces and features are the oracle for
+ * which those are, held by a synthetic workspace; the real tree is held to its structure), launched anew for
  * a changed catalog or quiz, and launched again ever more patiently when it ends by itself. And the dev server survives
  * its proctor: a proctor that answers an upgrade without upgrading — as one that restarts or goes away does — never
  * takes it along, also where sockets lack `destroySoon` (Bun 1.3), whose soft ending is held to Node's own.
@@ -24,12 +25,13 @@ import { connect, createServer as createNetServer, type AddressInfo, type Socket
 import { dirname, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer as createViteServer, preview } from "vite";
-import { destroySoon, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { destroySoon, semioServeUpgradeVitePlugin } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve/🟦️.ts";
 import { afterEach, describe, expect, it } from "vitest";
 import deployment from "../../🚀️deploy/🔣️.json" with { type: "json" };
 import { QUIZ_E2E_PORTS, endToEndPlan } from "../../🎭️e2e/🟦️.ts";
 import { SITE_MEDIA_TYPES, awaitReady, catalogFiles, httpAnswers, launchOwned, relaunchDelay, serveStaticSite } from "../../🧱️stack/🟦️.ts";
-import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorDevelopmentEnvironment, proctorSourceChanged, proctorSourceDirectories, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
+import { cargoPackageClosure } from "../../../../🛂️proctor/🏗️bootstrap/🕸️manifest-closure/🟦️.ts";
+import { DevelopmentDataRefused, PROCTOR_DATABASE_FILE, PROCTOR_DEV_DATA_DIRECTORY, PROCTOR_STORAGE_FORMAT, developmentDataSettled, proctorBuildLaunch, proctorDevelopmentEnvironment, proctorSourceChanged, proctorSourceDirectories, settleDevelopmentData, storedProctorFormat } from "../../../../🛂️proctor/🏗️bootstrap/🟦️.ts";
 
 const scratch: string[] = [];
 const closing: (() => Promise<unknown>)[] = [];
@@ -119,13 +121,135 @@ describe("the supervision of the dev proctor", () => {
     expect(["🧬️schema/🔣️.json", "🟦️.ts", "target/debug/build/x.rs", "node_modules/a/b.rs", "dist/Cargo.toml", "Cargo.lock"].map(proctorSourceChanged)).toEqual([false, false, false, false, false, false]);
   });
 
-  it("follows the owner of every crate of this repository the proctor is built from, as cargo resolves it, and nothing twice", async () => {
+  it("follows the owner of every crate of this repository the proctor is built from, and nothing twice", async () => {
     const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
     const roots = await proctorSourceDirectories(repoRoot);
     for (const owner of [["🎓️teaching", "🛂️proctor"], ["🧰️framework", "🛍️products", "❓️quiz"], ["🧰️framework", "🛍️products", "🖥️server"]]) expect(roots).toContain(join(repoRoot, ...owner));
     expect(roots.every((root) => root.startsWith(repoRoot) && existsSync(root) && !root.includes("📦️packages"))).toBe(true);
     expect(roots.some((root, index) => roots.some((other, at) => at !== index && root.startsWith(`${other}${sep}`)))).toBe(false);
-  }, 120_000);
+  }, 30_000);
+});
+
+/** 🧱️ A manifest of the synthetic workspace: `body` follows a `[package]` of `name`. */
+const manifest = (name: string, body = ""): string => `[package]\nname = "${name}"\nversion = "0.1.0"\n${body}`;
+
+/** 🧪️ A repository root holding a teaching workspace whose members `teaching-proctor` and `extra` depend on a graph of
+ * crates that exercises every rule of the Cargo reference the closure follows. */
+function syntheticRepository(): string {
+  const lib = (name: string, body = "") => ({ [`lib/${name}/Cargo.toml`]: manifest(name, body) });
+  return directory({
+    "🎓️teaching/Cargo.toml": '[workspace]\nmembers = ["proctor", "extra"]\n\n[workspace.dependencies]\ninherited = { path = "../lib/inherited" }\n',
+    "🎓️teaching/proctor/Cargo.toml": manifest(
+      "teaching-proctor",
+      [
+        "[dependencies]",
+        'core = { path = "../../lib/core/📦️packages/🦀️rust" }',
+        "inherited.workspace = true",
+        'defaulted = { path = "../../lib/defaulted" }',
+        'bare = { path = "../../lib/bare", default-features = false }',
+        "[build-dependencies]",
+        'builder = { path = "../../lib/builder" }',
+        "[target.'cfg(windows)'.dependencies]",
+        'windows-only = { path = "../../lib/windows-only" }',
+        "[dev-dependencies]",
+        'core = { path = "../../lib/core/📦️packages/🦀️rust", features = ["testkit"] }',
+        'fixtures = { path = "../../lib/fixtures" }',
+      ].join("\n"),
+    ),
+    "🎓️teaching/extra/Cargo.toml": manifest("extra", '[dependencies]\ncore = { path = "../../lib/core/📦️packages/🦀️rust", features = ["deflate", "loud"] }\nunrelated = { path = "../../lib/unrelated" }\n'),
+    "lib/core/📦️packages/🦀️rust/Cargo.toml": manifest(
+      "core",
+      [
+        "[features]",
+        'default = ["fast", "weakly"]',
+        'fast = ["dep:renamed"]',
+        'weakly = ["weak?/extra"]',
+        'testkit = ["dep:kit"]',
+        'deflate = ["dep:squeeze"]',
+        'loud = ["strong/extra"]',
+        "[dependencies]",
+        'renamed = { package = "real", path = "../../../real", optional = true }',
+        'kit = { path = "../../../kit", optional = true }',
+        'squeeze = { path = "../../../squeeze", optional = true }',
+        'strong = { path = "../../../strong", optional = true }',
+        'weak = { path = "../../../weak", optional = true }',
+        'lazy = { path = "../../../lazy", optional = true }',
+        'nested = { path = "../../inner" }',
+        'serde = "1"',
+      ].join("\n"),
+    ),
+    "lib/core/inner/Cargo.toml": manifest("nested"),
+    ...lib("inherited"),
+    ...lib("defaulted", '[features]\ndefault = ["noisy"]\nnoisy = ["dep:defaulted-dep"]\n[dependencies]\ndefaulted-dep = { path = "../defaulted-dep", optional = true }\n'),
+    ...lib("defaulted-dep"),
+    ...lib("bare", '[features]\ndefault = ["noisy"]\nnoisy = ["dep:bare-dep"]\n[dependencies]\nbare-dep = { path = "../bare-dep", optional = true }\n'),
+    ...lib("bare-dep"),
+    ...lib("builder"),
+    ...lib("windows-only"),
+    ...lib("fixtures"),
+    ...lib("kit"),
+    ...lib("real"),
+    ...lib("squeeze"),
+    ...lib("strong", "[features]\nextra = []\n"),
+    ...lib("weak", "[features]\nextra = []\n"),
+    ...lib("lazy"),
+    ...lib("unrelated"),
+  });
+}
+
+describe("the crates the proctor is built from", () => {
+  const reached = ["bare", "builder", "core", "defaulted", "defaulted-dep", "inherited", "kit", "nested", "real", "squeeze", "strong", "teaching-proctor", "windows-only"];
+
+  it("reads them from the manifests as the Cargo reference resolves a workspace: every platform and build table, unified features, optional ones only when enabled, dev-dependencies requesting but never leading", async () => {
+    const root = syntheticRepository();
+    const crates = await cargoPackageClosure(join(root, "🎓️teaching", "Cargo.toml"), "teaching-proctor");
+    expect(crates.map((crate) => crate.name).sort()).toEqual(reached);
+  });
+
+  it("names the owner of every crate once, a crate inside another owner left to it", async () => {
+    const root = syntheticRepository();
+    const expected = ["🎓️teaching/proctor", ...["bare", "builder", "core", "defaulted", "defaulted-dep", "inherited", "kit", "real", "squeeze", "strong", "windows-only"].map((name) => `lib/${name}`)].map((path) => join(root, path)).sort();
+    expect(await proctorSourceDirectories(root)).toEqual(expected);
+  });
+
+  it("reads each manifest once, reports each, and stops when it is cancelled", async () => {
+    const root = syntheticRepository();
+    const read: string[] = [];
+    await proctorSourceDirectories(root, { onManifest: (path) => read.push(path) });
+    expect(new Set(read).size).toBe(read.length);
+    expect(read).toContain(join(root, "lib", "core", "📦️packages", "🦀️rust", "Cargo.toml"));
+    await expect(proctorSourceDirectories(root, { signal: AbortSignal.abort(new Error("stopped")) })).rejects.toThrow("stopped");
+  });
+
+  it("refuses a workspace without the package, a member glob it cannot expand and a missing manifest", async () => {
+    const root = syntheticRepository();
+    await expect(cargoPackageClosure(join(root, "🎓️teaching", "Cargo.toml"), "absent")).rejects.toThrow("has no member package absent");
+    const globbed = directory({ "Cargo.toml": '[workspace]\nmembers = ["crates/*"]\n' });
+    await expect(cargoPackageClosure(join(globbed, "Cargo.toml"), "any")).rejects.toThrow("member glob");
+    await expect(cargoPackageClosure(join(root, "absent", "Cargo.toml"), "any")).rejects.toThrow();
+  });
+});
+
+describe("the build of the proctor", () => {
+  const repository = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../..");
+
+  it("runs through the repository's issued Cargo launcher in the teaching workspace and never through a bare cargo, whose compiler the ingress gate of `.cargo/config.toml` refuses", () => {
+    const launch = proctorBuildLaunch(repository, { PATH: "bin", SEMIO_BUILD_MODE: "release" });
+    expect(launch.command).toBe(process.execPath);
+    expect(existsSync(launch.args[0]!)).toBe(true);
+    expect(launch.args.slice(1, 6)).toEqual(["repo", "cargo", "--store=shared", "--configuration=prototype", "--"]);
+    expect(launch.args.slice(6)).toEqual(["build", "--locked", "--package", "teaching-proctor", "--bin", "proctor", "--message-format=json-render-diagnostics"]);
+    expect(launch.cwd).toBe(join(repository, "🎓️teaching"));
+    expect(existsSync(join(launch.cwd, "Cargo.toml"))).toBe(true);
+    expect(launch.env).toEqual({ PATH: "bin", SEMIO_BUILD_MODE: "prototype" });
+  });
+
+  it("selects the release configuration, and the same mode in the environment the launcher compares it with, for the deployed build", () => {
+    const launch = proctorBuildLaunch(repository, { SEMIO_BUILD_MODE: "prototype" }, "release");
+    expect(launch.args).toContain("--configuration=release");
+    expect(launch.args).not.toContain("--release");
+    expect(launch.env.SEMIO_BUILD_MODE).toBe("release");
+  });
 });
 
 describe("an owned command of the local stack", () => {

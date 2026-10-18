@@ -19,21 +19,21 @@
 //!   (its volume over its thickness), `balusters` the number of balusters.
 //! * space: `gross_area` the room, `net_area` without columns, `height` the clear height, `net_volume` the room volume, `finishes` the floor, wall and ceiling finish areas of the room (`finishes`).
 
-use super::super::components::ComponentValue;
-use super::super::curtain_layout::CurtainLayout;
-use super::super::mep::{self, MepValue};
-use super::super::element_solids::columns::profile_loop;
-use super::super::element_solids::plan_kit::seg;
-use super::super::element_solids::railings::baluster_count;
-use super::super::element_solids::{curtain_walls, dep_object, dep_value, parts, rail_hosts, wall_sweeps, walls, ElementSolid};
-use super::super::families::FamilyProfiles;
-use super::super::finishes::{self, FinishQuantity};
-use super::super::opening_frames::{OpeningCut, OpeningFrame};
-use super::super::spaces::{SpaceRoom, SpaceStatus};
-use super::super::ramp_runs::{strip_of, RampRun};
-use super::super::stair_runs::StairRun;
-use super::super::storey_levels::{vertical_of, StoreyLevel};
-use super::super::wall_layout::WallLayout;
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+use crate::standards::v1::subsets::any::schema::inferences::mep::{self, MepValue};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::railings::baluster_count;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{curtain_walls, dep_object, dep_value, parts, rail_hosts, wall_sweeps, walls, ElementSolid};
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyProfiles;
+use crate::standards::v1::subsets::any::schema::inferences::finishes::{self, FinishQuantity};
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningCut, OpeningFrame};
+use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus};
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{strip_of, RampRun};
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, Component, CurtainWall, Infill, Layer, ModelSnapshot, Opening, OpeningKind, Phase, Railing, Ramp, Roof, Slab, Space, Stair, Vertex, Wall, WallSweep};
 use semio_framework_geometry::loops;
 use semio_framework_geometry::Point;
@@ -200,7 +200,7 @@ pub struct ModelQuantities {
 //#endregion 🔖️Values
 
 //#region 🔖️Measures
-fn density(snapshot: &ModelSnapshot, material: &str) -> f64 {
+pub fn density(snapshot: &ModelSnapshot, material: &str) -> f64 {
     snapshot.materials.get(material).map_or(0.0, |row| row.density)
 }
 
@@ -250,7 +250,7 @@ pub fn upward_area(solid: &ElementSolid, layer: u32) -> f64 {
         .sum()
 }
 
-fn solid_rows(snapshot: &ModelSnapshot, solid: &ElementSolid) -> Vec<LayerQuantity> {
+pub fn solid_rows(snapshot: &ModelSnapshot, solid: &ElementSolid) -> Vec<LayerQuantity> {
     let volumes = group_volumes(solid);
     let mut rows: BTreeMap<(u32, String), f64> = BTreeMap::new();
     for (group, volume) in solid.groups.iter().zip(volumes) {
@@ -802,6 +802,4 @@ pub fn summarise(snapshot: &ModelSnapshot, elements: BTreeMap<String, ElementQua
 
 //#endregion 🔖️Totals
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

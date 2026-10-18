@@ -4,7 +4,7 @@
 
 extern crate infinite_canvas as infinite_world;
 use semio_framework_os_renderer_wgpu_asset_authority::{RendererAssetFetchOwner, RendererAssetSealStep, close_renderer_asset_step, finish_renderer_asset, renderer_asset_io, reserve_renderer_asset_response, retire_cancelled_renderer_asset_step, return_renderer_asset, seal_renderer_asset_response, take_next_completed_renderer_asset_step, take_next_renderer_asset};
-use semio_framework_os_renderer_wgpu_asset_decode::{RendererAssetDecodeResult, RendererAssetDecodeSession, RendererAssetDecodeTurn, RendererAssetDecodeTurnKind, RendererAssetProbe, RendererAssetProbePhase};
+use semio_framework_os_renderer_wgpu_asset_decode::{RendererAssetDecodeInvocation, RendererAssetDecodeResult, RendererAssetDecodeSession, RendererAssetDecodeTurn, RendererAssetDecodeTurnKind, RendererAssetProbe, RendererAssetProbePhase};
 use semio_framework_os_renderer_wgpu_frame_actions::{AppInteractionState, FrameActionOwners, FrameActionReceiptOwner, FrameBuildInputs, FrameDeferredCursor, FrameDeferredWork, RuntimeDispatchCursor, RuntimeDispatchSource, dispatch_normalized_event, settle_renderer_action_receipt};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_renderer_wgpu_frame_actions::{FrameExecutionOwnerCell, FrameExecutionRegistry, FrameMaintenanceAuthority, frame_maintenance_terminal_fault};

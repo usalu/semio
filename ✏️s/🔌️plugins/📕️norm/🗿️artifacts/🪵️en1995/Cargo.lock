@@ -330,7 +330,6 @@ name = "semio-framework-2d"
 version = "0.1.0"
 dependencies = [
  "semio-framework-2d-booleans",
- "semio-framework-2d-compute",
  "semio-framework-2d-engine",
  "semio-framework-2d-path-flatten",
  "semio-framework-2d-path-stroke",
@@ -2402,7 +2401,7 @@ name = "semio-framework-plugin-decl-app"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-composition-admission",
@@ -2489,7 +2488,7 @@ name = "semio-framework-plugin-decl-surface"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-composition-admission",
@@ -3423,7 +3422,7 @@ name = "semio-framework-plugin-testing-laws"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-artifact-reference",
  "semio-framework-composition-admission",
  "semio-framework-diagnostic",
@@ -4776,7 +4775,7 @@ name = "semio-s-artifact-norm-en1995-editor"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-async-macros",
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
@@ -4785,6 +4784,7 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-s-artifact-norm-en1995-examples",
  "semio-s-artifact-norm-en1995-inferences",
  "semio-s-artifact-norm-en1995-io",
  "semio-s-artifact-norm-en1995-model",
@@ -5055,6 +5055,7 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-value-derive",
  "semio-s-artifact-norm-en1995-diff",
+ "semio-s-artifact-norm-en1995-examples",
  "semio-s-artifact-norm-en1995-model",
  "semio-s-artifact-norm-en1995-mutations",
  "semio-s-plugin-norm-compliance",
@@ -5065,7 +5066,7 @@ dependencies = [
 name = "semio-s-artifact-norm-en1995-viewer"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
+ "semio-framework-2d-compute",
  "semio-framework-async-macros",
  "semio-framework-os-kernel",
  "semio-framework-plugin",

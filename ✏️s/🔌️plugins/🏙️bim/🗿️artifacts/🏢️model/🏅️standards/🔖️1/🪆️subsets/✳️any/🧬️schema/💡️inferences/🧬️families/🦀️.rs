@@ -6,14 +6,13 @@
 //! ([`parameters`]), the framework geometry builds the solids ([`solids`]). In the model graph a family is one node without parents; the solids of the columns, beams, mullions and railings whose
 //! profile is `Profile::Family` have that node as a parent and read its outline through [`FamilyProfiles`]. See `r11-decision-families.md` and `r12-exec-w2-f1-expression.md` in the BIM-PLUGIN ticket.
 
-use super::super::element_solids::{dep_object, dep_value, SolidBounds};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBounds};
 use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ModelSnapshot, ParameterKind, Profile, Railing, Vertex};
 use semio_framework_value::DslValue;
 use std::borrow::Cow;
 use std::collections::BTreeMap;
 
-#[path = "⚠️issues/🦀️.rs"]
-pub mod issues;
+pub use semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::inferences::families::issues;
 #[path = "🧮️parameters/🦀️.rs"]
 pub mod parameters;
 #[path = "🩺️findings/🦀️.rs"]

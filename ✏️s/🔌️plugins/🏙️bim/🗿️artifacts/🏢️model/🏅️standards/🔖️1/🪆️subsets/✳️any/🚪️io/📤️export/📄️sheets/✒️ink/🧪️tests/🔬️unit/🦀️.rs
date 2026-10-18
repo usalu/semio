@@ -1,10 +1,15 @@
 //! 🧪️ The ink of a sheet: one frame, one caption per window, a cell of text per title block field and a row of text per revision.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, TitleField};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::column_edges;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+use crate::standards::v1::subsets::any::io::export::sheets::ink::*;
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::layout_of;
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Point2, Sheet, SheetRevision, View, ViewKind, Viewport};
-use super::super::testkit::labels;
+use crate::standards::v1::subsets::any::io::export::sheets::testkit::labels;
 use std::collections::BTreeMap;
 
 

@@ -1,8 +1,8 @@
 //! ↩️ Inverse of `DeleteWindowType`: the setters of the properties and classifications of the type, then the concrete `CreateWindowType` carrying the full removed record, none when the window type was absent.
 
-use super::super::create_window_type::CreateWindowType;
-use super::super::cascade;
-use super::DeleteWindowType;
+use crate::standards::v1::subsets::any::schema::mutations::create_window_type::CreateWindowType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_window_type::DeleteWindowType;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteWindowType, base: &ModelSnapshot) -> Vec<Op>

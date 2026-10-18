@@ -1,5 +1,6 @@
-use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::viewer::html::modes::view::windows::main::*;
+use semio_s_artifact_stdio_html_inferences::viewer::html::modes::view::windows::main::{definition, WINDOW_KIND_ID, render};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_uses_the_frozen_window_kit_kind_id() {

@@ -17,10 +17,8 @@ use semio_framework_artifact_reference::Dialect;
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 use std::collections::BTreeMap;
 
-#[path = "🧭️frames/🦀️.rs"]
-pub mod frames;
-#[path = "📖️reader/🦀️.rs"]
-pub mod reader;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::frames;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::import::ifc::reader;
 #[path = "🏛️spatial/🦀️.rs"]
 pub mod spatial;
 #[path = "🧬️data/🦀️.rs"]
@@ -235,6 +233,4 @@ impl Deserializer<ModelSnapshot> for Ifc4IntoModel {
 }
 //#endregion 🔖️Deserializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

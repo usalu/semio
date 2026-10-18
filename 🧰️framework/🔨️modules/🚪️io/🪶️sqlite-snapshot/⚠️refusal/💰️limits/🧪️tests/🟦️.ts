@@ -5,7 +5,10 @@ import relationalSchema from "../../../🧬️schema/🏛️relational/🔣️.j
 import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
 import {SqliteAllocationControl,ValueError} from "../../../🟦️.ts";
 import authority from "./🧫️fixtures/🛂️authority.json";
-import {readFileSync} from "node:fs";
+import {readFileSync,readdirSync} from "node:fs";
+import {join,resolve} from "node:path";
+
+const sourceTree=(directory:string):string=>readdirSync(directory,{withFileTypes:true}).filter(entry=>!["node_modules","🧪️tests","🧪️testing","📦️packages"].includes(entry.name)).flatMap(entry=>entry.isDirectory()?[sourceTree(join(directory,entry.name))]:entry.name==="🦀️.rs"?[readFileSync(join(directory,entry.name),"utf8")]:[]).join("\n");
 
 test("original SQLite fixed ceilings are independently constrained",()=>{
  expect(validateJsonSchemaSubset(relationalSchema,fixture.database)).toEqual([]);
@@ -48,7 +51,7 @@ test("original receiving allocations require their own port despite unrelated na
   expect(authority.nativePaidBytes).toBeGreaterThan(authority.cases.find(row=>row.id==="receiving-unbound")!.bytes);
   expect(authority.nativePaidBytes).toBeLessThan(authority.maximumBytes);
  }finally{database.close();}
- const source=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");
+ const source=sourceTree(resolve(import.meta.dir,"../../.."));
  expect(source).toContain("pub fn receiving_scope(");
  expect(source).toContain("pub struct SqliteSnapshotReceivingControl");
  expect(source).toContain(authority.message);

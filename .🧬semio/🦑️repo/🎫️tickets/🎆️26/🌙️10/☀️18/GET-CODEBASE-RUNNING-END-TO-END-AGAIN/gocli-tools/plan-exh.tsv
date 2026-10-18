@@ -1,0 +1,6 @@
+🔭️exhaustive_test.go	🔭️ Exhaustive tests of the cli domain: codebase, policy, bundle, goal document, ticket identifiers and tree commands.	26-291
+🔁️exhaustive_lifecycle_test.go	🔁️ Exhaustive tests of the cli domain: end-to-end lifecycles, JSON, markdown and lifecycle commands.	293-764
+📃️exhaustive_list_test.go	📃️ Exhaustive tests of the cli domain: list, section and streaming list commands.	766-1075
+🔍️exhaustive_query_test.go	🔍️ Exhaustive tests of the cli domain: query flag, fuzzy match, cache index and empty queries.	1077-1463
+🧮️exhaustive_tool_test.go	🧮️ Exhaustive tests of the cli domain: statute, checkpoint and tool commands.	1465-1659
+⚖️exhaustive_parity_test.go	⚖️ Exhaustive tests of the cli domain: MCP ticket close, list parity and mermaid commands.	1661-1978

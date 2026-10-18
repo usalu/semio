@@ -3,7 +3,8 @@ import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import {applyPatch} from "fast-json-patch";
 const storeUnitPaths=["🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧭️prelude/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧮️snapshot/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🧵️operations/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/♻️retirement/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/🏭️preparation/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/📨️envelopes/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/🗄️store/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️testing/🎭️doubles/🧾️callers/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🔬️unit/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌆️bin-02/🔬️unit/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🔬️unit/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🔬️unit/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🔬️unit/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🔬️unit/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🍰️companion/🔬️unit/🦀️.rs"];
-const readStoreUnit=(root:string)=>storeUnitPaths.map(path=>readFileSync(resolve(root,path),"utf8")).join("\n");
+const splitStoreUnitFolders=["🏙️bin-01","🌈️bin-03","🌌️bin-04","🌅️bin-05","🌴️bin-06"];
+const readStoreUnit=(root:string)=>storeUnitPaths.map(path=>splitStoreUnitFolders.some(folder=>path.includes("/"+folder+"/"))?readModuleTreeSource(resolve(root,path)):readFileSync(resolve(root,path),"utf8")).join("\n");
 test("owned member batch retains exact ordered source across refusal and cancellation",()=>{
  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const source=structuredClone(fixture.values);
@@ -130,7 +131,7 @@ test("installed store and composed member publish full fallible retirement deman
   const semio = readFileSync(join(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🦀️.rs"), "utf8");
   expect(semio.includes("SemioStoreOwnedDisposer")).toBe(false);
   expect(semio.includes("enum SemioStoreClosePhase")).toBe(false);
-  expect(semio).toContain("dsl::ArtifactStoreCursorDisposer::<Self, subsets::$module::schema::mutations::$mutation>::new()");
+  expect(semio).toContain("dsl::space_members!");
 });
 
 
@@ -168,10 +169,10 @@ test("mounted original publication keeps independent retirement currencies and c
   expect(owner.includes("fn retirement_demands")).toBe(true);
   expect(owner.includes("batch.next_demands(maximum_body_bytes)?")).toBe(true);
   expect(owner.includes("group.retirement_demands(maximum_body_bytes)?")).toBe(true);
-  expect(owner.includes("context.next_close_capacity_byte_demand(maximum_body_bytes)?")).toBe(true);
-  expect(owner.includes("InteractiveJobCloseStep::Complete{progress}")).toBe(true);
-  expect(owner.includes(".admit(child_grant,context.terminal_is_empty())")).toBe(true);
-  expect(owner.includes("step=>step")).toBe(true);
+  expect(owner.includes("self.identity.next_close_byte_demand()")).toBe(true);
+  expect(owner.includes("InteractiveJobCloseStep::Complete{progress:Default::default()}")).toBe(true);
+  expect(owner.includes("self.identity.close_granted(child_grant)")).toBe(true);
+  expect(source.includes("InteractiveJobCloseStep::Pending{progress:step.progress()}")).toBe(true);
   expect(owner.includes("capacity.max(release)")).toBe(false);
   const schema = JSON.parse(readFileSync(valueRetirementSchemaUrl, "utf8"));
   const valid = new Ajv({strict:false}).compile({...schema, $ref:"#/$defs/Demand"});
@@ -212,7 +213,7 @@ test("Services original backing and five-axis retirement use genuine Job contrac
  for(const row of cases.retirement){const physical=Buffer.alloc(row.capacityBytes);expect(physical.byteLength).toBe(row.capacityBytes);expect(valid({copyBytes:row.copyBytes,capacityBytes:row.birthBytes,releaseBytes:physical.byteLength,depth:row.depth})).toBe(true);expect(physical.byteLength).toBeGreaterThan(row.logicalBytes);}
  const native=readFileSync(join(base,"🚪️native-io/🦀️.rs"),"utf8");
  expect(native).toContain("fn next_close_capacity_byte_demand");expect(native).toContain("grant: RetainedCloneGrant");expect(native).toContain("path.capacity()");expect(native).not.toContain("error.clear()");expect(native).not.toContain("JobPayloadCloseStep");expect(native).not.toContain("close_step(1,");expect(native).toContain("Result<RetirementDemand, ValueError>");expect(native).toContain("bytes.close_step(child)");expect(native).toContain("writer.close_step(child)");
- const pool=readModuleTreeSource(join(base,"🦀️.rs"),{crates:false});expect(pool).toContain("schedule_rejected_compute_job");expect(pool).not.toContain("while !rejected.terminal_is_empty()");expect(pool).toContain("close_step_outcome_slot(&mut state.retained_outcome");expect(pool).not.toContain("outcome.close_step(1,");
+ const pool=readModuleTreeSource(join(base,"🦀️.rs"),{crates:false});expect(pool).toContain("close_original_retained_step(cx,demand");expect(pool).not.toContain("while !rejected.terminal_is_empty()");expect(pool).toContain("self.session.close_step(cx)");expect(pool).not.toContain("outcome.close_step(1,");
  for(const path of ["🚪️native-io/🦀️.rs","🦀️.rs","🧪️tests/🔬️native-io-unit/🦀️.rs","🧪️tests/🔬️component-unit/🦀️.rs"]){const grammar=spawnSync("rustfmt",["--edition","2024","--emit","stdout","--config","skip_children=true"],{input:readFileSync(join(base,path),"utf8"),encoding:"utf8",maxBuffer:8*1024*1024,timeout:2000});expect(grammar.status,`${path}: ${grammar.stderr}`).toBe(0);}
 
 });
@@ -223,7 +224,7 @@ test("private actual member publication forwards five supplied OneItem axes",()=
  const base=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group");
  const source=readFileSync(join(base,"📦️owner/🦀️.rs"),"utf8");
  expect(source).not.toContain("maximum_bytes:");expect(source).not.toContain("grant.maximum_bytes");expect(source).toContain("next_open_retirement_demands");expect(source).not.toContain("open.next_close_byte_demand()");
- const native=readFileSync(join(base,"🪟️mounted/📦️owner/🦀️.rs"),"utf8");expect(native).toContain("next_open_retirement_demands");
+ const native=readFileSync(join(base,"🪟️mounted/📦️owner/🦀️.rs"),"utf8");expect(native).toContain("group.retirement_demands(maximum_body_bytes)?");
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});
  const demand={copyBytes:Int32Array.BYTES_PER_ELEMENT,capacityBytes:Buffer.alloc(128).byteLength,releaseBytes:Buffer.alloc(256).byteLength,depth:3};expect(valid(demand)).toBe(true);expect(Object.values(demand)).toEqual([4,128,256,3]);
 });
@@ -232,7 +233,7 @@ test("private actual member publication forwards five supplied OneItem axes",()=
 test("Store returned-read ingress consumes the supplied grant before original custody transfer",()=>{
  let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");
  const source=readStoreSourceText();
- const ingress=source.slice(source.indexOf("    pub fn take_returned_snapshot_read_retirement("),source.indexOf("    fn close_cursor_demands("));
+ const ingressStart=source.indexOf("    pub fn take_returned_snapshot_read_retirement("),ingress=source.slice(ingressStart,source.indexOf("\n    }\n",ingressStart));
  expect(ingress).toContain("grant: RetainedCloneGrant");expect(ingress).toContain("try_admit_one_returned::<P, _>(grant");expect(ingress).not.toContain("try_take_one_returned");expect(ingress).not.toContain("for _ in");expect(ingress).not.toContain("Box::new");
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});
  const demand={copyBytes:0,capacityBytes:Buffer.alloc(128).byteLength,releaseBytes:0,depth:1};expect(valid(demand)).toBe(true);expect(valid({...demand,capacityBytes:-1})).toBe(false);
@@ -242,9 +243,9 @@ test("Store returned-read ingress consumes the supplied grant before original cu
 
 test("ephemeral publication retires original preparation frames and capabilities under independent axes",()=>{
  let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");
- const source=readStoreSourceText();
+ const source=readModuleTreeSource(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/🦀️.rs"));
  const start=source.indexOf("impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation>");const end=source.indexOf("impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication",start);const owner=source.slice(start,end);
- expect(owner).toContain("pub fn retirement_demands(&self");expect(owner).toContain("Result<RetainedCloneStep, ValueError>");expect(owner).not.toContain("SnapshotRetirementStep");expect(owner).not.toContain("fault.pop()");expect(owner).toContain("fault.capacity()");expect(owner).toContain("size_of_val(owner.as_ref())");expect(owner).toContain("factory_retirement");expect(owner).toContain("grant.maximum_depth - 1");
+ expect(owner).toContain("pub fn retirement_demands(&self");expect(owner).toContain("Result<RetainedCloneStep, ValueError>");expect(owner).not.toContain("SnapshotRetirementStep");expect(owner).not.toContain("fault.pop()");expect(owner).toContain("text.capacity()");expect(owner).toContain("size_of_val(owner.as_ref())");expect(owner).toContain("factory_retirement");expect(owner).toContain("grant.maximum_depth - 1");
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});
  for(const releaseBytes of [0,128,16384]){const backing=Buffer.alloc(releaseBytes);const demand={copyBytes:0,capacityBytes:0,releaseBytes:backing.byteLength,depth:1};expect(valid(demand)).toBe(true);expect(demand.releaseBytes).toBe(releaseBytes);expect(valid({...demand,depth:-1})).toBe(false);}
 });
@@ -253,9 +254,9 @@ test("ephemeral publication retires original preparation frames and capabilities
 test("actual Plugin member birth retains nested source depth before original request transfer",()=>{
  let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");
  const base=join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
- const source=readFileSync(join(base,"🦀️.rs"),"utf8");expect(source).not.toContain("M::open_birth_bytes(request)");expect(source).toContain("fn member_open_birth_demand");expect(source).toContain("demand.depth > 64");
+ const source=readModuleTreeSource(join(base,"🗃️document/🦀️.rs"));expect(source).not.toContain("M::open_birth_bytes(request)");expect(source).toContain("fn member_open_birth_demand");expect(source).toContain("demand.depth > 64");
  const group=readFileSync(join(base,"🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs"),"utf8");expect(group).toContain("M::open_birth_demand(request)");expect(group).toContain("next_open_birth_demand");expect(group).toContain("maximum_depth: grant.maximum_depth - 2");expect(group).not.toContain("M::open_birth_bytes(request)");
- const mounted=readFileSync(join(base,"🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs"),"utf8");expect(mounted).toContain("birth.depth>64");
+ const mounted=readFileSync(join(base,"🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🦀️.rs"),"utf8");expect(mounted).not.toContain("M::open_birth_bytes(request)");
  const cases=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});
  for(const parents of [0,1,2]){const demand={copyBytes:0,capacityBytes:Buffer.alloc(cases.grant.maximumCapacityBytes).byteLength,releaseBytes:0,depth:parents+1};expect(valid(demand)).toBe(true);expect(demand.capacityBytes).toBe(cases.grant.maximumCapacityBytes);expect(demand.depth).toBe(parents+1);expect(cases.grant.maximumDepth-demand.depth).toBeGreaterThanOrEqual(0);}
@@ -263,8 +264,8 @@ test("actual Plugin member birth retains nested source depth before original req
 
 
 test("Store live read admission restores the same generation slot before any failed ownership transfer",()=>{
- let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");const source=readStoreSourceText();const read=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs"),"utf8");
- expect(read.includes("fn admit_retirement<T: Send + Sync + 'static>")).toBe(true);expect(read.includes("self.owner = Some(original)")).toBe(true);expect(source.includes("snapshot: &mut Option<ErasedSnapshotRead>")).toBe(true);expect(source.includes("SnapshotRetirementRejected")||read.includes("SnapshotRetirementRejected")).toBe(false);
+ let root=import.meta.dir;while(!existsSync(join(root,"bun.lock")))root=resolve(root,"..");const source=readStoreSourceText();const read=readModuleTreeSource(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs"));
+ const shared=readFileSync(join(root,"🧰️framework/🔨️modules/🌱️value/♻️retirement/🔗️shared/🏭️factory/🦀️.rs"),"utf8");expect(read.includes("pub fn admit_original_snapshot_alias<P,Mu>(original:&mut Option<ArtifactDerivedSnapshot<P>>")).toBe(true);expect(shared.includes("pub fn admit_original(original:&mut Option<Arc<T>>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>,grant")).toBe(true);expect(source.includes("snapshot: &mut Option<ErasedSnapshotRead>")).toBe(true);expect(source.includes("SnapshotRetirementRejected")||read.includes("SnapshotRetirementRejected")).toBe(false);
  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));const database=new Database(":memory:");try{database.exec("CREATE TABLE slots(id INTEGER PRIMARY KEY,generation INTEGER,owner TEXT)");database.query("INSERT INTO slots VALUES(?,?,?)").run(1,17,JSON.stringify(fixture.values));database.exec("BEGIN");database.query("DELETE FROM slots WHERE id=1 AND generation=17").run();database.exec("ROLLBACK");expect(database.query("SELECT generation,owner FROM slots WHERE id=1").get()).toEqual({generation:17,owner:JSON.stringify(fixture.values)});}finally{database.close();}
 });
 
@@ -319,7 +320,7 @@ test("decode retirement separates inline page work from original fixed directory
  const grant=fixture.physicalCloseGrant;const pageBytes=16384;
  const schema=JSON.parse(readFileSync(valueOrderedRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Grant"});expect(valid(fixture.decodeCloseGrant)).toBe(true);expect(fixture.decodeCloseGrant.maximumCopyBytes).toBe(pageBytes);expect(fixture.decodeCloseGrant.maximumCapacityBytes).toBe(0);
  for(const pages of [1,2]){const layout=Buffer.alloc(pages*(pageBytes+Uint16Array.BYTES_PER_ELEMENT));expect(layout.byteLength).toBe(pages*(pageBytes+2));expect(grant.maximumReleaseBytes).toBeGreaterThanOrEqual(layout.byteLength);expect(Buffer.alloc(pageBytes).byteLength).toBe(pageBytes);expect(grant.maximumCopyBytes).toBeLessThan(pageBytes);}
- const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs"),"utf8");
+ const source=readModuleTreeSource(join(root,"🧰️framework/🔨️modules/🎒️pack/🔤️json/📥️retained/🧬️schema/🦀️.rs"),{crates:false});
  const start=source.indexOf("pub struct OwnedSchemaDecodePages");const pages=source.slice(start,source.indexOf("pub struct OwnedSchemaTokenCursor",start));
  expect(pages.includes("self.slots.is_empty()")).toBe(true);expect(pages.includes("fn close_backing_step")).toBe(true);
  const token=source.slice(source.indexOf("impl OwnedSchemaTokenCursor"),source.indexOf("pub struct OwnedSchemaRecordCursor"));
@@ -373,5 +374,5 @@ test("shared Store coverage admits only every independently supplied axis",()=>{
  const fixture=JSON.parse(readFileSync(resolve(import.meta.dir,"🧫️fixtures/🔣️.json"),"utf8"));const {demand,denials}=fixture.grantCoverage;const policy=fixture.physicalCloseGrant;
  const schema=JSON.parse(readFileSync(valueRetirementSchemaUrl,"utf8"));const valid=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/Demand"});expect(valid(demand)).toBe(true);
  const database=new Database(":memory:");try{for(const row of [{axis:null,value:null},...denials]){const g={...policy,...(row.axis?{[row.axis]:row.value}:{})};const own=g.maximumItems>0&&g.maximumCopyBytes>=demand.copyBytes&&g.maximumCapacityBytes>=demand.capacityBytes&&g.maximumReleaseBytes>=demand.releaseBytes&&g.maximumDepth>=demand.depth;const oracle=database.query("SELECT (? > 0 AND ? >= ? AND ? >= ? AND ? >= ? AND ? >= ?) AS covered").get(g.maximumItems,g.maximumCopyBytes,demand.copyBytes,g.maximumCapacityBytes,demand.capacityBytes,g.maximumReleaseBytes,demand.releaseBytes,g.maximumDepth,demand.depth) as {covered:number};expect(own).toBe(Boolean(oracle.covered));expect(own).toBe(row.axis===null);}}finally{database.close();}
- const source=readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📥️lifted/🧬️owned-schema/🦀️.rs"),"utf8");const start=source.indexOf("fn artifact_retirement_grant_covers(");const owner=source.slice(start,source.indexOf("\n}",start));expect(owner).toContain("grant.maximum_depth >= demand.depth");
+ const source=readModuleTreeSource(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📥️lifted/🧬️owned-schema/🦀️.rs"));const start=source.indexOf("fn artifact_retirement_grant_covers(");const owner=source.slice(start,source.indexOf("\n}",start));expect(owner).toContain("grant.maximum_depth >= demand.depth");
 });

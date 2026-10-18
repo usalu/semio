@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `RemoveFamilyParameter`: the parameter record leaves. Refused while the formula of another parameter or a solid of the family refers to it (computed from the authored
 //! text of the formulas only).
 
-use super::super::family_rules;
-use super::RemoveFamilyParameter;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules;
+use crate::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter;
 use crate::standards::v1::subsets::any::schema::authored::formula;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

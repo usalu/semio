@@ -1,7 +1,7 @@
 /** 🖋️ Every neutral operator is independently interpreted by SQLite with exact named operands. */
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import type { PdfOp } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfOp } from "../../../../../🧬️schema/📸️snapshot/🖋️content/🟦️.ts";
 import { PdfProjection, PdfReader } from "../../🧩️entity/🟦️.ts";
 import { PDF17_SQLITE_SCHEMA } from "../../🧬️schema/🟦️.ts";
 import { writePdfOperations, readPdfOperations, pdfContentNumberColumns } from "../../🖋️content/🟦️.ts";

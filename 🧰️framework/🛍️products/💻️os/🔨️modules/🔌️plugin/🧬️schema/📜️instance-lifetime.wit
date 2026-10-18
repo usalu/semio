@@ -1,0 +1,40 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §2). Everything the host feeds
+/// into a `poll` call — lifecycle, channel, UI acks, effect completions, messaging, timers, and
+/// inbound requests. Rust SSOT: `semio_framework::kernel::Event` (packet A3); mirrors field-for-
+/// field, same conversion pattern as `effects.wit`.
+interface instance-lifetime {
+  record lifetime {
+    activation-generation: u64,
+    instance-id: u32,
+    guest-lifetime: u64,
+  }
+  record open-request {
+    activation-generation: u64,
+    instance-id: u32,
+    request-sequence: u64,
+  }
+  record close-request {
+    lifetime: lifetime,
+    request-sequence: u64,
+  }
+  record captured-receipt {
+    lifetime: lifetime,
+    request-sequence: u64,
+  }
+  record close-receipt {
+    lifetime: lifetime,
+    request-sequence: u64,
+    close-generation: u64,
+  }
+  record ui-patch-receipt {
+    lifetime: lifetime,
+    patch-sequence: u64,
+  }
+  variant receipt {
+    captured(captured-receipt),
+    accepted(close-receipt),
+    retired(close-receipt),
+  }
+}

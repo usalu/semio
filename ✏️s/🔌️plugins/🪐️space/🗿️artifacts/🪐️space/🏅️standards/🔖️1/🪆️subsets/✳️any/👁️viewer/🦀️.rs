@@ -11,7 +11,7 @@ use crate::viewer::space_index::modes::view;
 use crate::viewer::space_index::modes::view::windows::main;
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_plugin::{built_to_component_tree, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Fault, NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, UiAssemblyResult, ViewEmit, Viewer};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions this wave (no utilities, no mutations), so its typed command

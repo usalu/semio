@@ -1,6 +1,6 @@
 //! 📐️ `set-beam` payload. Edits a beam sparsely: type, top offset at the start (signed: positive above, negative below the storey top), top offset at the end (assigned: an inclined beam, or none for a level one) and name; absent fields stay untouched. Its axis is set by `set-beam-axis`.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::BeamPatch, ModelDiff}, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::BeamPatch, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -30,13 +30,16 @@ impl SetBeam {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetBeam {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetBeam
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetBeam>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "beam", kind: "set-beam", record: "SetBeam" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_beam::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_beam::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit beam \"{}\"", self.id), &format!("Träger \"{}\" ändern", self.id))

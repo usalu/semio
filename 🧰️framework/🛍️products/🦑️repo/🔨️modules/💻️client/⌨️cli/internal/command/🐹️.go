@@ -486,6 +486,9 @@ func (command *Command) execute(args []string) (*Command, error) {
 		return selected, nil
 	}
 	if len(selected.children) > 0 {
+		if len(positional) > 0 {
+			return selected, fmt.Errorf("unknown command %q for %q", positional[0], selected.Name())
+		}
 		return selected, selected.Help()
 	}
 	return selected, nil

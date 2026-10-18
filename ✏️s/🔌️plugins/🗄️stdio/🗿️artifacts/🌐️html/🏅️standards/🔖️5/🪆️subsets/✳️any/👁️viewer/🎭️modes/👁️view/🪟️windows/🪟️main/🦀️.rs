@@ -1,7 +1,7 @@
 //! 👁️ `html` view (any) — Main window: real `TextWindowKit`
 //! render of the current document (read-only).
 
-use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use semio_framework_plugin::app::{TextView, TextWindowKit};
 use semio_framework_plugin::{BuiltNode, WindowKindDefinition, WindowKit};
 use pack::snapshot::ArtifactDsl;

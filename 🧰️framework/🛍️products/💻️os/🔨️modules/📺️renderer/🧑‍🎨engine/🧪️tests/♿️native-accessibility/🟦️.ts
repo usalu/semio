@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 
 import { describe, expect, test } from "vitest";
 import { uiAccessibilityRoleV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🖼️presentation/♿️accessibility/🟦️.ts";
-import type { Component } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import type { Component } from "../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const fixture = JSON.parse(readFileSync(join(engineRoot, "🧪️tests/🧫️fixtures", "♿️native-accessibility-tree", "🔣️.json"), "utf8"));

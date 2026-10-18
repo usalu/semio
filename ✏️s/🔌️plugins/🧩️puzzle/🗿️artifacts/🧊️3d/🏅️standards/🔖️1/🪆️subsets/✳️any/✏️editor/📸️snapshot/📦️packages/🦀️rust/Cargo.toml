@@ -30,6 +30,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-puzzle-3d-diff = { workspace = true }
 semio-s-artifact-puzzle-3d-editor-config = { workspace = true }
 semio-s-artifact-puzzle-3d-editor-terminology = { workspace = true }
+semio-s-artifact-puzzle-3d-examples = { path = "../../../../📚️examples/📦️packages/🦀️rust" }
 semio-s-artifact-puzzle-3d-model = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations = { workspace = true }
 semio-s-artifact-puzzle-3d-mutations-object = { workspace = true }

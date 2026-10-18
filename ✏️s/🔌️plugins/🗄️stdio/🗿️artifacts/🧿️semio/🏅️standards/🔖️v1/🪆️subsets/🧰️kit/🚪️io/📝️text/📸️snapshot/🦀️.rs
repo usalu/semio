@@ -30,12 +30,12 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
@@ -47,18 +47,18 @@ use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child_opt;
 use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child_opt;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_child_list<S>(list: &[store::os_store::artifact_child::ArtifactChild<S>]) -> String {
+pub fn enc_child_list<S>(list: &[store::os_store::artifact_child::ArtifactChild<S>]) -> String {
     format!("[{}]", list.iter().map(enc_child).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_child_list<S>(s: &str) -> Result<Vec<store::os_store::artifact_child::ArtifactChild<S>>, String> {
+pub fn dec_child_list<S>(s: &str) -> Result<Vec<store::os_store::artifact_child::ArtifactChild<S>>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_child).collect()
 }
 
 /// 📌️ `LinkPin`: `h` (Head) | `c,<hex id>` (Checkpoint) | `s,<hex hash>,<size>,<hex media_type>` (Snapshot).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_pin(p: &store::LinkPin) -> String {
+pub fn enc_pin(p: &store::LinkPin) -> String {
     match p {
         store::LinkPin::Head => "[h]".to_string(),
         store::LinkPin::Checkpoint { id } => format!("[c,{}]", enc_str(id)),
@@ -67,7 +67,7 @@ pub(crate) fn enc_pin(p: &store::LinkPin) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_pin(s: &str) -> Result<store::LinkPin, String> {
+pub fn dec_pin(s: &str) -> Result<store::LinkPin, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     match parts.as_slice() {
         [tag] if *tag == "h" => Ok(store::LinkPin::Head),
@@ -90,12 +90,12 @@ pub fn dec_link(s: &str) -> Result<store::ArtifactLink, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_link_list(list: &[store::ArtifactLink]) -> String {
+pub fn enc_link_list(list: &[store::ArtifactLink]) -> String {
     format!("[{}]", list.iter().map(enc_link).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_link_list(s: &str) -> Result<Vec<store::ArtifactLink>, String> {
+pub fn dec_link_list(s: &str) -> Result<Vec<store::ArtifactLink>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_link).collect()
 }
 
@@ -118,60 +118,60 @@ pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_type(t: &SemioKitType) -> String {
+pub fn enc_type(t: &SemioKitType) -> String {
     format!("[{},{},{}]", enc_str(&t.id), enc_str(&t.name), enc_str(&t.category))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_type(s: &str) -> Result<SemioKitType, String> {
+pub fn dec_type(s: &str) -> Result<SemioKitType, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, category] = parts.as_slice() else { return Err(format!("type: expected 3 fields, got {}", parts.len())) };
     Ok(SemioKitType { id: dec_str(id)?, name: dec_str(name)?, category: dec_str(category)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_type_list(list: &[SemioKitType]) -> String {
+pub fn enc_type_list(list: &[SemioKitType]) -> String {
     format!("[{}]", list.iter().map(enc_type).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_type_list(s: &str) -> Result<Vec<SemioKitType>, String> {
+pub fn dec_type_list(s: &str) -> Result<Vec<SemioKitType>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_type).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_piece(p: &SemioKitPiece) -> String {
+pub fn enc_piece(p: &SemioKitPiece) -> String {
     format!("[{},{},{}]", enc_str(&p.id), enc_str(&p.type_id), enc_transform(&p.transform))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_piece(s: &str) -> Result<SemioKitPiece, String> {
+pub fn dec_piece(s: &str) -> Result<SemioKitPiece, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, type_id, transform] = parts.as_slice() else { return Err(format!("piece: expected 3 fields, got {}", parts.len())) };
     Ok(SemioKitPiece { id: dec_str(id)?, type_id: dec_str(type_id)?, transform: dec_transform(transform)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_connection(c: &SemioKitConnection) -> String {
+pub fn enc_connection(c: &SemioKitConnection) -> String {
     format!("[{},{},{},{},{}]", enc_str(&c.id), enc_str(&c.connecting_piece_id), enc_str(&c.connecting_port), enc_str(&c.connected_piece_id), enc_str(&c.connected_port))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_connection(s: &str) -> Result<SemioKitConnection, String> {
+pub fn dec_connection(s: &str) -> Result<SemioKitConnection, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, cp_id, cp_port, cd_id, cd_port] = parts.as_slice() else { return Err(format!("connection: expected 5 fields, got {}", parts.len())) };
     Ok(SemioKitConnection { id: dec_str(id)?, connecting_piece_id: dec_str(cp_id)?, connecting_port: dec_str(cp_port)?, connected_piece_id: dec_str(cd_id)?, connected_port: dec_str(cd_port)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_design(d: &SemioKitDesign) -> String {
+pub fn enc_design(d: &SemioKitDesign) -> String {
     let pieces = d.pieces.iter().map(enc_piece).collect::<Vec<_>>().join(",");
     let connections = d.connections.iter().map(enc_connection).collect::<Vec<_>>().join(",");
     format!("[{},{},[{}],[{}]]", enc_str(&d.id), enc_str(&d.name), pieces, connections)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_design(s: &str) -> Result<SemioKitDesign, String> {
+pub fn dec_design(s: &str) -> Result<SemioKitDesign, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, pieces, connections] = parts.as_slice() else { return Err(format!("design: expected 4 fields, got {}", parts.len())) };
     let pieces = split_top_level(strip_brackets(pieces)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_piece).collect::<Result<Vec<_>, String>>()?;
@@ -180,12 +180,12 @@ pub(crate) fn dec_design(s: &str) -> Result<SemioKitDesign, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_design_list(list: &[SemioKitDesign]) -> String {
+pub fn enc_design_list(list: &[SemioKitDesign]) -> String {
     format!("[{}]", list.iter().map(enc_design).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_design_list(s: &str) -> Result<Vec<SemioKitDesign>, String> {
+pub fn dec_design_list(s: &str) -> Result<Vec<SemioKitDesign>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_design).collect()
 }
 

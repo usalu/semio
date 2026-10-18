@@ -2,8 +2,8 @@
 //! an attach (`Roof`, `Slab`, `Ceiling`) must name an existing roof, slab or ceiling of the same building with a finite offset and no loop of references (authored reads only);
 //! the resolved height is inferred, never written.
 
-use super::super::wall_depth::attach_flaw;
-use super::SetWallTop;
+use crate::standards::v1::subsets::any::schema::mutations::wall_depth::attach_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationOutcome, OutcomeCode};
 

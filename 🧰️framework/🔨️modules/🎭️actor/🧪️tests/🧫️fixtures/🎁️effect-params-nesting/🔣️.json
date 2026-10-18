@@ -1,6 +1,6 @@
 {
-  "why": "W0 extracted every `req`-bearing effect's payload into its own `…-params` record (`🔌️plugin/🧬️schema/📜️.wit`), but `wireEffectToFriendly` kept reading `dispatch-action`, `open-window` and `spawn-plugin-instance` FLAT. The host therefore received a `dispatchAction` whose `action` was the empty string: on wgpu the guest's re-armed `flowEvalTick` reached the action door nameless, faulted, and — through `flush_deferred_actions` — took the whole shell boot with it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A WIT `option<T>` crosses as `{tag, val}` and must be unwrapped before the payload is read, or a `some` wrapper reaches the pack decoder as if it were the pack.",
-  "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit",
+  "why": "W0 extracted every `req`-bearing effect's payload into its own `…-params` record (`🔌️plugin/🧬️schema/📜️effects.wit`), but `wireEffectToFriendly` kept reading `dispatch-action`, `open-window` and `spawn-plugin-instance` FLAT. The host therefore received a `dispatchAction` whose `action` was the empty string: on wgpu the guest's re-armed `flowEvalTick` reached the action door nameless, faulted, and — through `flush_deferred_actions` — took the whole shell boot with it (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). A WIT `option<T>` crosses as `{tag, val}` and must be unwrapped before the payload is read, or a `some` wrapper reaches the pack decoder as if it were the pack.",
+  "schema": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️effects.wit",
   "nested": {
     "rule": "an effect record whose first field is `req: request-id` carries its payload under `params`",
     "records": {

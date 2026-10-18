@@ -1,0 +1,9 @@
+{
+ "name": "tt",
+ "crates": [
+  "semio-framework-plugin-time-travel",
+  "semio-framework-plugin-time-travel-panel",
+  "semio-framework-plugin-time-travel-turns"
+ ],
+ "note": "time-travel plugin crates"
+}

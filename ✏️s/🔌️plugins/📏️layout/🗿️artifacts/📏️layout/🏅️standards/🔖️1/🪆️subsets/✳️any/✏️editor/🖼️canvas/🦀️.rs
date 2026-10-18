@@ -8,7 +8,7 @@ use crate::modes::edit::windows::blueprint::config::LayoutWindowConfig;
 use crate::modes::edit::windows::blueprint::{select, transform};
 use crate::modes::edit::windows::blueprint::transient::LayoutWindowTransient;
 use crate::LayoutInteractionSnapshot;
-use semio_s_artifact_layout_layout_engine::scene::build_interactive_display_list;
+use semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::build_interactive_display_list;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_s_artifact_layout_layout_model::Page;
 use serde_json::{json, Value};
@@ -70,7 +70,7 @@ fn rotate_mark_points(mark: &mut Value, cx: f64, cy: f64, rotation: f64) {
 }
 
 
-fn rotated_proxy_layer(image: &semio_s_artifact_layout_layout_engine::scene::DisplayImage) -> Option<Value> {
+fn rotated_proxy_layer(image: &semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::DisplayImage) -> Option<Value> {
     let data_url = image.proxy_data_url.as_deref()?;
     let payload = data_url.strip_prefix("data:image/png;base64,")?;
     let bytes = decode_base64(payload).ok()?;
@@ -195,7 +195,7 @@ fn stroke_segments(points: &[(f32, f32)], closed: bool) -> Value {
     Value::Array(segments)
 }
 
-fn push_plan_stroke(layers: &mut Vec<Value>, stroke: &semio_s_artifact_layout_layout_engine::scene::DisplayStroke, id: String) {
+fn push_plan_stroke(layers: &mut Vec<Value>, stroke: &semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::DisplayStroke, id: String) {
     if stroke.points.len() < 2 {
         return;
     }
@@ -245,7 +245,7 @@ fn drop_preview_fill(kind: &str) -> [f32; 4] {
 const LAYOUT_DROP_PREVIEW_WIDTH: f64 = 200.0;
 const LAYOUT_DROP_PREVIEW_HEIGHT: f64 = 120.0;
 
-fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::scene::DisplayList, blueprint: bool, drop_preview: &semio_s_artifact_layout_layout_model::LayoutDropPreviewState) -> Vec<Value> {
+fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::DisplayList, blueprint: bool, drop_preview: &semio_s_artifact_layout_layout_model::LayoutDropPreviewState) -> Vec<Value> {
     let mut layers = Vec::new();
 
     let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
@@ -261,17 +261,17 @@ fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::sce
 
     let mut plan_index = 0usize;
     let mut frame_index = 0usize;
-    for piece in semio_s_artifact_layout_layout_engine::scene::stack_pieces(list) {
+    for piece in semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::stack_pieces(list) {
         match piece {
-            semio_s_artifact_layout_layout_engine::scene::StackPiece::Stroke(stroke) => {
+            semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::Stroke(stroke) => {
                 push_plan_stroke(&mut layers, stroke, format!("drawing.plan.{plan_index}"));
                 plan_index += 1;
             }
-            semio_s_artifact_layout_layout_engine::scene::StackPiece::FrameStroke(stroke) => {
+            semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::FrameStroke(stroke) => {
                 push_plan_stroke(&mut layers, stroke, format!("drawing.frame.{frame_index}"));
                 frame_index += 1;
             }
-            semio_s_artifact_layout_layout_engine::scene::StackPiece::Rect(rect) => {
+            semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::Rect(rect) => {
                 let segments = rotated_rect_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64, rect.rotation as f64);
                 let fill = rect.fill.as_ref().map(|color| color.0);
                 let dash = (blueprint && rect.inherited).then_some([4.0, 3.0]);
@@ -287,7 +287,7 @@ fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::sce
                 };
                 layers.push(host_layer(rect.object_id.clone(), &segments, fill, stroke));
             }
-            semio_s_artifact_layout_layout_engine::scene::StackPiece::Image(image) => {
+            semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::Image(image) => {
                 let rotation = image.rotation as f64;
                 let upright = rotation.abs() < 1.0e-6;
                 if let Some(data_url) = &image.proxy_data_url {
@@ -324,7 +324,7 @@ fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::sce
                     layers.push(host_layer(format!("{}.preview", image.object_id), &mark, None, Some(([0.25, 0.25, 0.28, 0.9], 1.0, None))));
                 }
             }
-            semio_s_artifact_layout_layout_engine::scene::StackPiece::Text(run) => {
+            semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::Text(run) => {
                 if run.content.is_empty() {
                     continue;
                 }

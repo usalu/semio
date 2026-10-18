@@ -76,7 +76,7 @@ impl ArtifactViewer for JsonIJsonViewer {
         _cfg: &ConfigView<'_, Self::Config>,
         _interaction: &semio_framework_plugin::app::InteractionView<'_>,
         _view_state: Option<&semio_framework_plugin::ViewModel>,
-        _engines: &semio_framework_2d::compute::EngineHandles,
+        _engines: &semio_framework_2d_compute::EngineHandles,
     ) -> Result<ViewEmit<Self::ConfigMutation>, Fault> {
         Ok(ViewEmit::default())
     }

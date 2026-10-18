@@ -156,7 +156,7 @@ use std::sync::Arc;
 #[allow(unused_imports)]
 use pack::snapshot::ArtifactPack;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::writer::*;
 use semio_framework_plugin::artifact_app_laws::{declared_verb_agent_divergences, declared_verb_probe, declared_verb_wrote_document, probe_agent_lane, DeclaredVerbOutcome};
 

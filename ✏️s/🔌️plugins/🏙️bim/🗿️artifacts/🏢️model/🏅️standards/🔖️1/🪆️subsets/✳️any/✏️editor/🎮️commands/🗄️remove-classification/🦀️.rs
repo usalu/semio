@@ -25,6 +25,4 @@ pub fn handle(payload: &RemoveClassification, doc: &ArtifactView<'_, ModelSnapsh
     Ok(Emit::mutations(holders.into_iter().map(|id| ModelMutation::RemoveElementClassification(crate::standards::v1::subsets::any::schema::mutations::remove_element_classification::RemoveElementClassification { id: id.clone(), system: system.to_string() })).collect()))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

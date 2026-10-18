@@ -103,9 +103,17 @@ pub struct PendingRasterSurface {
     pub queue: PendingRasterQueue,
     pub admission: Option<PreparedRasterReservation>,
     pub rejected: Option<PreparedRasterRejected>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub retiring: Option<PreparedRasterRejected>,
+    #[cfg(not(any(test, feature = "testkit")))]
     pub(crate) retiring: Option<PreparedRasterRejected>,
     pub closing: Option<PreparedRasterProducer>,
     /// 🖼️ Per-image refusals awaiting silent bounded retirement ([`PendingRasterSurface::park_refusal`]).
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub refused: [Option<PreparedRasterRejected>; RASTER_REFUSALS_PER_SURFACE],
+    #[cfg(not(any(test, feature = "testkit")))]
     pub(crate) refused: [Option<PreparedRasterRejected>; RASTER_REFUSALS_PER_SURFACE],
 }
 
@@ -128,7 +136,7 @@ impl PendingRasterSurface {
     }
 
     /// 🖼️ One bounded retirement step of the first parked refusal; `false` when the ring is empty.
-    pub(crate) fn retire_refusal_step(&mut self) -> bool {
+    pub fn retire_refusal_step(&mut self) -> bool {
         let Some(slot) = self.refused.iter_mut().find(|slot| slot.is_some()) else { return false };
         if slot.as_mut().is_some_and(PreparedRasterRejected::close_step) {
             debug_assert!(slot.as_ref().is_some_and(PreparedRasterRejected::terminal_is_empty), "a retired refusal is terminal-empty");

@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { playwrightTestTimeoutMs } from "@semio-tech/repo-lib";
+import { playwrightTestTimeoutMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎚️levels/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const demonstratorDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");

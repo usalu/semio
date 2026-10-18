@@ -2,7 +2,7 @@
  * Pure resolution plus `node:fs`; never imports the sources it reads.
  * @see ./🧪️tests/🟦️.ts
  * @see https://nodejs.org/api/path.html#pathrelativefrom-to */
-import { readdirSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -60,4 +60,19 @@ export function readStoreSourceText(): string {
   walk(base);
   found.sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
   return [root, ...found].map(file => readFileSync(file, "utf8")).join("\n");
+}
+
+/** 🪞️ The resolved targets of a fixture facade entry: a TypeScript file inside a `🧫️fixtures` folder whose every statement is an `export … from "<relative>"` re-export, so it carries no data of its own and only names fixtures an owner keeps under its `🧪️tests` tree. `undefined` for any other file (data, code, or a re-export of something that is not a file).
+ * @see ./🧪️tests/🟦️.ts */
+export function fixtureFacadeTargets(path: string): readonly string[] | undefined {
+  if (!/[\\/]🧫️fixtures(?:[\\/][^\\/]+)*[\\/]🟦️\.ts$/u.test(path)) return undefined;
+  const code = readFileSync(path, "utf8").replace(/\/\*[\s\S]*?\*\//gu, "").replace(/(^|[^:])\/\/[^\n]*/gu, "$1");
+  const statements = code.split(";").map(statement => statement.trim()).filter(statement => statement.length > 0);
+  const targets: string[] = [];
+  for (const statement of statements) {
+    const match = /^export\s+(?:type\s+)?(?:\*|\{[^}]*\})\s*from\s*"([^"]+)"(?:\s+with\s*\{[^}]*\})?$/u.exec(statement);
+    if (match === null) return undefined;
+    targets.push(resolve(dirname(path), match[1]!));
+  }
+  return targets.length > 0 && targets.every(target => existsSync(target)) ? targets : undefined;
 }

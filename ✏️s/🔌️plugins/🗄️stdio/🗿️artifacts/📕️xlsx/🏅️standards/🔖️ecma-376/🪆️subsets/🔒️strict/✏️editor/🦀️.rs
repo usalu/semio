@@ -12,7 +12,7 @@ use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;

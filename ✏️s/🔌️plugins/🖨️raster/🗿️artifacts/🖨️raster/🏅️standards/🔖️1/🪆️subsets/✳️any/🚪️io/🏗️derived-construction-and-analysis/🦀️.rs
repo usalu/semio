@@ -112,19 +112,7 @@ semio_framework_plugin::derive_artifact_facets!(
     composer: RasterComposer,
 );
 
-/// 🌉️ The single funnel-through "add real content" primitive: converts the real bytes into the
-/// composed child's own real content (`SemioImageSnapshot`, via the real `🚪️io` png↔semio/image
-/// bridge — never a stub), mints the CANONICAL content-addressed handle off that decoded content
-/// (`image_content_child_handle`), and attaches immutable content to that exact child owner. An
-/// unsupported mime or undecodable payload falls back to a raw-bytes handle without fabricating a
-/// materialization. Every call site receives one self-contained child owner; no process-global cache
-/// can leak content between snapshots or retain abandoned payloads.
-pub fn mint_raster_asset_child(asset_id: &str, asset: &RasterImageAsset) -> RasterAssetChild {
-    match crate::semio_image_snapshot_from_raster_asset(asset) {
-        Ok(image) => image_content_child_handle(asset_id, &image).with_local_owner(std::sync::Arc::new(image)),
-        Err(_) => image_asset_child_handle(asset_id, asset),
-    }
-}
+
 
 /// 🌉️ Resolves only content owned by the exact child in this snapshot. A wire-decoded child that
 /// has not yet been materialized by the host resolver fails soft without consulting shared state.

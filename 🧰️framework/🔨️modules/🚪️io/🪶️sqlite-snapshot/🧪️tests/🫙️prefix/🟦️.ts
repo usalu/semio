@@ -1,9 +1,10 @@
 /** 🫙️ Validates original recipient custody and UTF8 against independent SQLite. */
 import {expect,test} from "bun:test";
 import {Database} from "bun:sqlite";
-import {readFileSync} from "node:fs";
-import {resolve} from "node:path";
+import {readFileSync,readdirSync} from "node:fs";
+import {join,resolve} from "node:path";
 import Ajv from "ajv";
+const sourceTree=(directory:string):string=>readdirSync(directory,{withFileTypes:true}).filter(entry=>!["node_modules","🧪️tests","🧪️testing","📦️packages"].includes(entry.name)).flatMap(entry=>entry.isDirectory()?[sourceTree(join(directory,entry.name))]:entry.name==="🦀️.rs"?[readFileSync(join(directory,entry.name),"utf8")]:[]).join("\n");
 const owner=resolve(import.meta.dir,"../.."),fixture=JSON.parse(readFileSync(resolve(owner,"🧪️tests/🧫️fixtures/🫙️prefix/🔣️.json"),"utf8")) as {schemaSql:string;samples:{text:string;octets:number[]}[]};
 
 test("schema validation retains original lexical and declaration workspaces",()=>{
@@ -19,8 +20,8 @@ test("closed original recipient corpus matches independent SQLite UTF8",()=>{
  const db=new Database(":memory:");try{db.exec(fixture.schemaSql);for(const[index,row]of fixture.samples.entries())db.run("INSERT INTO original_values VALUES(?,?)",[index+1,row.text]);const rows=db.query("SELECT value,hex(CAST(value AS BLOB)) AS octets FROM original_values ORDER BY id").all() as {value:string;octets:string}[];expect(rows).toEqual(fixture.samples.map(row=>({value:row.text,octets:Buffer.from(row.octets).toString("hex").toUpperCase()})));}finally{db.close();}
 });
 test("SQLite scopes retain the original recipient with explicit active admission",()=>{
- const source=readFileSync(resolve(owner,"🦀️.rs"),"utf8"),recipient=readFileSync(resolve(owner,"../../🌱️value/🛬️decode/🫴️recipient/🦀️.rs"),"utf8");
- expect(recipient).toContain("pub fn with_reserved_owner");expect(source).toContain("pub fn with_retirement_owner");expect(source).toContain("retirement_active");expect(source).toContain("recipient.with_reserved_owner");
+ const source=sourceTree(owner),recipient=readFileSync(resolve(owner,"../../🌱️value/🛬️decode/🫴️recipient/🦀️.rs"),"utf8");
+ expect(recipient).toContain("pub fn with_reserved_owner");expect(source).toContain("pub fn with_retirement_owner");expect(source).toContain("is_reserved()");expect(source).toContain("reserve()");
 });
 test("relational original-field helpers expose retained text and blob destinations",()=>{
  const source=readFileSync(resolve(owner,"🧩️artifact/🦀️.rs"),"utf8");expect(source).toContain("pub fn reconstruct_text_into");expect(source).toContain("pub fn reconstruct_blob_into");
@@ -44,8 +45,8 @@ test("Complete original database fields agree with independent SQLite",()=>{
 });
 
 test("Nested conversion producers borrow the original transfer ledger and callback",()=>{
- const source=readFileSync(resolve(owner,"🦀️.rs"),"utf8");
+ const source=sourceTree(owner);
  expect(source).toContain("pub fn with_retirement_child");
- expect(source).toContain("Borrowed(&'a mut SqliteTransferLedger)");
- expect(source).toContain("TransferLedgerStorage::Borrowed");
+ expect(source).toContain("Lent(&'a mut SqliteSnapshotLedger)");
+ expect(source).toContain("SqliteSnapshotLedgerSlot::Lent");
 });

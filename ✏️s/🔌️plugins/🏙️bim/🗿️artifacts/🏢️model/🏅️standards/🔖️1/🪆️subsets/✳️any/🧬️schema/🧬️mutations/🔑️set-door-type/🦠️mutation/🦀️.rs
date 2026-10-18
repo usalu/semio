@@ -1,6 +1,6 @@
 //! 🔑️ `set-door-type` payload. Changes exactly the provided fields of a door type; every element of the type follows by inference.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{DoorLeaves, ModelSnapshot, Swing}, diff::{patches::DoorTypePatch, ModelDiff}, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{DoorLeaves, ModelSnapshot, Swing}, diff::{patches::DoorTypePatch, ModelDiff}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -38,13 +38,16 @@ impl SetDoorType {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetDoorType {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetDoorType
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetDoorType>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "door-type", kind: "set-door-type", record: "SetDoorType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_door_type::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_door_type::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change door type \"{}\"", self.id), &format!("Türtyp \"{}\" ändern", self.id))

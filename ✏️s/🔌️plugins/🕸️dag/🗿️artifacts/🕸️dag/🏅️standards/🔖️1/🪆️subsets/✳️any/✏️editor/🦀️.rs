@@ -65,7 +65,7 @@ use semio_framework_plugin::SelectionMethod;
 use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::TopologyNode;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const DAG_PLAY_APP_ID: &str = "s.dag.dag@1/*#editor";

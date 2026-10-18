@@ -1,8 +1,8 @@
 //! ↩️ Inverse of `DeleteWallType`: the setters of the properties and classifications of the type, then the concrete `CreateWallType` carrying the full removed record, none when the wall type was absent.
 
-use super::super::create_wall_type::CreateWallType;
-use super::super::cascade;
-use super::DeleteWallType;
+use crate::standards::v1::subsets::any::schema::mutations::create_wall_type::CreateWallType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_wall_type::DeleteWallType;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteWallType, base: &ModelSnapshot) -> Vec<Op>

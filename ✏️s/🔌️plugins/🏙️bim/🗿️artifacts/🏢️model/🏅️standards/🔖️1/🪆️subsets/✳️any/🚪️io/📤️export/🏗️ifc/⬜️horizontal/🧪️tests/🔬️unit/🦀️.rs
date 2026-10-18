@@ -1,3 +1,6 @@
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use crate::standards::v1::subsets::any::schema::inferences::quantities::LayerQuantity;
+use crate::standards::v1::subsets::any::io::export::ifc::horizontal::{slab, roof};
 use crate::standards::v1::subsets::any::io::export::ifc::testkit::{count, document, house, real, rows, string, tags, target};
 
 #[test]
@@ -49,6 +52,6 @@ fn the_take_off_rows_of_a_solid_map_back_to_its_groups_by_layer_and_material() {
     let row = |material: &str, volume: f64| LayerQuantity { material: material.into(), volume, ..LayerQuantity::default() };
     let solid = ElementSolid { groups: vec![group(1, "tile"), group(0, "wood"), group(0, "felt")], ..ElementSolid::default() };
     let rows = [row("felt", 2.0), row("wood", 3.0), row("tile", 5.0)];
-    assert_eq!(super::group_volumes(&solid, &rows), [5.0, 3.0, 2.0], "rows are ordered by (layer, material): felt, wood, tile");
-    assert_eq!(super::group_volumes(&solid, &rows[..1]), [0.0, 0.0, 2.0], "a missing row measures nothing");
+    assert_eq!(crate::standards::v1::subsets::any::io::export::ifc::horizontal::group_volumes(&solid, &rows), [5.0, 3.0, 2.0], "rows are ordered by (layer, material): felt, wood, tile");
+    assert_eq!(crate::standards::v1::subsets::any::io::export::ifc::horizontal::group_volumes(&solid, &rows[..1]), [0.0, 0.0, 2.0], "a missing row measures nothing");
 }

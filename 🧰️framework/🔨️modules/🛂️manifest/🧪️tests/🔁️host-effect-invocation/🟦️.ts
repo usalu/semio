@@ -4,7 +4,8 @@
  * contributions re-arm. */
 import { describe, expect, test } from "bun:test";
 import fixture from "../🧫️fixtures/🔁️host-effect-invocation/🔣️.json";
-import { appCommandIdsV1, hostEffectInvocationV1, type HostEffectDispatchScope, type PluginManifest } from "../../🟦️.ts";
+import { type PluginManifest } from "../../🗣️contributions-and-examples/🟦️.ts";
+import { appCommandIdsV1, hostEffectInvocationV1, type HostEffectDispatchScope } from "../../🔁️host-effects-choices-and-fault-notices/🟦️.ts";
 
 const scope = fixture.scope as HostEffectDispatchScope;
 const commandIds = fixture.appCommandIds as readonly string[];

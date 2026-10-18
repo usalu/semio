@@ -3,21 +3,21 @@
 //! The indexes the edges need are built once per run, never per element: the walls of each storey and the walls each wall touches (one sweep per storey), the openings of each host, the elements of
 //! each storey. The functions here only decide *which* nodes exist and *which* nodes are their parents; what a node computes is in `compute`.
 
-use super::super::super::annotation_layout;
-use super::super::super::clash_sets;
-use super::super::super::rule_results;
-use super::super::super::effective_properties;
-use super::super::super::families;
-use super::super::super::element_solids::beams;
-use super::super::super::element_solids::fillers::family_of;
-use super::super::super::element_solids::{SolidFamily, SolidKey};
-use super::super::super::schedules::rows::{candidates, property_keys};
-use super::super::super::storey_levels::{constraint_storeys, stackings};
-use super::super::super::wall_layout::{band_of, joins};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout;
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets;
+use crate::standards::v1::subsets::any::schema::inferences::rule_results;
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties;
+use crate::standards::v1::subsets::any::schema::inferences::families;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::beams;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::fillers::family_of;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
+use crate::standards::v1::subsets::any::schema::inferences::schedules::rows::{candidates, property_keys};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{constraint_storeys, stackings};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{band_of, joins};
 use crate::standards::v1::subsets::any::schema::authored::references;
-use super::super::super::energy_envelope::{neighbour_storey, Climate, EnergyScope};
-use super::super::super::zones::counts;
-use super::{DiagnosticScope, ModelNode, NodeKind, TotalsScope};
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{neighbour_storey, Climate, EnergyScope};
+use crate::standards::v1::subsets::any::schema::inferences::zones::counts;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{DiagnosticScope, ModelNode, NodeKind, TotalsScope};
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint, ViewKind};
 use protocol::InferenceStep;
 use std::collections::{BTreeMap, BTreeSet};
@@ -554,7 +554,7 @@ fn view_steps(snapshot: &ModelSnapshot, steps: &[InferenceStep<ModelNode>], on_s
 
 /// 🧭️ The storeys whose levels an element set of `storey` depends on: its own, then every storey a top constraint targets, sorted and unique.
 pub fn level_storeys(snapshot: &ModelSnapshot, storey: &str) -> Vec<String> {
-    super::super::super::bodies::level_storeys(snapshot, storey)
+    crate::standards::v1::subsets::any::schema::inferences::bodies::level_storeys(snapshot, storey)
 }
 
 /// 🪜️ The storey an element stands on (a space, wall, … by its record; an opening by its host).
@@ -611,5 +611,5 @@ pub fn railing_parents(snapshot: &ModelSnapshot, railing: &crate::standards::v1:
 
 /// 🧊️ The steps of the `Solid` nodes of one family, in plan order.
 pub fn solid_steps(snapshot: &ModelSnapshot, family: SolidFamily) -> Vec<InferenceStep<ModelNode>> {
-    build(snapshot, super::kinds::closure(NodeKind::Solid.bit())).into_iter().filter(|step| matches!(&step.key, ModelNode::Solid(key) if key.family == family)).collect()
+    build(snapshot, crate::standards::v1::subsets::any::schema::inferences::model_graph::kinds::closure(NodeKind::Solid.bit())).into_iter().filter(|step| matches!(&step.key, ModelNode::Solid(key) if key.family == family)).collect()
 }

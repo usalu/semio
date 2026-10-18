@@ -1,4 +1,6 @@
-use super::*;
+#[allow(unused_imports)]
+use semio_framework_value_derive::{FromValue, ToValue};
+use crate::viewer::bim::modes::view::windows::plan::config::*;
 use crate::render::window_config::assert_window_config_laws;
 
 #[test]

@@ -149,7 +149,7 @@ fn tab_insert_index_follows_the_painted_gapless_chip_run() {
 /// padding, and resize targets stay centred on the reserved separator while clipped to the canvas.
 #[test]
 fn themed_axis_geometry_matches_the_shared_react_fixture() {
-    let repo = fixture_path!("../../../../../../../../../..");
+    let repo = fixture_path!("../../../../../../../../../../..");
     let fixture_path = repo.join("🧰️framework/🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/📐️dock-axis-geometry/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(&fixture_path).unwrap_or_else(|error| panic!("read {}: {error}", fixture_path.display()))).expect("dock axis fixture");
     let token = fixture["oracleSample"]["tokenPixels"].as_f64().expect("token pixels") as f32;

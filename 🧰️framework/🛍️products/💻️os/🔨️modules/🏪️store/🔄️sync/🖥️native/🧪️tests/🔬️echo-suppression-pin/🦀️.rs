@@ -2,7 +2,17 @@
 
 #[test]
 fn the_native_actor_admits_authors_and_settles_by_operation_identity() {
-    let source = include_str!("../../🎭️actor/🦀️.rs");
+    let source = concat!(
+        include_str!("../../🎭️actor/🔌️actor-socket-types-bootstrap-control-and-folder-endpoint/🦀️.rs"),
+        include_str!("../../🎭️actor/🎬️actor-construction-drive-and-commands/🦀️.rs"),
+        include_str!("../../🎭️actor/📁️actor-folder-persistence-and-watcher/🦀️.rs"),
+        include_str!("../../🎭️actor/🔗️actor-hub-link-and-bootstrap/🦀️.rs"),
+        include_str!("../../🎭️actor/📨️actor-hub-frames-acks-and-delivery/🦀️.rs"),
+        include_str!("../../🎭️actor/🏃️actor-runner-types-and-handles/🦀️.rs"),
+        include_str!("../../🎭️actor/⏲️actor-runner-scheduling-terminal-and-spawn/🦀️.rs"),
+        include_str!("../../🎭️actor/🏠️native-artifact-host/🦀️.rs"),
+        include_str!("../../🎭️actor/🦀️.rs"),
+    );
     assert!(!source.contains("Some(origin.0.as_str())"), "no Commands frame is discarded by its origin");
     assert_eq!(source.matches("admit_remote_envelopes(&mut self.applied_op_ids").count(), 1, "the native actor admits by operation identity");
     assert_eq!(source.matches("note_authored_envelopes(&mut self.applied_op_ids, envelopes);").count(), 1, "the native actor records what it authors");

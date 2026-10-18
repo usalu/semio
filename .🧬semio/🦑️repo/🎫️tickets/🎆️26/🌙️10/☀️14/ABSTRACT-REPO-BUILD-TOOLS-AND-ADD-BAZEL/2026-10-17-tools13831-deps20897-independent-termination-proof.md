@@ -1,0 +1,5 @@
+# Tools13831 and Dependencies20897: Independent Abnormal Terminal Proof
+
+Four closed saved log/terminal files pass sequential nofollow descriptor/name seven-fact SHA checks under32MiB per-file bound; receipt `🗑️generated/tools13831-deps20897-independent-termination-hold.json`. Tools13831 terminal statusnull/signal9/989,901.163417ms; Dependencies20897 statusnull/signal9/721,132.271292ms. Saved logs reach accepted/observed only; neither establishes witnessed/detach, successful result, complete trace or owned-custody closure.
+
+The receipt records terminal-file mtime difference exactly. Those are save-file timestamps, not independently observed kill instants; elapsed durations are wrapper measurements, not proof of common cause. No system resource pressure, external/global kill, Original cancellation, parent signal, user action or process-tree attribution is inferred. Existing Products863 signal9 remains a separate saved event. Source diagnosis must distinguish ordinary own-child cancellation from any process-group/global kill path before further long attempts. No live process observation, Native/protected read or signal was performed by this audit.

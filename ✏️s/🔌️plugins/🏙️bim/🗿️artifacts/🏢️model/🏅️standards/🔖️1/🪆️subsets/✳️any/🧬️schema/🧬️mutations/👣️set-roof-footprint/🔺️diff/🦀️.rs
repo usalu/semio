@@ -3,8 +3,8 @@
 //! Whole-list ruling: the footprint is ONE closed loop, the geometry of the roof, so a provided footprint replaces the footprint
 //! as one field.
 
-use super::super::horizontal_rules::loop_fault;
-use super::SetRoofFootprint;
+use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::loop_fault;
+use crate::standards::v1::subsets::any::schema::mutations::set_roof_footprint::SetRoofFootprint;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::RoofPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

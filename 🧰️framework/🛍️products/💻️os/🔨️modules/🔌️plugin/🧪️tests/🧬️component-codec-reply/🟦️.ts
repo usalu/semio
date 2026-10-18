@@ -6,7 +6,8 @@ type TestSource = { readonly directory: string; readonly url: string };
  * imported as a real ES module beside a stand-in jco component) and the GENERATED worker
  * (`shardWorkerSource`'s `codec` case, which also refuses an overlapping turn and a stale activation).
  * Driven from the language-agnostic `🧬️component-codec/🧫️fixtures/🔣️.json`, with independent generated bridge and worker executions so both halves cannot drift.
- * @see 🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts
+ * @see 🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts
+ * @see 🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts
  * @see 🔌️plugin/🖥️host/🧬️component-codec/🦀️.rs (the native twin) */
 export async function registerComponentCodecReplyTests(vitest: NonNullable<ImportMeta["vitest"]>, _testSource: TestSource): Promise<void> {
   const { describe, it, expect } = vitest;
@@ -57,7 +58,8 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       const { mkdtempSync, mkdirSync, writeFileSync, rmSync } = await import("node:fs");
       const { join } = await import("node:path");
       const { pathToFileURL } = await import("node:url");
-      const { pluginComponentBridgeSource, hostShimSource } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      const { pluginComponentBridgeSource } = await import("../../🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts");
+      const { hostShimSource } = await import("../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts");
       const { APP_CHANNEL_VERSION } = await import("../../../../🟦️.ts");
       const artifactBase = process.env.SEMIO_TEST_ARTIFACT_DIR;
       if (!artifactBase) throw Error("SEMIO_TEST_ARTIFACT_DIR is required for generated bridge evidence");
@@ -66,14 +68,16 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       const stock = new KernelOriginalBootstrapStock(originalBootstrapStockFromWire(stockFixture));
       const clock = () => BigInt(Math.floor(performance.now() * 1000));
       try {
-        writeFileSync(join(directory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
-        writeFileSync(join(directory, "🟨️.js"), hostShimSource());
-        writeFileSync(join(directory, "fixture_component.js"), `export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION} }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
         const observed: Record<string, unknown>[] = [];
         for (const [index, row] of fixture.cases.entries()) {
           const codec = codecFor(row);
           (globalThis as { __semioCodecFixture?: unknown }).__semioCodecFixture = codec;
-          const bridge = await import(`${pathToFileURL(join(directory, "🌉️bridge.js")).href}?case=${index}`);
+          const caseDirectory = join(directory, `case-${index}`);
+          mkdirSync(caseDirectory, { recursive: true });
+          writeFileSync(join(caseDirectory, "🌉️bridge.js"), pluginComponentBridgeSource("fixture_component", "fixture.wasm"));
+          writeFileSync(join(caseDirectory, "🟨️.js"), hostShimSource());
+          writeFileSync(join(caseDirectory, "fixture_component.js"), `export const reactor = { channelVersion: async () => ${APP_CHANNEL_VERSION} }; export const jobs = {}; export const checkpoint = {}; export const describe = {}; export const codec = globalThis.__semioCodecFixture;\n`);
+          const bridge = await import(pathToFileURL(join(caseDirectory, "🌉️bridge.js")).href);
           const original = stock.admit();
           let api: { readonly originalSource: Pick<InstanceType<typeof OriginalOperationSource>, "close" | "issue">; readonly codec: (request: Record<string, unknown>) => Promise<unknown> } | undefined;
           try {
@@ -90,7 +94,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
             if (api) {
               const closing=api;
               closing.originalSource.close();
-              expect(() => closing.originalSource.issue()).toThrow("original-turn.closed");
+              expect(() => closing.originalSource.issue()).toThrow("original-turn.source-not-ready");
               stock.returnClosed(original, true);
             }
           }
@@ -104,7 +108,8 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
 
     it("answers a codec request from the generated worker with a result and a beat, and refuses an overlapping turn or a stale activation", async () => {
       const vm = await import("node:vm");
-      const { shardWorkerSource } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
+      const { shardWorkerSource } = await import("../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts");
+      const { classicShardWorkerSource } = await import("../✂️worker-vm-source/🟦️.ts");
       const posted: Record<string, unknown>[] = [];
       let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
       let row = fixture.cases[0]!;
@@ -120,7 +125,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
         self: { postMessage: (message: Record<string, unknown>) => posted.push(message), addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } },
         api: { originalSource, codec: (codecRequest: import("../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts").ActorCodecRequest) => actorCodecAnswer(codecFor(row), codecRequest) },
       });
-      new vm.Script(shardWorkerSource()).runInContext(context);
+      new vm.Script(classicShardWorkerSource(shardWorkerSource())).runInContext(context);
       new vm.Script('actors.set("a", { api, activationGeneration: 1n, pendingAssets: [] });').runInContext(context);
       const send = dispatch as unknown as ((event: { data: Record<string, unknown> }) => Promise<void>) | null;
       if (!send) throw new Error("Missing generated worker dispatcher");
@@ -154,7 +159,7 @@ export async function registerComponentCodecReplyTests(vitest: NonNullable<Impor
       expect(answered("stale")?.error).toContain("actor-lifecycle.activation-mismatch");
       } finally {
         originalSource.close();
-        expect(() => originalSource.issue()).toThrow("original-turn.closed");
+        expect(() => originalSource.issue()).toThrow("original-turn.source-not-ready");
         stock.returnClosed(original, true);
       }
       expect(stock.liveSources).toBe(0);

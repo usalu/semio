@@ -26,7 +26,7 @@ test("original tessellation keeps strict business source until complete canonica
   expect(implementation).toContain("tessellate_step");
   expect(implementation).toContain("admit_original_domain_failure");
   const guest = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
-  const normal = guest.slice(guest.indexOf("fn invoke(&self, capability:"), guest.indexOf("fn inference_context", guest.indexOf("fn invoke(&self, capability:")));
+  const normal = guest.slice(guest.indexOf("fn invoke(&mut self, capability:"), guest.indexOf("fn inference_context", guest.indexOf("fn invoke(&mut self, capability:")));
   expect(normal).toContain('"tessellate" => self.context.tessellate_raw(request, cx)');
   expect(normal).not.toContain("tessellate_step_envelope_json");
 });

@@ -70,7 +70,7 @@ i.e. the sync digest reproduces the sha the 03:04 activation wrote, for a real c
 ## 2. Strict acceptance suite: visible content, not just `data-shell-ready`
 
 `🏢️semio-tech/🎡️play/🧪️tests/🎭️acceptance/🟦️.ts` — three assertions per pane on top of the boot beacon,
-all HARD failures. `bun nx run @semio-tech/semio-tech-play:test-e2e` is unchanged (same runner, same
+all HARD failures. `bun repo run @semio-tech/semio-tech-play:test-e2e` is unchanged (same runner, same
 config, same 70 tests, `workers: 1` as before).
 
 1. **The chrome names the curated example.** The navbar trigger `#playground.navbar.fixture` inside

@@ -1,0 +1,13 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §3). Build-time only, never
+/// called at runtime by the OS — the `semio-framework-plugin-describe` bin crate (packet E1) runs
+/// this once per built component (fuel-limited, `pure` imports only) and writes
+/// `🛂️.descriptor.semio` + `🔣️.json`. Result bytes are a packed `PackageDescriptor`
+/// (`🛂️manifest` crate, packet E1) — this interface has no other function because everything a
+/// plugin or extension used to expose as separate `list-*` WIT exports (`list-artifact-dialects`,
+/// `list-artifact-inferences`, `list-artifact-mutations`, `list-io-entries`) is now static data
+/// inside this one descriptor instead.
+interface describe {
+  describe: async func() -> list<u8>;
+}

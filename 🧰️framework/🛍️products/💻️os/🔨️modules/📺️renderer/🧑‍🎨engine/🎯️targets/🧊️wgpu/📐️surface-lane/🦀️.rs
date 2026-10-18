@@ -1,9 +1,11 @@
 //! 📐️ Generation-qualified, fixed-capacity resize preparation for primary presentation surfaces.
 
-use semio_framework_async::Lane;
-use semio_framework_job::{CommitCandidate,InteractiveJob,InteractiveJobCloseStep,JobPayloadStream,StepContext,StepOutcome};
-use semio_framework_job_worker::{MountedWorkerJobSession};use semio_framework_job_worker_authority::{BatchDriveConfig,BatchJobParams,WorkerJobCloseStep};
-use semio_framework_trace::{Generation, InteractiveStage, OperationId};
+use semio_framework_async::{CancelTokenRetirement, CancelTokenRetirementError, Lane};
+use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, JobOutcomeDescriptor, JobOutcomeKind, JobOutcomeView, OriginalTurnFailure, RetainedCloneProgress, RetainedCloneStep, StepContext};
+use semio_framework_job_worker::{MountedWorkerJobSession, WorkerJobDemandError, WorkerJobPoll};
+use semio_framework_job_worker_authority::{BatchDriveConfig, BatchJobParams};
+use semio_framework_trace::{InteractiveStage, OperationId};
+use semio_framework_value::{ValueError, ValueRefusalKind};
 use std::sync::atomic::{AtomicBool, AtomicPtr, AtomicU64, Ordering};
 
 //#region 🔖️SurfaceLane
@@ -92,13 +94,13 @@ impl SurfaceResizeJob {
 }
 
 impl InteractiveJob for SurfaceResizeJob {
-    fn step(&mut self, cx: &mut StepContext<'_>) -> StepOutcome {
-        if cx.is_cancelled() || cx.deadline_exceeded() {
+    fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>, OriginalTurnFailure> {
+        if cx.is_cancelled() || self.phase == ResizePhase::Closing {
             self.begin_close();
-            return StepOutcome::Cancelled;
+            return JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from);
         }
         let Some(request) = self.request else {
-            return StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitState), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
+            return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(OriginalTurnFailure::from);
         };
         match self.phase {
             ResizePhase::LogicalWidth => {
@@ -122,19 +124,26 @@ impl InteractiveJob for SurfaceResizeJob {
                 self.request = None;
                 self.phase = ResizePhase::Complete;
             }
-            ResizePhase::Complete => {
-                return StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitState), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitOutput) });
-            }
-            ResizePhase::Closing => return StepOutcome::Cancelled,
+            ResizePhase::Complete => return JobOutcomeBorrow::admit_complete(cx, None, None).map_err(OriginalTurnFailure::from),
+            ResizePhase::Closing => return JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from),
         }
         cx.consume_fuel(SURFACE_RESIZE_STEP_FUEL);
-        if cx.is_cancelled() || cx.deadline_exceeded() {
+        if cx.is_cancelled() {
             self.begin_close();
-            StepOutcome::Cancelled
+            JobOutcomeBorrow::admit_cancelled(cx).map_err(OriginalTurnFailure::from)
         } else if self.phase == ResizePhase::Complete {
-            StepOutcome::Complete(CommitCandidate { state: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitState), output: semio_framework_job::RetainedJobPayload::empty(JobPayloadStream::CommitOutput) })
+            JobOutcomeBorrow::admit_complete(cx, None, None).map_err(OriginalTurnFailure::from)
         } else {
-            StepOutcome::Yield
+            JobOutcomeBorrow::admit_yield(cx).map_err(OriginalTurnFailure::from)
+        }
+    }
+
+    fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, ValueError> {
+        match descriptor.kind() {
+            JobOutcomeKind::Yield => descriptor.yielded(),
+            JobOutcomeKind::Cancelled => descriptor.cancelled(),
+            JobOutcomeKind::Complete => descriptor.complete(None, None),
+            _ => Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "surface resize publishes only yield, completion or cancellation")),
         }
     }
 
@@ -142,18 +151,45 @@ impl InteractiveJob for SurfaceResizeJob {
         self.phase = ResizePhase::Closing;
     }
 
-    fn close_step(&mut self, maximum_items: usize, _maximum_bytes: usize) -> InteractiveJobCloseStep {
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<InteractiveJobCloseStep, OriginalTurnFailure> {
         self.phase = ResizePhase::Closing;
-        if maximum_items == 0 {
-            return InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
+        let copy_bytes = self.next_close_copy_byte_demand()?;
+        if copy_bytes == 0 {
+            return Ok(InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() });
         }
-        if self.candidate.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        let grant = cx.retained_grant();
+        if cx.retirement_should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < copy_bytes {
+            return Ok(InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() });
         }
-        if self.request.take().is_some() {
-            return InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: copy_bytes, ..RetainedCloneProgress::default() };
+        cx.consume_retained(progress)?;
+        if self.candidate.take().is_none() {
+            self.request = None;
         }
-        InteractiveJobCloseStep::Complete
+        cx.consume_fuel(1);
+        Ok(InteractiveJobCloseStep::Pending { progress })
+    }
+
+    fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(if self.candidate.is_some() {
+            size_of::<PreparedSurfaceResize>()
+        } else if self.request.is_some() {
+            size_of::<SurfaceResizeRequest>()
+        } else {
+            0
+        })
+    }
+
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(0)
+    }
+
+    fn next_close_depth_demand(&self) -> Result<usize, ValueError> {
+        Ok(usize::from(self.candidate.is_some() || self.request.is_some()))
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -176,9 +212,219 @@ impl SurfaceResizeLaneAdmissionRejected {
     }
 }
 
-enum SurfaceResizeSession {
-    Admitted(MountedWorkerJobSession<SurfaceResizeJob>),
-    Rejected(semio_framework_job_worker::WorkerJobSessionAdmissionRejected<SurfaceResizeJob>),
+enum SurfaceResizeStep {
+    Working,
+    Finished(Option<PreparedSurfaceResize>),
+}
+
+/// 🎟️ One resize session under the initiating frame owner: the unadmitted job, parameters and cancellation alias, then the admitted mounted session with its paid outcome custody.
+struct SurfaceResizeSession {
+    job: Option<SurfaceResizeJob>,
+    params: Option<BatchJobParams>,
+    params_retirement: Option<CancelTokenRetirement>,
+    mounted: Option<MountedWorkerJobSession<SurfaceResizeJob>>,
+    receipt_taken: bool,
+    acknowledged: bool,
+    outcome_kind: Option<JobOutcomeKind>,
+}
+
+impl SurfaceResizeSession {
+    fn admit_request(request: SurfaceResizeRequest, cx: &mut StepContext<'_>) -> Result<Option<Self>, OriginalTurnFailure> {
+        let Some(now) = cx.now_us() else { return Ok(None) };
+        let Some(cancel) = cx.admit_original_cancel_alias()? else { return Ok(None) };
+        let params = BatchJobParams {
+            operation: cx.operation(),
+            generation: cx.generation(),
+            cancel,
+            now_us: cx.clock_source(),
+            config: BatchDriveConfig {
+                retained: cx.retained_grant(),
+                site: "os_renderer_surface_resize",
+                stage: InteractiveStage::InteractiveStep,
+                fuel_per_step: cx.fuel_remaining().min(SURFACE_RESIZE_STEP_FUEL),
+                step_budget_us: cx.deadline_us().saturating_sub(now).min(SURFACE_RESIZE_STEP_BUDGET_US),
+            },
+        };
+        Ok(Some(Self { job: Some(SurfaceResizeJob::new(request)), params: Some(params), params_retirement: None, mounted: None, receipt_taken: false, acknowledged: false, outcome_kind: None }))
+    }
+
+    fn begin_close(&mut self) {
+        if let Some(mounted) = self.mounted.as_mut() {
+            mounted.begin_close();
+        } else if let Some(job) = self.job.as_mut() {
+            job.begin_close();
+        }
+    }
+
+    fn drive(&mut self, cx: &mut StepContext<'_>) -> Result<SurfaceResizeStep, OriginalTurnFailure> {
+        let grant = cx.retained_grant();
+        if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(SurfaceResizeStep::Working);
+        }
+        let Some(mounted) = self.mounted.as_mut() else {
+            if self.job.is_some() && self.params.is_some() {
+                if let Some((mounted, _posted)) = MountedWorkerJobSession::try_admit_owned(&mut self.job, &mut self.params, &mut *cx)? {
+                    self.mounted = Some(mounted);
+                }
+            }
+            return Ok(SurfaceResizeStep::Working);
+        };
+        if !matches!(mounted.poll(), WorkerJobPoll::CheckedOut) {
+            let _ = mounted.pump_one(&semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Interactive, grant);
+            return Ok(SurfaceResizeStep::Working);
+        }
+        self.receive(cx)
+    }
+
+    fn receive(&mut self, cx: &mut StepContext<'_>) -> Result<SurfaceResizeStep, OriginalTurnFailure> {
+        for _ in 0..4 {
+            let grant = cx.retained_grant();
+            if cx.should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 {
+                break;
+            }
+            let Some(mounted) = self.mounted.as_mut() else { break };
+            if !self.receipt_taken {
+                let received = mounted.take_checked_out_retained_step_receipt().filter(|(issued, progress)| progress.fits(*issued) && progress.fits(grant));
+                let Some((_issued, progress)) = received else {
+                    mounted.begin_close();
+                    self.acknowledged = false;
+                    self.outcome_kind = None;
+                    return Ok(SurfaceResizeStep::Finished(None));
+                };
+                cx.consume_retained(progress)?;
+                self.outcome_kind = mounted.checked_out_outcome_descriptor().map(JobOutcomeDescriptor::kind);
+                self.receipt_taken = true;
+                continue;
+            }
+            if !self.acknowledged {
+                let step = mounted.acknowledge_checked_out_outcome(grant);
+                cx.consume_retained(step.progress())?;
+                cx.consume_fuel(step.progress().copied_items as u64);
+                self.acknowledged = matches!(step, RetainedCloneStep::Complete(_));
+                continue;
+            }
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..RetainedCloneProgress::default() })?;
+            cx.consume_fuel(1);
+            let kind = self.outcome_kind.take();
+            self.receipt_taken = false;
+            self.acknowledged = false;
+            return Ok(match kind {
+                Some(JobOutcomeKind::Complete) => {
+                    let candidate = mounted.checked_out_job_mut().and_then(SurfaceResizeJob::take_candidate);
+                    mounted.begin_close();
+                    SurfaceResizeStep::Finished(candidate)
+                }
+                None | Some(JobOutcomeKind::Yield) => {
+                    if mounted.resume().is_err() {
+                        mounted.begin_close();
+                        SurfaceResizeStep::Finished(None)
+                    } else {
+                        SurfaceResizeStep::Working
+                    }
+                }
+                Some(_) => {
+                    mounted.begin_close();
+                    SurfaceResizeStep::Finished(None)
+                }
+            });
+        }
+        Ok(SurfaceResizeStep::Working)
+    }
+
+    fn pay_item(cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        let grant = cx.retained_grant();
+        if cx.retirement_should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(false);
+        }
+        cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..RetainedCloneProgress::default() })?;
+        cx.consume_fuel(1);
+        Ok(true)
+    }
+
+    fn terminal_is_empty(&self) -> bool {
+        self.job.is_none() && self.params.is_none() && self.params_retirement.is_none() && self.mounted.is_none()
+    }
+
+    fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        let grant = cx.retained_grant();
+        if cx.retirement_should_yield() || grant.maximum_items == 0 || grant.maximum_depth == 0 {
+            return Ok(false);
+        }
+        if let Some(mounted) = self.mounted.as_mut() {
+            match mounted.poll() {
+                WorkerJobPoll::Outcome | WorkerJobPoll::Terminal | WorkerJobPoll::Rejected => {
+                    let _ = mounted.pump_one(&semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Interactive, grant);
+                }
+                WorkerJobPoll::CheckedOut => {
+                    if let Some((issued, progress)) = mounted.take_checked_out_retained_step_receipt() {
+                        if !progress.fits(issued) || !progress.fits(grant) {
+                            return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "surface resize worker receipt exceeds its original receiving authority").with_retained_progress(progress).into());
+                        }
+                        cx.consume_retained(progress)?;
+                    } else {
+                        mounted.close_step(cx)?;
+                    }
+                }
+                WorkerJobPoll::TerminalEmpty => {
+                    if Self::pay_item(cx)? {
+                        self.mounted = None;
+                    }
+                }
+                _ => {
+                    mounted.begin_close();
+                    match mounted.has_original_cancel_alias_witness(cx.original_cancel_token()) {
+                        Ok(true) => match mounted.return_original_cancel_alias_step(cx.original_cancel_token(), grant) {
+                            Ok(Some(step)) => {
+                                cx.consume_retained(step.progress())?;
+                                cx.consume_fuel(step.progress().copied_items as u64);
+                            }
+                            Ok(None) | Err(WorkerJobDemandError::Contention(_)) => {}
+                            Err(WorkerJobDemandError::Refused(error)) => return Err(OriginalTurnFailure::debit_original(error, cx)),
+                        },
+                        Ok(false) => {
+                            mounted.close_step(cx)?;
+                        }
+                        Err(WorkerJobDemandError::Contention(_)) => {}
+                        Err(WorkerJobDemandError::Refused(error)) => return Err(OriginalTurnFailure::debit_original(error, cx)),
+                    }
+                }
+            }
+            return Ok(false);
+        }
+        if let Some(job) = self.job.as_mut() {
+            job.begin_close();
+            if !job.terminal_is_empty() {
+                job.close_step(cx)?;
+            } else if Self::pay_item(cx)? {
+                self.job = None;
+            }
+            return Ok(false);
+        }
+        if let Some(params) = self.params.take() {
+            cx.consume_retained(RetainedCloneProgress { copied_items: 1, ..RetainedCloneProgress::default() })?;
+            cx.consume_fuel(1);
+            self.params_retirement = Some(CancelTokenRetirement::from_token(params.cancel));
+            return Ok(false);
+        }
+        if let Some(owner) = self.params_retirement.as_mut() {
+            if !owner.terminal_is_empty() {
+                match owner.return_alias_step(cx.original_cancel_token(), grant) {
+                    Ok(step) => {
+                        cx.consume_retained(step.progress())?;
+                        cx.consume_fuel(step.progress().copied_items as u64);
+                    }
+                    Err(CancelTokenRetirementError::Blocked(_)) => {}
+                    Err(CancelTokenRetirementError::Refused(error)) => return Err(OriginalTurnFailure::debit_original(error, cx)),
+                }
+                return Ok(false);
+            }
+            if Self::pay_item(cx)? {
+                self.params_retirement = None;
+            }
+            return Ok(false);
+        }
+        Ok(true)
+    }
 }
 
 pub struct MountedSurfaceResizeLane {
@@ -223,87 +469,49 @@ impl MountedSurfaceResizeLane {
         }
         self.metrics_generation = metrics_generation;
         if let Some(session) = self.session.as_mut() {
-            match session {
-                SurfaceResizeSession::Admitted(session) => session.begin_close(),
-                SurfaceResizeSession::Rejected(rejected) => rejected.begin_close(),
-            }
+            session.begin_close();
             self.session_closing = true;
         }
         Ok(self.pending.replace(request))
     }
 
-    pub fn drive_one(&mut self) {
-        if (self.session_closing || matches!(self.session.as_ref(), Some(SurfaceResizeSession::Rejected(_)))) && self.drive_session_close_one() {
-            return;
+    pub fn drive_one(&mut self, cx: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure> {
+        if self.session_closing && self.drive_session_close_one(cx)? {
+            return Ok(());
         }
         if let Some(session) = self.session.as_mut() {
-            let SurfaceResizeSession::Admitted(session) = session else { return };
-            if let Some(outcome) = session.checked_out_outcome() {
-                if outcome.is_terminal() {
-                    let candidate = session.checked_out_job_mut().and_then(SurfaceResizeJob::take_candidate);
-                    let _ = session.take_checked_out_outcome();
-                    if let Some(candidate) = candidate {
-                        if self.token == Some(candidate.token) && candidate.metrics_generation == self.metrics_generation {
-                            self.ready = Some(candidate);
-                        }
+            if let SurfaceResizeStep::Finished(candidate) = session.drive(cx)? {
+                if let Some(candidate) = candidate {
+                    if self.token == Some(candidate.token) && candidate.metrics_generation == self.metrics_generation {
+                        self.ready = Some(candidate);
                     }
-                    session.begin_close();
-                    self.session_closing = true;
-                } else {
-                    let _ = session.take_checked_out_outcome();
-                    let _ = session.resume();
                 }
-                return;
+                self.session_closing = true;
             }
-            let _ = session.pump_one(&semio_framework_os_renderer_wgpu_host_base::renderer_worker_pool(), Lane::Interactive);
-            return;
+            return Ok(());
         }
-        let Some(request) = self.pending.take() else { return };
-        let Some(operation) = self.operation else {
-            self.pending = Some(request);
-            return;
-        };
-        let cancel = semio_framework_job::root_cancel_token();
-        let params = BatchJobParams {
-            operation,
-            generation: Generation(request.metrics_generation),
-            cancel,
-            config: BatchDriveConfig { work_grant: semio_framework_job::retained_work::NO_RETAINED_WORK, site: "os_renderer_surface_resize", stage: InteractiveStage::InteractiveStep, fuel_per_step: SURFACE_RESIZE_STEP_FUEL, step_budget_us: SURFACE_RESIZE_STEP_BUDGET_US },
-            now_us: semio_framework_job::default_now_us,
-        };
-        self.session = Some(match MountedWorkerJobSession::try_new(SurfaceResizeJob::new(request), params) {
-            Ok(session) => SurfaceResizeSession::Admitted(session),
-            Err(mut rejected) => {
-                rejected.begin_close();
-                SurfaceResizeSession::Rejected(rejected)
-            }
-        });
-        self.session_closing = matches!(self.session.as_ref(), Some(SurfaceResizeSession::Rejected(_)));
+        let Some(request) = self.pending else { return Ok(()) };
+        if cx.should_yield() {
+            return Ok(());
+        }
+        if let Some(session) = SurfaceResizeSession::admit_request(request, cx)? {
+            self.pending = None;
+            self.session = Some(session);
+            self.session_closing = false;
+        }
+        Ok(())
     }
 
-    fn drive_session_close_one(&mut self) -> bool {
-        let Some(session) = self.session.as_mut() else { return false };
-        let complete = match session {
-            SurfaceResizeSession::Admitted(session) => {
-                if matches!(session.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), WorkerJobCloseStep::Complete) {
-                    session.terminal_is_empty()
-                } else {
-                    false
-                }
-            }
-            SurfaceResizeSession::Rejected(rejected) => {
-                if matches!(rejected.close_step(1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES), InteractiveJobCloseStep::Complete) {
-                    rejected.terminal_is_empty()
-                } else {
-                    false
-                }
-            }
+    fn drive_session_close_one(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
+        let Some(session) = self.session.as_mut() else {
+            self.session_closing = false;
+            return Ok(false);
         };
-        if complete {
+        if session.close_step(cx)? && session.terminal_is_empty() {
             self.session = None;
             self.session_closing = false;
         }
-        true
+        Ok(true)
     }
 
     pub fn take_ready(&mut self) -> Option<PreparedSurfaceResize> {
@@ -325,54 +533,52 @@ impl MountedSurfaceResizeLane {
     pub fn begin_close(&mut self) {
         self.closing = true;
         if let Some(session) = self.session.as_mut() {
-            match session {
-                SurfaceResizeSession::Admitted(session) => session.begin_close(),
-                SurfaceResizeSession::Rejected(rejected) => rejected.begin_close(),
-            }
+            session.begin_close();
             self.session_closing = true;
         }
     }
 
-    pub fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         self.begin_close();
-        if self.drive_session_close_one() {
-            return false;
+        if self.drive_session_close_one(cx)? {
+            return Ok(false);
         }
         if self.ready.take().is_some() {
-            return false;
+            return Ok(false);
         }
         if self.pending.take().is_some() {
-            return false;
+            return Ok(false);
         }
         if let Some(token) = self.token.take() {
             let slot = token.slot as usize;
             if SURFACE_LANE_GENERATIONS[slot].load(Ordering::Acquire) == token.generation {
                 SURFACE_LANE_OCCUPIED[slot].store(false, Ordering::Release);
             }
-            return false;
+            return Ok(false);
         }
         self.operation.take();
-        self.terminal_is_empty()
+        Ok(self.terminal_is_empty())
     }
 
     pub fn terminal_is_empty(&self) -> bool {
         self.operation.is_none() && self.token.is_none() && self.pending.is_none() && self.session.is_none() && self.ready.is_none()
     }
 
-    pub fn close_abandoned_step() -> bool {
+    pub fn close_abandoned_step(cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         let Some((slot, pointer)) = SURFACE_LANE_ABANDONMENT.iter().enumerate().find_map(|(slot, owner)| {
             let pointer = owner.swap(std::ptr::null_mut(), Ordering::AcqRel);
             (!pointer.is_null()).then_some((slot, pointer))
         }) else {
-            return true;
+            return Ok(true);
         };
         let mut lane = unsafe { Box::from_raw(pointer) };
-        if lane.close_step() && lane.terminal_is_empty() {
+        let closed = lane.close_step(cx);
+        if matches!(closed, Ok(true)) && lane.terminal_is_empty() {
             drop(lane);
         } else {
             SURFACE_LANE_ABANDONMENT[slot].store(Box::into_raw(lane), Ordering::Release);
         }
-        false
+        closed.map(|_| false)
     }
 }
 
@@ -396,9 +602,10 @@ impl SurfaceResizeAuthority {
         }
     }
 
-    pub fn drive_one(&mut self) {
-        if let Self::Mounted(lane) = self {
-            lane.drive_one();
+    pub fn drive_one(&mut self, cx: &mut StepContext<'_>) -> Result<(), OriginalTurnFailure> {
+        match self {
+            Self::Mounted(lane) => lane.drive_one(cx),
+            Self::Rejected(_) => Ok(()),
         }
     }
 
@@ -429,10 +636,10 @@ impl SurfaceResizeAuthority {
         }
     }
 
-    pub fn close_step(&mut self) -> bool {
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, OriginalTurnFailure> {
         match self {
-            Self::Mounted(lane) => lane.close_step(),
-            Self::Rejected(rejected) => rejected.close_step(),
+            Self::Mounted(lane) => lane.close_step(cx),
+            Self::Rejected(rejected) => Ok(rejected.close_step()),
         }
     }
 

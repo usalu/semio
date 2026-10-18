@@ -1,6 +1,16 @@
-use super::super::compute::dependency;
-use super::super::{kinds, plan, ModelInferenceSession};
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::element_storey;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
+#[allow(unused_imports)]
+use protocol::TouchedPaths;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::dependency;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::dirty::*;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference};
 use protocol::{DiffRegions, Inference};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
@@ -11,7 +21,7 @@ use std::collections::BTreeMap;
 /// 🧫️ The committed model snapshots at the given fixture paths, read when a test runs so the language-neutral JSON stays out of the compiled source closure.
 fn fixtures<const N: usize>(paths: [&'static str; N]) -> [(&'static str, &'static str); N] {
     paths.map(|path| {
-        let file = format!("{}/{path}/📸️snapshot/🔣️.json", concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures"));
+        let file = format!("{}/{path}/📸️snapshot/🔣️.json", concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧪️tests/🧫️fixtures"));
         (path, &*Box::leak(std::fs::read_to_string(&file).unwrap_or_else(|error| panic!("{file}: {error}")).into_boxed_str()))
     })
 }

@@ -1,4 +1,6 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::window_config;
+use crate::editor::bim::modes::edit::windows::schedule::config::*;
 use protocol::os_spr::protocol_laws::assert_diff_algebra_inverse_law;
 use protocol::{Mutation, OpBinary, OpText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};

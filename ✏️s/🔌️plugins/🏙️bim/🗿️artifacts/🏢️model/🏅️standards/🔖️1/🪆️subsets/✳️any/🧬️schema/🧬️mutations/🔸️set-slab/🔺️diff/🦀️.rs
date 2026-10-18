@@ -3,8 +3,8 @@
 //! Whole-list ruling: the holes are part of the slab's ONE planar region (see `set-slab-boundary`), so provided holes replace
 //! the holes as one field.
 
-use super::super::horizontal_rules::slope_fault;
-use super::SetSlab;
+use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::slope_fault;
+use crate::standards::v1::subsets::any::schema::mutations::set_slab::SetSlab;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::SlabPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

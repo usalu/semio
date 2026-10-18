@@ -3,8 +3,9 @@ import { resolve, relative, isAbsolute, join, sep, basename, parse } from "node:
 import { canonicalJson } from "../../../🧾️serialization/🔣️json/🟦️.ts";
 import { execFileSync } from "node:child_process";
 import { type Stats, readdirSync, lstatSync } from "node:fs";
-import { semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦️.ts";
-import { loadTaxonomy, TAXONOMY_RELATIVE_PATH, type LoadedTaxonomy } from "../../🔣️taxonomy/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
+import { loadTaxonomy, TAXONOMY_RELATIVE_PATH } from "../../🔣️taxonomy/🟦️.ts";
+import { type LoadedTaxonomy } from "../../🔣️taxonomy/📚️loaded/🟦️.ts";
 import { type TaxonomySourceAdmission, taxonomyScopedGitPathspec, sourceAdmissionRepositoryFences, sourceAdmissionAssertRepositoryPath, sourceAdmissionOpaque, sourceAdmissionSafePath, type TaxonomySourceOrigin, type TaxonomySourceIndexEntry, type TaxonomySourceCandidateObservation, SOURCE_ADMISSION_ORIGINS, type TaxonomySourceAdmissionInput, projectTaxonomySourceAdmission, type TaxonomyScopedGitPathspec, sourceAdmissionByteCompare, sourceAdmissionContainingRepository } from "../🟦️.ts";
 import { report, TaxonomyCancellationError, type TaxonomyProgress } from "../../🏃️operation/🟦️.ts";
 import { inScope, normalizeRelative } from "../../🛣️path/🟦️.ts";

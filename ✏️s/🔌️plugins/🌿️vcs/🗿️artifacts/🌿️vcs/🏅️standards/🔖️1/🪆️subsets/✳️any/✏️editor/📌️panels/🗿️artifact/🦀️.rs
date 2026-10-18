@@ -92,8 +92,3 @@ pub fn render(history: &HistoryView, labels: &VcsPlayLabels, windows: &TreeWindo
 }
 //#endregion 🔖️Render
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

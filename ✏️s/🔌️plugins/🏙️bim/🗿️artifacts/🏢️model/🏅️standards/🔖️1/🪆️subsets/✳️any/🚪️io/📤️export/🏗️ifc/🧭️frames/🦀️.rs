@@ -54,6 +54,4 @@ pub fn profile_top(profile: &Profile) -> f64 {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

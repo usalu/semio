@@ -38,7 +38,7 @@ use protocol::Mutation;
 use protocol::{OpBinary, OpText};
 use crate::io::text::mutations::print_document_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn wire_tag(m: &SemioDocumentMutation) -> u8 {
+pub fn wire_tag(m: &SemioDocumentMutation) -> u8 {
     match m {
         SemioDocumentMutation::InsertBlock(..) => TAG_INSERT_BLOCK,
         SemioDocumentMutation::RemoveBlock(..) => TAG_REMOVE_BLOCK,

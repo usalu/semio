@@ -11,6 +11,11 @@ for r in $(seq 1 $max); do
     o=$(python3 ohp-tools/autoimport.py $fam $prev $c --apply | tail -1); echo "$fam $prev $c import: $o"; echo "$o" | /usr/bin/grep -q "total imports 0 " || ch=1
     o=$(python3 ohp-tools/autotestkit.py $fam $prev $c --apply | tail -1); echo "$fam $prev $c testkit: $o"; echo "$o" | /usr/bin/grep -q "testkit conversions 0 " || ch=1
   done
+  if [ -f "$F/🗑️generated/ohp-touched-imports.txt" ]; then
+    python3 ohp-tools/fixdup.py --apply | tail -1
+    sort -u "$F/🗑️generated/ohp-touched-imports.txt" | while read -r rel; do python3 ohp-tools/consolidate.py "$rel" | tail -1; done
+    : > "$F/🗑️generated/ohp-touched-imports.txt"
+  fi
   [ $ch = 0 ] && { echo "$fam fixed point at $prev"; break; }
   ./ohp-tools/run.sh $fam $next lib,test
   n=$((n+1))

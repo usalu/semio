@@ -14,28 +14,20 @@ pub mod kit;
 #[path = "🧪️tests/🗂️fixture-cases/🦀️.rs"]
 mod fixture_cases;
 
-#[path = "🧵️elements/🦀️.rs"]
-pub mod elements;
+pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::elements;
 
-#[path = "🌊️cascade/🦀️.rs"]
-pub mod cascade;
-#[path = "🔙️cascade-restore/🦀️.rs"]
-pub mod cascade_restore;
+pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::schema::mutations::cascade;
 
-#[path = "🖍️annotating/🦀️.rs"]
-pub mod annotating;
 
-#[path = "🔩️family-rules/🦀️.rs"]
-pub mod family_rules;
+pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::mutations::annotating;
 
-#[path = "🔌️component-rules/🦀️.rs"]
-pub mod component_rules;
+pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::schema::mutations::family_rules;
 
-#[path = "📍️placement/🦀️.rs"]
-pub mod placement;
+pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::component_rules;
 
-#[path = "🧲️wall-depth/🦀️.rs"]
-pub mod wall_depth;
+pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::schema::mutations::placement;
+
+pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::schema::mutations::wall_depth;
 
 
 //#region 🔖️Operations
@@ -46,223 +38,223 @@ pub mod wall_depth;
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[mutations(snapshot = ModelSnapshot, diff = ModelDiff, schema = "bim.model")]
 pub enum ModelMutation {
-    SetElementWorkset(super::set_element_workset::SetElementWorkset),
-    SetElementOption(super::set_element_option::SetElementOption),
-    DeleteWorkset(super::delete_workset::DeleteWorkset),
-    SetWorkset(super::set_workset::SetWorkset),
-    CreateWorkset(super::create_workset::CreateWorkset),
-    DeleteDesignOption(super::delete_design_option::DeleteDesignOption),
-    SetDesignOption(super::set_design_option::SetDesignOption),
-    CreateDesignOption(super::create_design_option::CreateDesignOption),
-    DeleteOptionGroup(super::delete_option_group::DeleteOptionGroup),
-    SetOptionGroup(super::set_option_group::SetOptionGroup),
-    CreateOptionGroup(super::create_option_group::CreateOptionGroup),
-    CreateSupport(super::create_support::CreateSupport),
-    SetSupport(super::set_support::SetSupport),
-    DeleteSupport(super::delete_support::DeleteSupport),
-    CreateLoadCase(super::create_load_case::CreateLoadCase),
-    SetLoadCase(super::set_load_case::SetLoadCase),
-    DeleteLoadCase(super::delete_load_case::DeleteLoadCase),
-    CreateLoad(super::create_load::CreateLoad),
-    SetLoad(super::set_load::SetLoad),
-    DeleteLoad(super::delete_load::DeleteLoad),
+    SetElementWorkset(crate::standards::v1::subsets::any::schema::mutations::set_element_workset::SetElementWorkset),
+    SetElementOption(crate::standards::v1::subsets::any::schema::mutations::set_element_option::SetElementOption),
+    DeleteWorkset(crate::standards::v1::subsets::any::schema::mutations::delete_workset::DeleteWorkset),
+    SetWorkset(crate::standards::v1::subsets::any::schema::mutations::set_workset::SetWorkset),
+    CreateWorkset(crate::standards::v1::subsets::any::schema::mutations::create_workset::CreateWorkset),
+    DeleteDesignOption(crate::standards::v1::subsets::any::schema::mutations::delete_design_option::DeleteDesignOption),
+    SetDesignOption(crate::standards::v1::subsets::any::schema::mutations::set_design_option::SetDesignOption),
+    CreateDesignOption(crate::standards::v1::subsets::any::schema::mutations::create_design_option::CreateDesignOption),
+    DeleteOptionGroup(crate::standards::v1::subsets::any::schema::mutations::delete_option_group::DeleteOptionGroup),
+    SetOptionGroup(crate::standards::v1::subsets::any::schema::mutations::set_option_group::SetOptionGroup),
+    CreateOptionGroup(crate::standards::v1::subsets::any::schema::mutations::create_option_group::CreateOptionGroup),
+    CreateSupport(crate::standards::v1::subsets::any::schema::mutations::create_support::CreateSupport),
+    SetSupport(crate::standards::v1::subsets::any::schema::mutations::set_support::SetSupport),
+    DeleteSupport(crate::standards::v1::subsets::any::schema::mutations::delete_support::DeleteSupport),
+    CreateLoadCase(crate::standards::v1::subsets::any::schema::mutations::create_load_case::CreateLoadCase),
+    SetLoadCase(crate::standards::v1::subsets::any::schema::mutations::set_load_case::SetLoadCase),
+    DeleteLoadCase(crate::standards::v1::subsets::any::schema::mutations::delete_load_case::DeleteLoadCase),
+    CreateLoad(crate::standards::v1::subsets::any::schema::mutations::create_load::CreateLoad),
+    SetLoad(crate::standards::v1::subsets::any::schema::mutations::set_load::SetLoad),
+    DeleteLoad(crate::standards::v1::subsets::any::schema::mutations::delete_load::DeleteLoad),
 
-    SetCurtainWall(super::set_curtain_wall::SetCurtainWall),
-    DeleteCurtainWall(super::delete_curtain_wall::DeleteCurtainWall),
-    CreateCurtainWall(super::create_curtain_wall::CreateCurtainWall),
-    SplitWall(super::split_wall::SplitWall),
-    FlipWall(super::flip_wall::FlipWall),
-    SetWallLocation(super::set_wall_location::SetWallLocation),
-    SetWallTypeOf(super::set_wall_type_of::SetWallTypeOf),
-    SetWallBaseOffset(super::set_wall_base_offset::SetWallBaseOffset),
-    SetWallAxis(super::set_wall_axis::SetWallAxis),
-    CreateSite(super::create_site::CreateSite),
-    DeleteSite(super::delete_site::DeleteSite),
-    CreateBuilding(super::create_building::CreateBuilding),
-    DeleteBuilding(super::delete_building::DeleteBuilding),
-    CreateStorey(super::create_storey::CreateStorey),
-    RenameStorey(super::rename_storey::RenameStorey),
-    SetStoreyHeight(super::set_storey_height::SetStoreyHeight),
-    SetStoreyCutHeight(super::set_storey_cut_height::SetStoreyCutHeight),
-    SetElementPhase(super::set_element_phase::SetElementPhase),
-    SetElementStorey(super::set_element_storey::SetElementStorey),
-    SetStoreyLevel(super::set_storey_level::SetStoreyLevel),
-    DeleteStorey(super::delete_storey::DeleteStorey),
-    CreateWall(super::create_wall::CreateWall),
-    DeleteWall(super::delete_wall::DeleteWall),
-    SetWallTop(super::set_wall_top::SetWallTop),
-    SetProjectInfo(super::set_project_info::SetProjectInfo),
-    SetSite(super::set_site::SetSite),
-    SetBuilding(super::set_building::SetBuilding),
-    CreateGridLine(super::create_grid_line::CreateGridLine),
-    DeleteGridLine(super::delete_grid_line::DeleteGridLine),
-    SetGridLine(super::set_grid_line::SetGridLine),
-    CreateColumnType(super::create_column_type::CreateColumnType),
-    DeleteColumnType(super::delete_column_type::DeleteColumnType),
-    SetColumnType(super::set_column_type::SetColumnType),
-    CreateBeamType(super::create_beam_type::CreateBeamType),
-    DeleteBeamType(super::delete_beam_type::DeleteBeamType),
-    SetBeamType(super::set_beam_type::SetBeamType),
-    CreateWindowType(super::create_window_type::CreateWindowType),
-    DeleteWindowType(super::delete_window_type::DeleteWindowType),
-    SetWindowType(super::set_window_type::SetWindowType),
-    CreateDoorType(super::create_door_type::CreateDoorType),
-    DeleteDoorType(super::delete_door_type::DeleteDoorType),
-    SetDoorType(super::set_door_type::SetDoorType),
-    CreateMaterial(super::create_material::CreateMaterial),
-    DeleteMaterial(super::delete_material::DeleteMaterial),
-    SetMaterial(super::set_material::SetMaterial),
-    CreateWallType(super::create_wall_type::CreateWallType),
-    DeleteWallType(super::delete_wall_type::DeleteWallType),
-    SetWallType(super::set_wall_type::SetWallType),
-    CreateSlabType(super::create_slab_type::CreateSlabType),
-    DeleteSlabType(super::delete_slab_type::DeleteSlabType),
-    SetSlabType(super::set_slab_type::SetSlabType),
-    CreateRoofType(super::create_roof_type::CreateRoofType),
-    DeleteRoofType(super::delete_roof_type::DeleteRoofType),
-    SetRoofType(super::set_roof_type::SetRoofType),
-    CreateColumn(super::create_column::CreateColumn),
-    DeleteColumn(super::delete_column::DeleteColumn),
-    SetColumn(super::set_column::SetColumn),
-    CreateBeam(super::create_beam::CreateBeam),
-    DeleteBeam(super::delete_beam::DeleteBeam),
-    SetBeam(super::set_beam::SetBeam),
-    CreateRailing(super::create_railing::CreateRailing),
-    DeleteRailing(super::delete_railing::DeleteRailing),
-    SetRailing(super::set_railing::SetRailing),
-    CreateRamp(super::create_ramp::CreateRamp),
-    SetRamp(super::set_ramp::SetRamp),
-    DeleteRamp(super::delete_ramp::DeleteRamp),
-    CreateSpace(super::create_space::CreateSpace),
-    DeleteSpace(super::delete_space::DeleteSpace),
-    SetSpace(super::set_space::SetSpace),
-    CreateZone(super::create_zone::CreateZone),
-    SetZone(super::set_zone::SetZone),
-    DeleteZone(super::delete_zone::DeleteZone),
-    CreateAreaScheme(super::create_area_scheme::CreateAreaScheme),
-    SetAreaScheme(super::set_area_scheme::SetAreaScheme),
-    DeleteAreaScheme(super::delete_area_scheme::DeleteAreaScheme),
-    CreateSlab(super::create_slab::CreateSlab),
-    DeleteSlab(super::delete_slab::DeleteSlab),
-    SetSlabBoundary(super::set_slab_boundary::SetSlabBoundary),
-    SetSlab(super::set_slab::SetSlab),
-    CreateCeilingType(super::create_ceiling_type::CreateCeilingType),
-    DeleteCeilingType(super::delete_ceiling_type::DeleteCeilingType),
-    SetCeilingType(super::set_ceiling_type::SetCeilingType),
-    CreateCeiling(super::create_ceiling::CreateCeiling),
-    CreateDimension(super::create_dimension::CreateDimension),
-    DeleteDimension(super::delete_dimension::DeleteDimension),
-    SetDimension(super::set_dimension::SetDimension),
-    CreateTag(super::create_tag::CreateTag),
-    DeleteTag(super::delete_tag::DeleteTag),
-    SetTag(super::set_tag::SetTag),
-    CreateTextNote(super::create_text_note::CreateTextNote),
-    DeleteTextNote(super::delete_text_note::DeleteTextNote),
-    SetTextNote(super::set_text_note::SetTextNote),
-    CreateLeader(super::create_leader::CreateLeader),
-    DeleteLeader(super::delete_leader::DeleteLeader),
-    SetLeader(super::set_leader::SetLeader),
-    CreateAnnotationStyle(super::create_annotation_style::CreateAnnotationStyle),
-    DeleteMepElement(super::delete_mep_element::DeleteMepElement),
-    SetMepElement(super::set_mep_element::SetMepElement),
-    CreateMepElement(super::create_mep_element::CreateMepElement),
-    RemoveComponentOverride(super::remove_component_override::RemoveComponentOverride),
-    SetComponentOverride(super::set_component_override::SetComponentOverride),
-    DeleteComponent(super::delete_component::DeleteComponent),
-    SetComponent(super::set_component::SetComponent),
-    CreateComponent(super::create_component::CreateComponent),
-    SetFamilySolid(super::set_family_solid::SetFamilySolid),
-    DeleteFamilySolid(super::delete_family_solid::DeleteFamilySolid),
-    CreateFamilySolid(super::create_family_solid::CreateFamilySolid),
-    RemoveFamilyParameter(super::remove_family_parameter::RemoveFamilyParameter),
-    SetFamilyParameter(super::set_family_parameter::SetFamilyParameter),
-    SetFamily(super::set_family::SetFamily),
-    DeleteFamily(super::delete_family::DeleteFamily),
-    CreateFamily(super::create_family::CreateFamily),
-    DeleteAnnotationStyle(super::delete_annotation_style::DeleteAnnotationStyle),
-    SetAnnotationStyle(super::set_annotation_style::SetAnnotationStyle),
-    DeleteCeiling(super::delete_ceiling::DeleteCeiling),
-    SetCeilingBoundary(super::set_ceiling_boundary::SetCeilingBoundary),
-    SetCeiling(super::set_ceiling::SetCeiling),
-    CreateRoof(super::create_roof::CreateRoof),
-    DeleteRoof(super::delete_roof::DeleteRoof),
-    SetRoofFootprint(super::set_roof_footprint::SetRoofFootprint),
-    SetRoofShape(super::set_roof_shape::SetRoofShape),
-    CreateOpening(super::create_opening::CreateOpening),
-    DeleteOpening(super::delete_opening::DeleteOpening),
-    MoveOpening(super::move_opening::MoveOpening),
-    SetOpening(super::set_opening::SetOpening),
-    CreateStair(super::create_stair::CreateStair),
-    DeleteStair(super::delete_stair::DeleteStair),
-    SetStair(super::set_stair::SetStair),
-    MoveElements(super::move_elements::MoveElements),
-    RotateElements(super::rotate_elements::RotateElements),
-    PlaceElements(super::place_elements::PlaceElements),
-    DeleteElements(super::delete_elements::DeleteElements),
-    RenameElement(super::rename_element::RenameElement),
-    SetElementProperty(super::set_element_property::SetElementProperty),
-    RemoveElementProperty(super::remove_element_property::RemoveElementProperty),
-    SetElementClassification(super::set_element_classification::SetElementClassification),
-    RemoveElementClassification(super::remove_element_classification::RemoveElementClassification),
-    CreatePropertyTemplate(super::create_property_template::CreatePropertyTemplate),
-    SetPropertyTemplate(super::set_property_template::SetPropertyTemplate),
-    DeletePropertyTemplate(super::delete_property_template::DeletePropertyTemplate),
-    CreateClassificationSystem(super::create_classification_system::CreateClassificationSystem),
-    SetClassificationSystem(super::set_classification_system::SetClassificationSystem),
-    DeleteClassificationSystem(super::delete_classification_system::DeleteClassificationSystem),
-    CreateSchedule(super::create_schedule::CreateSchedule),
-    SetSchedule(super::set_schedule::SetSchedule),
-    DeleteSchedule(super::delete_schedule::DeleteSchedule),
-    CreateView(super::create_view::CreateView),
-    SetView(super::set_view::SetView),
-    DeleteView(super::delete_view::DeleteView),
-    CreateSheet(super::create_sheet::CreateSheet),
-    SetSheet(super::set_sheet::SetSheet),
-    DeleteSheet(super::delete_sheet::DeleteSheet),
-    CreateViewport(super::create_viewport::CreateViewport),
-    SetViewport(super::set_viewport::SetViewport),
-    DeleteViewport(super::delete_viewport::DeleteViewport),
-    CreateSheetRevision(super::create_sheet_revision::CreateSheetRevision),
-    SetSheetRevision(super::set_sheet_revision::SetSheetRevision),
-    DeleteSheetRevision(super::delete_sheet_revision::DeleteSheetRevision),
-    SetSpaceConditions(super::set_space_conditions::SetSpaceConditions),
-    RemoveSpaceConditions(super::remove_space_conditions::RemoveSpaceConditions),
-    SetTypeThermalData(super::set_type_thermal_data::SetTypeThermalData),
-    CreateClashSet(super::create_clash_set::CreateClashSet),
-    SetClashSet(super::set_clash_set::SetClashSet),
-    DeleteClashSet(super::delete_clash_set::DeleteClashSet),
-    CreateRule(super::create_rule::CreateRule),
-    SetRule(super::set_rule::SetRule),
-    DeleteRule(super::delete_rule::DeleteRule),
-    CreateIssue(super::create_issue::CreateIssue),
-    SetIssue(super::set_issue::SetIssue),
-    DeleteIssue(super::delete_issue::DeleteIssue),
-    CreateIssueComment(super::create_issue_comment::CreateIssueComment),
-    SetIssueComment(super::set_issue_comment::SetIssueComment),
-    DeleteIssueComment(super::delete_issue_comment::DeleteIssueComment),
-    SetWallEndJoin(super::set_wall_end_join::SetWallEndJoin),
-    CopyElements(super::copy_elements::CopyElements),
-    MirrorElements(super::mirror_elements::MirrorElements),
-    ArrayElements(super::array_elements::ArrayElements),
-    AlignElements(super::align_elements::AlignElements),
-    OffsetWall(super::offset_wall::OffsetWall),
-    TrimExtendWall(super::trim_extend_wall::TrimExtendWall),
-    SplitSlab(super::split_slab::SplitSlab),
-    SplitBeam(super::split_beam::SplitBeam),
-    CreateWallSweep(super::create_wall_sweep::CreateWallSweep),
-    SetWallSweep(super::set_wall_sweep::SetWallSweep),
-    DeleteWallSweep(super::delete_wall_sweep::DeleteWallSweep),
-    SetWallBaseSlab(super::set_wall_base_slab::SetWallBaseSlab),
-    SetBeamAxis(super::set_beam_axis::SetBeamAxis),
-    SetColumnTilt(super::set_column_tilt::SetColumnTilt),
-    CreateCurtainWallType(super::create_curtain_wall_type::CreateCurtainWallType),
-    SetCurtainWallType(super::set_curtain_wall_type::SetCurtainWallType),
-    DeleteCurtainWallType(super::delete_curtain_wall_type::DeleteCurtainWallType),
-    SetCurtainWallTypeOf(super::set_curtain_wall_type_of::SetCurtainWallTypeOf),
-    SetCurtainWallGrid(super::set_curtain_wall_grid::SetCurtainWallGrid),
-    CreateCurtainPanelOverride(super::create_curtain_panel_override::CreateCurtainPanelOverride),
-    SetCurtainPanelOverride(super::set_curtain_panel_override::SetCurtainPanelOverride),
-    DeleteCurtainPanelOverride(super::delete_curtain_panel_override::DeleteCurtainPanelOverride),
+    SetCurtainWall(crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall::SetCurtainWall),
+    DeleteCurtainWall(crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall::DeleteCurtainWall),
+    CreateCurtainWall(crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall::CreateCurtainWall),
+    SplitWall(crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall),
+    FlipWall(crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall),
+    SetWallLocation(crate::standards::v1::subsets::any::schema::mutations::set_wall_location::SetWallLocation),
+    SetWallTypeOf(crate::standards::v1::subsets::any::schema::mutations::set_wall_type_of::SetWallTypeOf),
+    SetWallBaseOffset(crate::standards::v1::subsets::any::schema::mutations::set_wall_base_offset::SetWallBaseOffset),
+    SetWallAxis(crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis),
+    CreateSite(crate::standards::v1::subsets::any::schema::mutations::create_site::CreateSite),
+    DeleteSite(crate::standards::v1::subsets::any::schema::mutations::delete_site::DeleteSite),
+    CreateBuilding(crate::standards::v1::subsets::any::schema::mutations::create_building::CreateBuilding),
+    DeleteBuilding(crate::standards::v1::subsets::any::schema::mutations::delete_building::DeleteBuilding),
+    CreateStorey(crate::standards::v1::subsets::any::schema::mutations::create_storey::CreateStorey),
+    RenameStorey(crate::standards::v1::subsets::any::schema::mutations::rename_storey::RenameStorey),
+    SetStoreyHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight),
+    SetStoreyCutHeight(crate::standards::v1::subsets::any::schema::mutations::set_storey_cut_height::SetStoreyCutHeight),
+    SetElementPhase(crate::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase),
+    SetElementStorey(crate::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey),
+    SetStoreyLevel(crate::standards::v1::subsets::any::schema::mutations::set_storey_level::SetStoreyLevel),
+    DeleteStorey(crate::standards::v1::subsets::any::schema::mutations::delete_storey::DeleteStorey),
+    CreateWall(crate::standards::v1::subsets::any::schema::mutations::create_wall::CreateWall),
+    DeleteWall(crate::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall),
+    SetWallTop(crate::standards::v1::subsets::any::schema::mutations::set_wall_top::SetWallTop),
+    SetProjectInfo(crate::standards::v1::subsets::any::schema::mutations::set_project_info::SetProjectInfo),
+    SetSite(crate::standards::v1::subsets::any::schema::mutations::set_site::SetSite),
+    SetBuilding(crate::standards::v1::subsets::any::schema::mutations::set_building::SetBuilding),
+    CreateGridLine(crate::standards::v1::subsets::any::schema::mutations::create_grid_line::CreateGridLine),
+    DeleteGridLine(crate::standards::v1::subsets::any::schema::mutations::delete_grid_line::DeleteGridLine),
+    SetGridLine(crate::standards::v1::subsets::any::schema::mutations::set_grid_line::SetGridLine),
+    CreateColumnType(crate::standards::v1::subsets::any::schema::mutations::create_column_type::CreateColumnType),
+    DeleteColumnType(crate::standards::v1::subsets::any::schema::mutations::delete_column_type::DeleteColumnType),
+    SetColumnType(crate::standards::v1::subsets::any::schema::mutations::set_column_type::SetColumnType),
+    CreateBeamType(crate::standards::v1::subsets::any::schema::mutations::create_beam_type::CreateBeamType),
+    DeleteBeamType(crate::standards::v1::subsets::any::schema::mutations::delete_beam_type::DeleteBeamType),
+    SetBeamType(crate::standards::v1::subsets::any::schema::mutations::set_beam_type::SetBeamType),
+    CreateWindowType(crate::standards::v1::subsets::any::schema::mutations::create_window_type::CreateWindowType),
+    DeleteWindowType(crate::standards::v1::subsets::any::schema::mutations::delete_window_type::DeleteWindowType),
+    SetWindowType(crate::standards::v1::subsets::any::schema::mutations::set_window_type::SetWindowType),
+    CreateDoorType(crate::standards::v1::subsets::any::schema::mutations::create_door_type::CreateDoorType),
+    DeleteDoorType(crate::standards::v1::subsets::any::schema::mutations::delete_door_type::DeleteDoorType),
+    SetDoorType(crate::standards::v1::subsets::any::schema::mutations::set_door_type::SetDoorType),
+    CreateMaterial(crate::standards::v1::subsets::any::schema::mutations::create_material::CreateMaterial),
+    DeleteMaterial(crate::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial),
+    SetMaterial(crate::standards::v1::subsets::any::schema::mutations::set_material::SetMaterial),
+    CreateWallType(crate::standards::v1::subsets::any::schema::mutations::create_wall_type::CreateWallType),
+    DeleteWallType(crate::standards::v1::subsets::any::schema::mutations::delete_wall_type::DeleteWallType),
+    SetWallType(crate::standards::v1::subsets::any::schema::mutations::set_wall_type::SetWallType),
+    CreateSlabType(crate::standards::v1::subsets::any::schema::mutations::create_slab_type::CreateSlabType),
+    DeleteSlabType(crate::standards::v1::subsets::any::schema::mutations::delete_slab_type::DeleteSlabType),
+    SetSlabType(crate::standards::v1::subsets::any::schema::mutations::set_slab_type::SetSlabType),
+    CreateRoofType(crate::standards::v1::subsets::any::schema::mutations::create_roof_type::CreateRoofType),
+    DeleteRoofType(crate::standards::v1::subsets::any::schema::mutations::delete_roof_type::DeleteRoofType),
+    SetRoofType(crate::standards::v1::subsets::any::schema::mutations::set_roof_type::SetRoofType),
+    CreateColumn(crate::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn),
+    DeleteColumn(crate::standards::v1::subsets::any::schema::mutations::delete_column::DeleteColumn),
+    SetColumn(crate::standards::v1::subsets::any::schema::mutations::set_column::SetColumn),
+    CreateBeam(crate::standards::v1::subsets::any::schema::mutations::create_beam::CreateBeam),
+    DeleteBeam(crate::standards::v1::subsets::any::schema::mutations::delete_beam::DeleteBeam),
+    SetBeam(crate::standards::v1::subsets::any::schema::mutations::set_beam::SetBeam),
+    CreateRailing(crate::standards::v1::subsets::any::schema::mutations::create_railing::CreateRailing),
+    DeleteRailing(crate::standards::v1::subsets::any::schema::mutations::delete_railing::DeleteRailing),
+    SetRailing(crate::standards::v1::subsets::any::schema::mutations::set_railing::SetRailing),
+    CreateRamp(crate::standards::v1::subsets::any::schema::mutations::create_ramp::CreateRamp),
+    SetRamp(crate::standards::v1::subsets::any::schema::mutations::set_ramp::SetRamp),
+    DeleteRamp(crate::standards::v1::subsets::any::schema::mutations::delete_ramp::DeleteRamp),
+    CreateSpace(crate::standards::v1::subsets::any::schema::mutations::create_space::CreateSpace),
+    DeleteSpace(crate::standards::v1::subsets::any::schema::mutations::delete_space::DeleteSpace),
+    SetSpace(crate::standards::v1::subsets::any::schema::mutations::set_space::SetSpace),
+    CreateZone(crate::standards::v1::subsets::any::schema::mutations::create_zone::CreateZone),
+    SetZone(crate::standards::v1::subsets::any::schema::mutations::set_zone::SetZone),
+    DeleteZone(crate::standards::v1::subsets::any::schema::mutations::delete_zone::DeleteZone),
+    CreateAreaScheme(crate::standards::v1::subsets::any::schema::mutations::create_area_scheme::CreateAreaScheme),
+    SetAreaScheme(crate::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme),
+    DeleteAreaScheme(crate::standards::v1::subsets::any::schema::mutations::delete_area_scheme::DeleteAreaScheme),
+    CreateSlab(crate::standards::v1::subsets::any::schema::mutations::create_slab::CreateSlab),
+    DeleteSlab(crate::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab),
+    SetSlabBoundary(crate::standards::v1::subsets::any::schema::mutations::set_slab_boundary::SetSlabBoundary),
+    SetSlab(crate::standards::v1::subsets::any::schema::mutations::set_slab::SetSlab),
+    CreateCeilingType(crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::CreateCeilingType),
+    DeleteCeilingType(crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::DeleteCeilingType),
+    SetCeilingType(crate::standards::v1::subsets::any::schema::mutations::set_ceiling_type::SetCeilingType),
+    CreateCeiling(crate::standards::v1::subsets::any::schema::mutations::create_ceiling::CreateCeiling),
+    CreateDimension(crate::standards::v1::subsets::any::schema::mutations::create_dimension::CreateDimension),
+    DeleteDimension(crate::standards::v1::subsets::any::schema::mutations::delete_dimension::DeleteDimension),
+    SetDimension(crate::standards::v1::subsets::any::schema::mutations::set_dimension::SetDimension),
+    CreateTag(crate::standards::v1::subsets::any::schema::mutations::create_tag::CreateTag),
+    DeleteTag(crate::standards::v1::subsets::any::schema::mutations::delete_tag::DeleteTag),
+    SetTag(crate::standards::v1::subsets::any::schema::mutations::set_tag::SetTag),
+    CreateTextNote(crate::standards::v1::subsets::any::schema::mutations::create_text_note::CreateTextNote),
+    DeleteTextNote(crate::standards::v1::subsets::any::schema::mutations::delete_text_note::DeleteTextNote),
+    SetTextNote(crate::standards::v1::subsets::any::schema::mutations::set_text_note::SetTextNote),
+    CreateLeader(crate::standards::v1::subsets::any::schema::mutations::create_leader::CreateLeader),
+    DeleteLeader(crate::standards::v1::subsets::any::schema::mutations::delete_leader::DeleteLeader),
+    SetLeader(crate::standards::v1::subsets::any::schema::mutations::set_leader::SetLeader),
+    CreateAnnotationStyle(crate::standards::v1::subsets::any::schema::mutations::create_annotation_style::CreateAnnotationStyle),
+    DeleteMepElement(crate::standards::v1::subsets::any::schema::mutations::delete_mep_element::DeleteMepElement),
+    SetMepElement(crate::standards::v1::subsets::any::schema::mutations::set_mep_element::SetMepElement),
+    CreateMepElement(crate::standards::v1::subsets::any::schema::mutations::create_mep_element::CreateMepElement),
+    RemoveComponentOverride(crate::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride),
+    SetComponentOverride(crate::standards::v1::subsets::any::schema::mutations::set_component_override::SetComponentOverride),
+    DeleteComponent(crate::standards::v1::subsets::any::schema::mutations::delete_component::DeleteComponent),
+    SetComponent(crate::standards::v1::subsets::any::schema::mutations::set_component::SetComponent),
+    CreateComponent(crate::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent),
+    SetFamilySolid(crate::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid),
+    DeleteFamilySolid(crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid),
+    CreateFamilySolid(crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid),
+    RemoveFamilyParameter(crate::standards::v1::subsets::any::schema::mutations::remove_family_parameter::RemoveFamilyParameter),
+    SetFamilyParameter(crate::standards::v1::subsets::any::schema::mutations::set_family_parameter::SetFamilyParameter),
+    SetFamily(crate::standards::v1::subsets::any::schema::mutations::set_family::SetFamily),
+    DeleteFamily(crate::standards::v1::subsets::any::schema::mutations::delete_family::DeleteFamily),
+    CreateFamily(crate::standards::v1::subsets::any::schema::mutations::create_family::CreateFamily),
+    DeleteAnnotationStyle(crate::standards::v1::subsets::any::schema::mutations::delete_annotation_style::DeleteAnnotationStyle),
+    SetAnnotationStyle(crate::standards::v1::subsets::any::schema::mutations::set_annotation_style::SetAnnotationStyle),
+    DeleteCeiling(crate::standards::v1::subsets::any::schema::mutations::delete_ceiling::DeleteCeiling),
+    SetCeilingBoundary(crate::standards::v1::subsets::any::schema::mutations::set_ceiling_boundary::SetCeilingBoundary),
+    SetCeiling(crate::standards::v1::subsets::any::schema::mutations::set_ceiling::SetCeiling),
+    CreateRoof(crate::standards::v1::subsets::any::schema::mutations::create_roof::CreateRoof),
+    DeleteRoof(crate::standards::v1::subsets::any::schema::mutations::delete_roof::DeleteRoof),
+    SetRoofFootprint(crate::standards::v1::subsets::any::schema::mutations::set_roof_footprint::SetRoofFootprint),
+    SetRoofShape(crate::standards::v1::subsets::any::schema::mutations::set_roof_shape::SetRoofShape),
+    CreateOpening(crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening),
+    DeleteOpening(crate::standards::v1::subsets::any::schema::mutations::delete_opening::DeleteOpening),
+    MoveOpening(crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening),
+    SetOpening(crate::standards::v1::subsets::any::schema::mutations::set_opening::SetOpening),
+    CreateStair(crate::standards::v1::subsets::any::schema::mutations::create_stair::CreateStair),
+    DeleteStair(crate::standards::v1::subsets::any::schema::mutations::delete_stair::DeleteStair),
+    SetStair(crate::standards::v1::subsets::any::schema::mutations::set_stair::SetStair),
+    MoveElements(crate::standards::v1::subsets::any::schema::mutations::move_elements::MoveElements),
+    RotateElements(crate::standards::v1::subsets::any::schema::mutations::rotate_elements::RotateElements),
+    PlaceElements(crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements),
+    DeleteElements(crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements),
+    RenameElement(crate::standards::v1::subsets::any::schema::mutations::rename_element::RenameElement),
+    SetElementProperty(crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty),
+    RemoveElementProperty(crate::standards::v1::subsets::any::schema::mutations::remove_element_property::RemoveElementProperty),
+    SetElementClassification(crate::standards::v1::subsets::any::schema::mutations::set_element_classification::SetElementClassification),
+    RemoveElementClassification(crate::standards::v1::subsets::any::schema::mutations::remove_element_classification::RemoveElementClassification),
+    CreatePropertyTemplate(crate::standards::v1::subsets::any::schema::mutations::create_property_template::CreatePropertyTemplate),
+    SetPropertyTemplate(crate::standards::v1::subsets::any::schema::mutations::set_property_template::SetPropertyTemplate),
+    DeletePropertyTemplate(crate::standards::v1::subsets::any::schema::mutations::delete_property_template::DeletePropertyTemplate),
+    CreateClassificationSystem(crate::standards::v1::subsets::any::schema::mutations::create_classification_system::CreateClassificationSystem),
+    SetClassificationSystem(crate::standards::v1::subsets::any::schema::mutations::set_classification_system::SetClassificationSystem),
+    DeleteClassificationSystem(crate::standards::v1::subsets::any::schema::mutations::delete_classification_system::DeleteClassificationSystem),
+    CreateSchedule(crate::standards::v1::subsets::any::schema::mutations::create_schedule::CreateSchedule),
+    SetSchedule(crate::standards::v1::subsets::any::schema::mutations::set_schedule::SetSchedule),
+    DeleteSchedule(crate::standards::v1::subsets::any::schema::mutations::delete_schedule::DeleteSchedule),
+    CreateView(crate::standards::v1::subsets::any::schema::mutations::create_view::CreateView),
+    SetView(crate::standards::v1::subsets::any::schema::mutations::set_view::SetView),
+    DeleteView(crate::standards::v1::subsets::any::schema::mutations::delete_view::DeleteView),
+    CreateSheet(crate::standards::v1::subsets::any::schema::mutations::create_sheet::CreateSheet),
+    SetSheet(crate::standards::v1::subsets::any::schema::mutations::set_sheet::SetSheet),
+    DeleteSheet(crate::standards::v1::subsets::any::schema::mutations::delete_sheet::DeleteSheet),
+    CreateViewport(crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport),
+    SetViewport(crate::standards::v1::subsets::any::schema::mutations::set_viewport::SetViewport),
+    DeleteViewport(crate::standards::v1::subsets::any::schema::mutations::delete_viewport::DeleteViewport),
+    CreateSheetRevision(crate::standards::v1::subsets::any::schema::mutations::create_sheet_revision::CreateSheetRevision),
+    SetSheetRevision(crate::standards::v1::subsets::any::schema::mutations::set_sheet_revision::SetSheetRevision),
+    DeleteSheetRevision(crate::standards::v1::subsets::any::schema::mutations::delete_sheet_revision::DeleteSheetRevision),
+    SetSpaceConditions(crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions),
+    RemoveSpaceConditions(crate::standards::v1::subsets::any::schema::mutations::remove_space_conditions::RemoveSpaceConditions),
+    SetTypeThermalData(crate::standards::v1::subsets::any::schema::mutations::set_type_thermal_data::SetTypeThermalData),
+    CreateClashSet(crate::standards::v1::subsets::any::schema::mutations::create_clash_set::CreateClashSet),
+    SetClashSet(crate::standards::v1::subsets::any::schema::mutations::set_clash_set::SetClashSet),
+    DeleteClashSet(crate::standards::v1::subsets::any::schema::mutations::delete_clash_set::DeleteClashSet),
+    CreateRule(crate::standards::v1::subsets::any::schema::mutations::create_rule::CreateRule),
+    SetRule(crate::standards::v1::subsets::any::schema::mutations::set_rule::SetRule),
+    DeleteRule(crate::standards::v1::subsets::any::schema::mutations::delete_rule::DeleteRule),
+    CreateIssue(crate::standards::v1::subsets::any::schema::mutations::create_issue::CreateIssue),
+    SetIssue(crate::standards::v1::subsets::any::schema::mutations::set_issue::SetIssue),
+    DeleteIssue(crate::standards::v1::subsets::any::schema::mutations::delete_issue::DeleteIssue),
+    CreateIssueComment(crate::standards::v1::subsets::any::schema::mutations::create_issue_comment::CreateIssueComment),
+    SetIssueComment(crate::standards::v1::subsets::any::schema::mutations::set_issue_comment::SetIssueComment),
+    DeleteIssueComment(crate::standards::v1::subsets::any::schema::mutations::delete_issue_comment::DeleteIssueComment),
+    SetWallEndJoin(crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin),
+    CopyElements(crate::standards::v1::subsets::any::schema::mutations::copy_elements::CopyElements),
+    MirrorElements(crate::standards::v1::subsets::any::schema::mutations::mirror_elements::MirrorElements),
+    ArrayElements(crate::standards::v1::subsets::any::schema::mutations::array_elements::ArrayElements),
+    AlignElements(crate::standards::v1::subsets::any::schema::mutations::align_elements::AlignElements),
+    OffsetWall(crate::standards::v1::subsets::any::schema::mutations::offset_wall::OffsetWall),
+    TrimExtendWall(crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::TrimExtendWall),
+    SplitSlab(crate::standards::v1::subsets::any::schema::mutations::split_slab::SplitSlab),
+    SplitBeam(crate::standards::v1::subsets::any::schema::mutations::split_beam::SplitBeam),
+    CreateWallSweep(crate::standards::v1::subsets::any::schema::mutations::create_wall_sweep::CreateWallSweep),
+    SetWallSweep(crate::standards::v1::subsets::any::schema::mutations::set_wall_sweep::SetWallSweep),
+    DeleteWallSweep(crate::standards::v1::subsets::any::schema::mutations::delete_wall_sweep::DeleteWallSweep),
+    SetWallBaseSlab(crate::standards::v1::subsets::any::schema::mutations::set_wall_base_slab::SetWallBaseSlab),
+    SetBeamAxis(crate::standards::v1::subsets::any::schema::mutations::set_beam_axis::SetBeamAxis),
+    SetColumnTilt(crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::SetColumnTilt),
+    CreateCurtainWallType(crate::standards::v1::subsets::any::schema::mutations::create_curtain_wall_type::CreateCurtainWallType),
+    SetCurtainWallType(crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type::SetCurtainWallType),
+    DeleteCurtainWallType(crate::standards::v1::subsets::any::schema::mutations::delete_curtain_wall_type::DeleteCurtainWallType),
+    SetCurtainWallTypeOf(crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type_of::SetCurtainWallTypeOf),
+    SetCurtainWallGrid(crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid::SetCurtainWallGrid),
+    CreateCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::create_curtain_panel_override::CreateCurtainPanelOverride),
+    SetCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::set_curtain_panel_override::SetCurtainPanelOverride),
+    DeleteCurtainPanelOverride(crate::standards::v1::subsets::any::schema::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride),
 }
 
 /// 🏷️ The kebab spelling of every [`ModelMutation`] variant, in declaration order: the one list the language-neutral test platform
@@ -505,440 +497,223 @@ pub fn inverse_model_mutation(snapshot: &ModelSnapshot, mutation: &ModelMutation
 mod tests;
 
 //#region 🧩️Modules
-#[path = "🧿️horizontal-rules/🦀️.rs"]
-pub mod horizontal_rules;
+pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::mutations::horizontal_rules;
 //#region 🔖️Leaves
-#[path = "🌍️create-site/🦀️.rs"]
-pub mod create_site;
-#[path = "🧹️delete-site/🦀️.rs"]
-pub mod delete_site;
-#[path = "🏢️create-building/🦀️.rs"]
-pub mod create_building;
-#[path = "🏚️delete-building/🦀️.rs"]
-pub mod delete_building;
-#[path = "🪜️create-storey/🦀️.rs"]
-pub mod create_storey;
-#[path = "🏷️rename-storey/🦀️.rs"]
-pub mod rename_storey;
-#[path = "📏️set-storey-height/🦀️.rs"]
-pub mod set_storey_height;
-#[path = "🔢️set-storey-level/🦀️.rs"]
-pub mod set_storey_level;
-#[path = "🚮️delete-storey/🦀️.rs"]
-pub mod delete_storey;
-#[path = "🧱️create-wall/🦀️.rs"]
-pub mod create_wall;
-#[path = "💥️delete-wall/🦀️.rs"]
-pub mod delete_wall;
-#[path = "🔝️set-wall-top/🦀️.rs"]
-pub mod set_wall_top;
-#[path = "🛤️create-railing/🦀️.rs"]
-pub mod create_railing;
-#[path = "🪚️delete-railing/🦀️.rs"]
-pub mod delete_railing;
-#[path = "🔧️set-railing/🦀️.rs"]
-pub mod set_railing;
-#[path = "🛋️create-space/🦀️.rs"]
-pub mod create_space;
-#[path = "🧽️delete-space/🦀️.rs"]
-pub mod delete_space;
-#[path = "🪑️set-space/🦀️.rs"]
-pub mod set_space;
-#[path = "🏛️create-column/🦀️.rs"]
-pub mod create_column;
-#[path = "🪦️delete-column/🦀️.rs"]
-pub mod delete_column;
-#[path = "🎛️set-column/🦀️.rs"]
-pub mod set_column;
-#[path = "➖️create-beam/🦀️.rs"]
-pub mod create_beam;
-#[path = "✂️delete-beam/🦀️.rs"]
-pub mod delete_beam;
-#[path = "⬜️create-slab/🦀️.rs"]
-pub mod create_slab;
-#[path = "🔻️delete-slab/🦀️.rs"]
-pub mod delete_slab;
-#[path = "🔷️set-slab-boundary/🦀️.rs"]
-pub mod set_slab_boundary;
-#[path = "🔸️set-slab/🦀️.rs"]
-pub mod set_slab;
-#[path = "🏠️create-roof/🦀️.rs"]
-pub mod create_roof;
-#[path = "🏘️delete-roof/🦀️.rs"]
-pub mod delete_roof;
-#[path = "👣️set-roof-footprint/🦀️.rs"]
-pub mod set_roof_footprint;
-#[path = "🏔️set-roof-shape/🦀️.rs"]
-pub mod set_roof_shape;
-#[path = "🗼️create-column-type/🦀️.rs"]
-pub mod create_column_type;
-#[path = "🏺️delete-column-type/🦀️.rs"]
-pub mod delete_column_type;
-#[path = "🎚️set-column-type/🦀️.rs"]
-pub mod set_column_type;
-#[path = "🌉️create-beam-type/🦀️.rs"]
-pub mod create_beam_type;
-#[path = "🪢️delete-beam-type/🦀️.rs"]
-pub mod delete_beam_type;
-#[path = "🎞️set-beam-type/🦀️.rs"]
-pub mod set_beam_type;
-#[path = "🖼️create-window-type/🦀️.rs"]
-pub mod create_window_type;
-#[path = "🧊️delete-window-type/🦀️.rs"]
-pub mod delete_window_type;
-#[path = "🔅️set-window-type/🦀️.rs"]
-pub mod set_window_type;
-#[path = "🛗️create-door-type/🦀️.rs"]
-pub mod create_door_type;
-#[path = "🔒️delete-door-type/🦀️.rs"]
-pub mod delete_door_type;
-#[path = "🔑️set-door-type/🦀️.rs"]
-pub mod set_door_type;
-#[path = "🪨️create-material/🦀️.rs"]
-pub mod create_material;
-#[path = "🗑️delete-material/🦀️.rs"]
-pub mod delete_material;
-#[path = "🖌️set-material/🦀️.rs"]
-pub mod set_material;
-#[path = "🪵️create-wall-type/🦀️.rs"]
-pub mod create_wall_type;
-#[path = "🚧️delete-wall-type/🦀️.rs"]
-pub mod delete_wall_type;
-#[path = "🔨️set-wall-type/🦀️.rs"]
-pub mod set_wall_type;
-#[path = "🟫️create-slab-type/🦀️.rs"]
-pub mod create_slab_type;
-#[path = "🟥️delete-slab-type/🦀️.rs"]
-pub mod delete_slab_type;
-#[path = "🟧️set-slab-type/🦀️.rs"]
-pub mod set_slab_type;
-#[path = "🛖️create-roof-type/🦀️.rs"]
-pub mod create_roof_type;
-#[path = "⛺️delete-roof-type/🦀️.rs"]
-pub mod delete_roof_type;
-#[path = "🏕️set-roof-type/🦀️.rs"]
-pub mod set_roof_type;
-#[path = "🕳️create-opening/🦀️.rs"]
-pub mod create_opening;
-#[path = "🪓️delete-opening/🦀️.rs"]
-pub mod delete_opening;
-#[path = "🛷️move-opening/🦀️.rs"]
-pub mod move_opening;
-#[path = "🕹️set-opening/🦀️.rs"]
-pub mod set_opening;
-#[path = "🧗️create-stair/🦀️.rs"]
-pub mod create_stair;
-#[path = "🧨️delete-stair/🦀️.rs"]
-pub mod delete_stair;
-#[path = "🧮️set-stair/🦀️.rs"]
-pub mod set_stair;
-#[path = "📇️set-project-info/🦀️.rs"]
-pub mod set_project_info;
-#[path = "🗺️set-site/🦀️.rs"]
-pub mod set_site;
-#[path = "🏗️set-building/🦀️.rs"]
-pub mod set_building;
-#[path = "🔲️create-grid-line/🦀️.rs"]
-pub mod create_grid_line;
-#[path = "🔳️delete-grid-line/🦀️.rs"]
-pub mod delete_grid_line;
-#[path = "🧭️set-grid-line/🦀️.rs"]
-pub mod set_grid_line;
-#[path = "〰️set-wall-axis/🦀️.rs"]
-pub mod set_wall_axis;
-#[path = "🔽️set-wall-base-offset/🦀️.rs"]
-pub mod set_wall_base_offset;
-#[path = "🥞️set-wall-type-of/🦀️.rs"]
-pub mod set_wall_type_of;
-#[path = "🦚️set-wall-location/🦀️.rs"]
-pub mod set_wall_location;
-#[path = "🪞️flip-wall/🦀️.rs"]
-pub mod flip_wall;
-#[path = "🦈️split-wall/🦀️.rs"]
-pub mod split_wall;
-#[path = "🦖️delete-curtain-wall/🦀️.rs"]
-pub mod delete_curtain_wall;
-#[path = "🚚️move-elements/🦀️.rs"]
-pub mod move_elements;
-#[path = "🎡️rotate-elements/🦀️.rs"]
-pub mod rotate_elements;
-#[path = "🪧️place-elements/🦀️.rs"]
-pub mod place_elements;
-#[path = "💣️delete-elements/🦀️.rs"]
-pub mod delete_elements;
-#[path = "🪪️rename-element/🦀️.rs"]
-pub mod rename_element;
-#[path = "🧾️set-element-property/🦀️.rs"]
-pub mod set_element_property;
-#[path = "🫧️remove-element-property/🦀️.rs"]
-pub mod remove_element_property;
-#[path = "🗂️set-element-classification/🦀️.rs"]
-pub mod set_element_classification;
-#[path = "🗄️remove-element-classification/🦀️.rs"]
-pub mod remove_element_classification;
-#[path = "🎬️set-storey-cut-height/🦀️.rs"]
-pub mod set_storey_cut_height;
-#[path = "🎑️create-ceiling-type/🦀️.rs"]
-pub mod create_ceiling_type;
-#[path = "🎏️delete-ceiling-type/🦀️.rs"]
-pub mod delete_ceiling_type;
-#[path = "🎐️set-ceiling-type/🦀️.rs"]
-pub mod set_ceiling_type;
-#[path = "🏞️create-ceiling/🦀️.rs"]
-pub mod create_ceiling;
-#[path = "🌆️delete-ceiling/🦀️.rs"]
-pub mod delete_ceiling;
-#[path = "🌇️set-ceiling-boundary/🦀️.rs"]
-pub mod set_ceiling_boundary;
-#[path = "🌄️set-ceiling/🦀️.rs"]
-pub mod set_ceiling;
-#[path = "🛝️create-ramp/🦀️.rs"]
-pub mod create_ramp;
-#[path = "🛹️set-ramp/🦀️.rs"]
-pub mod set_ramp;
-#[path = "🛼️delete-ramp/🦀️.rs"]
-pub mod delete_ramp;
-#[path = "📽️create-view/🦀️.rs"]
-pub mod create_view;
-#[path = "🔭️set-view/🦀️.rs"]
-pub mod set_view;
-#[path = "📺️delete-view/🦀️.rs"]
-pub mod delete_view;
-#[path = "🎨️create-annotation-style/🦀️.rs"]
-pub mod create_annotation_style;
-#[path = "🧺️delete-annotation-style/🦀️.rs"]
-pub mod delete_annotation_style;
-#[path = "🖊️set-annotation-style/🦀️.rs"]
-pub mod set_annotation_style;
-#[path = "↔️create-dimension/🦀️.rs"]
-pub mod create_dimension;
-#[path = "📎️delete-dimension/🦀️.rs"]
-pub mod delete_dimension;
-#[path = "📌️set-dimension/🦀️.rs"]
-pub mod set_dimension;
-#[path = "🔖️create-tag/🦀️.rs"]
-pub mod create_tag;
-#[path = "🎫️delete-tag/🦀️.rs"]
-pub mod delete_tag;
-#[path = "🏴️set-tag/🦀️.rs"]
-pub mod set_tag;
-#[path = "🗒️create-text-note/🦀️.rs"]
-pub mod create_text_note;
-#[path = "📃️delete-text-note/🦀️.rs"]
-pub mod delete_text_note;
-#[path = "📝️set-text-note/🦀️.rs"]
-pub mod set_text_note;
-#[path = "↗️create-leader/🦀️.rs"]
-pub mod create_leader;
-#[path = "↪️delete-leader/🦀️.rs"]
-pub mod delete_leader;
-#[path = "⤴️set-leader/🦀️.rs"]
-pub mod set_leader;
-#[path = "🗾️create-zone/🦀️.rs"]
-pub mod create_zone;
-#[path = "🪄️set-zone/🦀️.rs"]
-pub mod set_zone;
-#[path = "🧯️delete-zone/🦀️.rs"]
-pub mod delete_zone;
-#[path = "🗃️create-area-scheme/🦀️.rs"]
-pub mod create_area_scheme;
-#[path = "🗳️set-area-scheme/🦀️.rs"]
-pub mod set_area_scheme;
-#[path = "🧻️delete-area-scheme/🦀️.rs"]
-pub mod delete_area_scheme;
-#[path = "📊️create-schedule/🦀️.rs"]
-pub mod create_schedule;
-#[path = "📈️set-schedule/🦀️.rs"]
-pub mod set_schedule;
-#[path = "📉️delete-schedule/🦀️.rs"]
-pub mod delete_schedule;
-#[path = "🎢️set-element-storey/🦀️.rs"]
-pub mod set_element_storey;
-#[path = "🕰️set-element-phase/🦀️.rs"]
-pub mod set_element_phase;
-#[path = "🧷️set-wall-end-join/🦀️.rs"]
-pub mod set_wall_end_join;
-#[path = "👯️copy-elements/🦀️.rs"]
-pub mod copy_elements;
-#[path = "🔀️mirror-elements/🦀️.rs"]
-pub mod mirror_elements;
-#[path = "💠️array-elements/🦀️.rs"]
-pub mod array_elements;
-#[path = "📋️align-elements/🦀️.rs"]
-pub mod align_elements;
-#[path = "🧶️offset-wall/🦀️.rs"]
-pub mod offset_wall;
-#[path = "🔪️trim-extend-wall/🦀️.rs"]
-pub mod trim_extend_wall;
-#[path = "🍰️split-slab/🦀️.rs"]
-pub mod split_slab;
-#[path = "🥖️split-beam/🦀️.rs"]
-pub mod split_beam;
-#[path = "📄️create-sheet/🦀️.rs"]
-pub mod create_sheet;
-#[path = "📑️set-sheet/🦀️.rs"]
-pub mod set_sheet;
-#[path = "📒️delete-sheet/🦀️.rs"]
-pub mod delete_sheet;
-#[path = "📓️create-viewport/🦀️.rs"]
-pub mod create_viewport;
-#[path = "📔️set-viewport/🦀️.rs"]
-pub mod set_viewport;
-#[path = "📕️delete-viewport/🦀️.rs"]
-pub mod delete_viewport;
-#[path = "📖️create-sheet-revision/🦀️.rs"]
-pub mod create_sheet_revision;
-#[path = "📗️set-sheet-revision/🦀️.rs"]
-pub mod set_sheet_revision;
-#[path = "📘️delete-sheet-revision/🦀️.rs"]
-pub mod delete_sheet_revision;
-#[path = "🪝️set-beam-axis/🦀️.rs"]
-pub mod set_beam_axis;
-#[path = "🗽️set-column-tilt/🦀️.rs"]
-pub mod set_column_tilt;
-#[path = "🏟️create-curtain-wall-type/🦀️.rs"]
-pub mod create_curtain_wall_type;
-#[path = "🏤️set-curtain-wall-type/🦀️.rs"]
-pub mod set_curtain_wall_type;
-#[path = "🏥️delete-curtain-wall-type/🦀️.rs"]
-pub mod delete_curtain_wall_type;
-#[path = "🏦️set-curtain-wall-type-of/🦀️.rs"]
-pub mod set_curtain_wall_type_of;
-#[path = "🏧️set-curtain-wall-grid/🦀️.rs"]
-pub mod set_curtain_wall_grid;
-#[path = "🏨️create-curtain-panel-override/🦀️.rs"]
-pub mod create_curtain_panel_override;
-#[path = "🏩️set-curtain-panel-override/🦀️.rs"]
-pub mod set_curtain_panel_override;
-#[path = "🏪️delete-curtain-panel-override/🦀️.rs"]
-pub mod delete_curtain_panel_override;
-#[path = "📐️set-beam/🦀️.rs"]
-pub mod set_beam;
-#[path = "🔆️set-curtain-wall/🦀️.rs"]
-pub mod set_curtain_wall;
-#[path = "🏬️create-curtain-wall/🦀️.rs"]
-pub mod create_curtain_wall;
-#[path = "🧰️create-property-template/🦀️.rs"]
-pub mod create_property_template;
-#[path = "🛠️set-property-template/🦀️.rs"]
-pub mod set_property_template;
-#[path = "🗜️delete-property-template/🦀️.rs"]
-pub mod delete_property_template;
-#[path = "📚️create-classification-system/🦀️.rs"]
-pub mod create_classification_system;
-#[path = "🔏️set-classification-system/🦀️.rs"]
-pub mod set_classification_system;
-#[path = "🔐️delete-classification-system/🦀️.rs"]
-pub mod delete_classification_system;
-#[path = "🧩️create-family/🦀️.rs"]
-pub mod create_family;
-#[path = "🪅️delete-family/🦀️.rs"]
-pub mod delete_family;
-#[path = "🪆️set-family/🦀️.rs"]
-pub mod set_family;
-#[path = "🔡️set-family-parameter/🦀️.rs"]
-pub mod set_family_parameter;
-#[path = "🔠️remove-family-parameter/🦀️.rs"]
-pub mod remove_family_parameter;
-#[path = "🔶️create-family-solid/🦀️.rs"]
-pub mod create_family_solid;
-#[path = "🔹️delete-family-solid/🦀️.rs"]
-pub mod delete_family_solid;
-#[path = "📦️set-family-solid/🦀️.rs"]
-pub mod set_family_solid;
-#[path = "🪛️create-wall-sweep/🦀️.rs"]
-pub mod create_wall_sweep;
-#[path = "🪠️set-wall-sweep/🦀️.rs"]
-pub mod set_wall_sweep;
-#[path = "🪡️delete-wall-sweep/🦀️.rs"]
-pub mod delete_wall_sweep;
-#[path = "🪔️set-wall-base-slab/🦀️.rs"]
-pub mod set_wall_base_slab;
-#[path = "🦴️create-support/🦀️.rs"]
-pub mod create_support;
-#[path = "🦴️set-support/🦀️.rs"]
-pub mod set_support;
-#[path = "🦴️delete-support/🦀️.rs"]
-pub mod delete_support;
-#[path = "🦴️create-load-case/🦀️.rs"]
-pub mod create_load_case;
-#[path = "🦴️set-load-case/🦀️.rs"]
-pub mod set_load_case;
-#[path = "🦴️delete-load-case/🦀️.rs"]
-pub mod delete_load_case;
-#[path = "🦴️create-load/🦀️.rs"]
-pub mod create_load;
-#[path = "🦴️set-load/🦀️.rs"]
-pub mod set_load;
-#[path = "🦴️delete-load/🦀️.rs"]
-pub mod delete_load;
-#[path = "🧭️create-option-group/🦀️.rs"]
-pub mod create_option_group;
-#[path = "🧭️set-option-group/🦀️.rs"]
-pub mod set_option_group;
-#[path = "🧭️delete-option-group/🦀️.rs"]
-pub mod delete_option_group;
-#[path = "🧭️create-design-option/🦀️.rs"]
-pub mod create_design_option;
-#[path = "🧭️set-design-option/🦀️.rs"]
-pub mod set_design_option;
-#[path = "🧭️delete-design-option/🦀️.rs"]
-pub mod delete_design_option;
-#[path = "🧭️create-workset/🦀️.rs"]
-pub mod create_workset;
-#[path = "🧭️set-workset/🦀️.rs"]
-pub mod set_workset;
-#[path = "🧭️delete-workset/🦀️.rs"]
-pub mod delete_workset;
-#[path = "🧭️set-element-option/🦀️.rs"]
-pub mod set_element_option;
-#[path = "🧭️set-element-workset/🦀️.rs"]
-pub mod set_element_workset;
-#[path = "🚨️create-clash-set/🦀️.rs"]
-pub mod create_clash_set;
-#[path = "🚥️set-clash-set/🦀️.rs"]
-pub mod set_clash_set;
-#[path = "💢️delete-clash-set/🦀️.rs"]
-pub mod delete_clash_set;
-#[path = "⚖️create-rule/🦀️.rs"]
-pub mod create_rule;
-#[path = "🚦️set-rule/🦀️.rs"]
-pub mod set_rule;
-#[path = "❗️delete-rule/🦀️.rs"]
-pub mod delete_rule;
-#[path = "🚩️create-issue/🦀️.rs"]
-pub mod create_issue;
-#[path = "🏁️set-issue/🦀️.rs"]
-pub mod set_issue;
-#[path = "📢️delete-issue/🦀️.rs"]
-pub mod delete_issue;
-#[path = "💬️create-issue-comment/🦀️.rs"]
-pub mod create_issue_comment;
-#[path = "🗨️set-issue-comment/🦀️.rs"]
-pub mod set_issue_comment;
-#[path = "💭️delete-issue-comment/🦀️.rs"]
-pub mod delete_issue_comment;
-#[path = "🛏️create-component/🦀️.rs"]
-pub mod create_component;
-#[path = "🛁️set-component/🦀️.rs"]
-pub mod set_component;
-#[path = "🚽️delete-component/🦀️.rs"]
-pub mod delete_component;
-#[path = "🚿️set-component-override/🦀️.rs"]
-pub mod set_component_override;
-#[path = "🚰️remove-component-override/🦀️.rs"]
-pub mod remove_component_override;
-#[path = "💧️create-mep-element/🦀️.rs"]
-pub mod create_mep_element;
-#[path = "💨️set-mep-element/🦀️.rs"]
-pub mod set_mep_element;
-#[path = "💦️delete-mep-element/🦀️.rs"]
-pub mod delete_mep_element;
-#[path = "🌡️set-space-conditions/🦀️.rs"]
-pub mod set_space_conditions;
-#[path = "🥶️remove-space-conditions/🦀️.rs"]
-pub mod remove_space_conditions;
-#[path = "♨️set-type-thermal-data/🦀️.rs"]
-pub mod set_type_thermal_data;
+pub use semio_s_artifact_bim_model_mut_any_124::standards::v1::subsets::any::schema::mutations::create_site;
+pub use semio_s_artifact_bim_model_mut_any_58::standards::v1::subsets::any::schema::mutations::delete_site;
+pub use semio_s_artifact_bim_model_mut_any_125::standards::v1::subsets::any::schema::mutations::create_building;
+pub use semio_s_artifact_bim_model_mut_any_59::standards::v1::subsets::any::schema::mutations::delete_building;
+pub use semio_s_artifact_bim_model_mut_any_126::standards::v1::subsets::any::schema::mutations::create_storey;
+pub use semio_s_artifact_bim_model_mut_any::standards::v1::subsets::any::schema::mutations::rename_storey;
+pub use semio_s_artifact_bim_model_mut_any_2::standards::v1::subsets::any::schema::mutations::set_storey_height;
+pub use semio_s_artifact_bim_model_mut_any_3::standards::v1::subsets::any::schema::mutations::set_storey_level;
+pub use semio_s_artifact_bim_model_mut_any_60::standards::v1::subsets::any::schema::mutations::delete_storey;
+pub use semio_s_artifact_bim_model_mut_any_173::standards::v1::subsets::any::schema::mutations::create_wall;
+pub use semio_s_artifact_bim_model_mut_any_61::standards::v1::subsets::any::schema::mutations::delete_wall;
+pub use semio_s_artifact_bim_model_mut_any_174::standards::v1::subsets::any::schema::mutations::set_wall_top;
+pub use semio_s_artifact_bim_model_mut_any_127::standards::v1::subsets::any::schema::mutations::create_railing;
+pub use semio_s_artifact_bim_model_mut_any_62::standards::v1::subsets::any::schema::mutations::delete_railing;
+pub use semio_s_artifact_bim_model_mut_any_63::standards::v1::subsets::any::schema::mutations::set_railing;
+pub use semio_s_artifact_bim_model_mut_any_128::standards::v1::subsets::any::schema::mutations::create_space;
+pub use semio_s_artifact_bim_model_mut_any_64::standards::v1::subsets::any::schema::mutations::delete_space;
+pub use semio_s_artifact_bim_model_mut_any_4::standards::v1::subsets::any::schema::mutations::set_space;
+pub use semio_s_artifact_bim_model_mut_any_159::standards::v1::subsets::any::schema::mutations::create_column;
+pub use semio_s_artifact_bim_model_mut_any_65::standards::v1::subsets::any::schema::mutations::delete_column;
+pub use semio_s_artifact_bim_model_mut_any_66::standards::v1::subsets::any::schema::mutations::set_column;
+pub use semio_s_artifact_bim_model_mut_any_160::standards::v1::subsets::any::schema::mutations::create_beam;
+pub use semio_s_artifact_bim_model_mut_any_67::standards::v1::subsets::any::schema::mutations::delete_beam;
+pub use semio_s_artifact_bim_model_mut_any_129::standards::v1::subsets::any::schema::mutations::create_slab;
+pub use semio_s_artifact_bim_model_mut_any_68::standards::v1::subsets::any::schema::mutations::delete_slab;
+pub use semio_s_artifact_bim_model_mut_any_5::standards::v1::subsets::any::schema::mutations::set_slab_boundary;
+pub use semio_s_artifact_bim_model_mut_any_6::standards::v1::subsets::any::schema::mutations::set_slab;
+pub use semio_s_artifact_bim_model_mut_any_130::standards::v1::subsets::any::schema::mutations::create_roof;
+pub use semio_s_artifact_bim_model_mut_any_69::standards::v1::subsets::any::schema::mutations::delete_roof;
+pub use semio_s_artifact_bim_model_mut_any_7::standards::v1::subsets::any::schema::mutations::set_roof_footprint;
+pub use semio_s_artifact_bim_model_mut_any_8::standards::v1::subsets::any::schema::mutations::set_roof_shape;
+pub use semio_s_artifact_bim_model_mut_any_70::standards::v1::subsets::any::schema::mutations::create_column_type;
+pub use semio_s_artifact_bim_model_mut_any_70::standards::v1::subsets::any::schema::mutations::delete_column_type;
+pub use semio_s_artifact_bim_model_mut_any_9::standards::v1::subsets::any::schema::mutations::set_column_type;
+pub use semio_s_artifact_bim_model_mut_any_71::standards::v1::subsets::any::schema::mutations::create_beam_type;
+pub use semio_s_artifact_bim_model_mut_any_71::standards::v1::subsets::any::schema::mutations::delete_beam_type;
+pub use semio_s_artifact_bim_model_mut_any_10::standards::v1::subsets::any::schema::mutations::set_beam_type;
+pub use semio_s_artifact_bim_model_mut_any_72::standards::v1::subsets::any::schema::mutations::create_window_type;
+pub use semio_s_artifact_bim_model_mut_any_72::standards::v1::subsets::any::schema::mutations::delete_window_type;
+pub use semio_s_artifact_bim_model_mut_any_11::standards::v1::subsets::any::schema::mutations::set_window_type;
+pub use semio_s_artifact_bim_model_mut_any_73::standards::v1::subsets::any::schema::mutations::create_door_type;
+pub use semio_s_artifact_bim_model_mut_any_73::standards::v1::subsets::any::schema::mutations::delete_door_type;
+pub use semio_s_artifact_bim_model_mut_any_12::standards::v1::subsets::any::schema::mutations::set_door_type;
+pub use semio_s_artifact_bim_model_mut_any_74::standards::v1::subsets::any::schema::mutations::create_material;
+pub use semio_s_artifact_bim_model_mut_any_74::standards::v1::subsets::any::schema::mutations::delete_material;
+pub use semio_s_artifact_bim_model_mut_any_13::standards::v1::subsets::any::schema::mutations::set_material;
+pub use semio_s_artifact_bim_model_mut_any_75::standards::v1::subsets::any::schema::mutations::create_wall_type;
+pub use semio_s_artifact_bim_model_mut_any_75::standards::v1::subsets::any::schema::mutations::delete_wall_type;
+pub use semio_s_artifact_bim_model_mut_any_14::standards::v1::subsets::any::schema::mutations::set_wall_type;
+pub use semio_s_artifact_bim_model_mut_any_76::standards::v1::subsets::any::schema::mutations::create_slab_type;
+pub use semio_s_artifact_bim_model_mut_any_76::standards::v1::subsets::any::schema::mutations::delete_slab_type;
+pub use semio_s_artifact_bim_model_mut_any_15::standards::v1::subsets::any::schema::mutations::set_slab_type;
+pub use semio_s_artifact_bim_model_mut_any_77::standards::v1::subsets::any::schema::mutations::create_roof_type;
+pub use semio_s_artifact_bim_model_mut_any_77::standards::v1::subsets::any::schema::mutations::delete_roof_type;
+pub use semio_s_artifact_bim_model_mut_any_16::standards::v1::subsets::any::schema::mutations::set_roof_type;
+pub use semio_s_artifact_bim_model_mut_any_175::standards::v1::subsets::any::schema::mutations::create_opening;
+pub use semio_s_artifact_bim_model_mut_any_78::standards::v1::subsets::any::schema::mutations::delete_opening;
+pub use semio_s_artifact_bim_model_mut_any_79::standards::v1::subsets::any::schema::mutations::move_opening;
+pub use semio_s_artifact_bim_model_mut_any_176::standards::v1::subsets::any::schema::mutations::set_opening;
+pub use semio_s_artifact_bim_model_mut_any_131::standards::v1::subsets::any::schema::mutations::create_stair;
+pub use semio_s_artifact_bim_model_mut_any_80::standards::v1::subsets::any::schema::mutations::delete_stair;
+pub use semio_s_artifact_bim_model_mut_any_81::standards::v1::subsets::any::schema::mutations::set_stair;
+pub use semio_s_artifact_bim_model_mut_any_17::standards::v1::subsets::any::schema::mutations::set_project_info;
+pub use semio_s_artifact_bim_model_mut_any_18::standards::v1::subsets::any::schema::mutations::set_site;
+pub use semio_s_artifact_bim_model_mut_any_19::standards::v1::subsets::any::schema::mutations::set_building;
+pub use semio_s_artifact_bim_model_mut_any_132::standards::v1::subsets::any::schema::mutations::create_grid_line;
+pub use semio_s_artifact_bim_model_mut_any_82::standards::v1::subsets::any::schema::mutations::delete_grid_line;
+pub use semio_s_artifact_bim_model_mut_any_20::standards::v1::subsets::any::schema::mutations::set_grid_line;
+pub use semio_s_artifact_bim_model_mut_any_161::standards::v1::subsets::any::schema::mutations::set_wall_axis;
+pub use semio_s_artifact_bim_model_mut_any_21::standards::v1::subsets::any::schema::mutations::set_wall_base_offset;
+pub use semio_s_artifact_bim_model_mut_any_22::standards::v1::subsets::any::schema::mutations::set_wall_type_of;
+pub use semio_s_artifact_bim_model_mut_any_23::standards::v1::subsets::any::schema::mutations::set_wall_location;
+pub use semio_s_artifact_bim_model_mut_any_162::standards::v1::subsets::any::schema::mutations::flip_wall;
+pub use semio_s_artifact_bim_model_mut_any_177::standards::v1::subsets::any::schema::mutations::split_wall;
+pub use semio_s_artifact_bim_model_mut_any_83::standards::v1::subsets::any::schema::mutations::delete_curtain_wall;
+pub use semio_s_artifact_bim_model_mut_any_133::standards::v1::subsets::any::schema::mutations::move_elements;
+pub use semio_s_artifact_bim_model_mut_any_134::standards::v1::subsets::any::schema::mutations::rotate_elements;
+pub use semio_s_artifact_bim_model_mut_any_84::standards::v1::subsets::any::schema::mutations::place_elements;
+pub use semio_s_artifact_bim_model_mut_any_85::standards::v1::subsets::any::schema::mutations::delete_elements;
+pub use semio_s_artifact_bim_model_mut_any_86::standards::v1::subsets::any::schema::mutations::rename_element;
+pub use semio_s_artifact_bim_model_mut_any_87::standards::v1::subsets::any::schema::mutations::set_element_property;
+pub use semio_s_artifact_bim_model_mut_any_87::standards::v1::subsets::any::schema::mutations::remove_element_property;
+pub use semio_s_artifact_bim_model_mut_any_88::standards::v1::subsets::any::schema::mutations::set_element_classification;
+pub use semio_s_artifact_bim_model_mut_any_88::standards::v1::subsets::any::schema::mutations::remove_element_classification;
+pub use semio_s_artifact_bim_model_mut_any_24::standards::v1::subsets::any::schema::mutations::set_storey_cut_height;
+pub use semio_s_artifact_bim_model_mut_any_89::standards::v1::subsets::any::schema::mutations::create_ceiling_type;
+pub use semio_s_artifact_bim_model_mut_any_89::standards::v1::subsets::any::schema::mutations::delete_ceiling_type;
+pub use semio_s_artifact_bim_model_mut_any_25::standards::v1::subsets::any::schema::mutations::set_ceiling_type;
+pub use semio_s_artifact_bim_model_mut_any_135::standards::v1::subsets::any::schema::mutations::create_ceiling;
+pub use semio_s_artifact_bim_model_mut_any_90::standards::v1::subsets::any::schema::mutations::delete_ceiling;
+pub use semio_s_artifact_bim_model_mut_any_26::standards::v1::subsets::any::schema::mutations::set_ceiling_boundary;
+pub use semio_s_artifact_bim_model_mut_any_27::standards::v1::subsets::any::schema::mutations::set_ceiling;
+pub use semio_s_artifact_bim_model_mut_any_136::standards::v1::subsets::any::schema::mutations::create_ramp;
+pub use semio_s_artifact_bim_model_mut_any_91::standards::v1::subsets::any::schema::mutations::set_ramp;
+pub use semio_s_artifact_bim_model_mut_any_92::standards::v1::subsets::any::schema::mutations::delete_ramp;
+pub use semio_s_artifact_bim_model_mut_any_137::standards::v1::subsets::any::schema::mutations::create_view;
+pub use semio_s_artifact_bim_model_mut_any_28::standards::v1::subsets::any::schema::mutations::set_view;
+pub use semio_s_artifact_bim_model_mut_any_93::standards::v1::subsets::any::schema::mutations::delete_view;
+pub use semio_s_artifact_bim_model_mut_any_94::standards::v1::subsets::any::schema::mutations::create_annotation_style;
+pub use semio_s_artifact_bim_model_mut_any_94::standards::v1::subsets::any::schema::mutations::delete_annotation_style;
+pub use semio_s_artifact_bim_model_mut_any_29::standards::v1::subsets::any::schema::mutations::set_annotation_style;
+pub use semio_s_artifact_bim_model_mut_any_138::standards::v1::subsets::any::schema::mutations::create_dimension;
+pub use semio_s_artifact_bim_model_mut_any_95::standards::v1::subsets::any::schema::mutations::delete_dimension;
+pub use semio_s_artifact_bim_model_mut_any_30::standards::v1::subsets::any::schema::mutations::set_dimension;
+pub use semio_s_artifact_bim_model_mut_any_139::standards::v1::subsets::any::schema::mutations::create_tag;
+pub use semio_s_artifact_bim_model_mut_any_96::standards::v1::subsets::any::schema::mutations::delete_tag;
+pub use semio_s_artifact_bim_model_mut_any_31::standards::v1::subsets::any::schema::mutations::set_tag;
+pub use semio_s_artifact_bim_model_mut_any_140::standards::v1::subsets::any::schema::mutations::create_text_note;
+pub use semio_s_artifact_bim_model_mut_any_97::standards::v1::subsets::any::schema::mutations::delete_text_note;
+pub use semio_s_artifact_bim_model_mut_any_32::standards::v1::subsets::any::schema::mutations::set_text_note;
+pub use semio_s_artifact_bim_model_mut_any_141::standards::v1::subsets::any::schema::mutations::create_leader;
+pub use semio_s_artifact_bim_model_mut_any_98::standards::v1::subsets::any::schema::mutations::delete_leader;
+pub use semio_s_artifact_bim_model_mut_any_33::standards::v1::subsets::any::schema::mutations::set_leader;
+pub use semio_s_artifact_bim_model_mut_any_142::standards::v1::subsets::any::schema::mutations::create_zone;
+pub use semio_s_artifact_bim_model_mut_any_34::standards::v1::subsets::any::schema::mutations::set_zone;
+pub use semio_s_artifact_bim_model_mut_any_99::standards::v1::subsets::any::schema::mutations::delete_zone;
+pub use semio_s_artifact_bim_model_mut_any_143::standards::v1::subsets::any::schema::mutations::create_area_scheme;
+pub use semio_s_artifact_bim_model_mut_any_100::standards::v1::subsets::any::schema::mutations::set_area_scheme;
+pub use semio_s_artifact_bim_model_mut_any_101::standards::v1::subsets::any::schema::mutations::delete_area_scheme;
+pub use semio_s_artifact_bim_model_mut_any_102::standards::v1::subsets::any::schema::mutations::create_schedule;
+pub use semio_s_artifact_bim_model_mut_any_35::standards::v1::subsets::any::schema::mutations::set_schedule;
+pub use semio_s_artifact_bim_model_mut_any_102::standards::v1::subsets::any::schema::mutations::delete_schedule;
+pub use semio_s_artifact_bim_model_mut_any_144::standards::v1::subsets::any::schema::mutations::set_element_storey;
+pub use semio_s_artifact_bim_model_mut_any_103::standards::v1::subsets::any::schema::mutations::set_element_phase;
+pub use semio_s_artifact_bim_model_mut_any_178::standards::v1::subsets::any::schema::mutations::set_wall_end_join;
+pub use semio_s_artifact_bim_model_mut_any_179::standards::v1::subsets::any::schema::mutations::copy_elements;
+pub use semio_s_artifact_bim_model_mut_any_189::standards::v1::subsets::any::schema::mutations::mirror_elements;
+pub use semio_s_artifact_bim_model_mut_any_180::standards::v1::subsets::any::schema::mutations::array_elements;
+pub use semio_s_artifact_bim_model_mut_any_181::standards::v1::subsets::any::schema::mutations::align_elements;
+pub use semio_s_artifact_bim_model_mut_any_182::standards::v1::subsets::any::schema::mutations::offset_wall;
+pub use semio_s_artifact_bim_model_mut_any_183::standards::v1::subsets::any::schema::mutations::trim_extend_wall;
+pub use semio_s_artifact_bim_model_mut_any_184::standards::v1::subsets::any::schema::mutations::split_slab;
+pub use semio_s_artifact_bim_model_mut_any_185::standards::v1::subsets::any::schema::mutations::split_beam;
+pub use semio_s_artifact_bim_model_mut_any_145::standards::v1::subsets::any::schema::mutations::create_sheet;
+pub use semio_s_artifact_bim_model_mut_any_36::standards::v1::subsets::any::schema::mutations::set_sheet;
+pub use semio_s_artifact_bim_model_mut_any_104::standards::v1::subsets::any::schema::mutations::delete_sheet;
+pub use semio_s_artifact_bim_model_mut_any_146::standards::v1::subsets::any::schema::mutations::create_viewport;
+pub use semio_s_artifact_bim_model_mut_any_37::standards::v1::subsets::any::schema::mutations::set_viewport;
+pub use semio_s_artifact_bim_model_mut_any_105::standards::v1::subsets::any::schema::mutations::delete_viewport;
+pub use semio_s_artifact_bim_model_mut_any_147::standards::v1::subsets::any::schema::mutations::create_sheet_revision;
+pub use semio_s_artifact_bim_model_mut_any_38::standards::v1::subsets::any::schema::mutations::set_sheet_revision;
+pub use semio_s_artifact_bim_model_mut_any_106::standards::v1::subsets::any::schema::mutations::delete_sheet_revision;
+pub use semio_s_artifact_bim_model_mut_any_163::standards::v1::subsets::any::schema::mutations::set_beam_axis;
+pub use semio_s_artifact_bim_model_mut_any_164::standards::v1::subsets::any::schema::mutations::set_column_tilt;
+pub use semio_s_artifact_bim_model_mut_any_165::standards::v1::subsets::any::schema::mutations::create_curtain_wall_type;
+pub use semio_s_artifact_bim_model_mut_any_166::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type;
+pub use semio_s_artifact_bim_model_mut_any_165::standards::v1::subsets::any::schema::mutations::delete_curtain_wall_type;
+pub use semio_s_artifact_bim_model_mut_any_39::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type_of;
+pub use semio_s_artifact_bim_model_mut_any_167::standards::v1::subsets::any::schema::mutations::set_curtain_wall_grid;
+pub use semio_s_artifact_bim_model_mut_any_168::standards::v1::subsets::any::schema::mutations::create_curtain_panel_override;
+pub use semio_s_artifact_bim_model_mut_any_169::standards::v1::subsets::any::schema::mutations::set_curtain_panel_override;
+pub use semio_s_artifact_bim_model_mut_any_107::standards::v1::subsets::any::schema::mutations::delete_curtain_panel_override;
+pub use semio_s_artifact_bim_model_mut_any_170::standards::v1::subsets::any::schema::mutations::set_beam;
+pub use semio_s_artifact_bim_model_mut_any_171::standards::v1::subsets::any::schema::mutations::set_curtain_wall;
+pub use semio_s_artifact_bim_model_mut_any_172::standards::v1::subsets::any::schema::mutations::create_curtain_wall;
+pub use semio_s_artifact_bim_model_mut_any_108::standards::v1::subsets::any::schema::mutations::create_property_template;
+pub use semio_s_artifact_bim_model_mut_any_40::standards::v1::subsets::any::schema::mutations::set_property_template;
+pub use semio_s_artifact_bim_model_mut_any_108::standards::v1::subsets::any::schema::mutations::delete_property_template;
+pub use semio_s_artifact_bim_model_mut_any_148::standards::v1::subsets::any::schema::mutations::create_classification_system;
+pub use semio_s_artifact_bim_model_mut_any_41::standards::v1::subsets::any::schema::mutations::set_classification_system;
+pub use semio_s_artifact_bim_model_mut_any_148::standards::v1::subsets::any::schema::mutations::delete_classification_system;
+pub use semio_s_artifact_bim_model_mut_any_149::standards::v1::subsets::any::schema::mutations::create_family;
+pub use semio_s_artifact_bim_model_mut_any_149::standards::v1::subsets::any::schema::mutations::delete_family;
+pub use semio_s_artifact_bim_model_mut_any_42::standards::v1::subsets::any::schema::mutations::set_family;
+pub use semio_s_artifact_bim_model_mut_any_109::standards::v1::subsets::any::schema::mutations::set_family_parameter;
+pub use semio_s_artifact_bim_model_mut_any_109::standards::v1::subsets::any::schema::mutations::remove_family_parameter;
+pub use semio_s_artifact_bim_model_mut_any_110::standards::v1::subsets::any::schema::mutations::create_family_solid;
+pub use semio_s_artifact_bim_model_mut_any_110::standards::v1::subsets::any::schema::mutations::delete_family_solid;
+pub use semio_s_artifact_bim_model_mut_any_43::standards::v1::subsets::any::schema::mutations::set_family_solid;
+pub use semio_s_artifact_bim_model_mut_any_186::standards::v1::subsets::any::schema::mutations::create_wall_sweep;
+pub use semio_s_artifact_bim_model_mut_any_187::standards::v1::subsets::any::schema::mutations::set_wall_sweep;
+pub use semio_s_artifact_bim_model_mut_any_111::standards::v1::subsets::any::schema::mutations::delete_wall_sweep;
+pub use semio_s_artifact_bim_model_mut_any_188::standards::v1::subsets::any::schema::mutations::set_wall_base_slab;
+pub use semio_s_artifact_bim_model_mut_any_112::standards::v1::subsets::any::schema::mutations::create_support;
+pub use semio_s_artifact_bim_model_mut_any_44::standards::v1::subsets::any::schema::mutations::set_support;
+pub use semio_s_artifact_bim_model_mut_any_112::standards::v1::subsets::any::schema::mutations::delete_support;
+pub use semio_s_artifact_bim_model_mut_any_113::standards::v1::subsets::any::schema::mutations::create_load_case;
+pub use semio_s_artifact_bim_model_mut_any_45::standards::v1::subsets::any::schema::mutations::set_load_case;
+pub use semio_s_artifact_bim_model_mut_any_113::standards::v1::subsets::any::schema::mutations::delete_load_case;
+pub use semio_s_artifact_bim_model_mut_any_114::standards::v1::subsets::any::schema::mutations::create_load;
+pub use semio_s_artifact_bim_model_mut_any_46::standards::v1::subsets::any::schema::mutations::set_load;
+pub use semio_s_artifact_bim_model_mut_any_114::standards::v1::subsets::any::schema::mutations::delete_load;
+pub use semio_s_artifact_bim_model_mut_any_115::standards::v1::subsets::any::schema::mutations::create_option_group;
+pub use semio_s_artifact_bim_model_mut_any_47::standards::v1::subsets::any::schema::mutations::set_option_group;
+pub use semio_s_artifact_bim_model_mut_any_115::standards::v1::subsets::any::schema::mutations::delete_option_group;
+pub use semio_s_artifact_bim_model_mut_any_116::standards::v1::subsets::any::schema::mutations::create_design_option;
+pub use semio_s_artifact_bim_model_mut_any_48::standards::v1::subsets::any::schema::mutations::set_design_option;
+pub use semio_s_artifact_bim_model_mut_any_116::standards::v1::subsets::any::schema::mutations::delete_design_option;
+pub use semio_s_artifact_bim_model_mut_any_117::standards::v1::subsets::any::schema::mutations::create_workset;
+pub use semio_s_artifact_bim_model_mut_any_49::standards::v1::subsets::any::schema::mutations::set_workset;
+pub use semio_s_artifact_bim_model_mut_any_117::standards::v1::subsets::any::schema::mutations::delete_workset;
+pub use semio_s_artifact_bim_model_mut_any_50::standards::v1::subsets::any::schema::mutations::set_element_option;
+pub use semio_s_artifact_bim_model_mut_any_51::standards::v1::subsets::any::schema::mutations::set_element_workset;
+pub use semio_s_artifact_bim_model_mut_any_150::standards::v1::subsets::any::schema::mutations::create_clash_set;
+pub use semio_s_artifact_bim_model_mut_any_52::standards::v1::subsets::any::schema::mutations::set_clash_set;
+pub use semio_s_artifact_bim_model_mut_any_118::standards::v1::subsets::any::schema::mutations::delete_clash_set;
+pub use semio_s_artifact_bim_model_mut_any_151::standards::v1::subsets::any::schema::mutations::create_rule;
+pub use semio_s_artifact_bim_model_mut_any_53::standards::v1::subsets::any::schema::mutations::set_rule;
+pub use semio_s_artifact_bim_model_mut_any_119::standards::v1::subsets::any::schema::mutations::delete_rule;
+pub use semio_s_artifact_bim_model_mut_any_152::standards::v1::subsets::any::schema::mutations::create_issue;
+pub use semio_s_artifact_bim_model_mut_any_54::standards::v1::subsets::any::schema::mutations::set_issue;
+pub use semio_s_artifact_bim_model_mut_any_120::standards::v1::subsets::any::schema::mutations::delete_issue;
+pub use semio_s_artifact_bim_model_mut_any_153::standards::v1::subsets::any::schema::mutations::create_issue_comment;
+pub use semio_s_artifact_bim_model_mut_any_55::standards::v1::subsets::any::schema::mutations::set_issue_comment;
+pub use semio_s_artifact_bim_model_mut_any_121::standards::v1::subsets::any::schema::mutations::delete_issue_comment;
+pub use semio_s_artifact_bim_model_mut_any_154::standards::v1::subsets::any::schema::mutations::create_component;
+pub use semio_s_artifact_bim_model_mut_any_155::standards::v1::subsets::any::schema::mutations::set_component;
+pub use semio_s_artifact_bim_model_mut_any_122::standards::v1::subsets::any::schema::mutations::delete_component;
+pub use semio_s_artifact_bim_model_mut_any_156::standards::v1::subsets::any::schema::mutations::set_component_override;
+pub use semio_s_artifact_bim_model_mut_any_156::standards::v1::subsets::any::schema::mutations::remove_component_override;
+pub use semio_s_artifact_bim_model_mut_any_157::standards::v1::subsets::any::schema::mutations::create_mep_element;
+pub use semio_s_artifact_bim_model_mut_any_158::standards::v1::subsets::any::schema::mutations::set_mep_element;
+pub use semio_s_artifact_bim_model_mut_any_123::standards::v1::subsets::any::schema::mutations::delete_mep_element;
+pub use semio_s_artifact_bim_model_mut_any_56::standards::v1::subsets::any::schema::mutations::set_space_conditions;
+pub use semio_s_artifact_bim_model_mut_any_56::standards::v1::subsets::any::schema::mutations::remove_space_conditions;
+pub use semio_s_artifact_bim_model_mut_any_57::standards::v1::subsets::any::schema::mutations::set_type_thermal_data;
 //#endregion 🔖️Leaves
 //#endregion 🧩️Modules

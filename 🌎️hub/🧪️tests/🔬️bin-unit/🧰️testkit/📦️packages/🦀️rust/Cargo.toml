@@ -60,6 +60,7 @@ directory = { path = "../../../../../../🧰️framework/🛍️products/💻️
 db = { path = "../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
 tokio-tungstenite = "0.26"
 blake3 = "1"
+semio-framework-server = { workspace = true }
 
 [dev-dependencies]
 semio-hub-runtime = { workspace = true, features = ["testkit"] }

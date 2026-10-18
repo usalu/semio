@@ -1,12 +1,13 @@
 import "../../🏗️build/🧭️selection/🧪️tests/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import ts from "typescript";
 import {parseArgsStringToArgv} from "string-argv";
 import {createRequire} from "node:module";
 import { parseBuildInvocationV1 } from "../../🏗️build/🧭️invocation/🟦️.ts";
 import { validateBuildTaskArgumentsV1 } from "../../🏗️build/🧭️selection/🟦️.ts";
-import { readFileSync } from "node:fs";
+import { readFileSync,existsSync } from "node:fs";
 import {Database} from "bun:sqlite";
 import {readBuildDependencyInvocationV1} from "../../🏗️build/🧭️invocation/🟦️.ts";
 import {javascriptDependencyProducerArgumentsV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
@@ -18,6 +19,9 @@ import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import fixture from "../🧫️fixtures/🔧️build-surfaces/🔣️.json";
 import schema from "../../🧬️schema/🔧️build-surfaces/🔣️.json";
 import projectSchema from "../../🏗️build/🧬️schema/📋️project/🔣️.json";
+import graphSchema from "../../🏗️build/🧬️schema/🔣️.json";
+import {neutralBuildTargetV1,resolveBuildTargetV1} from "../../🏗️build/🕸️graph/🟦️.ts";
+import {planBazelTasksV1} from "../../🏗️build/🔧️tools/🏗️bazel/📜️script.ts";
 import { nativeHostContractLaws } from "../../🎮️playground/🖥️native-host/🧪️tests/🟦️.ts";
 
 const root = findWorkspaceRoot(import.meta.dir);
@@ -93,6 +97,14 @@ test("project declarations expose neutral executors through the owned schema", (
 
 test("native executable producers admit portable project declarations", () => nativeHostContractLaws(root));
 
+/** 📜️ Journal DATA owns its one immutable contract without a redundant runtime facade. */
+test("native journal DATA owner remains complete within neutral Source closures",async()=>{const policy=fixture.journalDataOwner,owner=await import(join(root,policy.owner))as Record<string,unknown>,db=new Database(":memory:");try{for(const name of policy.exports)expect(owner[name],name).toBeDefined();expect(existsSync(join(root,policy.retired))).toBe(false);const contract=owner.nativeStorageSchemaV1 as any,admit=owner.readNativeStorageDataV1 as((definition:string,value:unknown)=>unknown),event={type:"committed",id:"f".repeat(32)};expect(Object.isFrozen(contract)).toBe(true);expect(Object.isFrozen(contract.definitions.Event)).toBe(true);expect(admit("Event",event)).toBe(event);expect(new Ajv({strict:false}).validate({...contract.definitions.Event,definitions:contract.definitions},event)).toBe(true);expect(()=>admit("Event",{type:"unknown"})).toThrow();const tree=ts.createSourceFile(policy.owner,read(policy.owner),ts.ScriptTarget.Latest,true),exports=tree.statements.flatMap(node=>ts.isFunctionDeclaration(node)&&node.modifiers?.some(token=>token.kind===ts.SyntaxKind.ExportKeyword)?[node.name!.text]:ts.isVariableStatement(node)&&node.modifiers?.some(token=>token.kind===ts.SyntaxKind.ExportKeyword)?node.declarationList.declarations.map(row=>row.name.getText(tree)):[]);for(const name of policy.exports)expect(db.query("select exists(select 1 from json_each(?1) where value=?2) present").get(JSON.stringify(exports),name)).toEqual({present:1});expect(read(policy.owner)).not.toContain(policy.retired.split("/").slice(-2).join("/"));}finally{db.close();}});
+
+/** 🧾️ Every authored target normalizes through the first-party graph owner before backend planning. */
+test("all authored executor omissions preserve neutral execution through the actual Bazel planner",()=>{
+ const db=new Database(":memory:"),admit=new Ajv2020({strict:false}).compile(graphSchema),check=(raw:Record<string,any>,identity:string)=>{const target=neutralBuildTargetV1(raw,identity),graph={version:1 as const,projects:{audit:{name:"audit",root:".",targets:{task:{...target,dependsOn:[]}}}},dependencies:[]};expect(admit(graph),identity+":"+JSON.stringify(admit.errors)).toBe(true);const oracle=db.query("select json_patch(json_object('kind',case when json_extract(?1,'$.executor')='repo:noop' then 'noop' else 'command' end),coalesce(json_extract(?1,'$.options'),'{}')) value").get(JSON.stringify(raw))as{value:string},expected=JSON.parse(oracle.value);if(raw.command!==undefined)expected.command=raw.command;expect(target.execution,identity).toEqual(expected);const plan=planBazelTasksV1(graph,{tasks:["audit:task"],args:[]}),actual=plan.tasks[plan.selected[0]!]!;expect(plan.selected).toHaveLength(1);expect(actual.definition.execution,identity).toEqual(resolveBuildTargetV1(target,actual.configuration).execution);expect("executor"in actual.definition,identity).toBe(false);return target;};let projects=0,tasks=0,implicit=0;try{for(const row of fixture.implicitExecutors){if(row.accepted)check(row.target,row.name);else expect(()=>check(row.target,row.name)).toThrow();}const inventory=spawnSync("rg",["--files","--hidden","--null","-g","📋️project.json","-g","!node_modules","-g","!.git","-g","!.cache","-g","!🗑️generated"],{cwd:root,encoding:"utf8",timeout:10000,maxBuffer:16*1024*1024});expect(inventory.status,inventory.stderr).toBe(0);for(const path of new Set(inventory.stdout.split("\0").filter(path=>path&&!path.includes("/🎫️tickets/")))){const value=JSON.parse(read(path));projects++;for(const[name,raw]of Object.entries(value.targets??{})){const target=raw as Record<string,any>;check(target,path+":"+name);if(target.executor===undefined)implicit++;tasks++;}}expect(implicit).toBeGreaterThan(0);console.log("[DEBUG] Complete authored target neutral normalization "+JSON.stringify({projects,tasks,implicit,actualBazelPlanner:true,dependencyRelationPort:"isolated empty relation; full inferred dependency graph not claimed",NativeOperations:0}));}finally{db.close();}
+});
+
 test("editor entry points expose every build infrastructure command in both languages", () => {
   for (const file of [".vscode/launch.json", ".vscode/🧩️launch.seed.jsonc"]) {
     const document = JSON.parse(read(file));
@@ -128,7 +140,7 @@ test("editor task arguments cross the neutral argument boundary", () => {
 test("native orchestration and rebuild declarations use neutral build commands", () => {
   const manifest = JSON.parse(read("package.json"));
   for (const command of Object.values(manifest.scripts)) expect(command).not.toMatch(/(?:^|\s)(?:bun\s+(?:(?:run|x)\s+)?)?nx\s/u);
-  for (const path of fixture.commandSources) expect(read(path), path).not.toMatch(/\bbun\s+nx\s|--skip-nx-cache|--excludeTaskDependencies|--outputStyle|"nx"\s*,|node_modules\/nx\/(?:dist\/)?bin\/nx\.js/u);
+  for (const path of fixture.commandSources) expect(read(path), path).not.toMatch(/\bbun\s+nx\s|--skip-nx-cache|--excludeTaskDependencies|--outputStyle|"nx"\s*,|node_modules\/nx\/(?:dist\/)?bin\/nx\.js|\[cpp\] Nx completed/u);
 });
 
 test("MCP native staging uses one neutral command with independent argv", () => {
@@ -161,13 +173,13 @@ test("Bazel configuration files have explicit repository filename authority", ()
 });
 
 
-test("CI dependency synchronization preserves root scope through the neutral owner", () => {
+test("CI dependency synchronization initializes complete Source ownership through the neutral owner", () => {
   expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
   const row=fixture.ciDependencies,source=read(row.path),yaml=createRequire(import.meta.url)("yaml"),parsed=Bun.YAML.parse(source) as {jobs:Record<string,{steps:{name?:string;run?:string;uses?:string}[]}>};
   expect(parsed).toEqual(yaml.parse(source));
-  const accepts=(command:string):boolean=>{try{const argv=literalCommandTokensV1(command);expect(argv).toEqual(parseArgsStringToArgv(command));if(argv[0]!=="bun"||argv[1]!=="repo")return false;const selected=readBuildDependencyInvocationV1(argv.slice(2));return selected.mode==="sync"&&selected.selection.kind==="scope"&&selected.selection.owner===".";}catch{return false;}};
+  const accepts=(command:string):boolean=>{try{const argv=literalCommandTokensV1(command);expect(argv).toEqual(parseArgsStringToArgv(command));if(argv[0]!=="bun"||argv[1]!=="repo")return false;const selected=readBuildDependencyInvocationV1(argv.slice(2));return selected.mode==="sync"&&selected.selection.kind==="all";}catch{return false;}};
   const db=new Database(":memory:");
-  try{db.exec("CREATE TABLE commands (argv TEXT NOT NULL)");for(const vector of row.cases){const argv=parseArgsStringToArgv(vector.command);db.exec("DELETE FROM commands");db.query("INSERT INTO commands VALUES (?)").run(JSON.stringify(argv));const actual=db.query("SELECT CASE WHEN json_array_length(argv)=6 AND json_extract(argv,'$[0]')='bun' AND json_extract(argv,'$[1]')='repo' AND json_extract(argv,'$[2]')='dependencies' AND json_extract(argv,'$[3]')='sync' AND json_extract(argv,'$[4]')='--scope' AND json_extract(argv,'$[5]')='.' THEN 1 ELSE 0 END AS accepted FROM commands").get() as {accepted:number};expect(accepts(vector.command),vector.name).toBe(vector.accepted);expect(Boolean(actual.accepted),vector.name).toBe(vector.accepted);}
+  try{db.exec("CREATE TABLE commands (argv TEXT NOT NULL)");for(const vector of row.cases){const argv=parseArgsStringToArgv(vector.command);db.exec("DELETE FROM commands");db.query("INSERT INTO commands VALUES (?)").run(JSON.stringify(argv));const actual=db.query("SELECT CASE WHEN json_array_length(argv)=5 AND json_extract(argv,'$[0]')='bun' AND json_extract(argv,'$[1]')='repo' AND json_extract(argv,'$[2]')='dependencies' AND json_extract(argv,'$[3]')='sync' AND json_extract(argv,'$[4]')='--all' THEN 1 ELSE 0 END AS accepted FROM commands").get() as {accepted:number};expect(accepts(vector.command),vector.name).toBe(vector.accepted);expect(Boolean(actual.accepted),vector.name).toBe(vector.accepted);}
     for(const job of row.jobs){const steps=parsed.jobs[job]!.steps,install=steps.filter(step=>step.name==="Install");expect(install).toHaveLength(1);expect(install[0]!.run).toBe(row.command);expect(accepts(install[0]!.run!)).toBe(true);expect(steps.findIndex(step=>step.uses?.startsWith("oven-sh/setup-bun@"))).toBeLessThan(steps.indexOf(install[0]!));for(const step of steps)if(step.run)expect(step.run).not.toMatch(/\bbun\s+(?:run\s+)?install\b|\bbun\s+nx\b/u);}
     for(const cache of ["/workspace/cache/bun-cache","C:\\workspace\\cache\\bun-cache"]){const args=javascriptDependencyProducerArgumentsV1("sync",cache);expect(args.slice(0,3)).toEqual(["install","--frozen-lockfile","--ignore-scripts"]);expect(args.slice(-2)).toEqual(["--cache-dir",cache]);}
   }finally{db.close();}

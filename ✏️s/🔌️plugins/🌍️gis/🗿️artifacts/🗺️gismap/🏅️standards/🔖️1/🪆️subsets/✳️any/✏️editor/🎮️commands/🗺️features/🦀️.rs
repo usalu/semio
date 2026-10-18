@@ -385,8 +385,3 @@ pub mod patch_route {
 }
 //#endregion 🔖️PatchRoute
 
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests

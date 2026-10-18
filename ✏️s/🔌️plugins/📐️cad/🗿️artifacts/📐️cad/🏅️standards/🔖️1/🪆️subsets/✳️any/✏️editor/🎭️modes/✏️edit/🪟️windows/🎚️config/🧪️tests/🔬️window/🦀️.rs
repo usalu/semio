@@ -5,7 +5,6 @@ use semio_s_artifact_cad_cad_modes::windows::config::*;
 use semio_s_artifact_cad_cad_model::snapshot::CadPaneId;
 use semio_s_artifact_cad_cad_config::{CadConfig, cad_sun_config_to_world};
 use semio_s_artifact_cad_cad_kit::{CadPlayRuntime, cad_runtime_from};
-use crate;
 use semio_s_artifact_cad_cad_transient::CadWorldWindowTransient;
 use semio_framework_plugin::{ConfigView, Fault, ViewModel};
 use std::collections::HashMap;

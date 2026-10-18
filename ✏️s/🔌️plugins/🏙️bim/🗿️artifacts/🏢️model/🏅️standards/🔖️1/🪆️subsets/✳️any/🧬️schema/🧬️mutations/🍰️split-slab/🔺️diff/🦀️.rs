@@ -4,10 +4,10 @@
 //! loops. Refused: an unknown slab, a taken new id, a cut line without length, a line that does not cut the outline in two and a line
 //! through a hole.
 
-use super::super::elements;
-use super::super::horizontal_rules::{holes_fault, loop_fault};
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::{holes_fault, loop_fault};
 use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{contains, crosses, cut_loop, CutFlaw};
-use super::SplitSlab;
+use crate::standards::v1::subsets::any::schema::mutations::split_slab::SplitSlab;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::SlabPatch}, snapshot::{ModelSnapshot, Slab, Vertex}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

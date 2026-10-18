@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetCeiling`: a sparse ceiling patch of exactly the provided fields that differ. A new ceiling type must exist, the
 //! drop is finite and a slope (set or cleared) stays within [0, 89 degrees); providing only equal values, or no field, is a no-op.
 
-use super::super::horizontal_rules::slope_fault;
-use super::SetCeiling;
+use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::slope_fault;
+use crate::standards::v1::subsets::any::schema::mutations::set_ceiling::SetCeiling;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

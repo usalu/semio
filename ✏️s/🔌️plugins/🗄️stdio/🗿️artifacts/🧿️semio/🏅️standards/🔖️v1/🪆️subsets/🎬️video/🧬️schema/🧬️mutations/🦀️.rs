@@ -158,9 +158,9 @@ fn sample_at(base: &SemioVideoSnapshot, stream_index: usize, index: usize) -> Op
 /// the conformance-law tests — delegates to the existing test module's own `sample_mutations()`
 /// (byte-identical) rather than keep an independent copy, same dedupe flow's/mesh's own waves
 /// perform.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioVideoMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioVideoMutation> {
     tests::sample_mutations()
 }
 //#endregion 🔖️Demo

@@ -2,7 +2,7 @@
 //! The lxml + shapely oracle measures the SVG files and the pypdf oracle the PDF; both reproduce these tables from the files alone.
 //! 📎 https://www.w3.org/TR/SVG11/masking.html#ClippingPaths
 
-use super::ink::{sheet_marks, Mark, TitleLabels};
+use crate::standards::v1::subsets::any::io::export::sheets::ink::{sheet_marks, Mark, TitleLabels};
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, SheetLayout};
 use std::collections::BTreeMap;
 
@@ -67,6 +67,4 @@ pub fn pdf_table_json(layouts: &[&SheetLayout]) -> String {
     semio_framework_pack_json::to_json_string(&PdfSet { pages })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

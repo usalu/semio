@@ -15,7 +15,7 @@ test("ownership group roots match SQLite cycle and atomic publication oracle",()
  db.exec("delete from owns");put.run(...f.pendingCycle.additions[0]);expect((cycle.get(f.pendingCycle.additions[1][0],f.pendingCycle.additions[1][2]) as {total:number}).total>0).toBe(f.pendingCycle.expectedRefusal);
  db.exec("delete from owns");put.run(...f.emptyAdditionRoot.original);expect(f.emptyAdditionRoot.additions.length).toBe(0);expect(db.query("select parent,slot,child from owns").all().map((r:any)=>[r.parent,r.slot,r.child])).toEqual([f.emptyAdditionRoot.expected]);
  db.close();
- const source=readFileSync(resolve(import.meta.dir,"../../../../🦀️.rs"),"utf8");expect(source.includes("mod composition_group;")).toBe(true);const group=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(group.includes("pub fn begin_owns_group")).toBe(true);expect(group.includes("pub fn commit_owns_group")).toBe(true);
+ const source=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8");expect(source.includes("mod composition_group;")).toBe(true);const group=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");expect(group.includes("pub fn begin_owns_group")).toBe(true);expect(group.includes("pub fn commit_owns_group")).toBe(true);
 });
 
 function compileProductionForest(){
@@ -23,7 +23,7 @@ function compileProductionForest(){
  const ticket=process.env.SEMIO_TICKET_DIR;if(!ticket)throw new Error("SEMIO_TICKET_DIR is required for generated graph compiler outputs");
  const output=resolve(ticket,"🗑️generated","composition-group-rust-isolation");mkdirSync(output,{recursive:true});
  const tuple=(row:string[])=>`(${row.map(value=>JSON.stringify(value)).join(",")})`;
- const main=readFileSync(resolve(import.meta.dir,"../../../../🦀️.rs"),"utf8"),start=main.indexOf("    pub fn close_step(",main.indexOf("impl CompositionGraph {")),end=main.indexOf("    /// 🧺",start);expect(start>=0&&end>start).toBe(true);
+ const main=readFileSync(resolve(import.meta.dir,"../../../🦀️.rs"),"utf8"),start=main.indexOf("    pub fn close_step(",main.indexOf("impl CompositionGraph {")),end=main.indexOf("    /// 🧺",start);expect(start>=0&&end>start).toBe(true);
  const source=readFileSync(resolve(import.meta.dir,"🔬️isolated/🦀️.rs"),"utf8").replace("@COLD_CLOSE@",main.slice(start,end)).replace("@MODULE@",JSON.stringify(resolve(import.meta.dir,"../🦀️.rs"))).replace("@LINK_MODULE@",JSON.stringify(resolve(import.meta.dir,"../../🔗️links/🦀️.rs"))).replace("@LINKS@",`&[${f.links.rows.map(([source,targets]:[string,string[]])=>`(${JSON.stringify(source)},&[${targets.map(value=>JSON.stringify(value)).join(",")}])`).join(",")}]`).replace("@EMPTY_ROW@",tuple(f.emptyAdditionRoot.original)).replace("@SIBLINGS@",`&[${f.siblings.additions.map(tuple).join(",")}]`).replace("@INITIAL@",`&[${f.cycle.initial.map(tuple).join(",")}]`).replace("@CYCLE@",tuple(f.cycle.addition));
  const privateSource=readFileSync(resolve(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/📦️owner/🦀️.rs"),"utf8"),forward=privateSource.match(/^fn group_grant\([^\n]+\}$/mu)?.[0];if(!forward)throw new Error("current private group grant authority is absent");
  const admittedSource=source.replace("@PRIVATE_GROUP_GRANT@",forward.replace("fn group_grant(","fn private_group_grant("));

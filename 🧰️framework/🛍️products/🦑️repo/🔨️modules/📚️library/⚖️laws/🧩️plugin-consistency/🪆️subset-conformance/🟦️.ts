@@ -1,8 +1,10 @@
 /** 🔖️ Wave 4 plugin consistency policy: subset conformance and artifact viewer and editor rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
-import { canonicalFilenameForKind, canonicalPrimaryFilenameForKind, loadTaxonomy, schemaFacetFormatEntries, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { subsetIdForDirectoryName } from "../../../🔍️discovery/🟦️.ts";
+import { canonicalFilenameForKind, canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { schemaFacetFormatEntries } from "../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
+import { subsetIdForDirectoryName } from "../../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { policyReadFileSafe, policyReaddirSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyWalkRelFiles } from "../../../🔍️discovery/🚶️file-walk/🟦️.ts";
 import { policyListPluginArtifactDirs } from "../../../🔍️discovery/🗿️artifact/🏠️roots/🟦️.ts";

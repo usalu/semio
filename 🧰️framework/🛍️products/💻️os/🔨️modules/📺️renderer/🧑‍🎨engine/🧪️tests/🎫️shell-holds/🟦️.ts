@@ -30,8 +30,8 @@ describe("🎫️ the shell says what it holds", () => {
     const { fileURLToPath } = await import("node:url");
     const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../../../..");
     const nodeGraph = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx"));
-    const manifest = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🟦️.ts"), "utf8");
-    const { nodeGraphActions } = await import("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts");
+    const manifest = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts"), "utf8");
+    const { nodeGraphActions } = await import("../../../../../../../🔨️modules/🖱️ui/🎬️scene/🕸️node-graph/🟦️.ts");
 
     const reserved = /export const CLEAR_SELECTION_ACTION_ID = "([^"]+)";/u.exec(manifest)?.[1];
     expect(reserved, "the framework declares the reserved clear verb").toBe("clearSelection");

@@ -2,7 +2,7 @@ import { test, expect } from "bun:test";
 import Ajv2020 from "ajv/dist/2020.js";
 import { applyPatch } from "fast-json-patch";
 import { readFileSync } from "node:fs";
-import fixture from "../🧫️fixtures/🔣️.json" with { type: "json" };
+import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
 import schema from "../🧬️schema/🔣️.json" with { type: "json" };
 
 test("original fixture caller spends one source stock and CPU balance through all actions", () => {

@@ -60,7 +60,7 @@ jobs:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install
-        run: bun repo dependencies sync --scope .
+        run: bun repo dependencies sync --all
       - name: Test the catalog and the deployment files
         run: bun repo run @teaching/architecture-quiz:test
       - name: Build and verify the CDN artifact
@@ -106,7 +106,7 @@ jobs:
           path: ~/.bun/install/cache
           key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install
-        run: bun repo dependencies sync --scope .
+        run: bun repo dependencies sync --all
       - name: Build the proctor image
         run: bun repo run @teaching/architecture-quiz:docker-image-build
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0

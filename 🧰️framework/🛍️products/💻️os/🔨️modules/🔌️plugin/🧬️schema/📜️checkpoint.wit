@@ -1,0 +1,14 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §4). No more
+/// `INSTANCE_GUARD`/`clear-instance-guard` — a wasm trap now kills the whole actor and the host
+/// restores it from the last checkpoint, which is why checkpoint cadence is correctness-critical.
+/// Pack shape: `{instances: [{id, app_id, actor, document/config/draft packs, view_state,
+/// ephemeral}], timers, pending_requests}`; in-flight async tasks are never serialised — they're
+/// host reads, so they're simply marked re-run-on-restore instead.
+interface checkpoint {
+  use types.{plugin-error};
+
+  checkpoint: async func() -> result<list<u8>, plugin-error>;
+  restore: async func(state: list<u8>) -> result<_, plugin-error>;
+}

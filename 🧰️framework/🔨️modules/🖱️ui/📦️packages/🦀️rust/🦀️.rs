@@ -4,10 +4,6 @@
 //! nothing else — hence features rather than sibling crates, so a wasm32-wasip2 program component
 //! pulling in the component types never links winit/parley/swash.
 
-#[cfg(feature = "tui")]
-#[path = "../../🎯️targets/⌨️tui/🦀️.rs"]
-pub mod tui;
-
 #[cfg(feature = "wgpu")]
 #[path = "../../🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod wgpu;

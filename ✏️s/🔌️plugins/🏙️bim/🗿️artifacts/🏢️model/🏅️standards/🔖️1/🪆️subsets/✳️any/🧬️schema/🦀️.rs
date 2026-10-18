@@ -90,7 +90,5 @@ pub fn bim_model_artifact_schema_descriptor() -> semio_framework_schema_registry
 }
 //#endregion 🔖️Descriptor
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 

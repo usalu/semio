@@ -5,7 +5,7 @@ import Ajv from "ajv/dist/2020.js";
 import { inspectRustSourceInputs } from "../../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../../..");
-const fixture = JSON.parse(readFileSync(join(library, "🧫️fixtures/🧱️rust-source-direction/🪵️root/🔣️.json"), "utf8")) as { schemaVersion: number; cases: readonly { id: string; mode: string; expected: { state: string; reason: string | null } }[]; freshness: { identity: string; expected: string; cancellation: string }; native: readonly { id: string; markers: readonly string[] }[] };
+const fixture = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🧱️rust-source-direction/🪵️root/🔣️.json"), "utf8")) as { schemaVersion: number; cases: readonly { id: string; mode: string; expected: { state: string; reason: string | null } }[]; freshness: { identity: string; expected: string; cancellation: string }; native: readonly { id: string; markers: readonly string[] }[] };
 
 
 test("standalone root contract is closed with unique physical identities", () => {

@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteDoorType`: one deleted door type entry together with the properties and classifications keyed by the type; refused while openings or curtain panels still use it.
 
-use super::super::cascade;
-use super::DeleteDoorType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_door_type::DeleteDoorType;
 use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, ModelSnapshot, OpeningKind}, diff::{Entry, KeyedDelta, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

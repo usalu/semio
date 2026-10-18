@@ -51,7 +51,12 @@ const { plugins, extensions, playgrounds, moduleDirectories, assetProviders } = 
 
 /** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
  * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
-const { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
+const { playgroundFlowWasmDevStubPlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🪝️playground-stubs', '🟦️.ts'].join("/"));
+const { playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🧰️scene-host', '🟦️.ts'].join("/"));
+const { semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html', '🟦️.ts'].join("/"));
+const { semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
+const { semioAssetsVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🗃️assets', '🟦️.ts'].join("/"));
+const { semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🚦️status-serve', '🟦️.ts'].join("/"));
 const { semioExtensionStoreVitePlugin } = await import(['../../../🔌️plugin/🏪️store/📥️installation', '🟦️.ts'].join("/"));
 const { repoCacheDirectory } = await import(['../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching', '🟦️.ts'].join("/"));
 void _semioPlaygroundGraphAnchor;

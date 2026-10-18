@@ -1,0 +1,11 @@
+{
+ "name": "c5c8",
+ "crates": [
+  "semio-framework-plugin-surface-fixture",
+  "semio-framework-plugin-instance-typed-ops",
+  "semio-framework-plugin-retained-command",
+  "semio-framework-plugin-child",
+  "semio-framework-plugin-window-config"
+ ],
+ "note": "CENSUS5-C package 8: the owning crates of the split files (instance-app holds the refused plugin-app-impl)"
+}

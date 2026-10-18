@@ -8,7 +8,7 @@
 
 pub use crate::standards::v1::subsets::any::schema::authored::profile::CHORD_TOLERANCE;
 
-use super::super::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::mesh::TriMesh;
 use semio_framework_value::DslValue;
@@ -224,7 +224,7 @@ impl SolidBuilder {
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SolidEntry {
     pub solid: ElementSolid,
-    pub fallback: Option<super::roofs::RoofFallback>,
+    pub fallback: Option<crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback>,
 }
 //#endregion 🔖️Values
 
@@ -317,7 +317,5 @@ pub mod fixtures {
 }
 //#endregion 🔖️Fixtures
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 

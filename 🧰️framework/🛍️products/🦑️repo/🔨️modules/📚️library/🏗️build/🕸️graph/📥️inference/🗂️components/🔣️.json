@@ -1,0 +1,186 @@
+{
+  "version": 1,
+  "components": [
+    {
+      "name": "coordinates",
+      "path": "./📍️coordinates/🟨️.mjs",
+      "needs": []
+    },
+    {
+      "name": "bootstrap",
+      "path": "./🔁️bootstrap/🟨️.mjs",
+      "needs": [
+        "coordinates"
+      ]
+    },
+    {
+      "name": "source-analyses",
+      "path": "./🧬️source-analyses/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "bootstrap"
+      ]
+    },
+    {
+      "name": "bun-lock",
+      "path": "./🧶️bun-lock/🟨️.mjs",
+      "needs": [
+        "coordinates"
+      ]
+    },
+    {
+      "name": "target-policy",
+      "path": "./🎯️target-policy/🟨️.mjs",
+      "needs": [
+        "coordinates"
+      ]
+    },
+    {
+      "name": "native-manifests",
+      "path": "./🦀️native-manifests/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "source-analyses",
+        "target-policy"
+      ]
+    },
+    {
+      "name": "script-inputs",
+      "path": "./🧭️script-inputs/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "source-analyses",
+        "bun-lock",
+        "native-manifests"
+      ]
+    },
+    {
+      "name": "generator-outputs",
+      "path": "./🏭️generator-outputs/🟨️.mjs",
+      "needs": [
+        "coordinates"
+      ]
+    },
+    {
+      "name": "component-targets",
+      "path": "./🧩️component-targets/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "bootstrap",
+        "target-policy",
+        "native-manifests",
+        "script-inputs"
+      ]
+    },
+    {
+      "name": "playground-targets",
+      "path": "./🎮️playground-targets/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "bootstrap",
+        "source-analyses",
+        "target-policy",
+        "native-manifests"
+      ]
+    },
+    {
+      "name": "project-assembly",
+      "path": "./🧱️project-assembly/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "bootstrap",
+        "source-analyses",
+        "target-policy",
+        "native-manifests",
+        "script-inputs",
+        "generator-outputs",
+        "component-targets"
+      ]
+    },
+    {
+      "name": "owner-discovery",
+      "path": "./🔎️owner-discovery/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "bootstrap",
+        "source-analyses",
+        "target-policy",
+        "native-manifests",
+        "script-inputs",
+        "component-targets",
+        "playground-targets",
+        "project-assembly"
+      ]
+    },
+    {
+      "name": "project-nodes",
+      "path": "./📦️project-nodes/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "bootstrap",
+        "source-analyses",
+        "bun-lock",
+        "native-manifests",
+        "script-inputs",
+        "component-targets",
+        "playground-targets",
+        "project-assembly",
+        "owner-discovery"
+      ]
+    },
+    {
+      "name": "dependency-edges",
+      "path": "./🕸️dependency-edges/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "bootstrap",
+        "source-analyses",
+        "bun-lock",
+        "native-manifests",
+        "script-inputs",
+        "component-targets"
+      ]
+    },
+    {
+      "name": "revision",
+      "path": "./♻️revision/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "source-analyses",
+        "bun-lock",
+        "native-manifests"
+      ]
+    },
+    {
+      "name": "internals",
+      "path": "./🧰️internals/🟨️.mjs",
+      "needs": [
+        "bootstrap",
+        "source-analyses",
+        "bun-lock",
+        "target-policy",
+        "native-manifests",
+        "script-inputs",
+        "generator-outputs",
+        "component-targets",
+        "playground-targets",
+        "project-assembly",
+        "owner-discovery",
+        "dependency-edges",
+        "revision"
+      ]
+    },
+    {
+      "name": "invocation",
+      "path": "./🚦️invocation/🟨️.mjs",
+      "needs": [
+        "coordinates",
+        "bootstrap",
+        "project-nodes",
+        "dependency-edges",
+        "revision",
+        "internals"
+      ]
+    }
+  ]
+}

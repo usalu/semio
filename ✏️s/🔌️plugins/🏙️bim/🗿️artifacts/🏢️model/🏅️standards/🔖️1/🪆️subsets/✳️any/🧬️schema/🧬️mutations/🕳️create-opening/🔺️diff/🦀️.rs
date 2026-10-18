@@ -2,10 +2,10 @@
 //! names and a non-negative sill override (when authored) must hold, the centre offset must keep the opening inside the host axis and clear of its
 //! neighbours. An authored reveal (depth not negative, material existing) is checked as well. Only the offset, the optional sill override (which replaces the sill of the window type) and the optional reveal are stored; the frame follows the host parametrically by inference.
 
-use super::super::elements;
-use super::super::wall_depth::reveal_flaw;
-use super::super::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
-use super::CreateOpening;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::wall_depth::reveal_flaw;
+use crate::standards::v1::subsets::any::schema::mutations::placement::{host_length, kind_issue, placement_issue, positive, refuse_kind, width_of};
+use crate::standards::v1::subsets::any::schema::mutations::create_opening::CreateOpening;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

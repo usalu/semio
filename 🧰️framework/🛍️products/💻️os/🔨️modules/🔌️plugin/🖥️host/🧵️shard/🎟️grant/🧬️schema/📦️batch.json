@@ -14,7 +14,10 @@
     "earlyReturnRefused",
     "refusalHeap",
     "activeRemaining",
-    "closedRecipient"
+    "closedRecipient",
+    "workSpent",
+    "activeRemainingFuel",
+    "remainingFuel"
   ],
   "properties": {
     "contract": {
@@ -31,6 +34,11 @@
           "maximumCapacityBytes": 65536,
           "maximumReleaseBytes": 262144,
           "maximumDepth": 64
+        },
+        "work": {
+          "clockBinding": 1271,
+          "absoluteDeadlineUs": 1000000,
+          "fuel": 64
         }
       }
     },
@@ -119,6 +127,23 @@
           0
         ]
       }
+    },
+    "workSpent": {
+      "const": [
+        1,
+        1,
+        1
+      ]
+    },
+    "activeRemainingFuel": {
+      "const": [
+        63,
+        62,
+        61
+      ]
+    },
+    "remainingFuel": {
+      "const": 61
     }
   }
 }

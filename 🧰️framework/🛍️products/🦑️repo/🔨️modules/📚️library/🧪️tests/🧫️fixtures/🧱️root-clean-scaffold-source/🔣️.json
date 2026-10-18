@@ -302,10 +302,20 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🟦️.ts",
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🎫️ticket-protection/🟦️.ts",
       "owners": [
-        "🧼️workspace-cleanup/🛡️protection/🟦️.ts",
-        "🧼️workspace-cleanup/🎮️command/🟦️.ts",
+        "🧼️workspace-cleanup/🛡️protection/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧱️taxonomy-normalization/🟦️.ts",
+      "owners": [
+        "🧼️workspace-cleanup/🎮️command/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔬️workspace-contract/🧿️mutation-ownership/🟦️.ts",
+      "owners": [
         "🏗️authoring/🧬️mutation-tree/🟦️.ts"
       ]
     },

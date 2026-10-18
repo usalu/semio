@@ -12,7 +12,8 @@ import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../.
 import {componentModelLayoutV1,readComponentModelIntentV1} from "../../../../../../🔌️plugin/📦️model/📋️contract/🟦️.ts";
 import {fileDigest,readArtifactBytesV1,readArtifactPrefixV1,artifactFiles} from "../../../../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import {COMPONENT_RECEIPT_MAX_BYTES,parseComponentReceiptV1,componentReceiptBindsV1} from "../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
-import {CATALOG_DESCRIPTOR_MAX_BYTES,verifySemanticDescriptorPairBytesV1} from "../../../../../../🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../../../../../🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
+import { verifySemanticDescriptorPairBytesV1 } from "../../../../../../🔌️plugin/📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import publicationSchema from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import modelSchema from "../../../../../../🔌️plugin/📦️model/🧬️schema/🔣️.json" with {type:"json"};
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};

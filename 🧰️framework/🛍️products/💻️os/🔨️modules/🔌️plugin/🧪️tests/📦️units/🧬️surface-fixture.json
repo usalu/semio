@@ -36,8 +36,8 @@
     },
     "files": {
       "type": "array",
-      "minItems": 7,
-      "maxItems": 7,
+      "minItems": 14,
+      "maxItems": 14,
       "items": {
         "type": "object",
         "additionalProperties": false,

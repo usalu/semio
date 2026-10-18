@@ -9,7 +9,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 import MarkdownIt from "markdown-it";
-import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { defineTestAdapter } from "@semio-tech/framework/test/adapter";
 import { loadVizCatalog, loadVizSchema, marksItselfGenerated } from "../../🔨️modules/📊️visualization-gallery/🟦️.ts";
 import { vizGeneratedFiles } from "../../🔨️modules/📊️visualization-gallery/🏭️artifact-generation/🟦️.ts";

@@ -1,0 +1,17 @@
+[
+ {
+  "tag": "rcc",
+  "name": "semio-framework-value-retained-clone",
+  "pkg": "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🧬️contract/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ge",
+  "name": "semio-framework-geometry-primitives",
+  "pkg": "🧰️framework/🔨️modules/📐️geometry/⚙️engine/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "hb",
+  "name": "semio-hub-boot-laws",
+  "pkg": "🌎️hub/🧪️tests/🔬️bin-unit/🚀️boot/🏛️laws/📦️packages/🦀️rust"
+ }
+]

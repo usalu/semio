@@ -5,7 +5,7 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, 
 import { join, resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
 import { normalize } from "pathe";
-import {inspectRustModuleGraph,inspectRustModuleGraphFacts,rustModuleScopeProof} from "../../../🔍️discovery/🟦️.ts";
+import { inspectRustModuleGraph, inspectRustModuleGraphFacts, rustModuleScopeProof } from "../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { rustSourceTargets } from "../../../🕸️dependencies/🧭️direction/🦀️source/🟦️.ts";
 import { inspectRustSourceInputs } from "../../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 

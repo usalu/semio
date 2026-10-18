@@ -1,6 +1,6 @@
 //! 📈️ `set-schedule` payload. Sets any of a schedule's name, category, columns, sort, filter, grouping, itemization, storey scope and phase scope; absent fields stay untouched and a list replaces the whole list.
 
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::SchedulePatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, Phase, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleSort}};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::SchedulePatch}, snapshot::{ModelSnapshot, Phase, ScheduleCategory, ScheduleColumn, ScheduleFilter, ScheduleGroup, ScheduleSort}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -40,13 +40,16 @@ impl SetSchedule {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetSchedule {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetSchedule
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetSchedule>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "schedule", kind: "set-schedule", record: "SetSchedule" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_schedule::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_schedule::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit schedule \"{}\"", self.id), &format!("Bauteilliste \"{}\" ändern", self.id))

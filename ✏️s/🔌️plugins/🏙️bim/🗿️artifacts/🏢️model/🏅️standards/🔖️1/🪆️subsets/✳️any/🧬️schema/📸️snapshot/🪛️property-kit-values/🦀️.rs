@@ -1,6 +1,6 @@
 //! 🧮️ The methods of the value types of the `property_kit` kit; they live with the value types so the entity types and the model root stay above them.
 
-use super::values::{PropertyDef, PropertyKind, PropertyValue, TemplateTarget};
+use crate::standards::v1::subsets::any::schema::snapshot::values::{PropertyDef, PropertyKind, PropertyValue, TemplateTarget};
 
 const TOLERANCE: f64 = 1e-9;
 

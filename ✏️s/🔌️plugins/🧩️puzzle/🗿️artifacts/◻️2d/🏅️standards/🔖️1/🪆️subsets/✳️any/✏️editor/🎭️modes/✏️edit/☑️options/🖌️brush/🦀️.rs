@@ -8,6 +8,7 @@ use crate::editor::puzzle2d::snapshot::{puzzle2d_action, puzzle2d_kind_ids, Puzz
 use semio_framework_plugin::{MeasureSelectItem, WindowMeasure};
 #[cfg(test)] use semio_framework_pack_json::json;
 use std::collections::BTreeMap;
+use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 //#region 🔖️Constants
 pub const PUZZLE2D_SUGGESTION_OFFSET_MIN: f64 = 0.0;

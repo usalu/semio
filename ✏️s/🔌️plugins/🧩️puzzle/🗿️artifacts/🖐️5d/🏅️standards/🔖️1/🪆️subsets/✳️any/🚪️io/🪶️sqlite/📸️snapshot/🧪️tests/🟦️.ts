@@ -21,6 +21,7 @@ import type {RotateSelection3d as StandaloneRotate3d} from "../../../../🧬️s
 import type {ScaleSelection3d as StandaloneScale3d} from "../../../../🧬️schema/🧬️mutations/🔍️scale-selection3d/🦠️mutation/🟦️.ts";
 import type {CreatePart,AddPartGrip,CreateTargetVolume} from "../../../../🧬️schema/🧬️mutations/🟦️.ts";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
+import { sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 function specimen(bits:bigint):snapshot.Puzzle5dSnapshot {
  const word={bits};
  const part:snapshot.Puzzle5dPart={id:'',partKind:null,anchor:'derived','2d':{x:word,y:word,shape:'',radius:word,width:null,height:word,text:null,iconKind:'',hidden:null,locked:false},'3d':{origin:[word,word,word],meshUrl:'',orientation:[word,word,word,word],scale:word,label:null},grips:[{id:'',gripKind:'unresolved','2d':{angle:word,gripKind:null,radius:word},'3d':{position:[word,word,word],direction:[word,word,word],radius:null,label:''}}]};
@@ -153,7 +154,7 @@ test('SQLite Puzzle5d every persisted field retains its authored artifact state 
  for(const field of laws.persistedFields)expect(Reflect.get(artifactSchema.properties,field)['x-semio-state']).toBe('artifact');
 });
 for(let batch=0;batch<12;batch++)test('SQLite Puzzle5d neutral mutation snapshot batch '+batch+' retains declared JSON state through relational reconstruction',async()=>{
- const root=new URL("../../../../🧪️tests/🧫️fixtures",import.meta.url),ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema);ajv.addSchema(ioSchema);const validate=ajv.compile(artifactSchema);let index=0,count=0;
+ const root=new URL("../../../../🧪️tests/🧫️fixtures/",import.meta.url),ajv=new Ajv({strict:false}).addSchema(artifactReferenceSchema);ajv.addSchema(ioSchema);const validate=ajv.compile(artifactSchema);let index=0,count=0;
  for await(const path of new Bun.Glob('**/📸️snapshot/**/🔣️.json').scan({cwd:fileURLToPath(root)})){if(index++%12!==batch)continue;const source=await Bun.file(new URL(path,root)).text(),original=JSON.parse(source);expect(validate(original)).toBe(true);const value=io.puzzle5dSnapshotFromJsonText(source),database=await artifactSqlite0.puzzle5dSnapshotToSqliteDatabase(value),restored=await artifactSqlite0.puzzle5dSnapshotFromSqliteDatabase(database);expect(restored).toEqual(value);expect(io.puzzle5dSnapshotFromJsonText(io.puzzle5dSnapshotToJsonText(restored))).toEqual(value);count++}
  expect(index).toBe(laws.snapshotAssetCount);expect(count).toBe(Math.floor((laws.snapshotAssetCount+11-batch)/12));
 });
@@ -162,11 +163,11 @@ test("Puzzle5d borrowed Scale and diff metadata preserve the authored neutral re
  const validate=new Ajv({strict:true}).addSchema(artifactReferenceSchema).compile({type:"array",items:{type:"number"},oneOf:[{minItems:1,maxItems:1},{minItems:3,maxItems:3}]});
  for(const sample of laws.scaleDsl.samples){expect(validate(sample)).toBe(true);expect(JSON.parse(JSON.stringify(sample))).toEqual(sample)}
  for(const sample of laws.scaleDsl.invalidSamples)expect(validate(sample)).toBe(false);
- const owner=await Bun.file(new URL("../../../../../../../../🦀️.rs",import.meta.url)).text();
+ const owner=await Bun.file(new URL("../../../../🧬️schema/🧱️document-records/🦀️.rs",import.meta.url)).text();
  expect(owner).toContain("impl semio_framework_dsl_record::BorrowedDslField for Puzzle5dScale");
  expect(owner).toContain("<Vec<f64> as semio_framework_dsl_record::BorrowedDslField>::SHAPE");
  const diff=await Bun.file(new URL("../../../../🧬️schema/🔺️diff/🦀️.rs",import.meta.url)).text();
- expect([...diff.matchAll(/^pub struct (Puzzle5d\w+)\b/gm)].map(match=>match[1]!).sort()).toEqual([...laws.diffRecordOwners].sort());
+ expect([...diff.matchAll(/^pub struct (Puzzle5d\w+)\b(?!<)/gm)].map(match=>match[1]!).sort()).toEqual([...laws.diffRecordOwners].sort());
  for(const name of laws.diffRecordOwners){expect(diff).toMatch(new RegExp("#\\[derive\\([^\\]]*semio_framework_dsl_record_derive::DslRecord[^\\]]*\\)\\][^#]*?(?:#\\[[^\\]]*\\][^#]*?)*pub struct "+name+"\\b"))}
  for(const name of laws.deltaOwners)expect(diff).toContain("protocol::list_delta! { pub "+name+" {");
 });
@@ -178,5 +179,5 @@ test("Puzzle5d nullable delta retains omission, clearing and exact typed replace
  for(const sample of nullable.invalid)expect(validate(sample)).toBe(false);
  const binding=await Bun.file(frameworkSourceUrl("🔨️modules/🗣️dsl/🧬️schema/🪆️binding/🦀️.rs")).text();
  expect(binding).toContain('mod optional_field;');
- const macro=await Bun.file(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs")).text();const diffText=macro.slice(macro.indexOf('fn diff_text_tokens('),macro.indexOf('pub fn expand_diff_binary('));expect(diffText).toContain('::semio_framework_dsl_record::parse_exact(');
+ const diffText=sliceModuleTreeSource(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs"),'fn diff_text_tokens(','pub fn expand_diff_binary(');expect(diffText).toContain('::semio_framework_dsl_record::parse_exact(');
 });

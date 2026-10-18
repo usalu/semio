@@ -7,7 +7,8 @@ import {componentModelRequestV1,readComponentModelIntentV1,type ComponentModelIn
 import {readArtifactBytesV1,readArtifactPrefixV1,fileDigest} from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import { COMPONENT_RECEIPT_MAX_BYTES, componentReceiptBindsV1, parseComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 import { type ComponentReceiptV1 } from "../../../../../../🔨️modules/🏷️component-receipt/🟦️.ts";
-import {CATALOG_DESCRIPTOR_MAX_BYTES,verifySemanticDescriptorPairBytesV1,type OwnerDescriptorPairV1} from "../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES, type OwnerDescriptorPairV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import nativeSchema from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🧬️schema/🔣️.json" with {type:"json"};
 import publicationSchema from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};

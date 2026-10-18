@@ -14,7 +14,7 @@ pub use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClon
 
 #[path = "../🧵️retirement/🦀️.rs"]
 pub mod retirement;
-pub use retirement::{ColdDictionaryBuilder,ColdValueOwner,ValueRetirement};
+pub use retirement::{ColdDictionaryBuilder,ColdValueOwner,OperatorRetirement,ValueRetirement};
 #[path = "../🧊️cold/🦀️.rs"]
 pub mod cold;
 pub use cold::{ColdOwner, ColdRetire};

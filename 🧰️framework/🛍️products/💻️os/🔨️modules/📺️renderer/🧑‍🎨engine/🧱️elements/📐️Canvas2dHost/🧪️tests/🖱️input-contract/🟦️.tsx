@@ -147,15 +147,6 @@ describe("🖱️ Canvas2d mounted input contract", () => {
     ]);
   });
 
-  it("validates the shared catalogue terminal fixture", () => {
-  });
-
-  it("validates the renderer-neutral catalogue pointer transfer fixture", () => {
-  });
-
-  it("validates the renderer-neutral Canvas2d camera gesture fixture", () => {
-  });
-
   it("keeps the exact world point under an off-centre wheel anchor and clamps both zoom limits", () => {
     const { initialCamera, anchor, zoomInDeltaY, zoomOutDeltaY, zoomInFactor, zoomOutFactor, zoomMinimum, zoomMaximum } = cameraGestures.wheel;
     const { width, height } = cameraGestures.surface;

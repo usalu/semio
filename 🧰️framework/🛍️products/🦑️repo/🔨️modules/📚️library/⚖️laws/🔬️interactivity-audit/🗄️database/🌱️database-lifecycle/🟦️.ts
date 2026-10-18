@@ -2,7 +2,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🏁️run/🟦️.ts
  */
 import { toolJobRustBlock } from "../../../🎯️tool-job-coverage/📋️inventory/🟦️.ts";
-import { interactivityProductionSource } from "../🟦️.ts";
+import { interactivityProductionSource, interactivityRegionSource } from "../🟦️.ts";
 
 //#region 🔖️InteractivityAudit
 //#region 🗄️P1wCatalogBootstrapCas
@@ -26,9 +26,7 @@ function interactivityDriverHandshakeBlanked(region: string, authority: string):
 
 export function interactivityDatabaseCatalogBootstrapFailures(engineSource: string): string[] {
   const production = interactivityProductionSource(engineSource);
-  const start = production.indexOf("//#region 🔖️CatalogBootstrapCas");
-  const end = production.indexOf("//#endregion 🔖️CatalogBootstrapCas", start);
-  const bootstrap = start < 0 || end < 0 ? "" : production.slice(start, end);
+  const bootstrap = interactivityRegionSource(production, "🔖️CatalogBootstrapCas") ?? "";
   const openStart = production.indexOf("async fn open_with");
   const openEnd = production.indexOf("pub async fn create_document", openStart);
   const openWith = openStart < 0 || openEnd < 0 ? "" : production.slice(openStart, openEnd);
@@ -505,9 +503,7 @@ export function interactivityDatabaseSyncHelloFailures(syncSource: string, engin
   const hub = interactivityProductionSource(hubSource);
   const wal = interactivityProductionSource(walSource);
   const protocol = interactivityProductionSource(protocolSource);
-  const start = sync.indexOf("//#region 👋️RetainedHello");
-  const end = sync.indexOf("//#endregion 👋️RetainedHello", start);
-  const retained = start < 0 || end < 0 ? "" : sync.slice(start, end);
+  const retained = interactivityRegionSource(sync, "👋️RetainedHello") ?? "";
   const facadeStart = engine.indexOf("pub fn hello_retained");
   const facadeEnd = engine.indexOf("\n}\n", facadeStart);
   const facade = facadeStart < 0 || facadeEnd < 0 ? "" : engine.slice(facadeStart, facadeEnd);
@@ -621,10 +617,10 @@ export function interactivityArtifactHistoryFailures(engineSource: string, artif
   const artifact = interactivityProductionSource(artifactSource);
   const wal = interactivityProductionSource(walSource);
   const history = engine.slice(engine.indexOf("const ARTIFACT_HISTORY_OPERATION_SLOTS"), engine.indexOf("pub struct ArtifactHandle"));
-  const replay = artifact.slice(artifact.indexOf("//#region 🔖️HistoryReplay"), artifact.indexOf("//#endregion 🔖️HistoryReplay"));
+  const replay = interactivityRegionSource(artifact, "🔖️HistoryReplay") ?? "";
   const replayNext = replay.slice(replay.indexOf("fn next("), replay.indexOf("impl Future for HistoryReplayFuture"));
   const reservationBuild = replay.slice(replay.indexOf("impl HistoryReplayReservation"), replay.indexOf("struct HistoryReplayReservationCloseCursor"));
-  const actor = artifact.slice(artifact.indexOf("//#region 🔖️Actor"), artifact.indexOf("//#endregion 🔖️Actor"));
+  const actor = interactivityRegionSource(artifact, "🔖️Actor") ?? "";
   const terminalHandle = history.slice(history.indexOf("impl ArtifactHistoryTerminalHandle"), history.indexOf("impl Future for HistoryFuture"));
   const terminalCloseStart = terminalHandle.indexOf("pub fn close_step(&self)");
   const terminalClose = terminalHandle.slice(terminalCloseStart, terminalHandle.indexOf("pub fn terminal_is_empty(&self)", terminalCloseStart));

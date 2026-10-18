@@ -8,14 +8,14 @@ import{types}from"node:util";
 import{constants,opendirSync}from"node:fs";
 import{lstat,mkdir,open,unlink}from"node:fs/promises";
 import{dirname,join}from"node:path";
-import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"@semio-tech/framework/filesystem/observation/descriptor";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{withArtifactDescriptorV1,requireArtifactDescriptorClosureV1}from"../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{requireAcceptedPhysicalCleanupWriterProofV1,requireResourceLeaseWriterProofV1,resourceLeasePathV1,requireMaterializedPathV1,checkResourceLeaseControl,type ResourceLeaseControl,type ResourceLeaseWriterProofV1}from"../../../../../🔒️leases/🟦️.ts";
 import{withAcceptedPhysicalCleanupOperationV1,checkAcceptedPhysicalCleanupV1,withIssuedResourceOperationV1,requireAcceptedPhysicalCleanupDescendantV1,requireIssuedResourceControlRefinementV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import type{AcceptedPhysicalCleanupV1}from"../../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import{syncNativeCleanupDirectoryV1}from"../../🧹️cleanup/♻️retirement/💾️durability/🟦️.ts";
-import exportedStorageSchema from"../../🧬️schema/🔣️.json";
-import exportedSchema from"./🧬️schema/🔣️.json";
+import exportedStorageSchema from"../../🧬️schema/🔣️.json" with{type:"json"};
+import exportedSchema from"./🧬️schema/🔣️.json" with{type:"json"};
 const storageSchema=JSON.parse(JSON.stringify(exportedStorageSchema))as typeof exportedStorageSchema,schema=JSON.parse(JSON.stringify(exportedSchema))as typeof exportedSchema,protocol=Object.freeze({...schema.definitions.Protocol.const});
 type Identity=Readonly<{dev:string;ino:string;mode:number}>;
 /** 📋️ Immutable declaration DATA never grants a Native image or parent allocation. */

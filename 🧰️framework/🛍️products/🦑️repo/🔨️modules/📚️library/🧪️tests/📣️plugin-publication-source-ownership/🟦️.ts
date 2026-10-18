@@ -3,7 +3,7 @@ import { basename, dirname, relative, resolve } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import ts from "typescript";
-import { semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 /** 🧾️ Reads the parse diagnostics every `createSourceFile` result carries and the public `SourceFile` type omits. */
 const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
@@ -91,7 +91,7 @@ describe("plugin publication source ownership", () => {
   });
 
   test("owns implementation bodies under anonymous semantic leaves", () => {
-    expect(fixture.owners).toHaveLength(17);
+    expect(fixture.owners).toHaveLength(26);
     for (const owner of fixture.owners) {
       const path = resolve(repoRoot, owner.path);
       expect(existsSync(path), owner.path).toBe(true);

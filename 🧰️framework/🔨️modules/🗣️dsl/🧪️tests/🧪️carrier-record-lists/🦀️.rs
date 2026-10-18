@@ -5,16 +5,11 @@
 //! handcrafted format grammar (e.g. STEP Part 21 under `stdio.ifc.dsl`) use their own lexical options, so the shared lexer
 //! runs forgiving here: unknown characters become `Error` tokens and only the record-list token shape is judged.
 use semio_framework_dsl::{lex, Limits, TokenKind};
-use semio_framework_test_fixtures::manifest_dir;
 use std::collections::BTreeSet;
 use std::path::{Component, Path, PathBuf};
 
 fn repository_root() -> PathBuf {
-    let mut directory = manifest_dir!();
-    while !directory.join("nx.json").is_file() {
-        assert!(directory.pop(), "repository root (nx.json) above {}", env!("CARGO_MANIFEST_DIR"));
-    }
-    directory
+    semio_framework_test_fixtures::repo_root!()
 }
 
 fn listed(root: &Path, pattern: &str) -> Vec<String> {

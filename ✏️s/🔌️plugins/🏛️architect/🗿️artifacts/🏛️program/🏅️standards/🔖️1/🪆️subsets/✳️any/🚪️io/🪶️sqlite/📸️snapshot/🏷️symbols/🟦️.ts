@@ -1,0 +1,34 @@
+/** 🏷️ Closed vocabularies of the Architect SQLite symbol columns. */
+
+export const Priority=["mandatory","essential","preferred","optional","deferred","prohibited"] as const;
+export const LifecycleStatus=["draft","proposed","underReview","validated","approved","rejected","deferred","superseded","archived","open","closed","atRisk","blocked","inProgress","complete"] as const;
+export const InfluenceLevel=["low","medium","high","critical"] as const;
+export const EngagementLevel=["unaware","resistant","neutral","supportive","leading"] as const;
+export const UserCategory=["primary","secondary","occasional","service","visitor","staff","public"] as const;
+export const ProgramElementKind=["building","campus","floor","zone","room","suite","department","system","circulation","support","outdoor","furnitureGroup","other"] as const;
+export const FunctionKind=["primary","secondary","support","administrative","service","technical","public","private","shared","restricted","temporary","future","operational","circulation"] as const;
+export const FlowKind=["people","material","information","service","equipment","waste","emergency","vehicle"] as const;
+export const PrivacyKind=["public","semiPublic","semiPrivate","private","confidential","restricted","anonymous"] as const;
+export const SafetyDomain=["lifeSafety","occupationalHealth","fire","structural","electrical","chemical","radiation","ergonomics","biological","environmental"] as const;
+export const SecurityControlKind=["accessControl","surveillance","perimeter","cyber","personnel","information","physical","procedural","screening","keyManagement"] as const;
+export const StorageClass=["general","secure","climateControlled","hazardous","archive","mobile","fixed","shared","coldChain","flammable"] as const;
+export const EnvironmentalParameter=["temperature","humidity","airQuality","lighting","acoustics","ventilation","radiation","vibration","pressure","iaq"] as const;
+export const HumanFactorAspect=["ergonomics","cognition","sensory","social","cultural","behavioral","physical","psychological","fatigue","stress"] as const;
+export const AccessMode=["unrestricted","cardControlled","biometric","keyed","escortRequired","timeRestricted","roleBased","emergencyOnly"] as const;
+export const RelationshipKind=["contains","serves","supports","dependsOn","conflictsWith","equivalentTo","adjacentTo","feeds","receives","controls","monitors","functional","operational","organizational","user","service","information","access","security","supervision","communication","dependency","sequential","sharedResource"] as const;
+export const AdjacencyKind=["required","preferred","optional","prohibited"] as const;
+export const ConnectionKind=["direct","indirect","controlled","sharedAccess","none"] as const;
+export const SeparationKind=["acoustic","visual","security","olfactory","thermal","fire","hygienic","circulation","operational","infectionControl"] as const;
+export const FlowDirection=["oneWay","twoWay","bidirectionalPeak","restricted"] as const;
+export const AccessLevel=["public","restricted","controlled","private","secure","emergencyOnly"] as const;
+export const RiskLevel=["negligible","low","medium","high","critical"] as const;
+export const ConflictKind=["adjacency","capacity","schedule","budget","regulatory","operational","environmental","security","priority"] as const;
+export const RequirementKind=["functional","spatial","performance","regulatory","operational","technical","aesthetic","sustainability"] as const;
+export const ValidationStatus=["pending","passed","failed","waived","deferred"] as const;
+export const AnalysisKind=["gap","conflict","dependency","capacity","demand","utilization","workflow","risk","cost","scenario","sensitivity","impact","trend","requirementComparison","requirementClustering","requirementFiltering","requirementSorting","requirementScoring","requirementWeighting","relationshipAnalysis"] as const;
+export const ReportKind=["executiveSummary","programOverview","stakeholderSummary","requirementsMatrix","adjacencyMatrix","gapAnalysis","riskRegister","decisionLog","validationSummary","recommendation","userSummary","functionalSummary","capacitySummary","workflowSummary","complianceSummary","costSummary","scheduleSummary","changeSummary","openIssueSummary","prioritySummary","scenarioSummary"] as const;
+export const IssueSeverity=["cosmetic","minor","major","critical","blocker"] as const;
+export const AuditAction=["created","updated","deleted","reviewed","approved","rejected","exported","imported","merged","archived"] as const;
+export const CostBasis=["capital","operational","lifecycle","replacement","maintenance"] as const;
+export const DeliveryPhase=["concept","schematic","designDevelopment","constructionDocuments","procurement","construction","commissioning","occupancy"] as const;
+export const TraceKind=["objectiveToRequirement","stakeholderToRequirement","userToActivity","activityToFunction","functionToProgramElement","requirementToDecision","requirementToRisk","requirementToStandard","requirementToValidation","requirementToApproval","requirementToChange","equipmentToActivity","processToResource","constraintToImpact","scenarioToDecision","issueToAction","actionToOwner","decisionToOutcome","versionToChange","fullAuditTrail"] as const;

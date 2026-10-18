@@ -2,6 +2,15 @@ use super::*;
 
 use std::sync::Arc as StdArc;
 
+/// 🧾️ The authored source of the history crate: every child module and then the root, in module order, as the one text the source laws scan.
+const HISTORY_SOURCE: &str = concat!(
+    include_str!("../../🧭️replay-limits-view-and-reservation/🦀️.rs"),
+    include_str!("../../🛠️reservation-construction/🦀️.rs"),
+    include_str!("../../🔖️page-set-and-cursors/🦀️.rs"),
+    include_str!("../../⏳️replay-future/🦀️.rs"),
+    include_str!("../../🦀️.rs"),
+);
+
 fn history_construction_test_lock() -> std::sync::MutexGuard<'static, ()> {
     history_capacity_test_lock()
 }
@@ -77,7 +86,7 @@ fn artifact_history_backend_token_crc_fault_retire_1024_pages_one_grant_each() {
         assert!(cursor.close_step());
     }
     assert!(cursor.terminal_is_empty());
-    let replay = include_str!("../../🦀️.rs");
+    let replay = HISTORY_SOURCE;
     for fault in ["history backend page ownership", "history envelope has trailing bytes", "history source finished without authentication"] {
         assert!(replay.contains(fault), "missing retained fault source {fault}");
     }
@@ -306,8 +315,8 @@ fn artifact_history_construction_handback_rejects_stale_duplicate_and_aba_withou
 //#region 🔖️Source laws
 #[test]
 fn artifact_history_fixed_owner_accounting_has_no_capacity_scan() {
-    let source = include_str!("../../🦀️.rs");
-    let replay = &source[source.find("//#region 🔖️HistoryReplay").unwrap()..source.find("//#endregion 🔖️HistoryReplay").unwrap()];
+    let source = HISTORY_SOURCE;
+    let replay = &source[source.find("//#region 🔖️HistoryReplay").unwrap()..source.rfind("//#endregion 🔖️HistoryReplay").unwrap()];
     for forbidden in [".rposition(", "result_pages.iter()", "source_pages.iter().all", "pages.iter().all", "pages.iter().filter"] {
         assert!(!replay.contains(forbidden), "retained history accounting scanned fixed capacity through {forbidden}");
     }
@@ -318,7 +327,7 @@ fn artifact_history_fixed_owner_accounting_has_no_capacity_scan() {
 
 #[test]
 fn artifact_history_nested_derived_item_and_byte_caps_precede_materialization() {
-    let artifact = include_str!("../../🦀️.rs");
+    let artifact = HISTORY_SOURCE;
     for required in ["HISTORY_REPLAY_RESULT_BYTES", "HISTORY_REPLAY_OPERATION_BYTES", "HISTORY_REPLAY_MAX_ENTRIES", "HISTORY_REPLAY_MAX_OPERATION_IDS", "history dependency item credit", "history result byte credit"] {
         assert!(artifact.contains(required), "missing {required}");
     }
@@ -333,7 +342,7 @@ fn artifact_history_segment_cap_plus_one_reads_only_one_admitted_page() {
     if !db_io_driver::process_isolated_law("tests::artifact_history_segment_cap_plus_one_reads_only_one_admitted_page") {
         return;
     }
-    let artifact = include_str!("../../🦀️.rs");
+    let artifact = HISTORY_SOURCE;
     assert!(artifact.contains("HISTORY_REPLAY_SEGMENT_PAGES: u64 = 1_024"));
     assert!(artifact.contains(".min(HISTORY_REPLAY_PAGE_BYTES)"));
     assert!(artifact.contains("pack::ByteRange { offset, len: requested }"));
@@ -343,7 +352,7 @@ fn artifact_history_segment_cap_plus_one_reads_only_one_admitted_page() {
 
 #[test]
 fn artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant() {
-    let artifact = include_str!("../../🦀️.rs");
+    let artifact = HISTORY_SOURCE;
     assert!(artifact.contains("HistoryReplayTransition::FaultRetire"));
     assert!(artifact.contains("self.page_count -= 1"));
     assert!(artifact.contains("self.operation_ids.pop().is_some()"));
@@ -353,18 +362,18 @@ fn artifact_history_cancel_retires_one_page_or_nested_owner_per_actor_grant() {
 
 #[test]
 fn artifact_history_replay_ordering_is_segment_frame_then_result_fifo() {
-    let artifact = include_str!("../../🦀️.rs");
+    let artifact = HISTORY_SOURCE;
     let probe = artifact.find("HistoryReplayPhase::Probe => {").unwrap();
     let frame = artifact.find("HistoryReplayPhase::Frame { index } => {").unwrap();
     let publish = artifact.find("reservation.entries.push(ArtifactHistoryEntry").unwrap();
     assert!(probe < frame && frame < publish);
     assert!(artifact.contains("self.segment_ordinal += 1") || artifact.contains("this.segment_ordinal += 1"));
-    assert!(!include_str!("../../🦀️.rs").contains("ArtifactHistoryWorkOwner::Map"));
+    assert!(!HISTORY_SOURCE.contains("ArtifactHistoryWorkOwner::Map"));
 }
 
 #[test]
 fn artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant() {
-    let artifact = include_str!("../../🦀️.rs");
+    let artifact = HISTORY_SOURCE;
     assert!(artifact.contains("db_wal_log::WalAuthenticatedSource::new(std::mem::take(&mut this.pages), gate, *index, this.previous_tip)"));
     assert!(artifact.contains(".verify_step(&this.document, &mut control)"));
     assert!(artifact.contains("remaining.min(HISTORY_REPLAY_PAGE_BYTES)"));
@@ -374,7 +383,7 @@ fn artifact_history_crc_and_frame_tokenizer_advance_one_page_per_grant() {
 
 #[test]
 fn retained_retry_owners_release_their_guard_before_resubmission() {
-    for (name, source) in [("db_artifact_history", include_str!("../../🦀️.rs"))] {
+    for (name, source) in [("db_artifact_history", HISTORY_SOURCE)] {
         let lines: Vec<&str> = source.lines().collect();
         for (index, line) in lines.iter().enumerate() {
             let trimmed = line.trim_start().trim_start_matches("} else ");
@@ -396,7 +405,7 @@ fn retained_retry_owners_release_their_guard_before_resubmission() {
 
 #[test]
 fn artifact_history_replay_construction_fault_authority_is_retained() {
-    let artifact = include_str!("../../🦀️.rs");
+    let artifact = HISTORY_SOURCE;
     assert!(artifact.contains("const HISTORY_REPLAY_CONSTRUCTION_SLOTS: usize = 64"));
     assert!(artifact.contains("pub fn try_new()"));
     assert!(artifact.contains("pub struct HistoryReplayReservationConstructionFault"));
@@ -410,8 +419,8 @@ fn artifact_history_replay_construction_fault_authority_is_retained() {
 
 #[test]
 fn artifact_history_replay_cursor_one_grant_has_no_blocking_wait() {
-    let artifact = include_str!("../../🦀️.rs");
-    let replay = &artifact[artifact.find("//#region 🔖️HistoryReplay").unwrap()..artifact.find("//#endregion 🔖️HistoryReplay").unwrap()];
+    let artifact = HISTORY_SOURCE;
+    let replay = &artifact[artifact.find("//#region 🔖️HistoryReplay").unwrap()..artifact.rfind("//#endregion 🔖️HistoryReplay").unwrap()];
     for forbidden in ["block_on(", "ask_blocking", "submit_blocking", "loop {", "while "] {
         assert!(!replay.contains(forbidden), "history replay cursor retained {forbidden}");
     }

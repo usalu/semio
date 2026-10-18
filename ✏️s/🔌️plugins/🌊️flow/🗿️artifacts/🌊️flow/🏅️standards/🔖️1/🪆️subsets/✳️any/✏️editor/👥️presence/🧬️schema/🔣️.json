@@ -17,8 +17,30 @@
       "x-semio-state": "presence"
     },
     "camera": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/s/flow/flow/artifact.json#/$defs/CameraJson",
+      "$ref": "#/$defs/CameraJson",
       "x-semio-state": "presence"
+    }
+  },
+  "$defs": {
+    "CameraJson": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "zoom"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "zoom": {
+          "type": "number"
+        }
+      }
     }
   }
 }

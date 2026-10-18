@@ -1,0 +1,31 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-job-unit-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Companion white-box laws of the job core: retained payload ownership and payload retirement over the private operation ledger"
+
+[package.metadata.semio]
+role = "framework"
+id = "job-unit-tests"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }
+semio-framework-value = { workspace = true }
+serde_json = { workspace = true }

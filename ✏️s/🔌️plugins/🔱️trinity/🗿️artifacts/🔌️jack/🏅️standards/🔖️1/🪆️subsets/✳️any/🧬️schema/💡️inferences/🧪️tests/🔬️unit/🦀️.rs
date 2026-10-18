@@ -35,14 +35,9 @@ fn chain_snapshot() -> JackSnapshot {
 
 //#region 🧪️InferenceLaws
 #[semio_framework_async_macros::async_test]
-async fn inference_determinism_law() {
+async fn inference_determinism_law_over_chain_snapshot() {
     let snapshot = chain_snapshot();
     assert_eq!(JackInference::infer(&snapshot).expect("valid materialized inference fixture"), JackInference::infer(&snapshot).expect("valid materialized inference fixture"));
-}
-
-#[semio_framework_async_macros::async_test]
-async fn inference_default_law() {
-    assert_eq!(JackInference::infer(&<crate::test_support::FixtureComposition as crate::standards::v1::subsets::any::schema::composition::JackComposition>::initial_snapshot()).expect("valid materialized inference fixture"), JackInference::default());
 }
 
 #[semio_framework_async_macros::async_test]

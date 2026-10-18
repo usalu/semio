@@ -1,0 +1,22 @@
+{
+ "name": "c6db2",
+ "crates": [
+  "semio-framework-os-kernel-db-engine-catalog-read",
+  "semio-framework-os-kernel-db-engine-capability-open",
+  "semio-framework-os-kernel-db-engine-catalog-bootstrap",
+  "semio-framework-os-kernel-db-wal",
+  "semio-framework-os-kernel-db-snapshot",
+  "semio-framework-os-kernel-db-storage-postgres",
+  "semio-framework-os-kernel-db-artifact",
+  "semio-framework-os-kernel-db-engine",
+  "semio-framework-os-kernel-db-sync",
+  "semio-framework-os-kernel-db-storage-fs",
+  "semio-framework-os-kernel-db-storage-memory",
+  "semio-framework-os-kernel-db-storage-sqlite",
+  "semio-framework-os-kernel-db-artifact-engine",
+  "semio-framework-os-kernel-db-index",
+  "semio-framework-os-kernel-db-storage",
+  "semio-framework-os-kernel-db-io-core"
+ ],
+ "note": "CENSUS6 packages 27 to 29: the owning crates"
+}

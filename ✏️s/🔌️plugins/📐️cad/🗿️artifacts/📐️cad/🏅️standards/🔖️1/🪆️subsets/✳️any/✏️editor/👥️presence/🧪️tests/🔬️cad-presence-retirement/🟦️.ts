@@ -2,7 +2,8 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { WORKSPACE_ROOT } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
 import { toolJobRustBlock } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
-import { toolJobImmutableOperationRootsExact, toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts";
+import { toolJobImmutableOperationRootsExact } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🟦️.ts";
+import { toolJobPeerCommitAuthorityExact, toolJobPeerInteractionRootsExact } from "../../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🗄️artifact-store/🏛️structural-owners/🟦️.ts";
 import { frameworkSourcePath } from "@semio-tech/framework/test/source-text";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
@@ -257,7 +258,7 @@ export function cadPresenceRetirementSelfTests(): number {
   ];
   for (const [store, rejection, plugin] of rejectedHostiles) if (exactRejectedActor(store, rejection, plugin)) throw new Error("peer rejection guard accepted dropped identity, false byte credit or missing mounted owner");
   const channelSource = readModuleTreeSource(join(storeBase, "../../📡️spr/🧵️channel/🦀️.rs"));
-  const pluginLawSource = readFileSync(join(storeBase, "../../🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🦀️.rs"), "utf8");
+  const pluginLawSource = readModuleTreeSource(join(storeBase, "../../🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-5/🦀️.rs"));
   if (!pluginLawSource.includes("peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root") || !pluginLawSource.includes("peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority")) throw new Error("peer capture native laws are missing");
   const contextFixture = JSON.parse(readFileSync(frameworkSourcePath("🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🧫️fixtures/🧬️request-context.json"), "utf8"));
   const captureProof = (plugin: string, store: string, channel: string, retirement: string): boolean => toolJobPeerInteractionRootsExact(plugin, store, channel, retirement);

@@ -153,9 +153,9 @@ impl Default for SemioTextSnapshot {
 /// two languages, exercising every leaf/collection shape at least once. Single source of truth for
 /// `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the conformance-law
 /// tests in `🚪️io/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_text_snapshot() -> SemioTextSnapshot {
+pub fn demo_text_snapshot() -> SemioTextSnapshot {
     SemioTextSnapshot {
         schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(),
         runs: vec![

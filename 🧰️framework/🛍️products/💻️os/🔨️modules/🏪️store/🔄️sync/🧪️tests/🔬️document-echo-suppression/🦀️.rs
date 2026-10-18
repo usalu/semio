@@ -8,6 +8,20 @@ use semio_framework_os_spr::{ActorId, ArtifactId, MutationEnvelope, MutationId};
 
 const FIXTURE: &str = include_str!("../../../🧪️tests/🧫️fixtures/document-echo-suppression-v1/🔣️.json");
 
+/// 🔁️ The sync crate source as one text: every child module of the root, then the root.
+const SYNC_SOURCE: &str = concat!(
+    include_str!("../../🚨️sync-errors-actor-identity-and-envelope-serde/🦀️.rs"),
+    include_str!("../../🗄️persistence-binding-actor-config-and-messages/🦀️.rs"),
+    include_str!("../../📬️artifact-mailbox/🦀️.rs"),
+    include_str!("../../📡️actor-message-bytes-status-and-events/🦀️.rs"),
+    include_str!("../../🧭️backbone-retention-bootstrap-and-command-acks/🦀️.rs"),
+    include_str!("../../🧵️backbone-worker-wire-and-history-envelopes/🦀️.rs"),
+    include_str!("../../🔌️document-socket-link-and-echo-suppression/🦀️.rs"),
+    include_str!("../../🌉️wire-bridge-sync-session-and-presence-heartbeat/🦀️.rs"),
+    include_str!("../../🏠️artifact-host-state-and-core/🦀️.rs"),
+    include_str!("../../🦀️.rs"),
+);
+
 fn envelope(value: &serde_json::Value) -> MutationEnvelope {
     MutationEnvelope {
         mutation_id: MutationId(value["mutationId"].as_str().expect("fixture mutationId").into()),
@@ -48,7 +62,7 @@ fn every_vector_applies_by_operation_identity_and_never_discards_a_frame_by_orig
 
 #[test]
 fn neither_actor_reads_a_frame_origin_to_suppress_an_echo() {
-    let source = include_str!("../../🦀️.rs");
+    let source = SYNC_SOURCE;
     assert!(!source.contains("Some(origin.0.as_str())"), "no Commands frame is discarded by its origin");
 }
 
@@ -72,7 +86,7 @@ fn a_committed_own_operation_settles_the_outbox_and_its_pending_batch() {
 
 #[test]
 fn both_actors_settle_committed_operations_before_admission() {
-    let source = include_str!("../../🦀️.rs");
+    let source = SYNC_SOURCE;
     assert_eq!(source.matches("rollbacks.push(rollback_envelope(").count(), 0, "no rollback path pushes an unchecked rollback");
 }
 

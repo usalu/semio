@@ -24,5 +24,6 @@ path = "../../🦀️.rs"
 doctest = false
 
 [dependencies]
+semio-framework-process-routing-workspace = { path = "../../../../🏃️process/🧭️routing/🏠️workspace/📦️packages/🦀️rust" }
 
 [dev-dependencies]

@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateZone`: one created zone entry. The id must be free in every collection and the occupancy density a finite,
 //! non-negative number of persons per square metre. The spaces of the zone are not listed here: each space names its zone.
 
-use super::super::elements;
-use super::CreateZone;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_zone::CreateZone;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -3,7 +3,7 @@ import type { ActorInstanceLifetime } from "../../../../🎭️actor/📦️pack
 import type { ActorUiPatchReceipt } from "../../../../🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
 import { OwnedNativeUiPatchAuthority, OwnedNativeUiPatchSubmissionReceipt, type ShardActorActivationLease } from "@semio-tech/framework-actor/shard-client";
 import type { NumericIndexGrant } from "../../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
-import type { UiDocumentLimits } from "../../../../🛂️manifest/🟦️.ts";
+import type { UiDocumentLimits } from "../../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { OwnedUiSurface, type OwnedUiSurfaceAcknowledgement, type OwnedUiSurfaceView } from "../🖼️surface/🟦️.ts";
 import { OwnedUiWirePatchCursor } from "../🩹️operations/📥️wire/🟦️.ts";
 import type { OwnedUiSceneHostProfile } from "../🎬️scene/🧾️typed/🟦️.ts";

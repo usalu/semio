@@ -1,5 +1,5 @@
 //! 🖼️ Directed graph port, node, and canvas presentation contracts.
-use ::graph::manifest::PropertyBag;
+use semio_framework_graph_manifest::PropertyBag;
 use semio_framework_value::DslValue;
 use semio_framework_value_derive::{FromValue, ToValue};
 #[path="🗂️expanded/🦀️.rs"]
@@ -705,8 +705,8 @@ pub(crate) fn dag_visual_kind(node: &DagNodeSpec) -> String {
 
 
 /// 🧵️ Build execution wire rows from an enriched DAG host snapshot.
-pub fn dag_host_snapshot_execution_rows(host_snapshot: &DagHostSnapshot) -> (Vec<::graph::dsl::WireNode>, Vec<::graph::dsl::WireEdge>) {
-    use ::graph::dsl::{WireEdge, WireNode};
+pub fn dag_host_snapshot_execution_rows(host_snapshot: &DagHostSnapshot) -> (Vec<semio_framework_graph_dsl::WireNode>, Vec<semio_framework_graph_dsl::WireEdge>) {
+    use semio_framework_graph_dsl::{WireEdge, WireNode};
     use std::collections::HashSet;
     let executable: HashSet<String> = host_snapshot.nodes.iter().filter_map(|node| node.operator_kind.as_ref().map(|_| node.id.clone())).collect();
     let nodes = host_snapshot
@@ -737,7 +737,7 @@ semio_framework_value::artifact_retire_struct!(DagHostSnapshot {schema,camera,no
 
 /// 📝️ Render a DAG host snapshot as wire-literal compiled text.
 pub fn dag_host_snapshot_to_wire_literal(host_snapshot: &DagHostSnapshot) -> String {
-    use ::graph::dsl::{wire_literal_from_dag, WireEdge, WireNode};
+    use semio_framework_graph_dsl::{wire_literal_from_dag, WireEdge, WireNode};
     let nodes = host_snapshot.nodes.iter().map(|node| WireNode { id: node.id.clone(), kind: dag_visual_kind(node), port: None, properties: node.properties.clone() }).collect::<Vec<_>>();
     let edges = host_snapshot
         .edges

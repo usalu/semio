@@ -97,6 +97,4 @@ pub fn handle(payload: &EditTemplate, doc: &ArtifactView<'_, ModelSnapshot>, _cf
     Ok(Emit::mutations(vec![ModelMutation::SetPropertyTemplate(SetPropertyTemplate::from_patch(payload.id.clone(), PropertyTemplatePatch { properties: Some(properties), ..Default::default() }))]))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

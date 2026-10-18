@@ -68,7 +68,7 @@ describe("browser frame worker transport", () => {
   });
 
   it("aborts a retired component response, retries its exact handback, then admits the next asset", async () => {
-    const fixtureDirectory = join(dirname(fileURLToPath(import.meta.url)), "../../../🧫️fixtures/🛑️browser-component-asset-cancellation");
+    const fixtureDirectory = join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/🛑️browser-component-asset-cancellation");
     const fixture = JSON.parse(readFileSync(join(fixtureDirectory, "🔣️.json"), "utf8")) as {
       readonly owners: readonly { readonly id: string; readonly responseToken: number; readonly bytes: readonly number[] }[];
       readonly handback: readonly ["busy", "returned"];

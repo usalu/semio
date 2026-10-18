@@ -3,7 +3,7 @@ import type { BackboneWorkerTestDependencies } from "../../🔨️modules/🏪�
 import { workerLawFakesV1, FakeHubWebSocket, flushSocketGrantTurns, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️worker-law-fakes/🟦️.ts";
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
-type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
+type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
 type MutationEnvelope = import("@semio-tech/framework-replication").MutationEnvelope;
 type Vitest = NonNullable<ImportMeta["vitest"]>;

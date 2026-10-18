@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 import fixture from "../🧫️fixtures/🚚️table-lanes/🔣️.json";
-import { TABLE_SCENE_LANES, tableSceneFromLanes } from "../../🟦️.ts";
+import { TABLE_SCENE_LANES, tableSceneFromLanes } from "../../📄️documents/🟦️.ts";
 
 test("table carriers match their language-neutral schema", () => {
   expect(TABLE_SCENE_LANES).toEqual<typeof fixture.lanes>(fixture.lanes);

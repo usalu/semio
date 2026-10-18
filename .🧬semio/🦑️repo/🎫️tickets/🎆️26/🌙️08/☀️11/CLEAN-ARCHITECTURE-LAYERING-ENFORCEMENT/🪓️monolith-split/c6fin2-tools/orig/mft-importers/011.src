@@ -1,0 +1,148 @@
+//#region 🧬️GraphContract
+import type { Component, UiContractViolation, UiDocumentLimits, UiNodeRecord } from "../../../../../🛂️manifest/🟦️.ts";
+import type { RetainedUiComponent, RetainedUiNodeRecord } from "../../📦️wire/🧾️typed/🟦️.ts";
+import type { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../../🧮️tables/🟦️.ts";
+import { numberLimitValues, numberRangeIsValid, snapsAreValid } from "../../../🛡️limits/🟦️.ts";
+
+type Program<T> = Generator<number, T, void>;
+type Record = UiNodeRecord | RetainedUiNodeRecord;
+type Walk = { readonly kind: "enter" | "exit"; readonly id: number; readonly depth: number; readonly section: boolean };
+type Link = { value: Walk | null; next: Link | null };
+export type RetainedUiGraphFrontier = { stack: Link | null; count: number };
+export type RetainedUiGraphNodes = { readonly size: number; lookup(id: number): Program<Record | undefined>; entries(): Generator<number | readonly [number, Record], void, void> };
+
+function finite(component: Component | RetainedUiComponent): boolean {
+  switch (component.type) {
+    case "slider": return Number.isFinite(component.value) && Number.isFinite(component.min) && Number.isFinite(component.max) && Number.isFinite(component.step) && component.snaps.every(Number.isFinite) && (component.displayFactor == null || Number.isFinite(component.displayFactor)) && numberLimitValues(component.limits).every(Number.isFinite);
+    case "numberStepper": return Number.isFinite(component.value) && Number.isFinite(component.step) && (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.min == null || component.max == null || component.min <= component.max) && (component.snaps ?? []).every(Number.isFinite) && (component.displayFactor == null || Number.isFinite(component.displayFactor)) && numberLimitValues(component.limits).every(Number.isFinite);
+    case "ring": return Number.isFinite(component.t);
+    case "progress": return Number.isFinite(component.completed) && (component.total == null || Number.isFinite(component.total));
+    case "input": return (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.step == null || Number.isFinite(component.step)) && (component.snaps ?? []).every(Number.isFinite) && (component.displayFactor == null || Number.isFinite(component.displayFactor)) && numberLimitValues(component.limits).every(Number.isFinite);
+    default: return true;
+  }
+}
+
+/** 📏️ A slider's, stepper's and number field's travel, scale, display factor and limits agree — the twin of the Rust `number_range_is_valid` gate. */
+function validNumberRange(component: Component | RetainedUiComponent): boolean {
+  if (component.type === "slider") return numberRangeIsValid(component.min, component.max, component.scale ?? "linear", component.displayFactor ?? null, component.limits ?? null, component.snaps);
+  if (component.type === "numberStepper" || component.type === "input") return numberRangeIsValid(component.min ?? null, component.max ?? null, "linear", component.displayFactor ?? null, component.limits ?? null, component.snaps ?? []);
+  return true;
+}
+
+/** 🧲️ A slider's and a number field's detents obey the shared law; every other component passes — the twin of the Rust `snaps_are_valid` gate. */
+function validSnaps(component: Component | RetainedUiComponent): boolean {
+  if (component.type === "slider") return snapsAreValid(component.snaps, component.min, component.max);
+  return (component.type !== "input" && component.type !== "numberStepper") || snapsAreValid(component.snaps ?? [], component.min ?? Number.NEGATIVE_INFINITY, component.max ?? Number.POSITIVE_INFINITY);
+}
+
+function* violation(value: UiContractViolation, frontier: RetainedUiGraphFrontier, violations: RetainedUiNumericTable<UiContractViolation>): Program<void> {
+  if (frontier.count === Number.MAX_SAFE_INTEGER) throw new RangeError("Retained UI violation ordinal exhausted");
+  yield* violations.set(frontier.count++, value);
+}
+
+function* validTreeToolbar(record: Record, id: number, nodes: RetainedUiGraphNodes): Program<boolean> {
+  if (!(record.children ?? []).includes(id)) return false;
+  const toolbar = yield* nodes.lookup(id);
+  if (!toolbar || toolbar.component.type !== "container" || toolbar.component.role !== "toolbar" || toolbar.layout.kind !== "stack" || toolbar.layout.axis !== "horizontal") return false;
+  const children = toolbar.children ?? [];
+  if (children.length < 1 || children.length > 4) return false;
+  for (const child of children) {
+    const button = yield* nodes.lookup(child);
+    if (!button || button.component.type !== "button" || (button.children ?? []).length !== 0) return false;
+  }
+  return true;
+}
+
+function* validTreeDetail(record: Record, nodes: RetainedUiGraphNodes): Program<boolean> {
+  if (record.component.type !== "treeItem" || record.component.detail === null) return true;
+  const id = record.component.detail;
+  if (!(record.children ?? []).includes(id)) return false;
+  const detail = yield* nodes.lookup(id);
+  return detail?.component.type === "surface";
+}
+
+/** 🎯️ A TreeItem/TableRow carries `target` exactly when it carries row actions or a target `activation`, and never a record `activate` binding. */
+function validRowTarget(record: Record): boolean {
+  const component = record.component;
+  if (component.type !== "treeItem" && component.type !== "tableRow") return true;
+  return (component.target != null) === ((component.rowActions ?? []).length > 0 || component.target?.activation != null) && !(record.bindings ?? []).some((binding) => binding.trigger === "activate");
+}
+
+export function closeRetainedUiGraphFrame(frontier: RetainedUiGraphFrontier): boolean {
+  const cell = frontier.stack;
+  if (!cell) return false;
+  frontier.stack = cell.next; cell.next = null; cell.value = null;
+  return true;
+}
+//#endregion 🧬️GraphContract
+
+//#region 🚶️GraphTraversal
+/** 🛡️ Shared explicit graph frontier preserves the native depth-first violation order. */
+export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: number | null, limits: UiDocumentLimits, marks: RetainedUiNumericTable<number>, keys: RetainedUiSiblingKeys, violations: RetainedUiNumericTable<UiContractViolation>, frontier: RetainedUiGraphFrontier): Program<void> {
+  if (nodes.size > limits.maxNodes) { yield* violation({ type: "nodeQuota", count: nodes.size, max: limits.maxNodes }, frontier, violations); return; }
+  if (root !== null && (yield* nodes.lookup(root))) frontier.stack = { value: { kind: "enter", id: root, depth: 0, section: false }, next: null };
+  while (frontier.stack) {
+    const cell: Link = frontier.stack; frontier.stack = cell.next; cell.next = null;
+    const frame = cell.value!; cell.value = null; yield 48;
+    const flags = (yield* marks.lookup(frame.id)) ?? 0;
+    if (frame.kind === "exit") { yield* marks.set(frame.id, flags & ~2); continue; }
+    if (flags & 2) { yield* violation({ type: "cycle", node: frame.id }, frontier, violations); continue; }
+    if (flags & 1) continue;
+    yield* marks.set(frame.id, 1);
+    const record = yield* nodes.lookup(frame.id);
+    if (!record) continue;
+    const section = record.component.type === "container" && record.component.role === "section";
+    if (frame.section && section) yield* violation({ type: "sectionNested", node: frame.id }, frontier, violations);
+    if (!finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: frame.id }, frontier, violations);
+    else if (!validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: frame.id }, frontier, violations);
+    else if (!validNumberRange(record.component)) yield* violation({ type: "invalidNumberRange", node: frame.id }, frontier, violations);
+    if (record.component.type === "treeItem" && record.component.inlineToolbar !== null && !(yield* validTreeToolbar(record, record.component.inlineToolbar, nodes))) yield* violation({ type: "invalidTreeInlineToolbar", node: frame.id, toolbar: record.component.inlineToolbar }, frontier, violations);
+    if (record.component.type === "treeSection" && record.component.headerToolbar !== null && !(yield* validTreeToolbar(record, record.component.headerToolbar, nodes))) yield* violation({ type: "invalidTreeSectionHeaderToolbar", node: frame.id, toolbar: record.component.headerToolbar }, frontier, violations);
+    if (record.component.type === "treeItem" && record.component.detail !== null && !(yield* validTreeDetail(record, nodes))) yield* violation({ type: "invalidTreeDetail", node: frame.id, detail: record.component.detail }, frontier, violations);
+    if (!validRowTarget(record)) yield* violation({ type: "invalidRowTarget", node: frame.id }, frontier, violations);
+    if (frame.depth > limits.maxDepth) { yield* violation({ type: "depthQuota", node: frame.id, depth: frame.depth, max: limits.maxDepth }, frontier, violations); continue; }
+    yield* marks.set(frame.id, 3);
+    frontier.stack = { value: { ...frame, kind: "exit" }, next: frontier.stack }; yield 48;
+    for (const childId of record.children ?? []) {
+      const child = yield* nodes.lookup(childId);
+      if (!child) { yield* violation({ type: "orphanChild", parent: frame.id, child: childId }, frontier, violations); continue; }
+      if (yield* keys.insert(child.key)) yield* violation({ type: "duplicateSiblingKey", parent: frame.id, key: child.key }, frontier, violations);
+      frontier.stack = { value: { kind: "enter", id: childId, depth: frame.depth + 1, section: frame.section || section }, next: frontier.stack }; yield 64;
+    }
+    yield* keys.clear();
+  }
+  const entries = nodes.entries();
+  for (;;) {
+    const step = entries.next(); if (step.done) break;
+    if (typeof step.value === "number") { yield step.value; continue; }
+    const id = step.value[0]; yield 64;
+    if (!((yield* marks.lookup(id)) ?? 0)) yield* violation({ type: "danglingRoot", node: id }, frontier, violations);
+  }
+}
+
+/** 🎯️ Re-checks ONLY the records a shape-preserving delta replaced, against an already-validated base.
+ *
+ * Every state an `OwnedUiSurface` publishes passed {@link retainedUiGraphValidation}, so a candidate
+ * differs from a proven-valid graph by exactly the delta. When each replacement kept its sibling `key`,
+ * its `children` edges and its section role — what the operation cursor certifies as
+ * `shapePreserving` — the candidate's node set, edge set and root are IDENTICAL to the base's. Then
+ * `danglingRoot`, `cycle`, `depthQuota`, `orphanChild`, `duplicateSiblingKey` and `sectionNested` are
+ * all decided by structure the base already proved, and the invariants a payload can still break are
+ * `nonFiniteNumber`, `invalidSnaps` and `invalidRowTarget` on a replaced record. So this costs one index lookup per touched node instead of
+ * the base walk's three persistent-index writes per document node: measured 163 284 → 159 steps on the
+ * Nakagin-scale 145-node scene surface (`📃️UiDocumentStore/🧪️tests/🧪️typedwire`'s re-publish law).
+ *
+ * `nodeQuota` is still checked because it is the one invariant a same-shape candidate could violate
+ * were the base itself minted at the quota edge. */
+export function* retainedUiGraphTouchedValidation(nodes: RetainedUiGraphNodes, touched: RetainedUiNumericTable<true>, limits: UiDocumentLimits, violations: RetainedUiNumericTable<UiContractViolation>, frontier: RetainedUiGraphFrontier): Program<void> {
+  if (nodes.size > limits.maxNodes) { yield* violation({ type: "nodeQuota", count: nodes.size, max: limits.maxNodes }, frontier, violations); return; }
+  for (const entry of touched.entries()) {
+    if (typeof entry === "number") { yield entry; continue; }
+    const record = yield* nodes.lookup(entry[0]);
+    if (record && !finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: entry[0] }, frontier, violations);
+    else if (record && !validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: entry[0] }, frontier, violations);
+    else if (record && !validNumberRange(record.component)) yield* violation({ type: "invalidNumberRange", node: entry[0] }, frontier, violations);
+    if (record && !validRowTarget(record)) yield* violation({ type: "invalidRowTarget", node: entry[0] }, frontier, violations);
+  }
+}
+//#endregion 🚶️GraphTraversal

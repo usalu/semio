@@ -25,7 +25,7 @@
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🏃️command-ownership/🟦️.ts",
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/📦️artifact-package-graph/🟦️.ts",
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
     ],
     "stdioArtifactContract": [
@@ -56,7 +56,7 @@
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/🏃️command-ownership/🔣️.json",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package/🔣️.json",
       "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
     ],
     "stdioArtifactGraph": [
@@ -90,7 +90,7 @@
       "{workspaceRoot}/✏️s/🧑‍💻dev/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package-graph/📌️pin.json",
       "{workspaceRoot}/✏️s/🔌️plugins/🗄️stdio/🧪️tests/🧫️fixtures/📦️artifact-package/🔣️.json",
       "{workspaceRoot}/🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/{🏗️build/📥️inputs/🧊️stable-file,🗂️workspaces/📁️data-directories,🚨️policy,🧪️testing,🏃️process,🎮️playground,🎛️commands/📝️commit}/**/*.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts"
     ]
   },

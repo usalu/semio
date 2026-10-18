@@ -2,7 +2,8 @@
  * @see 📜️script.ts
  */
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { daemonBudgetOpts, getWorkspaceRoot, runCmd } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
+import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";

@@ -608,6 +608,9 @@ pub fn scene_for(snapshot: &Puzzle3dPlaySnapshot, config: &Puzzle3dRuntime, view
 
 use crate::windows::main;
 use semio_framework::kernel::UiDirtyScope;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dPlaySnapshot;
+use semio_s_artifact_puzzle_3d_editor_snapshot::puzzle3d_scene_active_utility;
+use semio_s_artifact_puzzle_3d_editor_snapshot::scene_from_snapshot;
 
 pub fn puzzle3d_viewport_scope() -> UiDirtyScope {
     UiDirtyScope::Partial { window_bodies: vec![main::BODY_KEY.to_string()], panel_bodies: Vec::new(), utilities: false, tools: false, engagements: false, measures: false, labels: false }

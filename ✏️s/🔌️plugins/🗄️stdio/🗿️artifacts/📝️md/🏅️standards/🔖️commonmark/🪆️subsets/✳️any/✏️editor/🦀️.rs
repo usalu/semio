@@ -11,7 +11,7 @@ use crate::standards::v_commonmark::subsets::any::schema::mutations::{splice_sou
 
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;

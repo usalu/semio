@@ -1,9 +1,33 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::point;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::ElevationPoint;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, fraction, WallLayout};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, parts, SolidBuilder, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::Wall;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::{nearest_intersection, BulgeSeg, Extent};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude_between_faces, ElevationFace};
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::walls::*;
 use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{fixtures::case, ElementSolid};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use semio_framework_geometry::mesh::TriMesh;
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeMap;
 
 fn solids(name: &str) -> (ModelSnapshot, BTreeMap<String, ElementSolid>) {
@@ -179,11 +203,11 @@ async fn walls_without_a_type_a_storey_or_a_height_have_no_solid() {
     assert!(solids.contains_key("w-layered"));
 }
 
-const JOINS: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json");
+static JOINS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🔗️wall-joins/📸️snapshot/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn every_wall_of_the_join_fixture_fills_exactly_its_trimmed_footprint() {
-    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str(JOINS, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the join fixture decodes");
+    let snapshot: ModelSnapshot = semio_framework_pack_json::from_json_str((*JOINS), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the join fixture decodes");
     let (layouts, solids) = (compute_wall_layout(&snapshot), compute_element_solids(&snapshot));
     assert_eq!(solids.len(), snapshot.walls.len());
     for (id, wall) in &snapshot.walls {

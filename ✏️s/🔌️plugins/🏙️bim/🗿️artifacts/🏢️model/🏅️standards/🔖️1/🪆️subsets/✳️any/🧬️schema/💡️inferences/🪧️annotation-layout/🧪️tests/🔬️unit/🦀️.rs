@@ -1,15 +1,33 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{DimensionUnit, ModelSnapshot, Point2};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::Reason;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{AnnotationAnchor, Terminator};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::EPS;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{finding};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::*;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanKind;
 use crate::standards::v1::subsets::any::schema::{diff::{patches::{AnnotationStylePatch, ColumnPatch, StoreyPatch, WallPatch}, Entry, ModelDiff}, snapshot::Axis, inferences::ModelInference};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
+static ROOM: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json"));
 
 fn room() -> ModelSnapshot {
-    from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes")
+    from_json_str((*ROOM), JsonMemberPolicy::Reject).expect("the room decodes")
 }
 
 fn annotations(snapshot: &ModelSnapshot) -> StoreyAnnotations {

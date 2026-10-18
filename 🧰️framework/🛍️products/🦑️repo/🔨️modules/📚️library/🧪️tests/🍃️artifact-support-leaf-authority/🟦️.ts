@@ -7,9 +7,13 @@ import glob from "fast-glob";
 import MarkdownIt from "markdown-it";
 import ts from "typescript";
 import { ownedFilesystemEntries } from "../🔍️filesystem/🟦️.ts";
-import { applyTaxonomyPlan, inventoryTaxonomy, planTaxonomy, typescriptLeadingDocumentationReferenceAuthority } from "../../🧹️normalization/🟦️.ts";
+import { applyTaxonomyPlan } from "../../🧹️normalization/🚀️apply/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
+import { planTaxonomy } from "../../🧹️normalization/🧠️planning/🟦️.ts";
+import { typescriptLeadingDocumentationReferenceAuthority } from "../../🧹️normalization/🧷️typescript-reference-authority/🟦️.ts";
 import { canonicalJson } from "../../🧾️serialization/🔣️json/🟦️.ts";
-import { validateTaxonomy, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { validateTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 
 type Mapping = Readonly<{ id: string; source: string; destination: string; kindId: string; size: number; sha256: string }>;
 type Negative = Readonly<{ id: string; omitDescriptor?: boolean; descriptorPatch?: Record<string, unknown>; extraDescriptor?: boolean; payload?: string; payloadPath?: string }>;
@@ -22,7 +26,7 @@ const ticket = join(repoRoot, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/�
 const schemaPath = `${library}/🔣️taxonomy.json`;
 const schemaBytes = readFileSync(join(repoRoot, schemaPath));
 const taxonomy = JSON.parse(schemaBytes.toString()) as Taxonomy;
-const vector = JSON.parse(readFileSync(join(repoRoot, library, "🧫️fixtures/🍃️artifact-support-leaf-authority/🔣️.json"), "utf8")) as Vector;
+const vector = JSON.parse(readFileSync(join(repoRoot, library, "🧪️tests/🧫️fixtures/🍃️artifact-support-leaf-authority/🔣️.json"), "utf8")) as Vector;
 const fixtureRetention = vector.execution.fixtureRetention;
 const subset = `${vector.owner}/${vector.subset}`;
 const sourceBytes = new Map(vector.cases.map((row) => [row.id, Buffer.from(vector.sourceInputs[row.id])]));

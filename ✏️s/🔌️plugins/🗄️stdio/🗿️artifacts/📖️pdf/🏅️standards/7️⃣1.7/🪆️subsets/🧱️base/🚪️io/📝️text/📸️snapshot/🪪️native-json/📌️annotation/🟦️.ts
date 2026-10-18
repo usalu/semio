@@ -1,5 +1,7 @@
 /** 📌️ Explicit native annotation admission into the owned scalar model. */
-import type { PdfAnnotation,PdfAnnotationKind,PdfMarkupAnnotation,PdfAppearance,PdfAppearanceEntry,PdfAppearanceState,PdfBorderStyle,PdfDate } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfAnnotation, PdfMarkupAnnotation, PdfAppearance, PdfAppearanceEntry, PdfAppearanceState, PdfBorderStyle } from "../../../../../🧬️schema/📸️snapshot/📌️annotation/🟦️.ts";
+import type { PdfAnnotationKind } from "../../../../../🧬️schema/📸️snapshot/📌️annotation/🏷️kind/🟦️.ts";
+import type { PdfDate } from "../../../../../🧬️schema/📸️snapshot/📇️metadata/🟦️.ts";
 import { record,array,text,boolean,integer,real,reals,four,pdfDictionaryFromNativeJson } from "../🟦️.ts";
 import { pdfActionFromNativeJson,pdfDestinationFromNativeJson,pdfFileFromNativeJson } from "../🎯️navigation/🟦️.ts";
 

@@ -152,9 +152,9 @@ impl Default for SemioVideoSnapshot {
 /// frame, one audio w/ no samples), exercising every leaf shape at least once. Single source of
 /// truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the
 /// conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_video_snapshot() -> SemioVideoSnapshot {
+pub fn demo_video_snapshot() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
         schema: STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![

@@ -1,5 +1,5 @@
 /** 📝️ Native form JSON admission into canonical owned field and COS domains. */
-import type { PdfAcroForm,PdfFormField,PdfFormFieldKind,PdfOptionalContent,PdfOptionalContentGroup } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfAcroForm, PdfFormField, PdfFormFieldKind, PdfOptionalContent, PdfOptionalContentGroup } from "../../../../../🧬️schema/📸️snapshot/📝️form/🟦️.ts";
 import { record,array,text,integer,boolean,pdfDictionaryFromNativeJson,pdfCosFromNativeJson } from "../🟦️.ts";
 const optionalText=(value:unknown)=>value==null?null:text(value);
 const optionalInteger=(value:unknown)=>value==null?null:integer(value);

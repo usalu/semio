@@ -38,7 +38,7 @@ pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -61,7 +61,7 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
@@ -84,27 +84,27 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_row(r: &[String]) -> String {
+pub fn enc_row(r: &[String]) -> String {
     format!("[{}]", r.iter().map(|f| enc_str(f)).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_row(s: &str) -> Result<Vec<String>, String> {
+pub fn dec_row(s: &str) -> Result<Vec<String>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_str).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_line_ending(l: LineEnding) -> &'static str {
+pub fn enc_line_ending(l: LineEnding) -> &'static str {
     match l {
         LineEnding::Lf => "lf",
         LineEnding::Crlf => "crlf",
@@ -112,7 +112,7 @@ pub(crate) fn enc_line_ending(l: LineEnding) -> &'static str {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_line_ending(s: &str) -> Result<LineEnding, String> {
+pub fn dec_line_ending(s: &str) -> Result<LineEnding, String> {
     match s {
         "lf" => Ok(LineEnding::Lf),
         "crlf" => Ok(LineEnding::Crlf),

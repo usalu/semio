@@ -26,8 +26,8 @@ test("the complete JSON reference route executes with products, S, Hub and ticke
     }
     for (const absent of contract.absentRoots) expect(existsSync(resolve(workspace, absent)), absent).toBe(false);
     expect(existsSync(resolve(workspace, ".🧬semio"))).toBe(false);
-    writeFileSync(resolve(workspace, "package.json"), JSON.stringify({private: true, type: "module"}));
-    writeFileSync(resolve(workspace, "nx.json"), "{}");
+    writeFileSync(resolve(workspace, "package.json"), JSON.stringify({private: true, type: "module", workspaces: []}));
+    writeFileSync(resolve(workspace, "📋️project.json"), "{}");
     await runBudgetedTestCommand(process.execPath, [resolve(workspace, contract.reference.script), contract.reference.command], {cwd: workspace, budgetMs: contract.reference.budgetMs, env: process.env, throwOnFailure: true});
   } finally {
     rmSync(workspace, {recursive: true, force: true});

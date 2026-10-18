@@ -2,10 +2,10 @@
 //! primitive a `path` or `text` that names its style class, what it depicts and the model element it belongs to.
 //! 📎 https://www.w3.org/TR/SVG11/struct.html#Groups
 
-use super::codec::{attr, element, text, CommonAttrs, SvgElement, TransformOp};
-use super::path::{commands, snap};
-use super::sheet::{Slot, TITLE_BAND};
-use super::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
+use crate::standards::v1::subsets::any::io::export::svg::codec::{attr, element, text, CommonAttrs, SvgElement, TransformOp};
+use crate::standards::v1::subsets::any::io::export::svg::path::{commands, snap};
+use crate::standards::v1::subsets::any::io::export::svg::sheet::{Slot, TITLE_BAND};
+use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, paint_rank, style_class, view_class, TAG_SIZE, TITLE_SIZE};
 use crate::standards::v1::subsets::any::schema::inferences::mep;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanText};
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
@@ -140,6 +140,4 @@ fn notation_layer(slot: &Slot, plan: &PlanLinework) -> Vec<SvgElement> {
     strokes.chain(plan.texts.iter().filter(|plan_text| annotated(plan_text.kind)).map(|plan_text| text_element(plan_text, slot))).collect()
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

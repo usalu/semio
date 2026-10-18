@@ -1,6 +1,6 @@
 //! 📦️ `set-family-solid` payload. Sets exactly the provided fields of a family solid: name, shape, material, visibility and offset; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{ExprPoint3, ModelSnapshot, SolidShape}, diff::{patches::FamilySolidPatch, ModelDiff}, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{ExprPoint3, ModelSnapshot, SolidShape}, diff::{patches::FamilySolidPatch, ModelDiff}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -32,13 +32,16 @@ impl SetFamilySolid {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetFamilySolid {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetFamilySolid
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetFamilySolid>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "family-solid", kind: "set-family-solid", record: "SetFamilySolid" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_family_solid::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_family_solid::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change family solid \"{}\"", self.id), &format!("Familienkörper \"{}\" ändern", self.id))

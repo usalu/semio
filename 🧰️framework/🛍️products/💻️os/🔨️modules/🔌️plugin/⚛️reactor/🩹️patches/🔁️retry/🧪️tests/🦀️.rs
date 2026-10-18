@@ -3,8 +3,7 @@ use crate::{PatchTracker, has_work};
 use semio_framework_ui_contract as ui_contract;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress};
 #[doc(hidden)]
-pub use semio_framework_plugin_testing_caller as original_caller;
-use original_caller::OriginalFixtureCaller;
+use semio_framework_plugin_testing_caller::OriginalFixtureCaller;
 
 #[cfg_attr(test,test)]
 pub fn pending_mounted_render_survives_denied_original_retry_without_heap_or_lost_schedule(){

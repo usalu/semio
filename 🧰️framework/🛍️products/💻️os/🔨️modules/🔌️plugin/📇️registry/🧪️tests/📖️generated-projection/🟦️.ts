@@ -7,7 +7,7 @@ import { filterProjectedPluginRegistry, projectedHostPluginFilter, readGenerated
 import { parseDeployedRegistryEntryV1 } from "../../🔎️discovery/🧬️schema/🟦️.ts";
 import type { PlaygroundEntry } from "../../🎮️playground/🔎️discovery/🟦️.ts";
 import { emitRustArtifacts } from "../../📽️projection/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures", "📖️generated-projection.json"), "utf8")) as {
   entries: DeployedRegistryEntryV1[];

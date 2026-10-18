@@ -3,10 +3,13 @@
  */
 import { interactivityToolRunLocalLifecycleFailures, interactivityToolRunLegacyTraceFailures, interactivityToolRunDeclarationFailures, interactivityToolRunReservedActionFailures } from "../../../🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts";
 import { POLICY_SPLIT_SOURCE_ROOTS, policyReadFileSafe, policyReadModuleTreeSource } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
-import { interactivityArtifactSubmitFailures, interactivityDatabaseCapabilityOpenFailures, interactivityDatabaseCatalogReadFailures, interactivityDbIoB1B6Failures, interactivityDbIoCallerMigrationFailures, interactivityDbIoCursorCallerFailures, interactivityDbIoDirectWriterFailures, interactivityDbIoFailures, interactivityPreparedRasterProducerFailures, interactivityShardExecutorFailures, interactivityStoreSyncFailures } from "../🗄️database/🟦️.ts";
+import { interactivityArtifactSubmitFailures, interactivityDbIoCallerMigrationFailures, interactivityDbIoCursorCallerFailures, interactivityDbIoDirectWriterFailures, interactivityDbIoFailures, interactivityPreparedRasterProducerFailures, interactivityShardExecutorFailures, interactivityStoreSyncFailures } from "../🗄️database/🟦️.ts";
+import { interactivityDatabaseCapabilityOpenFailures, interactivityDatabaseCatalogReadFailures } from "../🗄️database/🔓️capability-catalog/🟦️.ts";
+import { interactivityDbIoB1B6Failures } from "../🗄️database/🧮️b1b6-p1q-r4/🟦️.ts";
 import { interactivityArtifactHistoryFailures, interactivityDbCliFailures, interactivityMcpHttpTransportFailures } from "../🗄️database/🌱️database-lifecycle/🟦️.ts";
 import { INTERACTIVITY_AUDIT_ALLOWLIST, INTERACTIVITY_AUDIT_CANVAS_RASTER_FILE, INTERACTIVITY_AUDIT_DB_ARTIFACT_FAMILY, INTERACTIVITY_AUDIT_DB_ARTIFACT_FILE, INTERACTIVITY_AUDIT_DB_CLI_FILE, INTERACTIVITY_AUDIT_DB_CLUSTER_FILE, INTERACTIVITY_AUDIT_DB_COMPACT_FILE, INTERACTIVITY_AUDIT_DB_ENGINE_FAMILY, INTERACTIVITY_AUDIT_DB_ENGINE_FILE, INTERACTIVITY_AUDIT_DB_INDEX_FILE, INTERACTIVITY_AUDIT_DB_NEO4J_FILE, INTERACTIVITY_AUDIT_DB_POSTGRES_FILE, INTERACTIVITY_AUDIT_DB_PROJECTION_FILE, INTERACTIVITY_AUDIT_DB_QUERY_FILE, INTERACTIVITY_AUDIT_DB_ROOT_FILE, INTERACTIVITY_AUDIT_DB_SNAPSHOT_FILE, INTERACTIVITY_AUDIT_DB_SQLITE_FILE, INTERACTIVITY_AUDIT_DB_STATE_FILE, INTERACTIVITY_AUDIT_DB_STORAGE_FAMILY, INTERACTIVITY_AUDIT_DB_STORAGE_FILE, INTERACTIVITY_AUDIT_DB_SYNC_FILE, INTERACTIVITY_AUDIT_DB_TESTKIT_FILE, INTERACTIVITY_AUDIT_DB_WAL_FAMILY, INTERACTIVITY_AUDIT_DB_WAL_FILE, INTERACTIVITY_AUDIT_ENGINE_CANVAS_FILE, INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES, INTERACTIVITY_AUDIT_FIND_ITEMS_FILE, INTERACTIVITY_AUDIT_HUB_BIN_FAMILY, INTERACTIVITY_AUDIT_HUB_BIN_FILE, INTERACTIVITY_AUDIT_INTERPRETER_RASTER_FILE, INTERACTIVITY_AUDIT_KERNEL_FILE, INTERACTIVITY_AUDIT_KERNEL_UI_FILE, INTERACTIVITY_AUDIT_MCP_BRIDGE_FILE, INTERACTIVITY_AUDIT_MCP_BRIDGE_SESSION_FILE, INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE, INTERACTIVITY_AUDIT_MCP_ROOT_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_OS_SERVICES_FILE, INTERACTIVITY_AUDIT_PACK_FORMAT_FILE, INTERACTIVITY_AUDIT_PLUGIN_CENTRAL_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_DRAW_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_FILE, INTERACTIVITY_AUDIT_PREPARED_RASTER_GPU_FILE, INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE, INTERACTIVITY_AUDIT_REACTOR_TURN_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RENDERER_HOST_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_SHELL_FILE, INTERACTIVITY_AUDIT_SPR_FORMAT_FILE, INTERACTIVITY_AUDIT_STORE_SYNC_FILE, INTERACTIVITY_AUDIT_UI_ACCESSIBILITY_FILE, INTERACTIVITY_AUDIT_UI_BUILDER_FILE, INTERACTIVITY_AUDIT_UI_COMPONENT_FILE, INTERACTIVITY_AUDIT_UI_DOCUMENT_FILE, INTERACTIVITY_AUDIT_UI_LAYOUT_FILE, INTERACTIVITY_AUDIT_UI_LIMITS_FILE, INTERACTIVITY_AUDIT_UI_PRESENT_FILE, INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, INTERACTIVITY_AUDIT_UI_SURFACE_FILE, INTERACTIVITY_AUDIT_UI_VALUE_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_WORLD3D_FILES, type InteractivityAllowlistEntry, type InteractivityFinding } from "../🗂️files/🟦️.ts";
-import { interactivityLiveReconcileFailures, interactivityMountedFrameTransactionFailures, interactivityMountedLayoutTextFailures } from "../🖥️mounted/🟦️.ts";
+import { interactivityLiveReconcileFailures, interactivityMountedLayoutTextFailures } from "../🖥️mounted/🟦️.ts";
+import { interactivityMountedFrameTransactionFailures } from "../🖥️mounted/🎞️frame-transaction/🟦️.ts";
 import { INTERACTIVITY_AUDIT_PUZZLE_FILL_FILES, INTERACTIVITY_TOOL_RUN_REQUIREMENTS, interactivityPuzzleFillP4eFailures, interactivityPuzzleFillRunJobFailures, interactivityPuzzleFillSources, interactivityPuzzleFillTraceFailures, interactivityToolRunPolicySources } from "../🪣️tool-run-and-history/🟦️.ts";
 import { interactivityAuditScan } from "../🔎️scan/🟦️.ts";
 import { policyReadRustPolicyFamily, policyReadRustPolicySource, policyReadUiReconcileSource } from "../../../🔍️discovery/📖️source-access/🦀️rust-evidence/🟦️.ts";
@@ -26,7 +29,7 @@ export function interactivityAuditRun(repoRoot: string, lanes: SelfTestLanes): I
   const findings = interactivityAuditScan(repoRoot, lanes);
   lanes.interactivityShardExecutorSelfTests();
   const executor = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0]);
-  const shard = policyReadFileSafe(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
+  const shard = policyReadModuleTreeSource(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/🦀️.rs");
   for (const failure of interactivityShardExecutorFailures(executor, shard)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_EXACT_BLOCKING_BRIDGE_FILES[0], line: 0, text: failure });
   lanes.interactivityMcpHttpTransportSelfTests();
   const mcpTransport = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_MCP_HTTP_TRANSPORT_FILE);
@@ -134,14 +137,14 @@ export function interactivityAuditRun(repoRoot: string, lanes: SelfTestLanes): I
     INTERACTIVITY_AUDIT_UI_LIMITS_FILE,
     INTERACTIVITY_AUDIT_UI_LAYOUT_FILE,
     INTERACTIVITY_AUDIT_UI_PRESENT_FILE,
-  ].map((file) => policyReadFileSafe(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
+  ].map((file) => policyReadModuleTreeSource(repoRoot, file)).join("\n") + kernelTurn + tableKit + tableKitFixtures + commandBridge + commandBridgeFixtures;
   const reactorPatches = policyReadRustPolicySource(repoRoot, INTERACTIVITY_AUDIT_REACTOR_PATCHES_FILE);
   const reactor = [INTERACTIVITY_AUDIT_REACTOR_FILE, INTERACTIVITY_AUDIT_REACTOR_TURN_FILE, INTERACTIVITY_AUDIT_SHARD_FILE, INTERACTIVITY_AUDIT_RENDERER_GLUE_FILE, INTERACTIVITY_AUDIT_RUN_FILE, INTERACTIVITY_AUDIT_OS_ACTIVATION_FILE, INTERACTIVITY_AUDIT_RENDERER_RUNTIME_FILE, INTERACTIVITY_AUDIT_WINDOW_MEASURE_FILE, INTERACTIVITY_AUDIT_SHELL_FILE].map((file) => POLICY_SPLIT_SOURCE_ROOTS.includes(file) ? policyReadModuleTreeSource(repoRoot, file) : policyReadFileSafe(repoRoot, file)).join("\n");
   for (const failure of interactivityLiveReconcileFailures(uiReconcile, reactorPatches, reactor, uiValue, uiSchema)) findings.push({ category: "blocking-bridge", file: INTERACTIVITY_AUDIT_UI_RECONCILE_FILE, line: 0, text: failure });
   lanes.interactivityMountedLayoutTextSelfTests(repoRoot);
   const mountedLayout = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📌️mounted_layout/🦀️.rs");
   const mountedEngine = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚙️engine/🦀️.rs");
-  const mountedTree = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/🍃️nodes/🦀️.rs");
+  const mountedTree = policyReadModuleTreeSource(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🌳️retained/🌳️tree/🍃️nodes/🦀️.rs");
   const mountedPaint = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖌️paint/🦀️.rs");
   const mountedEvents = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/⚡️events/🦀️.rs");
   const mountedSlots = policyReadFileSafe(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/📨️scene_slots/🦀️.rs");

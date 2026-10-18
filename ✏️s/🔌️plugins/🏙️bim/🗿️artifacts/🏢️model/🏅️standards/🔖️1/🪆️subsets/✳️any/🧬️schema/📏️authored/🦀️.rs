@@ -1,14 +1,10 @@
 //! 📏️ `authored`: the pure functions over AUTHORED data that mutations and inferences share. A diff may read the snapshot only through its own accessors and through this module; it never runs, imports or
 //! reproduces an inference. Everything here is total, reads nothing but the arguments and evaluates no model graph: formula text, plan segments, storey stacking, opening sizes, attach references and profile outlines.
 
-#[path = "📝️formula/🦀️.rs"]
-pub mod formula;
-#[path = "🎚️option-rules/🦀️.rs"]
-pub mod option_rules;
-#[path = "🧭️plan/🦀️.rs"]
-pub mod plan;
-#[path = "▭️profile/🦀️.rs"]
-pub mod profile;
+pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::formula;
+pub use semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::schema::authored::option_rules;
+pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::plan;
+pub use semio_s_artifact_bim_model_formula::standards::v1::subsets::any::schema::authored::profile;
 #[path = "🔗️references/🦀️.rs"]
 pub mod references;
 #[path = "🪟️sizes/🦀️.rs"]

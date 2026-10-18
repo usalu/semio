@@ -1,0 +1,10 @@
+{
+ "tag": "pbh",
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎲️board-host/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎲️board-host/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "🧾️manifest-descriptor-sync-and-style-laws",
+  "🖱️drag-selection-and-lod-hit-laws",
+  "📐️generation-area-select-and-minimap-laws"
+ ]
+}

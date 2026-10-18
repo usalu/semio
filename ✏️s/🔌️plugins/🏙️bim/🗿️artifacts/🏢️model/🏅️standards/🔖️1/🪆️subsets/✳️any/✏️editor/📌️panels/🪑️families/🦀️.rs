@@ -139,6 +139,4 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &Bim
 }
 //#endregion 🔖️Render
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

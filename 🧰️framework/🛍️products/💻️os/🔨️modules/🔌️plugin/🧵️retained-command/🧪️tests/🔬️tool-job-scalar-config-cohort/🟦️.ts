@@ -2,6 +2,7 @@ import { join } from "node:path";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { WORKSPACE_ROOT } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/📍️checkout-root/🟦️.ts";
+import { POLICY_SPLIT_SOURCE_ROOTS, policyReadModuleTreeSource } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📖️source-access/🟦️.ts";
 import { toolJobOwnerSourceEvidence } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏭️factory/🟦️.ts";
 
 /** 🧪️ Checks scalar Config publication laws against Immer and exact live source policy witnesses. */
@@ -13,7 +14,7 @@ export function toolJobScalarConfigCohortSelfTests(): { routes: number; migrated
   enablePatches();
   
   
-  const files = new Map<string, string>(fixture.sources.map((file: string) => [file, readFileSync(join(WORKSPACE_ROOT, file), "utf8")]));
+  const files = new Map<string, string>(fixture.sources.map((file: string) => [file, POLICY_SPLIT_SOURCE_ROOTS.includes(file) ? policyReadModuleTreeSource(WORKSPACE_ROOT, file) : readFileSync(join(WORKSPACE_ROOT, file), "utf8")]));
   const evidence = toolJobOwnerSourceEvidence(files);
   if (evidence.failures.length || evidence.scanThenMonolith.length) throw new Error(`scalar Config source evidence: ${JSON.stringify(evidence.failures)}`);
   let routes = 0, migrated = 0, batchOnly = 0, forbidden = 0, hostileCases = 0;

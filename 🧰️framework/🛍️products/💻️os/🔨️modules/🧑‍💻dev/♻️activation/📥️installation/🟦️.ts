@@ -21,19 +21,33 @@ import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../�
 
 import {
   ensurePreview2ShimVendorAt,
+} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
+import {
   hostShimSource,
+} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
+import {
   PLUGIN_HOST_SHIM_FILE,
-  PREVIEW2_VENDOR_RELATIVE,
   GUESTSLIM_FONT_RELATIVE,
-  pluginComponentBridgeSource,
-  rewriteJcoComponentAssetUrls,
   SHARD_WORKER_FILE,
-  shardWorkerSource,
-  rewriteJcoAsyncResultLifting,
+  type PluginWebMaterializeContext,
+} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
+import {
+  PREVIEW2_VENDOR_RELATIVE,
   rewritePreview2ShimImportSource,
+} from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
+import {
+  pluginComponentBridgeSource,
+} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
+import {
+  rewriteJcoComponentAssetUrls,
+  rewriteJcoAsyncResultLifting,
+} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧬️jco-module-rewrites/🟦️.ts";
+import {
+  shardWorkerSource,
+} from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
+import {
   rewritePreview2ShimImports,
   transpilePluginComponentAsync,
-  type PluginWebMaterializeContext,
 } from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
 
 import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";

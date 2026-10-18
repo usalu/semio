@@ -1638,7 +1638,7 @@
   ],
   "nxEngineIdentity": {
     "script": "fixture/📜️script.ts",
-    "engine": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/📤️arguments/📜️script.ts",
+    "engine": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/📜️script.ts",
     "wire": ".🧬semio/🦑️repo/⚡️cache/build/nx-commands/wire.json"
   },
   "nxCommandBridge": {
@@ -2496,24 +2496,20 @@
     ],
     "expectedInstalls": 4,
     "moduleReceiving": {
-      "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/🟦️.ts",
-      "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
-      "operation": "prepareJavascriptDependencies",
-      "scriptHeader": "#!/usr/bin/env bun",
-      "operationExports": [
-        "runTool",
-        "runPreparedCargoDependencyPairV1",
-        "runNativeDependencyToolV1",
-        "runBun",
-        "javascriptDependencyArgumentsV1",
-        "prepareJavascriptDependencies"
-      ],
-      "commands": [
-        "SyncScript",
-        "RefreshLockScript",
-        "ContractCheckScript"
-      ]
-    }
+  "owner": "⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts",
+  "router": "⚡️caching/🚀️bootstrap/📦️dependencies/📜️script.ts",
+  "operation": "prepareJavascriptDependencies",
+  "scriptHeader": "#!/usr/bin/env bun",
+  "operationExports": [
+    "javascriptDependencyProducerArgumentsV1",
+    "prepareJavascriptDependencies"
+  ],
+  "commands": [
+    "SyncScript",
+    "RefreshLockScript",
+    "ContractCheckScript"
+  ]
+}
   },
   "watch": {
     "selected": "app",
@@ -3202,7 +3198,7 @@
     "launches": [
       {
         "name": "📥️deps javascript",
-        "command": "bun repo dependencies sync --scope .",
+        "command": "bun repo dependencies sync --all",
         "policy": {
           "version": 1,
           "owner": "repo:dependencies:javascript:sync",
@@ -3710,10 +3706,10 @@
     ],
     "mutation": "\n",
     "privateTasks": [
-      "🔌️nx-plugin/📤️arguments/🟨️.mjs",
-      "🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
-      "🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
-      "🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+      "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️source.json",
       "🏗️build/📥️caller/📤️orchestration/🟨️.mjs",
       "🏗️build/📥️caller/📤️orchestration/🧬️schema/🔣️.json",
       "🏗️build/🧬️schema/📥️caller.json"

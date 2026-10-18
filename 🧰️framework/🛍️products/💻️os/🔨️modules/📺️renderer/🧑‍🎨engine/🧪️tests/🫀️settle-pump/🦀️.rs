@@ -144,8 +144,8 @@ fn the_boot_arms_the_settle_lane_instead_of_converging_and_the_frame_loop_drives
     let settle_boot = SHELL_SOURCE().split("async fn settle_boot").nth(1).expect("the shell declares settle_boot");
     let settle_boot = &settle_boot[..["\n    async fn ", "\n    pub(crate) async fn "].iter().filter_map(|marker| settle_boot.find(marker)).min().unwrap_or(settle_boot.len())];
     assert!(!settle_boot.contains("self.flush_deferred_actions("), "settle_boot no longer converges the chain before the first paint");
-    assert!(RENDERER_SOURCE().contains("cursor.settle = self.shell.settle_pump_pending();"), "the frame-finish boundary re-reads the settle predicate every frame");
-    assert!(RENDERER_SOURCE().contains("interaction.shell.settle_pump_step().await"), "the frame's deferred owner is the ONE caller of the settle step");
+    assert!(RENDERER_SOURCE().contains("cursor.settle = semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut self.shell).settle_pump_pending();"), "the frame-finish boundary re-reads the settle predicate every frame");
+    assert!(RENDERER_SOURCE().contains("PointerCtx::of(&mut interaction.shell).settle_pump_step().await"), "the frame's deferred owner is the ONE caller of the settle step");
 }
 
 /// 🎥️ Scene paint precedes typed snapshot sealing in a frame transaction, so the snapshot

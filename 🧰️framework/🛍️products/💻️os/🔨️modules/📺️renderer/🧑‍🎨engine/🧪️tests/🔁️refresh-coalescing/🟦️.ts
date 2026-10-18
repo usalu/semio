@@ -4,7 +4,7 @@ import canvasClearance from "../../🧱️elements/🗣️Interpreter/🧪️tes
 import { createElement } from "react";
 import { uiI18n } from "@semio-tech/ui-react";
 import { type UiDirtyScope } from "@semio-tech/framework";
-import { panelViewContext } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { panelViewContext } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import { describe, expect, it, vi } from "vitest";
 import { type UtilityNode } from "@semio-tech/framework";

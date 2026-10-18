@@ -3,13 +3,13 @@
 //! Selection is a row index that never goes stale: every handler re-derives the selected row from the rows
 //! that are visible, so a table that shrank or collapsed under the selection selects its first visible row instead of panicking.
 
-use crate::tui::cell::{attr, Cell, CellBuffer};
-use crate::tui::event::{Key, KeyEvent, MouseEvent};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::rows::{navigate_to, paint_scroll_bar, row_style, Pointer, Rows};
-use crate::tui::text::{elide, truncate_to, Elision};
-use crate::tui::theme::{Glyph, Role, Surface, Theme};
-use crate::tui::widget::WidgetSignal;
+use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseEvent};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::rows::{navigate_to, paint_scroll_bar, row_style, Pointer, Rows};
+use semio_framework_ui_tui_core::text::{elide, truncate_to, Elision};
+use semio_framework_ui_tui_core::theme::{Glyph, Role, Surface, Theme};
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 
 //#region 🗂️State
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -231,7 +231,7 @@ pub(crate) fn paint_table(t: &TableState, theme: &Theme, rect: Rect, buf: &mut C
     if visible.is_empty() {
         if !t.empty.is_empty() {
             let text = elide(&t.empty, content.width, Elision::End, theme.glyphs.ellipsis());
-            let width = crate::tui::text::display_width(&text);
+            let width = semio_framework_ui_tui_core::text::display_width(&text);
             buf.put_str(Pos { x: content.x + content.width.saturating_sub(width) / 2, y: body.y }, &text, theme.role(Role::MutedForeground), bg, 0, Rect::new(content.x, body.y, content.width, 1));
         }
         return;

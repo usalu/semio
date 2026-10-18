@@ -1,0 +1,3 @@
+# Nested Leases Publication Plan60142: Independent Saved Proof
+
+Closed saved log/terminal/exact command pass sequential nofollow descriptor/name seven-fact SHA checks; receipt `🗑️generated/products-plan60142-independent-hold.json`. Actual terminal0/null in1,489.758208ms. Exact916-byte command SHA25ae7e8a15fb3de70b5531ef0f7ef4594cd41f31a4d7f18f76e7f192265eab57 equals the logged plan receipt and selects publish of gf-Fk58e1/.cache/b/l, namespace0, same complete Products parent/producer identity. Saved37742 is identity DATA only under fresh actual owner reauthentication; dispatch0 is not publication success, empty retirement or parent completion. Running Tools owner remains separate. No Native/protected reads were performed.

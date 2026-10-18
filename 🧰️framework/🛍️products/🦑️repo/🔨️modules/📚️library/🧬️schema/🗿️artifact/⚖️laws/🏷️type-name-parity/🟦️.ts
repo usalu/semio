@@ -1,4 +1,5 @@
-import { canonicalPrimaryFilenameForKind, loadTaxonomy, type BreachRecord } from "../../../../🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type BreachRecord } from "../../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceDirectory, type PolicySourceOperations } from "../../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_SCHEMA_FACET_RELS, policyLoadSchemaFacetLeaves } from "../../📚️facet-leaves/🟦️.ts";
 import { policyDeclaredSchemaExportName } from "../../🏷️export-identity/🟦️.ts";

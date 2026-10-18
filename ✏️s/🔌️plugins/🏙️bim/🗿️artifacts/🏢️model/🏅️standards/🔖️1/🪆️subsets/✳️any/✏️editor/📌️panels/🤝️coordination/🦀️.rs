@@ -24,7 +24,7 @@ const CLASHES_ROOT: &str = "bim-clashes";
 const RULES_ROOT: &str = "bim-rules";
 const ISSUES_ROOT: &str = "bim-issues";
 /// ✂️ The longest text a row shows, in characters (a fixed UI text holds 512 bytes).
-const CLIP: usize = 200;
+pub const CLIP: usize = 200;
 /// 📂️ A list with at most this many rows opens on first paint; a longer one waits for the host to open it and then streams its slice.
 const OPEN_LIMIT: usize = 12;
 /// 🏁️ The statuses in the order of the issue sections.
@@ -53,7 +53,7 @@ pub fn issues_definition() -> PanelTabDefinition {
 //#endregion 🔖️Definitions
 
 //#region 🔖️Rows
-fn clip(text: &str) -> String {
+pub fn clip(text: &str) -> String {
     if text.chars().count() <= CLIP {
         return text.to_string();
     }

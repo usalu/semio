@@ -13,7 +13,7 @@ type TestSource = { readonly directory: string; readonly url: string };
  * `puzzle#1` and every later verdict with it. The guest's own `jobs::cancel-job` spends ZERO teardown
  * units (`engagement_abort_tears_the_fill_plan_down_across_turns_and_never_inside_one`, puzzle3d): the
  * shard died of an unanswered request, not of guest work.
- * @see 🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts */
+ * @see 🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts */
 export async function registerCancelJobReplyTests(
   vitest: NonNullable<ImportMeta["vitest"]>,
   dependencies: import("../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts").ShardClientTestDependenciesV1,
@@ -24,7 +24,8 @@ export async function registerCancelJobReplyTests(
 
   const workerContext = async (cancelJob: (job: bigint) => Promise<void>) => {
     const vm = await import("node:vm");
-    const { shardWorkerSource } = await import("../../🌐️browser-bundle/🏗️materialization/🟦️.ts");
+    const { shardWorkerSource } = await import("../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts");
+    const { classicShardWorkerSource } = await import("../✂️worker-vm-source/🟦️.ts");
     const posted: Record<string, unknown>[] = [];
     let dispatch: ((event: { data: Record<string, unknown> }) => Promise<void>) | null = null;
     const context = vm.createContext({
@@ -36,7 +37,7 @@ export async function registerCancelJobReplyTests(
       self: { postMessage: (message: Record<string, unknown>) => posted.push(message), addEventListener: (kind: string, callback: typeof dispatch) => { if (kind === "message") dispatch = callback; } },
       api: { cancelJob },
     });
-    new vm.Script(shardWorkerSource()).runInContext(context);
+    new vm.Script(classicShardWorkerSource(shardWorkerSource())).runInContext(context);
     new vm.Script('actors.set("a", { api, activationGeneration: 1n, pendingAssets: [] });').runInContext(context);
     const send = dispatch as unknown as ((event: { data: Record<string, unknown> }) => Promise<void>) | null;
     if (!send) throw new Error("Missing generated worker dispatcher");

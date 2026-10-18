@@ -67,7 +67,7 @@ use semio_framework_plugin::WorldSunConfig;
 #[cfg(test)]
 use semio_framework_pack_json::to_json_string;
 use semio_framework_pack_json::{from_dsl_value as json_from_dsl_value, to_dsl_value as json_to_dsl_value, to_string as json_to_string, parse as parse_json, Object as Map, Value};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 const MODULE_PLUGIN_ID: &str = "playbook-module-procedural";

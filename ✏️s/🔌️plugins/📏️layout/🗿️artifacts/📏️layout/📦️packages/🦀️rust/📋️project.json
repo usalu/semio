@@ -46,8 +46,8 @@
       "dependsOn": [],
       "inputs": [
         "{projectRoot}/📜️script.ts",
-        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🦀️.rs",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🕹️layout-play-app/🦀️.rs",
+        "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎥️media-export-job-and-factories/🦀️.rs",
         "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️testing/📥️source/**/*",
         "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🟦️.ts",
         "{projectRoot}/../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🧪️tests/🧫️fixtures/🔣️.json",

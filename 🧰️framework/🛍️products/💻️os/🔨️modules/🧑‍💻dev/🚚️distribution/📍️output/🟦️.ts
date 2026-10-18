@@ -12,7 +12,7 @@ function outputDirectory(playground: PlaygroundReactDistributionRow): string | u
   return path;
 }
 
-/** 🧭️ Nx output bound to the caller's actual staging project or an explicitly authored directory. */
+/** 🧭️ Build output bound to the caller's actual staging project or an explicitly authored directory. */
 export function playgroundReactNxOutput(stagingProjectRoot: string, playground: PlaygroundReactDistributionRow, mode: BuildMode): string {
   outputDirectory(playground);
   return `{workspaceRoot}/.cache/b/p/m/vite/${readBuildMode(mode)}/${createHash("sha256").update("os-dev:"+playground.variant+":react").digest("hex").slice(0,16)}/out`;

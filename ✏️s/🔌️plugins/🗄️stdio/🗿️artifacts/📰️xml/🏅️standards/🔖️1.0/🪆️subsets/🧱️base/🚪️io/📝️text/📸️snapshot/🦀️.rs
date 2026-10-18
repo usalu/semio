@@ -440,7 +440,7 @@ use crate::XmlSnapshot;
 
 use super::node_text_codec::{enc_str, dec_str, enc_prolog, dec_prolog, split_top_level, strip_brackets, encode_option, decode_option, enc_declaration, dec_declaration, enc_doctype, dec_doctype, enc_xml_node, dec_xml_node};
 
-pub(crate) fn encode_snapshot(snapshot: &XmlSnapshot) -> String {
+pub fn encode_snapshot(snapshot: &XmlSnapshot) -> String {
     format!(
         "[{},{},{},{},{},{}]",
         enc_str(&snapshot.schema),
@@ -452,7 +452,7 @@ pub(crate) fn encode_snapshot(snapshot: &XmlSnapshot) -> String {
     )
 }
 
-pub(crate) fn decode_snapshot(value: &str) -> Result<XmlSnapshot, String> {
+pub fn decode_snapshot(value: &str) -> Result<XmlSnapshot, String> {
     let parts = split_top_level(strip_brackets(value)?, ',');
     let [schema, root, doctype, declaration, prolog, epilog] = parts.as_slice() else {
         return Err(format!("xml snapshot: expected 6 fields, got {}", parts.len()));
@@ -484,32 +484,32 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_prolog(prolog: &[XmlNode]) -> String {
+pub fn enc_prolog(prolog: &[XmlNode]) -> String {
     format!("[{}]", prolog.iter().map(enc_xml_node).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_prolog(s: &str) -> Result<Vec<XmlNode>, String> {
+pub fn dec_prolog(s: &str) -> Result<Vec<XmlNode>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().map(dec_xml_node).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
+pub fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -532,12 +532,12 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
@@ -545,7 +545,7 @@ pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> S
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -567,7 +567,7 @@ pub(crate) fn dec_attr(s: &str) -> Result<XmlAttr, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_declaration(d: &XmlDeclaration) -> String {
+pub fn enc_declaration(d: &XmlDeclaration) -> String {
     format!("[{},{},{},{}]", enc_str(&d.version), encode_option(&d.encoding, |v| enc_str(v)), encode_option(&d.standalone, |v| if *v { "1".to_string() } else { "0".to_string() }), enc_quote(d.quote),)
 }
 
@@ -592,14 +592,14 @@ pub(crate) fn dec_quote(s: &str) -> Result<XmlQuote, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_declaration(s: &str) -> Result<XmlDeclaration, String> {
+pub fn dec_declaration(s: &str) -> Result<XmlDeclaration, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [version, encoding, standalone, quote] = parts.as_slice() else { return Err(format!("declaration: expected 4 fields, got {}", parts.len())) };
     Ok(XmlDeclaration { version: dec_str(version)?, encoding: decode_option(encoding, dec_str)?, standalone: decode_option(standalone, |v| Ok(v == "1"))?, quote: dec_quote(quote)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_doctype(doctype: &XmlDoctype) -> String {
+pub fn enc_doctype(doctype: &XmlDoctype) -> String {
     let external = encode_option(&doctype.external_id, |external| match external {
         XmlExternalId::System { system_id } => format!("S[{}]", enc_str(system_id)),
         XmlExternalId::Public { public_id, system_id } => {
@@ -618,7 +618,7 @@ pub(crate) fn enc_doctype(doctype: &XmlDoctype) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
+pub fn dec_doctype(s: &str) -> Result<XmlDoctype, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [prolog_position, name, external, declarations] = parts.as_slice() else {
         return Err(format!("doctype: expected 4 fields, got {}", parts.len()));
@@ -675,7 +675,7 @@ pub fn enc_xml_node(node: &XmlNode) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
+pub fn dec_xml_node(s: &str) -> Result<XmlNode, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {

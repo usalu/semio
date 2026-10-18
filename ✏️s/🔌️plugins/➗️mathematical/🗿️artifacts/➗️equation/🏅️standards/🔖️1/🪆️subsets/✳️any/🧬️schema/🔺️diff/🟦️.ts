@@ -1,5 +1,5 @@
 /** 🔺️ Sparse Equation document delta: graph scalars, id-keyed node and edge row deltas, positional point edits and label-addressed expression-node kind patches. */
-import {parseEquationExprSnapshot,parseEquationGeometry,parseEquationGraph,type EquationEdge,type EquationNode,type EquationNodeKind,type EquationPoint} from "../🟦️.ts";
+import {parseEquationExprSnapshot,parseEquationGeometry,parseEquationGraph,type EquationEdge,type EquationGraphNode,type EquationNodeKind,type EquationPoint} from "../🟦️.ts";
 
 export interface EquationOptionalSeed { value: string | null }
 export interface RowDelta<Row, Patch> { removed: { id: string; index: number }[]; inserted: { index: number; row: Row }[]; moved: { id: string; from: number; to: number }[]; modified: { id: string; patch: Patch }[] }
@@ -9,7 +9,7 @@ export type EquationPointEdit = { op: "insert"; at: number; point: EquationPoint
 export interface EquationPointsDelta { edits: EquationPointEdit[] }
 export interface EquationKindPatch { label: bigint; kind: EquationNodeKind }
 export interface EquationExprDiff { kinds: EquationKindPatch[]; nextLabel: bigint | null }
-export type EquationNodesDelta = RowDelta<EquationNode, EquationNodePatch>;
+export type EquationNodesDelta = RowDelta<EquationGraphNode, EquationNodePatch>;
 export type EquationEdgesDelta = RowDelta<EquationEdge, EquationEdgePatch>;
 
 export interface EquationDiff {

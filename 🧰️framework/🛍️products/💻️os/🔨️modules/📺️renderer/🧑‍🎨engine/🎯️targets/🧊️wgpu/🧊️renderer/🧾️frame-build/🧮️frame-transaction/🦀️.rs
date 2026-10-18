@@ -594,7 +594,7 @@ impl FrameTransaction {
                 }
                 let surface_id = surface_id.to_owned();
                 let AppInteractionState { shell, input, .. } = interaction;
-                let modal = shell.pointer_input_is_modal();
+                let modal = shell.input.pointer_input_is_modal();
                 let Some(state) = shell.world3d_states.get_mut(&surface_id) else {
                     runtime.record_frame_fault("world3d authority surface order lost ownership");
                     self.phase = AppFrameTransactionPhase::Terminal;
@@ -853,10 +853,10 @@ pub async fn boot_runtime(
 
     let (locale, terminology) = semio_framework_os_renderer_wgpu_shell_prefs::shell_language_axes()?;
     let mut shell = ShellState::new(entries, plugin_filter.clone(), locale, terminology);
-    shell.install_document_services(services);
-    shell.screen_w = css_width;
-    shell.screen_h = css_height;
-    shell.boot().await.map_err(|err| format!("shell boot failed: {err}"))?;
+    shell.opening.install_document_services(services, &mut shell.directory);
+    shell.chrome.screen_w = css_width;
+    shell.chrome.screen_h = css_height;
+    semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx::of(&mut shell).boot().await.map_err(|err| format!("shell boot failed: {err}"))?;
 
     let runtime = RuntimeMailbox::new(AppRuntime {
         atlas,

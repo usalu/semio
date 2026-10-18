@@ -1,0 +1,15 @@
+ge	🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/🦀️.rs
+mp	🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📏mass-properties/🦀️.rs
+bl	🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🎨️blend/🦀️.rs
+bo	🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🦀️.rs
+mm	🧰️framework/🔨️modules/🧊️3d/🥽️mesh/🛠️modeling/🦀️.rs
+ss	🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect/🏄️surface-surface/🦀️.rs
+te	🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/🦀️.rs
+to	🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🕸️topology/🦀️.rs
+eu	🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔺️euler/🦀️.rs
+md	🧰️framework/🔨️modules/🧊️3d/🥽️mesh/📄️document/🦀️.rs
+ap	🧰️framework/🔨️modules/🎭️actor/💼️job/📨️publication/🦀️.rs
+av	🧰️framework/🔨️modules/🎭️actor/📖️vocabulary/🦀️.rs
+ar	🧰️framework/🔨️modules/🎭️actor/🦀️.rs
+jw	🧰️framework/🔨️modules/🧵️job/👷️worker/🦀️.rs
+jr	🧰️framework/🔨️modules/🧵️job/🦀️.rs

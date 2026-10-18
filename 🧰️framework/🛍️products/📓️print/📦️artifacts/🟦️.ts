@@ -1,6 +1,6 @@
 import{repositoryCachePartitionRootDataV1}from"../../🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import {posix,win32,relative,sep} from "node:path";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 
 /** 📦️ Projects fixed bounded slots without granting cache or filesystem custody. */
@@ -18,5 +18,5 @@ export async function runPrintWorkersV1<T>(items:readonly T[],signal:AbortSignal
 /** 🏷️ Projects a portable scratch identity without conflating it with an artifact receipt owner. */
 export function printScratchOwnerV1(name:string):string{if(validateJsonSchemaSubset(schema.definitions.ScratchName,name,schema).length)throw Error("Closed portable Print scratch name required");return schema.definitions.Protocol.const.scratchNamespace+"/"+name;}
 
-/** 🗺️ Projects the exact selected-mode producer slot as Nx DATA without opening or adopting storage. */
+/** 🗺️ Projects the exact selected-mode producer slot as build-graph DATA without opening or adopting storage. */
 export function printArtifactNxOutputV1(workspace:string,request:unknown):string{const root=repositoryCachePartitionRootDataV1(workspace,"products"),layout=printArtifactLayoutV1(root,request),row=request as {kind:string;mode:string};if(layout.store!=="products"||!["fonts","document","measurement"].includes(row.kind))throw Error("Mode-owned Print product output required");const parts=relative(root,layout.directory).split(sep);if(parts[0]!==schema.definitions.Protocol.const.namespace||parts[1]!==row.mode)throw Error("Exact Print product mode slot required");parts[1]=schema.definitions.NxProjection.const.modeToken;return"{workspaceRoot}/"+[relative(workspace,root).split(sep).join("/"),...parts].join("/");}

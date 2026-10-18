@@ -3,7 +3,7 @@
 //! follows by inference.
 
 use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
-use super::SetWallEndJoin;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_end_join::SetWallEndJoin;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

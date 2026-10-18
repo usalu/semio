@@ -4,7 +4,9 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 
 import { dirname, join, resolve } from "node:path";
 import { deflateSync } from "node:zlib";
 import ts from "typescript";
-import { inventoryTaxonomy, planTaxonomy, type TaxonomyPlanOptions } from "../../🧹️normalization/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
+import { planTaxonomy } from "../../🧹️normalization/🧠️planning/🟦️.ts";
+import { type TaxonomyPlanOptions } from "../../🧹️normalization/📜️plan-contracts/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -14,7 +16,7 @@ const ticket = join(artifactRoot, "taxonomy-cli-cancellation");
 const workflowPath = resolve(import.meta.dir, "../../🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts");
 const commandPath = resolve(import.meta.dir, "../../🧼️workspace-cleanup/🎮️command/🟦️.ts");
 const schemaPath = `${library}/🔣️taxonomy.json`;
-const vector = JSON.parse(readFileSync(join(root, library, "🧫️fixtures/🛑️taxonomy-cli-cancellation/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(root, library, "🧪️tests/🧫️fixtures/🛑️taxonomy-cli-cancellation/🔣️.json"), "utf8"));
 
 /** 🧱️ Materializes one deterministic empty committed repository without invoking a mutating Git command. */
 function materializeCommittedFixture(directory: string): string {

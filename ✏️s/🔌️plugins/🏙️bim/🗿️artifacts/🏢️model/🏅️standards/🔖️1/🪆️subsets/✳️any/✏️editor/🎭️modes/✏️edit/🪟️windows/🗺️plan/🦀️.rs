@@ -201,6 +201,4 @@ pub fn pick(plan: &PlanLinework, at: (f64, f64), tolerance: f64) -> Option<Strin
 }
 //#endregion 🔖️Pick
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -88,7 +88,7 @@ test('SQLite shared Block2d snapshot uses the same exact common word and require
  const parse=Reflect.get(two,'parseBlock2dSnapshot') as ((v:unknown)=>unknown)|undefined;expect(typeof parse).toBe('function');const base=specimen(0x7ff0000000000001n),value={schema:'literal',nodeKind:base.partKind,presentation:base.part2d,handleKinds:[{id:'',name:'',label:'',color:'',defaultWireKind:''}],handles:[{id:'',handleKind:'unresolved',angle:{bits:0x7ff0000000000001n},radius:{bits:0n}}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera2d:base.camera2d,meta:base.meta};expect(parse!(value)).toEqual(value);expect(()=>parse!({...value,camera2d:{x:0,y:0,zoom:1}})).toThrow();
 });
 test('SQLite shared Block3d snapshot retains the literal composed child and exact owned vortex words',()=>{
- const parse=Reflect.get(three,'parseBlock3dSnapshot') as ((v:unknown)=>unknown)|undefined;expect(typeof parse).toBe('function');const base=specimen(0x8000000000000000n),value={schema:'literal',objectKind:base.partKind,representations:base.representations,catalog:{childId:'local',target:{artifactId:'different target',dialect:{artifactKind:'literal',standard:'',subset:''}}},vortexKindExtra:[{id:'',name:'',label:'',color:'',defaultCableKind:''}],vortices:[{id:'',vortexKind:'unresolved',position:base.camera3d.position,direction:base.camera3d.target,radius:{bits:0x8000000000000000n},label:null}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera3d:base.camera3d,meta:base.meta};expect(parse!(value)).toEqual(value);expect(()=>parse!({...value,vortices:[{...value.vortices[0],radius:1}]})).toThrow();
+ const parse=Reflect.get(three,'parseBlock3dSnapshot') as ((v:unknown)=>unknown)|undefined;expect(typeof parse).toBe('function');const base=specimen(0x8000000000000000n),value={schema:'literal',objectKind:base.partKind,representations:base.representations,catalog:{childId:'local',target:{artifactId:'different target',dialect:{artifactKind:'s.stdio.semio',standard:'v1',subset:'kit'}}},vortexKindExtra:[{id:'',name:'',label:'',color:'',defaultCableKind:''}],vortices:[{id:'',vortexKind:'unresolved',position:base.camera3d.position,direction:base.camera3d.target,radius:{bits:0x8000000000000000n},label:null}],compatibility:base.compatibility,attributes:base.attributes,authors:base.authors,camera3d:base.camera3d,meta:base.meta};expect(parse!(value)).toEqual(value);expect(()=>parse!({...value,vortices:[{...value.vortices[0],radius:1}]})).toThrow();
 });
 
 test('SQLite Block5d authored schema and exact row refusal precede untouched domain fields',async()=>{
@@ -99,7 +99,7 @@ test('SQLite Block5d authored schema and exact row refusal precede untouched dom
 import jsonSchema from "../../../../🧬️schema/🔣️.json";
 const jsonValidate=new Ajv({strict:false}).compile(jsonSchema);
 import {fileURLToPath} from "node:url";
-const committedFixtureRoot=fileURLToPath(new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url));
+const committedFixtureRoot=fileURLToPath(new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations/",import.meta.url));
 const committedSnapshots=[...new Bun.Glob('**/📸️snapshot/**/🔣️.json').scanSync({cwd:committedFixtureRoot})].sort();
 test('SQLite Block5d committed neutral snapshot corpus remains complete',()=>{expect(committedSnapshots.length).toBe(82)});
 for(const relative of committedSnapshots)test('SQLite Block5d committed semantic snapshot '+relative,async()=>{
@@ -159,7 +159,7 @@ test('SQLite shared Block canonical text refuses lossy UTF-16 states excluded by
 });
 
 test('SQLite shared Block3d canonical child identities preserve native UTF-8 domain without URI restrictions',()=>{
- const base=specimen(0n),value:three.Block3dSnapshot={schema:'literal',objectKind:base.partKind,representations:[],catalog:{childId:'local',target:{artifactId:'different target',dialect:{artifactKind:'literal',standard:'',subset:''}}},vortexKindExtra:[],vortices:[],compatibility:[],attributes:[],authors:[],camera3d:base.camera3d,meta:base.meta};expect(three.parseBlock3dSnapshot(value)).toEqual(value);
+ const base=specimen(0n),value:three.Block3dSnapshot={schema:'literal',objectKind:base.partKind,representations:[],catalog:{childId:'local',target:{artifactId:'different target',dialect:{artifactKind:'s.stdio.semio',standard:'v1',subset:'kit'}}},vortexKindExtra:[],vortices:[],compatibility:[],attributes:[],authors:[],camera3d:base.camera3d,meta:base.meta};expect(three.parseBlock3dSnapshot(value)).toEqual(value);
  for(const units of laws.invalidUtf16CodeUnits){value.catalog.childId=String.fromCharCode(...units);expect(()=>three.parseBlock3dSnapshot(value)).toThrow()}
 });
 

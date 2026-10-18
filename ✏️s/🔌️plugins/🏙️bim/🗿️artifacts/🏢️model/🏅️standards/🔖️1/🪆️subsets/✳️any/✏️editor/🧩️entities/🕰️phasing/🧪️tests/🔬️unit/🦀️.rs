@@ -1,4 +1,4 @@
-use super::{phase_choices, storey_choices, write_phase, write_storey};
+use crate::editor::bim::entities::phasing::{phase_choices, storey_choices, write_phase, write_storey};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase};

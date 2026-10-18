@@ -14,7 +14,7 @@ import { readPlayActivation } from "./♻️activation/🟦️.ts";
 import { PLAY_E2E_OWNER, playE2eInvocationPid, playE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 
-/** 🎡️ Verifies every runtime component the outer Nx preparation graph staged into the one plugin-modules root. */
+/** 🎡️ Verifies every runtime component the outer preparation graph staged into the one plugin-modules root. */
 class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("prepare accepts no arguments");
@@ -28,7 +28,7 @@ class PreparationScript extends BundleScript {
   }
 }
 
-/** 📡️ Validates the host-lane activation after its Nx prerequisites have completed. */
+/** 📡️ Validates the host-lane activation after its prerequisites have completed. */
 class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play activation accepts no arguments");
@@ -37,7 +37,7 @@ class ActivationScript extends BundleScript {
   }
 }
 
-/** 🖥️ Serves completed runtime artifacts for the lifetime owned by Nx. */
+/** 🖥️ Serves completed runtime artifacts for the lifetime owned by the build tool. */
 class ServeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Play serving accepts no arguments");

@@ -1,0 +1,68 @@
+package semio:framework@1.0.0;
+
+/// 📤️ Canonical fixed return controls and one neutral raw page; semantic content stays native-owned.
+interface return-page {
+  use byte-page.{page};
+
+  record origin {
+    activation-generation: u64,
+    request-sequence: u64,
+  }
+  record identity {
+    origin: origin,
+    return-sequence: u64,
+  }
+  record page-receipt {
+    identity: identity,
+    page-sequence: u64,
+    length: u32,
+    final: bool,
+  }
+  variant control {
+    poll(identity),
+    input-ack(page-receipt),
+    cancel(identity),
+    retired-ack(identity),
+  }
+  variant drive {
+    execute(origin),
+    control(control),
+  }
+  enum pending-reason { working, blocked, awaiting-input, closing }
+  enum completion { complete, cancelled, faulted }
+  enum control-outcome { accepted, duplicate, blocked, refused }
+  enum fault {
+    none, capacity, sequence-exhausted, stale-origin, stale-identity,
+    wrong-page, input-not-retired, not-retired, clock-unavailable,
+    clock-backward, deadline, owner-fault, malformed-control, mixed-control,
+  }
+  record refused {
+    origin: origin,
+    fault: fault,
+  }
+  record pending {
+    identity: identity,
+    reason: pending-reason,
+  }
+  record page-result {
+    receipt: page-receipt,
+    page: page,
+  }
+  record retired {
+    identity: identity,
+    completion: completion,
+  }
+  record control-result {
+    control: control,
+    outcome: control-outcome,
+    fault: fault,
+  }
+  variant return-result {
+    refused(refused),
+    pending(pending),
+    page(page-result),
+    retired(retired),
+    control(control-result),
+    protocol-fault(fault),
+  }
+}

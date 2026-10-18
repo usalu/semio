@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetDoorType`: a sparse door type patch of exactly the provided fields. A provided material
 //! must exist and every provided value must keep the dimensions valid; providing nothing new is a no-op.
 
-use super::SetDoorType;
+use crate::standards::v1::subsets::any::schema::mutations::set_door_type::SetDoorType;
 use crate::standards::v1::subsets::any::schema::{snapshot::{is_positive_length, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -1,0 +1,286 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-job-coverage/🟦️.ts",
+ "function": "toolJobCoverageSelfTests",
+ "helpers": {
+  "dir": "🧮️source-evaluation",
+  "doc": "/** 🧮️ The tool job source evaluator and the exact bounded first step proof builder shared by the proof catalog phases. */",
+  "items": [
+   {
+    "line": 30,
+    "as": "evaluateToolJobSources",
+    "emoji": "⚗",
+    "doc": "Evaluates the tool job rows that remain unmigrated for a map of owner sources."
+   },
+   {
+    "line": 253,
+    "as": "exactBoundedFirstStepProof",
+    "emoji": "🪙",
+    "doc": "Builds the exact bounded first step proof source of one tool for an owner file and controller."
+   }
+  ]
+ },
+ "keep": [
+  57,
+  676,
+  1860,
+  1861
+ ],
+ "files": [
+  {
+   "dir": "🧾️proof-catalog-and-admission",
+   "doc": "/** 🧾️ The interactive job evaluation fixtures, the proof catalog evaluation checks and the admission order and bounded preparation checks. */",
+   "phases": [
+    {
+     "name": "interactiveJobEvaluationFixtures",
+     "emoji": "🔎",
+     "doc": "Runs the fixture sources that must leave at least one unmigrated tool job row and returns them for the final count.",
+     "from": 49,
+     "to": 56
+    },
+    {
+     "name": "proofCatalogEvaluationChecks",
+     "emoji": "📚",
+     "doc": "Checks scan then monolith rows, duplicate owners, valid, typed and shared catalogs, executable owners, qualified schemas and forged proof rows.",
+     "from": 257,
+     "to": 343
+    },
+    {
+     "name": "admissionOrderAndBoundedPreparationChecks",
+     "emoji": "🚦",
+     "doc": "Checks reserved route bypass, decode before lookup, contract mismatch, cancellation ownership, qualified proof order, alias fallback, reserved terminals and bounded full operation preparation.",
+     "from": 344,
+     "to": 402
+    }
+   ]
+  },
+  {
+   "dir": "🧯️payload-store-progress-and-mounted-session",
+   "doc": "/** 🧯️ The process global payload store inventory, the actor progress overlay and the mounted fem2d session checks. */",
+   "phases": [
+    {
+     "name": "globalPayloadStoreInventoryChecks",
+     "emoji": "🗃",
+     "doc": "Checks the process global payload owner inventory and the exact shared fixed authority exemption.",
+     "from": 58,
+     "to": 75
+    },
+    {
+     "name": "actorProgressOverlayChecks",
+     "emoji": "📶",
+     "doc": "Checks the actor, shard and wgpu job progress overlay sources and every single-edit mutation of them.",
+     "from": 86,
+     "to": 162
+    },
+    {
+     "name": "fem2dMountedSessionChecks",
+     "emoji": "🔩",
+     "doc": "Checks the mounted fem2d session sources and every single-edit mutation of them.",
+     "from": 163,
+     "to": 251
+    }
+   ]
+  },
+  {
+   "dir": "📤️publication-contracts",
+   "doc": "/** 📤️ The retained, ephemeral, fresh turn, host only, config and presence publication contract checks. */",
+   "phases": [
+    {
+     "name": "retainedPublicationChecks",
+     "emoji": "📰",
+     "doc": "Checks the retained store and plugin publication bounds.",
+     "from": 403,
+     "to": 461
+    },
+    {
+     "name": "ephemeralPublicationChecks",
+     "emoji": "💨",
+     "doc": "Checks the retained ephemeral one item publication and publisher bounds.",
+     "from": 463,
+     "to": 510
+    },
+    {
+     "name": "freshTurnAndHostOnlyPublicationChecks",
+     "emoji": "🔔",
+     "doc": "Checks publication freshness before every turn and the host only, config and presence publication contracts.",
+     "from": 512,
+     "to": 568
+    }
+   ]
+  },
+  {
+   "dir": "🛑️cancellation-close-and-output-ownership",
+   "doc": "/** 🛑️ The cancellation, runtime close, snapshot, reactor and segmented output ownership checks. */",
+   "phases": [
+    {
+     "name": "typedRouteCancellationAndCloseChecks",
+     "emoji": "🧷",
+     "doc": "Checks typed route guards, cancellation handle shapes, close witnesses, runtime close budgets and live cleanup ownership.",
+     "from": 570,
+     "to": 611
+    },
+    {
+     "name": "snapshotAndReactorCloseChecks",
+     "emoji": "🧹",
+     "doc": "Checks snapshot retirement witnesses, owned disposers and reactor close, admission and starvation.",
+     "from": 612,
+     "to": 639
+    },
+    {
+     "name": "segmentedOutputAndChildRootChecks",
+     "emoji": "📦",
+     "doc": "Checks segmented output chunks, media output credit, operation roots and the fixed child registry.",
+     "from": 640,
+     "to": 675
+    }
+   ]
+  },
+  {
+   "dir": "🗄️artifact-store-and-envelope-codec",
+   "doc": "/** 🗄️ The artifact store structural owner, history ledger, edit message ledger and owned envelope codec checks. */",
+   "phases": [
+    {
+     "name": "artifactStoreStructuralAndEnvelopeCodecChecks",
+     "emoji": "🏛",
+     "doc": "Checks the structural store owners, the VCS history reservation, the edit message ledger and the owned envelope codec callers.",
+     "from": 677,
+     "to": 715
+    }
+   ]
+  },
+  {
+   "dir": "✍️caller-retained-document-envelopes",
+   "doc": "/** ✍️ The writer, jack, trinity rewrite and gis map caller retained document envelope checks. */",
+   "phases": [
+    {
+     "name": "writerEnvelopeCallerRetainedChecks",
+     "emoji": "📝",
+     "doc": "Checks the writer envelope caller retained route and returns the writer sources the other documents derive from.",
+     "from": 716,
+     "to": 769
+    },
+    {
+     "name": "jackEnvelopeCallerRetainedChecks",
+     "emoji": "🔌",
+     "doc": "Checks the jack envelope caller retained route.",
+     "from": 770,
+     "to": 808
+    },
+    {
+     "name": "trinityRewriteEnvelopeCallerRetainedChecks",
+     "emoji": "🔁",
+     "doc": "Checks the trinity rewrite envelope caller retained route.",
+     "from": 809,
+     "to": 877
+    },
+    {
+     "name": "gisMapEnvelopeCallerRetainedChecks",
+     "emoji": "🗺",
+     "doc": "Checks the gis map envelope caller retained route.",
+     "from": 878,
+     "to": 932
+    }
+   ]
+  },
+  {
+   "dir": "🖼️raster-envelope",
+   "doc": "/** 🖼️ The raster envelope caller retained sources and their route, mutation, loop restoration and rejected output identity checks. */",
+   "phases": [
+    {
+     "name": "rasterEnvelopeSourceFixtures",
+     "emoji": "🧬",
+     "doc": "Builds the raster codec and editor sources.",
+     "from": 933,
+     "to": 1103
+    },
+    {
+     "name": "rasterEnvelopeRouteAndMutationChecks",
+     "emoji": "🎞",
+     "doc": "Checks the raster envelope route, signature suspension and single-edit mutations.",
+     "from": 1122,
+     "to": 1208
+    },
+    {
+     "name": "rasterEnvelopeLoopRestorationChecks",
+     "emoji": "♻",
+     "doc": "Checks that restoring a whole loop in the raster serializers is refused.",
+     "from": 1209,
+     "to": 1253
+    },
+    {
+     "name": "rasterRejectedOutputIdentityChecks",
+     "emoji": "🪪",
+     "doc": "Checks the rejected output identity, binding and retirement order of the raster parameter and asset maps.",
+     "from": 1254,
+     "to": 1304
+    }
+   ]
+  },
+  {
+   "dir": "🎨️drawing-envelope",
+   "doc": "/** 🎨️ The drawing envelope caller retained sources and their route, semantic digest and mutation checks. */",
+   "phases": [
+    {
+     "name": "drawingEnvelopeSourceFixtures",
+     "emoji": "🏗",
+     "doc": "Builds the drawing codec and editor sources.",
+     "from": 1305,
+     "to": 1513
+    },
+    {
+     "name": "drawingEnvelopeRouteAndSemanticChecks",
+     "emoji": "🔍",
+     "doc": "Checks the drawing envelope route, the production editor and the semantic digest field omissions.",
+     "from": 1536,
+     "to": 1595
+    },
+    {
+     "name": "drawingEnvelopeMutationChecks",
+     "emoji": "🧪",
+     "doc": "Checks the drawing single-edit mutations of the codec, the editor and the plugin sources.",
+     "from": 1600,
+     "to": 1684
+    }
+   ]
+  },
+  {
+   "dir": "🤝️peer-presence-and-command-ingress",
+   "doc": "/** 🤝️ The peer presence roster, the paged command ingress and the kernel request queue checks. */",
+   "phases": [
+    {
+     "name": "peerPresenceRosterChecks",
+     "emoji": "👥",
+     "doc": "Checks that the peer presence roster stays fixed, typed, validated and committed with its generation.",
+     "from": 1685,
+     "to": 1698
+    },
+    {
+     "name": "commandIngressAndKernelRequestChecks",
+     "emoji": "📥",
+     "doc": "Checks the paged command ingress, the command batch owners and the kernel request and close queues.",
+     "from": 1699,
+     "to": 1744
+    }
+   ]
+  },
+  {
+   "dir": "🔭️universal-and-layout-retained-ownership",
+   "doc": "/** 🔭️ The universal retained session ownership and the layout export and cold relay retained ownership checks. */",
+   "phases": [
+    {
+     "name": "universalRetainedOwnershipChecks",
+     "emoji": "🌐",
+     "doc": "Checks the job, native I/O, wgpu and animate retained session ownership and every single-edit mutation of them.",
+     "from": 1745,
+     "to": 1818
+    },
+    {
+     "name": "layoutAndColdRelayRetainedChecks",
+     "emoji": "📡",
+     "doc": "Checks the layout export, layout wasm and guest cold relay retained ownership.",
+     "from": 1819,
+     "to": 1859
+    }
+   ]
+  }
+ ]
+}

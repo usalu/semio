@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { schemaScopeIdFromDocumentId } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { schemaScopeIdFromDocumentId } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
 import Ajv from "ajv";
 import { build, transform } from "esbuild";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";

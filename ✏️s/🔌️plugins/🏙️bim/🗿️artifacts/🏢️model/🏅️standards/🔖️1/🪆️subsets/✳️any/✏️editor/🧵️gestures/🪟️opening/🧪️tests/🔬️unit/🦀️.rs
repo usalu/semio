@@ -1,4 +1,17 @@
-use super::*;
+use crate::editor::bim::marks::Style;
+use crate::standards::v1::subsets::any::schema::{snapshot::OpeningKind, mutations::ModelMutation};
+use crate::editor::bim::gestures::session::{Step, REJECTED, TYPE_MISSING};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::session::{Pointer, Tool, ToolContext, ToolEvent};
+#[allow(unused_imports)]
+use crate::editor::bim::marks::{Mark, Preview};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, ModelSnapshot, Opening};
+use crate::editor::bim::gestures::opening::*;
 use crate::editor::bim::marks::Shape;
 use crate::editor::bim::fixture::{room, Rig};
 

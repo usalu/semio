@@ -459,7 +459,7 @@ pub fn docx_top_level_text_targets(snapshot: &DocxSnapshot, block_index: usize) 
 }
 
 /// 🌱️ Prepares a first run inside an empty paragraph without replacing its existing markup.
-pub(crate) fn empty_paragraph_text_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, ValueError> {
+pub fn empty_paragraph_text_mutation(snapshot: &DocxSnapshot, address: &DocxXmlAddress, text: &str) -> Result<Option<DocxMutation>, ValueError> {
     let resolved = resolve_docx_xml_address(snapshot, address)?;
     if !is_word_name(&resolved.node, "p", &resolved.bindings) || contains_word_run(&resolved.node, &resolved.parent_bindings) {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,"DOCX text target must be an existing run or an empty WordprocessingML paragraph"));

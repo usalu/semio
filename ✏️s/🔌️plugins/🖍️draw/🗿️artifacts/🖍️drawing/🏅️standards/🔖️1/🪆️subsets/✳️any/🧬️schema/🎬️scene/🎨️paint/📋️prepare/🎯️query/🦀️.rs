@@ -5,6 +5,7 @@ use crate::preparation::DocumentSceneNode;
 #[path="🪢️lasso/🦀️.rs"]
 mod lasso;
 use lasso::{SegmentEnclosureCursor,LassoInteriorCursor};
+use crate::identity::SceneIdentity;
 #[derive(Clone,Copy,Debug,PartialEq)]
 pub struct PreparedSceneIdentity{pub source:SceneIdentity,pub build:u64,pub flatness:f64}
 impl PreparedSceneIdentity{

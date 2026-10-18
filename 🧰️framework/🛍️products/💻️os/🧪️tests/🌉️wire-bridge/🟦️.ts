@@ -5,7 +5,7 @@ import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
 type ArtifactPresencePeer = import("@semio-tech/framework-replication").ArtifactPresencePeer;
-type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
+type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 

@@ -1,6 +1,34 @@
 //! 🧪️ The sheet export job: bounded analysis steps then one sheet per step, the SVG of one sheet and the PDF of the set equal the writers' one-shot files, headings in the language asked for, refusals for an unknown format or sheet, cancelling.
 
-use super::*;
+use crate::editor::bim::commands::export_model::{stem, Output};
+use crate::editor::bim::modes::edit::windows::sheet::title_labels;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::io::export::sheets;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_framework_plugin::kernel::MEDIA_EXPORT_BASE64_ENCODING;
+#[allow(unused_imports)]
+use crate::editor::bim::commands::export_model::{INFER_PREVIEW, NODES_PER_STEP};
+#[allow(unused_imports)]
+use crate::editor::bim::kit::fault;
+#[allow(unused_imports)]
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use crate::editor::bim::{BimCommand, BimModelApp};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::sheets::{pdf::SheetsPdf, TitleLabels};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::Analysis;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+#[allow(unused_imports)]
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Effect, EditorApp, Emit, Fault, NoConfig, NoConfigMutation};
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::commands::export_sheets::*;
 use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
 

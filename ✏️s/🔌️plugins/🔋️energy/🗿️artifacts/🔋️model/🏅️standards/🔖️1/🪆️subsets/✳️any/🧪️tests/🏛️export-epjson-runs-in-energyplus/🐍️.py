@@ -21,7 +21,7 @@ compiled OpenStudio wheel (`📓️w2-oracle-toolchain.md` §2) and because read
 tables directly is one fewer library between the claim and the answer.
 
 ⚠️ NO SKIP CHANNEL. "A missing registration, a panic and an error are all results, never a silent
-skip." A host that has not run `nx run @semio-tech/energy-oracle-py:oracle-setup` fails here with a
+skip." A host that has not run `bun repo run @semio-tech/energy-oracle-py:oracle-setup` fails here with a
 message naming the absent binary and that target, rather than reporting a green that means nothing.
 
 @see ../../../../../../../../../../.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️06/ENERGY-PLUGIN-END-TO-END/📓️w6-epjson-io.md
@@ -77,7 +77,7 @@ def _openstudio_root(ctx: Context) -> Path:
     if not candidates:
         raise AssertionError(
             "no provisioned OpenStudio/EnergyPlus toolchain under %s. This case runs EnergyPlus itself; "
-            "run `nx run @semio-tech/energy-oracle-py:oracle-setup` (the dashboard command of the same id) "
+            "run `bun repo run @semio-tech/energy-oracle-py:oracle-setup` (the dashboard command of the same id) "
             "to download, sha256-verify and extract it. There is no skip channel in this host, so an "
             "unprovisioned machine reports this error rather than a meaningless green." % cache
         )

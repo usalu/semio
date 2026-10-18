@@ -28,21 +28,21 @@ pub(super) struct DenseStereoPreparation {
     reference_frame: usize,
     reference_camera: (remodeling_camera::CameraPose, remodeling_camera::Intrinsics),
     source_frames: Vec<(usize, remodeling_camera::CameraPose)>,
-    reference_gray: remodeling_image::ImageGray,
-    source_grays: Vec<(remodeling_image::ImageGray, remodeling_camera::CameraPose, remodeling_camera::Intrinsics)>,
+    pub reference_gray: remodeling_image::ImageGray,
+    pub source_grays: Vec<(remodeling_image::ImageGray, remodeling_camera::CameraPose, remodeling_camera::Intrinsics)>,
     pub(super) source: usize,
     pub(super) pixel: usize,
     /// 🌫️ The run's PatchMatch configuration with this view's own depth range (see
     /// [`sparse_depth_range`]).
     pub(super) dense: remodeling_dense::PatchMatchConfig,
-    patch_match: Option<remodeling_dense::PatchMatchPreparation>,
+    pub patch_match: Option<remodeling_dense::PatchMatchPreparation>,
 }
 
 #[derive(semio_framework_value::RetireOwned)]
 struct TextureViewPreparation {
     pub(super) pose: remodeling_camera::CameraPose,
     pub(super) intrinsics: remodeling_camera::Intrinsics,
-    pub(super) image: remodeling_image::ImageRgba8,
+    pub image: remodeling_image::ImageRgba8,
     pub(super) cursor: usize,
 }
 
@@ -50,11 +50,11 @@ struct TextureViewPreparation {
 pub(super) struct MeshingPreparation {
     sparse_cursor: usize,
     dense_cursor: usize,
-    pub(super) bounds_min: [f64; 3],
-    pub(super) bounds_max: [f64; 3],
+    pub bounds_min: [f64; 3],
+    pub bounds_max: [f64; 3],
     view_cursor: usize,
-    active_view: Option<TextureViewPreparation>,
-    views: Vec<semio_s_artifact_remodel_remodeling_mesh_atlas::editor::remodeling::engine::mesh::atlas::TextureView>,
+    pub active_view: Option<TextureViewPreparation>,
+    pub views: Vec<semio_s_artifact_remodel_remodeling_mesh_atlas::editor::remodeling::engine::mesh::atlas::TextureView>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]

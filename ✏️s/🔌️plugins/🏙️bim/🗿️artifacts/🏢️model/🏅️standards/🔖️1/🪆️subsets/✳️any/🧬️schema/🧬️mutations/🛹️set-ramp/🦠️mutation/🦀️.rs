@@ -1,6 +1,6 @@
 //! 📈️ `set-ramp` payload. Sets any of a ramp's authored path, width, landing lengths, slope limit, thickness, material, base offset, top constraint, side railings and name; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::RampPatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, TopConstraint, Vertex}};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::RampPatch}, snapshot::{ModelSnapshot, TopConstraint, Vertex}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -78,13 +78,16 @@ impl SetRamp {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetRamp {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetRamp
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetRamp>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "ramp", kind: "set-ramp", record: "SetRamp" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_ramp::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_ramp::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit ramp \"{}\"", self.id), &format!("Rampe \"{}\" ändern", self.id))

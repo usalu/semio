@@ -24,8 +24,8 @@ pub enum PngMutation {
     ReplaceSamples(ReplaceSamples),
 }
 
-#[cfg(test)]
-pub(crate) fn demo_mutation_cases() -> Vec<PngMutation> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn demo_mutation_cases() -> Vec<PngMutation> {
     vec![
         super::change_gamma::test_case(),
         super::patch_pixels::test_case(),

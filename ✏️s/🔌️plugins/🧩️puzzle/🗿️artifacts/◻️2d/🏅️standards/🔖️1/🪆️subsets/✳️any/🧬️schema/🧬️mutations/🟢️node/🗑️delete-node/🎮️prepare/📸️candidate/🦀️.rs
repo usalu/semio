@@ -39,7 +39,7 @@ pub struct Puzzle2dDeleteNodeCandidateState {
     remaining: usize,
     matched: bool,
     disposition: Puzzle2dDeleteNodeDisposition,
-    phase: u8,
+    pub phase: u8,
     closing: bool,
 }
 

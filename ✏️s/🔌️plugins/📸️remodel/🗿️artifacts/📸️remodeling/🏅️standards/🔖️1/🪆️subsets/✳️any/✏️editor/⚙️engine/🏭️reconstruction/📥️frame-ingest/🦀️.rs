@@ -139,7 +139,7 @@ pub struct FrameSource {
     pub(super) ingest: IngestParams,
     stream_id: u32,
     offered: u32,
-    pub(super) frames: Vec<AcceptedFrame>,
+    pub frames: Vec<AcceptedFrame>,
     rolling_scores: Vec<f32>,
 }
 

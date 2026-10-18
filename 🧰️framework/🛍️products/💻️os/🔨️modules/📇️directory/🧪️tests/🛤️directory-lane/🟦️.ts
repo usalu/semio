@@ -7,7 +7,7 @@ type DirectoryCommand = import("@semio-tech/framework/directory/schema").Directo
 type DirectoryCommandOutcomeV1 = import("@semio-tech/framework/directory/schema").DirectoryCommandOutcomeV1;
 type DirectoryCommandRequestV1 = import("@semio-tech/framework/directory/schema").DirectoryCommandRequestV1;
 type DirectoryCommandResultV1 = import("@semio-tech/framework/directory/schema").DirectoryCommandResultV1;
-type DirectoryCommandTransportOperationV1 = import("../../../🏪️store/👷️worker/🟦️.ts").DirectoryCommandTransportOperationV1;
+type DirectoryCommandTransportOperationV1 = import("../../../🏪️store/👷️worker/📇️space-artifact-creation/🟦️.ts").DirectoryCommandTransportOperationV1;
 type FetchTimeoutResponse = import("@semio-tech/framework/io/fetch-timeout").FetchTimeoutResponse;
 type Vitest = NonNullable<ImportMeta["vitest"]>;
 

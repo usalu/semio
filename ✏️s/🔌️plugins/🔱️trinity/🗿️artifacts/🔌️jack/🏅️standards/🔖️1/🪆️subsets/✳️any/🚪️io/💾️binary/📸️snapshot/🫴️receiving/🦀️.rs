@@ -9,7 +9,7 @@ use semio_framework_dsl_record::receiving::owned::{DslOwnedReceivingField,OwnedF
 use crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord;
 use semio_framework_value::{ValueType,ValueError,ValueRefusalKind,NativeDecodeControl,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
 use semio_framework_value::retirement::{RetireOwned,controlled::ControlledRetirement};
-use semio_framework_job::OriginalNativeDecodeIssued;
+use semio_framework_job_native_decode::OriginalNativeDecodeIssued;
 use std::mem::{ManuallyDrop,size_of};
 /// 📏️ Declared structural bounds belong to the actual caller, independently of its supplied turn grant.
 #[derive(Clone,Copy)]

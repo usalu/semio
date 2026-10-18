@@ -1,6 +1,9 @@
 //! 🎮️ Interaction state: the state a frame checks out to every worker (shell, input, pointer capture, text streams) with its keyboard and pointer entry points, and the normalized-event dispatch that drives it; the frame-actions crate of the renderer partition, below the runtime mailbox (plan section 5.3, inversion I2).
 use super::*;
 use semio_framework_os_renderer_wgpu_host_plumbing::input_wire::{event_modifiers_to_pointer, key_action_from_dispatch, pointer_button_to_i16};
+use semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx;
+use semio_framework_os_renderer_wgpu_shell_session::SessionCtx;
+use semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx;
 use ui_render::{DispatchEvent, ImeEvent, PointerInfo, TextEditTarget};
 
 //#region 📮️RuntimeMailbox
@@ -116,8 +119,8 @@ impl AppInteractionState {
     /// DOM. `dpr` never reaches layout — it only sizes the GPU surface, the projection divisor and
     /// the glyph atlas raster. See ticket 26/09/17/WGPU-RENDERER-REACT-PARITY packet W1g.
     pub fn resize(&mut self, css_width: f32, css_height: f32, _dpr: f32) {
-        self.shell.screen_w = css_width.max(1.0);
-        self.shell.screen_h = css_height.max(1.0);
+        self.shell.chrome.screen_w = css_width.max(1.0);
+        self.shell.chrome.screen_h = css_height.max(1.0);
     }
 
     /// ⌨️ Offers one key to every board pane the pointer is inside, newest-first, and answers `true`
@@ -127,7 +130,7 @@ impl AppInteractionState {
         if !matches!(action, KeyAction::Escape | KeyAction::Tab) {
             return false;
         }
-        let surfaces: Vec<(String, String)> = self.shell.board2d_states.keys().filter_map(|surface_id| self.shell.board2d_states.get(surface_id).map(|surface| (surface_id.to_string(), surface.controller_id.clone()))).collect();
+        let surfaces: Vec<(String, String)> = self.shell.surfaces.board2d_states.keys().filter_map(|surface_id| self.shell.surfaces.board2d_states.get(surface_id).map(|surface| (surface_id.to_string(), surface.controller_id.clone()))).collect();
         for (surface_id, controller_id) in surfaces {
             match semio_framework_os_renderer_wgpu_engine_board::board2d::board2d_key_into(&surface_id, &controller_id, action, modifiers, &mut self.input) {
                 Ok(true) => return true,
@@ -182,8 +185,8 @@ impl AppInteractionState {
             return;
         }
         if let KeyAction::Space(pressed) = &action {
-            if *pressed && (self.shell.context_menu.is_some() || self.shell.retained_select_owns_keyboard()) {
-                if let Err(err) = self.shell.handle_keyboard_async(KeyAction::Space(true), &modifiers, &mut self.input).await {
+            if *pressed && (self.shell.input.context_menu.is_some() || SessionCtx::of(&mut self.shell).retained_select_owns_keyboard()) {
+                if let Err(err) = PointerCtx::of(&mut self.shell).handle_keyboard_async(KeyAction::Space(true), &modifiers, &mut self.input).await {
                     log_debug(&format!("keyboard failed: {err}"));
                 }
                 return;
@@ -200,13 +203,13 @@ impl AppInteractionState {
         if semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::apply_focused_text_editor_key(&action, &modifiers, &mut self.input) {
             return;
         }
-        if action == KeyAction::Escape && self.shell.world3d_states.values_mut().fold(false, |cancelled, state| infinite_world::world::world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene) || cancelled) {
+        if action == KeyAction::Escape && self.shell.surfaces.world3d_states.values_mut().fold(false, |cancelled, state| infinite_world::world::world3d_cancel_relocate_drag(&mut state.session, &mut state.camera, &mut state.gumball, &mut state.scene) || cancelled) {
             return;
         }
         if self.board2d_key(&action, &modifiers) {
             return;
         }
-        if let Err(err) = self.shell.handle_keyboard_async(action, &modifiers, &mut self.input).await {
+        if let Err(err) = PointerCtx::of(&mut self.shell).handle_keyboard_async(action, &modifiers, &mut self.input).await {
             log_debug(&format!("keyboard failed: {err}"));
         }
     }
@@ -222,13 +225,13 @@ impl AppInteractionState {
                 let outcome = match target.kind {
                     ui_wgpu::wgpu::SurfaceKind::TiledMap => self
                         .shell
-                        .tiled_map_states
+                        .surfaces.tiled_map_states
                         .get(&target.host_id)
                         .filter(|surface| surface.window_id == target.window_id)
                         .map(|surface| semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
                     ui_wgpu::wgpu::SurfaceKind::Board2d => self
                         .shell
-                        .board2d_states
+                        .surfaces.board2d_states
                         .get(&target.host_id)
                         .filter(|surface| surface.window_id == target.window_id)
                         .map(|surface| semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_up_into(&target.host_id, &surface.controller_id, pointer.id, &mut self.input)),
@@ -241,15 +244,15 @@ impl AppInteractionState {
         }
         self.pointer_capture.release(pointer.id);
         self.pointer_down = self.pointer_capture.any_active();
-        self.shell.handle_pointer_cancel_for(pointer.id, &mut self.input);
+        PointerCtx::of(&mut self.shell).handle_pointer_cancel_for(pointer.id, &mut self.input);
     }
 
     /// 🎡️ Applies one owned normalized wheel event before the next dispatch can change its target.
     pub fn handle_pointer_wheel(&mut self, x: f32, y: f32, delta_x: f32, delta_y: f32, modifiers: PointerModifiers) {
         self.modifiers = modifiers.clone();
         self.input.modifiers = modifiers.clone();
-        let target = self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme);
-        let fault = self.shell.world3d_states.take_fault().or_else(|| self.shell.node_graph_states.take_fault()).or_else(|| self.shell.tiled_map_states.take_fault()).or_else(|| self.shell.board2d_states.take_fault());
+        let target = self.shell.input.scene_pointer_target_at(x, y, &self.input, &self.theme);
+        let fault = self.shell.surfaces.world3d_states.take_fault().or_else(|| self.shell.surfaces.node_graph_states.take_fault()).or_else(|| self.shell.surfaces.tiled_map_states.take_fault()).or_else(|| self.shell.surfaces.board2d_states.take_fault());
         if let Some(fault) = fault {
             self.frame_fault = Some(fault.to_owned());
             return;
@@ -259,14 +262,14 @@ impl AppInteractionState {
                 self.frame_fault = Some(fault.to_owned());
             }
         } else {
-            self.shell.handle_pointer_wheel(x, y, delta_x, delta_y, &mut self.input);
+            self.shell.input.handle_pointer_wheel(x, y, delta_x, delta_y, &mut self.input);
         }
     }
 
     /// 🎡️ Applies one notch to the captured published scene, never to overlapping peers.
     pub fn apply_scene_wheel(&mut self, target: &semio_framework_os_renderer_wgpu_contracts::ScenePointerTarget, x: f32, y: f32, delta: f32, modifiers: &PointerModifiers) -> Result<(), &'static str> {
         use ui_wgpu::wgpu::SurfaceKind;
-        if !self.shell.scene_pointer_target_is_published(target) {
+        if !self.shell.input.scene_pointer_target_is_published(target) {
             return Ok(());
         }
         let surface_id = &target.surface_id;
@@ -275,13 +278,13 @@ impl AppInteractionState {
             return Err("scene wheel identifier exceeded fixed credits");
         }
         let outcome = match target.kind {
-            SurfaceKind::World3d => self.shell.world3d_states.get_mut(host_id).map(|state| {
+            SurfaceKind::World3d => self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| {
                 if state.session.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
                     return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
                 }
                 enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::wheel(x, y, delta, modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits)
             }),
-            SurfaceKind::NodeGraph => self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+            SurfaceKind::NodeGraph => self.shell.surfaces.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
                     return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
                 }
@@ -291,13 +294,13 @@ impl AppInteractionState {
                 }
                 outcome
             }),
-            SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+            SurfaceKind::TiledMap => self.shell.surfaces.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
                     return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
                 }
                 semio_framework_os_renderer_wgpu_engine_board::tiled_map::tiled_map_wheel_into(host_id, &surface.controller_id, surface.bounds, x, y, delta, modifiers.ctrl, &mut self.input).map(|_| ())
             }),
-            SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+            SurfaceKind::Board2d => self.shell.surfaces.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 if surface.controller_id.len() > WORLD3D_DEADLINE_ID_BYTES {
                     return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
                 }
@@ -326,7 +329,7 @@ impl AppInteractionState {
         if down && button == 0 {
             semio_framework_os_renderer_wgpu_ui_engine_focus::ink_and_vfs_focus::blur_focused_ink_editor_at(x, y, &mut self.input);
         }
-        let target = if down { self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme) } else { None };
+        let target = if down { self.shell.input.scene_pointer_target_at(x, y, &self.input, &self.theme) } else { None };
         semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_table_editable_text_for_pointer(target.as_ref(), down, button, &mut self.input);
         semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_text_editor_for_pointer(target.as_ref(), down, button);
         semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::blur_focused_node_graph_caret_for_pointer(target.as_ref(), down, button);
@@ -343,15 +346,15 @@ impl AppInteractionState {
         };
         self.pointer_down = self.pointer_capture.any_active();
         if down {
-            self.shell.activate_window_under_pointer(x, y, &self.theme);
+            self.shell.input.activate_window_under_pointer(x, y, &self.theme, &mut self.shell.windows, &mut self.shell.dock);
         }
         if owner == PointerHitOwner::Chrome {
-            if let Err(err) = self.shell.handle_pointer_button_for(pointer.id, x, y, down, button, &mut self.input, &self.theme).await {
+            if let Err(err) = ChromeViewCtx::of(&mut self.shell).handle_pointer_button_for(pointer.id, x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
             return;
         }
-        let Some(target) = (if down { target } else { semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(pointer.id) }).filter(|target| self.shell.scene_pointer_target_is_published(target)) else { return };
+        let Some(target) = (if down { target } else { semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::release_scene_pointer(pointer.id) }).filter(|target| self.shell.input.scene_pointer_target_is_published(target)) else { return };
         if down && !semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::claim_scene_pointer_owner(target.clone(), pointer.id) {
             self.pointer_capture.release(pointer.id);
             self.pointer_down = self.pointer_capture.any_active();
@@ -359,17 +362,17 @@ impl AppInteractionState {
             return;
         }
         if down && target.kind == SurfaceKind::World3d && button == 2 && !modifiers.shift && !modifiers.alt && !modifiers.meta {
-            if let Err(err) = self.shell.handle_pointer_button_for(pointer.id, x, y, down, button, &mut self.input, &self.theme).await {
+            if let Err(err) = ChromeViewCtx::of(&mut self.shell).handle_pointer_button_for(pointer.id, x, y, down, button, &mut self.input, &self.theme).await {
                 log_debug(&format!("pointer failed: {err}"));
             }
         }
         let host_id = &target.host_id;
         let outcome = match target.kind {
             SurfaceKind::World3d => {
-                self.shell.world3d_states.get_mut(host_id).map(|state| enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits))
+                self.shell.surfaces.world3d_states.get_mut(host_id).map(|state| enqueue_world3d_event(&mut state.selection, &mut state.authority, WorldInteractionIntent::pointer_button(x, y, down, button, &modifiers)).map(|_| ()).map_err(|_| ui_wgpu::wgpu::BoundedActionFault::ItemCredits))
             }
             SurfaceKind::NodeGraph => {
-                let outcome = self.shell.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+                let outcome = self.shell.surfaces.node_graph_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                     if down {
                         semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_down_into(host_id, &surface.controller_id, surface.bounds, x, y, button, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, self.space_pressed, &mut self.input).map(|_| ())
                     } else {
@@ -379,7 +382,7 @@ impl AppInteractionState {
                 semio_framework_os_renderer_wgpu_ui_engine_focus::text_and_table_focus::refresh_node_graph_caret_after_pointer(&target);
                 outcome
             }
-            SurfaceKind::TiledMap => self.shell.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+            SurfaceKind::TiledMap => self.shell.surfaces.tiled_map_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 let touch_handled = pointer.kind == ui_render::PointerKind::Touch
                     && if down {
                         semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_touch_pointer_down(host_id, surface.bounds, pointer.id, x, y)
@@ -397,7 +400,7 @@ impl AppInteractionState {
                     semio_framework_os_renderer_wgpu_scene_feeds::tiled_map_pointer_up_into(host_id, &surface.surface_id, &surface.controller_id, surface.bounds, x, y, &mut self.input).map(|_| ())
                 }
             }),
-            SurfaceKind::Board2d => self.shell.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
+            SurfaceKind::Board2d => self.shell.surfaces.board2d_states.get(host_id).filter(|surface| surface.window_id == target.window_id).map(|surface| {
                 let touch_handled = pointer.kind == ui_render::PointerKind::Touch
                     && if down {
                         match semio_framework_os_renderer_wgpu_scene_text_vfs::board2d_touch_pointer_down_into(host_id, surface.bounds, pointer.id, x, y, &mut self.input) {
@@ -437,18 +440,18 @@ impl AppInteractionState {
         self.input.pointer_x = x;
         self.input.pointer_y = y;
         self.input.pointer_down = down;
-        self.shell.presence_pointer = Some((x, y));
+        self.shell.directory.presence_pointer = Some((x, y));
         let target = match self.pointer_capture.holder(pointer.id) {
             Some(PointerHitOwner::Surface) => semio_framework_os_renderer_wgpu_ui_engine::retained_ui_engine::captured_scene_pointer(pointer.id),
             Some(PointerHitOwner::Chrome) => None,
-            None => self.shell.scene_pointer_target_at(x, y, &self.input, &self.theme),
+            None => self.shell.input.scene_pointer_target_at(x, y, &self.input, &self.theme),
         }
-        .filter(|target| self.shell.scene_pointer_target_is_published(target));
+        .filter(|target| self.shell.input.scene_pointer_target_is_published(target));
         if target.is_none() && self.pointer_capture.holder(pointer.id) != Some(PointerHitOwner::Surface) {
-            self.shell.handle_pointer_move_for(pointer.id, x, y, down, &mut self.input, &self.theme);
+            PointerCtx::of(&mut self.shell).handle_pointer_move_for(pointer.id, x, y, down, &mut self.input, &self.theme);
         }
         let world_id = target.as_ref().filter(|target| target.kind == SurfaceKind::World3d).map(|target| target.host_id.as_str());
-        for (host_id, state) in self.shell.world3d_states.iter_mut() {
+        for (host_id, state) in self.shell.surfaces.world3d_states.iter_mut() {
             let intent = if Some(host_id.as_str()) == world_id {
                 WorldInteractionIntent::pointer_move(x, y, drag_dx, drag_dy, down, button, &modifiers)
             } else if world3d_hover_is_published(&state.selection) {
@@ -461,7 +464,7 @@ impl AppInteractionState {
                 return;
             }
         }
-        for (host_id, surface) in &self.shell.board2d_states {
+        for (host_id, surface) in &self.shell.surfaces.board2d_states {
             if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::Board2d && target.host_id == *host_id) {
                 continue;
             }
@@ -470,7 +473,7 @@ impl AppInteractionState {
                 return;
             }
         }
-        for (host_id, surface) in &self.shell.tiled_map_states {
+        for (host_id, surface) in &self.shell.surfaces.tiled_map_states {
             if target.as_ref().is_some_and(|target| target.kind == SurfaceKind::TiledMap && target.host_id == *host_id && target.window_id == surface.window_id) {
                 continue;
             }
@@ -484,13 +487,13 @@ impl AppInteractionState {
         let outcome = match target.kind {
             SurfaceKind::NodeGraph => self
                 .shell
-                .node_graph_states
+                .surfaces.node_graph_states
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
                 .map(|surface| semio_framework_os_renderer_wgpu_engine_graph::node_graph::node_graph_pointer_move_into(host_id, &surface.controller_id, surface.bounds, x, y, modifiers.shift, modifiers.ctrl_or_meta(), modifiers.alt, &mut self.input).map(|_| ())),
             SurfaceKind::TiledMap => self
                 .shell
-                .tiled_map_states
+                .surfaces.tiled_map_states
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
                 .map(|surface| {
@@ -502,7 +505,7 @@ impl AppInteractionState {
                 }),
             SurfaceKind::Board2d => self
                 .shell
-                .board2d_states
+                .surfaces.board2d_states
                 .get(host_id)
                 .filter(|surface| surface.window_id == target.window_id)
                 .map(|surface| {
@@ -651,7 +654,7 @@ pub async fn dispatch_normalized_event(app: &mut AppInteractionState, event: &mu
         }
         DispatchEvent::Ime(_) => {}
         DispatchEvent::Accessibility { target, event } => {
-            if let Err(error) = app.shell.handle_accessibility_event(target, event, &mut app.input).await {
+            if let Err(error) = PointerCtx::of(&mut app.shell).handle_accessibility_event(target, event, &mut app.input).await {
                 app.frame_fault = Some(error);
             }
         }

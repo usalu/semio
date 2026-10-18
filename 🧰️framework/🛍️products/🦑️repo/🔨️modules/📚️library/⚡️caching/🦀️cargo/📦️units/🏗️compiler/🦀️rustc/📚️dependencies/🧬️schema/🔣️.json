@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Current": {
+      "const": {"boundReceipt": true, "semanticIdentity": true, "storedReceipt": true, "artifactBytes": true, "retainedReaders": true, "acceptedChildDrain": true}
+    },
+    "Policy": {
+      "const": {
+        "maximumDependencies": 4096,
+        "maximumDirectoryCodeUnits": 256
+      }
+    },
+    "Artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "plan",
+        "directory",
+        "receipt",
+        "withReader"
+      ],
+      "properties": {
+        "plan": true,
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "receipt": true,
+        "withReader": true
+      }
+    }
+  }
+}

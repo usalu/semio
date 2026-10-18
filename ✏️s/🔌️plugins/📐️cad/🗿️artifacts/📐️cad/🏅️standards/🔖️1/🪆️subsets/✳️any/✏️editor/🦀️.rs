@@ -26,7 +26,7 @@ use semio_s_artifact_cad_cad_commands::{transform::apply_transformation, transfo
 use semio_s_artifact_cad_cad_commands::utility::set_dislocate_option;
 use semio_s_artifact_cad_cad_config::{cad_sun_config_to_world, CadConfig, CadConfigMutation, CadDislocateOptions, SetEdit, SetContributionsEdit};
 use semio_s_artifact_cad_cad_interaction::{self, apply_event, can_commit, keyed_transitions, resolve_interaction_key, start_session, CadEngagementScratch};
-use semio_s_artifact_cad_cad_modes;
+use semio_s_artifact_cad_cad_modes as edit;
 use semio_s_artifact_cad_cad_transform::{cad_import_object_emit, CadPaneModels, CadToolEntry, CadToolLeaf, CadTransformRecord};
 use semio_s_artifact_cad_cad_modes::window_transient;
 use semio_s_artifact_cad_cad_transient::CadWorldWindowTransient;
@@ -106,7 +106,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[cfg(test)]
 use semio_framework_pack_json::Value;
 use std::collections::HashMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Commands
 

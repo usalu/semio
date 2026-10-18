@@ -132,7 +132,7 @@ use std::collections::HashMap;
 #[allow(unused_imports)]
 use std::sync::Arc;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::{FlowChildGroupWork};
 use crate::editor::flow::*;
 

@@ -1,4 +1,32 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, RoofShape};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, stack};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder, SolidEntry, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::Roof;
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::{self, Vertex};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::ZPlane;
+#[allow(unused_imports)]
+use semio_framework_geometry::roof::{gable_pitches, roof_surface_controlled, Roof as Pitched, RoofError, RoofSurface, GABLE_END_TOLERANCE, VERTICAL};
+#[allow(unused_imports)]
+use semio_framework_geometry::skeleton::SkeletonError;
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::{cross, Xyz};
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::f64::consts::FRAC_PI_2;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelNode};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{layer_thicknesses, testing::{assert_matches_oracle, case, close, group_extent, raised}};
@@ -7,8 +35,9 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::standal
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_text;
 
-const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json");
+static CASE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🏔️roofs-shapes/🔣️.json"));
 
 fn geometry(snapshot: &ModelSnapshot, id: &str) -> RoofGeometry {
     let roof = &snapshot.roofs[id];
@@ -25,13 +54,13 @@ fn rise_of(geometry: &RoofGeometry, thickness: f64) -> f64 {
 
 #[semio_framework_async_macros::async_test]
 async fn roofs_reproduce_the_third_party_oracle_table() {
-    let case = case(CASE);
+    let case = case((*CASE));
     assert_matches_oracle(&case, &compute_element_solids(&case.snapshot), SolidFamily::Roof);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn fallbacks_rises_and_ridge_lengths_agree_with_the_oracle() {
-    let case = case(CASE);
+    let case = case((*CASE));
     for (id, row) in case.expected.as_object().expect("table").iter().filter(|(_, row)| !row.is_null()) {
         let roof = geometry(&case.snapshot, id);
         assert_eq!(roof.fallback.map(RoofFallback::code), row["fallback"].as_str(), "{id}.fallback");
@@ -47,7 +76,7 @@ async fn fallbacks_rises_and_ridge_lengths_agree_with_the_oracle() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_upward_surface_of_a_pitched_roof_is_its_plan_area_over_the_cosine_of_the_pitch() {
-    let case = case(CASE);
+    let case = case((*CASE));
     let quantities = ModelInference::infer(&case.snapshot).expect("infers").quantities;
     let mut measured = 0;
     for (id, row) in case.expected.as_object().expect("table").iter().filter(|(_, row)| row.get("slope_area").is_some()) {
@@ -59,7 +88,7 @@ async fn the_upward_surface_of_a_pitched_roof_is_its_plan_area_over_the_cosine_o
 
 #[semio_framework_async_macros::async_test]
 async fn roofs_have_the_analytic_volume_of_the_eave_area_times_the_layers() {
-    let solids = compute_element_solids(&case(CASE).snapshot);
+    let solids = compute_element_solids(&case((*CASE)).snapshot);
     assert!(close(9.0 * 7.0 * 0.2, solids["r-flat"].volume, 1e-7), "flat: 8 x 6 grown by 0.5 on every side");
     assert!(close(9.0 * 7.0 * 0.1, solids["r-gable"].volume, 1e-7), "the vertical build-up is independent of the pitch");
     assert!(close(8.0 * 6.0 * 0.1, solids["r-hip"].volume, 1e-7));
@@ -72,7 +101,7 @@ async fn roofs_have_the_analytic_volume_of_the_eave_area_times_the_layers() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_ridge_and_the_hips_of_each_shape_are_where_the_planes_meet() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let hip = geometry(&snapshot, "r-hip");
     assert_eq!(lines_of_kind(&hip, RoofLineKind::Hip).len(), 4);
     assert!(close(2.0, lines_of_kind(&hip, RoofLineKind::Ridge)[0], 1e-9), "an 8 x 6 hip roof has a ridge of 8 - 6");
@@ -87,7 +116,7 @@ async fn the_ridge_and_the_hips_of_each_shape_are_where_the_planes_meet() {
 
 #[semio_framework_async_macros::async_test]
 async fn concave_footprints_have_valleys_and_convex_ones_do_not() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     for id in ["r-l-hip", "r-t-hip", "r-u-hip", "r-l-hip-overhang", "r-l-mansard", "r-l-gable"] {
         let roof = geometry(&snapshot, id);
         assert_eq!(roof.fallback.map(RoofFallback::code).filter(|code| !code.contains("adjust")), None, "{id}: a concave footprint is no reason to fall back");
@@ -101,7 +130,7 @@ async fn concave_footprints_have_valleys_and_convex_ones_do_not() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_rise_of_a_hip_roof_over_an_l_is_the_tangent_of_the_pitch_times_the_half_width_of_its_widest_arm() {
-    let mut snapshot = case(CASE).snapshot;
+    let mut snapshot = case((*CASE)).snapshot;
     for pitch in [0.2, 0.5, 0.9, 1.2] {
         snapshot.roofs.get_mut("r-l-hip").expect("roof").shape = RoofShape::Hip { pitch };
         let found = geometry(&snapshot, "r-l-hip");
@@ -111,7 +140,7 @@ async fn the_rise_of_a_hip_roof_over_an_l_is_the_tangent_of_the_pitch_times_the_
 
 #[semio_framework_async_macros::async_test]
 async fn a_gable_next_to_a_reflex_corner_is_built_as_a_hip_and_says_so() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let gable = geometry(&snapshot, "r-l-gable");
     assert_eq!(gable.fallback, Some(RoofFallback::GableEndsAdjustToHip));
     let mut hip = snapshot.clone();
@@ -128,7 +157,7 @@ async fn a_gable_next_to_a_reflex_corner_is_built_as_a_hip_and_says_so() {
 
 #[semio_framework_async_macros::async_test]
 async fn what_a_shape_cannot_do_falls_back_to_a_flat_roof_with_a_reason() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     assert_eq!(geometry(&snapshot, "r-curved-gable").fallback, Some(RoofFallback::CurvedFootprint));
     assert_eq!(geometry(&snapshot, "r-bad-pitch").fallback, Some(RoofFallback::InvalidPitch));
     assert_eq!(geometry(&snapshot, "r-mansard-no-break").fallback, Some(RoofFallback::InvalidPitch));
@@ -148,7 +177,7 @@ async fn what_a_shape_cannot_do_falls_back_to_a_flat_roof_with_a_reason() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_fallback_is_reported_as_a_diagnostic_of_its_roof() {
-    let inferred = ModelInference::infer(&case(CASE).snapshot).expect("infers");
+    let inferred = ModelInference::infer(&case((*CASE)).snapshot).expect("infers");
     let reported = |slug: &str| -> Vec<&str> { inferred.diagnostics.iter().filter(|row| row.code.slug() == slug).flat_map(|row| row.elements.iter().map(String::as_str)).collect() };
     assert_eq!(reported("roof.fallback-flat.curved-footprint"), vec!["r-curved-gable"]);
     assert_eq!(reported("roof.fallback-flat.invalid-pitch"), vec!["r-bad-pitch", "r-mansard-no-break"]);
@@ -161,7 +190,7 @@ async fn every_fallback_is_reported_as_a_diagnostic_of_its_roof() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_cancelled_skeleton_leaves_a_flat_roof_that_says_why() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let roof = &snapshot.roofs["r-l-hip"];
     let thicknesses = layer_thicknesses(&snapshot.roof_types[&roof.roof_type].layers);
     let level = compute_storey_levels(&snapshot)[&roof.storey];
@@ -178,7 +207,7 @@ async fn a_cancelled_skeleton_leaves_a_flat_roof_that_says_why() {
 
 #[semio_framework_async_macros::async_test]
 async fn layers_stack_upward_from_the_underside_first_layer_outermost() {
-    let solids = compute_element_solids(&case(CASE).snapshot);
+    let solids = compute_element_solids(&case((*CASE)).snapshot);
     let flat = &solids["r-gable"];
     assert_eq!(flat.groups.iter().map(|g| (g.part.as_str(), g.material.as_str(), g.layer)).collect::<Vec<_>>(), vec![(parts::LAYER, "m-clay", 0), (parts::LAYER, "m-wood", 1)]);
     let (_, _, tiles) = group_extent(flat, 0);
@@ -192,7 +221,7 @@ async fn layers_stack_upward_from_the_underside_first_layer_outermost() {
 
 #[semio_framework_async_macros::async_test]
 async fn changing_a_storey_height_lifts_every_roof_standing_on_its_top() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let (before, after) = (compute_element_solids(&snapshot), compute_element_solids(&raised(&snapshot, "st-first", 0.4)));
     for id in ["r-flat", "r-shed", "r-gable", "r-hip", "r-mansard", "r-l-hip", "r-t-hip", "r-u-hip", "r-l-mansard"] {
         assert!(close(after[id].bounds.min.z - before[id].bounds.min.z, 0.4, 1e-9) && close(after[id].bounds.max.z - before[id].bounds.max.z, 0.4, 1e-9), "{id}");
@@ -204,7 +233,7 @@ async fn changing_a_storey_height_lifts_every_roof_standing_on_its_top() {
 
 #[semio_framework_async_macros::async_test]
 async fn roofs_are_deterministic_and_unknown_types_are_absent() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(inferred, ModelInference::infer(&snapshot).expect("infers"));
     assert!(!inferred.element_solids.contains_key("r-unknown-type"));

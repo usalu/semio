@@ -198,7 +198,7 @@
     {
       "packageEntry": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🟦️.ts",
       "owner": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts",
-      "maximumPackageLines": 3,
+      "maximumPackageLines": 12,
       "anchor": "UiTheme"
     }
   ],

@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "required nullable scalar stays nullable",
+      "definition": { "type": "object", "required": ["id", "label"], "properties": { "id": { "type": "string" }, "label": { "anyOf": [{ "type": "null" }, { "type": "string" }] } } },
+      "graphql": "type Row {\n  id: String!\n  label: String\n}\n",
+      "protobuf": "message Row {\n  string id = 1;\n  optional string label = 2;\n}\n"
+    },
+    {
+      "name": "optional nullable reference and type list",
+      "definition": { "type": "object", "required": ["count"], "properties": { "count": { "type": ["integer", "null"] }, "owner": { "oneOf": [{ "$ref": "#/$defs/Owner" }, { "type": "null" }] } } },
+      "graphql": "type Row {\n  count: Int\n  owner: Owner\n}\n",
+      "protobuf": "message Row {\n  optional int64 count = 1;\n  optional Owner owner = 2;\n}\n"
+    },
+    {
+      "name": "a free-form object is a custom GraphQL scalar and a protobuf message carrying its JSON text",
+      "definition": { "type": "object", "additionalProperties": true },
+      "graphql": "scalar Row\n",
+      "protobuf": "message Row {\n  bytes value = 1;\n}\n"
+    },
+    {
+      "name": "nullable array items drop the item non-null marker and a protobuf array of nullable items carries its JSON text",
+      "definition": { "type": "object", "required": ["tags"], "properties": { "tags": { "type": "array", "items": { "type": ["string", "null"] } } } },
+      "graphql": "type Row {\n  tags: [String]!\n}\n",
+      "protobuf": "message Row {\n  bytes tags = 1;\n}\n"
+    }
+  ]
+}

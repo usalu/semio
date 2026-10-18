@@ -1,0 +1,5 @@
+# Whole Tools Logical Publication52615: Independent Failure Proof
+
+Closed saved log/terminal and stage trace passed sequential nofollow descriptor/name seven-fact SHA checks with32MiB log bound; receipt `🗑️generated/tools52615-independent-failure-hold.json`. Actual terminal1/null in1,289,266.575ms. Stage trace records accepted, observed and terminal-failure, success=false/ownedCustodyClosed=false; no witnessed/detach acceptance is established.
+
+The exact failure is Logical publication metadata entry bound exhausted. Its current predicate combines path length>256, depth>64 and entries>=262144. Saved evidence has no cached discriminator, so none of these branches, payload size, physical/logical fit, inactivity, capacity overflow or eligibility for deletion is inferred. Failure occurred in advisory metadata preflight before full witness/detach. A later bounded diagnostic may project already-captured values without new IO, but needs separate Source qualification before any repeat. No Native/protected reads or process actions were performed by this audit.

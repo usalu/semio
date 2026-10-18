@@ -1,6 +1,6 @@
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { loadCatalogTaxonomy } from "../../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 export interface MutationDirectoryView {
   children(root: string, relativePath: string): readonly { readonly name: string; readonly isDirectory: boolean }[];

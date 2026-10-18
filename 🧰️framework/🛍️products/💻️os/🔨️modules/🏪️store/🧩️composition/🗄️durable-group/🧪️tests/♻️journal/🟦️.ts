@@ -1,6 +1,7 @@
 import { test, expect } from "bun:test";
 import { Database } from "bun:sqlite";
 import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const fixture = JSON.parse(readFileSync(new URL("./🔣️.json", import.meta.url), "utf8"));
 test("durable journal original string capacities require independent physical release", () => {
@@ -18,8 +19,8 @@ test("durable journal original string capacities require independent physical re
     for (const release of oracle) expect(release - 1).toBeLessThan(release);
   }
   db.close();
-  const production = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
-  const fixtureSource = readFileSync(new URL("../🔬️unit/🦀️.rs", import.meta.url), "utf8");
+  const production = readModuleTreeSource(new URL("../../📜️wire/📥️lifted/🗄️durable-group/🦀️.rs", import.meta.url));
+  const fixtureSource = readModuleTreeSource(new URL("../🔬️unit/🦀️.rs", import.meta.url));
   expect(production).toContain("fn retirement_demands(&self, body: usize)");
   expect(fixtureSource).toContain("durable_journal_close_preserves_original_capacities_and_exact_receipts");
 });

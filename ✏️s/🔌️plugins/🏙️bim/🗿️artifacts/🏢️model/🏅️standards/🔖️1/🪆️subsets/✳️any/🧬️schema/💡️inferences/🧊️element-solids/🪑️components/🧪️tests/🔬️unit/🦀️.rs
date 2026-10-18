@@ -1,13 +1,25 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidFamily;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::components::{ComponentEntry, ComponentIssueCode};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, ElementSolid, SolidBuilder};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilySolidMesh;
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::TriMesh;
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::Affine3;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::components::*;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const ROOM: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json");
+static ROOM: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json"));
 
 fn inferred() -> ModelInference {
-    let snapshot: ModelSnapshot = from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes");
+    let snapshot: ModelSnapshot = from_json_str((*ROOM), JsonMemberPolicy::Reject).expect("the room decodes");
     ModelInference::infer(&snapshot).expect("infers")
 }
 

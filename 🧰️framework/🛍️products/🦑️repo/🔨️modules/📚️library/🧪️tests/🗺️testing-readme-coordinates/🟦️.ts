@@ -5,7 +5,8 @@ import { createHash } from "node:crypto";
 import { closeSync, constants, fstatSync, lstatSync, openSync, readFileSync } from "node:fs";
 import { join, posix, relative, resolve } from "node:path";
 import ts from "typescript";
-import * as discovery from "../../🔍️discovery/🟦️.ts";
+import { loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { semanticExactOwnedFileCatalog } from "../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../.."), root = resolve(libraryRoot, "../../../../..");
 const sha = (value: Uint8Array): string => createHash("sha256").update(value).digest("hex");
@@ -124,8 +125,8 @@ test("registry JSON parsers agree and its schema link names the current regular 
 });
 
 test("documentation approval binds the stable current owner and preserves its baseline tuple",()=>{
- const taxonomy=discovery.loadTaxonomy(),contract=taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];if(contract.contractKind!=="exact-owner-path-catalog"||!contract.currentSourceRevisions)throw Error("Current domain approval required");
- const policy=discovery.semanticExactOwnedFileCatalog(root,taxonomy)!,owners=policy.entries.filter(row=>row.sourcePath===vector.documents.readme);expect(owners).toHaveLength(1);const owner=owners[0]!,approval=Object.values(contract.currentSourceRevisions).find(row=>row.sourcePath===owner.sourcePath)!;expect<typeof owner.preimage>(approval.baselinePreimage).toEqual(owner.preimage);expect(approval.currentPreimage.sha256).toBe(sha(readOwned(owner.sourcePath)));expect(owner.disposition).toBe("owner-documentation-relocate");expect(owner.generatorOwnerId).toBeNull();expect(Object.hasOwn(contract,"expectedCounts")).toBe(false);
+ const taxonomy=loadTaxonomy(),contract=taxonomy.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];if(contract.contractKind!=="exact-owner-path-catalog"||!contract.currentSourceRevisions)throw Error("Current domain approval required");
+ const policy=semanticExactOwnedFileCatalog(root,taxonomy)!,owners=policy.entries.filter(row=>row.sourcePath===vector.documents.readme);expect(owners).toHaveLength(1);const owner=owners[0]!,approval=Object.values(contract.currentSourceRevisions).find(row=>row.sourcePath===owner.sourcePath)!;expect<typeof owner.preimage>(approval.baselinePreimage).toEqual(owner.preimage);expect(approval.currentPreimage.sha256).toBe(sha(readOwned(owner.sourcePath)));expect(owner.disposition).toBe("owner-documentation-relocate");expect(owner.generatorOwnerId).toBeNull();expect(Object.hasOwn(contract,"expectedCounts")).toBe(false);
 });
 
 test("documentation gate registration matches the declared Nx route", () => {
@@ -133,7 +134,7 @@ test("documentation gate registration matches the declared Nx route", () => {
   const projectSource = readOwned(packagePath + "/📋️project.json").toString("utf8"), project = JSON.parse(projectSource), errors: ParseError[] = [];
   expect(parseJson(projectSource, errors, { disallowComments: true, allowTrailingComma: false })).toEqual(project);
   expect(errors).toEqual([]);
-  expect(project.targets[expected.target]).toEqual({ executor: "nx:run-commands", options: { cwd: packagePath, command: expected.command } });
+  expect(project.targets[expected.target]).toEqual({ executor: "repo:script", options: { cwd: packagePath, command: expected.command } });
   const router = readOwned(packagePath + "/📜️script.ts").toString("utf8"), tree = ts.createSourceFile("router.ts", router, ts.ScriptTarget.Latest, true), branches: ts.IfStatement[] = [];
   const visit = (node: ts.Node): void => {
     if (ts.isIfStatement(node) && ts.isBinaryExpression(node.expression) && node.expression.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken && node.expression.left.getText(tree) === "segments[0]" && ts.isStringLiteral(node.expression.right) && node.expression.right.text === expected.route) branches.push(node);

@@ -55,12 +55,24 @@ def modpath(host):
     if segs and segs[0] == 'render': return ['crate', 'render', 'bim'] + segs[1:]
     return ['crate', 'standards', 'v1', 'subsets', 'any'] + segs
 
+
+def is_component(host):
+    parts = host.split('/')
+    i = parts.index('✳️any')
+    rel = '/'.join(parts[i:])
+    root = os.path.join(host[:host.index('🏅️standards')], '🦀️.rs')
+    try:
+        text = read(root)
+    except OSError:
+        return False
+    return ('path = "🏅️standards/🔖️1/🪆️subsets/' + rel + '"]\n') in text.replace('\r', '') and re.search(re.escape('/' + rel + '"]') + r'\s*\n\s*mod component;', text) is not None
+
 def absolute(path, host):
     mp = modpath(host)
     if path.startswith('self::'): return '::'.join(mp + path.split('::')[1:])
     m = re.match(r'^((?:super::)+)(.*)$', path)
     if m:
-        depth = m.group(1).count('super::')
+        depth = m.group(1).count('super::') - (1 if is_component(host) else 0)
         return '::'.join(mp[:len(mp) - depth] + m.group(2).split('::'))
     return path
 

@@ -140,7 +140,7 @@ impl Default for SemioSnapshot {
 /// own conformance-law tests.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_semio_snapshot() -> SemioSnapshot {
+pub fn demo_semio_snapshot() -> SemioSnapshot {
     use semio_s_artifact_stdio_semio_flow::schema::snapshot::demo_flow_snapshot;
     SemioSnapshot { schema: STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset: SemioSubsetSnapshot::Flow(demo_flow_snapshot()) }
 }

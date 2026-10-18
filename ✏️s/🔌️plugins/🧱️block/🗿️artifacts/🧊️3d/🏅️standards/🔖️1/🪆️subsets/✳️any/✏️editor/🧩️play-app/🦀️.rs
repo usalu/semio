@@ -1,6 +1,7 @@
 //! 🧩️ Play app: `Block3dPlayApp`, the `ArtifactEditor` the framework mounts, with its dispatch, render and media bodies.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Block3dPlayApp
 /// 🧪️ B1: unit struct — every former `RefCell` field now lives in `crate::editor::block3d::config::

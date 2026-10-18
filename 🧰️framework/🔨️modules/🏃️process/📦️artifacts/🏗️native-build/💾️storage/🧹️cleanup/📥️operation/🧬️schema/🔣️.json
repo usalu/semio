@@ -176,6 +176,17 @@
         }
       },
       "$ref": "#/definitions/OpenLifetime/definitions/Case"
+    },
+    "BorrowerOperationIdentity": {
+      "const": {
+        "version": 1,
+        "purpose": "actual-borrower-operation-identity",
+        "outermostSameOwner": true,
+        "privateIssueOnly": true,
+        "registration": false,
+        "writerAuthority": false,
+        "expires": "actual-frame-drained"
+      }
     }
   }
 }

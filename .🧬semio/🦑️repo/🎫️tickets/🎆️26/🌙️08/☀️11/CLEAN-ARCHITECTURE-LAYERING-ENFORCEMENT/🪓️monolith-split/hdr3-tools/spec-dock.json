@@ -1,0 +1,8 @@
+{"owner": "semio-framework-os-renderer-wgpu-dock", "suffix": "laws", "kind": "plain",
+ "new_root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🧪️tests/🔬️laws/🦀️.rs",
+ "moves": [
+  {"mount_file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs", "mount_name": "app_mode_layout_tests", "as": "app_mode_layout_tests"},
+  {"mount_file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs", "mount_name": "window_template_drag_tests", "as": "window_template_drag_tests"},
+  {"mount_file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs", "mount_name": "stack_drop_destination_tests", "as": "stack_drop_destination_tests"},
+  {"mount_file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛰️Dock/🎯️targets/🧊️wgpu/🦀️.rs", "mount_name": "unit_tests", "as": "unit_tests"}
+ ]}

@@ -1,4 +1,22 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::modify::{ArrayPattern, MAX_COPIES};
+use std::f64::consts::PI;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::{angle, dist, point2, quantised, rotate_about, same, translate, COINCIDENT, P};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::session::{length_label, Pick, Pointer, Step, Tool, ToolContext, PICK_PIXELS};
+#[allow(unused_imports)]
+use crate::editor::bim::marks::{Mark, Preview, Style};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::transform::{ghost, outline};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::kind_holding;
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::plan;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::modify;
+#[allow(unused_imports)]
+use std::f64::consts::TAU;
+use crate::editor::bim::gestures::duplicate::*;
 use crate::editor::bim::gestures::session::{Modifiers, ToolEvent};
 use crate::editor::bim::marks::Shape;
 use crate::editor::bim::fixture::{room, Rig};

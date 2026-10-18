@@ -12,7 +12,7 @@ import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
 import { minimatch } from "minimatch";
 import { clearContributionCache, isTestOraclePath, scanDeclaredDependencies } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { isBlockingBreach } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { isBlockingBreach } from "../../../📚️library/🚨️policy/🏃️runner/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import oracleDirectoryCases from "../🧫️fixtures/🧭️contribution-directory-ownership/🔣️.json";
 import { type TestCasePlan, type FeatureScenario } from "@semio-tech/framework/test/adapter";

@@ -2,14 +2,15 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import ts from "typescript";
+import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const text = readFileSync(resolve(root, library, "🧹️normalization/🟦️.ts"), "utf8");
+const text = normalizationEngineDeclarations(resolve(root, library, "🧹️normalization"));
 const syntax = ts.createSourceFile("./🟦️.ts", text, ts.ScriptTarget.Latest, true);
 type Token = { adapter: string; structuredLocation: string; start: number; end: number; value: string; targetValues?: string[]; rewriteKind?: string; rewriteData?: Record<string, unknown>; unsupportedReason?: string };
 type Parser = (path: string, content: string, adapter: "json" | "jsonc") => Token[];
-const helpers = new Set(["lineLocation", "embeddedArgumentTokens"]);
+const helpers = new Set(["lineLocation", "embeddedArgumentTokens", "requireTaxonomyValue"]);
 const constants = new Set(["indexedLineContent", "indexedLineStarts", "EMBEDDED_ARGUMENT_WORD", "EMBEDDED_ESCAPED_ARGUMENT_WORD", "EMBEDDED_ARGUMENT_PATH"]);
 const support = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? helpers.has(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => constants.has(declaration.name.getText(syntax)))).map((node) => node.getText(syntax)).join("\n");
 const declaration = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === "jsonTokens");

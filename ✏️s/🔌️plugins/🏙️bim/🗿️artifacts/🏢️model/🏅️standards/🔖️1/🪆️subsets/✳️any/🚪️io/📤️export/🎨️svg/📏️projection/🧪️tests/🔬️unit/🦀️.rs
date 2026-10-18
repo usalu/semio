@@ -1,4 +1,24 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanStyle;
+use crate::standards::v1::subsets::any::io::export::svg::style::style_class;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::path::{has_arc, is_arc, path_length, points, ring_area, snap};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::sheet::{layout, Slot};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::drawing::tint;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::svg::style::{annotated, kind_class, view_class};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::io::export::svg::projection::*;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::{house, read, svg, tags};
 use crate::standards::v1::subsets::any::io::export::svg::style::STYLE_CLASSES;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_view_linework;

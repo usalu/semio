@@ -1743,7 +1743,7 @@ pub fn filter_plugins(entries: Vec<ProgramBridgeEntry>, _plugin_filter: &str) ->
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-/// 📋️ Loads only the completed components named by the Nx runtime manifest.
+/// 📋️ Loads only the completed components named by the build runtime manifest.
 pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) -> Result<Vec<ProgramBridgeEntry>, String> {
     use crate::native_runtime_modules::{NativeJsonPages, NativeRuntimeManifest};
     let mut pages = read_native_json_pages(&modules_root.join("🔣️runtime.json"), NATIVE_RUNTIME_MANIFEST_MAX_BYTES).await?;

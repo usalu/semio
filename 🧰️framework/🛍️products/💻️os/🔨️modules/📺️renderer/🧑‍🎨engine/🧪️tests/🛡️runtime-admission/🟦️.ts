@@ -13,12 +13,12 @@ import { readFileSync, existsSync } from "node:fs";
 import "../🧰️engine-contract-helpers/🟦️.ts";
 
 //#region 🩺️RuntimeDiagnostics
-/** 🩺️ The module that GENERATES the shard worker, read as text. `import.meta.url` is not a file URL
+/** 🩺️ A module that DECLARES or GENERATES the shard worker (its contract constants or its source), read as text. `import.meta.url` is not a file URL
  * under this suite's transform and the module itself cannot be imported here (it reaches the repo
  * library's `bun:sqlite` lease store, which a jsdom bundle refuses), so it is located by walking up
  * from the runner's cwd — the same shape the world3d-host law above uses. */
-function readGeneratedShardWorkerOwnerSource(): string {
-  const relative = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
+function readGeneratedShardWorkerOwnerSource(leaf: "🧾️contract" | "🧵️shard-worker-source"): string {
+  const relative = `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/${leaf}/🟦️.ts`;
   let root = process.cwd();
   for (let hop = 0; hop < 12 && !existsSync(`${root}/${relative}`); hop += 1) root = `${root}/..`;
   expect(existsSync(`${root}/${relative}`)).toBe(true);
@@ -42,10 +42,10 @@ describe("shell runtime diagnostics switch", () => {
   // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️audit-guest-tick-cost-2026-09-12.md` §4 rank 1).
   it("spells the same diagnostics key in every realm that resolves it", () => {
     expect(SHARD_RUNTIME_DIAGNOSTICS_KEY).toBe(RUNTIME_DIAGNOSTICS_KEY);
-    // 🔌️ The generated shard worker's own copy lives in `🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`,
+    // 🔌️ The generated shard worker's own copy lives in `🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts`,
     // which this jsdom suite cannot import (it reaches the repo library's `bun:sqlite` lease store),
     // so it is read as text — the same shape `⏱️wgpu-ui-turn-budget` uses for `ShellHost`.
-    const pluginPackage = readGeneratedShardWorkerOwnerSource();
+    const pluginPackage = readGeneratedShardWorkerOwnerSource("🧾️contract");
     expect(pluginPackage).toContain(`export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "${RUNTIME_DIAGNOSTICS_KEY}"`);
     expect(pluginPackage).toContain(`export const SHARD_WORKER_DIAGNOSTICS_PARAM = "${SHARD_WORKER_DIAGNOSTICS_PARAM}"`);
   });
@@ -69,7 +69,7 @@ describe("shell runtime diagnostics switch", () => {
       if (original === undefined) Reflect.deleteProperty(globalThis, "localStorage");
       else Object.defineProperty(globalThis, "localStorage", { configurable: true, value: original });
     }
-    const pluginPackage = readGeneratedShardWorkerOwnerSource();
+    const pluginPackage = readGeneratedShardWorkerOwnerSource("🧵️shard-worker-source");
     expect(pluginPackage).toContain('searchParams.get("${SHARD_WORKER_DIAGNOSTICS_PARAM}")');
     expect(pluginPackage).toContain('_setEnv({ "${SHARD_RUNTIME_DIAGNOSTICS_KEY}": "1" })');
     expect(pluginPackage.indexOf("await armGuestRuntimeDiagnostics()")).toBeLessThan(pluginPackage.indexOf("const bridge = await import("));

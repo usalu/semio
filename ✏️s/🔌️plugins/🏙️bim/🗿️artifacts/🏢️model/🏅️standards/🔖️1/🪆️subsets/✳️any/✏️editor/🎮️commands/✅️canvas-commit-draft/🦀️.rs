@@ -15,6 +15,4 @@ pub fn handle(_payload: &CanvasCommitDraft, doc: &ArtifactView<'_, ModelSnapshot
     run_keyed(ctx, doc, ToolEvent::Finish)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

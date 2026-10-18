@@ -13,10 +13,10 @@
 //!
 //! Related: shapely `Polygon.boundary.distance` and `buffer` reproduce the face test, <https://shapely.readthedocs.io/en/stable/manual.html#object.distance>.
 
-use super::super::element_solids::{dep_object, dep_value};
-use super::super::opening_frames::OpeningFrame;
-use super::super::quantities::{ElementQuantity, ModelQuantities, QuantityKind};
-use super::super::spaces::{self, SpaceRoom, SpaceStatus};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, ModelQuantities, QuantityKind};
+use crate::standards::v1::subsets::any::schema::inferences::spaces::{self, SpaceRoom, SpaceStatus};
 use crate::standards::v1::subsets::any::schema::snapshot::{Ceiling, ModelSnapshot, Slope, Space, Vertex};
 use semio_framework_2d::booleans::{BooleanOperation, BooleanProgress};
 use semio_framework_2d::regions::{region_boolean, Region};
@@ -62,7 +62,7 @@ pub struct FinishQuantity {
 //#endregion 🔖️Values
 
 //#region 🔖️Geometry
-fn rings_of(room: &SpaceRoom) -> Vec<Vec<[f64; 2]>> {
+pub fn rings_of(room: &SpaceRoom) -> Vec<Vec<[f64; 2]>> {
     std::iter::once(&room.outline)
         .chain(room.holes.iter())
         .filter(|ring| ring.len() >= 2)
@@ -80,7 +80,7 @@ fn distance(point: [f64; 2], from: [f64; 2], to: [f64; 2]) -> f64 {
     (point[0] - (from[0] + along * dx)).hypot(point[1] - (from[1] + along * dy))
 }
 
-fn on_boundary(rings: &[Vec<[f64; 2]>], point: [f64; 2]) -> bool {
+pub fn on_boundary(rings: &[Vec<[f64; 2]>], point: [f64; 2]) -> bool {
     rings.iter().any(|ring| (0..ring.len()).any(|index| distance(point, ring[index], ring[(index + 1) % ring.len()]) <= FACE_TOLERANCE))
 }
 
@@ -179,7 +179,7 @@ struct FinishRow {
     ceiling_area: f64,
 }
 
-fn area_of(quantity: &ElementQuantity, surface: FinishSurface) -> f64 {
+pub fn area_of(quantity: &ElementQuantity, surface: FinishSurface) -> f64 {
     quantity.finishes.iter().filter(|row| row.surface == surface).map(|row| row.area).sum()
 }
 
@@ -198,6 +198,4 @@ pub fn table_json(quantities: &ModelQuantities) -> String {
 }
 //#endregion 🔖️Projection
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

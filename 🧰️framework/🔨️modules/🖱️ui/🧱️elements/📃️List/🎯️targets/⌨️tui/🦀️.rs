@@ -2,13 +2,13 @@
 //! multi-marked list whose viewport follows the selection, with hover, select-then-activate and a scroll bar.
 //! Wired as a crate-root sibling module of `crate::tui::widget` (see that mod's `pub use crate::tui::list::ListState;`).
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::rows::{follow_top, navigate_to, paint_scroll_bar, row_style, row_under};
-use crate::tui::text::{elide, Elision};
-use crate::tui::theme::{Glyph, Role, Status, Surface, Theme};
-use crate::tui::widget::WidgetSignal;
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_core::event::{Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::rows::{follow_top, navigate_to, paint_scroll_bar, row_style, row_under};
+use semio_framework_ui_tui_core::text::{elide, Elision};
+use semio_framework_ui_tui_core::theme::{Glyph, Role, Status, Surface, Theme};
+use semio_framework_ui_tui_core::signal::WidgetSignal;
 use std::cell::Cell as Shared;
 
 const WHEEL_ROWS: usize = 3;

@@ -1,0 +1,429 @@
+//! ⏩️ Replay owned state operations: the owned replay steps, the retirement and the drive of the replay owned state. See [`super`].
+
+use super::*;
+
+impl<P, Mutation> ReplayOwnedState<P, Mutation>
+where
+    Mutation: super::Mutation<P> + OpBinary,
+{
+    /// 🐣️ A replay of `order[from..]` starting from `base`, the projection after `order[..from]`, reading every
+    /// operation of a document of `schema` through `supersessions`. `edits` must hold every edit the suffix names.
+    pub(super) fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> {
+        if from > order.len() { return Err(VcsError::ValidationFailed(format!("edit replay starts at {from} past its {}-edit order", order.len()))); }
+        let mut total = 0u32;
+        for edit_id in &order[from..] {
+            let edit = edits.replay_edit(edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+            total = total.saturating_add(u32::try_from(edit.forwards.len()).unwrap_or(u32::MAX));
+        }
+        let mut catalog = semio_framework_os_vcs::HistoryPageStack::new();
+        catalog.extend(order);
+        Self::new_counted(mode, base, catalog, from, schema, supersessions, total)
+    }
+
+    pub(super) fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_framework_os_vcs::HistoryPageStack<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> {
+        let total = total.saturating_add(u32::try_from(order.len().saturating_sub(from)).unwrap_or(u32::MAX));
+        let replay = Self {
+            mode,
+            order,
+            from,
+            prefix_until: from,
+            prefix_work_progress: false,
+            operation_progress: false,
+            cursor: from,
+            operation: 0,
+            schema: schema.to_string(),
+            supersessions,
+            state: Some(base),
+            candidate: None,
+            edit_messages: semio_framework_os_spr::command::ReplayMessageAccumulator::default(),
+            edit_inverse: Default::default(),
+            message_settlement: None,
+            closed_outcomes: 0,
+            committed: Vec::new(),
+            quarantined: Vec::new(),
+            rebased_inverse: Vec::new(),
+            replayed: Vec::new(),
+            outcomes: Vec::new(),
+            report_worst: None,
+            unit_flags: protocol::HistoryFoldIndex::new(),
+            operation_preparation_factory: None,
+            operation_preparation: None,
+            prepared_operation: None,
+            operation_retirement: None,
+            operation_message_settlement: None,
+            preparation_completed: ArtifactReplayPreparationProgress::default(),
+            replay_retirement_factory: None,
+            replay_retirement: None,
+            prefix_message_retirement: None,
+            convergence: None,
+            convergence_search: None,
+            convergence_pending_finish: false,
+            converged_at: None,
+            record_stride: usize::MAX,
+            recorded: Vec::new(),
+            drafts: protocol::HistoryInputDrafts::new(),
+            generation: 0,
+            revision: [0; 32],
+            progress: ReplayProgress { done: 0, total },
+            finished: false,
+        };
+        if replay.from > replay.order.len() {
+            return Err(VcsError::ValidationFailed(format!("edit replay starts at {} past its {}-edit order", replay.from, replay.order.len())));
+        }
+        Ok(replay)
+    }
+
+    /// 🐣️ [`Self::new`] starting from `base`, the projection after `order[..base_length]` for a `base_length <= from`: the
+    /// replay first folds `order[base_length..from]` plainly — stepped under the same deadline as its suffix and recording the
+    /// prefix ring on the way — and then replays `order[from..]` as [`Self::new`] does, so no synchronous fold precedes it.
+    #[allow(clippy::too_many_arguments)]
+    pub(super) fn new_after_prefix(mode: ReplayMode, base_length: usize, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> {
+        if base_length > from {
+            return Err(VcsError::ValidationFailed(format!("edit replay base after {base_length} edits lies past its start {from}")));
+        }
+        let mut replay = Self::new(mode, base, order, from, schema, supersessions, edits)?;
+        replay.cursor = base_length;
+        Ok(replay)
+    }
+
+    pub fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self {
+        self.replace_convergence(convergence);
+        self
+    }
+
+    pub(super) fn replace_convergence(&mut self, convergence: Option<ReplayConvergence<P>>) {
+        if let Some(previous) = std::mem::replace(&mut self.convergence, convergence) {
+            for (_, checkpoint) in previous.checkpoints {
+                retire_shared_projection::<P, Mutation>(checkpoint);
+            }
+        }
+    }
+
+    /// 🧵️ Takes `appended` operations a tick appended to `edit_id` into the total when that edit is the unreplayed tail of
+    /// this replay's order (the grown edit is read by id when the replay gets there), and forgets the convergence probe,
+    /// whose previous head predates the tick.
+    pub fn absorb_tail_growth(&mut self, edit_id: &str, appended: usize) {
+        if self.cursor < self.order.len() && self.order.last().is_some_and(|tail| tail == edit_id) {
+            self.progress.total = self.progress.total.saturating_add(u32::try_from(appended).unwrap_or(u32::MAX));
+        }
+        self.replace_convergence(None);
+    }
+
+    /// 🎙️ Keeps the projection after every replayed prefix whose length is a multiple of `stride`, for the prefix ring —
+    /// seeded with `prefixes`, the retained projections the base was folded through, and with the base itself when its
+    /// length is such a multiple.
+    pub fn recording(mut self, stride: usize, prefixes: Vec<(usize, Arc<P>)>) -> Self {
+        self.record_stride = stride.max(1);
+        self.recorded.extend(prefixes);
+        self.record();
+        self
+    }
+
+    /// 🔢️ Stamps the store generation and content revision this replay was started against — the freshness a finished
+    /// replay is committed under ([`ArtifactStore::commit_finished_replay`]).
+    pub fn with_base(mut self, generation: u64, revision: [u8; 32]) -> Self {
+        self.generation = generation;
+        self.revision = revision;
+        self
+    }
+
+    /// 🖊️ Records the draft inputs this replay previews, which a finalization authors as the supersession.
+    pub fn with_drafts(mut self, drafts: protocol::HistoryInputDrafts) -> Self {
+        self.drafts = drafts;
+        self
+    }
+
+    /// 🆔️ The store generation this replay was started against.
+    pub fn generation(&self) -> u64 {
+        self.generation
+    }
+
+    /// 🗒️ The draft inputs this replay previews.
+    pub fn drafts(&self) -> &protocol::HistoryInputDrafts {
+        &self.drafts
+    }
+
+    /// 📈️ Replay work completed, including an edit's final diagnostic settlement.
+    pub fn progress(&self) -> ReplayProgress {
+        self.progress
+    }
+
+    /// ⌛️ Whether every operation of the suffix was replayed (or the replay converged).
+    pub fn is_finished(&self) -> bool {
+        self.finished
+    }
+
+    /// ⏭️ Replays operations until the replay finishes or `deadline`, asked after every operation, answers `true`.
+    pub fn step(&mut self, edits: &impl ReplayEdits<Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+        self.step_with_operation_cap(edits, usize::MAX, deadline)
+    }
+
+    /// 🔢️ Caps folded mutations while retaining every structural deadline and owner check.
+    pub fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+        if !self.operation_progress {
+            if self.progress.done != 0 { return Err(VcsError::ValidationFailed("operation-counted replay authority must be selected before work begins".into())); }
+            self.progress.total = self.progress.total.saturating_sub(u32::try_from(self.order.len().saturating_sub(self.from)).unwrap_or(u32::MAX));
+            self.operation_progress = true;
+        }
+        self.step_with_operation_cap(edits, maximum_operations, deadline)
+    }
+
+    fn step_with_operation_cap(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+        if maximum_operations == 0 && !self.finished { return Ok(ReplayStep::Pending(self.progress)); }
+        let mut completed_operations = 0usize;
+        while !self.finished {
+            if let Some(retirement) = self.replay_retirement.as_mut() {
+                let body = retirement.next_copy_byte_demand().map_err(VcsError::InverseRefused)?;
+                let capacity = retirement.next_capacity_byte_demand(body).map_err(VcsError::InverseRefused)?;
+                if body.saturating_add(capacity) > 4096 { return Err(VcsError::ValidationFailed("replay cleanup native frame exceeds one body/capacity grant".into())); }
+                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: capacity, maximum_release_bytes: retirement.next_release_byte_demand().map_err(VcsError::InverseRefused)?, maximum_depth: retirement.next_depth_demand().map_err(VcsError::InverseRefused)? };
+                let step = retirement.close_step(grant).map_err(VcsError::InverseRefused)?;
+                if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("replay cleanup exceeded its admitted grant".into())); }
+                if retirement.terminal_is_empty() {
+                    self.replay_retirement = None;
+                }
+                if deadline() || step.progress().copied_items == 0 { return Ok(ReplayStep::Pending(self.progress)); }
+                continue;
+            }
+            if let Some(owner) = self.prefix_message_retirement.as_mut() {
+                let body = owner.next_copy_byte_demand();
+                let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: body, maximum_capacity_bytes: 0, maximum_release_bytes: owner.next_release_byte_demand().map_err(VcsError::InverseRefused)?, maximum_depth: owner.next_depth_demand().map_err(VcsError::InverseRefused)? };
+                let step = owner.close_step(grant).map_err(VcsError::InverseRefused)?;
+                if !step.progress().fits(grant) { return Err(VcsError::ValidationFailed("prefix diagnostic cleanup exceeded its actual grant".into())); }
+                if owner.terminal_is_empty() { self.prefix_message_retirement = None; }
+                if deadline() || step.progress().copied_items == 0 { return Ok(ReplayStep::Pending(self.progress)); }
+                continue;
+            }
+            if self.convergence_pending_finish {
+                self.convergence_pending_finish = false;
+                self.finished = true;
+                self.progress.done = self.progress.total;
+                break;
+            }
+            if self.convergence_search.is_some() {
+                self.step_convergence();
+                if deadline() { return Ok(ReplayStep::Pending(self.progress)); }
+                continue;
+            }
+            let Some(edit_id) = self.order.get(self.cursor) else {
+                self.finished = true;
+                break;
+            };
+            let edit = edits.replay_edit(edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+            if self.cursor < self.prefix_until {
+                if self.operation < edit.forwards.len() {
+                    if self.operation_preparation_factory.is_some() {
+                        if !self.step_prepared_operation(edit, true, deadline)? { deadline(); return Ok(ReplayStep::Pending(self.progress)); }
+                        self.operation += 1;
+                    completed_operations = completed_operations.saturating_add(1);
+                        if self.prefix_work_progress { self.progress.done = self.progress.done.saturating_add(1); }
+                        if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
+                        continue;
+                    }
+                    let index = self.operation;
+                    let id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
+                    if edit.forwards[index].may_emit_foreign_steps() {
+                        let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
+                        self.unit_flags.insert((digest, index), edit.forwards[index].foreign_step_source(self.state.as_ref().expect("replay prefix state"), 0).map_err(VcsError::from)?.is_some());
+                    }
+                    let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, id, &self.schema, &self.supersessions);
+                    if let Some(operation) = effective.operation() {
+                        let state = self.state.as_mut().ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?;
+                        if let (Some(next), _) = fold_operation::<P, Mutation>(state, operation, index as u32) { <Arc<P> as FoldProjection<P, Mutation>>::advance(state, next); }
+                    }
+                    self.operation += 1;
+                    completed_operations = completed_operations.saturating_add(1);
+                    if self.prefix_work_progress { self.progress.done = self.progress.done.saturating_add(1); }
+                    if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
+                    continue;
+                }
+                self.cursor += 1;
+                self.operation = 0;
+                self.record();
+                continue;
+            }
+            if self.operation < edit.forwards.len() {
+                if self.operation_preparation_factory.is_some() {
+                    if !self.step_prepared_operation(edit, false, deadline)? { deadline(); return Ok(ReplayStep::Pending(self.progress)); }
+                    self.operation += 1;
+                    completed_operations = completed_operations.saturating_add(1);
+                    self.progress.done = self.progress.done.saturating_add(1);
+                    if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
+                    continue;
+                }
+                self.replay_operation(edit)?;
+                self.operation += 1;
+                    completed_operations = completed_operations.saturating_add(1);
+                self.progress.done = self.progress.done.saturating_add(1);
+                if deadline() || completed_operations >= maximum_operations { return Ok(ReplayStep::Pending(self.progress)); }
+                continue;
+            }
+            if !self.step_close_edit(&edit.id)? {
+                if deadline() { return Ok(ReplayStep::Pending(self.progress)); }
+                continue;
+            }
+            if !self.operation_progress { self.progress.done = self.progress.done.saturating_add(1); }
+            self.cursor += 1;
+            self.operation = 0;
+            self.record();
+            self.converge();
+            if self.cursor == self.order.len() { self.finished = true; }
+            if !self.finished && deadline() { return Ok(ReplayStep::Pending(self.progress)); }
+        }
+        Ok(ReplayStep::Finished(self.progress))
+    }
+
+    /// 🫀️ Replays operation `self.operation` of `edit`: its effective input is re-diffed and re-inverted against the running
+    /// state and its outcome recorded. A `Report` replay never aborts on a leaf: an inverse the leaf refuses on the replayed
+    /// state is one `Fatal` `mutation.inverse-refused` message on that mutation, the operation folds forward exactly as every
+    /// messageless fold site folds it, and its edit stages no inverse rows for it — the report blocks finalizing until that
+    /// mutation is edited or withdrawn. A `Merge` replay refuses with [`VcsError::InverseRefused`].
+    fn replay_operation(&mut self, edit: &Edit<Mutation>) -> Result<(), VcsError> {
+        let index = self.operation;
+        let mutation_id = semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, index).expect("recorded operation identity");
+        if edit.forwards[index].may_emit_foreign_steps() {
+            let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
+            let base = self.candidate.as_ref().or(self.state.as_ref()).expect("replay operation state");
+            self.unit_flags.insert((digest, index), edit.forwards[index].foreign_step_source(base, 0).map_err(VcsError::from)?.is_some());
+        }
+        let effective = effective_operation::<P, Mutation>(&edit.forwards[index], index as u32, mutation_id, &self.schema, &self.supersessions);
+        let mut messages: Vec<semio_framework_os_spr::MutationMessage> = effective.fault().cloned().into_iter().collect();
+        if let Some(operation) = effective.operation() {
+            let base = match self.mode {
+                ReplayMode::Merge(_) => self.candidate.as_ref().or(self.state.as_ref()),
+                ReplayMode::Report => self.state.as_ref(),
+            }
+            .ok_or_else(|| VcsError::ValidationFailed("edit replay lost its running projection".into()))?;
+            let (back, refused) = match operation.inverse(base) {
+                Ok(mut back) => {
+                    back.reverse();
+                    (back, None)
+                }
+                Err(cause) if self.mode == ReplayMode::Report => (Vec::new(), Some(cause)),
+                Err(cause) => return Err(VcsError::InverseRefused(cause)),
+            };
+            let next = match self.mode {
+                ReplayMode::Report => {
+                    let (next, operation_messages) = fold_operation::<P, Mutation>(base, operation, index as u32);
+                    messages = operation_messages;
+                    next
+                }
+                ReplayMode::Merge(_) => {
+                    let (applied, operation_messages) = apply_operation::<P, Mutation>(base, operation, index as u32);
+                    messages = operation_messages;
+                    match applied {
+                        Ok(next) => Some(next),
+                        Err(error) => {
+                            retire_scratch_operations::<P, Mutation>(back);
+                            return Err(error.into());
+                        }
+                    }
+                }
+            };
+            if let Some(cause) = refused {
+                let mut fatal = semio_framework_os_spr::MutationMessage::fatal("mutation.inverse-refused", format!("the operation has no inverse on the replayed state: {cause}")).at([effective.mutation_id.0.clone()]);
+                fatal.op_index = Some(index as u32);
+                messages.push(fatal);
+            }
+            match next {
+                Some(next) => {
+                    self.edit_inverse.extend(back);
+                    let next = Arc::new(next);
+                    let displaced = match self.mode {
+                        ReplayMode::Merge(_) => self.candidate.replace(next),
+                        ReplayMode::Report => self.state.replace(next),
+                    };
+                    if let Some(displaced) = displaced {
+                        retire_shared_projection::<P, Mutation>(displaced);
+                    }
+                }
+                None => retire_scratch_operations::<P, Mutation>(back),
+            }
+        }
+        let worst = semio_framework_os_spr::worst_level(&messages);
+        self.report_worst = self.report_worst.max(worst);
+        let mut drain = semio_framework_os_spr::command::OperationMessageDrain::new(protocol::MutationReplayOutcome { mutation_id: effective.mutation_id.clone(), edit_id: edit.id.clone(), op_index: index as u32, worst, messages, superseded: effective.superseded(), withdrawn: effective.withdrawn() });
+        while !drain.is_finished() {
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: drain.next_copy_byte_demand(&self.edit_messages), maximum_capacity_bytes: drain.next_capacity_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_release_bytes: drain.next_release_byte_demand(), maximum_depth: 1 };
+            drain.step(&mut self.edit_messages, grant).map_err(VcsError::InverseRefused)?;
+        }
+        self.outcomes.push(drain.take().expect("cold original operation messages transferred"));
+        Ok(())
+    }
+
+    /// 📨️ Settles one bounded diagnostic unit before sealing an edit's staged owners.
+    fn step_close_edit(&mut self, edit_id: &str) -> Result<bool, VcsError> {
+        let Some(settlement) = self.message_settlement.as_mut() else {
+            self.message_settlement = Some(semio_framework_os_store_ledger::edit_message_clamp::settlement::EditMessageSettlement::new(edit_id, &self.edit_messages, self.closed_outcomes, self.outcomes.len()));
+            return Ok(false);
+        };
+        if !settlement.is_finished() {
+            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: settlement.next_copy_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_capacity_bytes: settlement.next_capacity_byte_demand().map_err(VcsError::InverseRefused)?, maximum_release_bytes: settlement.next_release_byte_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?, maximum_depth: 64 };
+            if grant.maximum_copy_bytes.saturating_add(grant.maximum_capacity_bytes) > ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES { return Err(VcsError::ValidationFailed("edit message settlement exceeds its body/capacity grant".into())); }
+            settlement.step(&mut self.edit_messages, &mut self.outcomes, grant).map_err(VcsError::InverseRefused)?;
+            return Ok(false);
+        }
+        let rejects = match self.mode {
+            ReplayMode::Merge(policy) => semio_framework_os_spr::worst_level(settlement.messages()).is_some_and(|level| policy.rejects(level)),
+            ReplayMode::Report => false,
+        };
+        if rejects {
+            if let Some(candidate) = self.candidate.take() { self.begin_replay_snapshot_retirement(candidate); return Ok(false); }
+            if !self.edit_inverse.terminal_is_empty() {
+                let inverse = std::mem::take(&mut self.edit_inverse);
+                self.begin_replay_mutations_retirement(inverse);
+                return Ok(false);
+            }
+        } else if let Some(candidate) = self.candidate.take() {
+            if let Some(previous) = self.state.replace(candidate) { self.begin_replay_snapshot_retirement(previous); return Ok(false); }
+        }
+        let messages = self.message_settlement.as_mut().expect("completed edit message selection").take_messages().expect("final bounded diagnostic owner");
+        drop(self.message_settlement.take());
+        self.closed_outcomes = self.outcomes.len();
+        let inverse = std::mem::take(&mut self.edit_inverse);
+        self.replayed.push(semio_framework_os_spr::EditMessages { edit_id: edit_id.to_string(), messages });
+        if rejects {
+            self.quarantined.push(edit_id.to_string());
+        } else {
+            self.rebased_inverse.push((edit_id.to_string(), inverse));
+            self.committed.push(edit_id.to_string());
+        }
+        Ok(true)
+    }
+
+    pub fn record(&mut self) {
+        if self.mode != ReplayMode::Report || self.cursor % self.record_stride != 0 || self.cursor >= self.order.len() {
+            return;
+        }
+        if let Some(state) = self.state.as_ref() {
+            self.recorded.push((self.cursor, Arc::clone(state)));
+        }
+    }
+
+    fn converge(&mut self) {
+        if self.mode != ReplayMode::Report { return; }
+        let Some(convergence) = self.convergence.as_ref() else { return };
+        if self.cursor < convergence.horizon || self.cursor >= self.order.len() { return; }
+        self.convergence_search = Some(0);
+    }
+
+    fn step_convergence(&mut self) {
+        let Some(index) = self.convergence_search else { return };
+        let Some(convergence) = self.convergence.as_ref() else { self.convergence_search = None; return };
+        let Some((length, previous)) = convergence.checkpoints.get(index) else { self.convergence_search = None; return };
+        if *length != self.cursor {
+            self.convergence_search = Some(index + 1);
+            return;
+        }
+        self.convergence_search = None;
+        let Some(state) = self.state.as_ref() else { return };
+        let pointer_equal = Arc::ptr_eq(state, previous);
+        let cold_authority = self.operation_preparation_factory.is_none() && self.replay_retirement_factory.is_none();
+        if !pointer_equal && !(cold_authority && (convergence.equal)(state, previous)) { return; }
+        let Some(head) = convergence.checkpoints.last().filter(|(length, _)| *length == self.order.len()).map(|(_, head)| Arc::clone(head)) else { return };
+        self.converged_at = Some(self.cursor);
+        self.convergence_pending_finish = true;
+        if let Some(previous) = self.state.replace(head) { self.begin_replay_snapshot_retirement(previous); }
+    }
+
+}

@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `RemoveComponentOverride`: the override record leaves and the component evaluates the formula of its family again. Refused when the component or the override is absent.
 
-use super::super::family_rules;
-use super::RemoveComponentOverride;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules;
+use crate::standards::v1::subsets::any::schema::mutations::remove_component_override::RemoveComponentOverride;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

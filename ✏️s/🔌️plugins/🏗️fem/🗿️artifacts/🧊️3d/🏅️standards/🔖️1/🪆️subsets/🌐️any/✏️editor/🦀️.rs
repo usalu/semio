@@ -107,7 +107,7 @@ use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
 use semio_framework_plugin::EphemeralEmit;
 use std::collections::HashMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Commands
 semio_framework_plugin::app_commands! {

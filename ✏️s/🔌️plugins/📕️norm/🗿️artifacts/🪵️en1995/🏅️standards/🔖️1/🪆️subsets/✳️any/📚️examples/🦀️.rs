@@ -30,3 +30,13 @@ pub mod multi_fail_timber;
 #[path = "⚠️overloaded-footbridge/🦀️.rs"]
 pub mod overloaded_footbridge;
 //#endregion 🪢️Mounts
+
+/// 📚️ Every bundled EN 1995 example in catalogue order — compliant first, then non-compliant.
+pub fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
+    vec![
+        glulam_floor_beam::source(),
+        glulam_footbridge::source(),
+        multi_fail_timber::source(),
+        overloaded_footbridge::source(),
+    ]
+}

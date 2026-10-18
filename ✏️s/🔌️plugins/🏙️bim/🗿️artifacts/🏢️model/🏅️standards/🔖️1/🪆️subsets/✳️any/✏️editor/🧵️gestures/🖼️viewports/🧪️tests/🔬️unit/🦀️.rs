@@ -1,6 +1,31 @@
 //! 🧪️ The sheet tools: standard scales, picking and moving viewports to the whole millimetre, scaling by the corner handle, nothing written for a press that did not travel, the place tool and the ghosts.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::PaperRect;
+use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use crate::editor::bim::gestures::plane::P;
+use crate::editor::bim::gestures::session::{Pointer, Step, Surface, ToolContext, ToolEvent};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::{dist, point2};
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::session::{Tool, PICK_PIXELS};
+#[allow(unused_imports)]
+use crate::editor::bim::marks::{Mark, Preview, Style};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::sheets::{next_view, scale_of};
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::sheet;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::create_viewport::CreateViewport;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::mutations::set_viewport::SetViewport;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::windows::{place, WINDOW_PADDING};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PlacedViewport, SheetLayout};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{view_is_drawn, Viewport};
+use crate::editor::bim::gestures::viewports::{layout, set};
+use crate::editor::bim::gestures::viewports::*;
 use crate::editor::bim::gestures::session::Modifiers;
 use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};

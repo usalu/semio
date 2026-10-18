@@ -131,7 +131,7 @@ impl Default for En1990Snapshot {
 pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
 
-use semio_s_plugin_norm_app_surface;
+use semio_s_plugin_norm_app_surface as app_surface;
 
 /// ⚓️ Permanent action entry (G_k,sup / G_k,inf / prestress) — forces in N.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]

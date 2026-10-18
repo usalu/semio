@@ -1,6 +1,18 @@
 //! 📋️ Manifest of the BIM editor: the action argument folding, the keybindings and the app manifest stitch of `create_bim_app`. See [`super`].
 
-use super::*;
+use crate::editor::bim::commands::gesture_keys;
+use crate::editor::bim::modes::edit;
+use crate::editor::bim::modes::edit::windows::{family, plan, schedule, section, sheet, world};
+use crate::editor::bim::panels::{families as families_panel, classification as classification_panel, diagnostics as diagnostics_panel, coordination as coordination_panel, library as library_panel, outliner as outliner_panel, properties as properties_panel};
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::BIM_MODEL_DIALECT;
+use semio_framework_plugin::ActionArgDef;
+use semio_framework_plugin::{PanelGroup, PanelTabDefinition, PanelTabKind, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL};
+use semio_framework_plugin::ActionDefinition;
+use semio_framework_plugin::Editor;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_ui_locale::LocalizedLabel;
+use crate::editor::bim::*;
 
 //#region 🔖️Manifest
 fn bim_action_args(id: &str) -> Vec<ActionArgDef> {

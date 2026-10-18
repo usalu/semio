@@ -8,7 +8,7 @@ import { decodeCargoDepInfo, foreignDepInfoPaths, invalidateForeignUnits, scanBu
 
 const moduleRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(moduleRoot, "../../../../../..");
-const fixture = JSON.parse(readFileSync(join(moduleRoot, "🧫️fixtures/🧾️cargo-provenance/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(join(moduleRoot, "🧪️tests/🧫️fixtures/🧾️cargo-provenance/🔣️.json"), "utf8"));
 
 const bytes = (hex: string): Uint8Array => Uint8Array.from(hex.match(/../g)!.map((pair) => Number.parseInt(pair, 16)));
 

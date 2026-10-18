@@ -1,5 +1,5 @@
 //! 🧭️ IFC option groups, design options and worksets restore authored records and memberships.
-use super::{Import, data::label, spatial::authoring_of, reader::{text, refs}};
+use crate::standards::v1::subsets::any::io::import::ifc::{Import, data::label, spatial::authoring_of, reader::{text, refs}};
 use crate::standards::v1::subsets::any::schema::snapshot::{OptionGroup, DesignOption, Workset, ElementMembership};
 use semio_s_artifact_stdio_contract::part21::Part21Value;
 

@@ -1,6 +1,7 @@
 //! 📚️ Set active example work: the staged switch of the active example document in fixed steps and bounded chunks.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dSetActiveExampleStage {

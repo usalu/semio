@@ -465,9 +465,9 @@ fn wrap_stream_diff(stream_index: usize, diff: SemioVideoStreamDiff) -> SemioVid
 //#region 🔖️Demo
 /// 🌱 Representative `SemioVideoDiff` cases built declaratively (empty/no-op and a removed stream row) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioVideoDiff> {
+pub fn demo_diff_cases() -> Vec<SemioVideoDiff> {
     vec![SemioVideoDiff::default(), SemioVideoDiff { streams: Some(IndexedTripleDiff { removed: vec![0], ..Default::default() }) }]
 }
 //#endregion 🔖️Demo

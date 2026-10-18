@@ -19,13 +19,13 @@ test("member opening retains six rejection stages and queries indivisible physic
     expect(reference.retained + reference.released).toBe(allocation.length);
     expect(Math.max(7, allocation.length)).toBeLessThanOrEqual(demand.admissionBytes);
   }
-  const source = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
+  const source = await Bun.file(new URL("../../🏭️operation/📥️lifted/🚪️open/🦀️.rs", import.meta.url)).text();
   const retained = source.slice(source.indexOf("impl<P, M> ErasedSnapshotRetirement for MemberStoreOpenRetained"));
   for (const axis of ["copy_byte", "capacity_byte", "release_byte", "depth"]) expect(retained).toContain(`fn next_${axis}_demand`);
-  expect(source).toContain("super::artifact_retirement_box_demands");
-  expect(source).toContain("pub fn next_release_byte_demand(&self)");
+  expect(source).toContain("semio_framework_os_store_read::artifact_retirement_box_demands");
+  expect(await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text()).toContain("pub fn next_release_byte_demand(&self)");
   expect(retained).not.toContain("next_close_byte_demand");
-  const store = await Bun.file(new URL("../../../../🦀️.rs", import.meta.url)).text();
+  const store = await Bun.file(new URL("../../../../📒️ledger/♻️retirement/🦀️.rs", import.meta.url)).text();
   const decoded = store.slice(store.indexOf("impl<Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreDecodedEditRetirement"), store.indexOf("impl<Mutation> Drop for ArtifactStoreDecodedEditRetirement"));
   for (const axis of ["copy_byte", "capacity_byte", "release_byte", "depth"]) expect(decoded).toContain(`fn next_${axis}_demand`);
   expect(decoded).not.toContain("next_close_byte_demand");

@@ -1,6 +1,6 @@
 //! 📍️ Annotations in the plan: spaces (outline and tag anchor with number, name and area) and the grid lines of the building with their bubbles.
 
-use super::{Context, PlanKind, PlanStyle, PlanVertex, Sheet};
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{Context, PlanKind, PlanStyle, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged as corners, point};
 use crate::standards::v1::subsets::any::schema::snapshot::SpaceBoundary;
 use semio_framework_geometry::Point;

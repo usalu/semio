@@ -171,12 +171,14 @@ pub mod app {
     pub use super::table_kit::*;
     pub use super::text_kit::*;
     pub use super::tree_kit::*;
+    pub use super::tree_kit::tree_item;
     pub use super::window_kits::*;
     pub use super::window_surface::*;
     pub use super::app_builder::*;
     pub use super::app_contract::*;
     pub use super::app_emission::*;
     pub use super::app_views::*;
+    pub use super::app_views::PeerMark;
     pub use super::artifact_declaration::*;
     pub use super::artifact_identity::*;
     pub use super::artifact_inference::*;

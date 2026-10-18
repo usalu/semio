@@ -2,7 +2,8 @@
 //! grid lines with their intersections and the orthogonal directions from the last point of a chain. Candidates compete by kind (a corner beats a midpoint beats a grid line ...)
 //! inside a pixel tolerance expressed in metres; nothing within reach leaves the pointer free.
 
-use super::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
+use crate::editor::bim::modes::edit::windows::plan;
+use crate::editor::bim::gestures::plane::{angle, axis_ends, dist, from_point2, polar, pt, P};
 use crate::standards::v1::subsets::any::schema::authored::plan::segment_of;
 use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 use semio_framework_geometry::bulge::{intersect, BulgeSeg, Extent};
@@ -151,6 +152,4 @@ pub fn snap(snapshot: &ModelSnapshot, raw: P, request: &SnapRequest<'_>) -> Snap
 }
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,7 +1,9 @@
 import { parseArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
 import {pdfDateFromNativeJson} from "./📌️annotation/🟦️.ts";
 /** 🪪️ Explicit finite native JSON admission into PDF's canonical owned scalar model. */
-import type { PdfObject, PdfDictEntry, PdfStreamFilter, PdfFunction, PdfColorSpace, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfObject, PdfDictEntry, PdfStreamFilter } from "../../../../🧬️schema/📸️snapshot/🧩️cos/🟦️.ts";
+import type { PdfFunction, PdfColorSpace } from "../../../../🧬️schema/📸️snapshot/🌈️color/🟦️.ts";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import {binary64} from "@semio-tech/framework/value/ieee754";
 
 function record(value: unknown): Record<string, unknown> { if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error("PDF native JSON requires an object"); return value as Record<string, unknown>; }

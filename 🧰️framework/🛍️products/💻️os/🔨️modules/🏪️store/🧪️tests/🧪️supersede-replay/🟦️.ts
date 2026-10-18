@@ -10,6 +10,7 @@ import { blake3 } from "@noble/hashes/blake3.js";
 import { blake3Hex } from "@semio-tech/framework/hash";
 
 import { applyPatch, type Operation } from "fast-json-patch";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 //#region 🧮️DemoOracle
 type Snapshot = { n: number | null };
@@ -89,7 +90,7 @@ test("cold history fixtures declare finite caller identity admission", () => {
   const database = new Database(":memory:");
   try { expect(database.query<{ ceiling: number }, number[]>("SELECT ?1 * ?2 + ?3 AS ceiling").get(law.maximumOperations, law.bodyBytesPerOperation, law.commandScaffoldBytes)?.ceiling).toBe(law.maximumOwnedBytes); }
   finally { database.close(); }
-  const source = readFileSync(new URL("./🦀️.rs", import.meta.url), "utf8");
+  const source = readModuleTreeSource(new URL("./🦀️.rs", import.meta.url));
   expect(source).toContain("EntityIdentityAuthority::new(FIXTURE_IDENTITY_BYTE_CEILING");
   expect(source).toContain("const FIXTURE_IDENTITY_BYTE_CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES");
 });

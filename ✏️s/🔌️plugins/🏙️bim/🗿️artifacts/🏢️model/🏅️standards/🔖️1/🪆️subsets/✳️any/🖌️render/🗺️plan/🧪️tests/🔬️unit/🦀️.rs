@@ -1,4 +1,18 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanKind, PlanLinework, PlanPolyline, PlanRegion, PlanStyle, PlanVertex};
+use semio_framework_2d::PathSegment;
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanText;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::BulgeSeg;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_plugin::{Canvas2dFraming, Canvas2dScene};
+#[allow(unused_imports)]
+use semio_framework_value::ToValue;
+use crate::render::plan::{ACCENT, ring, record};
+use crate::render::plan::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanBounds;
 

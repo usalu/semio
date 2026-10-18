@@ -1,0 +1,1548 @@
+//! 🗄️ `db_cli` — the `db` binary: `inspect`/`doc`/`wal-inspect`/`snapshot-inspect`/`verify`/
+//! `query`/`replay`/`repair`/`compact`/`health`/`conflict-simulate`/`replica-simulate`/`migrate`/
+//! `profile` over a `db::storage::FsStorage`-rooted document store. Hand-rolled arg parsing (no
+//! external CLI crate, per repo convention), exit codes `0` (success) / `1` (operation failed) /
+//! `2` (usage error), never panics on corrupt input. Frozen contract:
+//! `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md`
+//! (`## db crate family`, `db_cli` row).
+//!
+//! 🎯️ Design choice (depends on the `db` facade alone, `db_*` paths nowhere): every subcommand
+//! below reaches every primitive it needs purely through `db::<submodule>::…` paths (`db::storage`,
+//! `db::wal`, `db::snapshot`, `db::conflict`, `db::cluster`, `db::observe`, `db::document`,
+//! `db::actor`, `db::core`, …) — the facade's own re-exports, verified complete against `db/rs/
+//! lib.rs`. This crate's `Cargo.toml` accordingly depends on nothing but `db` itself plus two
+//! siblings that are NOT `db_*` crates: `protocol` (every frozen `Database`/`ArtifactHandle` entry
+//! point is typed against `protocol::ArtifactId`/`MutationEnvelope`/…, which the facade exposes
+//! without re-exporting a path to) and `pack` (`SnapshotManager::verify`'s `VerificationLevel` is
+//! pack's own type, snapshots being pack files). No `db_storage`/`db_wal`/`db_snapshot`/… path
+//! dependency of its own — `wal-inspect`/`snapshot-inspect`/`replay`/`repair` still need
+//! lower-level access than the actor-mediated `Database` API exposes (there is no `Database` method
+//! that lists WAL segments or snapshot generations), reached the same facade-path way.
+//!
+//! 🎯️ Every subcommand is real, including `migrate` and `profile`: `migrate` appends a genuine
+//! `WAL_MIGRATION` record via `db::wal::ArtifactWal` (force-flushed durably); `profile` submits `N`
+//! real commands sequentially through `ArtifactHandle::submit` and reports wall-clock throughput —
+//! both self-contained (bootstrap their own document/WAL if it doesn't exist yet), needing nothing
+//! from `db_fault_testing` (a separate, non-`db`-facade sibling crate this one deliberately does not
+//! depend on, to keep the "facade only" dependency footprint honest). `conflict-simulate` runs the
+//! genuine `db::conflict::ConflictDetector` over two hand-built `CommandTouch`es (no storage
+//! touched); `replica-simulate` runs the genuine `db::cluster::replicate_document` primitive between
+//! two local `FsStorage` roots (no network transport exists yet in this family, which is exactly why
+//! this stays a *simulation* rather than a real cluster operation).
+#![allow(async_fn_in_trait)]
+#![cfg(not(target_arch = "wasm32"))]
+extern crate semio_framework_os_kernel as pack;
+
+use std::collections::HashMap;
+use std::path::Path;
+
+use db_io_core::{SnapshotStorage as _, WalStorage as _};
+
+//#region 🔖️Args
+/// ✂️ Splits argv-style slices into positionals and `--flag value` / `--flag=value` pairs; a
+/// trailing bare `--flag` with nothing after it maps to an empty-string value. Callers with any
+/// no-argument boolean flags must strip those out of `args` first via `strip_flag` — this parser
+/// always tries to consume the next token as a value, which would otherwise swallow a following
+/// positional/flag. Mirrors `protocol_cli::parse_args`'s exact shape (same repo convention).
+async fn parse_args(args: &[String]) -> (Vec<String>, HashMap<String, String>) {
+    let mut positional = Vec::new();
+    let mut flags = HashMap::new();
+    let mut index = 0;
+    while index < args.len() {
+        let arg = &args[index];
+        let Some(rest) = arg.strip_prefix("--") else {
+            positional.push(arg.clone());
+            index += 1;
+            continue;
+        };
+        if let Some((key, value)) = rest.split_once('=') {
+            flags.insert(key.to_string(), value.to_string());
+            index += 1;
+        } else if index + 1 < args.len() {
+            flags.insert(rest.to_string(), args[index + 1].clone());
+            index += 2;
+        } else {
+            flags.insert(rest.to_string(), String::new());
+            index += 1;
+        }
+    }
+    (positional, flags)
+}
+
+/// ✂️ Pulls every occurrence of a no-value boolean `--<name>` flag out of `args` before the
+/// generic `parse_args` runs — see `parse_args`'s doc for why that's required.
+async fn strip_flag(args: &[String], name: &str) -> (Vec<String>, bool) {
+    let flag = format!("--{name}");
+    let mut present = false;
+    let mut rest = Vec::with_capacity(args.len());
+    for arg in args {
+        if arg == &flag {
+            present = true;
+        } else {
+            rest.push(arg.clone());
+        }
+    }
+    (rest, present)
+}
+
+async fn parse_profile(flags: &HashMap<String, String>) -> Result<db_policy::Profile, String> {
+    match flags.get("profile").map(String::as_str) {
+        None => Ok(db_policy::Profile::Dev),
+        Some("test") => Ok(db_policy::Profile::Test),
+        Some("dev") => Ok(db_policy::Profile::Dev),
+        Some("prod") => Ok(db_policy::Profile::Prod),
+        Some(other) => Err(format!("unknown --profile '{other}' (expected test|dev|prod)")),
+    }
+}
+
+/// ⚖️ `--policy laissez-faire|normal|vigilant` — the authority-local `protocol::MergePolicy`
+/// `db_artifact::ArtifactEngine::submit`'s outcome step judges a batch's worst graded conflict/
+/// message level against (contract §C9). Replaces the deleted CRDT-era `--rule-a`/`--rule-b`/
+/// `merge:<strategy>` vocabulary (C10).
+async fn parse_merge_policy(flags: &HashMap<String, String>) -> Result<protocol::MergePolicy, String> {
+    match flags.get("policy").map(String::as_str) {
+        None => Ok(protocol::MergePolicy::default()),
+        Some("laissez-faire") => Ok(protocol::MergePolicy::LaissezFaire),
+        Some("normal") => Ok(protocol::MergePolicy::Normal),
+        Some("vigilant") => Ok(protocol::MergePolicy::Vigilant),
+        Some(other) => Err(format!("unknown --policy '{other}' (expected laissez-faire|normal|vigilant)")),
+    }
+}
+//#endregion 🔖️Args
+
+//#region 🔖️Format
+fn hex32(bytes: &[u8; 32]) -> String {
+    bytes.iter().map(|b| format!("{b:02x}")).collect()
+}
+
+async fn now_ms() -> u64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
+}
+
+/// 🧾️ A best-effort human display of a query result's raw value bytes — UTF-8 text verbatim (the
+/// common case: `db_artifact`'s path-value convention stores JSON-encoded scalars, which decode as
+/// text), or a byte count for anything that doesn't decode, never a panic.
+fn describe_value_bytes(bytes: &db_query::QueryBytes) -> String {
+    let mut text = String::with_capacity(bytes.len());
+    let (mut scalar, mut minimum, mut remaining) = (0_u32, 0_u32, 0_u8);
+    for fragment in bytes.fragments() {
+        for byte in fragment {
+            if remaining == 0 {
+                match *byte {
+                    0x00..=0x7f => text.push(char::from(*byte)),
+                    0xc2..=0xdf => {
+                        scalar = u32::from(*byte & 0x1f);
+                        minimum = 0x80;
+                        remaining = 1;
+                    }
+                    0xe0..=0xef => {
+                        scalar = u32::from(*byte & 0x0f);
+                        minimum = 0x800;
+                        remaining = 2;
+                    }
+                    0xf0..=0xf4 => {
+                        scalar = u32::from(*byte & 0x07);
+                        minimum = 0x1_0000;
+                        remaining = 3;
+                    }
+                    _ => return format!("<{} bytes, non-utf8>", bytes.len()),
+                }
+            } else if byte & 0xc0 != 0x80 {
+                return format!("<{} bytes, non-utf8>", bytes.len());
+            } else {
+                scalar = (scalar << 6) | u32::from(*byte & 0x3f);
+                remaining -= 1;
+                if remaining == 0 {
+                    if scalar < minimum || scalar > 0x10_ffff || (0xd800..=0xdfff).contains(&scalar) {
+                        return format!("<{} bytes, non-utf8>", bytes.len());
+                    }
+                    text.push(char::from_u32(scalar).expect("validated unicode scalar"));
+                }
+            }
+        }
+    }
+    if remaining == 0 {
+        text
+    } else {
+        format!("<{} bytes, non-utf8>", bytes.len())
+    }
+}
+
+async fn fail(context: &str, err: impl std::fmt::Display) -> i32 {
+    eprintln!("db: {context}: {err}");
+    1
+}
+
+async fn close_wal_open_rejected(mut rejected: db_wal::ArtifactWalOpenRejected) -> db_ids::DbError {
+    loop {
+        match rejected.retry_close().await {
+            Ok(cause) => return cause,
+            Err(retained) => rejected = retained,
+        }
+    }
+}
+
+async fn close_document_open_rejected(mut rejected: db_engine::DatabaseDocumentOpenRejected) -> db_ids::DbError {
+    loop {
+        match rejected.retry_close().await {
+            Ok(cause) => return cause,
+            Err(retained) => rejected = retained,
+        }
+    }
+}
+
+async fn fail_wal_open(context: &str, rejected: db_wal::ArtifactWalOpenRejected) -> i32 {
+    fail(context, close_wal_open_rejected(rejected).await).await
+}
+
+async fn fail_document_open(context: &str, rejected: db_engine::DatabaseDocumentOpenRejected) -> i32 {
+    fail(context, close_document_open_rejected(rejected).await).await
+}
+
+async fn close_replication_rejected(mut rejected: db_cluster::ReplicationRejected) -> db_ids::DbError {
+    loop {
+        match rejected.retry_close().await {
+            Ok(cause) => return cause,
+            Err(retained) => rejected = retained,
+        }
+    }
+}
+
+async fn usage(message: &str) -> i32 {
+    eprintln!("db: {message}");
+    2
+}
+//#endregion 🔖️Format
+
+//#region 🔖️AsyncBridge
+/// 🚀️ Opens `FsStorage` on this binary's process pool, then synchronously waits only
+/// at the process entry boundary.
+// 🚫️async: E5 executor bridge — `db_cli` is a single-shot, strictly-sequential process (R4
+// clause 1: a binary entry point IS its own executor), so every `FsStorage` call in this file
+// stays plain sync and crosses the boundary here, once, via `db_actor::block_on`.
+fn open_fs_storage(root: &Path) -> Result<db_storage_fs::FsStorage, db_ids::DbError> {
+    match db_actor::block_on(db_storage_fs::FsStorage::open(cli_worker_pool(), root)) {
+        Ok(storage) => Ok(storage),
+        Err(mut rejected) => loop {
+            match db_actor::block_on(rejected.retry_close()) {
+                Ok(cause) => return Err(cause),
+                Err(retained) => rejected = retained,
+            }
+        },
+    }
+}
+
+/// 🧵️ The CLI process's one headless worker pool, shared by every database authority the
+/// selected subcommand opens.
+fn cli_worker_pool() -> std::sync::Arc<semio_framework_async::WorkerPool> {
+    let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
+    let config = semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::HeadlessBatch, cores);
+    std::sync::Arc::new(semio_framework_async::process_worker_pool(config))
+}
+
+/// 🗄️ Opens a database and injects the CLI process worker pool before any authority can spawn.
+async fn open_database(root: &Path, profile: db_policy::Profile) -> Result<db_engine::Database, db_ids::DbError> {
+    match db_engine::Database::open_at(cli_worker_pool(), root, profile).await {
+        Ok(database) => Ok(database),
+        Err(mut rejected) => loop {
+            match rejected.retry_close().await {
+                Ok(cause) => return Err(cause),
+                Err(retained) => rejected = retained,
+            }
+        },
+    }
+}
+//#endregion 🔖️AsyncBridge
+
+//#region 🔖️Health
+fn health_state_label(state: &db_observe::HealthState) -> String {
+    match state {
+        db_observe::HealthState::Healthy => "healthy".to_string(),
+        db_observe::HealthState::Degraded(reason) => format!("degraded: {reason}"),
+        db_observe::HealthState::Unhealthy(reason) => format!("unhealthy: {reason}"),
+    }
+}
+
+fn print_health(health: &db_engine::DbHealth) {
+    println!("== health ==");
+    println!("  overall: {}", health_state_label(&health.report.overall));
+    println!("  open_artifacts: {}", health.open_artifacts);
+    for (name, state) in &health.report.components {
+        println!("  - {name}: {}", health_state_label(state));
+    }
+}
+//#endregion 🔖️Health
+
+//#region 🔖️Inspect
+/// 📇️ `db inspect <root> [--profile test|dev|prod]` — opens (zero-touch, creating if absent) the
+/// `Database` at `root` and prints its catalog plus a health snapshot.
+async fn cmd_inspect(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
+    let Some(root) = positional.first() else {
+        return usage("usage: db inspect <root> [--profile test|dev|prod]").await;
+    };
+    let profile = match parse_profile(&flags).await {
+        Ok(profile) => profile,
+        Err(message) => return usage(&message).await,
+    };
+    let mut database = match open_database(Path::new(root), profile).await {
+        Ok(database) => database,
+        Err(err) => return fail("open", err).await,
+    };
+
+    let catalog = database.catalog().await;
+    println!("== catalog: {root} ==");
+    println!("  documents: {}", catalog.artifacts.len());
+    for entry in &catalog.artifacts {
+        println!("  - {} (created_at_ms={})", entry.document.0, entry.created_at_ms);
+    }
+    print_health(&database.health().await);
+
+    if let Err(err) = database.shutdown(&db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
+        return fail("shutdown", err).await;
+    }
+    0
+}
+//#endregion 🔖️Inspect
+
+//#region 🔖️Doc
+fn print_engine_frontier(frontier: &db_engine_base::Frontier) {
+    println!("  head_seq: {}", frontier.head_seq);
+    println!("  commit_seq: {}", frontier.commit_seq);
+    println!("  epoch: {}", frontier.epoch);
+    println!("  chain_hash: {}", hex32(&frontier.chain_hash));
+}
+
+/// 📄️ `db doc <root> <document-id> [--profile ...]` — opens `document` through a real
+/// `ArtifactHandle` (recovering it from its WAL if not already open) and prints its current
+/// frontier plus a tail of its committed history (real: `ArtifactHandle::history` replays the WAL
+/// directly per `db_engine`'s own module doc).
+async fn cmd_doc(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
+    if positional.len() < 2 {
+        return usage("usage: db doc <root> <document-id> [--profile test|dev|prod]").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+    let profile = match parse_profile(&flags).await {
+        Ok(profile) => profile,
+        Err(message) => return usage(&message).await,
+    };
+    let mut database = match open_database(Path::new(root), profile).await {
+        Ok(database) => database,
+        Err(err) => return fail("open", err).await,
+    };
+    let document_id = protocol::ArtifactId(id.clone());
+    let handle = match database.document(&document_id).await {
+        Ok(handle) => handle,
+        Err(err) => return fail_document_open("document", err).await,
+    };
+
+    let outcome = match handle.frontier().await {
+        Ok(frontier) => {
+            println!("== document {id} ==");
+            print_engine_frontier(&frontier);
+            match handle.history().await {
+                Ok(mut history) => {
+                    println!("  history entries: {}", history.entries().len());
+                    for entry in history.entries().iter().rev().take(10) {
+                        println!("    - operations={} head_seq={}", entry.operation_count, entry.head_seq);
+                    }
+                    while history.close_step() {}
+                }
+                Err(err) => println!("  history: unavailable ({err})"),
+            }
+            0
+        }
+        Err(err) => fail("frontier", err).await,
+    };
+
+    drop(handle);
+    match database.shutdown(&db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
+        Ok(()) => outcome,
+        Err(err) => fail("shutdown", err).await,
+    }
+}
+//#endregion 🔖️Doc
+
+//#region 🔖️CommandClose
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum CliCommandCloseExit {
+    Closed,
+    Fault,
+    Interrupted,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+struct CliCommandCloseWitness {
+    exit: CliCommandCloseExit,
+    opportunities: u64,
+}
+
+static CLI_COMMAND_CLOSE_INTERRUPTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+static CLI_COMMAND_CLOSE_FAULTED: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+
+fn cli_command_close_witness(exit: CliCommandCloseExit, opportunities: u64) -> CliCommandCloseWitness {
+    CliCommandCloseWitness { exit, opportunities }
+}
+
+#[derive(Clone, Debug, PartialEq)]
+enum CliCommandCloseTerminal {
+    Witness(CliCommandCloseWitness),
+    Fault(db_ids::DbError),
+}
+
+fn cli_command_close_terminal(terminal: &CliCommandCloseTerminal) -> Result<CliCommandCloseWitness, db_ids::DbError> {
+    match terminal {
+        CliCommandCloseTerminal::Witness(witness) => Ok(*witness),
+        CliCommandCloseTerminal::Fault(error) => Err(error.clone()),
+    }
+}
+
+/// 🧹️ Mounted WAL-record close state; one poll owns one close opportunity.
+struct MountedWalRecordCommandClose {
+    owner: Option<db_wal_log::WalRecord>,
+    opportunities: u64,
+    terminal: Option<CliCommandCloseTerminal>,
+}
+
+impl MountedWalRecordCommandClose {
+    fn new(owner: db_wal_log::WalRecord) -> Self {
+        Self { owner: Some(owner), opportunities: 0, terminal: None }
+    }
+}
+
+impl std::future::Future for MountedWalRecordCommandClose {
+    type Output = Result<CliCommandCloseWitness, db_ids::DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.opportunities += 1;
+        if self.owner.is_none() {
+            let interrupted = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            let terminal = self.terminal.get_or_insert(CliCommandCloseTerminal::Witness(interrupted));
+            return std::task::Poll::Ready(cli_command_close_terminal(terminal));
+        }
+        let owner = self.owner.as_mut().ok_or_else(|| db_ids::DbError::Internal("WAL record close lost its retained owner".to_string()))?;
+        match owner.close_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.owner = None;
+                let witness = cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities);
+                self.terminal = Some(CliCommandCloseTerminal::Witness(witness));
+                std::task::Poll::Ready(Ok(witness))
+            }
+            Err(error) => {
+                self.owner = None;
+                self.terminal = Some(CliCommandCloseTerminal::Fault(error.clone()));
+                CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
+impl Drop for MountedWalRecordCommandClose {
+    fn drop(&mut self) {
+        if self.owner.take().is_some() {
+            let _ = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            CLI_COMMAND_CLOSE_INTERRUPTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+
+/// 🧰️ Mounted WAL-batch close state; the batch cursor retires one record owner per poll.
+struct MountedWalBatchCommandClose {
+    owner: Option<db_wal_log::WalRecordBatch>,
+    opportunities: u64,
+    terminal: Option<CliCommandCloseTerminal>,
+}
+
+impl MountedWalBatchCommandClose {
+    fn new(owner: db_wal_log::WalRecordBatch) -> Self {
+        Self { owner: Some(owner), opportunities: 0, terminal: None }
+    }
+}
+
+impl std::future::Future for MountedWalBatchCommandClose {
+    type Output = Result<CliCommandCloseWitness, db_ids::DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.opportunities += 1;
+        if self.owner.is_none() {
+            let interrupted = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            let terminal = self.terminal.get_or_insert(CliCommandCloseTerminal::Witness(interrupted));
+            return std::task::Poll::Ready(cli_command_close_terminal(terminal));
+        }
+        let owner = self.owner.as_mut().ok_or_else(|| db_ids::DbError::Internal("WAL batch close lost its retained owner".to_string()))?;
+        match owner.close_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.owner = None;
+                let witness = cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities);
+                self.terminal = Some(CliCommandCloseTerminal::Witness(witness));
+                std::task::Poll::Ready(Ok(witness))
+            }
+            Err(error) => {
+                self.owner = None;
+                self.terminal = Some(CliCommandCloseTerminal::Fault(error.clone()));
+                CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
+impl Drop for MountedWalBatchCommandClose {
+    fn drop(&mut self) {
+        if self.owner.take().is_some() {
+            let _ = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            CLI_COMMAND_CLOSE_INTERRUPTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+
+/// 📼️ Mounted replay-cursor close state with one synchronous owner step per poll.
+struct MountedWalReplayCommandClose<'storage> {
+    owner: Option<MountedWalReplayCommandOwner<'storage>>,
+    opportunities: u64,
+    terminal: Option<CliCommandCloseTerminal>,
+}
+
+enum MountedWalReplayCommandOwner<'storage> {
+    Raw(db_wal_log::WalReplayCursor<'storage, db_storage_fs::FsStorage>),
+    Committed(db_wal_log::WalCommittedCursor<'storage, db_storage_fs::FsStorage>),
+}
+
+impl MountedWalReplayCommandOwner<'_> {
+    fn close_owner_step(&mut self) -> Result<bool, db_ids::DbError> {
+        match self {
+            Self::Raw(owner) => owner.close_owner_step(),
+            Self::Committed(owner) => owner.close_owner_step(),
+        }
+    }
+}
+
+impl<'storage> MountedWalReplayCommandClose<'storage> {
+    fn new(owner: db_wal_log::WalReplayCursor<'storage, db_storage_fs::FsStorage>) -> Self {
+        Self { owner: Some(MountedWalReplayCommandOwner::Raw(owner)), opportunities: 0, terminal: None }
+    }
+
+    fn committed(owner: db_wal_log::WalCommittedCursor<'storage, db_storage_fs::FsStorage>) -> Self {
+        Self { owner: Some(MountedWalReplayCommandOwner::Committed(owner)), opportunities: 0, terminal: None }
+    }
+}
+
+impl std::future::Future for MountedWalReplayCommandClose<'_> {
+    type Output = Result<CliCommandCloseWitness, db_ids::DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.opportunities += 1;
+        if self.owner.is_none() {
+            let interrupted = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            let terminal = self.terminal.get_or_insert(CliCommandCloseTerminal::Witness(interrupted));
+            return std::task::Poll::Ready(cli_command_close_terminal(terminal));
+        }
+        let owner = self.owner.as_mut().ok_or_else(|| db_ids::DbError::Internal("WAL replay close lost its retained owner".to_string()))?;
+        match owner.close_owner_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.owner = None;
+                let witness = cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities);
+                self.terminal = Some(CliCommandCloseTerminal::Witness(witness));
+                std::task::Poll::Ready(Ok(witness))
+            }
+            Err(error) => {
+                self.owner = None;
+                self.terminal = Some(CliCommandCloseTerminal::Fault(error.clone()));
+                CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
+impl Drop for MountedWalReplayCommandClose<'_> {
+    fn drop(&mut self) {
+        if self.owner.take().is_some() {
+            let _ = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            CLI_COMMAND_CLOSE_INTERRUPTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+
+/// 📸️ Mounted snapshot-cursor close state with an exact terminal exit witness.
+struct MountedSnapshotCommandClose<'manager, 'storage> {
+    owner: Option<db_snapshot::SnapshotChainCursor<'manager, 'storage, db_storage_fs::FsStorage>>,
+    opportunities: u64,
+    terminal: Option<CliCommandCloseTerminal>,
+}
+
+impl<'manager, 'storage> MountedSnapshotCommandClose<'manager, 'storage> {
+    fn new(owner: db_snapshot::SnapshotChainCursor<'manager, 'storage, db_storage_fs::FsStorage>) -> Self {
+        Self { owner: Some(owner), opportunities: 0, terminal: None }
+    }
+}
+
+impl std::future::Future for MountedSnapshotCommandClose<'_, '_> {
+    type Output = Result<CliCommandCloseWitness, db_ids::DbError>;
+
+    fn poll(mut self: std::pin::Pin<&mut Self>, context: &mut std::task::Context<'_>) -> std::task::Poll<Self::Output> {
+        self.opportunities += 1;
+        if self.owner.is_none() {
+            let interrupted = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            let terminal = self.terminal.get_or_insert(CliCommandCloseTerminal::Witness(interrupted));
+            return std::task::Poll::Ready(cli_command_close_terminal(terminal));
+        }
+        let owner = self.owner.as_mut().ok_or_else(|| db_ids::DbError::Internal("snapshot close lost its retained owner".to_string()))?;
+        match owner.close_step() {
+            Ok(true) => {
+                context.waker().wake_by_ref();
+                std::task::Poll::Pending
+            }
+            Ok(false) => {
+                self.owner = None;
+                let witness = cli_command_close_witness(CliCommandCloseExit::Closed, self.opportunities);
+                self.terminal = Some(CliCommandCloseTerminal::Witness(witness));
+                std::task::Poll::Ready(Ok(witness))
+            }
+            Err(error) => {
+                self.owner = None;
+                self.terminal = Some(CliCommandCloseTerminal::Fault(error.clone()));
+                CLI_COMMAND_CLOSE_FAULTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+                std::task::Poll::Ready(Err(error))
+            }
+        }
+    }
+}
+
+impl Drop for MountedSnapshotCommandClose<'_, '_> {
+    fn drop(&mut self) {
+        if self.owner.take().is_some() {
+            let _ = cli_command_close_witness(CliCommandCloseExit::Interrupted, self.opportunities);
+            CLI_COMMAND_CLOSE_INTERRUPTED.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+        }
+    }
+}
+//#endregion 🔖️CommandClose
+
+//#region 🔖️WalInspect
+fn wal_cursor_control() -> Result<db_wal_log::WalCursorControl, db_ids::DbError> {
+    db_wal_log::WalCursorControl::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), std::time::Instant::now() + std::time::Duration::from_secs(30), 1_000_000)
+}
+
+async fn admit_cli_wal_bytes(source: Vec<u8>, maximum: u64, control: &mut db_wal_log::WalCursorControl) -> Result<db_wal_log::WalBytes, db_ids::DbError> {
+    match db_wal_log::WalBytes::try_admit(source, maximum, control).await {
+        Ok(bytes) => Ok(bytes),
+        Err(mut rejected) => {
+            control.grant()?;
+            let _ = rejected.close_step()?;
+            Err(rejected.into_error())
+        }
+    }
+}
+
+fn wal_record_kind_name(record: &db_wal_log::WalRecord) -> &'static str {
+    match record {
+        db_wal_log::WalRecord::SegmentHeader { .. } => "segment_header",
+        db_wal_log::WalRecord::TxBegin { .. } => "tx_begin",
+        db_wal_log::WalRecord::TxCommit { .. } => "tx_commit",
+        db_wal_log::WalRecord::TxAbort { .. } => "tx_abort",
+        db_wal_log::WalRecord::Command(_) => "command",
+        db_wal_log::WalRecord::Payload(_) => "payload",
+        db_wal_log::WalRecord::Diff(_) => "diff",
+        db_wal_log::WalRecord::Inverse(_) => "inverse",
+        db_wal_log::WalRecord::Event(_) => "event",
+        db_wal_log::WalRecord::Outbox(_) => "outbox",
+        db_wal_log::WalRecord::Frontier(_) => "frontier",
+        db_wal_log::WalRecord::SnapshotPub { .. } => "snapshot_pub",
+        db_wal_log::WalRecord::IndexCkpt { .. } => "index_ckpt",
+        db_wal_log::WalRecord::Lease { .. } => "lease",
+        db_wal_log::WalRecord::Migration(_) => "migration",
+    }
+}
+
+fn describe_wal_record(record: &db_wal_log::WalRecord) -> String {
+    let kind = wal_record_kind_name(record);
+    match record {
+        db_wal_log::WalRecord::SegmentHeader { document, segment_index, prev_chain_hash } => {
+            format!("{kind} document={document} segment_index={segment_index} prev_chain_hash={}", prev_chain_hash.map_or_else(|| "-".to_string(), |hash| hex32(&hash)))
+        }
+        db_wal_log::WalRecord::TxBegin { tx_id } => format!("{kind} tx_id={tx_id}"),
+        db_wal_log::WalRecord::TxCommit { tx_id, record_count } => format!("{kind} tx_id={tx_id} record_count={record_count}"),
+        db_wal_log::WalRecord::TxAbort { tx_id } => format!("{kind} tx_id={tx_id}"),
+        db_wal_log::WalRecord::Command(bytes) => format!("{kind} bytes={}", bytes.len()),
+        db_wal_log::WalRecord::Payload(db_wal_log::WalPayloadRef::Inline(bytes)) => format!("{kind} inline bytes={}", bytes.len()),
+        db_wal_log::WalRecord::Payload(db_wal_log::WalPayloadRef::CasRef(hash)) => format!("{kind} cas_ref hash={}", hex32(&hash.0)),
+        db_wal_log::WalRecord::Diff(bytes) => format!("{kind} bytes={}", bytes.len()),
+        db_wal_log::WalRecord::Inverse(bytes) => format!("{kind} bytes={}", bytes.len()),
+        db_wal_log::WalRecord::Event(bytes) => format!("{kind} bytes={}", bytes.len()),
+        db_wal_log::WalRecord::Outbox(bytes) => format!("{kind} bytes={}", bytes.len()),
+        db_wal_log::WalRecord::Frontier(frontier) => {
+            format!("{kind} head_seq={} commit_seq={} epoch={} chain_hash={}", frontier.head_seq, frontier.commit_seq, frontier.epoch, hex32(&frontier.chain_hash))
+        }
+        db_wal_log::WalRecord::SnapshotPub { generation, frontier } => format!("{kind} generation={generation} head_seq={}", frontier.head_seq),
+        db_wal_log::WalRecord::IndexCkpt { run_ids } => format!("{kind} run_ids={}", run_ids.len()),
+        db_wal_log::WalRecord::Lease { resource, holder, fence, expires_at_ms } => format!("{kind} resource={} holder={} fence={fence} expires_at_ms={expires_at_ms}", resource.as_str(), holder.as_str()),
+        db_wal_log::WalRecord::Migration(bytes) => format!("{kind} bytes={}", bytes.len()),
+    }
+}
+
+/// 📼️ `db wal-inspect <root> <document-id> [--limit N]` — lists `document`'s raw WAL segments
+/// (index + byte length, straight from `WalStorage`, before any decoding) then decodes every
+/// `WAL_*` record via `db::wal::replay_document`. A torn/corrupt WAL is reported honestly (with a
+/// hint pointing at `db repair`), never panics.
+async fn cmd_wal_inspect(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
+    if positional.len() < 2 {
+        return usage("usage: db wal-inspect <root> <document-id> [--limit N]").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+    let limit = match flags.get("limit").map(|value| value.parse::<usize>()) {
+        None => None,
+        Some(Ok(limit)) => Some(limit),
+        Some(Err(_)) => return usage("db wal-inspect: --limit must be a non-negative integer").await,
+    };
+
+    let storage = match open_fs_storage(Path::new(root)) {
+        Ok(storage) => storage,
+        Err(err) => return fail("open", err).await,
+    };
+    let document = db_ids::ArtifactId(id.clone());
+
+    let mut segments = match db_actor::block_on(storage.list_segments(&document)) {
+        Ok(segments) => segments,
+        Err(err) => return fail("list_segments", err).await,
+    };
+    println!("== wal segments: {} ==", segments.len());
+    for index in &segments {
+        match db_actor::block_on(storage.segment_len(&document, *index)) {
+            Ok(len) => println!("  segment {index}: {len} bytes"),
+            Err(err) => println!("  segment {index}: <error reading length: {err}>"),
+        }
+    }
+    let _ = segments.close_step();
+    drop(segments);
+
+    let control = match wal_cursor_control() {
+        Ok(control) => control,
+        Err(err) => return fail("wal cursor", err).await,
+    };
+    match db_wal_log::replay_document(&storage, &document, control).await {
+        Ok(mut records) => {
+            println!("== wal records ==");
+            let mut count = 0usize;
+            let mut shown = 0usize;
+            loop {
+                match records.next_step().await {
+                    Ok(db_wal_log::WalReplayStep::Record(record)) => {
+                        if limit.is_none_or(|limit| shown < limit) {
+                            println!("  [{count}] {}", describe_wal_record(&record));
+                            shown += 1;
+                        }
+                        count += 1;
+                        if let Err(err) = MountedWalRecordCommandClose::new(record).await {
+                            let _ = MountedWalReplayCommandClose::new(records).await;
+                            return fail("record close", err).await;
+                        }
+                    }
+                    Ok(db_wal_log::WalReplayStep::Yield) => continue,
+                    Ok(db_wal_log::WalReplayStep::Done) => break,
+                    Err(err) => {
+                        let _ = MountedWalReplayCommandClose::new(records).await;
+                        return fail("replay", err).await;
+                    }
+                }
+            }
+            if let Err(err) = MountedWalReplayCommandClose::new(records).await {
+                return fail("replay close", err).await;
+            }
+            if shown < count {
+                println!("  ... {} more (pass --limit to see more)", count - shown);
+            }
+            0
+        }
+        Err(err) => {
+            println!("== wal records: unavailable ==");
+            println!("  {err}");
+            println!("  (hint: run `db repair {root} {id}` to discard a torn tail)");
+            1
+        }
+    }
+}
+//#endregion 🔖️WalInspect
+
+//#region 🔖️SnapshotInspect
+/// 📸️ `db snapshot-inspect <root> <document-id> [--generation N] [--verify]` — lists every stored
+/// generation, then decodes one (the latest, or `--generation N`) via `db::snapshot::open_latest`
+/// over `SnapshotManager`'s retained lineage cursor, printing its descriptor.
+/// `--verify` additionally runs `SnapshotManager::verify` at `VerificationLevel::Full`.
+async fn cmd_snapshot_inspect(rest: &[String]) -> i32 {
+    let (rest, verify) = strip_flag(rest, "verify").await;
+    let (positional, flags) = parse_args(&rest).await;
+    if positional.len() < 2 {
+        return usage("usage: db snapshot-inspect <root> <document-id> [--generation N] [--verify]").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+
+    let storage = match open_fs_storage(Path::new(root)) {
+        Ok(storage) => storage,
+        Err(err) => return fail("open", err).await,
+    };
+    let document = db_ids::ArtifactId(id.clone());
+
+    let mut generations = match db_actor::block_on(storage.list_generations(&document)) {
+        Ok(generations) => generations,
+        Err(err) => return fail("list_generations", err).await,
+    };
+    println!("== snapshot generations: {} ==", generations.len());
+    for generation in &generations {
+        println!("  - {generation}");
+    }
+    let latest = generations.last().copied();
+    let _ = generations.close_step();
+    drop(generations);
+    let Some(latest) = latest else {
+        return 0;
+    };
+
+    let generation = match flags.get("generation").map(|value| value.parse::<u64>()) {
+        None => latest,
+        Some(Ok(generation)) => generation,
+        Some(Err(_)) => return usage("db snapshot-inspect: --generation must be a non-negative integer").await,
+    };
+
+    let manager = db_snapshot::SnapshotManager::new(&storage).await;
+    let cancelled = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
+    let control = match db_snapshot::SnapshotCursorControl::new(cancelled, std::time::Instant::now() + std::time::Duration::from_secs(30), 8_192) {
+        Ok(control) => control,
+        Err(err) => return fail("snapshot_cursor", err).await,
+    };
+    let mut cursor = manager.chain_cursor(&document, generation, control);
+    let descriptor = match db_actor::block_on(cursor.latest_descriptor()) {
+        Ok(descriptor) => descriptor,
+        Err(err) => {
+            let _ = MountedSnapshotCommandClose::new(cursor).await;
+            return fail("snapshot_cursor", err).await;
+        }
+    };
+    println!("== generation {generation} descriptor ==");
+    println!("  parent_generation: {}", descriptor.parent_generation.map_or_else(|| "-".to_string(), |generation| generation.to_string()));
+    println!("  head_seq: {}", descriptor.head_seq);
+    println!("  commit_seq: {}", descriptor.commit_seq);
+    println!("  epoch: {}", descriptor.epoch);
+    println!("  chain_hash: {}", hex32(&descriptor.chain_hash));
+    println!("  protocol_version: {}", descriptor.protocol_version);
+    println!("  base_pack_hash: {}", descriptor.base_pack_hash.map_or_else(|| "-".to_string(), |hash| hex32(&hash.0)));
+    println!("  roots: {}", descriptor.roots.len());
+    println!("  new_pages: {}", descriptor.new_pages.len());
+    println!("  created_at_ms: {}", descriptor.created_at_ms);
+    if let Err(err) = MountedSnapshotCommandClose::new(cursor).await {
+        return fail("snapshot cursor close", err).await;
+    }
+
+    if verify {
+        match db_actor::block_on(manager.verify(&document, generation, pack::os_pack::VerificationLevel::Full)) {
+            Ok(()) => println!("== verify: OK =="),
+            Err(err) => {
+                println!("== verify: FAIL ==");
+                println!("  {err}");
+                return 1;
+            }
+        }
+    }
+    0
+}
+//#endregion 🔖️SnapshotInspect
+
+//#region 🔖️Verify
+/// 🔬️ The shared per-document check `verify` runs: a full WAL replay (rejects a torn tail) plus,
+/// if a snapshot exists, a full-level `SnapshotManager::verify` of its latest generation.
+async fn verify_document(storage: &db_storage_fs::FsStorage, document: &db_ids::ArtifactId) -> Result<String, db_ids::DbError> {
+    let mut records = db_wal_log::replay_committed_document(storage, document, wal_cursor_control()?).await?;
+    let mut record_count = 0usize;
+    let replay = async {
+        loop {
+            let mut transaction = match records.next_transaction_step().await? {
+                db_wal_log::WalCommittedStep::Transaction(transaction) => transaction,
+                db_wal_log::WalCommittedStep::Yield => {
+                    semio_framework_async::yield_once().await;
+                    continue;
+                }
+                db_wal_log::WalCommittedStep::Done => break,
+            };
+            loop {
+                match transaction.next_record_step()? {
+                    db_wal_log::WalCommittedRecordStep::Record(_) => record_count += 1,
+                    db_wal_log::WalCommittedRecordStep::Yield => {
+                        semio_framework_async::yield_once().await;
+                        continue;
+                    }
+                    db_wal_log::WalCommittedRecordStep::Done => break,
+                }
+                while transaction.close_record_step()? {
+                    semio_framework_async::yield_once().await;
+                }
+            }
+            transaction.finish()?;
+        }
+        Ok::<(), db_ids::DbError>(())
+    }
+    .await;
+    let closed = MountedWalReplayCommandClose::committed(records).await;
+    replay?;
+    closed?;
+    let manager = db_snapshot::SnapshotManager::new(storage).await;
+    match db_actor::block_on(manager.load_latest(document))? {
+        Some((generation, _descriptor)) => {
+            db_actor::block_on(manager.verify(document, generation, pack::os_pack::VerificationLevel::Full))?;
+            Ok(format!("wal committed records={record_count} snapshot generation={generation} (verified)"))
+        }
+        None => Ok(format!("wal committed records={record_count} snapshot=none")),
+    }
+}
+
+/// 🔬️ `db verify <root> [document-id] [--profile ...]` — verifies one document, or every document
+/// in the catalog if none is given. Prints `OK <id>: <summary>` / `FAIL <id>: <reason>` per
+/// document, never panics on corrupt input; exits `1` iff any document failed.
+async fn cmd_verify(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
+    let Some(root) = positional.first() else {
+        return usage("usage: db verify <root> [document-id] [--profile test|dev|prod]").await;
+    };
+    let profile = match parse_profile(&flags).await {
+        Ok(profile) => profile,
+        Err(message) => return usage(&message).await,
+    };
+
+    let ids: Vec<String> = match positional.get(1) {
+        Some(id) => vec![id.clone()],
+        None => {
+            let mut database = match open_database(Path::new(root), profile).await {
+                Ok(database) => database,
+                Err(err) => return fail("open", err).await,
+            };
+            let ids = database.catalog().await.artifacts.iter().map(|entry| entry.document.0.clone()).collect();
+            if let Err(err) = database.shutdown(&db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
+                return fail("shutdown", err).await;
+            }
+            ids
+        }
+    };
+    if ids.is_empty() {
+        println!("db verify: no documents in catalog at '{root}'");
+        return 0;
+    }
+
+    let storage = match open_fs_storage(Path::new(root)) {
+        Ok(storage) => storage,
+        Err(err) => return fail("open", err).await,
+    };
+    let mut failures = 0usize;
+    for id in &ids {
+        let document = db_ids::ArtifactId(id.clone());
+        match verify_document(&storage, &document).await {
+            Ok(summary) => println!("OK   {id}: {summary}"),
+            Err(err) => {
+                println!("FAIL {id}: {err}");
+                failures += 1;
+            }
+        }
+    }
+    if failures > 0 {
+        1
+    } else {
+        0
+    }
+}
+//#endregion 🔖️Verify
+
+//#region 🔖️Query
+/// 🔎️ `db query <root> <document-id> <path> [more-paths...] [--profile ...]` — resolves one or
+/// more paths against `document`'s live (`Consistency::Canonical`) state through a real
+/// `ArtifactHandle::query`.
+async fn cmd_query(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
+    if positional.len() < 3 {
+        return usage("usage: db query <root> <document-id> <path> [more-paths...] [--profile test|dev|prod]").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+    let paths: Vec<String> = positional[2..].to_vec();
+    let profile = match parse_profile(&flags).await {
+        Ok(profile) => profile,
+        Err(message) => return usage(&message).await,
+    };
+    let mut database = match open_database(Path::new(root), profile).await {
+        Ok(database) => database,
+        Err(err) => return fail("open", err).await,
+    };
+    let document_id = protocol::ArtifactId(id.clone());
+    let handle = match database.document(&document_id).await {
+        Ok(handle) => handle,
+        Err(err) => return fail_document_open("document", err).await,
+    };
+
+    let query = match paths.len() {
+        1 => db_engine_base::Query::Get { path: paths[0].clone() },
+        _ => db_engine_base::Query::GetMany { paths },
+    };
+    let outcome = match handle.query(query, db_engine_base::Consistency::Canonical).await {
+        Ok(mut stream) => {
+            for entry in stream.iter() {
+                match entry.value() {
+                    Some(bytes) => println!("{} = {}", entry.path(), describe_value_bytes(bytes)),
+                    None => println!("{} = <unset>", entry.path()),
+                }
+            }
+            match (|| -> Result<(), db_ids::DbError> {
+                let _ = stream.close_step()?;
+                Ok(())
+            })() {
+                Ok(()) => 0,
+                Err(error) => fail("query close", error).await,
+            }
+        }
+        Err(err) => fail("query", err).await,
+    };
+
+    drop(handle);
+    match database.shutdown(&db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
+        Ok(()) => outcome,
+        Err(err) => fail("shutdown", err).await,
+    }
+}
+//#endregion 🔖️Query
+
+//#region 🔖️Replay
+/// 🔁️ `db replay <root> <document-id>` — a raw, actor-bypassing `db::wal::replay_document` pass:
+/// record-kind counts plus the frontier reconstructed from the last `WAL_FRONTIER` record. Distinct
+/// from `doc`, which goes through a live `ArtifactAuthority` — this is the lower-level diagnostic
+/// twin, useful precisely when the actor path itself is in question.
+async fn cmd_replay(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
+    if positional.len() < 2 {
+        return usage("usage: db replay <root> <document-id>").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+    let storage = match open_fs_storage(Path::new(root)) {
+        Ok(storage) => storage,
+        Err(err) => return fail("open", err).await,
+    };
+    let document = db_ids::ArtifactId(id.clone());
+    let control = match wal_cursor_control() {
+        Ok(control) => control,
+        Err(err) => return fail("wal cursor", err).await,
+    };
+    let mut records = match db_wal_log::replay_document(&storage, &document, control).await {
+        Ok(records) => records,
+        Err(err) => return fail("replay", err).await,
+    };
+
+    let mut kind_counts: std::collections::BTreeMap<&'static str, usize> = std::collections::BTreeMap::new();
+    let mut last_frontier: Option<db_durability::Frontier> = None;
+    let mut record_count = 0usize;
+    loop {
+        let record = match records.next_step().await {
+            Ok(db_wal_log::WalReplayStep::Record(record)) => record,
+            Ok(db_wal_log::WalReplayStep::Yield) => continue,
+            Ok(db_wal_log::WalReplayStep::Done) => break,
+            Err(err) => {
+                let _ = MountedWalReplayCommandClose::new(records).await;
+                return fail("replay", err).await;
+            }
+        };
+        record_count += 1;
+        *kind_counts.entry(wal_record_kind_name(&record)).or_insert(0) += 1;
+        if let db_wal_log::WalRecord::Frontier(frontier) = &record {
+            last_frontier = Some(frontier.clone());
+        }
+        if let Err(err) = MountedWalRecordCommandClose::new(record).await {
+            let _ = MountedWalReplayCommandClose::new(records).await;
+            return fail("record close", err).await;
+        }
+    }
+    if let Err(err) = MountedWalReplayCommandClose::new(records).await {
+        return fail("replay close", err).await;
+    }
+
+    println!("== replay: {id} ==");
+    println!("  records: {record_count}");
+    for (kind, count) in &kind_counts {
+        println!("  - {kind}: {count}");
+    }
+    match last_frontier {
+        Some(frontier) => {
+            println!("  reconstructed frontier:");
+            println!("    head_seq: {}", frontier.head_seq);
+            println!("    commit_seq: {}", frontier.commit_seq);
+            println!("    epoch: {}", frontier.epoch);
+            println!("    chain_hash: {}", hex32(&frontier.chain_hash));
+        }
+        None => println!("  reconstructed frontier: none (no committed transaction found)"),
+    }
+    0
+}
+//#endregion 🔖️Replay
+
+//#region 🔖️Repair
+/// 🩹️ `db repair <root> <document-id>` — the real repair primitive: `db::wal::ArtifactWal::open`
+/// already discards a torn active-segment tail and rewrites it from the trusted prefix (see its own
+/// doc's "forced by `protocol::SprWriter`'s API" design-choice note) — this subcommand simply drives
+/// that recovery path and reports what it found. Idempotent on an already-clean WAL.
+async fn cmd_repair(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
+    if positional.len() < 2 {
+        return usage("usage: db repair <root> <document-id>").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+    let storage = match open_fs_storage(Path::new(root)) {
+        Ok(storage) => storage,
+        Err(err) => return fail("open", err).await,
+    };
+    let document = db_ids::ArtifactId(id.clone());
+    match db_actor::block_on(db_wal::ArtifactWal::open(&storage, document, db_wal_log::GroupCommitPolicy::default(), now_ms().await)) {
+        Ok((mut wal, report)) => {
+            if let Err(err) = wal.close().await {
+                return fail("repair close", err).await;
+            }
+            println!("== repair: {id} ==");
+            println!("  segments_seen: {}", report.segments_seen);
+            println!("  records_replayed: {}", report.records_replayed);
+            println!("  torn_tail_bytes: {}", report.torn_tail_bytes);
+            if report.torn_tail_bytes > 0 {
+                println!("  discarded a torn tail — the active segment has been rewritten");
+            } else {
+                println!("  no torn tail found — wal was already clean");
+            }
+            0
+        }
+        Err(err) => fail_wal_open("repair", err).await,
+    }
+}
+//#endregion 🔖️Repair
+
+//#region 🔖️Compact
+/// 🧹️ `db compact <root> <document-id> [--holder H] [--consolidate] [--profile ...]` — drives a
+/// real, fenced `db_compact::Compactor` pass via `Database::compact_document`.
+async fn cmd_compact(rest: &[String]) -> i32 {
+    let (rest, consolidate) = strip_flag(rest, "consolidate").await;
+    let (positional, flags) = parse_args(&rest).await;
+    if positional.len() < 2 {
+        return usage("usage: db compact <root> <document-id> [--holder H] [--consolidate] [--profile test|dev|prod]").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+    let holder = flags.get("holder").cloned().unwrap_or_else(|| "db-cli".to_string());
+    let profile = match parse_profile(&flags).await {
+        Ok(profile) => profile,
+        Err(message) => return usage(&message).await,
+    };
+    let mut database = match open_database(Path::new(root), profile).await {
+        Ok(database) => database,
+        Err(err) => return fail("open", err).await,
+    };
+    let document_id = protocol::ArtifactId(id.clone());
+
+    let outcome = match database.compact_document(&document_id, &holder, consolidate).await {
+        Ok(report) => {
+            println!("== compact: {id} ==");
+            println!("  wal_segments_deleted: {}", report.wal_segments_deleted);
+            println!("  payloads_deleted: {}", report.payloads_deleted);
+            println!("  index_reports: {}", report.index_reports.len());
+            println!("  snapshot_consolidated_generation: {}", report.snapshot_consolidated_generation.map_or_else(|| "-".to_string(), |generation| generation.to_string()));
+            println!("  snapshot_generations_pruned: {}", report.snapshot_generations_pruned);
+            0
+        }
+        Err(err) => fail_document_open("compact", err).await,
+    };
+
+    match database.shutdown(&db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
+        Ok(()) => outcome,
+        Err(err) => fail("shutdown", err).await,
+    }
+}
+//#endregion 🔖️Compact
+
+//#region 🔖️HealthCmd
+/// 🩺️ `db health <root> [--profile ...]` — a real `Database::health()` snapshot. Exits `1` iff the
+/// overall status is `Unhealthy`.
+async fn cmd_health(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
+    let Some(root) = positional.first() else {
+        return usage("usage: db health <root> [--profile test|dev|prod]").await;
+    };
+    let profile = match parse_profile(&flags).await {
+        Ok(profile) => profile,
+        Err(message) => return usage(&message).await,
+    };
+    let mut database = match open_database(Path::new(root), profile).await {
+        Ok(database) => database,
+        Err(err) => return fail("open", err).await,
+    };
+    let health = database.health().await;
+    print_health(&health);
+    let exit = if matches!(health.report.overall, db_observe::HealthState::Unhealthy(_)) { 1 } else { 0 };
+
+    match database.shutdown(&db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
+        Ok(()) => exit,
+        Err(err) => fail("shutdown", err).await,
+    }
+}
+//#endregion 🔖️HealthCmd
+
+//#region 🔖️ConflictSimulate
+fn describe_conflict_kind(kind: &db_conflict::ConflictKind) -> String {
+    match kind {
+        db_conflict::ConflictKind::TouchedRegion(regions) => format!("touched_region({})", regions.iter().map(|region| region.path.as_str()).collect::<Vec<_>>().join(",")),
+        db_conflict::ConflictKind::Constraint(description) => format!("constraint({description})"),
+    }
+}
+
+fn touched_command(command_id: &str, actor: &str, kind: &str, hlc_actor: u64, paths: &str) -> db_conflict::CommandTouch {
+    let timestamp = db_actor::block_on(async { protocol::HybridLogicalTimestamp::new(hlc_actor, now_ms().await) });
+    let touch = db_conflict::CommandTouch::new(protocol::MutationId(command_id.to_string()), protocol::ActorId(actor.to_string()), db_conflict::CommandKind::from(kind), timestamp);
+    paths.split(',').map(str::trim).filter(|path| !path.is_empty()).fold(touch, |touch, path| touch.touch(db_state::TouchedRegion::write(path)))
+}
+
+/// ⚔️ `db conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]` — runs the
+/// real `db::conflict::ConflictDetector` over two hand-built `CommandTouch`es (no storage touched at
+/// all: a pure, local simulation). Exits `1` iff a conflict was found (so the exit code alone
+/// answers "would these conflict"); grading a found conflict into a `protocol::Severity` (and
+/// whether a `protocol::MergePolicy` would reject it) is `db_artifact`'s job one layer up, not this
+/// detection-only simulation's (see `db_conflict`'s own module doc).
+async fn cmd_conflict_simulate(rest: &[String]) -> i32 {
+    let (_positional, flags) = parse_args(rest).await;
+    let Some(touch_a) = flags.get("touch-a") else {
+        return usage("usage: db conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]").await;
+    };
+    let Some(touch_b) = flags.get("touch-b") else {
+        return usage("db conflict-simulate: --touch-b is required").await;
+    };
+    let kind_a = flags.get("kind-a").map_or("command-a", String::as_str);
+    let kind_b = flags.get("kind-b").map_or("command-b", String::as_str);
+
+    let command_a = touched_command("simulated-a", "actor-a", kind_a, 1, touch_a);
+    let command_b = touched_command("simulated-b", "actor-b", kind_b, 2, touch_b);
+    let records = db_conflict::ConflictDetector::new().detect(&[command_a, command_b]);
+    if records.is_empty() {
+        println!("no conflict detected");
+        return 0;
+    }
+    for record in &records {
+        println!("conflict: {} <-> {} kind={}", record.command_id.0, record.conflicting_with.0, describe_conflict_kind(&record.kind));
+    }
+    1
+}
+//#endregion 🔖️ConflictSimulate
+
+//#region 🔖️ReplicaSimulate
+/// 📡️ `db replica-simulate <leader-root> <follower-root> <document-id>` — runs the real
+/// `db::cluster::replicate_document` primitive between two local `FsStorage` roots: replays both
+/// sides' WALs, decides a bootstrap plan, and applies it (tail-append or raw snapshot copy). No
+/// network transport exists in this family yet — this is a genuine local simulation of the
+/// replication mechanism, not a stub.
+async fn cmd_replica_simulate(rest: &[String]) -> i32 {
+    let (positional, _flags) = parse_args(rest).await;
+    if positional.len() < 3 {
+        return usage("usage: db replica-simulate <leader-root> <follower-root> <document-id>").await;
+    }
+    let leader_root = &positional[0];
+    let follower_root = &positional[1];
+    let id = &positional[2];
+
+    let leader = match open_fs_storage(Path::new(leader_root)) {
+        Ok(storage) => db_storage::DbBackend::Fs(storage),
+        Err(err) => return fail("open leader", err).await,
+    };
+    let follower = match open_fs_storage(Path::new(follower_root)) {
+        Ok(storage) => db_storage::DbBackend::Fs(storage),
+        Err(err) => return fail("open follower", err).await,
+    };
+    let document = db_ids::ArtifactId(id.clone());
+
+    match db_actor::block_on(db_cluster::replicate_document(&leader, &follower, document, db_wal_log::GroupCommitPolicy::default(), now_ms().await)) {
+        Ok(db_cluster::ReplicationOutcome::UpToDate { frontier }) => {
+            println!("== replica-simulate: up to date ==");
+            println!("  head_seq: {}", frontier.head_seq);
+            0
+        }
+        Ok(db_cluster::ReplicationOutcome::TailApplied { frontier, count }) => {
+            println!("== replica-simulate: tail applied ==");
+            println!("  commands: {count}");
+            println!("  head_seq: {}", frontier.head_seq);
+            0
+        }
+        Ok(db_cluster::ReplicationOutcome::SnapshotTransferred { generation, pack_hash }) => {
+            println!("== replica-simulate: snapshot transferred ==");
+            println!("  generation: {generation}");
+            println!("  pack_hash: {}", hex32(&pack_hash));
+            0
+        }
+        Err(err) => fail("replicate", close_replication_rejected(err).await).await,
+    }
+}
+//#endregion 🔖️ReplicaSimulate
+
+//#region 🔖️Migrate
+/// 🚚️ `db migrate <root> <document-id> <name> [--payload TEXT]` — appends a real `WAL_MIGRATION`
+/// record (`name` on its own line, then an optional `--payload` text body) via a real
+/// `db::wal::ArtifactWal`, force-flushed durably (`DurabilityClass::Fsync`). `ArtifactWal::open`
+/// auto-creates a fresh WAL if `document` has none yet (see its own doc's "Creates a fresh WAL...
+/// if `document` has no segments yet" note), so this also works as a bootstrap path for a document
+/// that was never `create_document`d through the actor API.
+async fn cmd_migrate(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
+    if positional.len() < 3 {
+        return usage("usage: db migrate <root> <document-id> <name> [--payload TEXT]").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+    let name = &positional[2];
+    let payload = flags.get("payload").cloned().unwrap_or_default();
+
+    let storage = match open_fs_storage(Path::new(root)) {
+        Ok(storage) => storage,
+        Err(err) => return fail("open", err).await,
+    };
+    let document = db_ids::ArtifactId(id.clone());
+    let now = now_ms().await;
+    let (mut wal, _report) = match db_actor::block_on(db_wal::ArtifactWal::open(&storage, document, db_wal_log::GroupCommitPolicy::default(), now)) {
+        Ok(pair) => pair,
+        Err(err) => return fail_wal_open("open wal", err).await,
+    };
+    let outcome: Result<db_wal::WalAppendReceipt, (&'static str, db_ids::DbError)> = async {
+        let bytes = format!("{name}\n{payload}").into_bytes();
+        let mut control = wal_cursor_control().map_err(|err| ("wal cursor", err))?;
+        let bytes = admit_cli_wal_bytes(bytes, 1024 * 1024, &mut control).await.map_err(|err| ("wal migration admission", err))?;
+        let mut records = db_wal_log::WalRecordBatch::new();
+        if let Err(record) = records.push(db_wal_log::WalRecord::Migration(bytes)) {
+            let record_close = MountedWalRecordCommandClose::new(record).await;
+            let batch_close = MountedWalBatchCommandClose::new(records).await;
+            match (record_close, batch_close) {
+                (Err(err), Err(batch_err)) => {
+                    eprintln!("db: wal migration batch close after record close failure: {batch_err}");
+                    return Err(("wal migration record close", err));
+                }
+                (Err(err), _) => return Err(("wal migration record close", err)),
+                (_, Err(err)) => return Err(("wal migration batch close", err)),
+                (Ok(_), Ok(_)) => {}
+            }
+            return Err(("wal migration", db_ids::DbError::LimitExceeded("cli wal record batch")));
+        }
+        let submission = wal.submit(&storage, &[], &records, db_durability::DurabilityClass::Fsync, now).await;
+        let batch_close = MountedWalBatchCommandClose::new(records).await;
+        let receipt = match (submission, batch_close) {
+            (Ok(receipt), Ok(_)) => receipt,
+            (Err(err), Err(close_err)) => {
+                eprintln!("db: wal migration close after submission failure: {close_err}");
+                return Err(("migrate", err));
+            }
+            (Err(err), _) => return Err(("migrate", err)),
+            (_, Err(err)) => return Err(("wal migration close", err)),
+        };
+        wal.force_flush(&storage).await.map_err(|err| ("flush", err))?;
+        Ok(receipt)
+    }
+    .await;
+    let wal_close = wal.close().await;
+    match (outcome, wal_close) {
+        (Ok(receipt), Ok(())) => {
+            println!("== migrate: {id} ==");
+            println!("  name: {name}");
+            println!("  segment_index: {}", receipt.segment_index);
+            println!("  tx_id: {}", receipt.tx_id);
+            println!("  committed: {}", receipt.committed);
+            0
+        }
+        (Err((context, err)), Ok(())) => fail(context, err).await,
+        (Ok(_), Err(err)) => fail("wal close", err).await,
+        (Err((context, err)), Err(close_err)) => {
+            eprintln!("db: {context}: {err}");
+            fail("wal close after migration failure", close_err).await
+        }
+    }
+}
+//#endregion 🔖️Migrate
+
+//#region 🔖️Profile
+/// ⏱️ `db profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N]
+/// [--policy laissez-faire|normal|vigilant] [--profile test|dev|prod]` — submits `N` (default 100)
+/// trivial single-path `set`-shaped commands sequentially through the real submit pipeline
+/// (`ArtifactHandle::submit`, actor-mediated, WAL group-commit and all) and reports wall-clock
+/// throughput/latency. Opens `document` if it already exists, else creates it first —
+/// self-contained, no separate seeding step required. Deliberately hand-timed with
+/// `std::time::Instant` rather than pulling in `db_fault_testing`'s `WorkloadGen`/criterion harness:
+/// `db_fault_testing` is a sibling crate, not part of the `db` facade's own re-export surface, and this
+/// crate's dependency footprint is the `db` facade alone (see module doc).
+async fn cmd_profile(rest: &[String]) -> i32 {
+    let (positional, flags) = parse_args(rest).await;
+    if positional.len() < 2 {
+        return usage("usage: db profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--policy laissez-faire|normal|vigilant] [--profile test|dev|prod]").await;
+    }
+    let root = &positional[0];
+    let id = &positional[1];
+    let commands: u64 = match flags.get("commands") {
+        Some(value) => match value.parse() {
+            Ok(commands) => commands,
+            Err(_) => return usage("db profile: --commands must be a non-negative integer").await,
+        },
+        None => 100,
+    };
+    let durability = match flags.get("durability").map(String::as_str) {
+        None => db_durability::DurabilityClass::Fsync,
+        Some("memory") => db_durability::DurabilityClass::Memory,
+        Some("os") => db_durability::DurabilityClass::Os,
+        Some("fsync") => db_durability::DurabilityClass::Fsync,
+        Some(other) => match other.strip_prefix("quorum:") {
+            Some(n) => match n.parse::<u8>() {
+                Ok(n) => db_durability::DurabilityClass::Quorum(n),
+                Err(_) => return usage(&format!("db profile: bad --durability quorum count '{n}'")).await,
+            },
+            None => return usage(&format!("db profile: unknown --durability '{other}' (expected memory|os|fsync|quorum:N)")).await,
+        },
+    };
+    let policy = match parse_merge_policy(&flags).await {
+        Ok(policy) => policy,
+        Err(message) => return usage(&message).await,
+    };
+    let profile = match parse_profile(&flags).await {
+        Ok(profile) => profile,
+        Err(message) => return usage(&message).await,
+    };
+    let mut database = match open_database(Path::new(root), profile).await {
+        Ok(database) => database,
+        Err(err) => return fail("open", err).await,
+    };
+    let document_id = protocol::ArtifactId(id.clone());
+    let handle = match database.document(&document_id).await {
+        Ok(handle) => handle,
+        Err(rejected) => {
+            let error = close_document_open_rejected(rejected).await;
+            if !matches!(error, db_ids::DbError::NotFound(_)) {
+                return fail("document", error).await;
+            }
+            match database.create_document(db_engine::ArtifactSpec::new(document_id.clone()).await).await {
+                Ok(handle) => handle,
+                Err(err) => return fail_document_open("create", err).await,
+            }
+        }
+    };
+
+    let start = std::time::Instant::now();
+    for counter in 0..commands {
+        let mut forward = serde_json::Map::with_capacity(1);
+        forward.insert("cli/profile/counter".to_string(), serde_json::json!(counter));
+        let mut backward = serde_json::Map::with_capacity(1);
+        backward.insert("cli/profile/counter".to_string(), serde_json::Value::Null);
+        let envelope = protocol::MutationEnvelope {
+            mutation_id: protocol::MutationId(format!("profile-{}-{counter}", now_ms().await)),
+            document_id: document_id.clone(),
+            actor: protocol::ActorId("profiler".to_string()),
+            dependencies: Vec::new(),
+            observed: None,
+            target: Vec::new(),
+            diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::Value::Object(forward)).await.unwrap_or_default() },
+            inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact_contract::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact_contract::encode_pathmap_json(&serde_json::Value::Object(backward)).await.unwrap_or_default() },
+            timestamp: protocol::HybridLogicalTimestamp::new(0, now_ms().await),
+            transaction: None, verb: None, line: None,
+        };
+        let batch = match db_artifact_contract::CommandBatch::new(vec![envelope]).await {
+            Ok(batch) => batch,
+            Err(err) => return fail("build batch", err).await,
+        };
+        match db_actor::block_on(handle.submit(batch, db_artifact_contract::SubmitOptions { durability, policy })) {
+            Ok(Ok(_receipt)) => {}
+            Ok(Err(err)) => return fail(&format!("submit rejected at command {counter}"), err).await,
+            Err(err) => return fail(&format!("submit failed at command {counter}"), err).await,
+        }
+    }
+    let elapsed = start.elapsed();
+    let elapsed_secs = elapsed.as_secs_f64();
+    let per_sec = if elapsed_secs > 0.0 { commands as f64 / elapsed_secs } else { f64::INFINITY };
+    let avg_latency_us = if commands > 0 { (elapsed.as_micros() as f64) / (commands as f64) } else { 0.0 };
+    println!("== profile: {id} ==");
+    println!("  commands: {commands}");
+    println!("  elapsed_ms: {:.3}", elapsed_secs * 1000.0);
+    println!("  commands_per_sec: {per_sec:.1}");
+    println!("  avg_latency_us: {avg_latency_us:.1}");
+
+    drop(handle);
+    match database.shutdown(&db_engine::DatabaseShutdownControl::for_timeout(std::time::Duration::from_secs(5))).await {
+        Ok(()) => 0,
+        Err(err) => fail("shutdown", err).await,
+    }
+}
+//#endregion 🔖️Profile
+
+//#region 🔖️Cli
+async fn print_help() {
+    eprintln!("usage: db <command> [args...]");
+    eprintln!();
+    eprintln!("commands:");
+    eprintln!("  inspect <root> [--profile test|dev|prod]");
+    eprintln!("  doc <root> <document-id> [--profile ...]");
+    eprintln!("  wal-inspect <root> <document-id> [--limit N]");
+    eprintln!("  snapshot-inspect <root> <document-id> [--generation N] [--verify]");
+    eprintln!("  verify <root> [document-id] [--profile ...]");
+    eprintln!("  query <root> <document-id> <path> [more-paths...] [--profile ...]");
+    eprintln!("  replay <root> <document-id>");
+    eprintln!("  repair <root> <document-id>");
+    eprintln!("  compact <root> <document-id> [--holder H] [--consolidate] [--profile ...]");
+    eprintln!("  health <root> [--profile ...]");
+    eprintln!("  conflict-simulate --touch-a p1,p2 --touch-b p2,p3 [--kind-a K] [--kind-b K]");
+    eprintln!("  replica-simulate <leader-root> <follower-root> <document-id>");
+    eprintln!("  migrate <root> <document-id> <name> [--payload TEXT]");
+    eprintln!("  profile <root> <document-id> [--commands N] [--durability memory|os|fsync|quorum:N] [--policy laissez-faire|normal|vigilant] [--profile ...]");
+}
+
+pub async fn main_impl(args: &[String]) -> i32 {
+    let Some((command, rest)) = args.split_first() else {
+        print_help().await;
+        return 2;
+    };
+    match command.as_str() {
+        "inspect" => cmd_inspect(rest).await,
+        "doc" => cmd_doc(rest).await,
+        "wal-inspect" => cmd_wal_inspect(rest).await,
+        "snapshot-inspect" => cmd_snapshot_inspect(rest).await,
+        "verify" => cmd_verify(rest).await,
+        "query" => cmd_query(rest).await,
+        "replay" => cmd_replay(rest).await,
+        "repair" => cmd_repair(rest).await,
+        "compact" => cmd_compact(rest).await,
+        "health" => cmd_health(rest).await,
+        "conflict-simulate" => cmd_conflict_simulate(rest).await,
+        "replica-simulate" => cmd_replica_simulate(rest).await,
+        "migrate" => cmd_migrate(rest).await,
+        "profile" => cmd_profile(rest).await,
+        "help" | "--help" | "-h" => {
+            print_help().await;
+            0
+        }
+        other => {
+            eprintln!("db: unknown subcommand '{other}'\n");
+            print_help().await;
+            2
+        }
+    }
+}
+//#endregion 🔖️Cli
+
+//#region 🧪️Tests
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+//#endregion 🧪️Tests

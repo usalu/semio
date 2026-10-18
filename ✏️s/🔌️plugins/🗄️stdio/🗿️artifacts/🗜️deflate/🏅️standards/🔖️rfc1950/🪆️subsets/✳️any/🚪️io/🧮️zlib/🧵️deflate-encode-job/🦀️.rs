@@ -7,7 +7,7 @@ use super::*;
 //#region 🧵️StreamingEncode
 /// 🧵️ Persistent fixed-Huffman DEFLATE encoder with bounded LZ77 transitions and portable checkpoints.
 pub struct DeflateEncodeJob {
-    pub(super) input: Vec<u8>,
+    pub input: Vec<u8>,
     pub(super) writer: BitWriter,
     pub(super) head: Vec<i32>,
     pub(super) previous: Vec<i32>,
@@ -16,7 +16,7 @@ pub struct DeflateEncodeJob {
     pub(super) checkpoint_interval: usize,
     pub(super) next_checkpoint: usize,
     pub(super) complete: bool,
-    pub(super) publication: Option<Box<Publication>>,
+    pub publication: Option<Box<Publication>>,
 }
 
 impl DeflateEncodeJob {

@@ -1,0 +1,59 @@
+{
+ "name": "c6ui-all",
+ "crates": [
+  "semio-framework-ui",
+  "semio-framework-ui-retained-tree-tree",
+  "semio-framework-ui-scene-plane",
+  "semio-framework-ui-scene-mesh",
+  "semio-framework-ui-render",
+  "semio-framework-ui-action",
+  "semio-framework-ui-scene-modelling",
+  "semio-framework-ui-text",
+  "semio-framework-ui-host",
+  "semio-framework-ui-contract-components",
+  "semio-framework-ui-contract-typegen",
+  "semio-framework-ui-render-shader-contract",
+  "semio-framework-ui-runtime-reconcile-cursor",
+  "semio-framework-ui-runtime-reconcile",
+  "semio-framework-ui-contract-values",
+  "semio-framework-ui-contract-validation",
+  "semio-framework-ui-retained-tree",
+  "semio-framework-ui-declaration",
+  "semio-framework-ui-render-text",
+  "semio-framework-ui-layout",
+  "semio-framework-ui-contract-builder"
+ ],
+ "features": {
+  "semio-framework-ui": [
+   "tui",
+   "tui-terminal"
+  ]
+ },
+ "base": {
+  "rev": "HEAD",
+  "crates": [
+   "semio-framework-ui",
+   "semio-framework-ui-retained-tree-tree",
+   "semio-framework-ui-scene-plane",
+   "semio-framework-ui-scene-mesh",
+   "semio-framework-ui-render",
+   "semio-framework-ui-action",
+   "semio-framework-ui-scene-modelling",
+   "semio-framework-ui-text",
+   "semio-framework-ui-host",
+   "semio-framework-ui-contract-components",
+   "semio-framework-ui-contract-typegen",
+   "semio-framework-ui-render-shader-contract",
+   "semio-framework-ui-runtime-reconcile-cursor",
+   "semio-framework-ui-runtime-reconcile",
+   "semio-framework-ui-contract-values",
+   "semio-framework-ui-contract-validation",
+   "semio-framework-ui-retained-tree",
+   "semio-framework-ui-declaration",
+   "semio-framework-ui-render-text",
+   "semio-framework-ui-layout",
+   "semio-framework-ui-contract-builder"
+  ]
+ },
+ "note": "P18-P22 all 21 owning crates"
+}

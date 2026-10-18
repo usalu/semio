@@ -11,7 +11,7 @@ const owner = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚�
 const root = resolve(import.meta.dir, ...owner.split("/").map(() => ".."));
 const library = owner.slice(0, owner.lastIndexOf("/🧪️tests"));
 const packageRoot = library + "/📦️packages/🟦️typescript";
-const sourcePath = library + "/🧹️normalization/🟦️.ts";
+const sourcePath = library + "/🧹️normalization";
 const observations = new Map<string, Buffer>();
 
 /** 🛡️ Reads only declared nonopaque inputs beneath no-follow ancestors. */
@@ -34,10 +34,9 @@ function input(path: string): Buffer {
 
 if (join(root, owner) !== import.meta.dir) throw new Error("Wrong test owner");
 input(owner + "/🟦️.ts");
-const vector = JSON.parse(input(library + "/🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"));
+const vector = JSON.parse(input(library + "/🧪️tests/🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"));
 const source = normalizationSourceDeclarations(join(root, sourcePath), (path) => input(relative(root, path).replaceAll("\\", "/")));
-input(library + "/🔍️discovery/🟦️.ts");
-input(library + "/🔣️taxonomy.json");
+const taxonomyNames = JSON.parse(input(library + "/🔣️taxonomy.json").toString("utf8")) as { testsDirName: string; testFixturesDirName: string };
 const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const compilers = [
   { name: "Bun", compile: (text: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(text) },
@@ -58,7 +57,7 @@ function declaration(name: string): ts.Statement {
   return found[0]!;
 }
 
-const names = ["LEXICAL_OPAQUE_ROOTS", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "noFollowAncestors", "assertLexicalInputOutsideOpaque", "lexicalInputOutsideOpaque", "createLexicalInputSession", "isExcluded", "lstatOrNull", "utf8Compare", "generatorPathCompare", "report", "ancestorReferenceCoordinateRoot", "referenceCoordinateRoots"];
+const names = ["LEXICAL_OPAQUE_ROOTS", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "noFollowAncestors", "assertLexicalInputOutsideOpaque", "lexicalInputOutsideOpaque", "createLexicalInputSession", "isExcluded", "lstatOrNull", "utf8Compare", "generatorPathCompare", "report", "ancestorReferenceCoordinateRoot", "taxonomyFixturePayloadPath", "requireTaxonomyValue", "referenceCoordinateRoots"];
 const extracted = names.map((name) => declaration(name).getText(syntax).replace(/^export /u, "")).join("\n");
 const compiled = compilers.map((compiler) => ({ name: compiler.name, code: compiler.compile(extracted) }));
 
@@ -125,13 +124,13 @@ function execute(compiler: typeof compiled[number], row: Case, withProgress = tr
     if (row.cancel?.when === "pending" && event.path === row.cancel.path || row.cancel?.when === "empty" && event.total === 0) cancelled = true;
   };
   let roots: string[] | null = null, error: string | null = null;
-  try { roots = api(repoRoot, row.paths, { exclusions: vector.semantics.opaqueRoots.map((path: string) => ({ path })) }, "cancel", observe, withProgress ? progress : undefined, row.operation); }
+  try { roots = api(repoRoot, row.paths, { exclusions: vector.semantics.opaqueRoots.map((path: string) => ({ path })), discoverySchema: { testsDirName: taxonomyNames.testsDirName, testFixturesDirName: taxonomyNames.testFixturesDirName } }, "cancel", observe, withProgress ? progress : undefined, row.operation); }
   catch (caught) { error = caught instanceof Error ? caught.message : String(caught); }
   return { roots, error, events, markerProbes, observers, io, ioEventCounts };
 }
 
 test("coordinate progress has independent JSON parsing and directory-order parity", () => {
-  expect(parseJsonc(input(library + "/🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"))).toEqual(vector);
+  expect(parseJsonc(input(library + "/🧪️tests/🧫️fixtures/📈️reference-coordinate-progress/🔣️.json").toString("utf8"))).toEqual(vector);
   for (const row of vector.cases) oracle(row);
 });
 
@@ -190,7 +189,7 @@ test("registration only: coordinate progress has one exact route and package own
   const packageJson = JSON.parse(input(packageRoot + "/package.json").toString("utf8"));
   const router = input(packageRoot + "/📜️script.ts").toString("utf8");
   expect(project.targets[registration.target]?.options?.command).toBe("bun ./📜️script.ts test " + registration.command);
-  expect(packageJson.scripts?.[registration.target]).toBe("nx run @semio-tech/repo-lib:" + registration.target);
+  expect(packageJson.scripts?.[registration.target]).toBe("bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:" + registration.target);
   expect(router).toContain('"' + registration.command + '"');
   expect(router).toContain(registration.testPath);
 });

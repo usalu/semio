@@ -9,7 +9,8 @@ import {createRequire} from "node:module";
 import {join} from "node:path";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "./🧫️fixtures/🔣️.json" with {type:"json"};
-import {nativeStorageStateV1,nativeStorageEventV1,nativeStorageUsedBytesV1,acquireNativeStorageV1,ordinaryNativeStoragePortV1,type NativeStorageEventV1} from "../🟦️.ts";
+import{acquireNativeStorageV1,ordinaryNativeStoragePortV1}from"../🟦️.ts";
+import{nativeStorageStateV1,nativeStorageEventV1,nativeStorageUsedBytesV1,type NativeStorageEventV1}from"../📜️journal/🟦️.ts";
 import {buildCargoArtifacts} from "../../🟦️.ts";
 
 const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;

@@ -12,7 +12,7 @@ pub mod fixture {
     // bare, colliding with `declarations::ArtifactDeclaration` (new) brought in by `use super::*` below (E0659).
     use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
     use crate::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
-    use semio_framework_2d::compute::EngineHandles;
+    use semio_framework_2d_compute::EngineHandles;
     use semio_framework::AppDefinition;
 use semio_framework_artifact_reference::{ArtifactDialect, Dialect, StandardId, SubsetId};
 use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer, Editor, Viewer};

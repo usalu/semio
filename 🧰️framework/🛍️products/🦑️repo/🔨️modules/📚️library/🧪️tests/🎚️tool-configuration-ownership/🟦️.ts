@@ -44,7 +44,7 @@ type Fixture = Readonly<{
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/🎚️tool-configuration-ownership/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧪️tests/🧫️fixtures/🎚️tool-configuration-ownership/🔣️.json"), "utf8")) as Fixture;
 
 const ownerById = new Map(fixture.owners.map((owner) => [owner.id, owner]));
 const read = (path: string): string => readFileSync(resolve(repoRoot, path), "utf8");
@@ -131,7 +131,7 @@ describe("Tool configuration ownership", () => {
 
     const rootEslint = ownerById.get("root-eslint")!;
     const rootLint = new ESLint({ cwd: repoRoot, overrideConfigFile: resolve(repoRoot, rootEslint.ownerPath) });
-    const rootConfig = await rootLint.calculateConfigForFile(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts"));
+    const rootConfig = await rootLint.calculateConfigForFile(resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts"));
     expect(Object.keys(rootConfig?.rules ?? {}).length).toBeGreaterThan(50);
     const reactEslint = ownerById.get("ui-react-eslint")!;
     const reactRoot = resolve(repoRoot, reactEslint.effectiveRoot);
@@ -212,7 +212,7 @@ describe("Tool configuration ownership", () => {
       expect(taxonomy.fixedFilenameContracts[id], id).toBeUndefined();
       expect(taxonomy.packageSourceDispositions[id], id).toBeUndefined();
     }
-    const librarySource = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
+    const librarySource = read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts");
     expect(librarySource).not.toContain("resolveViteConfigFileName");
     expect(librarySource).toContain("config: string;");
     expect(taxonomy.semanticDirectoryMemberKinds["tool-configuration-ownership"].memberNames).toEqual(["🎚️tool-configuration-ownership"]);
@@ -222,9 +222,9 @@ describe("Tool configuration ownership", () => {
     expect(script).toContain('segments[0] === "tool-configuration-ownership"');
     const project = JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json"));
     expect(project.targets[fixture.registration.target].options.command).toBe("bun ./📜️script.ts test tool-configuration-ownership");
-    expect(project.targets[fixture.registration.target].inputs).toContain("{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
+    expect(project.targets[fixture.registration.target].inputs).toContain("{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🌐️service/🟦️.ts");
     for (const path of [ownerById.get(fixture.postcss.ownerId)!.ownerPath, fixture.postcss.packageEntryPath, fixture.postcss.historicalFixturePath]) expect(project.targets[fixture.registration.target].inputs).toContain(`{workspaceRoot}/${path}`);
     const manifest = JSON.parse(read("🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/package.json"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
   });
 });

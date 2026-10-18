@@ -8,6 +8,7 @@ import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
 import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
+import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Token = Readonly<{ adapter: "markdown"; structuredLocation: string; start: number; end: number; value: string }>;
 type Scenario = Readonly<{ id: string; path: string; source: string; oracleScope: "common-subset" | "scanner-only"; reason: string; expected: readonly Token[] }>;
@@ -21,7 +22,7 @@ type NativeParser = { helpers: NativeHelpers; inline: { parse(source: string, pa
 type NativeSpan = Readonly<{ value: string; start: number; end: number; raw: string }>;
 const library = resolve(import.meta.dir, "../.."), root = resolve(library, "../../../../..");
 const oracleRequire = createRequire(import.meta.url), MarkdownIt = oracleRequire("markdown-it") as new () => NativeParser;
-const normalizerPath = join(library, "🧹️normalization/🟦️.ts");
+const normalizerPath = join(library, "🧹️normalization");
 const vectorPath = join(import.meta.dir, "../🧫️fixtures/🔗️markdown-inline-references/🔣️.json");
 const packagePath = join(library, "📦️packages/🟦️typescript/package.json"), oraclePath = fileURLToPath(import.meta.resolve("markdown-it/package.json")), oracleEntryPath = oracleRequire.resolve("markdown-it");
 const vectorBytes = snapshot(vectorPath), vector: Vector = JSON.parse(vectorBytes.toString("utf8"));
@@ -92,7 +93,7 @@ function declarations(content: string): Readonly<Record<string, string | null>> 
   return rows;
 }
 
-const bodies = declarations(snapshot(normalizerPath).toString("utf8"));
+const bodies = declarations(normalizationEngineDeclarations(normalizerPath, snapshot));
 const closure = [...vector.extraction.globals, ...vector.extraction.required, ...vector.extraction.optional].map((name) => bodies[name]).filter((body): body is string => body !== null).join("\n");
 const compiled = (compiler: typeof compilers[number]): Operation => new Function("basename", compiler.compile(closure) + "\nreturn referenceTokens;")(basename) as Operation;
 
@@ -282,6 +283,6 @@ test("Markdown parser oracle is an exact direct test-only dependency", () => {
 for (const compiler of compilers) test(compiler.id + " failed-label and failed-title scans finish inside one bounded pure child", () => stress(compiler));
 
 afterAll(() => {
-  expect(declarations(snapshot(normalizerPath).toString("utf8"))).toEqual(bodies);
+  expect(declarations(normalizationEngineDeclarations(normalizerPath, snapshot))).toEqual(bodies);
   for (const [path, bytes] of inputBytes) expect(snapshot(path), path + " changed during the packet").toEqual(bytes);
 });

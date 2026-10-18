@@ -15,7 +15,7 @@ use crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::PlaygroundSnapshot;
 use crate::{PLAYGROUND_DIALECT, PLAYGROUND_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 #[cfg(test)]
 use semio_framework_pack_json::{parse, Value};
 use semio_framework_plugin::app::InteractionView;

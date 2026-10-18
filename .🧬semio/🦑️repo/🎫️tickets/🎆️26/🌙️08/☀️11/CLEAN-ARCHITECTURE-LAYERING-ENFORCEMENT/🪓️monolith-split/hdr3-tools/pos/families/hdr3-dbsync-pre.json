@@ -1,0 +1,5 @@
+{
+ "name": "hdr3-dbsync-pre",
+ "crates": ["semio-framework-os-kernel-db-sync"],
+ "note": "pre-check absolute"
+}

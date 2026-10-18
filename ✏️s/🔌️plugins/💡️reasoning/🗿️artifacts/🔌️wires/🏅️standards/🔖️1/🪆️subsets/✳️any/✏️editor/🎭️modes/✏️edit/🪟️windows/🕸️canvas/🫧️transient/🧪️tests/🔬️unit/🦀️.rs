@@ -1,4 +1,6 @@
 use crate::editor::wires::window_transient::*;
+use semio_s_artifact_reasoning_wires_window_transient::editor::wires::window_transient::schema::WiresCanvasTransientDiff;
+use semio_s_artifact_reasoning_wires_window_transient::editor::wires::window_transient::schema::WiresCanvasOptionalNode;
 
 #[semio_framework_async_macros::async_test]
 async fn wires_pointer_move_uses_only_the_captured_canvas_and_publishes_document_positions() {

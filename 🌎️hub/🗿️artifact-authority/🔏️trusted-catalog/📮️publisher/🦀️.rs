@@ -42,7 +42,7 @@ impl TrustedCatalogPublisher {
         let bundle_bytes = generation.read_regular(&relative, TRUSTED_BUNDLE_MAX_BYTES, context).await?;
         if sha256(&bundle_bytes, context).await? != bundle_digest { return Err(catalog("trusted publication candidate bundle differs from its digest")); }
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
-        let (verified, _) = TrustedCatalogLoader::verify_selected(&generation, relative, bundle_bytes, &command.profile_id, providers, &GuestCodecVerificationCacheV1::beside(data_path), context).await?;
+        let (verified, _) = TrustedCatalogLoader::verify_selected(&generation, relative, bundle_bytes, &command.profile_id, providers, &GuestCodecVerificationCacheV1::beside(data_path), &Arc::default(), context).await?;
         if verified.generation_id() != command.generation_id { return Err(catalog("trusted publication candidate generation differs from the verified profile")); }
         let mut published_module_files = BTreeSet::new();
         for package in &verified.packages {

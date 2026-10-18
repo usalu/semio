@@ -1,6 +1,6 @@
 //! 🧪️ ISO 6946: the surface resistances of the three flow directions, the resistance of a homogeneous layer stack and the transmittance against hand-computed values.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::*;
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() < 1e-12

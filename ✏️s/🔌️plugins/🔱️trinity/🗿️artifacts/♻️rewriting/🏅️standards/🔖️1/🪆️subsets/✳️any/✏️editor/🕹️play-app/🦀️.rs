@@ -1,6 +1,7 @@
 //! 🕹️ Rewriting play app: the `TrinityRewritingPlayApp` editor and its `ArtifactEditor` implementation.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::rewriting::window_config;
 use crate::editor::rewriting::modes::edit;
 use semio_s_artifact_trinity_jack_semio_content::SemioJackContentOwner;

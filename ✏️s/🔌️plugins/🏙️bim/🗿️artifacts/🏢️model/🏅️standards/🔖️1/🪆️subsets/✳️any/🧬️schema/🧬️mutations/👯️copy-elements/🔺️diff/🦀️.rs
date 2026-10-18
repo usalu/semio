@@ -5,7 +5,7 @@
 //! is taken and a vector that is not finite.
 
 use crate::standards::v1::subsets::any::schema::mutations::modify::{self, Map};
-use super::CopyElements;
+use crate::standards::v1::subsets::any::schema::mutations::copy_elements::CopyElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

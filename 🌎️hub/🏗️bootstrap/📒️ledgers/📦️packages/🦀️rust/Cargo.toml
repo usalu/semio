@@ -45,5 +45,6 @@ semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust" }
 directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 db = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+semio-framework-server = { workspace = true }
 
 [dev-dependencies]

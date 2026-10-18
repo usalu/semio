@@ -1,0 +1,34 @@
+package semio:framework@1.0.0;
+
+/// 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §1 + §5). The broker's
+/// `CapabilityId`/`CapabilityRequest`/`CapabilityGrant`/`CapabilityChange` Rust SSOT
+/// (`semio_framework::kernel`, packet A3) mirrors this shape field-for-field.
+///
+/// ⚠️ Deviation from the design table's literal `resource capability-token`: a WIT `resource`
+/// only gets cross-boundary methods when its owning interface is imported or exported by the
+/// world, and `pure` (log/now-ms/trace-span) is this world's ONLY import — there is no seam left
+/// for a host-owned resource's methods to be called through. `capability-token` is therefore a
+/// plain record (an opaque numeric handle + the id it was minted for); revocation works the same
+/// way every other capability check does here — the guest's next `host::*` await on a revoked
+/// token gets `Fault(capability-revoked)` back on the `event.completed` it's parked on, not a
+/// trapped method call.
+interface capabilities {
+  type capability-id = string;
+
+  record capability-token {
+    id: capability-id,
+    token: u64,
+  }
+
+  record capability-grant {
+    token: capability-token,
+    scope: string,
+    expires-ms: option<s64>,
+  }
+
+  variant capability-change {
+    granted(capability-grant),
+    revoked(capability-id),
+    narrowed(capability-grant),
+  }
+}

@@ -9,7 +9,7 @@ use crate::canvas::active_page;
 use crate::modes::edit::windows::blueprint::config::{current, LayoutWindowConfig};
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use semio_s_artifact_layout_layout_engine::scene::hit_test_page_frames;
+use semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::hit_test_page_frames;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

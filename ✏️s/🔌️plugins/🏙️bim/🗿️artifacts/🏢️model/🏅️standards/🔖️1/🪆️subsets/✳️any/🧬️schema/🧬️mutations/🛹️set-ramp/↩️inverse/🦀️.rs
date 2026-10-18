@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetRamp`: an absolute `SetRamp` restoring the base value of exactly the fields the forward really changes, none when the ramp is absent or nothing changes.
 
-use super::SetRamp;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_ramp::SetRamp;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetRamp, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetRamp, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_ramp::SetRamp>,
+{
     let Some(record) = base.ramps.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetRamp, base: &ModelSnapshot) -> Vec<ModelMutation> {
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetRamp(SetRamp::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetRamp::from_patch(payload.id.clone(), restore))]
 }

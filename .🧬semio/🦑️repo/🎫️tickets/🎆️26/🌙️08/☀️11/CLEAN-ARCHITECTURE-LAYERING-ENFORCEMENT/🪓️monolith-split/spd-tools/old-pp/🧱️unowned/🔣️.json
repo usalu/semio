@@ -1,0 +1,912 @@
+{
+  "reasons": {
+    "iterative-walk": "The parser walks an unbounded tree with an explicit stack so that a deep document cannot overflow the call stack; the generator only emits recursion.",
+    "unrenderable": "No renderer covers the schema form of the export (an untyped node, a form the projection does not know), or the parser is generic over type arguments, so there is no projection to compare with.",
+    "schema-disagrees-with-type": "The normative schema and the declared TypeScript type of the export disagree (fields, variants or element types the other side lacks), so a parser projected from the schema does not produce the declared type; the owner must decide which side is right.",
+    "in-memory-model": "The parser validates the owned in-memory model of the artifact (exact Binary64 and Binary32 words, bigint counters, Uint8Array octets, transports of those words), while the normative JSON Schema states the JSON transport (plain numbers, decimal strings, bare objects). Regenerating it from the schema would change what it admits; the schema must first state the in-memory model through a binding to the framework value parsers.",
+    "normalizing-reader": "The parser is a lenient reader: it fills defaults for fields its schema requires (and builds a default object through a function), so it admits documents the schema refuses. The caller depends on that normalisation; the owner must decide whether the schema stops requiring those fields.",
+    "cross-field-rule": "The parser enforces a rule across fields (for example a pixel selection must agree with the configured paint target) that the schema does not state; a projection of the schema alone would admit what the rule refuses."
+  },
+  "parsers": [
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ShootingDiff",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ShootingArtifact",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "SequenceArtifact",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "AccessRule",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "AccessibilityRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Activity",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Adjacency",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "AdjacencyKind",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "AnalysisRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ApprovalRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ArtifactRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Assumption",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "AuditEvent",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "BenchmarkRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ChangeRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "CollaborationRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "CommunicationRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ComplianceRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Conflict",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ConstraintRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "CostRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Decision",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "DeliveryConstraint",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "EnvironmentalRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Equipment",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "FlexibilityRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "FlowRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Function",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Governance",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "GrowthPlan",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "HumanFactorRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "InformationRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "InfrastructureRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Issue",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "KnowledgeRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "MeetingRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "OperationalRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "OptionEvaluation",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "OrganizationalRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "PerformanceCriterion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "PriorityRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "PrivacyRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Process",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ProgramArtifact",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ProgramElement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ProgramMeta",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ProjectDefinition",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "QualityRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "QuantityRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "QuantitySpec",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "RegulatoryRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Relationship",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ReportRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Requirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ResilienceRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Resource",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Risk",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "SafetyRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Scenario",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ScheduleRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "SearchFilter",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "SecurityRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ServiceRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "SiteContext",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Stakeholder",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "StatusRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "StorageRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Survey",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "SustainabilityRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "TemplateRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "TraceLink",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "UserProfile",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "ValidationRecord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "WayfindingRequirement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "Workshop",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🟦️.ts",
+      "name": "LowpolyBounds",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "LowpolyDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "LowpolyObjectPatch",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "LowpolyObjectPatchEntry",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "LowpolyObjectsDelta",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "LowpolyPaintEdit",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "LowpolyPaintLayerPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "LowpolyPaintLayersDelta",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "LowpolyVertexPosition",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "LowpolyObject",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "LowpolyPaintLayer",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "LowpolyTransform",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "DrawingSnapshot",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawingAssetsDelta",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawingDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawingLayerAddress",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawingLayerInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawingLayerPatch",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawingLayerRemoval",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawingLayersDelta",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "DrawingArtboard",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "DrawingArtifact",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "DrawingImageAsset",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "DrawingLayerNode",
+      "reason": "iterative-walk"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🟦️.ts",
+      "name": "RasterConfig",
+      "reason": "cross-field-rule"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "RasterSnapshot",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "RasterAdjustmentParameter",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "RasterAssetsDelta",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "RasterDiff",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "RasterLayerAddress",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "RasterLayerInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "RasterLayerPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "RasterLayerRemoval",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "RasterPixelRegion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "RasterArtifact",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "RasterLayerMask",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "RasterLayerNode",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "RasterTransform",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "HtmlNode",
+      "reason": "schema-disagrees-with-type"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "HtmlArtifact",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "ZipEntry",
+      "reason": "normalizing-reader"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "ZipSnapshot",
+      "reason": "normalizing-reader"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "SvgDiff",
+      "reason": "schema-disagrees-with-type"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "SvgNodeDiff",
+      "reason": "schema-disagrees-with-type"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🟦️.ts",
+      "name": "SvgArtifact",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🟦️.ts",
+      "name": "Ifc2x3SnapshotBinary",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/🟦️.ts",
+      "name": "Ifc2x3DiffBinary",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "PageDoc",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "XmlDoctype",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "XmlDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/🟦️.ts",
+      "name": "XmlArtifact",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "StlTriangleDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🏅️standards/🔖️ascii/🪆️subsets/✳️any/🧬️schema/🟦️.ts",
+      "name": "StlTriangle",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "TiffValues",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ObjFaceAdded",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ObjGroupDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ObjNormalAdded",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ObjNormalDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ObjTexCoordAdded",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ObjTexCoordDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ObjVertexAdded",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "ObjVertexDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🟦️.ts",
+      "name": "ObjGroup",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🟦️.ts",
+      "name": "ObjNormal",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🟦️.ts",
+      "name": "ObjObject",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🟦️.ts",
+      "name": "ObjSmoothingRange",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🟦️.ts",
+      "name": "ObjTexCoord",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🟦️.ts",
+      "name": "ObjUnknownStatement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🟦️.ts",
+      "name": "ObjUsemtlRange",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🏅️standards/🔖️3.0/🪆️subsets/📐️geometry/🧬️schema/🟦️.ts",
+      "name": "ObjVertex",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "PlyElement",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "PlyValue",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "PlyElementDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "SemioAudioDiff",
+      "reason": "schema-disagrees-with-type"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🟦️.ts",
+      "name": "SemioTextArtifact",
+      "reason": "schema-disagrees-with-type"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "DrawCanvas",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "DrawNode",
+      "reason": "iterative-walk"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "DrawStyle",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🟦️.ts",
+      "name": "PathSegment",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawCanvasDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawNodeDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "DrawStyleDiff",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "IndexedTripleDiff",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "NamedTripleDiff",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dFastenerInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dFastenerPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dGrip2dPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dGrip3dPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dGripInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dPart2dPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dPart3dPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dPartInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dTargetVolumeInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle5dTargetVolumePatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dAttractionInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dAttractionPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dMetaPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dObjectInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dObjectPatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dReferenceInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dReferencePatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dTargetVolumeInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dTargetVolumePatch",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dVortexInsertion",
+      "reason": "in-memory-model"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "Puzzle3dVortexPatch",
+      "reason": "in-memory-model"
+    }
+  ]
+}

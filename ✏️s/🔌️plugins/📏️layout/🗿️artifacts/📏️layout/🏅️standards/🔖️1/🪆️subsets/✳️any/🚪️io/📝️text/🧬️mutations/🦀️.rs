@@ -40,7 +40,7 @@ impl protocol::OpText for LayoutMutation {
 //#endregion 🔖️OpBinary
 
 #[allow(unused_imports)]
-mod mutations_codec {
+pub(crate) mod mutations_codec {
 use super::*;
 use crate::*;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

@@ -1,8 +1,8 @@
 //! ↩️ Inverse of `DeleteRoofType`: the setters of the properties and classifications of the type, then the concrete `CreateRoofType` carrying the full removed record, none when the roof type was absent.
 
-use super::super::create_roof_type::CreateRoofType;
-use super::super::cascade;
-use super::DeleteRoofType;
+use crate::standards::v1::subsets::any::schema::mutations::create_roof_type::CreateRoofType;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_roof_type::DeleteRoofType;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteRoofType, base: &ModelSnapshot) -> Vec<Op>

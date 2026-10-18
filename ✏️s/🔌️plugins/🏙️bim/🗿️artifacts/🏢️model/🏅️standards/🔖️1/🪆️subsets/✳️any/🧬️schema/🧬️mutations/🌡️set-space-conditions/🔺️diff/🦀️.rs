@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetSpaceConditions`: the first use creates the record of the space from the provided fields, later uses a sparse patch of exactly the provided fields that differ. The space must exist and the
 //! resulting conditions must be writable (see `conditions_problem`); providing only equal values is a no-op.
 
-use super::SetSpaceConditions;
+use crate::standards::v1::subsets::any::schema::mutations::set_space_conditions::SetSpaceConditions;
 use crate::standards::v1::subsets::any::schema::{snapshot::{conditions_problem, ModelSnapshot, SpaceConditions}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

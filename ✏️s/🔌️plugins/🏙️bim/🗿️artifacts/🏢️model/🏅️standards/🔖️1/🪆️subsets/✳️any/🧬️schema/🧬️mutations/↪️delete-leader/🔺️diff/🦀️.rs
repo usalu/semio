@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteLeader`: the leader leaves in one sparse diff (see the shared cascade); the elements it names stay untouched.
 
-use super::super::cascade;
-use super::DeleteLeader;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_leader::DeleteLeader;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -19,13 +19,14 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+pack = { workspace = true }
 semio-framework-job-publication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
 
 semio-framework = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
-semio-framework-2d = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-canvas = { workspace = true }
 semio-framework-dsl-record = { workspace = true }

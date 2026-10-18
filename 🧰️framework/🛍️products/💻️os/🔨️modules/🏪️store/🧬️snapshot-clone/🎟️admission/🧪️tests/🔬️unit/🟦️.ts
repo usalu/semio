@@ -6,7 +6,7 @@ import { readFileSync } from "node:fs";
 const read = (path: string) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 
 test("snapshot clone source admission retains every owner until its exact granted birth", () => {
-  const law = read("../../🧫️fixtures/🔣️.json");
+  const law = read("../🧫️fixtures/🔣️.json");
   const db = new Database(":memory:");
   try {
     db.exec("CREATE TABLE custody (ordinal INTEGER PRIMARY KEY, owner TEXT NOT NULL); CREATE TABLE birth (ordinal INTEGER PRIMARY KEY, bytes INTEGER NOT NULL)");

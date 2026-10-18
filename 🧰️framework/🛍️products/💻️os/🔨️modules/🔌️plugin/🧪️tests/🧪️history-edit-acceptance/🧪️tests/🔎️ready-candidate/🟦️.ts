@@ -3,7 +3,7 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 test("history acceptance search discards blocked trials before selecting a ready draft",()=>{
- const read=(path:string)=>readFileSync(resolve(import.meta.dir,path),"utf8");const fixture=JSON.parse(read("🧪️tests/🧫️fixtures/🔣️.json"));
+ const read=(path:string)=>readFileSync(resolve(import.meta.dir,path),"utf8");const fixture=JSON.parse(read("🧫️fixtures/🔣️.json"));
  for(const row of fixture.cases){
   const db=new Database(":memory:");db.exec("CREATE TABLE committed (trial INTEGER)");let selected:number|null=null;
   for(let index=0;index<row.attempts.length;index++){

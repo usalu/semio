@@ -1,0 +1,6 @@
+{
+ "name": "cg1-job",
+ "crates": ["semio-framework-job", "semio-framework-job-native-decode", "semio-framework-job-unit-tests"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-job"]},
+ "note": "CG1: native decode peeled out of the job core, white-box laws moved to a companion with testkit accessors"
+}

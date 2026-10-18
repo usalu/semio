@@ -1,6 +1,7 @@
 //! 🔷️ `insert-shape` -- builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
+use semio_s_artifact_stdio_pptx_transitional::standards::v_ecma_376::subsets::transitional::schema::xml_address::PptxXmlVacancyAddress;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

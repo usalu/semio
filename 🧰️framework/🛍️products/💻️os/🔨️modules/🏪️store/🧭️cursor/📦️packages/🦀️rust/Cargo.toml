@@ -21,7 +21,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["dep:serde"]
+testkit = ["dep:serde", "semio-framework-os-vcs/testkit"]
 
 [dependencies]
 semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }

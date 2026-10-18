@@ -23,7 +23,6 @@ pub(crate) mod extension_unit_4 {
     use semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime;
     use semio_framework::kernel::QuotaSchema;
     use serde_json::Value;
-    use semio_framework_plugin_runtime_instances::inst_opening::runtime_lifecycle_grant;
     #[cfg(test)]
 use std::mem::size_of;
     use semio_framework_plugin_decl_app::ArtifactApp;

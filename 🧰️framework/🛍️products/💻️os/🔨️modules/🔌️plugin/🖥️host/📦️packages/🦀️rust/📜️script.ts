@@ -10,10 +10,14 @@ import Parser from "web-tree-sitter";
 import {findIndex} from "lodash";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { orchestratorBudgetOpts, runCargo, runCmd, runProbe, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runProbe } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 //#region 🎯️Tasks
 /** 🧱️ The facade package and every producer crate it is assembled from. */
@@ -83,7 +87,7 @@ class ServiceOperationConversionCheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     assert(segments.every((segment) => segment === "--native"), "service-operation-conversion-check accepts only --native");
     const hostRoot = join(import.meta.dir, "..", "..");
-    const wit = readFileSync(join(hostRoot, "..", "🧬️schema", "📜️.wit"), "utf8");
+    const wit = readFileSync(join(hostRoot, "..", "🧬️schema", "📜️effects.wit"), "utf8");
     const synchronous = readFileSync(join(hostRoot, "🔗️wit-bindings", "🔀️conversion", "🦀️.rs"), "utf8");
     const asynchronous = readFileSync(join(hostRoot, "📥️imports", "🦀️.rs"), "utf8");
     const kernel = join(this.repoRoot, "🧰️framework", "🔨️modules", "🎠️kernel");
@@ -193,9 +197,9 @@ function guestFaultOracle(): number {
     const actual = row.code === fixture.code && row.retryable === true && row.events.length <= 1 && row.events.every((event: string) => ["open", "close", "ack"].includes(event));
     assert.equal(actual, row.eligible, row.id);
   }
-  const host = readFileSync(join(hostRoot, "🎭️guest-runtime", "🦀️.rs"), "utf8");
+  const host = readModuleTreeSource(join(hostRoot, "🎭️guest-runtime", "🦀️.rs"));
   const retained = readFileSync(join(hostRoot, "🧬️component-codec", "🎟️retained-turn", "🦀️.rs"), "utf8");
-  const owned = readFileSync(join(hostRoot, "..", "🧠️interpreter", "🏃️runtime", "🦀️.rs"), "utf8");
+  const owned = readModuleTreeSource(join(hostRoot, "..", "🧠️interpreter", "🏃️runtime", "🦀️.rs"));
   const contract = readFileSync(join(hostRoot, "..", "🧬️guest-contract", "🦀️.rs"), "utf8");
   assert(contract.includes("Guest(semio_framework::Fault)"), "typed guest fault must survive host decode");
   assert(host.includes("original.map_err(retained_turn_wire::failure_from_wit)"), "real Wasmtime poll must return the original actor failure receipt");
@@ -390,7 +394,7 @@ class UiPatchMarshallingCheckScript extends BundleScript {
       assert.equal(row.root, expected[2], row.id);
     }
     const codec = readFileSync(join(owner, "🦀️.rs"), "utf8");
-    const synchronous = readFileSync(join(hostRoot, "🎭️guest-runtime", "🦀️.rs"), "utf8");
+    const synchronous = readModuleTreeSource(join(hostRoot, "🎭️guest-runtime", "🦀️.rs"));
     const scale = readFileSync(join(this.repoRoot, "🧰️framework", "🛍️products", "💻️os", "🧪️testing", "⚖️scale", "🦀️.rs"), "utf8");
     for (const kind of ["Upsert", "SetComponent", "SetLayout", "SetActivity", "SetChildren", "SetStyle", "SetAccessibility", "SetBindings", "SetMenu", "Remove", "SetRoot"]) {
       assert(codec.includes(`wit_ui::PatchOp::${kind}`), `missing ${kind} reverse codec`);
@@ -471,7 +475,7 @@ class RouterEffectSourceCustodyScript extends BundleScript {
     parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", this.repoRoot)), "out/tree-sitter-rust.wasm")));
     try {
       for (const relative of ["🦀️.rs", "🧪️tests/🔬️unit/🦀️.rs", "../🦀️.rs", "../🧵️shard/🦀️.rs", "../🧵️shard/🪪️identity/🦀️.rs", "../🧵️shard/🪪️identity/🧪️tests/🦀️.rs", "../🧵️shard/🔁️lifecycle/🦀️.rs", "../🧵️shard/🧵️executor/🦀️.rs"]) {
-        const tree = parser.parse(readFileSync(join(owner, relative), "utf8"));
+        const tree = parser.parse(/^\.\.\/[^/]*shard\/[^/]*\.rs$/u.test(relative) ? readModuleTreeSource(join(owner, relative)) : readFileSync(join(owner, relative), "utf8"));
         if (relative === "../🦀️.rs") {
           assert(tree);
           for (const name of ["GuestRelayWakeAuthority", "guest_relay_lifecycle_probe_session", "exercise_abandoned_relay_lifecycle_trace", "exercise_live_relay_lifecycle_trace", "exercise_stale_relay_lifecycle_trace", "test_relay_wake_authority", "run_job_on_worker", "apply_emit_ops"]) {

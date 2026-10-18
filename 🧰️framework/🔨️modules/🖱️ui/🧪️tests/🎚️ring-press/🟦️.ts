@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import ts from "typescript";
 import React from "react";
-import { createContinuousGestureLane } from "../../🎬️scene/🟦️.ts";
+import { createContinuousGestureLane } from "../../🎬️scene/🖐️gestures/🟦️.ts";
 
 const ui = resolve(import.meta.dir, "../.."), root = resolve(ui, "../..");
 const renderer = join(root, "🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine");

@@ -1,5 +1,32 @@
-use super::*;
-use super::testing::{close, gable_roof, model, rect, wall};
+use crate::standards::v1::subsets::any::schema::authored::references::find_cycle;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::references::{edges, top_target};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, layer_thicknesses, seg};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ceilings, dep_object, dep_value, roofs, slabs, Anonymous, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Axis, Wall};
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::{self, Vertex};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::ZPlane;
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::{cross, lerp, perp};
+#[allow(unused_imports)]
+use semio_framework_geometry::{Point, Vec2};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{simplified};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::*;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::testing::{close, gable_roof, model, rect, wall};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_wall_layout;
 use serde_json::json;
 

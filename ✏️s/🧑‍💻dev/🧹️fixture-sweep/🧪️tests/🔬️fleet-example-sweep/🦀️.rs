@@ -4,7 +4,6 @@
 
 #[cfg(test)]
 mod tests {
-    use semio_framework_test_fixtures::manifest_dir;
 
     use std::path::{Path, PathBuf};
 
@@ -144,18 +143,9 @@ mod tests {
     //#endregion 🔖️Registry
 
     //#region 🔖️Walk
-    /// 🏠️ Ascends from `CARGO_MANIFEST_DIR` looking for `nx.json` (a repo-root-only marker)
-    /// rather than hardcoding a `../..` depth — robust to this crate ever moving.
+    /// 🏠️ Declared package workspace above `CARGO_MANIFEST_DIR`, rather than a hardcoded `../..` depth — robust to this crate ever moving.
     fn repo_root() -> PathBuf {
-        let mut dir = manifest_dir!();
-        loop {
-            if dir.join("nx.json").is_file() {
-                return dir;
-            }
-            if !dir.pop() {
-                panic!("could not locate repo root (nx.json) ascending from {}", env!("CARGO_MANIFEST_DIR"));
-            }
-        }
+        semio_framework_test_fixtures::repo_root!()
     }
 
     const EXAMPLES_DIR_NAME: &str = "📚️examples";

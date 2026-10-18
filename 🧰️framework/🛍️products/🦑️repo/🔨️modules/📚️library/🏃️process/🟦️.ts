@@ -1,7 +1,7 @@
 import{withCompilerWorkspaceWriteV1}from"../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
 import {requireNativeStorageReservationV1,type NativeStorageReservationV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
-import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
+import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1,cargoPlanningOutputBytesV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1,type CargoSourceBoundaryPolicyV1} from "../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
 import { buildBudgetMs, cmdBudgetMs, orchestratorBudgetMs, daemonBudgetMs } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
@@ -85,7 +85,7 @@ export async function cargoStreamingStatus(args: readonly string[], cwd: string,
   await prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot(env)),getWorkspaceRoot(env),args,cwd,env,control);
   return withCompilerWorkspaceWriteV1(operation.storage,operation.policy.leaseDirectory,control,async()=>{
   const compiles=["build","rustc","check","run","clippy","test","bench","doc"].includes(args[0]??""),observes=observesCargoInvocation(args,env),directories=cargoDirectories(getWorkspaceRoot(env),env),buildDirectory=observes?directories.build:undefined,provenanceRoot=env.SEMIO_TEST_ARTIFACT_DIR??(buildDirectory?join(buildDirectory,"semio-cargo-provenance"):undefined),builtAtMs=Date.now(),units:any[]=[],buildScripts:any[]=[];
-  if(policy.buildDirectory!==directories.build)throw Error("Cargo relay compiler store differs from its original policy");if(compiles){args=cargoArtifactArgumentsV1(args,policy);const workspace=getWorkspaceRoot(env),graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args,environment:env,maximumOutputBytes:16777216},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,operation.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,cwd,operation.storage));await operation.storage.recheck();}
+  if(policy.buildDirectory!==directories.build)throw Error("Cargo relay compiler store differs from its original policy");if(compiles){args=cargoArtifactArgumentsV1(args,policy);const workspace=getWorkspaceRoot(env),graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd,program:"cargo",prefix:[],args,environment:env,maximumOutputBytes:cargoPlanningOutputBytesV1},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,operation.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,cwd,operation.storage));await operation.storage.recheck();}
   if(provenanceRoot)requireNativeStoragePathV1(operation.storage.backing.root,provenanceRoot);
   const lease=compiles?await acquireCargoBuildLeaseV1({directory:policy.leaseDirectory,buildDirectory:directories.build,targetDirectory:directories.target,args,signal:control.signal,control}):undefined;
   try{

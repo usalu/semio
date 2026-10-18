@@ -27,7 +27,7 @@ use semio_framework_ui_contract as ui;
 use semio_framework_ui_locale::Label;
 
 #[path = "🏷️data/🦀️.rs"]
-mod data;
+pub mod data;
 
 #[path = "🎚️overrides/🦀️.rs"]
 pub mod overrides;
@@ -36,7 +36,7 @@ pub mod overrides;
 /// 🪪️ The unique id of this panel tab, a child of the framework inspection tab.
 pub const PANEL_TAB_ID: &str = "bim.panel.properties";
 pub const BODY_KEY: &str = "bim.edit.properties";
-const ROOT: &str = "bim-properties";
+pub const ROOT: &str = "bim-properties";
 /// 🔽️ A reference row with fewer choices than this is a dropdown of them; a longer library is typed by id (a dropdown holds at most 32 items, one of them is "none").
 const SELECT_ITEMS: usize = 31;
 //#endregion 🔖️Constants

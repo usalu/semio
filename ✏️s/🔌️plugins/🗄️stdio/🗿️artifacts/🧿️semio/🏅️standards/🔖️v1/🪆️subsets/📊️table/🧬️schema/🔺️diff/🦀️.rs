@@ -151,9 +151,9 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioTableDiff` cases — single source of truth for `diff_grammar_conformance_
 /// law`/`protocol_walk_law` in `🚪️io/🦀️.rs`. Covers: empty, columns-only, rows-only, and both-present.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioTableDiff> {
+pub fn demo_diff_cases() -> Vec<SemioTableDiff> {
     use semio_s_artifact_stdio_semio_base::schema::triples::IndexAdded;
     use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
     use crate::schema::snapshot::demo_table_snapshot;

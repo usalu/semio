@@ -10,6 +10,7 @@ import fixture from "./🔣️.json" with { type: "json" };
 import schema from "./🧬️.json" with { type: "json" };
 import receipt from "../../../⚛️reactor/🎟️context/🌉️call/📤️receipt/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import { readPluginRuntimeSource } from "../../../⚛️reactor/🏃️runtime/📖️source-text/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 const owner = resolve(import.meta.dir, "../..");
 await Parser.init();
@@ -19,7 +20,7 @@ parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree
 /** 🔌️ Every authored job crossing is a real selected core export, including output handback and complete closure. */
 test("owned interpreter selects all six original WIT job exports", () => {
   expect(new Ajv2020({ strict: true }).validate(schema, fixture)).toBe(true);
-  const source = readFileSync(resolve(owner, "🦀️.rs"), "utf8"), tree = parser.parse(source);
+  const source = readModuleTreeSource(resolve(owner, "🦀️.rs")), tree = parser.parse(source);
   const enumNode = tree.rootNode.namedChildren.find(node => node.type === "enum_item" && node.childForFieldName("name")?.text === "OwnedSemioExport");
   expect(enumNode).toBeDefined();
   const variants = enumNode!.childForFieldName("body")!.namedChildren.filter(node => node.type === "enum_variant").map(node => node.childForFieldName("name")!.text);
@@ -30,8 +31,8 @@ test("owned interpreter selects all six original WIT job exports", () => {
   const names = members.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "core_name")!.childForFieldName("body")!.text;
   const typeBody = members.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "core_type")!.childForFieldName("body")!;
   const typeArms = typeBody.descendantsOfType("match_arm");
-  const wit = readFileSync(resolve(owner, "../🧬️schema/📜️.wit"), "utf8");
-  const runtimeTree = parser.parse(readFileSync(resolve(owner, "🏃️runtime/🦀️.rs"), "utf8"));
+  const wit = readFileSync(resolve(owner, "../🧬️schema/📜️jobs.wit"), "utf8");
+  const runtimeTree = parser.parse(readModuleTreeSource(resolve(owner, "🏃️runtime/🦀️.rs")));
   const operation = runtimeTree.rootNode.namedChildren.find(node => node.type === "enum_item" && node.childForFieldName("name")?.text === "OwnedOperation")!;
   const operations = operation.childForFieldName("body")!.namedChildren.filter(node => node.type === "enum_variant").map(node => node.childForFieldName("name")!.text);
   const operationImpl = runtimeTree.rootNode.namedChildren.find(node => node.type === "impl_item" && node.childForFieldName("type")?.text === "OwnedOperation")!;
@@ -65,7 +66,7 @@ test("owned interpreter selects all six original WIT job exports", () => {
 test("job contract GUI launches match the supported original Nx caller", () => {
   const root = resolve(owner, "../../../../../.."), target = JSON.parse(readFileSync(resolve(owner, "📦️packages/🦀️rust/📋️project.json"), "utf8"));
   const library = resolve(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library");
-  const admit = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(library, "🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"), "utf8")));
+  const admit = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(resolve(library, "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json"), "utf8")));
   expect(target.targets[fixture.commands.source].metadata.semio.execution).toEqual({ version: 1, kind: "source" });
   expect(target.targets[fixture.commands.native].metadata.semio.execution).toEqual({ version: 1, kind: "native", scope: "test" });
   for (const file of [".vscode/🧩️launch.seed.jsonc", ".vscode/launch.json"]) {
@@ -121,11 +122,11 @@ test("authored job selector core types match actual export signatures and indepe
 test("owned result decoder preserves the original current fixed actor receipt", () => {
   const bytes = Buffer.from(receipt.failureHex, "hex");
   expect(bytes.length).toBe(receipt.extent);
-  expect(bytes.subarray(0, 4).toString()).toBe("SAC2");
+  expect(bytes.subarray(0, 4).toString()).toBe("SAC3");
   expect(receipt.fields.map((_, index) => bytes.readBigUInt64LE(8 + index * 8).toString())).toEqual(receipt.fields.map(String));
-  const db = new Database(":memory:"), tree = parser.parse(readFileSync(resolve(owner, "🏃️runtime/🦀️.rs"), "utf8"));
+  const db = new Database(":memory:"), tree = parser.parse(readModuleTreeSource(resolve(owner, "🏃️runtime/🦀️.rs")));
   try {
-    expect(db.query("select length(?) as extent,hex(substr(?,1,4)) as magic").get(bytes, bytes)).toEqual({ extent: receipt.extent, magic: "53414332" });
+    expect(db.query("select length(?) as extent,hex(substr(?,1,4)) as magic").get(bytes, bytes)).toEqual({ extent: receipt.extent, magic: "53414333" });
     const decoder = tree.rootNode.namedChildren.find(node => node.type === "function_item" && node.childForFieldName("name")?.text === "decode_owned_result")!;
     const body = decoder.childForFieldName("body")!.text;
     expect(body.indexOf('bytes.starts_with(b"SAC2")')).toBeGreaterThanOrEqual(0);

@@ -2,6 +2,7 @@
 //! already present in `base`) was itself a no-op, so its inverse is also `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::delete_stream::DeleteStream;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::create_stream::component::CreateStream;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<DeleteStream>>(payload: &super::CreateStream, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

@@ -147,7 +147,7 @@ fn world3d_orbit_and_wheel_emit_the_generation3d_set_camera_payload() {
 /// `🧵️frame-job/🦀️.rs:474` submits the frame build to it).
 ///
 /// `Builder::stack_size` overrides `RUST_MIN_STACK`, so the repo runner's blanket 128 MiB floor
-/// (`runCargoTestBudgeted`, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts`)
+/// (`runCargoTestBudgeted`, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🔣️policy/🟦️.ts`)
 /// cannot hide a re-inflated frame here the way it hid the 5 664 768-byte
 /// `AdmittedSurfaceMap::<World3dState>::default` array literal until 2026-09-12. Behavioural, not a
 /// source-shape assertion: any future frame that grows back past the budget aborts this lane.

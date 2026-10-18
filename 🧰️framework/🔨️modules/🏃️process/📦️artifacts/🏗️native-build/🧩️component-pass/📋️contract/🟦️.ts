@@ -13,7 +13,7 @@ export type NativeBuildJobV1 = Readonly<{ id: string; cwd: string; command: read
 /** 🧾️ One job of a product's native build pipeline declaration (`PipelineJobV1`). */
 export type NativeBuildPipelineJobV1 = Readonly<{ id: string; root: string; command: readonly string[]; after: readonly string[]; lane?: string; profile: string; target: string; workerProtocol: "jobserver" | "reserved" | "exclusive"; policies: readonly ("process" | "cargo" | "wasm")[] }>;
 
-/** 🗂️ A product's native build pipeline declaration (`PipelineV1`): Nx prerequisites and the jobs the driver runs beside the component passes. */
+/** 🗂️ A product's native build pipeline declaration (`PipelineV1`): build prerequisites and the jobs the driver runs beside the component passes. */
 export type NativeBuildPipelineV1 = Readonly<{ prerequisites: readonly string[]; jobs: readonly NativeBuildPipelineJobV1[]; stageAfter?: Readonly<Record<string, readonly string[]>> }>;
 
 /** 🗺️ Every Cargo pass and job one native build driver owns (`NativeBuildPlanV1`). */

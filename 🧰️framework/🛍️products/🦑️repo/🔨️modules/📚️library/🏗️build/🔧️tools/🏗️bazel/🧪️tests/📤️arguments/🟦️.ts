@@ -19,7 +19,7 @@ import*as routing from"../../../../../../../../../🔨️modules/🏃️process/
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import{compilerAdmissionBudgetV1}from"../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎟️capacity/🟦️.ts";
 import{runOwnedCommand,captureOwnedCommandV1}from"../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
-import{executeLiteralBuildArgumentsV1}from"../../../../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
+import{executeLiteralBuildArgumentsV1}from"../../../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🟨️.mjs";
 import corpus from"./🔣️.json";
 import schema from"./🧬️schema.json";
 

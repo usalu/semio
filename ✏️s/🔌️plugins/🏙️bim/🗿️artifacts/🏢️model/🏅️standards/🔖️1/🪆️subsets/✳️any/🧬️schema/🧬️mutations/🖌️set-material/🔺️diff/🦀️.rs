@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetMaterial`: a sparse material patch of exactly the provided fields. Physical values stay finite and
 //! non-negative, colour channels in 0..1; a patch that changes nothing is a no-op. Everything derived from the material follows by inference.
 
-use super::SetMaterial;
+use crate::standards::v1::subsets::any::schema::mutations::set_material::SetMaterial;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::MaterialPatch, ModelDiff, Patch}, snapshot::{ModelSnapshot, Rgb}};
 use protocol::{MutationOutcome, OutcomeCode};
 

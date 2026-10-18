@@ -1,0 +1,351 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+ "cap": 950,
+ "chunks": [
+  {
+   "dir": "📜️plan-contracts",
+   "ranges": [
+    [
+     0,
+     47
+    ]
+   ]
+  },
+  {
+   "dir": "🧾️plan-parsing",
+   "ranges": [
+    [
+     48,
+     69
+    ]
+   ],
+   "parts": [
+    "📃️plan-document"
+   ]
+  },
+  {
+   "dir": "🏷️file-kind-matching",
+   "ranges": [
+    [
+     70,
+     88
+    ]
+   ]
+  },
+  {
+   "dir": "📸️repository-capture",
+   "ranges": [
+    [
+     89,
+     105
+    ]
+   ]
+  },
+  {
+   "dir": "📏️fixed-contracts",
+   "ranges": [
+    [
+     106,
+     129
+    ]
+   ]
+  },
+  {
+   "dir": "🔗️reference-inventory",
+   "ranges": [
+    [
+     130,
+     155
+    ]
+   ],
+   "parts": [
+    "📥️incoming-references"
+   ]
+  },
+  {
+   "dir": "🔤️reference-tokenizers",
+   "ranges": [
+    [
+     156,
+     172
+    ],
+    [
+     190,
+     199
+    ]
+   ],
+   "parts": [
+    "🦀️rust-reference-graph",
+    "🔬️reference-analysis"
+   ]
+  },
+  {
+   "dir": "🧷️typescript-reference-authority",
+   "ranges": [
+    [
+     173,
+     189
+    ]
+   ]
+  },
+  {
+   "dir": "🧮️reference-digests",
+   "ranges": [
+    [
+     200,
+     216
+    ]
+   ],
+   "parts": [
+    "🔬️reference-analysis"
+   ]
+  },
+  {
+   "dir": "🦀️rust-reference-graph",
+   "ranges": [
+    [
+     217,
+     241
+    ]
+   ],
+   "parts": [
+    "🔬️reference-analysis"
+   ]
+  },
+  {
+   "dir": "✂️reference-edits",
+   "ranges": [
+    [
+     242,
+     271
+    ]
+   ],
+   "parts": [
+    "🧭️reference-resolution"
+   ]
+  },
+  {
+   "dir": "🧱️inventory-leaf-stamps",
+   "ranges": [
+    [
+     272,
+     285
+    ]
+   ],
+   "parts": [
+    "🕸️reference-graph"
+   ]
+  },
+  {
+   "dir": "🪞️artifact-reference-projection",
+   "ranges": [
+    [
+     286,
+     309
+    ]
+   ]
+  },
+  {
+   "dir": "👥️mutation-projection",
+   "ranges": [
+    [
+     310,
+     337
+    ]
+   ],
+   "parts": [
+    "🔍️inventory-planning"
+   ]
+  },
+  {
+   "dir": "🗺️artifact-projection-catalogs",
+   "ranges": [
+    [
+     338,
+     368
+    ]
+   ],
+   "parts": [
+    "📂️owned-file-projection"
+   ]
+  },
+  {
+   "dir": "🏭️generator-inputs",
+   "ranges": [
+    [
+     369,
+     388
+    ]
+   ],
+   "parts": [
+    "🔍️inventory-planning"
+   ]
+  },
+  {
+   "dir": "➰️symlink-targets",
+   "ranges": [
+    [
+     389,
+     396
+    ]
+   ],
+   "parts": [
+    "🪢️symlink-target-edits"
+   ]
+  },
+  {
+   "dir": "❄️frozen-evidence",
+   "ranges": [
+    [
+     397,
+     412
+    ]
+   ]
+  },
+  {
+   "dir": "🛫️embedded-roots",
+   "ranges": [
+    [
+     413,
+     431
+    ]
+   ]
+  },
+  {
+   "dir": "🗃️affected-state",
+   "ranges": [
+    [
+     432,
+     440
+    ]
+   ],
+   "parts": [
+    "🧠️planning"
+   ]
+  },
+  {
+   "dir": "🌳️tree-digests",
+   "ranges": [
+    [
+     441,
+     454
+    ]
+   ],
+   "parts": [
+    "✅️verification"
+   ]
+  },
+  {
+   "dir": "💾️durable-journal",
+   "ranges": [
+    [
+     455,
+     465
+    ],
+    [
+     476,
+     481
+    ]
+   ],
+   "parts": [
+    "🔄️journal-reconciliation"
+   ]
+  },
+  {
+   "dir": "🔐️transaction-lease",
+   "ranges": [
+    [
+     466,
+     475
+    ]
+   ],
+   "parts": [
+    "🔑️transaction-lease-acquisition"
+   ]
+  },
+  {
+   "dir": "🧐️preimage-assertions",
+   "ranges": [
+    [
+     482,
+     505
+    ]
+   ],
+   "parts": [
+    "🗑️removal-references",
+    "🛫️embedded-roots"
+   ]
+  },
+  {
+   "dir": "🚿️transaction-cleanup",
+   "ranges": [
+    [
+     506,
+     508
+    ]
+   ],
+   "parts": [
+    "↩️rollback-transaction"
+   ]
+  },
+  {
+   "dir": "🩹️recovery-authorities",
+   "ranges": [
+    [
+     509,
+     540
+    ]
+   ],
+   "parts": [
+    "🛟️recovery",
+    "🗃️affected-state"
+   ]
+  },
+  {
+   "dir": "♻️projection-staleness",
+   "ranges": [
+    [
+     541,
+     550
+    ]
+   ]
+  },
+  {
+   "dir": "⏪️rollback-reconciliation",
+   "ranges": [
+    [
+     551,
+     558
+    ]
+   ],
+   "parts": [
+    "↩️rollback-transaction"
+   ]
+  },
+  {
+   "dir": "🏛️repository-authority",
+   "ranges": [
+    [
+     559,
+     567
+    ]
+   ]
+  },
+  {
+   "dir": "🚀️apply",
+   "ranges": [
+    [
+     568,
+     568
+    ]
+   ]
+  }
+ ],
+ "edits": [
+  {
+   "chunk": "🧮️reference-digests",
+   "find": "new URL(\"./🧵️digests/🟦️.ts\", import.meta.url)",
+   "replace": "new URL(\"../🧵️digests/🟦️.ts\", import.meta.url)"
+  }
+ ]
+}

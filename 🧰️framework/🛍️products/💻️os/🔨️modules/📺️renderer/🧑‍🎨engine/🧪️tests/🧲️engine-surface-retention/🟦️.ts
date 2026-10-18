@@ -116,7 +116,7 @@ test("Chromium retires every pointer capture with its removed scene and admits a
 
 test("Chromium captures the topmost scene through release outside every scene", async () => {
   const { default: Ajv } = await import("ajv/dist/2020.js");
-  const fixtureRoot = join(import.meta.dir, "../🧫️fixtures/🪪️scene-pointer-owner");
+  const fixtureRoot = join(import.meta.dir, "../../🧫️fixtures/🪪️scene-pointer-owner");
   const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
   
   

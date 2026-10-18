@@ -87,6 +87,9 @@ package = "semio-framework"
 [workspace.dependencies.semio-framework-2d]
 path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-2d-compute]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-async]
 path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"
 
@@ -115,6 +118,10 @@ package = "semio-framework-hash"
 [workspace.dependencies.semio-framework-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 package = "semio-framework-os-kernel"
+
+[workspace.dependencies.pack]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+package = "semio-framework-pack"
 
 [workspace.dependencies.semio-framework-pack-json]
 path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"

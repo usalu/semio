@@ -43,7 +43,7 @@ pub enum DwgObjectLayout {
 }
 impl DwgObjectLayout {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub(crate) fn of(version: &str) -> Result<Self, String> {
+    pub fn of(version: &str) -> Result<Self, String> {
         match version {
             "AC1018" => Ok(Self::R2004),
             "AC1021" => Ok(Self::R2007),
@@ -58,16 +58,16 @@ impl DwgObjectLayout {
 pub struct DwgObjectRecordFrame<'a> {
     layout: DwgObjectLayout,
     handle: u64,
-    type_code: u16,
-    data: DwgBitReader<'a>,
+    pub type_code: u16,
+    pub data: DwgBitReader<'a>,
     strings: Option<DwgBitReader<'a>>,
-    handles: DwgBitReader<'a>,
+    pub handles: DwgBitReader<'a>,
     main_end_bit: usize,
-    end_bit: usize,
+    pub end_bit: usize,
 }
 impl<'a> DwgObjectRecordFrame<'a> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn open(layout: DwgObjectLayout, object_data: &'a [u8], handle: u64, address: usize) -> Result<Self, String> {
+    pub fn open(layout: DwgObjectLayout, object_data: &'a [u8], handle: u64, address: usize) -> Result<Self, String> {
         let frame = object_data.get(address..).ok_or_else(|| format!("object {handle:#x} address {address:#x} is out of bounds"))?;
         let mut sizer = DwgBitReader::new(frame);
         let payload_size = sizer.read_ms().map_err(|error| format!("object {handle:#x} size: {error}"))? as usize;
@@ -114,7 +114,7 @@ impl<'a> DwgObjectRecordFrame<'a> {
 
     /// ⏭️ Steps over extended entity data by its declared record sizes.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn skip_extended_data(&mut self) -> Result<(), String> {
+    pub fn skip_extended_data(&mut self) -> Result<(), String> {
         loop {
             let size = self.data.read_bs()? as usize;
             if size == 0 {
@@ -663,7 +663,7 @@ pub fn viewport_status_flags(mask: u32) -> Result<Vec<semio_s_artifact_stdio_dwg
     Ok(all.into_iter().enumerate().filter_map(|(bit, flag)| (mask & (1 << bit) != 0).then_some(flag)).collect())
 }
 struct DwgDecodedEntityCommon {
-    logical: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon,
+    pub logical: semio_s_artifact_stdio_dwg_snapshot_objects::standards::v_ac1024::subsets::any::schema::snapshot::objects::entities::DwgEntityCommon,
     reactor_count: usize,
     extension_dictionary_missing: bool,
 }

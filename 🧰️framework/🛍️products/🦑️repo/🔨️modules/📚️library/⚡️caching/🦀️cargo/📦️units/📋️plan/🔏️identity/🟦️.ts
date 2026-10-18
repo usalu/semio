@@ -1,8 +1,8 @@
 /** 📋️ Identity: module exporting `compareRustUnitTextV1`, `canonicalRustUnitJsonV1`, `normalizeRustUnitV1`, `rustUnitPlanDigestV1` and more. */
 import{createHash}from"node:crypto";
 import type{RustUnitV1,RustUnitPlanV1}from"../../🟦️.ts";
-/** 🔡️ Orders valid scalar text by UTF8 bytes across compiler implementations. */
-export function compareRustUnitTextV1(a:string,b:string):number{return Buffer.compare(Buffer.from(a,"utf8"),Buffer.from(b,"utf8"));}
+/** 🔡️ Orders UTF8 bytes without temporary encoding and preserves replacement for unpaired surrogates. */
+export function compareRustUnitTextV1(a:string,b:string):number{if(a===b)return 0;let left=0,right=0;while(left<a.length&&right<b.length){const x=a.codePointAt(left)!,y=b.codePointAt(right)!,first=x>=0xd800&&x<=0xdfff?0xfffd:x,second=y>=0xd800&&y<=0xdfff?0xfffd:y;if(first!==second)return first<second?-1:1;left+=x>0xffff?2:1;right+=y>0xffff?2:1;}return left<a.length?1:right<b.length?-1:0;}
 function canonical(value:unknown):unknown{if(Array.isArray(value))return value.map(canonical);if(value&&typeof value==="object")return Object.fromEntries(Object.entries(value).sort(([a],[b])=>compareRustUnitTextV1(a,b)).map(([key,item])=>[key,canonical(item)]));return value;}
 /** 🧬️ Serializes only already validated ordinary DATA with canonical UTF8 key ordering. */
 export function canonicalRustUnitJsonV1(value:unknown):string{return JSON.stringify(canonical(value));}

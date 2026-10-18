@@ -8,7 +8,8 @@ import{withBuildTestInvocationV1}from"../../../../../../../🏗️build/🧪️t
 import{createIssuedResourceControlV1,withRequestedIssuedResourceControlV1,scriptInvocationEnvironment}from"../../../../../../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{withRepositoryCacheStoreV1}from"../../🏪️store/🟦️.ts";
 import{openNativePlatformStorageV1,retireNativePlatformStorageV1,type NativeImageStorageV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
-import{acquireNativeStorageV1,observeNativeStorageStateV1,rebudgetNativeStorageAllocationV1,checkpointNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1,type NativeStoragePolicyV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{acquireNativeStorageV1,observeNativeStorageStateV1,rebudgetNativeStorageAllocationV1,checkpointNativeStorageV1,recoverNativeStorageReservationV1,nativeStorageRetirementPortV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStoragePolicyV1}from"../../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/📥️capture/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../../../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import fixture from"./📦️physical.json";

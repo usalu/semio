@@ -1,0 +1,306 @@
+cargo-features = [ "trim-paths" ]
+
+# 🔋️ Energy plugin workspace: the simulation engine module crates and the plugin's extension crates. The model
+# artifact keeps its own workspace (`🗿️artifacts/🔋️model`), and `🏭️bridge` its own.
+[workspace]
+resolver = "2"
+members = [
+  "🔨️modules/⚡️simulation/⚙️engine/☀️solar/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/♻️heat_recovery/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/⚖️units/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/⚠️faults/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🌀️coils/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🌞️daylight/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🌫️evaporative/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🌬️air_system/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🎛️controls/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🎬️scene/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🏢️envelope/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🏭️plant/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/💦️humidity_eq/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/💧️water/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/💯️ideal_hvac/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/💰️economics/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/📅️calendar/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/📈️gains/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/📉️curves/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/📊️metrics/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/📍️site/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/📏️sizing/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/📐️geometry/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/📤️output/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🔋️model/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🔚️terminal/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🔢️num/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🔥️solar_thermal/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🚦️dispatch/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🚨️error/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🚿️shw/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🛋️comfort/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🛏️room_air/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/♻️restore/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📡️wire/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🪜️retirement/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧮️meters/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧰️props/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧱️material/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🧾️results/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🪟️fenestration/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🪭️fans/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🫁️iaq/📦️packages/🦀️rust",
+  "🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/📦️packages/🦀️rust",
+  "🧩️extensions/🌦️epw/📦️packages/🦀️rust",
+]
+exclude = [ "**/🏭️bridge/**", "**/👽️guest/**", "**/🔮️oracles/**", "🗿️artifacts/**" ]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+exclude-patterns = [ "**/🏭️bridge/**", "**/👽️guest/**", "**/🔮️oracles/**", "🗿️artifacts/**" ]
+member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
+
+  [workspace.package]
+  version = "0.1.0"
+  edition = "2021"
+  rust-version = "1.95"
+
+[workspace.dependencies.geometry]
+path = "../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust"
+package = "semio-framework-geometry"
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record-derive]
+path = "../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-job]
+path = "../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-pack-json]
+path = "../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-plugin]
+path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-derive]
+path = "../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-epw]
+path = "../🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-air-exchange]
+path = "🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-air-system]
+path = "🔨️modules/⚡️simulation/⚙️engine/🌬️air_system/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-airflow-network]
+path = "🔨️modules/⚡️simulation/⚙️engine/🫧️airflow_network/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-bestest]
+path = "🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-calendar]
+path = "🔨️modules/⚡️simulation/⚙️engine/📅️calendar/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-coils]
+path = "🔨️modules/⚡️simulation/⚙️engine/🌀️coils/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-comfort]
+path = "🔨️modules/⚡️simulation/⚙️engine/🛋️comfort/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-controls]
+path = "🔨️modules/⚡️simulation/⚙️engine/🎛️controls/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-curves]
+path = "🔨️modules/⚡️simulation/⚙️engine/📉️curves/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-daylight]
+path = "🔨️modules/⚡️simulation/⚙️engine/🌞️daylight/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-dispatch]
+path = "🔨️modules/⚡️simulation/⚙️engine/🚦️dispatch/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-economics]
+path = "🔨️modules/⚡️simulation/⚙️engine/💰️economics/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-electrical]
+path = "🔨️modules/⚡️simulation/⚙️engine/⚡️electrical/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-envelope]
+path = "🔨️modules/⚡️simulation/⚙️engine/🏢️envelope/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-error]
+path = "🔨️modules/⚡️simulation/⚙️engine/🚨️error/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-evaporative]
+path = "🔨️modules/⚡️simulation/⚙️engine/🌫️evaporative/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-fans]
+path = "🔨️modules/⚡️simulation/⚙️engine/🪭️fans/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-faults]
+path = "🔨️modules/⚡️simulation/⚙️engine/⚠️faults/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-fenestration]
+path = "🔨️modules/⚡️simulation/⚙️engine/🪟️fenestration/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-gains]
+path = "🔨️modules/⚡️simulation/⚙️engine/📈️gains/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-geometry]
+path = "🔨️modules/⚡️simulation/⚙️engine/📐️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-heat-recovery]
+path = "🔨️modules/⚡️simulation/⚙️engine/♻️heat_recovery/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-humidity-eq]
+path = "🔨️modules/⚡️simulation/⚙️engine/💦️humidity_eq/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-hvac-topo]
+path = "🔨️modules/⚡️simulation/⚙️engine/🕸️hvac_topo/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-iaq]
+path = "🔨️modules/⚡️simulation/⚙️engine/🫁️iaq/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-ideal-hvac]
+path = "🔨️modules/⚡️simulation/⚙️engine/💯️ideal_hvac/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-kernel]
+path = "🔨️modules/⚡️simulation/⚙️engine/🌰️kernel/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-material]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧱️material/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-meters]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧮️meters/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-metrics]
+path = "🔨️modules/⚡️simulation/⚙️engine/📊️metrics/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-model]
+path = "🔨️modules/⚡️simulation/⚙️engine/🔋️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-num]
+path = "🔨️modules/⚡️simulation/⚙️engine/🔢️num/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-output]
+path = "🔨️modules/⚡️simulation/⚙️engine/📤️output/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-plant]
+path = "🔨️modules/⚡️simulation/⚙️engine/🏭️plant/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-precompute]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧠️precompute/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-props]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧰️props/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-refrigeration]
+path = "🔨️modules/⚡️simulation/⚙️engine/❄️refrigeration/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-results]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧾️results/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-room-air]
+path = "🔨️modules/⚡️simulation/⚙️engine/🛏️room_air/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-scene]
+path = "🔨️modules/⚡️simulation/⚙️engine/🎬️scene/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-schedule]
+path = "🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-shw]
+path = "🔨️modules/⚡️simulation/⚙️engine/🚿️shw/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-sim]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-sim-restore]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/♻️restore/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-sim-retirement]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🪜️retirement/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-sim-wire]
+path = "🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📡️wire/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-site]
+path = "🔨️modules/⚡️simulation/⚙️engine/📍️site/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-sizing]
+path = "🔨️modules/⚡️simulation/⚙️engine/📏️sizing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-solar]
+path = "🔨️modules/⚡️simulation/⚙️engine/☀️solar/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-solar-thermal]
+path = "🔨️modules/⚡️simulation/⚙️engine/🔥️solar_thermal/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-terminal]
+path = "🔨️modules/⚡️simulation/⚙️engine/🔚️terminal/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-units]
+path = "🔨️modules/⚡️simulation/⚙️engine/⚖️units/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-water]
+path = "🔨️modules/⚡️simulation/⚙️engine/💧️water/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-zone-air]
+path = "🔨️modules/⚡️simulation/⚙️engine/🏠️zone_air/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-engine-zone-hvac]
+path = "🔨️modules/⚡️simulation/⚙️engine/🌡️zone_hvac/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-plugin-energy-epw]
+path = "🧩️extensions/🌦️epw/📦️packages/🦀️rust"
+
+[workspace.dependencies.serde]
+version = "1.0.228"
+features = [ "derive" ]
+
+[workspace.dependencies.serde_json]
+version = "1.0.149"
+features = [ "raw_value" ]
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+  [workspace.lints.rust.future_incompatible]
+  level = "warn"
+  priority = -1
+
+  [workspace.lints.rust.rust_2018_idioms]
+  level = "warn"
+  priority = -1
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+  [workspace.lints.clippy.all]
+  level = "warn"
+  priority = -1
+

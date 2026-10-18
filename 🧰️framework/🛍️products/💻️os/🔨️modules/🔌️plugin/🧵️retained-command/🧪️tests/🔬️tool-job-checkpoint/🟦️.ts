@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 

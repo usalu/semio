@@ -101,7 +101,7 @@ pub struct DefaultArtifactIdentifier;
 
 impl ArtifactIdentifier for DefaultArtifactIdentifier {
     fn artifact_id(&self, entity_kind: &str, data: &BTreeMap<String, Value>) -> String {
-        semio_framework_repo_model::entity::artifact_id(entity_kind, &data.iter().map(|(key, value)| (key.clone(), value.clone())).collect())
+        semio_framework_repo_model_entity::entity::artifact_id(entity_kind, &data.iter().map(|(key, value)| (key.clone(), value.clone())).collect())
     }
 }
 
@@ -111,15 +111,15 @@ pub struct DefaultEntityRenderer;
 
 impl EntityRenderer for DefaultEntityRenderer {
     fn human(&self, entity_kind: &str, data: &BTreeMap<String, Value>) -> String {
-        semio_framework_repo_model::entity::render_human(entity_kind, &data.iter().map(|(key, value)| (key.clone(), value.clone())).collect(), false)
+        semio_framework_repo_model_entity::entity::render_human(entity_kind, &data.iter().map(|(key, value)| (key.clone(), value.clone())).collect(), false)
     }
 
     fn markdown(&self, entity_kind: &str, data: &BTreeMap<String, Value>) -> String {
-        semio_framework_repo_model::entity::render_markdown(entity_kind, &data.iter().map(|(key, value)| (key.clone(), value.clone())).collect())
+        semio_framework_repo_model_entity::entity::render_markdown(entity_kind, &data.iter().map(|(key, value)| (key.clone(), value.clone())).collect())
     }
 
     fn markdown_link(&self, entity_kind: &str, data: &BTreeMap<String, Value>) -> String {
-        semio_framework_repo_model::entity::render_markdown_link(entity_kind, &data.iter().map(|(key, value)| (key.clone(), value.clone())).collect())
+        semio_framework_repo_model_entity::entity::render_markdown_link(entity_kind, &data.iter().map(|(key, value)| (key.clone(), value.clone())).collect())
     }
 }
 

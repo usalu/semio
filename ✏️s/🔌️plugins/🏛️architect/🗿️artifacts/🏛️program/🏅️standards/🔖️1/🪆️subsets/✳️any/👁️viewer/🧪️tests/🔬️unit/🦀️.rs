@@ -34,7 +34,7 @@ use semio_framework_plugin::ViewEmit;
 #[allow(unused_imports)]
 use semio_framework_plugin::{app::Dialect, app::InteractionView};
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::architect::*;
 
 #[semio_framework_async_macros::async_test]

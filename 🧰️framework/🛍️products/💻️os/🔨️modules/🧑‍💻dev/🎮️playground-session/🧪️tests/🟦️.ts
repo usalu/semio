@@ -14,7 +14,7 @@ const oracle = new Ajv({ strict: false }).compile(schema);
 
 test("actual session owner routes admit domain instances and never read test fixtures", async () => {
   const specificSource = read(specific + "/📜️script.ts");
-  expect(specificSource).not.toContain("./🧩️catalog/🎮️session/🧫️fixtures/🔣️.json");
+  expect(specificSource).not.toContain("./🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json");
   const { runtimeFixturePathV1 } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🟦️.ts");
   for (const script of [general + "/📦️packages/🟦️typescript/📜️script.ts", specific + "/📜️script.ts"]) {
     const syntax = ts.createSourceFile(script, read(script), ts.ScriptTarget.Latest, true);
@@ -29,9 +29,9 @@ test("actual session owner routes admit domain instances and never read test fix
   const generalRequest = JSON.parse(read(general + "/🎮️playground-session/🔣️.json"));
   const specificRequest = JSON.parse(read(specific + "/🧩️catalog/🎮️session/🔣️.json"));
   expect(generalRequest).toEqual(cases.cases.find(row => row.id === "explicit-empty")!.input);
-  expect(specificRequest).toEqual(JSON.parse(read(specific + "/🧩️catalog/🎮️session/🧫️fixtures/🔣️.json")).publication);
+  expect(specificRequest).toEqual(JSON.parse(read(specific + "/🧩️catalog/🎮️session/🧪️tests/🧫️fixtures/🔣️.json")).publication);
   for (const row of cases.cases) { expect(oracle(row.input), row.id).toBe(row.shape); if (row.accepted) expect(parsePlaygroundSessionPublicationRequestV1(row.input)).toEqual(row.input); else expect(() => parsePlaygroundSessionPublicationRequestV1(row.input)).toThrow(); }
-  const { loadCatalogTaxonomy, generatorPreviewExecution } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
+  const { loadCatalogTaxonomy } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts"), { generatorPreviewExecution } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts");
   const taxonomy = loadCatalogTaxonomy();
   for (const id of ["playground-session", "s-playground-session"]) {
     const contract = taxonomy.generatorContracts![id]!; expect(contract.inputPatterns!.every(path => !path.includes("🧪️tests/🧫️fixtures") && !path.includes("🧪️tests"))).toBe(true);

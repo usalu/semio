@@ -3,10 +3,10 @@
 //! handling and a scroll bar painter. It knows rows by position and options by identity (their index in the
 //! unfiltered list), so signals stay stable while the filter narrows and widens.
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::event::{Key, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::theme::{Glyph, Rgb, Role, Theme};
+use crate::cell::{Cell, CellBuffer};
+use crate::event::{Key, MouseButton, MouseEvent, MouseKind};
+use crate::geometry::{Pos, Rect};
+use crate::theme::{Glyph, Rgb, Role, Theme};
 use std::cell::Cell as Shared;
 use std::ops::Range;
 
@@ -152,7 +152,7 @@ pub fn row_under_with(area: Rect, pos: Pos, top: usize, count: usize, stride: u1
 pub fn row_style(theme: &Theme, base: Rgb, selected: bool, focused: bool, hovered: bool) -> (Rgb, Rgb, u8) {
     match (selected, focused, hovered) {
         (true, true, _) => (theme.role(Role::ActiveForeground), theme.role(Role::ActiveBase), 0),
-        (true, false, _) => (theme.role(Role::Foreground), base, crate::tui::cell::attr::BOLD),
+        (true, false, _) => (theme.role(Role::Foreground), base, crate::cell::attr::BOLD),
         (false, _, true) => (theme.role(Role::Foreground), theme.role(Role::HoverInteractive), 0),
         _ => (theme.role(Role::Foreground), base, 0),
     }
@@ -457,7 +457,7 @@ pub fn paint_scroll_bar(buf: &mut CellBuffer, theme: &Theme, track: Rect, top: u
     let travel = height - thumb;
     let max_top = count - rows;
     let offset = (top.min(max_top) * travel + max_top / 2).checked_div(max_top).unwrap_or(0);
-    let bg = buf.get(track.x, track.y).map_or(theme.surface(crate::tui::theme::Surface::Window), |cell| cell.bg);
+    let bg = buf.get(track.x, track.y).map_or(theme.surface(crate::theme::Surface::Window), |cell| cell.bg);
     let track_glyph = theme.glyphs.glyph(Glyph::ScrollTrack);
     let thumb_glyph = theme.glyphs.glyph(Glyph::ScrollThumb);
     for row in 0..height {

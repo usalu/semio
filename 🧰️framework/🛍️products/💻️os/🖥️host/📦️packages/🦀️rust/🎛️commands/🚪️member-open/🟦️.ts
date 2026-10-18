@@ -8,9 +8,10 @@ import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv from "ajv";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import type { SchemaCheck } from "../🎞️media-persistence-and-retirement/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 export class MemberOpenProtocolScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -151,7 +152,7 @@ export class PublicMemberOpenHandoffScript extends BundleScript {
     }
     assert.equal(ids.size, 20);
     console.log("public member-open handoff oracle:20 projection/input/capacity cases + exact18 operation arms +8 Flow lifecycle traces; one bounded Flow decoder,17 explicit retained denials, schema+owner derived, publication0");
-    const store = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs"), "utf8");
+    const store = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📥️lifted/🏪️store/🦀️.rs"));
     const factory = store.slice(store.indexOf("pub trait MemberFactory"), store.indexOf("pub enum NoMembers"));
     assert(/type Open\s*:\s*MemberOpenOperation<Member\s*=\s*Self>/.test(factory) && factory.includes("fn begin_open(request: MemberOpenRequest)"),
       "public handoff requires the actual closed MemberFactory operation; borrowed M::open is not retained authority");

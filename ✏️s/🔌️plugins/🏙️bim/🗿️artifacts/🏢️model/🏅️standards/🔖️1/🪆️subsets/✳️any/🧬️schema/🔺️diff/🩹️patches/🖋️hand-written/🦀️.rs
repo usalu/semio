@@ -1,6 +1,8 @@
 //! 🖋️ Hand-written sparse patches that the model generator does not emit: option groups, design options, worksets, element memberships, structural supports, load cases and structural loads.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*};
+use crate::standards::v1::subsets::any::schema::snapshot::{StructuralSupport, LoadCase, StructuralLoad, StructuralLocation, Restraints};
+use crate::standards::v1::subsets::any::schema::diff::algebra::*;
 
 /// 🩹️ Sparse authored OptionGroup fields.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

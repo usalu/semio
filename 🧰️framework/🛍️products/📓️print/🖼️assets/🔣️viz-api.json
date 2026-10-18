@@ -7161,8 +7161,17 @@
               "type": "number",
               "default": "7",
               "description": {
-                "en": "Height of one box in millimetres.",
-                "de": "Höhe eines Kastens in Millimetern."
+                "en": "Least height of one box in millimetres; a row grows to its tallest text.",
+                "de": "Mindesthöhe eines Kastens in Millimetern; eine Zeile wächst mit ihrem höchsten Text."
+              }
+            },
+            {
+              "name": "font",
+              "type": "string",
+              "default": "cell",
+              "description": {
+                "en": "Theme font role a cell is set in: \\Key{cell}, \\Key{label} or \\Key{value}.",
+                "de": "Schriftrolle des Themas, in der eine Zelle gesetzt wird: \\Key{cell}, \\Key{label} oder \\Key{value}."
               }
             },
             {
@@ -41869,6 +41878,15 @@
               }
             },
             {
+              "name": "height",
+              "type": "number",
+              "default": "0",
+              "description": {
+                "en": "Canvas height in millimetres of the chart the column holds; the chart fills that rectangle under the heading. Zero leaves the column to content that grows downward.",
+                "de": "Höhe der Zeichenfläche in Millimetern für das Diagramm der Spalte; das Diagramm füllt dieses Rechteck unter der Überschrift. Null überlässt die Spalte nach unten wachsendem Inhalt."
+              }
+            },
+            {
               "name": "note",
               "type": "text",
               "default": "",
@@ -54062,6 +54080,16 @@
           }
         },
         {
+          "name": "mode",
+          "syntax": "identifier",
+          "type": "string",
+          "default": "",
+          "description": {
+            "en": "Which member of the family the preset renders.",
+            "de": "Welches Mitglied der Familie die Voreinstellung zeichnet."
+          }
+        },
+        {
           "name": "opacity",
           "syntax": "expression",
           "type": "number",
@@ -54150,6 +54178,26 @@
           "description": {
             "en": "Dimensionless normalized-width factor: route strokes use 0.3 + factor × normalized value points; flow half-width uses 0.4 + 2 × factor × normalized value millimetres.",
             "de": "Dimensionsloser Faktor der normierten Breite: Routenlinien nutzen 0,3 + Faktor × normierter Wert Punkt; Flusshalbbreiten nutzen 0,4 + 2 × Faktor × normierter Wert Millimeter."
+          }
+        },
+        {
+          "name": "samples",
+          "syntax": "expression",
+          "type": "integer",
+          "default": "",
+          "description": {
+            "en": "Number of samples the curve or field is evaluated at.",
+            "de": "Anzahl der Stützstellen, an denen Kurve oder Feld ausgewertet werden."
+          }
+        },
+        {
+          "name": "stations",
+          "syntax": "scalar",
+          "type": "boolean",
+          "default": "",
+          "description": {
+            "en": "Draw the stations along the route.",
+            "de": "Die Stationen entlang der Route zeichnen."
           }
         },
         {
@@ -93840,7 +93888,7 @@
   "totals": {
     "packages": 77,
     "commands": 169,
-    "keys": 4296,
+    "keys": 4298,
     "families": 246
   }
 }

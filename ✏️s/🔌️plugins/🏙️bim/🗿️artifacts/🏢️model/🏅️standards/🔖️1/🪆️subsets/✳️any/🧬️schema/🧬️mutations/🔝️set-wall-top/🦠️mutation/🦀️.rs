@@ -1,6 +1,6 @@
 //! 🔝️ `set-wall-top` payload. Sets how a wall's top is resolved: free height, the own storey's top, or another storey of the same building.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, TopConstraint}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct SetWallTop {
     pub top: TopConstraint,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetWallTop {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetWallTop
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetWallTop>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "wall", kind: "set-wall-top", record: "SetWallTop" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_wall_top::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_wall_top::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Constrain the top of wall \"{}\"", self.id), &format!("Oberkante von Wand \"{}\" festlegen", self.id))

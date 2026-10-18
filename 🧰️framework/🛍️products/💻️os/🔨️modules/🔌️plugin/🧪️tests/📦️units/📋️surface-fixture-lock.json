@@ -1,7 +1,7 @@
 {
   "path": "🧰️framework/Cargo.lock",
   "beforeSha256": "6316c18ec7e4770894ca0c7f7c11dbb44a4c672c3062cbedca828bed03b5fc38",
-  "afterSha256": "97645ef0ae370aef8ca2df22812f30d650ba6232e1a416dc30785d0d96d81975",
+  "afterSha256": "e2161c49585dec1f2bcedfbf089e06374d2adbac9cf5582d61895c71d7e082a4",
   "thirdpartyPinsSha256": "cec33bada3d45ab1e279cd48fa43e2b814aadaad6ee076be0fe7b39cbb8fee23",
   "entries": [
     {
@@ -10,7 +10,7 @@
       "version": "0.1.0",
       "dependencies": [
         "semio-framework",
-        "semio-framework-2d",
+        "semio-framework-2d-compute",
         "semio-framework-artifact-reference",
         "semio-framework-async-macros",
         "semio-framework-diagnostic",

@@ -67,12 +67,12 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
@@ -149,7 +149,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// letter tag prefix immediately followed by the bracketed positional payload, same convention
 /// `f6-recon-report.md` §5 and `SvgDiff`'s `enc_xml_node` use for data-carrying enums.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_cell_value(v: &XlsxCellValue) -> String {
+pub fn enc_cell_value(v: &XlsxCellValue) -> String {
     match v {
         XlsxCellValue::Number(n) => format!("N[{}]", enc_f64(*n)),
         XlsxCellValue::SharedString(i) => format!("S[{i}]"),
@@ -162,7 +162,7 @@ pub(crate) fn enc_cell_value(v: &XlsxCellValue) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_cell_value(s: &str) -> Result<XlsxCellValue, String> {
+pub fn dec_cell_value(s: &str) -> Result<XlsxCellValue, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {
@@ -194,13 +194,13 @@ pub(crate) fn dec_cell(s: &str) -> Result<XlsxCell, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_sheet(s: &XlsxSheet) -> String {
+pub fn enc_sheet(s: &XlsxSheet) -> String {
     let cells = s.cells.iter().map(enc_cell).collect::<Vec<_>>().join(",");
     format!("[{},[{}]]", enc_str(&s.name), cells)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_sheet(s: &str) -> Result<XlsxSheet, String> {
+pub fn dec_sheet(s: &str) -> Result<XlsxSheet, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, cells] = parts.as_slice() else { return Err(format!("sheet: expected 2 fields, got {}", parts.len())) };
     let cells = split_top_level(strip_brackets(cells)?, ',').into_iter().map(dec_cell).collect::<Result<Vec<_>, String>>()?;

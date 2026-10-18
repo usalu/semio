@@ -8,7 +8,7 @@
 //! ends, so the solid of every layer, the cut of the openings and the quantities all read the same function of `s`. A top that would fall below the base is lifted to the base ([`MIN_HEIGHT`]) and reported as clamped.
 //! The attach references of walls point at leaf elements (roofs, slabs and ceilings have no attach of their own), so the chain of references cannot loop; [`find_cycle`] guards the graph all the same.
 
-use super::{face_ends, WallLayout};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
 use crate::standards::v1::subsets::any::schema::authored::references::{edges, find_cycle, top_target};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, layer_thicknesses, seg};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ceilings, dep_object, dep_value, roofs, slabs, Anonymous, CHORD_TOLERANCE};
@@ -213,7 +213,7 @@ pub fn sample(axis: &Axis, length: f64, surface: &AttachSurface, over: bool) -> 
     Sampled { points: simplified(points), covered: if length > 0.0 { (covered / length).min(1.0) } else { 0.0 } }
 }
 
-fn simplified(points: Vec<ElevationPoint>) -> Vec<ElevationPoint> {
+pub fn simplified(points: Vec<ElevationPoint>) -> Vec<ElevationPoint> {
     let mut out: Vec<ElevationPoint> = Vec::with_capacity(points.len());
     for point in points {
         if out.last().is_some_and(|last| (last.s - point.s).abs() < 1e-12 && (last.z - point.z).abs() < 1e-12) {
@@ -521,6 +521,4 @@ pub mod testing {
 }
 //#endregion 🔖️Testing
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

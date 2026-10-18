@@ -10,7 +10,9 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryCargoTests, runRepositoryTestCommand, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { readModuleTreeSource, sliceModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
@@ -95,7 +97,7 @@ export async function directorySessionAuthorityOracle(repoRoot: string): Promise
     if (!row.brokerAdmissionCurrent) assert.equal(row.outcome, "ignored", `${row.id}: stale admission`);
   }
   const rust = readFileSync(join(root, "🦀️.rs"), "utf8");
-  const client = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
+  const client = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), { crates: false });
   const sessionIo = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🚪️io/📝️text/🪪️session-authority-v1/🦀️.rs"), "utf8");
   assert(rust.includes("pub struct DirectorySessionAuthorityV1") && sessionIo.includes("parse_canonical_json"), "Rust session authority contract missing");
   assert(client.includes("DirectorySessionAuthorityV1::parse_canonical_json") && client.includes("DIRECTORY_SESSION_AUTHORITY_MAX_BYTES"), "Rust client does not enforce canonical session authority");
@@ -184,7 +186,7 @@ export async function directoryEventPageClientOracle(repoRoot: string): Promise<
     "TypeScript canonical page transport is incomplete",
   );
   assert(typescript.includes("streamAcknowledged(since:") && typescript.includes("acknowledge: (through: number)"), "TypeScript acknowledged directory frontier is missing");
-  const rust = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8");
+  const rust = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), { crates: false });
   assert(rust.includes("pub async fn event_page") && rust.includes("CanonicalDirectoryEventPageV1") && rust.includes("DIRECTORY_EVENT_PAGE_MAX_BYTES"), "Rust canonical page transport is incomplete");
   assert(rust.includes("pub fn stream_acknowledged") && rust.includes("pub fn acknowledge(&mut self, through: u64)"), "Rust acknowledged directory frontier is missing");
   assert(rust.includes("pub struct DirectoryEventPageBootstrapV1") && rust.includes("pub enum DirectoryBootstrapTransition"), "Rust directory bootstrap owner is missing");
@@ -249,7 +251,7 @@ export function directoryEventPageBootstrapOracle(repoRoot: string): number {
   assert.throws(() => acknowledge(trace.pages[1], trace.bootstrapEpoch + 1), "stale epoch");
   assert.equal(acknowledge(trace.pages[1]), "live");
   for (const wakeup of trace.wakeups) assert(wakeup > cursor && cursor === trace.expectedSocketSince);
-  const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
+  const worker = readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"));
   assert(worker.includes("DirectoryEventPageBootstrapV1") && worker.includes("directory-bootstrap-ack") && worker.includes("directory-event-page"), "browser worker bootstrap owner missing");
   return 11;
 }

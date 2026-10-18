@@ -62,6 +62,4 @@ pub fn document_text(root: XmlNode) -> Result<String, String> {
     })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

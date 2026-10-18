@@ -1,0 +1,5 @@
+{
+ "name": "c6fw-actor",
+ "crates": ["semio-framework-actor", "semio-framework-actor-vocabulary", "semio-framework-actor-job-publication"],
+ "note": "c6fw census 6 P15: the owning crates of the three actor split files"
+}

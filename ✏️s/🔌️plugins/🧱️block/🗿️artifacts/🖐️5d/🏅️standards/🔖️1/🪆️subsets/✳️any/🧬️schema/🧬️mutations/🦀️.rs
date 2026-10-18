@@ -12,10 +12,15 @@ extern crate semio_framework_value_derive as value_derive;
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
 //#endregion 📖️SemioGrammar
-
 use semio_s_artifact_block_5d_diff::Block5dDiff;
 use semio_s_artifact_block_5d_model::Block5dSnapshot;
 use protocol::Mutation;
+use semio_s_artifact_block_5d_mut_part_kind::{rename_part_kind::RenamePartKind, change_part_kind_label::ChangePartKindLabel, change_part_kind_variant::ChangePartKindVariant, change_part_kind_description::ChangePartKindDescription, change_part_kind_icon::ChangePartKindIcon, change_part_kind_unit::ChangePartKindUnit, update_part_2d::UpdatePart2d, update_part_3d::UpdatePart3d};
+use semio_s_artifact_block_5d_mut_representations::{create_representation::CreateRepresentation, delete_representation::DeleteRepresentation, change_representation_mesh_url::ChangeRepresentationMeshUrl, add_representation_attribute::AddRepresentationAttribute, remove_representation_attribute::RemoveRepresentationAttribute};
+use semio_s_artifact_block_5d_mut_grip_kinds::{create_grip_kind::CreateGripKind, delete_grip_kind::DeleteGripKind, rename_grip_kind::RenameGripKind, change_grip_kind_label::ChangeGripKindLabel, change_grip_kind_color::ChangeGripKindColor, change_grip_kind_default_rope_kind::ChangeGripKindDefaultRopeKind};
+use semio_s_artifact_block_5d_mut_grips::{create_grip::CreateGrip, delete_grip::DeleteGrip, move_grip_2d::MoveGrip2d, move_grip_3d::MoveGrip3d, resize_grip_3d::ResizeGrip3d, change_grip_grip_kind::ChangeGripGripKind};
+use semio_s_artifact_block_5d_mut_meta::{add_compatibility_rule::AddCompatibilityRule, remove_compatibility_rule::RemoveCompatibilityRule, add_attribute::AddAttribute, remove_attribute::RemoveAttribute, add_author::AddAuthor, remove_author::RemoveAuthor, change_meta_description::ChangeMetaDescription};
+use semio_s_artifact_block_5d_mut_cameras::{move_camera2d::MoveCamera2d, scale_camera2d::ScaleCamera2d, move_camera3d::MoveCamera3d, scale_camera3d::ScaleCamera3d};
 
 //#region 🔖️Store
 pub type Block5dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Block5dSnapshot, Block5dMutation>;

@@ -7,6 +7,7 @@ use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::puzzle2d_action;
 use semio_framework_plugin::WindowMeasure;
+use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 /// 🎛️ Tagged with the select utility's id as a routing envelope only; `partition_window_measures`
 /// unwraps the children so both toggles render flat under the Select toggle that already owns the row.

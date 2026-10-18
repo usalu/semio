@@ -1,6 +1,6 @@
 //! 🎢️ `set-element-storey` payload. Stands a storey-placed element (wall, curtain wall, column, beam, slab, ceiling, roof, stair, railing, ramp, space) on another storey of its building. Hosted openings follow their host by reference; refused while the top constraint would no longer lie above the base or a hosted opening would rise above the new height.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct SetElementStorey {
     pub storey: String,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetElementStorey {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetElementStorey
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetElementStorey>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "element", kind: "set-element-storey", record: "SetElementStorey" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_element_storey::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_element_storey::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Move element \"{}\" to storey \"{}\"", self.id, self.storey), &format!("Element \"{}\" in Geschoss \"{}\" verschieben", self.id, self.storey))

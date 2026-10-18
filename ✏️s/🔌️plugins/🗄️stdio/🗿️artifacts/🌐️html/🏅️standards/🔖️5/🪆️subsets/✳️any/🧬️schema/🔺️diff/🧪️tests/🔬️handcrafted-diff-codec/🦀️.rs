@@ -1,5 +1,6 @@
-use crate::{standards::v5::subsets::any::schema::snapshot::HtmlAttr, standards::v5::subsets::any::schema::snapshot::HtmlNode, standards::v5::subsets::any::schema::snapshot::HtmlSnapshot};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot};
 use crate::standards::v5::subsets::any::schema::diff::*;
+use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff::HtmlDiff;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -9,7 +10,7 @@ fn elem(name: &str, attrs: Vec<(&str, Option<&str>)>, children: Vec<HtmlNode>) -
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snapshot(doctype: Option<&str>, root: HtmlNode) -> HtmlSnapshot {
-    HtmlSnapshot { schema: crate::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: doctype.map(|s| s.to_string()), root }
+    HtmlSnapshot { schema: semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::STDIO_HTML_DOCUMENT_SCHEMA.into(), doctype: doctype.map(|s| s.to_string()), root }
 }
 
 /// 🧪️ diff_codec_text_binary_roundtrip_law: exercises the recursive enum tree (`Element`/

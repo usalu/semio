@@ -1,6 +1,8 @@
 //! 🪪️ Native identity bootstrap from an owned one-shot local credential endpoint.
 
-use super::client::{DirectoryClient, DirectoryTransport, LocalHubCredential};
+use super::client::directory_client::DirectoryClient;
+use super::client::http_and_transport_contracts::DirectoryTransport;
+use super::client::wire_helpers_and_credentials::LocalHubCredential;
 use semio_framework_async::OperationContext;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::{Arc, OnceLock};
@@ -81,7 +83,7 @@ pub fn claim_inherited_local_hub_credential(expected_class: &str) -> Result<Arc<
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[doc(hidden)] pub fn claim_local_hub_credential_with(claimed: &OnceLock<ClaimedLocalHubCredential>, expected_class: &str, read: impl FnOnce(&str) -> Result<LocalHubCredential, super::client::DirectoryClientError>) -> Result<Arc<LocalHubCredential>, IdentityError> {
+#[doc(hidden)] pub fn claim_local_hub_credential_with(claimed: &OnceLock<ClaimedLocalHubCredential>, expected_class: &str, read: impl FnOnce(&str) -> Result<LocalHubCredential, super::client::errors_and_event_pages::DirectoryClientError>) -> Result<Arc<LocalHubCredential>, IdentityError> {
     let claimed = claimed.get_or_init(|| ClaimedLocalHubCredential { client_class: expected_class.to_string(), result: read(expected_class).map(Arc::new).map_err(|_| IdentityError) });
     if claimed.client_class != expected_class {
         return Err(IdentityError);

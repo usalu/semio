@@ -4,8 +4,9 @@ import { join, posix, resolve } from "node:path";
 import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
 import Ajv from "ajv";
-import * as discovery from "../../🔍️discovery/🟦️.ts";
-import { registryCatalogInputPaths, registryStaticImports, scanRegistryCompilerImports, type RegistryCatalogInputView, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { registryCatalogInputPaths } from "../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
+import { registryCompilerInputDependencies, registryStaticImports, scanRegistryCompilerImports, type RegistryCatalogInputView } from "../../🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
+import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
@@ -43,7 +44,7 @@ test("registry imported data follows the schema-first role and strict JSON gramm
   
   expect(dataVector["schemaVersion"]).toEqual(1);expect(dataVector["contractId"]).toEqual("registry-compiler-input-dependencies-v1");expect(dataVector["selection"]).toEqual("physical-extension-and-requested-role");expect(dataVector["dataGrammar"]).toEqual("strict-json");expect(dataVector["fallback"]).toEqual("none");expect(dataVector["graph"]["entries"]).toEqual(["📜️script.ts"]);expect(dataVector["graph"]["dataPath"]).toEqual("🧩️module/🔣️.json");
   
-  const dependencies = Reflect.get(discovery, "registryCompilerInputDependencies");
+  const dependencies = registryCompilerInputDependencies;
   expect(typeof dependencies).toBe("function");
   for (const row of dataVector.cases) {
     for (const path of [row.path, row.path.replaceAll("/", "\\")]) {

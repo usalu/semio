@@ -22,7 +22,8 @@
           "enum": [
             "current-publication",
             "current-exact-publication",
-            "current-prepared-publication"
+            "current-prepared-publication",
+            "current-retained-inactive-publication"
           ]
         },
         "receiptSha256": {
@@ -107,7 +108,36 @@
             "inactive"
           ]
         }
-      }
+      },
+      "allOf": [
+        {
+          "oneOf": [
+            {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "enum": [
+                    "current-publication",
+                    "current-exact-publication",
+                    "current-prepared-publication"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "purpose": {
+                  "const": "current-retained-inactive-publication"
+                },
+                "initialState": {
+                  "const": "mounted"
+                }
+              }
+            }
+          ]
+        }
+      ]
     },
     "Witness": {
       "type": "object",
@@ -763,6 +793,61 @@
           "minimum": 0,
           "maximum": 1
         }
+      }
+    },
+    "RetainedInactivePolicy": {
+      "const": {
+        "purpose": "current-retained-inactive-publication",
+        "initialState": "mounted",
+        "qualification": "inactive-application-preserved",
+        "maximumBodyCommands": 7,
+        "actions": [
+          "information",
+          "detach",
+          "inactive",
+          "attach",
+          "verify",
+          "detach",
+          "inactive"
+        ],
+        "standalone": false,
+        "terminal": "inactive"
+      }
+    },
+    "RetainedInactiveDispatchOrders": {
+      "const": {
+        "darwin": [
+          "image:information",
+          "service:before",
+          "image:detach",
+          "image:inactive",
+          "image:attach",
+          "image:verify",
+          "service:after",
+          "image:detach",
+          "image:inactive"
+        ],
+        "linux": [
+          "image:information",
+          "image:detach",
+          "image:inactive",
+          "image:attach",
+          "image:verify",
+          "image:detach",
+          "image:inactive"
+        ],
+        "win32": [
+          "image:information",
+          "metadata:pending",
+          "image:detach",
+          "image:inactive",
+          "metadata:published",
+          "image:attach",
+          "image:verify",
+          "image:detach",
+          "image:inactive",
+          "metadata:settled"
+        ]
       }
     }
   }

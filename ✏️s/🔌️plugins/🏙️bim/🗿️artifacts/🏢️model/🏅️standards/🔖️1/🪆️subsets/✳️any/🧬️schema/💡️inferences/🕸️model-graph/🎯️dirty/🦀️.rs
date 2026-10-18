@@ -2,9 +2,12 @@
 //! (`compute::dependency`, the honesty contract of `dep_input`), so an incremental update evaluates the dependency of those nodes only. Rows are named by the snapshot after the diff: a changed reference means the referring row
 //! was written. Granularity is the row; an element kind that reads aggregates (rooms, plans, annotations, diagnostics, schedules, zones, views, phases) answers yes, and so does every kind this table does not know.
 
-use super::ModelNode;
-use super::super::super::element_solids::{SolidFamily, SolidKey};
-use super::plan::element_storey;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use semio_framework_value::DslValue;
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelNode;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidFamily, SolidKey};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::element_storey;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind};
 use protocol::TouchedPaths;
 
@@ -132,7 +135,7 @@ pub fn touched(snapshot: &ModelSnapshot, key: &ModelNode, touched: &TouchedPaths
         ModelNode::Quantity(id) => quantity(&regions, snapshot, id),
         ModelNode::Component(id) => regions.row("components", id) || regions.collection("component_overrides") || regions.collection("families") || regions.collection("family_parameters") || regions.collection("family_solids") || regions.collection("materials") || regions.collection("walls"),
         ModelNode::Mep(id) => regions.row("mep_elements", id),
-        ModelNode::StructuralAnalysis => super::super::super::analytical_members::READS.iter().any(|field| regions.collection(field)),
+        ModelNode::StructuralAnalysis => crate::standards::v1::subsets::any::schema::inferences::analytical_members::READS.iter().any(|field| regions.collection(field)),
         ModelNode::MepClash(_) => false,
         ModelNode::Family(id) => regions.row("families", id) || regions.collection("family_parameters") || regions.collection("family_solids") || regions.collection("materials"),
         ModelNode::Totals(_) | ModelNode::DiagnosticIndex => false,
@@ -142,6 +145,4 @@ pub fn touched(snapshot: &ModelSnapshot, key: &ModelNode, touched: &TouchedPaths
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,6 +1,6 @@
 /** 📂 Context menu mapping, tiled-map snapshot ABI and catalogue drag payloads. */
 import { uiI18n } from "@semio-tech/ui-react";
-import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🟦️.tsx";
+import { contextMenuItemClassName } from "../../../../../../../🔨️modules/🖱️ui/🧱️elements/🖱️ContextMenu/🎨️item-render/🟦️.tsx";
 import { cleanup } from "@semio-tech/ui-react/test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { uiDataLabel, formatKeybindingShortcut, buildKeysByActionId } from "@semio-tech/ui-react";

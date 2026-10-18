@@ -1,4 +1,16 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, PropertyTemplate, PropertyValue, TemplateTarget};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::Diagnostic;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{OpeningKind, Violation};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::{finding};
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::*;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;

@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "entry",
+    "consumer",
+    "forbidden",
+    "sourceSha256",
+    "sourceDigest",
+    "maximumFiles",
+    "maximumBytes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "entry": {
+      "type": "string"
+    },
+    "consumer": {
+      "type": "string"
+    },
+    "forbidden": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "sourceSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "sourceDigest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "maximumFiles": {
+      "const": 256
+    },
+    "maximumBytes": {
+      "const": 16777216
+    }
+  }
+}

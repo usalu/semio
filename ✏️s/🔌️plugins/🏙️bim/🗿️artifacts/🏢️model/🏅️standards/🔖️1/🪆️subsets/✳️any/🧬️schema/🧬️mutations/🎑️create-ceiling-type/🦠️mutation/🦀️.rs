@@ -1,6 +1,6 @@
 //! 🎑️ `create-ceiling-type` payload. Brings a new layered ceiling type into the library; every layer names an existing material and has a positive thickness.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{CeilingType, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{CeilingType, ModelSnapshot}, diff::ModelDiff};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateCeilingType {
     pub ceiling_type: CeilingType,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateCeilingType {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateCeilingType
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateCeilingType> + From<crate::standards::v1::subsets::any::schema::mutations::delete_ceiling_type::DeleteCeilingType>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "ceiling-type", kind: "create-ceiling-type", record: "CreateCeilingType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_ceiling_type::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create ceiling type \"{}\"", self.ceiling_type.name), &format!("Unterdeckentyp \"{}\" anlegen", self.ceiling_type.name))

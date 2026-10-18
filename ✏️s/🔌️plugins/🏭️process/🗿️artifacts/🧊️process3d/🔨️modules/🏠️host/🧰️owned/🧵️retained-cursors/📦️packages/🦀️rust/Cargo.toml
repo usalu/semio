@@ -1,0 +1,27 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-artifact-process-process3d-host-retained-cursors"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "process3d document store and publication authorities: retained-cursors"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = []
+
+[dependencies]
+machine = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-s-artifact-process-process3d-model = { workspace = true }
+semio-s-artifact-process-process3d-mutations = { workspace = true }

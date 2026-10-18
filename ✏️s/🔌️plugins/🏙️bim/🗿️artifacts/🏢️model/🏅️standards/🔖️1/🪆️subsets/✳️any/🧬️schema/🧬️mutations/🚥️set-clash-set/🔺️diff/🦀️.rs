@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `SetClashSet`: a sparse clash set patch of exactly the provided fields that differ. The clash set that results must be writable (see `clash_set_problem`); a patch that restates the current values is
 //! `mutation.no-op`.
 
-use super::SetClashSet;
+use crate::standards::v1::subsets::any::schema::mutations::set_clash_set::SetClashSet;
 use crate::standards::v1::subsets::any::schema::{snapshot::{clash_set_problem, ModelSnapshot}, diff::{Entry, ModelDiff, Patch}};
 use protocol::{MutationOutcome, OutcomeCode};
 

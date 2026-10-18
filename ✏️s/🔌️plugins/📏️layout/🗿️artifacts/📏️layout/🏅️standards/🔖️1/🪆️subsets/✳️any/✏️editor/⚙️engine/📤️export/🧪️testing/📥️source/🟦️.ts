@@ -12,7 +12,7 @@ export interface LayoutMediaSourceDefinitionV1 {
 /** 🎞️ Names the S-owned source adoption contract independently of trial data. */
 export interface LayoutMediaAdoptionSourceV1 {
   readonly version: 1;
-  readonly sources: Readonly<{ editor: "../../🦀️.rs"; export: "./🦀️.rs" }>;
+  readonly sources: Readonly<{ editor: "../../🕹️layout-play-app/🦀️.rs"; export: "../../🎥️media-export-job-and-factories/🦀️.rs" }>;
   readonly adopter: LayoutMediaSourceDefinitionV1 & Readonly<{ body: string }>;
   readonly producer: Readonly<{ definition: LayoutMediaSourceDefinitionV1; phases: readonly Readonly<{ id: string; source: string }>[] }>;
 }

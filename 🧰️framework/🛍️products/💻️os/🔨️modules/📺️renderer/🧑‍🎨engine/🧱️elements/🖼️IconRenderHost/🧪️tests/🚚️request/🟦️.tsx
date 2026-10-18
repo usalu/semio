@@ -4,9 +4,6 @@ import Ajv2020 from "ajv/dist/2020";
 import { renderIconRequest } from "../../🚚️request/🟦️.ts";
 import fixture from "../🧫️fixtures/🚚️request/🔣️.json";
 
-it("validates the neutral icon request transport fixture", () => {
-});
-
 it("resolves preview and export asset transport without changing the shot", async () => {
   for (const sample of fixture.cases) {
     const received: IconRenderRequest[] = [];

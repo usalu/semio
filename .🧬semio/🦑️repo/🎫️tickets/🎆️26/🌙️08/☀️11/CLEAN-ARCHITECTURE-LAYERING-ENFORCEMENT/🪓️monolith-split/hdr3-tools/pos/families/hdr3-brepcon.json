@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-brepcon",
+ "crates": ["semio-framework-3d-brep-construction", "semio-framework-3d-brep-construction-unit-tests"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-3d-brep-construction"]},
+ "note": "HDR-3: brep construction primitive/sew tests moved to a companion"
+}

@@ -2,15 +2,15 @@
   "contract": {
     "version": 1,
     "sources": {
-      "editor": "../../🦀️.rs",
-      "export": "./🦀️.rs"
+      "editor": "../../🕹️layout-play-app/🦀️.rs",
+      "export": "../../🎥️media-export-job-and-factories/🦀️.rs"
     },
     "adopter": {
       "implementation": "ArtifactEditor for LayoutPlayApp",
       "method": "build_media_export_job",
       "parameters": "request:&mut Option<ArtifactMediaExportJobRequest<EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_job::StepContext<'_>",
       "result": "Result<bool,semio_framework_job::OriginalTurnFailure>",
-      "body": "use crate::editor::layout::engine::export::{LayoutMediaExportJob,LAYOUT_MEDIA_EXPORT_TOOL_ID};\n        if request.as_ref().is_some_and(|input|input.port!=\"layout:out\"||input.tool_id!=LAYOUT_MEDIA_EXPORT_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,\"layout producer requires its exact registered output port\").into())}\n        LayoutMediaExportJob::admit_original(request,body,cx)"
+      "body": "use semio_s_artifact_layout_layout_engine_export::LAYOUT_MEDIA_EXPORT_TOOL_ID;\n        if request.as_ref().is_some_and(|input|input.port!=\"layout:out\"||input.tool_id!=LAYOUT_MEDIA_EXPORT_TOOL_ID){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,\"layout producer requires its exact registered output port\").into())}\n        LayoutMediaExportJob::admit_original(request,body,cx)"
     },
     "producer": {
       "definition": {

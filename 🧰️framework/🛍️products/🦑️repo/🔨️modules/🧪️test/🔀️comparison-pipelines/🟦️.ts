@@ -4,7 +4,7 @@
  */
 
 //#region 🔌️Adapters
-import { runProbe } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runProbe } from "../../📚️library/🏃️process/🔍️probe/🟦️.ts";
 import { canonicalize } from "../🟰️comparison/🟦️.ts";
 import { isQualifiedProbe, type ProbeEntry, type ProbeReport, probeReportProblems } from "../🔬️probes/🟦️.ts";
 import { type TestResult } from "../📤️results/🟦️.ts";

@@ -1,4 +1,4 @@
-use super::{component_fault, family_swap_fault, mep_fault, mounted_on, override_fault};
+use crate::standards::v1::subsets::any::schema::mutations::component_rules::{component_fault, family_swap_fault, mep_fault, mounted_on, override_fault};
 use crate::standards::v1::subsets::any::schema::mutations::{elements, family_rules};
 use crate::standards::v1::subsets::any::schema::snapshot::{Component, FamilyCategory, MepElement, MepShape, ModelSnapshot, Point3};
 use crate::standards::v1::subsets::any::schema::mutations::{align_elements::AlignElements, copy_elements::CopyElements, delete_elements::DeleteElements, delete_family::DeleteFamily, delete_storey::DeleteStorey, delete_wall::DeleteWall, mirror_elements::MirrorElements, move_elements::MoveElements, place_elements::PlaceElements, rename_element::RenameElement, rotate_elements::RotateElements, set_element_storey::SetElementStorey, set_family::SetFamily, split_wall::SplitWall};

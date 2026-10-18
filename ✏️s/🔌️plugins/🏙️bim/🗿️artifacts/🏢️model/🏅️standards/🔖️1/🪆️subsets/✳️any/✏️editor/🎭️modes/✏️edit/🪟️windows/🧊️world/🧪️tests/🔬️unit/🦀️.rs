@@ -1,5 +1,27 @@
+use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::ViewPhase;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_framework_plugin::SurfaceKind;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::kind_holding;
+#[allow(unused_imports)]
+use crate::editor::bim::marks::{Preview, Shape};
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use crate::render::world::{mesh_data, overview_orbit, world_bounds};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+#[allow(unused_imports)]
+use semio_framework_plugin::DslValue;
+#[allow(unused_imports)]
+use semio_framework_plugin::InteractionRef;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowKindDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::WindowOptions;
 use crate::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
-use super::*;
+use crate::editor::bim::modes::edit::windows::world::*;
 use protocol::Inference;
 use serde_json::Value;
 

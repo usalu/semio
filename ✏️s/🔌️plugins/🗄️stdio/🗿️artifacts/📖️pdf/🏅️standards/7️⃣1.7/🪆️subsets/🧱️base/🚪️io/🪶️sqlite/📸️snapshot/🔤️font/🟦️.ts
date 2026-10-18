@@ -1,5 +1,6 @@
 /** 🔤️ Handwritten font descriptors, intrinsic programs, Unicode and CID encodings. */
-import type { PdfFont, PdfFontKind, PdfCharProc, PdfFontDescriptor, PdfFontProgram, PdfSimpleEncoding, PdfBaseEncoding, PdfToUnicode, PdfToUnicodeMapping, PdfCMap, PdfCodespaceRange, PdfCidMapping, PdfCidFont, PdfCidToGid, PdfCidWidthRun, PdfCidVerticalRun, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfFont, PdfFontKind, PdfCharProc, PdfFontDescriptor, PdfFontProgram, PdfSimpleEncoding, PdfBaseEncoding, PdfToUnicode, PdfToUnicodeMapping, PdfCMap, PdfCodespaceRange, PdfCidMapping, PdfCidFont, PdfCidToGid, PdfCidWidthRun, PdfCidVerticalRun } from "../../../../🧬️schema/📸️snapshot/🔤️font/🟦️.ts";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, type SqliteRow, type PdfCell } from "../🧩️entity/🟦️.ts";
 import {writePdfArtifactReference,readPdfArtifactReference} from "../📦️artifact-reference/🟦️.ts";
 import { writePdfDictionary, readPdfDictionary } from "../🧩️cos/🟦️.ts";

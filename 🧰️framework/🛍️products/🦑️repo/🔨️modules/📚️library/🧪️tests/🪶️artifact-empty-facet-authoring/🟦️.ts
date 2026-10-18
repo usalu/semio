@@ -6,7 +6,8 @@ import fastGlob from "fast-glob";
 import { parse, type ParseError } from "jsonc-parser";
 import ts from "typescript";
 import { authorArtifactScaffold, ArtifactScaffoldError, type ArtifactScaffoldProgress } from "../../🏗️builder/🟦️.ts";
-import { canonicalFilenameForKind, loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority } from "../../🔍️discovery/🟦️.ts";
+import { canonicalFilenameForKind, loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { semanticArtifactEmptyFacetProjectionAuthority } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
 
 type Case = Readonly<{ id: string; producer: "surface" | "subset"; setup: string; role: string; expected: "created" | "preserved" | "preview" | "rejected" }>;
 type Result = { created: string[]; skipped: string[] };
@@ -40,10 +41,18 @@ mkdirSync(report, { recursive: true });
 const hash = (bytes: string | Uint8Array): string => createHash("sha256").update(bytes).digest("hex");
 const sort = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
 
+/** 🍃️ Lists the leaf module of every direct child directory of one split owner in byte order. */
+function ownerLeaves(owner: string): string[] {
+  return readdirSync(join(library, owner), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => join(library, owner, entry.name, "🟦️.ts")).filter((path) => { try { return lstatSync(path).isFile(); } catch { return false; } }).sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
+}
+
 const identityPaths = [
   artifactOwnerPath,
   registryPath,
-  ...["🏗️builder/🟦️.ts", "📦️packages/🟦️typescript/🟦️.ts", "🔍️discovery/🟦️.ts", "🧹️normalization/🟦️.ts", "🔣️taxonomy.json"].map((path) => join(library, path)),
+  join(library, "🏗️builder/🟦️.ts"),
+  ...ownerLeaves("🔍️discovery"),
+  ...ownerLeaves("🧹️normalization"),
+  join(library, "🔣️taxonomy.json"),
   import.meta.filename,
   ...[
     "../🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json",
@@ -401,7 +410,7 @@ test("registers empty-facet authoring through its closed canonical route", async
   expect(project.targets[registration.target]).toBeDefined();
   expect(project.targets[registration.target]).toEqual({ executor: "nx:run-commands", cache: registration.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${registration.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
-  expect(manifest.scripts[registration.target]).toBe(`nx run @semio-tech/repo-lib:${registration.target}`);
+  expect(manifest.scripts[registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${registration.target}`);
   const path = join(packageRoot, "📜️script.ts"),
     source = readFileSync(path, "utf8"),
     syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);

@@ -1,10 +1,12 @@
 //! 📊️ Code metric verbs: the mermaid charts, `loc`, technologies, bundles and `benchmark`.
 
 use semio_framework_repo_cli_command_framework::{CliError, Invocation};
+use semio_framework_repo_graphql::RepoContext;
 use semio_framework_repo_cli_event_stream::{format_markdown_result, Format};
 use semio_framework_repo_cli_tree_source_and_search::{status_filter, StreamOptions};
 use semio_framework_repo_codebase::{Codebase, Scope as CodebaseScope};
-use semio_framework_repo_model::{entity, TicketStatus};
+use semio_framework_repo_model::{TicketStatus};
+use semio_framework_repo_model_entity::entity;
 use serde_json::{json, Value as Json};
 use std::collections::{BTreeMap, BTreeSet};
 

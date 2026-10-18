@@ -1,0 +1,87 @@
+[
+ {
+  "tag": "dd",
+  "name": "semio-framework-plugin-document-media",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🗃️document/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ir",
+  "name": "semio-framework-plugin-interpreter-runtime",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/🏃️runtime/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ip",
+  "name": "semio-framework-plugin-interpreter",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "he",
+  "name": "semio-framework-plugin-host-effects",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/⚡️effects/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "hg",
+  "name": "semio-framework-plugin-host-guest-runtime",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🎭️guest-runtime/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "hr",
+  "name": "semio-framework-plugin-host-routers",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧭️routers/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "hs",
+  "name": "semio-framework-plugin-host-shard",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧵️shard/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "sc",
+  "name": "semio-s-artifact-layout-layout-engine",
+  "pkg": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ej",
+  "name": "semio-s-artifact-layout-layout-engine-json",
+  "pkg": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🔣️json/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ex",
+  "name": "semio-s-artifact-layout-layout-engine-export",
+  "pkg": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ed",
+  "name": "semio-s-artifact-layout-layout-editor",
+  "pkg": "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "pub",
+  "name": "semio-framework-plugin-instance-typed-ops",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "rc",
+  "name": "semio-framework-plugin-retained-command",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "ch",
+  "name": "semio-framework-plugin-child",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪆️child/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "wc",
+  "name": "semio-framework-plugin-window-config",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "dc",
+  "name": "semio-framework-os-directory-client",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/📦️packages/🦀️rust"
+ },
+ {
+  "tag": "dgd",
+  "name": "semio-framework-os-kernel-dsl-derive-expand",
+  "pkg": "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧩️expand/📦️packages/🦀️rust"
+ }
+]

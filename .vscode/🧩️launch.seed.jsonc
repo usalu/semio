@@ -11567,7 +11567,7 @@
       "name": "📦️dependencies sync",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo dependencies sync --scope .",
+      "command": "bun repo dependencies sync --all",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_BUILD_MODE": "prototype",
@@ -13286,7 +13286,7 @@
       "name": "🧩️Component Compiler 🛠️prototype",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/stdio-json-rs:component --configuration=prototype",
+      "command": "bun repo run semio-hub-stdio-component:component --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -13301,7 +13301,7 @@
       "name": "🧩️Component Compiler 🛠️release",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/stdio-json-rs:component --configuration=release",
+      "command": "bun repo run semio-hub-stdio-component:component --configuration=release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -18466,7 +18466,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/hk/a",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -19545,7 +19545,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib store:: --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mf/a",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -35284,7 +35284,7 @@
       "name": "▶️start",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:start",
+      "command": "bun repo run os-hub:local-hub-owner",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -35524,7 +35524,7 @@
       "name": "📥️deps javascript",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo dependencies sync --scope .",
+      "command": "bun repo dependencies sync --all",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -36867,7 +36867,7 @@
       "name": "🛠️dev📐️cad🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- cad",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-cad-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -37051,10 +37051,10 @@
       "name": "📇️catalog🏢️semio-tech🎡️play🏢️aec-building",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/cad-extension-aec-building-rust:component --skip-cache --skip-remote-cache",
+      "command": "bun repo run semio-s-plugin-cad-aec-building-component:component --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37086,13 +37086,28 @@
       "command": "bun repo run semio-hub-demonstrator-component:component --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
       "presentation": {
         "group": "4_build",
         "order": 11.04
+      }
+    },
+    {
+      "name": "🛠️component🏢️semio-tech🎡️play🔌️plugin",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun repo run ${input:playComponentPackage}:component --skip-cache --skip-remote-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 11.041
       }
     },
     {
@@ -37117,7 +37132,7 @@
       "command": "bun repo run @semio-tech/semio-tech-play:build --skip-cache --skip-remote-cache --parallel=4 --output-style=stream",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37133,7 +37148,7 @@
       "command": "bun repo run-many -t describe --projects=@semio-tech/process-extension-wood-rust,@semio-tech/process-extension-metal-rust,@semio-tech/process-extension-concrete-rust,@semio-tech/process-extension-robotic-rust --skip-cache --skip-remote-cache --parallel=4",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37149,7 +37164,7 @@
       "command": "bun repo run-many -t describe --projects=@semio-tech/sourcing-extension-beams-rust,@semio-tech/sourcing-extension-slabs-rust,@semio-tech/sourcing-extension-windows-rust --skip-cache --skip-remote-cache --parallel=4",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37165,7 +37180,7 @@
       "command": "bun repo run-many -t describe --projects=@semio-tech/process-extension-wood-rust,@semio-tech/process-extension-metal-rust,@semio-tech/process-extension-concrete-rust,@semio-tech/process-extension-robotic-rust,@semio-tech/sourcing-extension-beams-rust,@semio-tech/sourcing-extension-slabs-rust,@semio-tech/sourcing-extension-windows-rust --skip-cache --skip-remote-cache --parallel=4 --output-style=stream",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37258,7 +37273,7 @@
       "command": "bun repo run @semio-tech/cad-extension-aec-building-rust:test --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37304,7 +37319,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --skip-cache --skip-remote-cache --exclude-dependencies -- native_descriptor_topic_payload_matches_canonical_emission -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37320,7 +37335,7 @@
       "command": "bun repo run @semio-tech/value-derive-rs:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --test typed_path -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37336,7 +37351,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --exclude-dependencies -- retained_genesis_aliases_retire_each_decoded_allocation_once -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37352,7 +37367,7 @@
       "command": "bun repo run @semio-tech/cad-cad-rs:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37368,7 +37383,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- --lib --filter-expr \"test(tagged_field_borrowed_schema_matches_neutral_cases) | test(delete_step_binary_matches_neutral_leb128_oracle)\" --ignore-default-filter --nocapture --status-level pass --final-status-level all",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37414,7 +37429,7 @@
       "command": "bun repo run @semio-tech/sourcing-curation-rs:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37445,7 +37460,7 @@
       "command": "bun repo run @semio-tech/sourcing-curation-rs:verify-curation-document-contract --skip-cache --skip-remote-cache --exclude-dependencies",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37515,7 +37530,7 @@
       "command": "bun repo run @semio-tech/procedural-generation3d-rs:verify-generation3d-document-io --skip-cache --skip-remote-cache --exclude-dependencies",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37531,7 +37546,7 @@
       "command": "bun repo run @semio-tech/flow-flow-rs:test --skip-cache --skip-remote-cache -- long --lib --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37577,7 +37592,7 @@
       "command": "bun repo run @semio-tech/gis-gismap-rs:test --skip-cache --skip-remote-cache -- long --lib --features component-app-assembly --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37593,7 +37608,7 @@
       "command": "bun repo run @semio-tech/gis-gismap-rs:verify-map-document-contract --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37609,7 +37624,7 @@
       "command": "bun repo run @semio-tech/gis-gismap-rs:verify-gis-map-window-ownership --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37625,7 +37640,7 @@
       "command": "bun repo run @semio-tech/framework-process:test-cargo-driver --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37641,7 +37656,7 @@
       "command": "bun repo exec --projects=@semio-tech/cad-cad-rs --exclude-dependencies -- bun \"${workspaceFolder}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📜️script.ts\" test-snapshot-sqlite source",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37672,7 +37687,7 @@
       "command": "bun repo exec --projects=@semio-tech/cad-cad-rs --exclude-dependencies -- bun \"${workspaceFolder}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📜️script.ts\" verify cad-document-contract",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37688,7 +37703,7 @@
       "command": "bun repo exec --projects=@semio-tech/cad-cad-rs --exclude-dependencies -- bun \"${workspaceFolder}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust/📜️script.ts\" verify snapshot-sqlite-source",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37704,7 +37719,7 @@
       "command": "bun repo run @semio-tech/cad-cad-rs:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib cad_owned_geometry_media -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37720,7 +37735,7 @@
       "command": "bun repo run-many -t test --projects=@semio-tech/os-store-tests-01-rs,@semio-tech/os-store-tests-02-rs,@semio-tech/os-store-tests-03-rs,@semio-tech/os-store-tests-04-rs,@semio-tech/os-store-tests-05-rs,@semio-tech/os-store-tests-06-rs,@semio-tech/os-store-tests-07-rs,@semio-tech/os-store-tests-08-rs,@semio-tech/os-store-tests-09-rs,@semio-tech/os-store-tests-10-rs,@semio-tech/os-store-sync-tests-1-rs,@semio-tech/os-store-sync-tests-2-rs,@semio-tech/os-store-member-open-tests-rs,@semio-tech/os-store-durable-group-tests-rs --skip-cache --skip-remote-cache --parallel=1 -- --lib --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37736,7 +37751,7 @@
       "command": "bun repo run @semio-tech/flow-flow-rs:test --skip-cache --skip-remote-cache -- --lib --filter-expr \"test(example_fixture_dsl_round_trips) | test(pack_round_trips_and_agrees_with_dsl) | test(set_active_example_demo_loads_the_published_demo_graph) | test(demo_example_ships_the_laid_out_default_graph_as_its_content_genesis)\" --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37782,7 +37797,7 @@
       "command": "bun repo run @semio-tech/flow-flow-rs:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib connection_keeps_the_original_typed_owner_until_publication -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37798,7 +37813,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test-composed-child-history-source --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37814,7 +37829,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib composed_child_history -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37830,7 +37845,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37846,7 +37861,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --skip-cache --skip-remote-cache -- long --lib list:: --no-fail-fast -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37877,7 +37892,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-value --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🌱️value/📋️list/🧪️tests/📋️list/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37893,7 +37908,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib retained_command_work_receives_exact_one_unit_and_fallback_charges_once -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37909,7 +37924,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37925,7 +37940,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test-replay-source --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37941,7 +37956,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --filter-expr \"test(retained_initializer_replays_every_neutral_timeline_mutation) | test(retained_timeline_cancellation_closes_partial_rows_and_json_with_exact_grants)\" --no-fail-fast --nocapture --status-level pass --final-status-level all",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37972,7 +37987,7 @@
       "command": "bun repo run semio-framework-os-flow-core:test --skip-cache --skip-remote-cache -- long --lib connect_ports_admits_only_declared_neutral_endpoints -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -37988,7 +38003,7 @@
       "command": "bun repo exec --projects=@semio-tech/process-process3d-rs --exclude-dependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️initializer/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38004,7 +38019,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38020,7 +38035,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38036,7 +38051,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38052,7 +38067,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(retained_hydrators_refuse_actorless_history_from_the_neutral_law) | test(a_member_document_with_supersessions_hydrates_to_its_superseded_state) | test(retained_hydration_preserves_the_original_opened_actor_across_stored_authors) | test(persisted_hydration_release_pages_are_independent_of_step_fuel)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38068,7 +38083,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib store:: --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38084,7 +38099,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib bounded_history_read_cursors_obey_the_neutral_law -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38100,7 +38115,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-replay/🟦️.ts\" \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️deferred-reprojection/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38116,7 +38131,7 @@
       "command": "bun repo run @semio-tech/semio-tech-play:test --skip-cache --skip-remote-cache --exclude-dependencies -- ./🔨️modules/📦️site/🆕️fresh-build/🟦️.ts",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38163,7 +38178,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(timber_document_replays_every_step_with_monotone_subtractive_volume) | test(render_world_scene_replays_the_timber_beam_instead_of_the_fallback_box) | test(export_brep_out_returns_step_text_structured_payload)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38179,7 +38194,7 @@
       "command": "bun repo run @semio-tech/framework-job-rs:test-close-demand-source --skip-cache --skip-remote-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38195,7 +38210,7 @@
       "command": "bun repo run @semio-tech/framework-job-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(worker_close_demand_queries_preserve_exact_physical_grants)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38208,7 +38223,7 @@
       "name": "⚖️gate🏢️semio-tech🎡️play📄️payload-full-grant-native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-job-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E \"test(job_payload_retirement_)\"",
+      "command": "bun repo run @semio-tech/job-unit-tests-rs:test --skip-cache --exclude-dependencies -- long --offline --lib -E \"test(job_payload_retirement_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/document-continuation-2026-10-08/job-payload-original",
@@ -38276,7 +38291,7 @@
       "command": "bun repo exec --projects=semio-framework-3d --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38292,7 +38307,7 @@
       "command": "bun repo run semio-framework-3d:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib coincident_face_boundary_selection_agrees_with_the_neutral_law -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38308,7 +38323,7 @@
       "command": "bun repo exec --projects=workspace --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38324,7 +38339,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(initialization_runtime_preserves_physical_backing_and_terminal_cursor_box)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38337,10 +38352,10 @@
       "name": "⚖️gate🏢️semio-tech🎡️play📦️physical-page-native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-job-rs:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib retained_ownership_tests --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
+      "command": "bun repo run @semio-tech/job-unit-tests-rs:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib retained_ownership_tests --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38356,7 +38371,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-job-rs --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🧵️job/🧪️tests/📦️physical-close/🔮️oracle/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38372,7 +38387,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test-member-input-census-source --skip-cache --skip-remote-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38388,7 +38403,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(fresh_vcs_release_publishes_actual_retained_backing_demand)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38404,7 +38419,7 @@
       "command": "bun repo run semio-framework-3d:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib brep::operations::boolean::tests:: --no-fail-fast -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38420,7 +38435,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(snapshot_decoder_publishes_and_funds_large_timeline_backing)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38436,7 +38451,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📨️emission/🌱️genesis/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38452,7 +38467,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(vcs_retirement_propagates_nested_physical_allocation_demand)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38468,7 +38483,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(fresh_field_release_propagates_retained_target_allocation_demand)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38484,7 +38499,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --skip-cache --skip-remote-cache --exclude-dependencies -- long --lib private_child_genesis_wire_retains_exact_identity_and_indivisible_backing -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38500,7 +38515,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(fresh_vcs_preserves_terminal_snapshot_cursor_box_under_grant)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38516,7 +38531,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib retained_clone_tests --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38532,7 +38547,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-value --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🌱️value/🧪️tests/🧩️neutral-owner/🟦️.ts\" -t \"recursive structural depth\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38548,7 +38563,7 @@
       "command": "bun repo exec --projects=@semio-tech/process-process3d-rs --exclude-dependencies -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38564,7 +38579,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(vcs_artifact_app_production_maintenance_swap_is_authoritative_and_fail_closed)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38580,7 +38595,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(fresh_vcs_active_history_decoder_propagates_physical_release_demand) | test(fresh_vcs_preserves_terminal_snapshot_cursor_box_under_grant)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38596,7 +38611,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib os_controlled_field_derive_retains_all_refusal_categories_and_position -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38612,7 +38627,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test-member-group-publication-source --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "SEMIO_TICKET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -38629,7 +38644,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --skip-cache --skip-remote-cache -- long --lib initializer_job_retains_terminal_authority_until_its_physical_box_is_funded --no-fail-fast -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38645,7 +38660,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38661,7 +38676,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib member_owned_batch_retains_exact_type_source_and_physical_grants --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38677,7 +38692,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(mutation_decoder_forwards_large_retained_backing_grant)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38693,7 +38708,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib child_emission_owned_ready_transfers_original_typed_vector_without_wire_decoding --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38709,7 +38724,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_revision_and_metadata_refusal --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38725,7 +38740,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib retained_member_common_root_copies_history_under_grant_and_publishes_three_lanes_once --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38741,7 +38756,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "SEMIO_TICKET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -38758,7 +38773,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib retirement_struct_macro_defers_exact_field_birth_and_release_allocations --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38774,7 +38789,7 @@
       "command": "bun repo run @semio-tech/cad-cad-rs:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib cad_imported_geometry_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38790,7 +38805,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib child_emission_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38806,7 +38821,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(retained_initializer_replays_every_neutral_timeline_mutation) | test(retained_timeline_cancellation_closes_partial_rows_and_json_with_exact_grants) | test(snapshot_decoder_publishes_and_funds_large_timeline_backing) | test(mutation_decoder_forwards_large_retained_backing_grant)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38822,7 +38837,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib member_owned_batch_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38838,7 +38853,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib retained_presence_local_capture_cancel_closes_mounted_worker_while_store_remains_open --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38854,7 +38869,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib edit_message_clamp_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38870,7 +38885,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📨️messages/✂️clamp/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38886,7 +38901,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib retirement_forward_deque_keeps_original_source --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38902,7 +38917,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(member_open_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38918,7 +38933,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38934,7 +38949,7 @@
       "command": "bun repo exec --projects=@semio-tech/process-extension-wood-rust --exclude-dependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️catalogs/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38950,7 +38965,7 @@
       "command": "bun repo run-many -t test --projects=@semio-tech/process-extension-wood-rust,@semio-tech/process-extension-metal-rust,@semio-tech/process-extension-concrete-rust,@semio-tech/process-extension-robotic-rust --skip-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38966,7 +38981,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(envelope_and_genesis_preserve_terminal_cursor_physical_grants)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38982,7 +38997,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(installed_store_disposer_preserves_terminal_physical_grant)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -38998,7 +39013,7 @@
       "command": "bun repo exec --projects=@semio-tech/sourcing-extension-beams-rust --exclude-dependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️sourcing-catalogs/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39014,7 +39029,7 @@
       "command": "bun repo run-many -t test --projects=@semio-tech/sourcing-extension-beams-rust,@semio-tech/sourcing-extension-slabs-rust,@semio-tech/sourcing-extension-windows-rust --skip-cache --skip-remote-cache -- --no-fail-fast --nocapture --status-level pass --final-status-level all",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39030,7 +39045,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(retained_owner_demand_distinguishes_structural_work_from_exact_string_allocation)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39046,7 +39061,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache -- long --lib prepared_child_content_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39062,7 +39077,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-plugin --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-child-member-registry/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39078,7 +39093,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib child_emission_private_input_request_retains_whole_page_backing_undergrant --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39094,7 +39109,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(envelope_and_genesis_preserve_terminal_cursor_physical_grants) | test(installed_store_disposer_preserves_terminal_physical_grant)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39110,7 +39125,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib child_emission_private_genesis_writer_streams_canonical_pages_and_retains_every_cancelled_owner --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39126,7 +39141,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib member_genesis_envelope_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39142,7 +39157,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🌱️genesis/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39158,7 +39173,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib member_owned_publication_birth_refuses_without_allocating_or_transferring_source --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39174,7 +39189,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🌱️birth/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39190,7 +39205,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(private_child_metadata_) | test(private_parent_metadata_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39206,7 +39221,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-plugin --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🪪️metadata/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39222,7 +39237,7 @@
       "command": "bun repo run @semio-tech/process-process3d-rs:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(=editor::process3d::component::unit_tests::context::conflict_history_edits_end_to_end)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "SEMIO_DEBUG_CLOSE_PHASE": "1",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -39239,7 +39254,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib controlled_retirement_separates_logical_work_from_exact_physical_release --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39255,7 +39270,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --skip-cache --skip-remote-cache -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(child_complete_actual_authored_typed_source_physical8194_grant4096)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39271,7 +39286,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-plugin --exclude-dependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️typed-string/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39287,7 +39302,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib member_owned_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39303,7 +39318,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🌳️graph/🤝️group/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "SEMIO_TICKET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -39320,7 +39335,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib composition_group_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39336,7 +39351,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(member_open_constructor_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39352,7 +39367,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📏️birth/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39368,7 +39383,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib paged_native_controlled_retirement_observes_copy_demand_without_releasing_backing --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39384,7 +39399,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib vcs_app_retained_composition_query_funds_exact_large_identifier --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39400,7 +39415,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-plugin --exclude-dependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️composition-demand/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39416,7 +39431,7 @@
       "command": "bun repo exec --projects=@semio-tech/value-rs --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/🗺️ordered-map/🧪️tests/📏️close/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39432,7 +39447,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(bounded_lookup_insert_and_duplicate_refusal_match_btree_oracle) | test(cancelled_partial_insertion_retires_candidate_and_shifted_workspace) | test(immutable_lookup_target_and_repeated_directory_growth_match_btree_oracle) | test(cold_clone_terminal_frame_denies_partial_funding_and_reports_actual_same_turn_release)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39448,7 +39463,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib owned_document_member_ingress_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39464,7 +39479,7 @@
       "command": "bun repo exec --projects=@semio-tech/repo-lib --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🧪️tests/📬️test-body/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39480,7 +39495,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib member_open_request_original_identity_capacity_is_indivisible_even_when_empty --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39496,7 +39511,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🔬️unit/📏️retirement/🟦️.ts\" \"${workspaceFolder}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/🧪️tests/📦️protocol/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39512,7 +39527,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39528,7 +39543,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/🪪️metadata/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39544,7 +39559,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib private_publication_metadata_preserves_group_id_independently_of_transaction --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39560,7 +39575,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🪪️identity/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39576,7 +39591,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib mounted_child_group_identity_preserves_original_inputs_and_physical_grants --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39592,7 +39607,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib owned_document_member_ingress_identity_preserves_denied_original_capacity_even_when_empty --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39608,7 +39623,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib owned_document_ingress_registry_backing_remains_owned_until_exact_release --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39624,7 +39639,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib child_emission_private_typed_lanes_stage_three_original_batches_and_retire_all_cancelled_sources --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39640,7 +39655,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️app-child-member-registry/📦️ingress-paging/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39656,7 +39671,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib owned_document_ingress_paging_matches_neutral_frames_and_exact_physical_retirement --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39672,7 +39687,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39688,7 +39703,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib prepared_operation_wire_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39704,7 +39719,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39720,7 +39735,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39736,7 +39751,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(mounted_receipt_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39752,7 +39767,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🎒️pack/🌱️value/🛫️encode/🫳️borrowed/⏳️cursor/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39768,7 +39783,7 @@
       "command": "bun repo run @semio-tech/stdio-semio-rs:test --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(brep_borrowed_set_snapshot_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39784,7 +39799,7 @@
       "command": "bun repo exec --projects=@semio-tech/stdio-semio-rs --exclude-dependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️brep-borrowed/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39800,7 +39815,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(persisted_hydration_release_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39816,7 +39831,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️hydration-demand/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39832,7 +39847,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib shared_retirement_physical_demand_preserves_original_backing_and_terminal_frames --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39848,7 +39863,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🌱️value/♻️retirement/🎮️controlled/🧪️tests/🟦️.ts\" -t \"cold shared retirement\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39864,7 +39879,7 @@
       "command": "bun repo run-many -t describe --projects=@semio-tech/process-extension-wood-rust,@semio-tech/process-extension-metal-rust,@semio-tech/process-extension-concrete-rust,@semio-tech/process-extension-robotic-rust --parallel=1 --skip-cache --skip-remote-cache --output-style=stream",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39880,7 +39895,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib durable_group::tests --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39896,7 +39911,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib retirement::tests --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39912,7 +39927,7 @@
       "command": "bun repo run @semio-tech/framework-pack-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib borrowed_projected_pack_cursor_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39928,7 +39943,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39944,7 +39959,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib mounted_group_receipt_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39960,7 +39975,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39976,7 +39991,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(retained_composed_replacement_close_query_) | test(retained_composed_replacement_terminal_store_box_requires_whole_physical_grant)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -39992,7 +40007,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-plugin --exclude-dependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️replacement-demand/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40008,7 +40023,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🧹️pruning/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40024,7 +40039,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🪟️mounted/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40040,7 +40055,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --status-level pass --final-status-level all --nocapture --filter-expr \"test(mounted_command_history_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40056,7 +40071,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🧪️tests/🟦️.ts\" \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/🧹️pruning/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40072,7 +40087,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib mounted_group_receipt_command_mutable_views_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40088,7 +40103,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/👤️member/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40104,7 +40119,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib mounted_member_receipt_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40120,7 +40135,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib live_maintenance_caller_funds_exact_retained_physical_extent_without_more_work --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40136,7 +40151,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-plugin --exclude-dependencies --skip-cache --skip-remote-cache -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️live-maintenance/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40152,7 +40167,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪆️child/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40168,7 +40183,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/📡️replication/🔗️causal/📦️slots/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40184,7 +40199,7 @@
       "command": "bun repo run @semio-tech/framework-replication-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib causal:: --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40200,7 +40215,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📚️members/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40216,7 +40231,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib mounted_group_member_receipts_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40232,7 +40247,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🪪️triple/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40248,7 +40263,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib mounted_group_receipt_triple_prevalidation_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40264,7 +40279,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(mounted_group_receipt_) | test(mounted_group_member_receipts_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40280,7 +40295,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🪪️triple/🧪️tests/🟦️.ts\" \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📚️members/🧪️tests/🟦️.ts\" \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40296,7 +40311,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(artifact_store_resident_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40312,7 +40327,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies --skip-cache --skip-remote-cache -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️store-backing/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40328,7 +40343,7 @@
       "command": "bun repo run @semio-tech/value-rs:test --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(factory_preborn_tickets_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40344,7 +40359,7 @@
       "command": "bun repo exec --projects=@semio-tech/value-rs --exclude-dependencies --skip-cache --skip-remote-cache -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️factory-backing/📜️script.ts\" oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40360,7 +40375,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/📚️command/📄️entry/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40376,7 +40391,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(mounted_command_entry_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40392,7 +40407,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/🧾️receipt/📦️group/↩️return/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40408,7 +40423,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/📡️replication/🔗️causal/🔀️transition/🔁️fold/📏️retirement/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40424,7 +40439,7 @@
       "command": "bun repo run @semio-tech/framework-replication-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib bounded_history_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40440,7 +40455,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/🤝️group/🪟️mounted/📦️owner/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40456,7 +40471,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib mounted_private_child_frame --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40472,7 +40487,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🔨️modules/🧵️job/⏱️context/📦️owner/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40488,7 +40503,7 @@
       "command": "bun repo run @semio-tech/framework-job-rs:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib retained_step_context_owner_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40504,7 +40519,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/🪟️mounted-owned-child/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40520,7 +40535,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib mounted_owned_child_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40536,7 +40551,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --output-style=stream -- long --lib factory_preborn_tickets_retire_sole_snapshot_weak_without_losing_upgrade_witness --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40552,7 +40567,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib retained_native_history_fold_obeys_the_neutral_law --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40568,7 +40583,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies --skip-cache --skip-remote-cache -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️hydration-demand/📜️script.ts\" fold-oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40584,7 +40599,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40600,7 +40615,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(direct_owned_child_dispatch_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40616,7 +40631,7 @@
       "command": "bun repo run @semio-tech/semio-tech-play:build --graph=play-prefinal-current-task-graph.json",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40632,7 +40647,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/📦️member-authority/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40648,7 +40663,7 @@
       "command": "bun repo run @semio-tech/semio-tech-play:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40664,7 +40679,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract/📨️owned-child-dispatch/🪪️admission/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40680,7 +40695,7 @@
       "command": "bun repo run @semio-tech/framework-plugin:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib framework_reserved_emit_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40696,7 +40711,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/📦️member-authority/🌱️birth/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40712,7 +40727,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies --skip-cache --skip-remote-cache -- bun test \"${workspaceFolder}/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🏭️operation/📦️catalog/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40728,7 +40743,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies --skip-cache --skip-remote-cache -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️hydration-demand/📜️script.ts\" store-entry-oracle",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40744,7 +40759,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --exclude-dependencies --skip-cache --skip-remote-cache --output-style=stream -- long --lib member_catalog_ --no-fail-fast --status-level pass --final-status-level all -- --nocapture",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40760,7 +40775,7 @@
       "command": "bun repo exec --projects=@semio-tech/framework-os-kernel --exclude-dependencies --skip-cache --skip-remote-cache -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/🔍️store-backing/📜️script.ts\" string-owner",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40776,7 +40791,7 @@
       "command": "bun repo run @semio-tech/framework-os-kernel:test --skip-cache --skip-remote-cache --output-style=stream -- long --lib --ignore-default-filter --no-fail-fast --nocapture --status-level pass --final-status-level all --filter-expr \"test(persisted_hydration_release_) | test(artifact_store_resident_)\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40792,7 +40807,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🏢️semio-tech/🎡️play/🔨️modules/📦️site/📄pages/📦️publication/🧪️tests/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40808,7 +40823,7 @@
       "command": "bun repo exec --projects=@semio-tech/space-core-rs --exclude-dependencies -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/🪐️space/🫀️core/📄️documents/🧪️tests/🔬️unit/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40824,7 +40839,7 @@
       "command": "bun repo exec --projects=@semio-tech/gis-gismap-rs --exclude-dependencies -- bun test \"${workspaceFolder}/✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🔌️client/🧪️tests/🚪️io/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40840,7 +40855,7 @@
       "command": "bun repo exec --projects=@semio-tech/semio-tech-play --exclude-dependencies -- bun test \"${workspaceFolder}/🏢️semio-tech/🎡️play/🧪️tests/🧩️release-job-order/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40856,7 +40871,7 @@
       "command": "bun repo exec --projects=@semio-tech/mit-bestand-demonstrator --exclude-dependencies -- bun test \"${workspaceFolder}/♻️mit-bestand/🧺️demonstrator/🧪️tests/🧩️engine-producers/🟦️.ts\"",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -40929,10 +40944,10 @@
       "name": "🛠️dev📐️cad🧩️concrete🌲️forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- cad fixture concrete",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-cad-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "CAD_JS_RENDERER_PLAY_PORT": "6020",
+        "S_OS_PORT": "6020",
         "SEMIO_RENDERER": "react",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -40951,10 +40966,10 @@
       "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- cad fixture concrete",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-cad-wgpu-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "CAD_JS_RENDERER_PLAY_PORT": "6120",
+        "S_OS_PORT": "6120",
         "SEMIO_RENDERER": "wgpu",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -40973,7 +40988,7 @@
       "name": "🛠️dev📐️cad🧩️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- cad",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-cad-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41003,7 +41018,7 @@
       "name": "🖱️mcpinspector",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- mcp",
+      "command": "bun repo run workspace:dev-mcp",
       "env": {
         "CLIENT_PORT": "6274",
         "SERVER_PORT": "6277",
@@ -41040,7 +41055,7 @@
       "name": "🛠️dev🧊️wgpu🖥️native🚢️release",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native-release -- s",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-s-native-release --configuration=release",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "0_dev",
@@ -41071,7 +41086,7 @@
       "name": "🛠️dev🌳️dag🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- dag",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-dag-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41086,7 +41101,7 @@
       "name": "🛠️dev🧮️mathematical🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- mathematical",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-mathematical-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41101,7 +41116,7 @@
       "name": "🛠️dev🏛️architect🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- architect",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-architect-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41132,7 +41147,7 @@
       "name": "🛠️dev🌊️flow🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- flow",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-flow-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41147,7 +41162,7 @@
       "name": "🛠️dev⚙️imperative🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- imperative",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-imperative-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41162,7 +41177,7 @@
       "name": "🛠️dev📜️sequence🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- sequence",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-sequence-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41177,7 +41192,7 @@
       "name": "🛠️dev🔷️lowpoly🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- lowpoly",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-lowpoly-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41192,7 +41207,7 @@
       "name": "🛠️dev📄️layout🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- layout",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-layout-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41207,7 +41222,7 @@
       "name": "🛠️dev🌐️gis📍️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- gis2d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-gis2d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41222,7 +41237,7 @@
       "name": "🛠️dev🌐️gis⛰️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- gis3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-gis3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41237,7 +41252,7 @@
       "name": "🛠️dev🎬️animateplay🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- animate",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-animate-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41283,7 +41298,7 @@
       "name": "🛠️dev🔧️procedural🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- generation2d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-generation2d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41322,7 +41337,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- generation3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-generation3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41337,7 +41352,7 @@
       "name": "🛠️dev🪚️process🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- process3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-process3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41352,7 +41367,7 @@
       "name": "🛠️dev🛒️sourcing🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- sourcing",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-sourcing-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41367,7 +41382,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d🎛️hexagonal🍄️mushroom🧱️column⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- procedural 3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-generation3d-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6018",
@@ -41390,7 +41405,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d🎛️hexagonal🍄️mushroom🧱️column🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- procedural 3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-generation3d-wgpu-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6118",
@@ -41413,7 +41428,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d👁️viewer⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- procedural 3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-generation3d-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6018",
@@ -41436,7 +41451,7 @@
       "name": "🛠️dev🔧️procedural🏙️3d👁️viewer🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- procedural 3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-generation3d-wgpu-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6118",
@@ -41459,7 +41474,7 @@
       "name": "🛠️dev🀄️wfc🖼️bitmap🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- bitmap",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-bitmap-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41474,7 +41489,7 @@
       "name": "🛠️dev🀄️wfc🔲️grid2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- grid2d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-grid2d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41489,7 +41504,7 @@
       "name": "🛠️dev🀄️wfc◻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- wfc2d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-wfc2d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41504,7 +41519,7 @@
       "name": "🛠️dev🀄️wfc🧱️grid3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- grid3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-grid3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -41519,7 +41534,7 @@
       "name": "🛠️dev🀄️wfc🧊️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- wfc3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-wfc3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97655,7 +97670,7 @@
       "name": "🛠️dev🧩️puzzle🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- puzzle2d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-puzzle2d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97670,7 +97685,7 @@
       "name": "🛠️dev🧩️puzzle🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- puzzle3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-puzzle3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97685,11 +97700,12 @@
       "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- 3d fixture concrete",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-puzzle3d-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_3D_PLAY_PORT": "6013",
+        "S_OS_PORT": "6013",
         "SEMIO_RENDERER": "react",
+        "SEMIO_DEFAULT_EXAMPLE": "concrete-forest",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -97707,11 +97723,12 @@
       "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- 3d fixture concrete",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-puzzle3d-wgpu-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_3D_PLAY_PORT": "6113",
+        "S_OS_PORT": "6113",
         "SEMIO_RENDERER": "wgpu",
+        "SEMIO_DEFAULT_EXAMPLE": "concrete-forest",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -97729,7 +97746,7 @@
       "name": "🛠️dev🧩️puzzle🏙️3d🎛️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- puzzle3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-puzzle3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97744,7 +97761,7 @@
       "name": "🛠️dev🧩️puzzle👯️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- puzzle5d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-puzzle5d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97759,11 +97776,12 @@
       "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- 5d fixture concrete",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-puzzle5d-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_5D_PLAY_PORT": "6014",
+        "S_OS_PORT": "6014",
         "SEMIO_RENDERER": "react",
+        "SEMIO_DEFAULT_EXAMPLE": "concrete-forest",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -97781,11 +97799,12 @@
       "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- 5d fixture concrete",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-puzzle5d-wgpu-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_5D_PLAY_PORT": "6114",
+        "S_OS_PORT": "6114",
         "SEMIO_RENDERER": "wgpu",
+        "SEMIO_DEFAULT_EXAMPLE": "concrete-forest",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       },
@@ -97803,7 +97822,7 @@
       "name": "🛠️dev🧩️puzzle👯️5d🎛️concrete🌲️forest🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- puzzle5d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-puzzle5d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97818,10 +97837,10 @@
       "name": "🛠️dev🧩️puzzle👯️5d🎛️capsule🌙️dream⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- 5d",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-puzzle5d-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_5D_PLAY_PORT": "6015",
+        "S_OS_PORT": "6015",
         "SEMIO_RENDERER": "react",
         "PLAYGROUND_LOCKED_EXAMPLE_ID": "capsule-dream",
         "SEMIO_DEFAULT_EXAMPLE": "capsule-dream",
@@ -97842,10 +97861,10 @@
       "name": "🛠️dev🧩️puzzle👯️5d🎛️capsule🌙️dream🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- 5d",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-puzzle5d-wgpu-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PUZZLE_5D_PLAY_PORT": "6115",
+        "S_OS_PORT": "6115",
         "SEMIO_RENDERER": "wgpu",
         "PLAYGROUND_LOCKED_EXAMPLE_ID": "capsule-dream",
         "SEMIO_DEFAULT_EXAMPLE": "capsule-dream",
@@ -97866,7 +97885,7 @@
       "name": "🛠️dev🧱️block🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- block2d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-block2d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97881,7 +97900,7 @@
       "name": "🛠️dev🧱️block🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- block3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-block3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97896,7 +97915,7 @@
       "name": "🛠️dev🧱️block👯️5d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- block5d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-block5d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97911,7 +97930,7 @@
       "name": "🛠️dev🧠️reasoning🔗️wires🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- reasoning-wires",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-reasoning-wires-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -97926,7 +97945,7 @@
       "name": "🛠️dev🧰️repo🤖️mcp",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- mcp repo",
+      "command": "bun repo run workspace:dev-mcp-repo",
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
         "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token",
@@ -97948,7 +97967,7 @@
       "name": "🛠️dev🧰️repo🤖️mcp⌨️cursor",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- mcp stdio cursor",
+      "command": "bun repo run workspace:dev-mcp -- stdio cursor",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98085,7 +98104,7 @@
       "name": "🛠️dev📸️shooting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- shooting",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-shooting-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98100,10 +98119,10 @@
       "name": "🛠️dev📸️shooting🎛️base⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- shooting fixture base-icon",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-shooting-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SHOOTING_PLAY_PORT": "6019",
+        "S_OS_PORT": "6019",
         "SEMIO_RENDERER": "react",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -98122,10 +98141,10 @@
       "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🌐️wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- shooting fixture base-icon",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-shooting-wgpu-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SHOOTING_PLAY_PORT": "6119",
+        "S_OS_PORT": "6119",
         "SEMIO_RENDERER": "wgpu",
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
@@ -98144,7 +98163,7 @@
       "name": "🛠️dev📸️shooting🎛️base🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- shooting",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-shooting-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98282,7 +98301,7 @@
       "name": "🛠️dev🔺️trinity🃏️jack🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- trinity",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-trinity-jack-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98312,7 +98331,7 @@
       "name": "🛠️dev🔺️trinity♻️rewriting🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- trinity-rewriting",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-trinity-rewriting-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98327,7 +98346,7 @@
       "name": "🛠️dev📋️forms🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- forms",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-forms-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98342,7 +98361,7 @@
       "name": "🛠️dev🗄️vcs🎛️play🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- vcs",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-vcs-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98357,7 +98376,7 @@
       "name": "🛠️dev🖥️s⚛️react📦️served",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- s served",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-s-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6070",
@@ -98380,7 +98399,7 @@
       "name": "🛠️dev🖥️s🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- s",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-s-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98395,7 +98414,7 @@
       "name": "🛠️dev🖼️raster🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- raster",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-raster-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -98410,7 +98429,7 @@
       "name": "🛠️dev🪐️space⚛️react🔒local-only",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- s",
+      "command": "bun repo run @semio-tech/framework-os-dev:dev-s-react-prototype --skip-cache --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "env": {
         "S_OS_PORT": "6070",
@@ -99177,7 +99196,7 @@
       "name": "🛠️dev🌉️os-mcp🧵️stdio",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- mcp stdio os",
+      "command": "bun repo run workspace:dev-mcp -- stdio os",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -99210,7 +99229,7 @@
       "name": "🛠️dev🌉️os-mcp🌐️http",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run workspace:dev -- mcp http os",
+      "command": "bun repo run @semio-tech/framework-os-mcp-rs:dev",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -99382,7 +99401,7 @@
       "name": "🛠️dev✏️draw🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- draw",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-draw-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -99397,7 +99416,7 @@
       "name": "🛠️dev✍️writer🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- writer",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-writer-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -99412,7 +99431,7 @@
       "name": "🛠️dev📝️note🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- note",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-note-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -99427,7 +99446,7 @@
       "name": "🛠️dev🏺️remodel🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- remodel",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-remodel-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -99532,7 +99551,7 @@
       "name": "🛠️dev🏗️fem🩻️2d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- fem2d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-fem2d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -99547,7 +99566,7 @@
       "name": "🛠️dev🏗️fem🏙️3d🧊️wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun repo run @semio-tech/framework-renderer-wgpu:native -- fem3d",
+      "command": "bun repo run @semio-tech/framework-os-dev:run-fem3d-native-prototype --configuration=prototype",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -124128,38 +124147,6 @@
       "presentation": {
         "group": "9_gates",
         "order": 900.05782
-      }
-    },
-    {
-      "name": "🧪️test🧰️framework💻️os🔌️plugin🤝️cooperative-host",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun repo run @semio-tech/framework-plugin:cooperative-host-check --skip-cache",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-root/cooperative-host",
-        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
-        "NODE_DISABLE_COMPILE_CACHE": "1"
-      },
-      "presentation": {
-        "group": "9_gates",
-        "order": 900.05783
-      }
-    },
-    {
-      "name": "🧪️test🧰️framework💻️os🔌️plugin🤝️cooperative-host🦀️native",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun repo run @semio-tech/framework-plugin:cooperative-host-native-check --skip-cache",
-      "cwd": "${workspaceFolder}",
-      "env": {
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-root/cooperative-host",
-        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
-        "NODE_DISABLE_COMPILE_CACHE": "1"
-      },
-      "presentation": {
-        "group": "9_gates",
-        "order": 900.057831
       }
     },
     {
@@ -155378,6 +155365,216 @@
       }
     },
     {
+      "name": "🏗️ Dependency Source Owners · Source [EN]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}tooling-diagnostic${pathSeparator}📜️script.ts\" --source-owner-source ${input:repoBuildSourceOwnerScopeEN}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 924.11
+      },
+      "env": {
+        "SEMIO_WORKSPACE_ROOT": "${workspaceFolder}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}🗑️generated",
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": null,
+        "SEMIO_SCRIPT_POLICY": null,
+        "SEMIO_SCRIPT_CAPABILITIES": null,
+        "SEMIO_BUILD_TOOL": null,
+        "SEMIO_BUILD_GRAPH_PATH": null,
+        "SEMIO_BUILD_GRAPH_DIGEST": null,
+        "SEMIO_BUILD_REUSE_GRAPH": null,
+        "SEMIO_BUILD_BUDGET_MS": null,
+        "SEMIO_CMD_BUDGET_MS": null,
+        "SEMIO_ORCHESTRATOR_BUDGET_MS": null,
+        "SEMIO_DAEMON_BUDGET_MS": null,
+        "SEMIO_BUILD_MODE": null,
+        "SEMIO_SCRIPT_MAX_ELAPSED_MS": null,
+        "SEMIO_BUILD_INVOCATION_PID": null,
+        "SEMIO_TASK_PROJECT": null,
+        "SEMIO_TASK_TARGET": null,
+        "SEMIO_BAZEL_FIXTURE_PHASE": null,
+        "SEMIO_BAZEL_INTEGRATION": null
+      }
+    },
+    {
+      "name": "🏗️ Dependency-Quellbesitzer · Quelle [DE]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}tooling-diagnostic${pathSeparator}📜️script.ts\" --source-owner-source ${input:repoBuildSourceOwnerScopeDE}",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 924.12
+      },
+      "env": {
+        "SEMIO_WORKSPACE_ROOT": "${workspaceFolder}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}🗑️generated",
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": null,
+        "SEMIO_SCRIPT_POLICY": null,
+        "SEMIO_SCRIPT_CAPABILITIES": null,
+        "SEMIO_BUILD_TOOL": null,
+        "SEMIO_BUILD_GRAPH_PATH": null,
+        "SEMIO_BUILD_GRAPH_DIGEST": null,
+        "SEMIO_BUILD_REUSE_GRAPH": null,
+        "SEMIO_BUILD_BUDGET_MS": null,
+        "SEMIO_CMD_BUDGET_MS": null,
+        "SEMIO_ORCHESTRATOR_BUDGET_MS": null,
+        "SEMIO_DAEMON_BUDGET_MS": null,
+        "SEMIO_BUILD_MODE": null,
+        "SEMIO_SCRIPT_MAX_ELAPSED_MS": null,
+        "SEMIO_BUILD_INVOCATION_PID": null,
+        "SEMIO_TASK_PROJECT": null,
+        "SEMIO_TASK_TARGET": null,
+        "SEMIO_BAZEL_FIXTURE_PHASE": null,
+        "SEMIO_BAZEL_INTEGRATION": null
+      }
+    },
+    {
+      "name": "🏗️ Dependency Source Owners · Types [EN]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}tooling-diagnostic${pathSeparator}📜️script.ts\" --source-owner-strict",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 924.13
+      },
+      "env": {
+        "SEMIO_WORKSPACE_ROOT": "${workspaceFolder}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}🗑️generated",
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": null,
+        "SEMIO_SCRIPT_POLICY": null,
+        "SEMIO_SCRIPT_CAPABILITIES": null,
+        "SEMIO_BUILD_TOOL": null,
+        "SEMIO_BUILD_GRAPH_PATH": null,
+        "SEMIO_BUILD_GRAPH_DIGEST": null,
+        "SEMIO_BUILD_REUSE_GRAPH": null,
+        "SEMIO_BUILD_BUDGET_MS": null,
+        "SEMIO_CMD_BUDGET_MS": null,
+        "SEMIO_ORCHESTRATOR_BUDGET_MS": null,
+        "SEMIO_DAEMON_BUDGET_MS": null,
+        "SEMIO_BUILD_MODE": null,
+        "SEMIO_SCRIPT_MAX_ELAPSED_MS": null,
+        "SEMIO_BUILD_INVOCATION_PID": null,
+        "SEMIO_TASK_PROJECT": null,
+        "SEMIO_TASK_TARGET": null,
+        "SEMIO_BAZEL_FIXTURE_PHASE": null,
+        "SEMIO_BAZEL_INTEGRATION": null
+      }
+    },
+    {
+      "name": "🏗️ Dependency-Quellbesitzer · Typen [DE]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}tooling-diagnostic${pathSeparator}📜️script.ts\" --source-owner-strict",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 924.14
+      },
+      "env": {
+        "SEMIO_WORKSPACE_ROOT": "${workspaceFolder}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}🗑️generated",
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": null,
+        "SEMIO_SCRIPT_POLICY": null,
+        "SEMIO_SCRIPT_CAPABILITIES": null,
+        "SEMIO_BUILD_TOOL": null,
+        "SEMIO_BUILD_GRAPH_PATH": null,
+        "SEMIO_BUILD_GRAPH_DIGEST": null,
+        "SEMIO_BUILD_REUSE_GRAPH": null,
+        "SEMIO_BUILD_BUDGET_MS": null,
+        "SEMIO_CMD_BUDGET_MS": null,
+        "SEMIO_ORCHESTRATOR_BUDGET_MS": null,
+        "SEMIO_DAEMON_BUDGET_MS": null,
+        "SEMIO_BUILD_MODE": null,
+        "SEMIO_SCRIPT_MAX_ELAPSED_MS": null,
+        "SEMIO_BUILD_INVOCATION_PID": null,
+        "SEMIO_TASK_PROJECT": null,
+        "SEMIO_TASK_TARGET": null,
+        "SEMIO_BAZEL_FIXTURE_PHASE": null,
+        "SEMIO_BAZEL_INTEGRATION": null
+      }
+    },
+    {
+      "name": "🏗️ Dependency Source Owners · Actual ALL [EN]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}tooling-diagnostic${pathSeparator}📜️script.ts\" --source-owner-profile",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 924.15
+      },
+      "env": {
+        "SEMIO_WORKSPACE_ROOT": "${workspaceFolder}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}🗑️generated",
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": null,
+        "SEMIO_SCRIPT_POLICY": null,
+        "SEMIO_SCRIPT_CAPABILITIES": null,
+        "SEMIO_BUILD_TOOL": null,
+        "SEMIO_BUILD_GRAPH_PATH": null,
+        "SEMIO_BUILD_GRAPH_DIGEST": null,
+        "SEMIO_BUILD_REUSE_GRAPH": null,
+        "SEMIO_BUILD_BUDGET_MS": null,
+        "SEMIO_CMD_BUDGET_MS": null,
+        "SEMIO_ORCHESTRATOR_BUDGET_MS": null,
+        "SEMIO_DAEMON_BUDGET_MS": null,
+        "SEMIO_BUILD_MODE": null,
+        "SEMIO_SCRIPT_MAX_ELAPSED_MS": null,
+        "SEMIO_BUILD_INVOCATION_PID": null,
+        "SEMIO_TASK_PROJECT": null,
+        "SEMIO_TASK_TARGET": null,
+        "SEMIO_BAZEL_FIXTURE_PHASE": null,
+        "SEMIO_BAZEL_INTEGRATION": null
+      }
+    },
+    {
+      "name": "🏗️ Dependency-Quellbesitzer · Tatsächliches ALL [DE]",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}tooling-diagnostic${pathSeparator}📜️script.ts\" --source-owner-profile",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 924.16
+      },
+      "env": {
+        "SEMIO_WORKSPACE_ROOT": "${workspaceFolder}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}${pathSeparator}.🧬semio${pathSeparator}🦑️repo${pathSeparator}🎫️tickets${pathSeparator}🎆️26${pathSeparator}🌙️10${pathSeparator}☀️14${pathSeparator}ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL${pathSeparator}🗑️generated",
+        "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
+        "NODE_DISABLE_COMPILE_CACHE": "1",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": null,
+        "SEMIO_SCRIPT_POLICY": null,
+        "SEMIO_SCRIPT_CAPABILITIES": null,
+        "SEMIO_BUILD_TOOL": null,
+        "SEMIO_BUILD_GRAPH_PATH": null,
+        "SEMIO_BUILD_GRAPH_DIGEST": null,
+        "SEMIO_BUILD_REUSE_GRAPH": null,
+        "SEMIO_BUILD_BUDGET_MS": null,
+        "SEMIO_CMD_BUDGET_MS": null,
+        "SEMIO_ORCHESTRATOR_BUDGET_MS": null,
+        "SEMIO_DAEMON_BUDGET_MS": null,
+        "SEMIO_BUILD_MODE": null,
+        "SEMIO_SCRIPT_MAX_ELAPSED_MS": null,
+        "SEMIO_BUILD_INVOCATION_PID": null,
+        "SEMIO_TASK_PROJECT": null,
+        "SEMIO_TASK_TARGET": null,
+        "SEMIO_BAZEL_FIXTURE_PHASE": null,
+        "SEMIO_BAZEL_INTEGRATION": null
+      }
+    },
+    {
       "name": "🧪️ Verify Graph Maintenance Source · Default Policy (No Overall Deadline) [EN]",
       "type": "node-terminal",
       "request": "launch",
@@ -156402,6 +156599,65 @@
       "id": "graphMaintenanceCommandDE",
       "type": "promptString",
       "description": "Dateiname des frisch geplanten Befehls"
+    },
+    {
+      "id": "repoBuildSourceOwnerScopeEN",
+      "type": "pickString",
+      "description": "Independent bounded dependency Source gate",
+      "options": [
+        {
+          "label": "Ownership and provider laws",
+          "value": "owners"
+        },
+        {
+          "label": "Store command and retained failures",
+          "value": "store"
+        },
+        {
+          "label": "Lock command and conditional publication",
+          "value": "locks"
+        },
+        {
+          "label": "Current consumers",
+          "value": "consumers"
+        },
+        {
+          "label": "Public callers",
+          "value": "callers"
+        }
+      ]
+    },
+    {
+      "id": "repoBuildSourceOwnerScopeDE",
+      "type": "pickString",
+      "description": "Unabhängige begrenzte Dependency-Quellprüfung",
+      "options": [
+        {
+          "label": "Besitz- und Anbieterregeln",
+          "value": "owners"
+        },
+        {
+          "label": "Speicherbefehl und bewahrte Fehler",
+          "value": "store"
+        },
+        {
+          "label": "Lock-Befehl und bedingte Veröffentlichung",
+          "value": "locks"
+        },
+        {
+          "label": "Aktuelle Leser",
+          "value": "consumers"
+        },
+        {
+          "label": "Öffentliche Aufrufer",
+          "value": "callers"
+        }
+      ]
+    },
+    {
+      "id": "playComponentPackage",
+      "type": "promptString",
+      "description": "Component package to build, describe and materialize / Komponentenpaket zum Bauen, Beschreiben und Bereitstellen (packageName of a plugin or extension row, e.g. semio-hub-animate-component)"
     }
   ],
   "devLaunchers": {

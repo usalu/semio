@@ -24,6 +24,4 @@ pub fn handle(payload: &EditSchedule, doc: &ArtifactView<'_, ModelSnapshot>, _cf
     Ok(Emit::mutations(vec![ModelMutation::SetSchedule(mutation)]))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

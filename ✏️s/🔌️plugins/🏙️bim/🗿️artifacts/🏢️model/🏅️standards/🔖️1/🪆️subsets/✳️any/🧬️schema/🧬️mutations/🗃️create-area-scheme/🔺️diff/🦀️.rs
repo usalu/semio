@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateAreaScheme`: one created area scheme entry. The id must be free in every collection, every counted zone must
 //! exist and a counted usage must not be blank (a blank usage could never match a space). An empty list counts everything, so it is valid.
 
-use super::super::elements;
-use super::CreateAreaScheme;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_area_scheme::CreateAreaScheme;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

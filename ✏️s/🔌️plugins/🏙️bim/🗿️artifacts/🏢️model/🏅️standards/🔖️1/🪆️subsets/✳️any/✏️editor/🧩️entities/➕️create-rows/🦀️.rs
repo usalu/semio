@@ -1,6 +1,8 @@
 //! ➕️ Create rows of the BIM entity table: the create mutation of every entity kind. See [`super`].
 
-use super::*;
+use crate::editor::bim::entities::field_codecs::{first, number, point};
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{Axis, DoorLeaves, Layer, LayerFunction, LocationLine, MaterialCategory, ModelSnapshot, OpeningKind, Phase, Point2, Profile, Rgb, RoofShape, SpaceBoundary, StairFlight, Swing, TopConstraint, Vertex}};
+use std::collections::BTreeMap;
 
 //#region 🔖️Create
 pub type Created = Result<ModelMutation, &'static str>;

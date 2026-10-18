@@ -31,7 +31,8 @@ test("Actor public facets publish only their defining explicit symbol and schema
         if (!declaration.exportClause || !ts.isNamedExports(declaration.exportClause)) throw Error("Named first-party exports required");
         if (!declaration.moduleSpecifier || !ts.isStringLiteral(declaration.moduleSpecifier)) throw Error("Defining source reexports required");
         const schemaExport = declaration.exportClause.elements.some(element => element.name.text === row.schemaExport);
-        expect(resolve(dirname(path), declaration.moduleSpecifier.text)).toBe(join(owner, schemaExport ? row.schema! : row.implementation));
+        const generatedExport = row.generated !== undefined && declaration.exportClause.elements.every(element => row.generatedTypes!.includes(element.name.text));
+        expect(resolve(dirname(path), declaration.moduleSpecifier.text)).toBe(join(owner, generatedExport ? row.generated! : schemaExport ? row.schema! : row.implementation));
         for (const element of declaration.exportClause.elements) db.query("INSERT INTO public_symbol VALUES(?,?,?)").run(row.subpath, element.name.text, declaration.isTypeOnly || element.isTypeOnly ? "type" : "runtime");
       }
       expect(db.query("SELECT name FROM public_symbol WHERE facet=? AND kind='runtime' ORDER BY name").all(row.subpath)).toEqual([...row.runtime].sort().map(name => ({ name })));

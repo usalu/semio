@@ -31,7 +31,7 @@ fn break_class(c: char) -> Break {
 }
 
 /// 📏️ Terminal cell width of one scalar: 0 for controls, joiners, marks and variation selectors, 2 for wide, else 1.
-pub(crate) fn char_cells(c: char) -> u8 {
+pub fn char_cells(c: char) -> u8 {
     let codepoint = c as u32;
     if codepoint < 0x7f {
         return u8::from(codepoint >= 0x20);

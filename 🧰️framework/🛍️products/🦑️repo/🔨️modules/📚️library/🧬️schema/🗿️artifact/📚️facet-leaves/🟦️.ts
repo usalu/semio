@@ -1,5 +1,6 @@
 import { join } from "node:path";
-import { canonicalPrimaryFilenameForKind, loadTaxonomy, schemaFacetFormatEntries } from "../../../🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { schemaFacetFormatEntries } from "../../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceText, type PolicySourceOperations, type PolicySourceTextResult } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import type { PolicySchemaLeafExtract } from "../../🔍️field-discovery/🧱️contract/🟦️.ts";
 import { policyExtractGraphqlSchemaFields } from "../../🔍️field-discovery/🔗️graphql/🟦️.ts";

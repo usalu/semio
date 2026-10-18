@@ -1,14 +1,38 @@
-use super::*;
+use crate::editor::bim::kit::fault;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{Clash, ClashKind};
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::ClashRef, snapshot::Issue, snapshot::IssuePriority, snapshot::IssueStatus, snapshot::ModelSnapshot, snapshot::Point3, snapshot::SectionBox, mutations::ModelMutation};
+use semio_framework_plugin::Fault;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::coordination::latest_moment;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::id_taken;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::IdMint;
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::world;
+#[allow(unused_imports)]
+use crate::editor::bim::panels::coordination::name_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::{diff::patches::IssuePatch, snapshot::IssueViewpoint, snapshot::Point2, snapshot::ViewCamera};
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, Emit, NoConfig, NoConfigMutation};
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::commands::coordinate::*;
 use crate::editor::bim::fixture::context::view;
 use crate::editor::bim::fixture::support::run;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_locale::Locale;
 
-const FRAME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
+static FRAME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json"));
 
 fn frame() -> ModelSnapshot {
-    from_json_str(FRAME, JsonMemberPolicy::Reject).expect("the committed frame decodes")
+    from_json_str((*FRAME), JsonMemberPolicy::Reject).expect("the committed frame decodes")
 }
 
 fn first_clash(snapshot: &ModelSnapshot) -> (String, Clash) {

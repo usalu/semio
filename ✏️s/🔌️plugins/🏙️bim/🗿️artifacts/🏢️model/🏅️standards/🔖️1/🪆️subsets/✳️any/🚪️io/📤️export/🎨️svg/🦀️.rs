@@ -14,18 +14,12 @@ use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoPayload, IoRe
 use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
 use std::collections::BTreeMap;
 
-#[path = "🧱️codec/🦀️.rs"]
-pub mod codec;
-#[path = "✒️path/🦀️.rs"]
-pub mod path;
-#[path = "🎚️style/🦀️.rs"]
-pub mod style;
-#[path = "📐️sheet/🦀️.rs"]
-pub mod sheet;
-#[path = "🖍️drawing/🦀️.rs"]
-pub mod drawing;
-#[path = "📏️projection/🦀️.rs"]
-pub mod projection;
+pub use semio_s_artifact_bim_model_examples::standards::v1::subsets::any::io::export::svg::codec;
+pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::path;
+pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::style;
+pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::export::svg::sheet;
+pub use semio_s_artifact_bim_model_incremental_tests::standards::v1::subsets::any::io::export::svg::drawing;
+
 
 /// 🪪️ The SVG 1.1 dialect this leaf writes.
 pub const SVG_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId::ANY };
@@ -79,6 +73,4 @@ impl Serializer<ModelSnapshot> for ModelIntoSvg {
 #[path = "🧪️tests/🧰️testkit/🦀️.rs"]
 pub mod testkit;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

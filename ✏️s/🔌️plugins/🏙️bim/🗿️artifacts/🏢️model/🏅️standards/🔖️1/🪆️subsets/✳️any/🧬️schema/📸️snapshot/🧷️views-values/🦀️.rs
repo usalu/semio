@@ -1,6 +1,6 @@
 //! 🧮️ The methods of the value types of the `views` kit; they live with the value types so the entity types and the model root stay above them.
 
-use super::values::ViewKind;
+use crate::standards::v1::subsets::any::schema::snapshot::values::ViewKind;
 
 impl ViewKind {
     /// 🗺️ Whether the kind cuts a storey horizontally.

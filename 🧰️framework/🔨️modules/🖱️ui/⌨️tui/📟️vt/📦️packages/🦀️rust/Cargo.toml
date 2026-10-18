@@ -1,0 +1,29 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-tui-vt"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio tui virtual terminal: parser, screen, pane, history, key encoder"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-tui-vt"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-ui-tui-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }

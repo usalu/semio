@@ -1,6 +1,7 @@
 //! 🖥️ Play app of the FEM 3D editor: the `Fem3dPlayApp` and its `ArtifactEditor` implementation. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Fem3dPlayApp
 /// 🧮️ v0 design: results are recomputed fresh inside `render()`, no cache, no `RunAnalysis` operation.

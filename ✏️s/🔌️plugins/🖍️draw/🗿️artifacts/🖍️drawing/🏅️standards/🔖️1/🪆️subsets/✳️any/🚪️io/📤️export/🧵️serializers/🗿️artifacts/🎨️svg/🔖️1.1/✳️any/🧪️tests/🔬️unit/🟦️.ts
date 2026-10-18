@@ -3,7 +3,7 @@ import {drawingImageDataUri} from "../../../../../../../../🖼️image/🟦️.
 import { expect, test } from "bun:test";
 
 test("Draw SVG export uses the typed SVG serializer directly", async () => {
-  const source = await Bun.file(new URL("../../../../../../../../🦀️.rs", import.meta.url)).text();
+  const source = await Bun.file(new URL("../../../../../../../../📤️export/🦀️.rs", import.meta.url)).text();
   const body = source.slice(source.indexOf("pub fn drawing_document_to_svg("), source.indexOf("pub fn drawing_document_json_to_svg("));
   expect(body.includes("drawing_document_to_semio_drawing")).toBe(false);
   expect(body.includes("export::svg::v1_1::any::")).toBe(true);

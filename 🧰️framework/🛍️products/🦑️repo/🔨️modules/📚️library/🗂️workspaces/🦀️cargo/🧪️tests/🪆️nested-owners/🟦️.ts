@@ -4,7 +4,7 @@ import TOML from "@iarna/toml";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { discoverCargoWorkspaces, cargoRepositoryPackages, cargoWorkspaceForManifest, publishCargoWorkspaceMembership } from "../../🟦️.ts";
-const owner=resolve(import.meta.dir,"../.."),fixture=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🪆️nested-owners/🔣️.json"),"utf8")),artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;
+const owner=resolve(import.meta.dir,"../.."),fixture=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🪆️nested-owners/🔣️.json"),"utf8")),artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!artifactRoot)throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
 const put=(root:string,path:string,text:string):void=>{mkdirSync(dirname(join(root,path)),{recursive:true});writeFileSync(join(root,path),text);};
 const native=(root:string,manifest:string)=>Bun.spawnSync(["cargo","metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,manifest)],{cwd:root,stdout:"pipe",stderr:"pipe"});

@@ -1,10 +1,10 @@
 //! 🖼️ Authored-view rules shared by the three view leaves, the editor and the `view-linework` inference: which fields a view kind owns, the conventions of its defaults and
 //! why a view cannot be written. Pure, total and read-only: a refusal names the field below the view record and carries the message.
 
-use super::values::{DetailLevel, Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
-use super::ModelSnapshot;
-use super::entities::View;
-use super::validity::DEFAULT_CUT_HEIGHT;
+use crate::standards::v1::subsets::any::schema::snapshot::values::{DetailLevel, Phase, Point2, ViewCamera, ViewCategory, ViewCrop, ViewKind, ViewPlane};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::entities::View;
+use crate::standards::v1::subsets::any::schema::snapshot::validity::DEFAULT_CUT_HEIGHT;
 use std::f64::consts::FRAC_PI_2;
 
 //#region 🔖️Defaults
@@ -194,6 +194,4 @@ pub fn view_problem(base: &ModelSnapshot, id: &str, view: &View) -> Option<ViewP
 }
 //#endregion 🔖️Problems
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -2,6 +2,12 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "schema://process/native-image-publication/witness",
   "definitions": {
+    "LogicalEntryNameCase":{"type":"object","additionalProperties":false,"required":["id","platform","root","current","name","count","reason"],"properties":{"id":{"type":"string","pattern":"^[a-z0-9-]+$"},"platform":{"enum":["posix","win32"]},"root":{"type":"string"},"current":{"type":"string"},"name":{"oneOf":[{"type":"string"},{"type":"integer"},{"type":"null"}]},"count":{"oneOf":[{"type":"integer"},{"const":"unsafe"}]},"reason":{"enum":[null,"count","type","empty","separator","navigation","path"]}}},
+    "LogicalEntryNameRefusal":{"type":"object","additionalProperties":false,"required":["version","reason","directory","directoryTruncated","name","nameTruncated","count","nameUnits","pathUnits","maximumPathUnits","purpose","maximumEntries","authority"],"properties":{"version":{"const":1},"reason":{"enum":["count","type","empty","separator","navigation","path"]},"directory":{"type":"string","maxLength":256},"directoryTruncated":{"type":"boolean"},"name":{"type":["string","null"],"maxLength":256},"nameTruncated":{"type":"boolean"},"count":{"type":["integer","null"]},"nameUnits":{"type":["integer","null"],"minimum":0},"pathUnits":{"type":["integer","null"],"minimum":0},"maximumPathUnits":{"const":256},"purpose":{"const":"logical-publication-name-bound-refusal"},"maximumEntries":{"const":67108864},"authority":{"const":false}}},
+    "LogicalEntryNameCases":{"const":[{"id":"safe-name","platform":"posix","root":"/source/payload","current":"/source/payload","name":"ok.txt","count":1,"reason":null},{"id":"unsafe-count","platform":"posix","root":"/source/payload","current":"/source/payload","name":"ok.txt","count":"unsafe","reason":"count"},{"id":"name-type","platform":"posix","root":"/source/payload","current":"/source/payload","name":3,"count":1,"reason":"type"},{"id":"name-null","platform":"posix","root":"/source/payload","current":"/source/payload","name":null,"count":1,"reason":"type"},{"id":"slash","platform":"posix","root":"/source/payload","current":"/source/payload","name":"a/b","count":1,"reason":"separator"},{"id":"backslash","platform":"posix","root":"/source/payload","current":"/source/payload","name":"a\\b","count":1,"reason":"separator"},{"id":"nul","platform":"posix","root":"/source/payload","current":"/source/payload","name":"a\u0000b","count":1,"reason":"separator"},{"id":"dot","platform":"posix","root":"/source/payload","current":"/source/payload","name":".","count":1,"reason":"navigation"},{"id":"dot-dot","platform":"posix","root":"/source/payload","current":"/source/payload","name":"..","count":1,"reason":"navigation"},{"id":"unicode-safe","platform":"posix","root":"/source/payload","current":"/source/payload","name":"🧪️.txt","count":1,"reason":null},{"id":"path-boundary","platform":"posix","root":"/source/payload","current":"/source/payload","name":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","count":1,"reason":null},{"id":"path-overflow","platform":"posix","root":"/source/payload","current":"/source/payload","name":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","count":1,"reason":"path"},{"id":"bounded-text","platform":"posix","root":"/source/payload","current":"/source/payload","name":"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001","count":1,"reason":"path"},{"id":"win-name","platform":"win32","root":"C:\\source\\payload","current":"C:\\source\\payload","name":"safe.txt","count":1,"reason":null},{"id":"win-overflow","platform":"win32","root":"C:\\source\\payload","current":"C:\\source\\payload","name":"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx","count":1,"reason":"path"},{"id":"win-utf16","platform":"win32","root":"C:\\source\\payload","current":"C:\\source\\payload","name":"🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪🧪","count":1,"reason":"path"},{"id":"bounded-escaped-text","platform":"posix","root":"/source/payload","current":"/source/payload/\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001","name":"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001","count":1,"reason":"path"},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"empty","name":"","count":1,"reason":"empty"},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"count-exact","name":"ok","count":67108864,"reason":null},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"count-above","name":"ok","count":67108865,"reason":"count"},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"count-and-empty","name":"","count":67108865,"reason":"count"},{"platform":"posix","root":"/source/payload","current":"/source/payload","id":"type-and-count","name":null,"count":"unsafe","reason":"count"}]},
+    "LogicalEntryWorkProtocol":{"const":{"version":1,"entryCeiling":"cumulative-metadata-work","minimumVisitCharge":1,"counterReset":"none-within-one-observation","unchanged":["maximumMetadataWork","maximumResidentRows","maximumLogicalBytes","maximumResultBytes","physical-funding","original-invocation","native-meter"],"scope":"every-event-prefix-and-complete-tree-without-new-authority"}},
+    "LogicalEntryWorkCase":{"type":"object","required":["id","maximumWork","accepted"],"properties":{"id":{"enum":["complete","hard-alias","wide-pages","work-exhausted","cancel-final","observer-undefined","directory-close-undefined","directory-close-frozen"]},"maximumWork":{"type":"integer","minimum":1,"maximum":65536},"accepted":{"type":"boolean"}},"additionalProperties":false},
+    "LogicalEntryWorkCases":{"const":[{"id":"complete","maximumWork":16384,"accepted":true},{"id":"hard-alias","maximumWork":16384,"accepted":true},{"id":"wide-pages","maximumWork":16384,"accepted":true},{"id":"work-exhausted","maximumWork":32,"accepted":false},{"id":"cancel-final","maximumWork":16384,"accepted":false},{"id":"observer-undefined","maximumWork":16384,"accepted":false},{"id":"directory-close-undefined","maximumWork":16384,"accepted":false},{"id":"directory-close-frozen","maximumWork":16384,"accepted":false}]},
     "AncestryBatchCase": {
       "type": "object",
       "additionalProperties": false,
@@ -725,26 +731,7 @@
     "Windows": {
       "definitions": {
         "Protocol": {
-          "const": {
-            "version": 1,
-            "maximumPathUnits": 256,
-            "bufferBytes": 65536,
-            "directoryClass": 37,
-            "directoryHeaderBytes": 104,
-            "directoryAlignment": 8,
-            "streamClass": 22,
-            "streamHeaderBytes": 24,
-            "statusSuccess": 0,
-            "statusPending": 259,
-            "statusNoMoreFiles": 2147483654,
-            "statusEndOfFile": 3221225489,
-            "statusCancelled": 3221225760,
-            "diskFileType": 1,
-            "maximumPendingObservations": 1,
-            "maximumHostRecordBytes": 4096,
-            "footerBytes": 512,
-            "maximumPendingHandles": 32
-          }
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/fixed/system/component.json#/definitions/NativeReadProtocol"
         },
         "DirectoryCase": {
           "type": "object",
@@ -856,28 +843,7 @@
           }
         },
         "Root": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "version",
-            "root",
-            "volume"
-          ],
-          "properties": {
-            "version": {
-              "const": 1
-            },
-            "root": {
-              "type": "string",
-              "minLength": 4,
-              "maxLength": 256
-            },
-            "volume": {
-              "type": "string",
-              "minLength": 49,
-              "maxLength": 49
-            }
-          }
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/fixed/system/component.json#/definitions/NativeReadRoot"
         },
         "RootCase": {
           "type": "object",
@@ -912,104 +878,7 @@
           }
         },
         "Facts": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "volumeSerial",
-            "fileId",
-            "bytes",
-            "creationTime",
-            "writeTime",
-            "changeTime",
-            "securitySha256",
-            "streamsSha256",
-            "path",
-            "finalPath",
-            "volume",
-            "kind",
-            "links",
-            "attributes",
-            "nativeDevice",
-            "nativeInode",
-            "allocatedBytes"
-          ],
-          "properties": {
-            "volumeSerial": {
-              "type": "string",
-              "pattern": "^[0-9]{1,20}$"
-            },
-            "fileId": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{32}$"
-            },
-            "bytes": {
-              "type": "string",
-              "pattern": "^[0-9]{1,20}$"
-            },
-            "creationTime": {
-              "type": "string",
-              "pattern": "^-?[0-9]{1,20}$"
-            },
-            "writeTime": {
-              "type": "string",
-              "pattern": "^-?[0-9]{1,20}$"
-            },
-            "changeTime": {
-              "type": "string",
-              "pattern": "^-?[0-9]{1,20}$"
-            },
-            "securitySha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
-            },
-            "streamsSha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$"
-            },
-            "path": {
-              "type": "string",
-              "minLength": 3,
-              "maxLength": 256
-            },
-            "finalPath": {
-              "type": "string",
-              "minLength": 49,
-              "maxLength": 305
-            },
-            "volume": {
-              "type": "string",
-              "minLength": 49,
-              "maxLength": 49
-            },
-            "kind": {
-              "enum": [
-                "file",
-                "directory"
-              ]
-            },
-            "links": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 4294967295
-            },
-            "attributes": {
-              "type": "integer",
-              "minimum": 0,
-              "maximum": 4294967295
-            },
-            "nativeDevice": {
-              "type": "string",
-              "pattern": "^[0-9]{1,20}$"
-            },
-            "nativeInode": {
-              "type": "string",
-              "pattern": "^[0-9]{1,20}$"
-            },
-            "allocatedBytes": {
-              "type": "string",
-              "pattern": "^[0-9]{1,20}$"
-            }
-          }
+          "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/fixed/system/component.json#/definitions/NativeReadFacts"
         },
         "HostIdentity": {
           "type": "object",
@@ -3540,12 +3409,12 @@
       "const": {
         "version": 1,
         "maximumLogicalBytes": 68719476736,
-        "maximumEntries": 262144,
         "maximumMetadataWork": 67108864,
         "maximumResultBytes": 16384,
         "maximumResidentRows": 4160,
         "contentsObserved": false,
-        "authority": false
+        "authority": false,
+        "entryCeiling": "cumulative-metadata-work"
       }
     },
     "LogicalObservationBudget": {
@@ -3735,27 +3604,27 @@
         "entries": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 262144
+          "maximum": 67108864
         },
         "files": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 262144
+          "maximum": 67108864
         },
         "directories": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 262144
+          "maximum": 67108864
         },
         "links": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 262144
+          "maximum": 67108864
         },
         "sockets": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 262144
+          "maximum": 67108864
         },
         "bytes": {
           "type": "string",
@@ -3901,7 +3770,6 @@
             "cancelled-open",
             "cross-device",
             "lineage-change",
-            "entry-bound",
             "work-bound",
             "resident-bound",
             "depth-bound"
@@ -3957,12 +3825,6 @@
           "closed": true
         },
         {
-          "id": "entry-bound",
-          "zeroIo": false,
-          "zeroContents": true,
-          "closed": true
-        },
-        {
           "id": "work-bound",
           "zeroIo": false,
           "zeroContents": true,
@@ -3979,6 +3841,270 @@
           "zeroIo": false,
           "zeroContents": true,
           "closed": true
+        }
+      ]
+    },
+    "LogicalEntryBoundRefusalPolicy": {
+      "const": {
+        "version": 1,
+        "maximumPathUnits": 256,
+        "maximumEncodedBytes": 4096,
+        "prefix": "first-256-utf16-code-units",
+        "authority": false
+      }
+    },
+    "LogicalEntryBoundRefusal": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "reason",
+        "path",
+        "pathTruncated",
+        "pathUnits",
+        "depth",
+        "entries",
+        "maximumPathUnits",
+        "maximumDepth",
+        "maximumEntries",
+        "authority"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "logical-publication-entry-bound-refusal"
+        },
+        "reason": {
+          "enum": [
+            "path",
+            "depth",
+            "entries"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "pathTruncated": {
+          "type": "boolean"
+        },
+        "pathUnits": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "maximumPathUnits": {
+          "const": 256
+        },
+        "maximumDepth": {
+          "const": 64
+        },
+        "maximumEntries": {
+          "const": 67108864
+        },
+        "authority": {
+          "const": false
+        }
+      }
+    },
+    "LogicalEntryBoundCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "platform",
+        "root",
+        "current",
+        "depth",
+        "entries",
+        "reason"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "platform": {
+          "enum": [
+            "posix",
+            "win32"
+          ]
+        },
+        "root": {
+          "type": "string"
+        },
+        "current": {
+          "type": "string"
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "entries": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "reason": {
+          "enum": [
+            null,
+            "path",
+            "depth",
+            "entries"
+          ]
+        }
+      }
+    },
+    "LogicalEntryBoundCases": {
+      "const": [
+        {
+          "id": "exact-all",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "depth": 64,
+          "entries": 67108863,
+          "reason": null
+        },
+        {
+          "id": "path-above",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "depth": 0,
+          "entries": 0,
+          "reason": "path"
+        },
+        {
+          "id": "depth-above",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r/a",
+          "depth": 65,
+          "entries": 0,
+          "reason": "depth"
+        },
+        {
+          "id": "entries-exact-refusal",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r/a",
+          "depth": 0,
+          "entries": 67108864,
+          "reason": "entries"
+        },
+        {
+          "id": "entries-above",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r/a",
+          "depth": 0,
+          "entries": 67108865,
+          "reason": "entries"
+        },
+        {
+          "id": "all-path-precedence",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "depth": 65,
+          "entries": 67108864,
+          "reason": "path"
+        },
+        {
+          "id": "depth-precedence",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r/a",
+          "depth": 65,
+          "entries": 67108864,
+          "reason": "depth"
+        },
+        {
+          "id": "unicode-exact",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r/😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀a",
+          "depth": 0,
+          "entries": 0,
+          "reason": null
+        },
+        {
+          "id": "unicode-above",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r/😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+          "depth": 0,
+          "entries": 0,
+          "reason": "path"
+        },
+        {
+          "id": "surrogate-prefix",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa😀",
+          "depth": 0,
+          "entries": 0,
+          "reason": "path"
+        },
+        {
+          "id": "escaped-prefix",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r/\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n",
+          "depth": 0,
+          "entries": 0,
+          "reason": "path"
+        },
+        {
+          "id": "win-exact",
+          "platform": "win32",
+          "root": "C:\\r",
+          "current": "C:\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "depth": 0,
+          "entries": 0,
+          "reason": null
+        },
+        {
+          "id": "win-above",
+          "platform": "win32",
+          "root": "C:\\r",
+          "current": "C:\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "depth": 0,
+          "entries": 0,
+          "reason": "path"
+        },
+        {
+          "id": "win-depth",
+          "platform": "win32",
+          "root": "C:\\r",
+          "current": "C:\\r\\a",
+          "depth": 65,
+          "entries": 0,
+          "reason": "depth"
+        },
+        {
+          "id": "root-empty-relative",
+          "platform": "posix",
+          "root": "/r",
+          "current": "/r",
+          "depth": 0,
+          "entries": 67108864,
+          "reason": "entries"
         }
       ]
     }

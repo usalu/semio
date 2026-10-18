@@ -6,7 +6,7 @@ import { readServiceSession, waitForServiceReady } from "../../../../🧰️fram
 import { repoCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "../🧩️runtime/🧪️e2e/🟦️.ts";
 
-/** 🎭️ Runs acceptance tests only against the server generation prepared and owned by Nx. */
+/** 🎭️ Runs acceptance tests only against the server generation prepared and owned by the build tool. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Demonstrator E2E accepts no compiler or server arguments");

@@ -59,6 +59,4 @@ pub fn layers_of<'a>(model: &'a ModelSnapshot, surface: &EnvelopeSurface, holder
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

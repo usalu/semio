@@ -24,6 +24,7 @@ impl<PA> ArtifactApps for PA where
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_s_artifact_stdio_semio_kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_block_3d_model::{Block3dVortexKindExtra, Block3dVortexKind};
 
 // #region 🔖️Document
 
@@ -120,10 +121,6 @@ pub fn artifact<PA: ArtifactApps>() -> semio_framework_plugin::app::declarations
 }
 
 //#endregion 🪪️Declaration
-
-                
-        
-        
 
 //#region 🪢️Mounts
 #[cfg(test)]

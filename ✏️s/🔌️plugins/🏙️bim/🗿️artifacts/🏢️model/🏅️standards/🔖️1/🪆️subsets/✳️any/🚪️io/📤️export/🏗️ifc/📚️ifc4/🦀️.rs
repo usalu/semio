@@ -341,6 +341,4 @@ impl Serializer<ModelSnapshot> for ModelIntoIfc4 {
 }
 //#endregion 🔖️Serializer
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

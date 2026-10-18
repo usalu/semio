@@ -200,9 +200,9 @@ fn find_viewpoint<'a>(base: &'a BcfSnapshot, topic_guid: &str, guid: &str) -> Op
 /// truth reused by `⚙️engine/🦀️.rs`'s `ops_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same shape `📜️docx/…/🧬️mutations/🦀️.rs`'s own
 /// `demo_mutation_cases()` establishes.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<BcfMutation> {
+pub fn demo_mutation_cases() -> Vec<BcfMutation> {
     use crate::schema::diff::{demo_snapshot_a, demo_snapshot_b};
     let base = demo_snapshot_a();
     let snapshot = demo_snapshot_b();

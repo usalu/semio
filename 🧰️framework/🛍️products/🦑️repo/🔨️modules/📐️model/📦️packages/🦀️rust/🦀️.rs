@@ -112,12 +112,6 @@ pub use codebase_aggregate::*;
 mod tree_aggregate;
 pub use tree_aggregate::*;
 
-#[path = "🎨️ansi/🦀️.rs"]
-pub mod ansi;
-
-#[path = "🪪️entity/🦀️.rs"]
-pub mod entity;
-
 //#region 🔁️Wire Round Trip
 
 macro_rules! wire_types {

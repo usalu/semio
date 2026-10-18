@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { createReadStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
 import { arch, platform } from "node:os";
 import { join, resolve } from "node:path";
-import { getRepoMetaDir, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getRepoMetaDir } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🧬️metadata/🟦️.ts";
+import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 
 export type OraclePlatformAsset = { asset: string; bytes: number; sha256: string };
 export type OracleToolManifest = { tool: string; version: string; bundles: Record<string, string>; downloadUrlTemplate: string; stripComponents: number; binaries: Record<string, string>; platforms: Record<string, OraclePlatformAsset> };

@@ -18,7 +18,8 @@ import { type GeneratedCatalogProjection, readGeneratedCatalogProjection,filterP
 
 import { generatePluginRegistry, TAXONOMY } from "../../🔎️discovery/🟦️.ts";
 import { generatePlaygroundRegistry } from "../🔎️discovery/🟦️.ts";
-import { discoverCatalogPackages, registryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { discoverCatalogPackages } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
+import { registryCatalogInputView } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 export class SessionScript extends BundleScript {
   async run(args: string[]): Promise<void> {

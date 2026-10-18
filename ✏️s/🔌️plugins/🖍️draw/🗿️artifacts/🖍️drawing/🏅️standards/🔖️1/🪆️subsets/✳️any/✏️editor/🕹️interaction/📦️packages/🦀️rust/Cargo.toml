@@ -22,7 +22,7 @@ testkit = ["dep:serde", "semio-s-artifact-draw-drawing-geometry/testkit", "semio
 semio-framework-job-registry = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
 
 semio-framework = { workspace = true }
-semio-framework-2d = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }

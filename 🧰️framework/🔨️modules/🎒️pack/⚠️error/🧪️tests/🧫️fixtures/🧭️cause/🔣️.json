@@ -14,12 +14,7 @@
       "expectedKind": "invalidValue",
       "display": "bad magic",
       "authority": "intrinsicContract",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "closed BadMagic container contract; actual internal consumers still require audit"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "intrinsic-UnsupportedVersion",
@@ -34,12 +29,7 @@
       "expectedKind": "unsupportedOwner",
       "display": "unsupported version 2.3",
       "authority": "intrinsicContract",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "closed UnsupportedVersion container contract; actual internal consumers still require audit"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "intrinsic-UnknownRequiredFlags",
@@ -54,12 +44,7 @@
       "expectedKind": "unsupportedOwner",
       "display": "unknown required feature bits 0x4",
       "authority": "intrinsicContract",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "closed UnknownRequiredFlags container contract; actual internal consumers still require audit"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "intrinsic-Truncated",
@@ -74,12 +59,7 @@
       "expectedKind": "invalidValue",
       "display": "truncated at offset 9",
       "authority": "intrinsicContract",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "closed Truncated container contract; actual internal consumers still require audit"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "intrinsic-ChecksumMismatch",
@@ -94,12 +74,7 @@
       "expectedKind": "invalidValue",
       "display": "checksum mismatch in deflate at offset 9",
       "authority": "intrinsicContract",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "closed ChecksumMismatch container contract; actual internal consumers still require audit"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "intrinsic-ContentHashMismatch",
@@ -114,12 +89,7 @@
       "expectedKind": "invalidValue",
       "display": "content hash mismatch",
       "authority": "intrinsicContract",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "closed ContentHashMismatch container contract; actual internal consumers still require audit"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "intrinsic-NonCanonical",
@@ -134,12 +104,7 @@
       "expectedKind": "invalidValue",
       "display": "non-canonical encoding: same deliberately misleading cancellation/limit prose",
       "authority": "intrinsicContract",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "closed NonCanonical container contract; actual internal consumers still require audit"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "intrinsic-UnsupportedCodec",
@@ -154,12 +119,7 @@
       "expectedKind": "unsupportedOwner",
       "display": "unsupported codec 7",
       "authority": "intrinsicContract",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "closed UnsupportedCodec container contract; actual internal consumers still require audit"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "ValueRefusal-invalidValue",
@@ -174,12 +134,7 @@
       "expectedKind": "invalidValue",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned ValueRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "ValueRefusal-canceled",
@@ -194,12 +149,7 @@
       "expectedKind": "canceled",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned ValueRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "ValueRefusal-ownershipLimit",
@@ -214,12 +164,7 @@
       "expectedKind": "ownershipLimit",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned ValueRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "ValueRefusal-allocationFailed",
@@ -234,12 +179,7 @@
       "expectedKind": "allocationFailed",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned ValueRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "ValueRefusal-workLimit",
@@ -254,12 +194,7 @@
       "expectedKind": "workLimit",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned ValueRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "ValueRefusal-depthLimit",
@@ -274,12 +209,7 @@
       "expectedKind": "depthLimit",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned ValueRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "ValueRefusal-unsupportedOwner",
@@ -294,12 +224,7 @@
       "expectedKind": "unsupportedOwner",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned ValueRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "ValueRefusal-invariantViolated",
@@ -314,12 +239,7 @@
       "expectedKind": "invariantViolated",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned ValueRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "TextRefusal-invalidValue",
@@ -334,12 +254,7 @@
       "expectedKind": "invalidValue",
       "display": "schema error: same deliberately misleading cancellation/limit prose at 2:3",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned TextRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "TextRefusal-canceled",
@@ -354,12 +269,7 @@
       "expectedKind": "canceled",
       "display": "schema error: same deliberately misleading cancellation/limit prose at 2:3",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned TextRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "TextRefusal-ownershipLimit",
@@ -374,12 +284,7 @@
       "expectedKind": "ownershipLimit",
       "display": "schema error: same deliberately misleading cancellation/limit prose at 2:3",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned TextRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "TextRefusal-allocationFailed",
@@ -394,12 +299,7 @@
       "expectedKind": "allocationFailed",
       "display": "schema error: same deliberately misleading cancellation/limit prose at 2:3",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned TextRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "TextRefusal-workLimit",
@@ -414,12 +314,7 @@
       "expectedKind": "workLimit",
       "display": "schema error: same deliberately misleading cancellation/limit prose at 2:3",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned TextRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "TextRefusal-depthLimit",
@@ -434,12 +329,7 @@
       "expectedKind": "depthLimit",
       "display": "schema error: same deliberately misleading cancellation/limit prose at 2:3",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned TextRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "TextRefusal-unsupportedOwner",
@@ -454,12 +344,7 @@
       "expectedKind": "unsupportedOwner",
       "display": "schema error: same deliberately misleading cancellation/limit prose at 2:3",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned TextRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "TextRefusal-invariantViolated",
@@ -474,12 +359,7 @@
       "expectedKind": "invariantViolated",
       "display": "schema error: same deliberately misleading cancellation/limit prose at 2:3",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⚠️error/🦀️.rs",
-        "sha256": "2fa929bd048483c842f5f8d26d0d1c0d01d2f6a54ef8086f9f579b97aab59eb7",
-        "predicate": "direct original owned TextRefusal payload"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "physical-credit",
@@ -494,12 +374,7 @@
       "expectedKind": "ownershipLimit",
       "display": "limit exceeded: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
-        "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
-        "predicate": "check_controlled_allocation compares cumulative owned bytes to maximum_bytes and max_total_alloc"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "physical-width",
@@ -514,12 +389,7 @@
       "expectedKind": "ownershipLimit",
       "display": "limit exceeded: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
-        "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
-        "predicate": "controlled_vec count.checked_mul(size_of::<T>())"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "work-width",
@@ -534,12 +404,7 @@
       "expectedKind": "workLimit",
       "display": "limit exceeded: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
-        "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
-        "predicate": "expected.checked_add(stored_len) inflation work arithmetic"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "fixed-prefix",
@@ -554,12 +419,7 @@
       "expectedKind": "invariantViolated",
       "display": "limit exceeded: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs",
-        "sha256": "33c6d83346bb9e120459fecb08eb9b137db0d4773016d12aa83d1088d25e52f5",
-        "predicate": "Prefix::bytes end exceeds fixed 256-byte buffer"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "chunk-reserve",
@@ -574,12 +434,7 @@
       "expectedKind": "allocationFailed",
       "display": "limit exceeded: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🛫️encoding/🦀️.rs",
-        "sha256": "33c6d83346bb9e120459fecb08eb9b137db0d4773016d12aa83d1088d25e52f5",
-        "predicate": "self.chunks.try_reserve_exact(1) returns Err"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "reset-lifecycle",
@@ -594,12 +449,7 @@
       "expectedKind": "invariantViolated",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs",
-        "sha256": "b6513fee9e94e116455b50be1b8bab8adc50610b2cc546f823d06c6ed301e74c",
-        "predicate": "reset while incomplete, closed, pending or faulted; guard must split"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "reset-ceiling",
@@ -614,12 +464,7 @@
       "expectedKind": "ownershipLimit",
       "display": "limit exceeded: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs",
-        "sha256": "b6513fee9e94e116455b50be1b8bab8adc50610b2cc546f823d06c6ed301e74c",
-        "predicate": "reset expected > limit; guard must split from lifecycle"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "decoded-length",
@@ -634,12 +479,7 @@
       "expectedKind": "invalidValue",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/📡️replication/⚙️codec/🦀️.rs",
-        "sha256": "b6513fee9e94e116455b50be1b8bab8adc50610b2cc546f823d06c6ed301e74c",
-        "predicate": "produced > source declared expected length"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "pre-cancel",
@@ -654,12 +494,7 @@
       "expectedKind": "canceled",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⏳️async/🦀️.rs",
-        "sha256": "7a30cdd6c06a8ac716cfd0e8471ab24fadab4ed753849ada4ba993a2b2e2da76",
-        "predicate": "read observes cancel.is_cancelled() true"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "active-cancel",
@@ -674,12 +509,7 @@
       "expectedKind": "canceled",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⏳️async/🦀️.rs",
-        "sha256": "7a30cdd6c06a8ac716cfd0e8471ab24fadab4ed753849ada4ba993a2b2e2da76",
-        "predicate": "CancelWatch::poll token.poll_cancelled returns true"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "invalid-path",
@@ -694,12 +524,7 @@
       "expectedKind": "invalidValue",
       "display": "schema error: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/🔌️io/🦀️.rs",
-        "sha256": "adbcf74272b70db32c7b706365097610b5bee45c975935b6a176840637200c3c",
-        "predicate": "write_atomic caller path.file_name() is None"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "count-ceiling",
@@ -714,12 +539,7 @@
       "expectedKind": "workLimit",
       "display": "limit exceeded: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
-        "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
-        "predicate": "count > limits.max_symbols; split source/limits OR"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "impossible-count",
@@ -734,12 +554,7 @@
       "expectedKind": "invalidValue",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🦀️.rs",
-        "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
-        "predicate": "count > bytes.len(); split source/limits OR"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "internal-group-range",
@@ -754,12 +569,7 @@
       "expectedKind": "invariantViolated",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/⏳️async/🦀️.rs",
-        "sha256": "7a30cdd6c06a8ac716cfd0e8471ab24fadab4ed753849ada4ba993a2b2e2da76",
-        "predicate": "caller_range.offset.checked_sub(group_range.offset) is None"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "retained-source-cancel",
@@ -774,12 +584,7 @@
       "expectedKind": "canceled",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/🦀️.rs",
-        "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
-        "predicate": "RetainedPackSourceCursor::grant observes cancelled"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "retained-source-closed",
@@ -794,12 +599,7 @@
       "expectedKind": "invariantViolated",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/🦀️.rs",
-        "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
-        "predicate": "next_allocation_bytes closed/sealed branch after distinct canceled precedence"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "catalog-allocation-state",
@@ -814,12 +614,7 @@
       "expectedKind": "invariantViolated",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "sourcePredicate",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/📐️format/🎮️retained/🦀️.rs",
-        "sha256": "9784b9674ad4a9c1c0254ec727e9464b06ca8cd8530d01835273fb7615532907",
-        "predicate": "requested_allocation_bytes receives Ok(None) while allocation_need is Some"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "deflate-remember-ownershipLimit",
@@ -834,12 +629,7 @@
       "expectedKind": "ownershipLimit",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🗜️deflate/🦀️.rs",
-        "sha256": "9cfe2e1db549d076b9213c55a4023fe451b50c6736ed06ddcac5d04b1cc333fa",
-        "predicate": "actual lower allocation error kind passes through before reason/code rendering"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "deflate-remember-allocationFailed",
@@ -854,12 +644,7 @@
       "expectedKind": "allocationFailed",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🗜️deflate/🦀️.rs",
-        "sha256": "9cfe2e1db549d076b9213c55a4023fe451b50c6736ed06ddcac5d04b1cc333fa",
-        "predicate": "actual lower allocation error kind passes through before reason/code rendering"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "deflate-remember-invariantViolated",
@@ -874,12 +659,7 @@
       "expectedKind": "invariantViolated",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "sourceContractOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🗜️deflate/🦀️.rs",
-        "sha256": "9cfe2e1db549d076b9213c55a4023fe451b50c6736ed06ddcac5d04b1cc333fa",
-        "predicate": "actual lower allocation error kind passes through before reason/code rendering"
-      }
+      "witness": "sourceContractOnly"
     },
     {
       "id": "list-remember-ownershipLimit",
@@ -894,12 +674,7 @@
       "expectedKind": "ownershipLimit",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
-        "sha256": "6e24af193b8af5a3ee1a96875ea235059561400d1cc9fbd04ca73168da5356cb",
-        "predicate": "actual lower allocation error kind passes through before reason/code rendering"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "list-remember-allocationFailed",
@@ -914,12 +689,7 @@
       "expectedKind": "allocationFailed",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
-        "sha256": "6e24af193b8af5a3ee1a96875ea235059561400d1cc9fbd04ca73168da5356cb",
-        "predicate": "actual lower allocation error kind passes through before reason/code rendering"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "list-remember-invariantViolated",
@@ -934,12 +704,7 @@
       "expectedKind": "invariantViolated",
       "display": "malformed deflate at offset 9: same deliberately misleading cancellation/limit prose",
       "authority": "originalTypedCause",
-      "witness": "sourceContractOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🌱️value/📋️list/🦀️.rs",
-        "sha256": "6e24af193b8af5a3ee1a96875ea235059561400d1cc9fbd04ca73168da5356cb",
-        "predicate": "actual lower allocation error kind passes through before reason/code rendering"
-      }
+      "witness": "sourceContractOnly"
     },
     {
       "id": "injected-transport-workLimit-transient",
@@ -954,12 +719,7 @@
       "expectedKind": "workLimit",
       "display": "io error: same deliberately misleading cancellation/limit prose",
       "authority": "injectedTransportPolicy",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/🌐️http/🦀️.rs",
-        "sha256": "12c9372d7cc92364d535c0bc105d1144498b831161a575fbeb3147bea603daa0",
-        "predicate": "injected transport explicitly authors typed cause and retry policy; no native provider mapping claimed"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "injected-transport-workLimit-never",
@@ -974,12 +734,7 @@
       "expectedKind": "workLimit",
       "display": "io error: same deliberately misleading cancellation/limit prose",
       "authority": "injectedTransportPolicy",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/🌐️http/🦀️.rs",
-        "sha256": "12c9372d7cc92364d535c0bc105d1144498b831161a575fbeb3147bea603daa0",
-        "predicate": "injected transport explicitly authors typed cause and retry policy; no native provider mapping claimed"
-      }
+      "witness": "draftProjectionOnly"
     },
     {
       "id": "injected-transport-canceled",
@@ -994,12 +749,7 @@
       "expectedKind": "canceled",
       "display": "io error: same deliberately misleading cancellation/limit prose",
       "authority": "injectedTransportPolicy",
-      "witness": "draftProjectionOnly",
-      "source": {
-        "path": "🧰️framework/🔨️modules/🎒️pack/🌐️http/🦀️.rs",
-        "sha256": "12c9372d7cc92364d535c0bc105d1144498b831161a575fbeb3147bea603daa0",
-        "predicate": "injected transport explicitly authors typed cause and retry policy; no native provider mapping claimed"
-      }
+      "witness": "draftProjectionOnly"
     }
   ]
 }

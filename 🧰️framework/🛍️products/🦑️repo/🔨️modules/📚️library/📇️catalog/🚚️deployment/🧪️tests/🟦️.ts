@@ -7,7 +7,7 @@ import { componentDeploymentDirectoryV1 } from "../🟨️.mjs";
 import { declaredComponentDeploymentDirectoryV1 } from "../🟦️.ts";
 
 const owner = resolve(import.meta.dir, "..");
-const fixture = JSON.parse(readFileSync(resolve(owner, "🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
 const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(new URL("../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json", import.meta.url), "utf8")));
 
 test("component compilation does not imply deployment", () => {

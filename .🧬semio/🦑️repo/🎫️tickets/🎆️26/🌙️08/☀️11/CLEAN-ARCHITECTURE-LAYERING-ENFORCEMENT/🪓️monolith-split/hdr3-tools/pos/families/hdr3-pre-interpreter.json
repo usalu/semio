@@ -1,0 +1,1 @@
+{"name": "hdr3-pre-interpreter", "crates": ["semio-framework-plugin-interpreter"], "base": {"rev": "7880cc36f78", "crates": ["semio-framework-plugin-interpreter"]}, "note": "pre-check"}

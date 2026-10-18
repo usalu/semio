@@ -121,6 +121,4 @@ pub fn message(issue: &FamilyIssue, locale: &str) -> String {
     format!("{place}: {what}")
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

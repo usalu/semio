@@ -42,6 +42,8 @@
     "discoverNativeBuildOwnersV1",
     "discoverBuildOwnerAdmissionFactsV1",
     "readBuildOwnerRegistrySourceV1",
+    "currentImplementationRevisionV1",
+    "loadCurrentImplementationV1",
     "dependencyResolutionAuthority",
     "createDependencies",
     "createMetadata",

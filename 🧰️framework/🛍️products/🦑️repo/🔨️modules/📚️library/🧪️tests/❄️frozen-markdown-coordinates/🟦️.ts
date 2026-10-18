@@ -6,8 +6,13 @@ import { tmpdir } from "node:os";
 import { dirname, join, posix, resolve } from "node:path";
 import { fromMarkdown } from "mdast-util-from-markdown";
 import ts from "typescript";
-import * as discovery from "../../🔍️discovery/🟦️.ts";
-import * as normalization from "../../🧹️normalization/🟦️.ts";
+import { registryCatalogPathMayAffect } from "../../🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
+import { loadCatalogTaxonomy, validateTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type FrozenMarkdownCoordinateEvidenceContract, type Taxonomy, validateFrozenMarkdownCoordinateEvidenceContracts } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
+import { frozenMarkdownCoordinateEvidenceCoordinates } from "../../🧹️normalization/❄️frozen-evidence/🟦️.ts";
+import { planTaxonomy } from "../../🧹️normalization/🧠️planning/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
+import { applyTaxonomyPlan } from "../../🧹️normalization/🚀️apply/🟦️.ts";
 
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/❄️frozen-markdown-coordinates/🔣️.json"), "utf8"));
 const historical = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/❄️frozen-markdown-coordinates/🧬️energy-source-coordinates/🔣️.json"), "utf8"));
@@ -16,22 +21,22 @@ const sha = (bytes: Uint8Array | string): string => createHash("sha256").update(
 const scratch: string[] = [];
 afterAll(() => { for (const directory of scratch) rmSync(directory, { recursive: true, force: true }); });
 const functions = () => {
-  const validate = Reflect.get(discovery, "validateFrozenMarkdownCoordinateEvidenceContracts");
-  const coordinates = Reflect.get(normalization, "frozenMarkdownCoordinateEvidenceCoordinates");
+  const validate = validateFrozenMarkdownCoordinateEvidenceContracts;
+  const coordinates = frozenMarkdownCoordinateEvidenceCoordinates;
   expect(typeof validate).toBe("function");
   expect(typeof coordinates).toBe("function");
   return { validate, coordinates };
 };
-const contractFor = (row: any): discovery.FrozenMarkdownCoordinateEvidenceContract => ({ path: "🧪️tests/📝️history.md", grammar: vector.contract, sha256: sha(row.content), coordinates: [{ start: row.start ?? row.content.indexOf(row.value), end: row.end ?? row.content.indexOf(row.value) + row.value.length, kind: "source", form: row.form, valueSha256: sha(row.value) }] });
+const contractFor = (row: any): FrozenMarkdownCoordinateEvidenceContract => ({ path: "🧪️tests/📝️history.md", grammar: vector.contract, sha256: sha(row.content), coordinates: [{ start: row.start ?? row.content.indexOf(row.value), end: row.end ?? row.content.indexOf(row.value) + row.value.length, kind: "source", form: row.form, valueSha256: sha(row.value) }] });
 
 /** 📦️ Reuses the executed Draw collector without importing or running its test suite. */
-function producerInputs(schema: discovery.Taxonomy) {
-  const path = join(libraryRoot, "🧪️tests/🔬️workspace-contract/🟦️.ts"), content = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true);
+function producerInputs(schema: Taxonomy) {
+  const path = join(libraryRoot, "🧪️tests/🔬️workspace-contract/🏗️shared-fixtures/🟦️.ts"), content = readFileSync(path, "utf8"), tree = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true);
   const names = new Set(["artifactProjectionProducerInput", "artifactProjectionProducerInputs", "projectionByteSort"]);
   const declarations = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
   expect(declarations).toHaveLength(3);
-  const source = declarations.map((node) => node.getText(tree)).join("\n"), compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(source);
-  const scenario = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🖍️draw-source-scenario/🔣️.json"), "utf8"));
+  const source = declarations.map((node) => node.getText(tree).replace(/^export /u, "")).join("\n"), compiled = new Bun.Transpiler({ loader: "ts" }).transformSync(source);
+  const scenario = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🖍️draw-source-scenario/🔣️.json"), "utf8"));
   const build = new Function("getWorkspaceRoot", "lstatSync", "readFileSync", "createHash", "join", "posix", "registryCompilerInputDependencies", "DRAW_SOURCE_SCENARIO", compiled + "\nreturn { read: artifactProjectionProducerInput, collect: artifactProjectionProducerInputs };")(() => root, lstatSync, readFileSync, createHash, join, posix, discovery.registryCompilerInputDependencies, scenario);
   return { ...build.collect(schema), read: build.read, sourceSha256: sha(source) } as { files: Record<string, { content: string; mode: number; sha256: string; origin: string }>; modules: unknown[]; read: (path: string) => { sha256: string; mode: number }; sourceSha256: string };
 }
@@ -89,11 +94,11 @@ test("frozen Markdown authority rejects wrong document value and shifted overlap
 });
 
 test("the ten exact Markdown contracts stay registered byte-for-byte and JSON evidence changes only through the seal ledger", () => {
-  const schema = discovery.loadCatalogTaxonomy();
+  const schema = loadCatalogTaxonomy();
   for (const row of historical.documents) expect([row.id, schema.frozenMarkdownCoordinateEvidenceContracts[row.id]]).toEqual([row.id, row.contract]);
-  const ledger = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"), "utf8")) as { pinnedFor: string; contracts: Record<string, unknown>; later: Record<string, unknown> };
+  const ledger = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🧫️frozen-seal-ledger/🔣️.json"), "utf8")) as { pinnedFor: string; contracts: Record<string, unknown>; later: Record<string, unknown> };
   expect(Object.keys(schema.frozenCoordinateEvidenceContracts).filter((id) => id !== ledger.pinnedFor).sort()).toEqual([...Object.keys(ledger.contracts), ...Object.keys(ledger.later)].sort());
-  expect(discovery.validateTaxonomy(schema)).toEqual([]);
+  expect(validateTaxonomy(schema)).toEqual([]);
 });
 
 test("all 21 reviewed historical spans retain exact physical bytes and independent CommonMark ownership", () => {
@@ -138,11 +143,11 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   const encodedHistoryPath = "🧪️tests/🧪️history/🔣️.json", escaped = JSON.stringify(source).replaceAll("/", "\\/"), encodedHistory = '[{"path":' + escaped + '}]\n';
   const schemaPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
   const declaration = { start: history.indexOf(source), end: history.indexOf(source) + source.length, kind: "source" as const, form: "inline-code" as const, valueSha256: sha(source) };
-  const schema = { ...structuredClone(discovery.loadCatalogTaxonomy()), frozenCoordinateEvidenceContracts: { history: { path: encodedHistoryPath, sha256: sha(encodedHistory), schemaVersion: null, rootKind: "array" as const, coordinates: [{ pointer: "/0/path", kind: "source" as const, representation: "json-escaped-source-path" as const }] } }, frozenMarkdownCoordinateEvidenceContracts: { history: { path: historyPath, grammar: "frozen-markdown-source-coordinates-v1" as const, sha256: sha(history), coordinates: [declaration] } } };
+  const schema = { ...structuredClone(loadCatalogTaxonomy()), frozenCoordinateEvidenceContracts: { history: { path: encodedHistoryPath, sha256: sha(encodedHistory), schemaVersion: null, rootKind: "array" as const, coordinates: [{ pointer: "/0/path", kind: "source" as const, representation: "json-escaped-source-path" as const }] } }, frozenMarkdownCoordinateEvidenceContracts: { history: { path: historyPath, grammar: "frozen-markdown-source-coordinates-v1" as const, sha256: sha(history), coordinates: [declaration] } } };
   const producer = producerInputs(schema);
   checkpoint("producer-inputs");
   for (const [path, input] of Object.entries(producer.files)) { put(path, input.content); chmodSync(join(fixture, path), input.mode); }
-  expect(discovery.registryCatalogPathMayAffect(source, schema)).toBe(false);
+  expect(registryCatalogPathMayAffect(source, schema)).toBe(false);
   const schemaBytes = JSON.stringify(schema, null, 2) + "\n";
   put(schemaPath, schemaBytes); put(source, "pub fn value() -> u32 { 7 }\n"); put(historyPath, history); put(encodedHistoryPath, encodedHistory); put(livePath, live);
   git(["init", "-q"]); put(".git/info/exclude", schemaPath + "\n");
@@ -150,7 +155,7 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   git(["-c", "user.name=Markdown Source Fixture", "-c", "user.email=fixture@invalid.example", "-c", "commit.gpgsign=false", "commit", "-qm", "Markdown source fixture"]);
   const baselineCommit = git(["rev-parse", "HEAD"]), ticketDir = join(fixture, ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️27/MARKDOWN-TRANSACTION");
   mkdirSync(ticketDir, { recursive: true });
-  const plan = () => normalization.planTaxonomy(normalization.inventoryTaxonomy({ repoRoot: fixture, scope, workers: 1 }), { baselineCommit, excludedTreeDigests: [] });
+  const plan = () => planTaxonomy(inventoryTaxonomy({ repoRoot: fixture, scope, workers: 1 }), { baselineCommit, excludedTreeDigests: [] });
   const current = plan();
   checkpoint("initial-plan");
   expect(current.unresolved).toEqual([]);
@@ -172,13 +177,13 @@ test("a scoped transaction preserves Markdown and escaped JSON history while rew
   expect(unowned.edits.filter((edit) => edit.path === encodedHistoryPath)).toEqual([]);
   put(historyPath, history); put(encodedHistoryPath, encodedHistory); put(schemaPath, schemaBytes);
   const options = { repoRoot: fixture, ticketDir, expectedBaselineCommit: baselineCommit, expectedPlanDigest: current.planDigest };
-  expect(normalization.applyTaxonomyPlan(current, { ...options, injectFailureAt: "after-edits" }).state).toBe("rolled-back");
+  expect(applyTaxonomyPlan(current, { ...options, injectFailureAt: "after-edits" }).state).toBe("rolled-back");
   checkpoint("rollback");
   expect(readFileSync(join(fixture, source), "utf8")).toBe("pub fn value() -> u32 { 7 }\n");
   expect(readFileSync(join(fixture, livePath), "utf8")).toBe(live);
   expect(readFileSync(join(fixture, historyPath), "utf8")).toBe(history);
   expect(readFileSync(join(fixture, encodedHistoryPath), "utf8")).toBe(encodedHistory);
-  expect(normalization.applyTaxonomyPlan(current, options).state).toBe("committed");
+  expect(applyTaxonomyPlan(current, options).state).toBe("committed");
   checkpoint("retry-commit");
   expect(existsSync(join(fixture, source))).toBe(false);
   expect(readFileSync(join(fixture, final), "utf8")).toBe("pub fn value() -> u32 { 7 }\n");

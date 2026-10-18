@@ -19,5 +19,6 @@ path = "🦀️.rs"
 serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-repo-model = { path = "../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-model-entity = { path = "../../../📐️model/🪪️entity/📦️packages/🦀️rust" }
 semio-framework-repo-identity = { path = "../../../🪪️identity/📦️packages/🦀️rust" }
 semio-framework-repo-statutes = { path = "../../../📜️statutes/📦️packages/🦀️rust" }

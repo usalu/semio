@@ -1,6 +1,6 @@
 //! 🔪️ `trim-extend-wall` payload. Trims or extends one end of a wall to the axis of another wall: the intersection of the two axes (lines and circles carried on infinitely) nearest to the old end becomes the new end, as a concrete axis. Openings keep their place in the world: when the start moves their offsets move with it, and an opening that would no longer fit refuses the call.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -12,13 +12,16 @@ pub struct TrimExtendWall {
     pub target: String,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for TrimExtendWall {
+impl<Op> MutationKind<ModelSnapshot, Op> for TrimExtendWall
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<TrimExtendWall> + From<crate::standards::v1::subsets::any::schema::mutations::place_elements::PlaceElements>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "resize", entity: "wall", kind: "trim-extend-wall", record: "TrimExtendWall" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Trim or extend the {:?} of wall \"{}\" to wall \"{}\"", self.end, self.id, self.target), &format!("{:?} der Wand \"{}\" auf Wand \"{}\" kürzen oder verlängern", self.end, self.id, self.target))

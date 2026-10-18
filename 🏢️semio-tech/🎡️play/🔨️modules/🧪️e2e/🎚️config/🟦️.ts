@@ -1,7 +1,7 @@
 // #region 🧲️Header
 // 💻️ 🏢️semio-tech/🎡️play/🔨️modules/🧪️e2e/🎚️config/🟦️.ts
 // Specs: Run Playwright acceptance coverage against a live play dev server.
-// Summary: Nx prepares an isolated continuous service; the E2E consumer validates its generation
+// Summary: The build tool prepares an isolated continuous service; the E2E consumer validates its generation
 // before supplying PLAYWRIGHT_BASE_URL. Playwright consumes that server and does not start one.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲️Header
@@ -12,12 +12,12 @@ import { fileURLToPath } from "node:url";
 
 import { defineConfig, devices } from "@playwright/test";
 
-import { playwrightTestTimeoutMs } from "@semio-tech/repo-lib";
+import { playwrightTestTimeoutMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎚️levels/🟦️.ts";
 // #endregion 🔌️Adapters
 
 const playDir = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
 const playwrightTimeoutMs = playwrightTestTimeoutMs();
-if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the play test-e2e target through Nx");
+if (!process.env.PLAYWRIGHT_BASE_URL) throw new Error("Run the play test-e2e target: bun repo run @semio-tech/semio-tech-play:test-e2e");
 const baseURL = process.env.PLAYWRIGHT_BASE_URL.endsWith("/") ? process.env.PLAYWRIGHT_BASE_URL : `${process.env.PLAYWRIGHT_BASE_URL}/`;
 
 /** 🖥️ Map and wgpu panes need a real adapter; `PLAY_E2E_GPU=swiftshader` forces the software stack for hosts without one. */

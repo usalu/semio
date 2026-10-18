@@ -314,7 +314,7 @@ accidental_cases: vec![],
 pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
 
-use semio_s_plugin_norm_app_surface;
+use semio_s_plugin_norm_app_surface as app_surface;
 
 pub mod part_1_2 {
     /// 🔥️ Fire exposure curve family (EN 1991-1-2 §3.2 nominal / Annex A parametric).

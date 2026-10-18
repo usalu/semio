@@ -2,9 +2,9 @@
 //! counter-clockwise loop, a pitched shape has pitches in (0, 89 degrees), the overhang is not negative and the base offset is finite.
 //! The roof solid is inferred.
 
-use super::super::elements;
-use super::super::horizontal_rules::{loop_fault, overhang_fault, shape_fault};
-use super::CreateRoof;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::horizontal_rules::{loop_fault, overhang_fault, shape_fault};
+use crate::standards::v1::subsets::any::schema::mutations::create_roof::CreateRoof;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

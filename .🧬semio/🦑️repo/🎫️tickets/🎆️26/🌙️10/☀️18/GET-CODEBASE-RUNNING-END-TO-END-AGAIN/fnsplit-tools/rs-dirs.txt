@@ -1,0 +1,6 @@
+✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧾️register-operators/📂️io-operators
+✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧾️register-operators/📐️measurement-utility-and-topology-operators
+✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧾️register-operators/🔍️intersection-and-evaluation-operators
+✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧾️register-operators/🧊️schemas-primitives-and-curves
+✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧾️register-operators/🧮️booleans-transforms-and-solid-features
+✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧾️register-operators/🪡️surfaces-and-sweeps

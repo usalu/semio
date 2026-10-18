@@ -59,24 +59,24 @@ use semio_s_artifact_stdio_zip::opc::retained::RetainedOpcPackage;
 use std::collections::BTreeMap;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
+pub fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
     out.extend_from_slice(bytes);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
+pub fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
     Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
@@ -96,7 +96,7 @@ pub(crate) fn dec_attr_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlAttr
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
+pub fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
     match node {
         XmlNode::Element { name, attrs, children } => {
             out.push(0);
@@ -131,7 +131,7 @@ pub(crate) fn enc_xml_node_bin(node: &XmlNode, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
+pub fn dec_xml_node_bin(reader: &mut store::ByteReader<'_>) -> Result<XmlNode, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => {
@@ -284,7 +284,7 @@ pub(crate) fn dec_table_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxTa
 
 /// 🌳️ `0`=Paragraph / `1`=Table -- `DocxBlock`'s two variants, tag-prefixed like `enc_xml_node_bin`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
+pub fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
     match b {
         DocxBlock::Paragraph(p) => {
             out.push(0);
@@ -298,7 +298,7 @@ pub(crate) fn enc_block_bin(b: &DocxBlock, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
+pub fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBlock, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => Ok(DocxBlock::Paragraph(dec_paragraph_bin(reader)?)),
         1 => Ok(DocxBlock::Table(dec_table_bin(reader)?)),
@@ -307,7 +307,7 @@ pub(crate) fn dec_block_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxBl
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
+pub fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
     write_str_lp(out, &s.id);
     write_str_lp(out, &s.name);
     out.push(if s.based_on.is_some() { 1 } else { 0 });
@@ -317,7 +317,7 @@ pub(crate) fn enc_style_bin(s: &DocxStyle, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyle, String> {
+pub fn dec_style_bin(reader: &mut store::ByteReader<'_>) -> Result<DocxStyle, String> {
     let id = read_str_lp(reader)?;
     let name = read_str_lp(reader)?;
     let based_on = if reader.read_u8().map_err(|e| e.to_string())? != 0 { Some(read_str_lp(reader)?) } else { None };

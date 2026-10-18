@@ -1,6 +1,7 @@
 //! 🧩️ Sourcing app: the `ArtifactEditor` implementation of `SourcingCurationApp` with its dispatch, render, media and composition bodies.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::sourcing::base::{SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_ROWS_DOMAIN, reset_document_effect, sourcing_curation_io};
 
 impl ArtifactEditor for SourcingCurationApp {

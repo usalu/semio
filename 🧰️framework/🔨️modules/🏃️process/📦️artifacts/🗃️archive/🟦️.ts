@@ -3,7 +3,7 @@ import{createHash}from"node:crypto";
 import{createGunzip,createInflateRaw}from"node:zlib";
 import{finished}from"node:stream/promises";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../🔒️leases/🟦️.ts";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 
 /** 📏️ Describes finite decoding limits without granting filesystem or process authority. */

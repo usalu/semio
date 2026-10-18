@@ -17,7 +17,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { browserWasiInterfaces } from "./🌐️wasi/🟦️.ts";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES as browserActorMaximumBytes } from "../../../../../🔨️modules/📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
-import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { readStableBuildFile } from "../../../../🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
 import { canonicalJson } from "../../../../🦑️repo/🔨️modules/📚️library/🧾️serialization/🔣️json/🟦️.ts";
 
 export type BrowserComponentCore = Readonly<{ name: string; bytes: Uint8Array }>;
@@ -330,11 +330,13 @@ function captureBrowserCodegenPolicyInputs(runtime: BrowserActorRuntimeSnapshot,
   const parserManifest = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(parserManifestBytes));
   if (parserManifest.name !== "typescript" || parserManifest.version !== "5.9.3" || ts.version !== "5.9.3") throw new Error("browser actor artifact: unqualified parser");
   const parser = { name: "typescript", version: "5.9.3", manifestSha256: hash(parserManifestBytes), lockRowSha256: locked("typescript", "5.9.3"), entry: { logicalPath: "typescript/lib/typescript.js", sha256: hash(parserBytes), byteLength: parserBytes.byteLength } };
+  const normalizationDirectory = resolve(browserBundleDirectory, "../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization");
+  const normalizationOwners = readdirSync(normalizationDirectory, { withFileTypes: true }).filter((entry) => entry.isDirectory() && !entry.name.startsWith("🧪️")).map((entry) => entry.name).filter((owner) => { try { return lstatSync(join(normalizationDirectory, owner, "🟦️.ts")).isFile(); } catch { return false; } }).sort((left, right) => Buffer.compare(Buffer.from(left), Buffer.from(right)));
   const paths = [
     { logicalPath: "browser/📜️script.ts", path: fileURLToPath(import.meta.url) },
     { logicalPath: "browser/🧬️schema/🔣️.json", path: join(browserBundleDirectory, "🧬️schema/🔣️.json") },
-    { logicalPath: "repo/execution/🟦️.ts", path: resolve(browserBundleDirectory, "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts") },
-    { logicalPath: "repo/normalization/🟦️.ts", path: resolve(browserBundleDirectory, "../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts") },
+    { logicalPath: "repo/execution/🟦️.ts", path: resolve(browserBundleDirectory, "../../../../🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts") },
+    ...normalizationOwners.map((owner) => ({ logicalPath: `repo/normalization/${owner}/🟦️.ts`, path: join(normalizationDirectory, owner, "🟦️.ts") })),
   ];
   paths.push(
     { logicalPath: "browser/🧵️compiler-worker/📜️script.ts", path: resolve(browserBundleDirectory, "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️bundle/🟦️bun/📜️script.ts") },

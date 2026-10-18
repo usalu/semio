@@ -2,7 +2,7 @@
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { isDevPortInUse } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { isDevPortInUse } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🌐️network/🔌️ports/🟦️.ts";
 import { awaitHttpOk } from "@semio-tech/framework-os-dev/activation/readiness";
 import { withLocalHubHostTaskV1, stopLocalHubV1, waitForReadiness, type LocalHubHostV1, finishLocalHub, startLocalHub, type LocalHubRun } from "../../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import type { LocalProfile } from "../../../🚀️local-bootstrap/🛂authentication/🟦️.ts";

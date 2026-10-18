@@ -28,6 +28,4 @@ pub fn document_text(root: &SvgElement) -> Result<String, String> {
     xml_document_to_text_checked(&document)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

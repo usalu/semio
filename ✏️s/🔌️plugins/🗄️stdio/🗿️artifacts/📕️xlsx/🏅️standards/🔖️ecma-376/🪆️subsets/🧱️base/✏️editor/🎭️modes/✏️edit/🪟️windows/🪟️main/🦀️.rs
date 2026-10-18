@@ -101,7 +101,7 @@ fn render_sheet_grid(
     )
 }
 
-pub(crate) fn render_for_controller(
+pub fn render_for_controller(
     document: &XlsxSnapshot,
     locale: Locale,
     windows: &TreeWindows<'_>,

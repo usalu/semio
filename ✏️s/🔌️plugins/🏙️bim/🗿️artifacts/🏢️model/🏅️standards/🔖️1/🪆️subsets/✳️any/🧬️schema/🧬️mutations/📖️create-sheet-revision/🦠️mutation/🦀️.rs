@@ -1,6 +1,6 @@
 //! 📖️ `create-sheet-revision` payload. Adds a row to the revision table of a sheet: the mark, its date, what changed and who changed it. The table is printed in the corner of the sheet by the inferred sheet layout.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, SheetRevision}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, SheetRevision}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateSheetRevision {
     pub sheet_revision: SheetRevision,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateSheetRevision {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateSheetRevision
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSheetRevision> + From<crate::standards::v1::subsets::any::schema::mutations::delete_sheet_revision::DeleteSheetRevision>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "sheet-revision", kind: "create-sheet-revision", record: "CreateSheetRevision" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_sheet_revision::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_sheet_revision::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Add revision \"{}\" to sheet \"{}\"", self.sheet_revision.number, self.sheet_revision.sheet), &format!("Änderung \"{}\" zu Blatt \"{}\" hinzufügen", self.sheet_revision.number, self.sheet_revision.sheet))

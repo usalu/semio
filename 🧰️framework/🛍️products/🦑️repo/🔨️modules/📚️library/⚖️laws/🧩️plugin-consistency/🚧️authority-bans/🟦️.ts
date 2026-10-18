@@ -2,7 +2,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { policyMaskLiterals, policyTestModSpans, policyLineInTestMod } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
-import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SKIP_DIRS, policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyLineOfIndex } from "../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
 import { AGENT_CLIENT_DECLARATION_MANIFEST, checkAgentClients, mcpServersOf, readDeclaredTools, type McpServer } from "../../../🤖️agent-clients/🟦️.ts";
@@ -344,7 +344,6 @@ export function policyNoPackFilesBreaches(repoRoot: string): BreachRecord[] {
 //#endregion 🔧️PolicyRuleNoPackFiles
 
 //#region 🔧️PolicyRuleNoRawSpawn
-const POLICY_RAW_SPAWN_EXEMPT = new Set(["./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"]);
 const POLICY_RAW_SPAWN_RE = /\b(spawnSync|execSync|execFileSync|Bun\.spawn|spawn)\s*\(/g;
 
 /** 🔎️Strips TS/JS comments and string literals so policy regexes only see executable code. */
@@ -430,7 +429,6 @@ function policyDiscoverScriptTsFiles(repoRoot: string): string[] {
 export function policyRawSpawnBreaches(repoRoot: string): BreachRecord[] {
   const breaches: BreachRecord[] = [];
   for (const relPath of policyDiscoverScriptTsFiles(repoRoot)) {
-    if (POLICY_RAW_SPAWN_EXEMPT.has(relPath)) continue;
     const content = policyReadFileSafe(repoRoot, relPath);
     const stripped = policyStripTsCommentsAndStrings(content);
     const seenLines = new Set<number>();

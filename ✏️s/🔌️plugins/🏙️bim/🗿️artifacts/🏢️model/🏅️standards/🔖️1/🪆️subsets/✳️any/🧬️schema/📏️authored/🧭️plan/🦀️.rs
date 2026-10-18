@@ -30,6 +30,4 @@ pub fn axis_length(axis: &Axis) -> f64 {
 /// 📐️ The largest lean of a column from the vertical in radians (60 degrees).
 pub const MAX_TILT: f64 = std::f64::consts::FRAC_PI_3;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

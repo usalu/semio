@@ -88,6 +88,4 @@ pub fn render_rows(snapshot: &ModelSnapshot, root: &str, component: &str, labels
 }
 //#endregion 🔖️Panel
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,15 +1,18 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
-import { resolveTestLevel } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🀄️ `@semio-tech/wfc-js` router: `bun ./📜️script.ts test`. */
-import { runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolve } from "node:path";
+import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 
+const suites = ["🗿️artifacts/**/📚️examples/**/🧪️tests/🧩️example/🟦️.ts", "🗿️artifacts/**/🧬️schema/🧪️tests/🧩️suite/🟦️.ts"];
+
 class TestScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
-    await runVitest(this.root, rest, "../../🧪️tests/🎚️config/🟦️.ts");
+  async run(): Promise<void> {
+    const plugin = resolve(this.root, "../..");
+    const files = suites.flatMap(pattern => [...new Bun.Glob(pattern).scanSync({ cwd: plugin })].map(path => resolve(plugin, path))).sort();
+    runCmd(process.execPath, ["test", ...files], { cwd: this.repoRoot });
   }
 }
 

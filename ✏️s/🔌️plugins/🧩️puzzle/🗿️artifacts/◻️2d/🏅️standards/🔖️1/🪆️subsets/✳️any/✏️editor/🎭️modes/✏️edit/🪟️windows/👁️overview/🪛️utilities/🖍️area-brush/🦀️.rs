@@ -11,6 +11,7 @@ use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
+use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 pub const UTILITY_ID: &str = "areaBrush";
 

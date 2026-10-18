@@ -16,6 +16,15 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-3d-brep-construction = { workspace = true }
+semio-framework-3d-brep-curve = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-3d-brep-queries = { workspace = true }
+semio-framework-3d-brep-representation = { workspace = true }
+semio-framework-3d-brep-surface = { workspace = true }
+semio-framework-3d-brep-tolerance = { workspace = true }
+semio-framework-3d-brep-validation = { workspace = true }
+semio-framework-3d-brep-vector = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
@@ -40,6 +49,7 @@ semio-s-artifact-stdio-step-cc6 = { workspace = true }
 semio-s-artifact-stdio-step-inferences = { workspace = true }
 semio-s-artifact-stdio-step-mutations = { workspace = true }
 semio-s-artifact-stdio-step-snapshot = { workspace = true }
+semio-s-spatial-kernel-semio-session = { workspace = true }
 
 [dev-dependencies]
 pack = { workspace = true }

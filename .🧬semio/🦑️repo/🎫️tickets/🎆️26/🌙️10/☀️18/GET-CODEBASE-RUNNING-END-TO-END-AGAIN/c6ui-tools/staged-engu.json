@@ -1,0 +1,16 @@
+{
+ "tag": "engu",
+ "file": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs",
+ "root": "🧰️framework/🔨️modules/🖱️ui/🧪️tests/🔬️targets-wgpu-engine-unit/🦀️.rs",
+ "folders": [
+  "🧱️engine-fixtures-and-scene-lifetime-laws",
+  "💬️tooltip-and-accessibility-fixtures-laws",
+  "⚙️settings-close-and-accessibility-commit-laws",
+  "🖼️facade-frame-storm-and-mounted-layout-laws",
+  "🎭️scene-host-overlay-body-and-frame-laws",
+  "🏆️golden-widget-conversions-and-paint-goldens",
+  "🔬️golden-tree-gaps-introspection-and-widget-measure-laws",
+  "🖱️widget-interaction-and-render-laws",
+  "📐️surface-content-height-and-worker-close-laws"
+ ]
+}

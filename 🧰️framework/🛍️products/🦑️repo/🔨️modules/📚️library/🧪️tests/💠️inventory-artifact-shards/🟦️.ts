@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
 import stringify from "fast-json-stable-stringify";
 import fastGlob from "fast-glob";
-import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
 import { publishTaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/📦️publication/🟦️.ts";
 import { buildTaxonomyInventoryArtifactShards, validateTaxonomyInventoryArtifactShards, type TaxonomyInventoryArtifactShards } from "../../🧹️normalization/📇️inventory/🧩️shards/🟦️.ts";
 import { taxonomyInventoryCanonicalChunks, taxonomyInventoryIncrementalCanonicalDigest } from "../../🧹️normalization/📇️inventory/🧾️serialization/🟦️.ts";
@@ -155,7 +155,7 @@ test("the real inventory producer publishes locale-different violation order los
 
 test("publication verifies canonical violations and rejects inconsistent replacement before writing", async () => {
   const root = mkdtempSync(join(ticketRoot, "🧪️inventory-order-publication-")), dataRoot = join(root, "📊️inventory");
-  const source = inventory(vector.cases[0].rows), inputPath = join(root, "🧫️fixtures/💠️inventory-artifact-shards/🔣️.json");
+  const source = inventory(vector.cases[0].rows), inputPath = join(root, "🧪️tests/🧫️fixtures/💠️inventory-artifact-shards/🔣️.json");
   mkdirSync(dirname(inputPath), { recursive: true });
   writeFileSync(inputPath, JSON.stringify(source));
   const manifest = publishTaxonomyInventoryArtifactShards(dataRoot, source);

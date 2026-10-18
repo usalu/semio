@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `DeleteSlab`: the slab leaves in one sparse diff together with its properties and classifications (see the shared cascade).
 //! The outcome carries a cascade note when more than the slab leaves.
 
-use super::super::cascade;
-use super::DeleteSlab;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_slab::DeleteSlab;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

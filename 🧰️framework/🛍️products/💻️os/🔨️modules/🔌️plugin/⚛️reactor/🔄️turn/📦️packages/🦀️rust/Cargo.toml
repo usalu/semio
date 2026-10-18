@@ -48,6 +48,7 @@ semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust"
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
+semio-framework-job-native-decode = { path = "../../../../../../../../🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-pack = { path = "../../../../../../../../🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 semio-framework-trace = { workspace = true }

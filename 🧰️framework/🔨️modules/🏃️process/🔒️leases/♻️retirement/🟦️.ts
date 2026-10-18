@@ -5,7 +5,7 @@ import {lstatSync,type Stats} from "node:fs";
 import {createHash} from "node:crypto";
 import {dirname,join,resolve} from "node:path";
 import authoritySchema from "../🧬️schema/📜️ticket.json" with {type:"json"};
-import scanSchema from"./🧬️schema/🔣️.json";
+import scanSchema from"./🧬️schema/🔣️.json" with{type:"json"};
 const schema=authoritySchema.definitions.RetirementPolicy;
 /** 📐️ Bounds cooperative scanning even when unfinished entries consume no candidate slot. */
 export const resourceLeaseRetirementScanLimitsV1=Object.freeze({...scanSchema.definitions.Scan.const});

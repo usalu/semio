@@ -4,7 +4,8 @@ import { Color, ColorManagement, Plane, Vector3 } from "three";
 
 import fixture from "../🧫️fixtures/📏️world3d-modelling/🔣️.json";
 import schema from "../../🧬️schema/📏️world3d-modelling/🔣️.json";
-import { WORLD3D_SCENE_LANES, world3dSceneFromLanes, type World3dScene } from "../../🟦️.ts";
+import { WORLD3D_SCENE_LANES, world3dSceneFromLanes } from "../../🛤️lanes/🟦️.ts";
+import { type World3dScene } from "../../🌐️world3d/🟦️.ts";
 import {
   parseWorld3dAnnotationLayer,
   parseWorld3dModellingOptions,

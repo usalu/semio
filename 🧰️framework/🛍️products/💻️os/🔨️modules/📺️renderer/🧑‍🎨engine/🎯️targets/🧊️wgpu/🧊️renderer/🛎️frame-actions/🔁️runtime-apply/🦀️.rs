@@ -272,7 +272,7 @@ impl RuntimeApply {
             #[cfg(target_arch = "wasm32")]
             {
                 mailbox.spawn_frame_maintenance_reserved(async move {
-                    cursor_value.shell_maintenance = interaction.shell.advance_chrome_maintenance_step();
+                    cursor_value.shell_maintenance = semio_framework_os_renderer_wgpu_shell_view_chrome::ChromeViewCtx::of(&mut interaction.shell).advance_chrome_maintenance_step();
                     if cursor_value.shell_maintenance {
                         cursor_value.phase = 0;
                     }
@@ -300,7 +300,7 @@ impl RuntimeApply {
             match work {
                 FrameDeferredWork::ShellMaintenance => {}
                 FrameDeferredWork::PumpSync => {
-                    interaction.shell.pump_sync_events().await;
+                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).pump_sync_events().await;
                 }
                 FrameDeferredWork::Action(action) => {
                     if action.cancelled {
@@ -308,7 +308,7 @@ impl RuntimeApply {
                     } else {
                         let receipt = action.receipt;
                         let mut receipt_owner = FrameActionReceiptOwner { receipt };
-                        match interaction.shell.dispatch_gesture_action(action.descriptor).await {
+                        match semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).dispatch_gesture_action(action.descriptor).await {
                             Ok(()) => {
                                 receipt_owner.settle(semio_framework_os_renderer_wgpu_engine_text::text_editor::TextEditorActionOutcome::Accepted);
                             }
@@ -320,14 +320,14 @@ impl RuntimeApply {
                                     }
                                 }
                                 log_debug(&format!("[TRACE] frame deferred action failed: {error}"));
-                                interaction.shell.note_dispatch_fault(&error);
+                                interaction.shell.prefs.note_dispatch_fault(&error, &mut interaction.shell.chrome);
                             }
                         }
                     }
                 }
-                FrameDeferredWork::FlushTutorial => interaction.shell.tutorial_flush_pending_document_ops().await,
+                FrameDeferredWork::FlushTutorial => semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).tutorial_flush_pending_document_ops().await,
                 FrameDeferredWork::Settle => {
-                    interaction.shell.settle_pump_step().await;
+                    semio_framework_os_renderer_wgpu_shell_pointer::PointerCtx::of(&mut interaction.shell).settle_pump_step().await;
                 }
             }
             (interaction, cursor_value)
@@ -363,8 +363,8 @@ impl RuntimeApply {
                 Some(Ok(entries)) => {
                     let handle = handle.clone();
                     RuntimeMailbox::submit_interaction(runtime, &handle, Some("plugin-boot"), move |mut interaction| async move {
-                        interaction.shell.prepare_hot_reload(entries);
-                        if let Err(error) = interaction.shell.boot().await {
+                        interaction.shell.docs.prepare_hot_reload(entries, &mut interaction.shell.plugins, &mut interaction.shell.directory);
+                        if let Err(error) = semio_framework_os_renderer_wgpu_shell_actions::ActionsCtx::of(&mut interaction.shell).boot().await {
                             log_debug(&format!("wasm program hot reload failed: {error}"));
                         } else {
                             log_debug("wasm program hot reload complete");

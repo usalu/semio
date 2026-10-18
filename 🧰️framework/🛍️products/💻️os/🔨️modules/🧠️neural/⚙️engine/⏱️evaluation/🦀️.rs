@@ -397,7 +397,7 @@ impl EvalStepBudget {
     }
 
     /// 🛑️ Whether the walk must yield before dispatching another cache-missed neuron.
-    fn exhausted(&self, spent: usize) -> bool {
+    pub fn exhausted(&self, spent: usize) -> bool {
         spent >= self.dispatches || (spent != 0 && self.deadline.is_some_and(|deadline| deadline.expired()))
     }
 }

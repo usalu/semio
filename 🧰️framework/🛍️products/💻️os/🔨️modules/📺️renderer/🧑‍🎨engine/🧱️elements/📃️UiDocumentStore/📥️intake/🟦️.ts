@@ -1,5 +1,5 @@
 //#region 🧬️NativeIntakeContract
-import { OwnedNativeUiPatchAuthority } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { OwnedNativeUiPatchAuthority } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🩹️ui-patch/🟦️.ts";
 import type { OwnedUiInstance, OwnedUiInstanceSurface, OwnedUiInstancePatch, OwnedUiSurfaceLookup, OwnedUiPatchAcknowledgement } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🏘️instance/🟦️.ts";
 import type { NumericIndexGrant } from "@semio-tech/framework/value/ordered/numeric";
 import type { RetainedUiWireStep } from "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/📦️wire/🟦️.ts";

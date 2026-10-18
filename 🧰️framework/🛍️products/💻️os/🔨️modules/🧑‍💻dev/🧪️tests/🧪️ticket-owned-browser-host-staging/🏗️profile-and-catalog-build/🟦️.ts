@@ -13,7 +13,7 @@ export async function registerProfileAndCatalogBuildTests(vitest: NonNullable<Im
   describe("WASI component profile policy", () => {
     itLong("ships one profile and iterates one plugin, as the strict policy fixture and the root manifest state", async () => {
       const { default: toml } = await import("@iarna/toml");
-      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧫️fixtures/🦀️wasm-profile-policy/🧬️v1/🔣️.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧪️tests/🧫️fixtures/🦀️wasm-profile-policy/🧬️v1/🔣️.json"), "utf8"));
       expect(SHIPPED_COMPONENT_PROFILE).toBe(fixture.shippedProfile);
       expect(Object.keys(COMPONENT_PROFILE_POLICIES)).toEqual(fixture.runtimeDirectories);
       for (const vector of fixture.cases) {

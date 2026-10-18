@@ -2,6 +2,7 @@
 
 use super::{flag_or_arg, print_lines, resolve_section_name};
 use semio_framework_repo_cli_command_framework::{CliError, Invocation};
+use semio_framework_repo_graphql::RepoContext;
 use serde_json::json;
 
 fn path_mutation(invocation: &mut Invocation<'_>, query: &str) -> Result<(), CliError> {

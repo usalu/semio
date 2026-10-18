@@ -8,8 +8,9 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️mod
 import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 export class MemberFactoryIdentityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -140,7 +141,7 @@ export class MemberFactoryIdentityScript extends BundleScript {
     const laws = ["member_factory_selection_uses_only_complete_closed_declarations", "member_factory_selection_retains_input_through_denial_and_handoff"];
     for (const law of laws) assert(tests.includes(`fn ${law}`));
     assert(tests.includes('fixture["semantic"]') && tests.includes('fixture["semanticLifecycle"]') && tests.includes("begin_dictionary"), "native selected schema law must traverse the actual dictionary owner and retain every denied input");
-    const store = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+    const store = readModuleTreeSource(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"));
     const storeTests = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🚪️open/🧪️tests/🍰️companion/🔬️unit/🦀️.rs"), "utf8");
     const generatedSource = storeTests.slice(storeTests.indexOf("pub enum RetainedTestMembers, RetainedTestMembersOpen {"), storeTests.indexOf("fn member_publication_fixture()"));
     assert.deepEqual([...generatedSource.matchAll(/\w+\("([^"]+)", "([^"]+)", "([^"]+)", "([^"]+)"\) =>/g)].map(match => match.slice(1)), fixture.generatedDeclarations);

@@ -163,7 +163,7 @@ describe("node graph gestures", () => {
   });
 
   it("lets the HOST journal every content change a released gesture made, so no renderer publishes the fixture", () => {
-    const flowHost = ["✏️host-authoring", "🌳️host-evaluation-history"].map((node) => readFileSync(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/${node}/🦀️.rs`), "utf8")).join("\n");
+    const flowHost = ["✏️host-authoring", "🌳️host-evaluation-history"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/${node}/🦀️.rs`))).join("\n");
     const answer = flowHost.slice(flowHost.indexOf("pub fn take_graph_edits_json"));
     const answerBody = answer.slice(0, answer.indexOf("\n    }\n"));
     expect(answerBody).toContain("self.dag.take_graph_edits()");
@@ -206,7 +206,7 @@ describe("node graph gestures", () => {
     const dag = ["🗃️model", "🕸️graph", "🧭️host"].map((node) => readModuleTreeSource(resolve(repoRoot, `🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🔌️ports/➡️directed/🕸️dag/${node}/🦀️.rs`))).join("\n");
     const begins = dag.slice(dag.indexOf("pub fn screen_pointer_gesture_begins_at"));
     expect(begins.slice(0, begins.indexOf("\n}\n"))).toContain("screen_hit(viewport, graph, minimap, sx, sy).is_screen_path()");
-    const hit = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🦀️.rs"), "utf8");
+    const hit = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🎲️board/🧬️schema/🦀️.rs"));
     expect(hit).toContain("pub fn is_draggable_body(&self) -> bool {");
     expect(hit).toContain("self.node_id.is_some() && !self.is_screen_path()");
     expect(law.rules.aBodyPressSelectsThatNode).toContain("is_draggable_body");

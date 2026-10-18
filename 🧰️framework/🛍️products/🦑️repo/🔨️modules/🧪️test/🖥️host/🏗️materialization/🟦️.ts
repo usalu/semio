@@ -3,7 +3,8 @@ import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️proce
 import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
 import { type Implementation, type TestRole } from "@semio-tech/framework/test/adapter";
 import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectHostPackagesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runProbe } from "../../../📚️library/🏃️process/🔍️probe/🟦️.ts";
+import { writeCanonicalGoWorkspaceOverlay } from "../../../📚️library/🧪️testing/🐹️go-plan/🟦️.ts";
 import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { rustSubjectPackage } from "../../🕸️dependencies/🟨️.mjs";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -182,7 +183,8 @@ export function materializeGoHost(repoRoot: string, discovered: DiscoveredCase, 
   if (existsSync(join(repoRoot, "go.work.sum"))) writeFileSync(join(dir, "go.work.sum"), readFileSync(join(repoRoot, "go.work.sum")));
   writeFileSync(join(dir, "adapter.go"), readFileSync(adapterAbs, "utf8").replace(/^package\s+\w+/m, "package main"));
   writeFileSync(join(dir, "main.go"), ["// 🤖️ Generated native entrypoint.", "package main", "", 'import host "semio.tech/repo/test"', "", "func main() {", "\thost.RunMain(Adapter())", "}", ""].join("\n"));
-  return { command: "go", args: ["run", ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repositoryTestArtifactEnvironmentV1(repoRoot,{ ...process.env, GOWORK: join(dir, "go.work"), GOFLAGS: "" }), hostDir: dir, problems: [] };
+  const overlay = writeCanonicalGoWorkspaceOverlay(join(dir, "go-overlay.json"), workspace.uses);
+  return { command: "go", args: ["run", `-overlay=${overlay}`, ".", "--plan", planPath, "--out", outPath], cwd: dir, env: repositoryTestArtifactEnvironmentV1(repoRoot,{ ...process.env, GOWORK: join(dir, "go.work"), GOFLAGS: "" }), hostDir: dir, problems: [] };
 }
 
 /** 🐍️ The interpreter oracle hosts are provisioned from: `SEMIO_PYTHON`, else the repository's own

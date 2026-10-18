@@ -1,0 +1,1562 @@
+#!/usr/bin/env bun
+import { compilerCapacityWorkerCountV1, type CompilerAdmissionControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { originalOperationWorkerSource } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🎟️retained-turn/🟦️.ts";
+import { SHARD_LIVENESS_POLICY } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🫀️liveness/🟦️.ts";
+import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
+/** 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
+ *
+ * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `pluginWorkerSource`/`PLUGIN_WORKER_FILE`
+ * (one Worker per plugin) are replaced by `shardWorkerSource`/`SHARD_WORKER_FILE` — ONE
+ * package-agnostic `🟨️shard-worker.js`, served from `/🔌️plugin-modules/🧵️shard/`, multiplexed by
+ * `actorId` across a bounded shard pool (see `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`'s
+ * `ShardClient`, the client-side transport this worker pairs with). V8 reserves a 4 GiB guard region
+ * per wasm module per worker — one-worker-per-plugin capped the browser at ~20 plugins; this is the
+ * change that lifts that ceiling. */
+import { spawn } from "node:child_process";
+import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, statSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
+import ts from "typescript";
+import { ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES, encodeActorInstanceLifecycle } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🟦️.ts";
+import { ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES, encodeActorUiPatchReceipt, validateActorUiPatchPairing } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🚪️lifetime/🩹️patch/🟦️.ts";
+import { COMMAND_INGRESS_KINDS } from "../../../../../../🔨️modules/🌐️browser-bundle/🧵️child/🧬️schema/🟦️.ts";
+import { preparedBinaryen } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🕸️wasm/📜️script.ts";
+import { resolveWorkspaceBin, runCmdStatus, runNodeBinStatus, semioBuildMode } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
+import { classifyGuestLogLine } from "../🌐️wasi/🟦️.ts";
+import { actorCodecRuntimeSourceV1 } from "../../../../../../🔨️modules/🎭️actor/📦️packages/🟦️typescript/🧬️codec/🟦️.ts";
+import { APP_CHANNEL_VERSION, admitGuestChannelVersion } from "../../../../../../🔨️modules/🧾️app-channel/🔢️request-sequence/🟦️.ts";
+export { PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImportSource } from "../🕸️imports/🟦️.ts";
+
+export const PLUGIN_HOST_SHIM_FILE = "🟨️.js";
+export const SHARD_WORKER_FILE = "🟨️shard-worker.js";
+export const GUESTSLIM_FONT_RELATIVE = "🪞️vendor/🔤️guestslim-typst-fonts.bin";
+
+/** 🫀️ Uses the canonical lightweight shard watchdog policy for generated progress ticks. */
+export const SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS = SHARD_LIVENESS_POLICY.progressIntervalMs;
+
+/** 📤️ The generated worker's per-chunk byte cap for the segmented-download lane, interpolated into
+ * {@link shardWorkerSource}. Its OWNER is the schema-owned chunk contract
+ * (`https://json.schemas.assets.semio-tech.com/framework/actor/shard-client/segmented-download/schema.json` —
+ * `🎭️actor/📮️shard-client/📤️segmented-download/🧬️schema/🔣️.json` + `🧫️fixtures/🔣️.json`, mirrored on the
+ * host side by `SEGMENTED_DOWNLOAD_CONTRACT` and on the guest side by `🔌️plugin/🦀️.rs`'s
+ * `ARTIFACT_OUTPUT_CHUNK_BYTES`); this declaration is held equal to `contract.chunkBytes` by the
+ * shard-client suite, which reads this literal straight out of this file, so editing one alone fails
+ * closed. Declared rather than imported for the same reason
+ * {@link SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS} is. */
+export const SEGMENTED_DOWNLOAD_CHUNK_BYTES = 4096;
+
+/** 🩺️ Mirrors `🎭️actor/🧵️shard-runtime/🟦️.ts`'s `SHARD_RUNTIME_DIAGNOSTICS_KEY`/
+ * `SHARD_WORKER_DIAGNOSTICS_PARAM` and, through them, the guest's own `RUNTIME_DIAGNOSTICS_ENV`
+ * (`🧰️framework/🔨️modules/⏱️trace/🦀️.rs`). Declared rather than imported for the same reason
+ * {@link SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS} is: this module is bundled into `⚙️vite.config.ts`'s
+ * import graph, and reaching `🧵️shard-runtime` from here would drag `ShardClient` and the whole
+ * kernel/ui/resident graph into config loading. Held equal by the `🛡️runtime-admission` suite. */
+export const SHARD_RUNTIME_DIAGNOSTICS_KEY = "SEMIO_RUNTIME_DIAGNOSTICS";
+export const SHARD_WORKER_DIAGNOSTICS_PARAM = "diagnostics";
+
+/** 🚚️ What ONE whole reactor turn costs on the renderer this drive was measured against, in
+ * milliseconds — the `worker.guest` mean of `🐍️react-hop-cost-probe.mjs` over a 10-step run of the
+ * procedural 3d React door (12.9 ms over 1 154 crossings and 13.2 ms over 1 214, 2026-09-15). It is a
+ * MEASUREMENT carried as a declaration, because the drive's bounds are DERIVED from it rather than
+ * chosen: `SHARD_TURN_DRIVE_STEPS = floor(grant wall / this)`.
+ *
+ * 🐛️ It replaces a wall budget of `SHARD_TURN_SILENT_HOLD_MS = 8`, which was the reactor's own
+ * executor slice (`⚛️reactor/🔄️turn/🦀️.rs`'s `run_until_deadline(64, 256 KiB, now + 8 ms)`) borrowed
+ * as the worker's drive budget. A whole turn costs more than the reactor's slice of it, so an 8 ms
+ * wall admitted `floor(8 / 13) = 0` further turns and the hold degenerated into "one extra poll" —
+ * named but not taken by `📓️reactor-reconcile-spin-2026-09-14.md` §7 item 2. The reactor's slice is
+ * still the reactor's: `REACTOR_TURN_EXECUTOR_HOLD_MS` is unchanged and unrelated to this number.
+ *
+ * Held equal to `⚛️reactor/🧫️fixtures/🚚️more-work-drive.json`'s `measuredGuestTurnCostMs` — and
+ * through it to the reactor's own `MEASURED_GUEST_TURN_COST_MS` — by the more-work-drive suite, which
+ * reads this literal straight out of this file. Declared rather than imported for the same reason
+ * {@link SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS} is. */
+export const SHARD_TURN_GUEST_COST_MS = 13;
+/** 🚚️ Hard cap on the drive's step ceiling however large a lane's granted wall gets, so a guest whose
+ * turns cost microseconds cannot park the worker's whole message queue behind one drive. It bounds
+ * the DERIVATION, it is not the derivation. */
+export const SHARD_TURN_DRIVE_STEP_CEILING = 512;
+
+export type PluginWebMaterializeContext = {
+  readonly repoRoot: string;
+  readonly environment?: Readonly<Record<string, string | undefined>>;
+  readonly preview2VendorDir: string;
+  readonly signal?: AbortSignal;
+  readonly control?: CompilerAdmissionControl;
+  readonly optimize?: boolean;
+  readonly wasmOptBin?: string;
+  readonly cores?: number;
+};
+
+/** 🔤️ The staged typst font seed `semio-framework-os-infinite:fonts` publishes — the one source of the
+ * `🪞️vendor` font asset every plugin-module root (dev and release) serves. */
+export function guestSlimTypstFontSeed(repoRoot: string): string {
+  return join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "♾️infinite", "📦️packages", "🦀️rust", "dist", "fonts", "🔤️guestslim-typst-fonts.bin");
+}
+
+/** 🫙️ Places `🪞️vendor/🔤️guestslim-typst-fonts.bin` in one plugin-module root from the staged seed — the
+ * asset plugin workers' typst text path and the wgpu serve's readiness check read, for either profile.
+ * `false` when no seed is staged yet; the caller decides whether it can build one. */
+export function ensureGuestSlimTypstFontsAt(moduleRoot: string, repoRoot: string): boolean {
+  const out = join(moduleRoot, GUESTSLIM_FONT_RELATIVE);
+  if (existsSync(out) && statSync(out).size > 0) return true;
+  const seed = guestSlimTypstFontSeed(repoRoot);
+  if (!existsSync(seed) || statSync(seed).size === 0) return false;
+  mkdirSync(dirname(out), { recursive: true });
+  copyFileSync(seed, out);
+  return true;
+}
+
+export function ensurePreview2ShimVendorAt(preview2VendorDir: string, repoRoot: string): void {
+  const distDir = join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/dist/browser");
+  const libDir = join(repoRoot, "node_modules/@bytecodealliance/preview2-shim/lib/browser");
+  const sourceDir = existsSync(distDir) ? distDir : libDir;
+  if (!existsSync(sourceDir)) throw new Error("missing @bytecodealliance/preview2-shim browser shims; run bun install");
+  mkdirSync(preview2VendorDir, { recursive: true });
+  for (const entry of readdirSync(sourceDir, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith(".js")) continue;
+    copyFileSync(join(sourceDir, entry.name), join(preview2VendorDir, entry.name));
+  }
+  patchPreview2ShimGuestLogClassification(join(preview2VendorDir, "cli.js"));
+  patchPreview2ShimGuestLogLineRelease(join(preview2VendorDir, "cli.js"));
+}
+
+/** 🗣️ Preserves Preview2's streaming decoder and classifies complete guest debug lines. */
+export function patchPreview2ShimGuestLogClassification(cliPath: string): void {
+  const source = readFileSync(cliPath, "utf8");
+  const original = "consoleStream((line) => console.error(line))";
+  const classified = `consoleStream((line) => (${classifyGuestLogLine.toString()})("stderr", line) === "debug" ? console.debug(line) : console.error(line))`;
+  const originalCount = source.split(original).length - 1, classifiedCount = source.split(classified).length - 1;
+  if (originalCount === 0 && classifiedCount === 2) return;
+  if (originalCount !== 2 || classifiedCount !== 0) throw new Error(`preview2 cli.js guest-log patch did not match: ${cliPath}`);
+  writeFileSync(cliPath, source.replaceAll(original, classified));
+}
+
+/** 🗣️ Upstream's own release of a buffered guest line — `@bytecodealliance/preview2-shim@0.25.0`'s
+ * `dist/browser/cli.js` `consoleStream`, where `flush()` publishes whatever is buffered, complete
+ * line or not. Anchored verbatim so a shim upgrade fails closed instead of silently reinstating the
+ * fragment storm below. */
+const PREVIEW2_PARTIAL_LINE_RELEASE = `        flush() {
+            pending += decoder.decode();
+            if (pending) {
+                writeLine(pending);
+            }
+            pending = "";
+        },
+        blockingFlush() {
+            this.flush?.();
+        },
+        drop() {
+            this.flush?.();
+        },
+`;
+
+/** 🧵 One logical guest line is ONE host emit — the law `🌐️wasi/🟦️.ts`'s `createGuestLogLineSink`
+ * already states for the semio-owned browser WASI profile, transplanted onto the vendored Preview2
+ * stream. A flush releases COMPLETE lines only; an unterminated tail is released on drop, written
+ * out directly rather than through `this.flush`, because `OutputStream[Symbol.dispose]` clears
+ * `open` before it calls `drop` and `this.flush` then throws `{ tag: "closed" }`. */
+const SEMIO_COMPLETE_LINE_RELEASE = `        flush() {
+            pending += decoder.decode();
+            emitCompleteLines();
+        },
+        blockingFlush() {
+            this.flush?.();
+        },
+        drop() {
+            pending += decoder.decode();
+            emitCompleteLines();
+            if (pending) {
+                writeLine(pending);
+                pending = "";
+            }
+        },
+`;
+
+/** 🧵 Releases guest log lines whole, so {@link patchPreview2ShimGuestLogClassification}'s severity
+ * classifies a MESSAGE instead of a `core::fmt` fragment.
+ *
+ * 🐛️ Rust's stderr is unbuffered, so `core::fmt::write` turns one `eprintln!("[TRACE] … {a} … {b}")`
+ * into one `blocking-write-and-flush` per literal piece and per argument, and `io.js`'s
+ * `blockingWriteAndFlush` is `handler.write()` + `handler.blockingFlush()`. Under upstream's partial
+ * release every fragment became its own console call: fragment 1 carried the `[TRACE] ` prefix and
+ * reached `console.debug`, fragments 2..n did not and reached `console.error` — 16 bogus `[error]`
+ * lines on every canvas play pane and 172 on puzzle3d, which failed the strict acceptance suite on
+ * 44 of 60 panes (ticket 26/09/19, `📓️console-spam.md`). */
+export function patchPreview2ShimGuestLogLineRelease(cliPath: string): void {
+  const source = readFileSync(cliPath, "utf8");
+  const occurrences = (needle: string) => source.split(needle).length - 1;
+  const partialCount = occurrences(PREVIEW2_PARTIAL_LINE_RELEASE), wholeCount = occurrences(SEMIO_COMPLETE_LINE_RELEASE);
+  if (partialCount === 0 && wholeCount === 1) return;
+  if (partialCount !== 1 || wholeCount !== 0) throw new Error(`preview2 cli.js guest-log line release patch did not match: ${cliPath}`);
+  writeFileSync(cliPath, source.replace(PREVIEW2_PARTIAL_LINE_RELEASE, SEMIO_COMPLETE_LINE_RELEASE));
+}
+
+/**
+ * 🧵️ ONE package-agnostic worker bootstrap shared by every actor this tab's shard pool
+ * activates — pairs with `ShardClient` (`🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`), which
+ * owns exactly K of these workers (design-runtime.md §1 `ShardTable`: `min(hardwareConcurrency-1,
+ * 4)` on web) instead of one per plugin. Keeps `Map<actorId, {api, instance}>` and dynamically
+ * `import()`s each actor's own jco bridge module (`pluginComponentBridgeSource`'s output) on its
+ * first `activate` — never at worker-bootstrap time, since one worker now hosts many unrelated
+ * plugins' actors over its lifetime.
+ *
+ * Runs *one turn at a time per actor*: two `turn` requests for the SAME `actorId` overlapping is a
+ * caller bug (the scheduler's job to prevent, not this worker's), enforced here defensively by
+ * rejecting a second in-flight turn rather than corrupting interleaved guest state. Different actors
+ * DO interleave — every request handler is `async`, so a long `await` inside one actor's turn lets
+ * another actor's message be picked up and start in the meantime; nothing here blocks the worker's
+ * event loop across actors.
+ *
+ * Heartbeats: a beat is taken at the START of every request (before running any guest code) and at
+ * every STEP BOUNDARY — the instant a `turn`/`stepJob` hands control back. The step beat is what
+ * proves a guest running a BUDGETED job is alive, because such a guest blocks the worker's event loop
+ * (and the while-busy ticker with it) for the whole of each step and is otherwise indistinguishable
+ * from a dead worker (ticket 26/09/09/PROCEDURAL-3D-END-TO-END). See `ShardClient`'s watchdog, which
+ * times a turn out at `2×wallMs` and, after three such windows, terminates and rebuilds this worker.
+ *
+ * Neither of those two beats costs a `postMessage` of its own any more: they RIDE the crossing that is
+ * already happening, as the reply's `beat` field, and `ShardClient.handleMessage` folds them into the
+ * same `recordHeartbeat` a dedicated `{kind:"heartbeat"}` message reaches. One message carries
+ * liveness. A beat with NO crossing to ride still posts — `loadActor`'s three await boundaries and
+ * the while-busy `progress` ticker — because there is nothing else to carry it. Every beat also
+ * mirrors its `turnSeq` into the shared `Atomics.store` heartbeat slot when `attachHeartbeatSab`
+ * provided one (COOP/COEP already served ⇒ `SharedArrayBuffer` available) — purely a faster read path;
+ * the messages above are unconditional, so correctness never depends on the SAB path.
+ *
+ * 🚧 See `🧵️shard-client.ts`'s header doc for the one open gap this generated worker inherits: `turn`
+ * events/results here are the interim JSON `ShardEventEnvelope[]`/plain-object shape, not the real
+ * hand-rolled `Envelope`/`TurnResult` pack encoding (no TS mirror of that codec exists yet — tracked
+ * against A1's `🤖️generated/🎭️actor/🟦️.ts`). The WIT-level `stage-command-page`/`stage-cold-pair-page`
+ * then `poll(events, budget)` calls this worker makes
+ * against the guest's own jco bindings is unaffected either way (jco marshals those to/from the wasm
+ * component boundary itself); only the Kernel↔Shard wire between this worker and `ShardClient` is
+ * interim JSON rather than pack bytes.
+ *
+ * 📨️ terra-web-shardframe: also handles the NEW `"frame"` message kind — `ShardClient.grant`/
+ * `ShardClient.envelope`'s `ShardFrame::Grant`/`ShardFrame::Envelope` wire, additive alongside `"turn"`
+ * above (unchanged). `interpretFrame`/`grantedBudgets`/`orderEnvelopesByLane` below are a hand-
+ * transcribed mirror of `🧵️shard-client.ts`'s `interpretShardFrame`/`GrantedBudgetTracker`/
+ * `orderEnvelopesByLane` — this string can't `import` that module, so the logic is duplicated by
+ * necessity; that file's own in-source tests are what's actually exercised for this behavior, this
+ * copy is kept byte-for-byte equivalent by hand. A `Grant` remembers its budget for `frame.actor`;
+ * a later budget-less `Envelope` for that actor runs under it (falling back to
+ * `MAINTENANCE_LANE_DEFAULT_BUDGET` — `semio_framework_actor::lane_defaults::budget_for(Lane::
+ * Maintenance)` — for an actor never granted one) instead of any caller-cached constant. An unknown
+ * frame `kind` this worker has never heard of is acknowledged as `{ ignored: true }` rather than
+ * thrown, so a future Rust-side `ShardFrame` variant can reach a live worker before its TS mirror
+ * lands without wedging it. An `Envelope` whose `payload.kind` is `"effect-complete"`/`"effect-error"`
+ * is routed to `deliverEffectResult` instead of a normal turn (🧪️ terra-web-bridges, see that
+ * function's own doc) — it settles a `🟨️.js` Promise, it is never itself a turn to run.
+ *
+ * 🧪️ terra-web-bridges (async-worlds): every WIT function the target world exports/imports is now
+ * `async func`, and jco's JS glue for that ALWAYS calls `new WebAssembly.Suspending(...)`/
+ * `WebAssembly.promising(...)` regardless of `--async-mode` (📓️terra-jco-spike-report.md's VERDICT:
+ * GO-jspi — confirmed no flag produces JSPI-free output). Without JSPI the failure is hard and early:
+ * a `TypeError` at MODULE TOP-LEVEL, before any call, with no graceful degradation. The guard right
+ * below turns that opaque failure into an explicit, actionable one — a diagnostic, NOT a fallback;
+ * there is no code path here that runs a plugin without JSPI.
+ */
+export function shardWorkerSource(): string {
+  return `/** @generated semio shard worker (H2 — bounded pool, actorId-multiplexed) */
+import { monotonicClock } from "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/clocks.js";
+const operationClockUs = () => monotonicClock.now() / 1000n;
+// 🩺️ SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION (1-B): raise the captured-frame
+// cap BEFORE anything else runs so a deep guest recursion's real stack survives \`error.stack\`
+// instead of being truncated to V8's 10-frame default — this worker's stack is otherwise destroyed
+// before \`ShardClient\` ever sees it (the main thread only ever saw one frame: \`at worker.onmessage\`).
+Error.stackTraceLimit = 200;
+
+// 🧪️ terra-web-bridges: explicit JSPI capability gate — see this file's own header doc ("what must
+// change" #1 in 📓️terra-jco-spike-report.md). Every plugin component this worker will ever \`import()\`
+// is fully async-lifted, and jco's glue for that unconditionally needs \`WebAssembly.Suspending\`/
+// \`WebAssembly.promising\`; without them the FIRST \`import()\` throws \`TypeError: WebAssembly.Suspending
+// is not a constructor\` at module top-level, before any plugin call — an opaque failure the spike
+// reproduced verbatim under plain Node 24. Posting a \`"trap"\` BEFORE throwing gives \`ShardClient\`'s
+// \`onActorTrap\` its best chance at a readable message even where a cross-context Worker \`onerror\`
+// gets redacted to \`"undefined undefined undefined"\` (also reproduced by the spike) — \`actorId: "*"\`
+// is a worker-wide sentinel, not a real actor, since no actor has activated yet at this point.
+if (typeof WebAssembly === "undefined" || typeof WebAssembly.Suspending !== "function" || typeof WebAssembly.promising !== "function") {
+  const message = "semio shard worker: this browser/engine lacks JavaScript Promise Integration (JSPI) — WebAssembly.Suspending/WebAssembly.promising are required to run semio's async-lifted plugin components and there is no fallback. Chrome/Edge/Chromium-based browsers ship JSPI on by default; Firefox needs the javascript.options.wasm_js_promise_integration flag in about:config; Node.js needs --experimental-wasm-jspi.";
+  self.postMessage({ kind: "trap", actorId: "*", activationGeneration: null, message });
+  throw new Error(message);
+}
+
+// 🩺️ Nothing inside a Worker is visible from the page unless the worker says it: an exception that
+// escapes a message handler, or a promise nobody awaits, reaches the parent as an \`ErrorEvent\` whose
+// \`message\` the platform routinely redacts to nothing (exactly what the 2026-09-05 boot logged, four
+// times, with no other evidence). These three variables are the breadcrumb trail — updated at every
+// boundary so a fault report names the phase, the actor and the module URL it died on — and the two
+// global listeners below are what turn an otherwise-anonymous \`Event\` into a readable payload on the
+// host side. Registered BEFORE the "message" listener so a permissive test stub that keeps only the
+// last handler still keeps the dispatcher.
+let faultPhase = "bootstrap";
+let faultActorId = null;
+let faultModuleUrl = null;
+
+function describeFault(value) {
+  if (value instanceof Error) return { message: value.message, stack: value.stack };
+  if (value && typeof value === "object" && (typeof value.stack === "string" || typeof value.message === "string")) return { message: String(value), stack: typeof value.stack === "string" ? value.stack : undefined };
+  if (value && typeof value === "object") { try { return { message: JSON.stringify(value) }; } catch { return { message: String(value) }; } }
+  return { message: String(value) };
+}
+
+function reportWorkerFault(source, value, event) {
+  const reason = value !== undefined && value !== null ? value : event && typeof event.message === "string" && event.message.length > 0 ? event.message : value;
+  const described = describeFault(reason);
+  self.postMessage({
+    kind: "worker-fault",
+    source,
+    phase: faultPhase,
+    actorId: faultActorId,
+    moduleUrl: faultModuleUrl,
+    message: described.message,
+    stack: described.stack,
+    filename: event && typeof event.filename === "string" ? event.filename : undefined,
+    lineno: event && typeof event.lineno === "number" ? event.lineno : undefined,
+  });
+}
+
+self.addEventListener("error", (event) => reportWorkerFault("error", event && event.error, event));
+self.addEventListener("unhandledrejection", (event) => reportWorkerFault("unhandledrejection", event && event.reason, null));
+
+const actors = new Map(); // actorId -> { api, moduleUrl }
+const activatingActors = new Set();
+let lastActivationGeneration = 0n;
+const inFlightTurnActors = new Set();
+let turnSeq = 0;
+let heartbeatSabView = null;
+let heartbeatShardIndex = -1;
+// 📤️ Per-chunk byte cap of the segmented-download lane, interpolated from the ONE schema-owned chunk
+// contract (\`🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json\`'s \`contract\`, mirrored by
+// \`SEGMENTED_DOWNLOAD_CONTRACT\`) that the guest producer slices by and the host drain admits against —
+// never a literal of this worker's own.
+const SEGMENTED_DOWNLOAD_CHUNK_BYTES = ${SEGMENTED_DOWNLOAD_CHUNK_BYTES};
+// 🫀️ Progress-heartbeat cadence, interpolated from the ONE schema-owned liveness policy
+// (\`🎭️actor/📮️shard-client/🧫️fixtures/🔣️.json\`'s \`policy\`, mirrored by \`SHARD_LIVENESS_POLICY\`) the
+// host watchdog reads — never a literal of this worker's own.
+const PROGRESS_HEARTBEAT_INTERVAL_MS = ${SHARD_PROGRESS_HEARTBEAT_INTERVAL_MS};
+// 🚚️ The worker-owned MoreWork drive, interpolated from \`SHARD_TURN_GUEST_COST_MS\`/
+// \`SHARD_TURN_DRIVE_STEP_CEILING\` — the MEASURED cost of one whole guest turn, which is what the
+// drive's step ceiling is derived FROM. Twin of \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s
+// \`driveShardTurnMoreWorkV1\`/\`shardTurnDriveStepsV1\`, which own the law.
+const GUEST_TURN_COST_MS = ${SHARD_TURN_GUEST_COST_MS};
+const DRIVE_STEP_CEILING = ${SHARD_TURN_DRIVE_STEP_CEILING};
+let progressHandle = null;
+let inFlightRequests = 0;
+// 📬️ Every message the host posts bumps this, and a drive that started at one value crosses back the
+// moment it sees another — that is the whole "a host-owned input interrupts the drive" contract. It
+// counts messages rather than naming kinds on purpose: a kind this worker has never heard of is still
+// the host speaking, and the drive must never be the reason it waits.
+let hostInputSeq = 0;
+
+// 📨️ terra-web-shardframe: ShardFrame::Grant/Envelope support — see this file's own header doc.
+const MAINTENANCE_LANE_DEFAULT_BUDGET = { fuel: 80000000, wallMs: 200, memoryBytes: 256 * 1024 * 1024, uiNodes: 4000, mailboxLen: 1024, maxEffects: 512, maxPatchBytes: 2097152,maxFrames:8 };
+const SHARD_FRAME_LANE_ORDER = ["Interactive", "UserVisible", "Background", "Maintenance"];
+const grantedBudgets = new Map(); // actorId -> last ShardFrame::Grant budget, mirrors ShardLoop::granted_budgets
+
+function orderEnvelopesByLane(envelopes) {
+  return envelopes
+    .map((envelope, index) => ({ envelope, index }))
+    .sort((left, right) => {
+      const rank = SHARD_FRAME_LANE_ORDER.indexOf(left.envelope.lane) - SHARD_FRAME_LANE_ORDER.indexOf(right.envelope.lane);
+      return rank !== 0 ? rank : left.index - right.index;
+    })
+    .map((entry) => entry.envelope);
+}
+
+// 🧠️ Mirrors 🧵️shard-client.ts's interpretShardFrame — see that function's own doc for the semantics.
+function interpretFrame(frame, actorId) {
+  switch (frame.kind) {
+    case "Register":
+      return { action: "register" };
+    case "Unregister":
+      return { action: "unregister" };
+    case "Grant":
+      grantedBudgets.set(frame.actor, frame.budget);
+      return { action: "runEnvelopes", budget: frame.budget, envelopes: orderEnvelopesByLane(frame.envelopes) };
+    case "Envelope":
+      return { action: "runEnvelopes", budget: grantedBudgets.has(actorId) ? grantedBudgets.get(actorId) : MAINTENANCE_LANE_DEFAULT_BUDGET, envelopes: [frame.envelope] };
+    default:
+      return { action: "unknown" };
+  }
+}
+
+// 🫀️ ONE beat door for every liveness signal this worker emits. It advances the sequence and mirrors
+// it into the shared \`Atomics\` slot, and it RETURNS the beat instead of posting it — because a beat
+// taken at a boundary that is about to cross anyway rides the crossing (\`reply\`/\`replyError\` carry
+// \`beat\`), and a message that carries liveness is one message, not two.
+//
+// 🐛️ It used to post unconditionally, so every turn crossing cost THREE main-thread messages: a
+// start-of-request \`heartbeat\`, a \`turn-step\` \`heartbeat\`, and the \`result\` itself — on a main
+// thread the hop measurement shows is the binding constraint
+// (\`📓️reactor-reconcile-spin-2026-09-14.md\` §7 item 3, which named this and left it). Neither posted
+// beat told the host anything the reply does not: \`ShardClient.noteLiveness\` treats EVERY inbound
+// message as proof of life, and the request's own start instant already counts as proven-alive in
+// \`evaluateShardLiveness\`. What is NOT foldable is a beat with no crossing to ride — \`loadActor\`'s
+// await boundaries and the while-busy ticker — so those still call \`postBeat\`.
+function beat(phase) {
+  turnSeq += 1;
+  if (heartbeatSabView) Atomics.store(heartbeatSabView, heartbeatShardIndex, turnSeq);
+  return { turnSeq, phase: phase === undefined ? null : phase };
+}
+
+function postBeat(phase) {
+  self.postMessage({ kind: "heartbeat", ...beat(phase) });
+}
+
+// 🫀️ The whole busy-versus-dead discriminator: while ANY request is outstanding, an interval beats
+// every PROGRESS_HEARTBEAT_INTERVAL_MS. A worker legitimately parked on one multi-second \`await\`
+// (fetching, compiling and instantiating a multi-MB wasm component) still runs its event loop, so it
+// keeps beating and the host's watchdog keeps its miss count at zero; a worker wedged inside
+// synchronous guest code cannot run this callback at all, so it still dies after the same
+// \`missedLimit\` windows. Guarded on \`setInterval\` existing so a bare VM/test context is unaffected.
+function beginRequest() {
+  inFlightRequests += 1;
+  if (progressHandle !== null || typeof setInterval !== "function") return;
+  progressHandle = setInterval(() => postBeat("progress"), PROGRESS_HEARTBEAT_INTERVAL_MS);
+}
+
+function endRequest() {
+  inFlightRequests -= 1;
+  if (inFlightRequests > 0 || progressHandle === null) return;
+  clearInterval(progressHandle);
+  progressHandle = null;
+}
+
+// ⏱️ The ONE clock this worker shares with the page. A Worker's \`performance.now()\` counts from its
+// OWN \`timeOrigin\`, so only \`timeOrigin + now()\` — the same Unix-epoch millisecond on both sides at
+// sub-millisecond resolution — lets the CROSSINGS be measured (post → receive, reply → receive)
+// rather than inferred by subtracting the parts from the whole. Twin of
+// \`🔨️modules/⏱️trace/🟦️.ts\`'s \`hopTraceEpochNowMs\`, which is what reads these back on the page.
+const hopEpochNow = () => (typeof performance === "object" && typeof performance.now === "function" ? (typeof performance.timeOrigin === "number" ? performance.timeOrigin : 0) + performance.now() : Date.now());
+
+// 🏷️ The ONE spelling of a turn status. jco lifts \`more-work\` kebab-cased, the host's own fixtures
+// spell it \`moreWork\`, and \`🖼️wire-turn/🟦️.ts\`'s \`wireTurnStatusTag\` reconciles both — this is its
+// verbatim twin, because a drive that misreads the status would hand back a turn nobody asked for.
+function shardTurnStatusTag(result) {
+  const tag = result && typeof result === "object" && result.status && typeof result.status === "object" ? result.status.tag : undefined;
+  return typeof tag === "string" ? tag.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase() : "";
+}
+
+// 🤫️ Whether ONE reactor turn result carried nothing the host could act on: no ui patch, no effect,
+// no presence, no wake, neither receipt, and both ingress lanes idle. Every field of \`turn-result\`
+// (\`🔌️plugin/🧬️schema/📜️reactor.wit\`) is named here on purpose — a carrier this predicate forgot would be
+// DROPPED by the drive below, so the list is exhaustive by construction and asserted as such by
+// \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s law. \`fuelUsed\` is the one field with no host reader.
+function shardTurnCarriesNothing(result) {
+  if (!result || typeof result !== "object") return false;
+  if (!Array.isArray(result.uiPatches) || result.uiPatches.length !== 0) return false;
+  if (!Array.isArray(result.effects) || result.effects.length !== 0) return false;
+  if (result.presence !== undefined && (!Array.isArray(result.presence) || result.presence.length !== 0)) return false;
+  if (result.nextWake !== null && result.nextWake !== undefined) return false;
+  if (result.lifecycleReceipt !== undefined && result.lifecycleReceipt !== null) return false;
+  if (result.uiPatchReceipt !== undefined && result.uiPatchReceipt !== null) return false;
+  if (!result.commandIngress || result.commandIngress.tag !== "idle") return false;
+  if (!result.coldPairIngress || result.coldPairIngress.tag !== "idle") return false;
+  return true;
+}
+
+// 🚚️ The drive's two bounds, DERIVED from the wall the host granted for this crossing and what one
+// guest turn measures — never a constant of this worker's own. Verbatim twins of
+// \`🎭️actor/🖼️wire-turn/🟦️.ts\`'s \`shardTurnDriveStepsV1\`/\`shardTurnDriveBudgetMsV1\`.
+function shardTurnDriveSteps(grantWallMs, guestTurnCostMs) {
+  if (!Number.isFinite(grantWallMs) || !Number.isFinite(guestTurnCostMs) || guestTurnCostMs <= 0) return 1;
+  return Math.max(1, Math.min(DRIVE_STEP_CEILING, Math.floor(grantWallMs / guestTurnCostMs)));
+}
+
+function shardTurnDriveBudgetMs(grantWallMs, guestTurnCostMs) {
+  if (!Number.isFinite(grantWallMs) || grantWallMs <= 0) return Math.max(0, guestTurnCostMs);
+  return Math.max(grantWallMs, guestTurnCostMs);
+}
+
+// 📬️ ONE macrotask, so a message the host already posted is DELIVERED before the drive takes its next
+// step. Without it \`hostInputSeq\` could never move mid-drive: an \`await\` settles on the microtask
+// queue, which never drains the message queue, so the drive would be uninterruptible by construction.
+// A \`MessageChannel\` task and not \`setTimeout(0)\`, for the reason the host's own
+// \`hostContinuations\` gives: a timer chain is throttled to one tick per second in a hidden tab (once
+// per minute under intensive throttling) and a channel message is a macrotask visibility never
+// throttles. Waiters are a QUEUE because two actors may be driving this worker at the same time.
+const driveYieldChannel = typeof MessageChannel === "function" ? new MessageChannel() : null;
+const driveYieldWaiters = [];
+if (driveYieldChannel) driveYieldChannel.port1.onmessage = () => { const resolve = driveYieldWaiters.shift(); if (resolve) resolve(); };
+
+function driveYield() {
+  if (!driveYieldChannel) return Promise.resolve();
+  return new Promise((resolve) => { driveYieldWaiters.push(resolve); driveYieldChannel.port2.postMessage(0); });
+}
+
+// 🫀️ EVERY reply carries a beat — an answered request is a proven-alive worker, and the caller's own
+// \`ShardClient\` folds it into exactly the state a dedicated \`heartbeat\` message would have reached.
+// A boundary that has a name of its own (\`turn-step\`) passes it; everything else beats unphased.
+function reply(requestId, value, timings, carriedBeat) {
+  const carried = carriedBeat === undefined ? beat() : carriedBeat;
+  if (!timings) { self.postMessage({ kind: "result", requestId, ok: true, value, beat: carried }); return; }
+  timings.repliedAtEpochMs = hopEpochNow();
+  self.postMessage({ kind: "result", requestId, ok: true, value, timings, beat: carried });
+  // ⏱️ Written AFTER the post so the host can separate the two halves of the reply: the structured
+  // CLONE this call performs synchronously (\`clonedAtEpochMs\` − \`repliedAtEpochMs\`, mutated on the
+  // object the clone already took a copy of, so the host reads it from the NEXT reply's carry) from
+  // the main thread's own pickup latency. A worker cannot amend a message it already posted, so the
+  // clone cost of turn N is carried on turn N+1 — one turn of lag, exact either way.
+  lastReplyCloneMs = hopEpochNow() - timings.repliedAtEpochMs;
+}
+let lastReplyCloneMs = 0;
+
+// 🩺️ \`frames\` is the request's own bulk payload (the \`turn\` message's \`events\` array — the largest,
+// most recursion-prone field a request carries) — sized WITHOUT ever JSON.stringify-ing it first
+// unless it isn't already a binary buffer, so a huge/cyclic payload can't itself blow the stack while
+// we're trying to report a stack overflow. A \`turn\`'s \`events\` is an ARRAY of wire buffers, never a
+// lone buffer, so summing member byte lengths is the only path that reports wire bytes: the stringify
+// fallback renders each byte as \`"index":value\` and inflated a 6 MB payload to 63 MB, which is a
+// memory diagnosis this ticket had to walk back (26/09/09/PROCEDURAL-3D-END-TO-END).
+function replyError(requestId, error, frames, retryableLifecycle) {
+  const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
+  const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : "";
+  let stack;
+  try { stack = error && error.stack ? String(error.stack) : undefined; } catch { stack = undefined; }
+  let type;
+  try { type = (error && error.constructor && error.constructor.name) || typeof error; } catch { type = typeof error; }
+  let framesBytes;
+  try {
+    framesBytes = frames instanceof Uint8Array || frames instanceof ArrayBuffer ? frames.byteLength
+      : Array.isArray(frames) && frames.every((frame) => frame instanceof Uint8Array || frame instanceof ArrayBuffer) ? frames.reduce((total, frame) => total + frame.byteLength, 0)
+      : frames !== undefined ? JSON.stringify(frames).length : undefined;
+  } catch { framesBytes = undefined; }
+  // 🩺️ A guest plugin rejects with a LIFTED FAULT RECORD, not an \`Error\` — a plain object whose
+  // \`String()\` is the useless \`[object Object]\` that used to be all the host, the console, and the
+  // on-screen error surface ever saw for the single most common failure there is. Serialize the
+  // record itself; \`Error\` still reports its own message, and an unserializable value still falls
+  // back to \`String\`.
+  // 🩺️ \`instanceof Error\` is false for an Error thrown in ANOTHER realm (a \`vm\` context, or any
+  // cross-context host callback this worker invokes), and \`JSON.stringify\` of an Error is the useless
+  // \`"{}"\` — which is what the host used to be told for exactly the faults it most needs to read.
+  // Duck-typing on \`stack\`/\`message\` catches the cross-realm case without ever mis-serializing a
+  // genuine lifted fault record, which has neither.
+  let reason;
+  if (error instanceof Error) reason = error.message;
+  else if (error && typeof error === "object" && (typeof error.stack === "string" || typeof error.message === "string")) reason = String(error);
+  else if (error && typeof error === "object") { try { reason = JSON.stringify(error); } catch { reason = String(error); } }
+  else reason = String(error);
+  self.postMessage({ kind: "result", requestId, ok: false, error: reason + detail, stack, type, framesBytes, retryableLifecycle: retryableLifecycle === true, beat: beat("fault") });
+}
+
+// 🩺️ Hands every component this worker hosts the guest-side diagnostics switch through
+// \`wasi:cli/environment\` — the ONE schema-declared door a \`wasm32-wasip2\` component's own
+// \`std::env::var\` reads (\`semio_framework_trace::RUNTIME_DIAGNOSTICS_ENV\`). Before this, every
+// \`[TRACE]\` line the guest's Rust hot path prints was unreachable from a browser session: the page's
+// \`localStorage\` switch only ever armed TypeScript-side traces, and \`runtime_diagnostics_from_environment\`
+// resolved against an environment nobody populated (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+// \`📓️audit-guest-tick-cost-2026-09-12.md\` §0/§4 rank 1).
+//
+// 🚪️ The page resolved the switch and stamped it on this worker's OWN url (\`shardWorkerUrl\`), since a
+// Worker realm owns no \`localStorage\`. The shim module is the SAME instance the transpiled component
+// imports — both resolve \`🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js\` against the shared
+// \`🔌️plugin-modules/\` root — so seeding it here seeds the guest. Disarmed is the default and costs
+// one url read; a shim that cannot be loaded degrades to silent traces, never to a failed boot.
+let guestRuntimeDiagnostics = null;
+async function armGuestRuntimeDiagnostics() {
+  if (guestRuntimeDiagnostics !== null) return guestRuntimeDiagnostics;
+  guestRuntimeDiagnostics = (async () => {
+    if (new URL(self.location.href).searchParams.get("${SHARD_WORKER_DIAGNOSTICS_PARAM}") !== "1") return false;
+    try {
+      const { _setEnv } = await import(/* @vite-ignore */ "../🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/cli.js");
+      _setEnv({ "${SHARD_RUNTIME_DIAGNOSTICS_KEY}": "1" });
+      return true;
+    } catch {
+      return false;
+    }
+  })();
+  return guestRuntimeDiagnostics;
+}
+
+async function loadActor(actorId, activationGeneration, moduleUrl, originalAdmission) {
+  if (typeof activationGeneration !== "bigint" || activationGeneration <= lastActivationGeneration || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
+  if (actors.has(actorId) || activatingActors.has(actorId)) throw new Error("actor-close.activation-already-owned");
+  lastActivationGeneration = activationGeneration;
+  activatingActors.add(actorId);
+  try {
+    // 🫀️ The three await boundaries of the longest turn this worker ever runs: the dynamic import
+    // (network fetch + WebAssembly.compile + instantiate, all opaque inside one await) and the guest's
+    // own \`createActorApi\`. Each boundary beats explicitly so a console trace names where a slow boot
+    // actually sat; the ticker above is what carries liveness THROUGH each of them.
+    faultModuleUrl = moduleUrl;
+    faultPhase = "load-bridge";
+    postBeat("module-fetch");
+    await armGuestRuntimeDiagnostics();
+    const bridge = await import(/* @vite-ignore */ moduleUrl);
+    faultPhase = "instantiate";
+    postBeat("module-ready");
+    const api = await bridge.createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, { receipt: receipt => self.postMessage({ kind: "original-turn-receipt", actorId, activationGeneration, receipt }), hold: refusal => self.postMessage({ kind: "original-producer-held", actorId, activationGeneration, operation: originalAdmission.operation, generation: originalAdmission.generation, refusal }) });
+    faultPhase = "actor-ready";
+    postBeat("actor-ready");
+    const entry = { api, moduleUrl, activationGeneration, pendingAssets: [] };
+    actors.set(actorId, entry);
+    return entry;
+  } finally {
+    activatingActors.delete(actorId);
+  }
+}
+
+// 🧪️ terra-web-bridges: settles a \`🟨️.js\` \`effectRequest\` Promise from an \`effect-complete\`/
+// \`effect-error\` envelope — see \`hostShimSource\`'s own doc for the wire shape this expects
+// (\`envelope.payload.payload.requestId\`, \`.value\` on complete / \`.message\` on error). A missing actor
+// (already disposed, or the envelope arrived before \`activate\`) is silently dropped rather than
+// thrown — this envelope is itself an ANSWER, so nobody is awaiting a reply to it. That is exactly
+// what makes it different from \`cancelJob\`, which IS a request and is answered in the switch below.
+function deliverEffectResult(actorId, activationGeneration, envelope) {
+  const actor = actors.get(actorId);
+  if (!actor || actor.activationGeneration !== activationGeneration || envelope.to !== actorId || envelope.from?.kind !== "kernel") return;
+  const { kind, payload } = envelope.payload;
+  if (kind === "effect-complete") actor.api.resolveEffect(payload.requestId, payload.value);
+  else if (kind === "effect-error") actor.api.rejectEffect(payload.requestId, payload.message);
+}
+
+async function closeOriginalActor(actorId, activationGeneration) {
+  const actor = actors.get(actorId);
+  if (!actor || actor.activationGeneration !== activationGeneration || inFlightTurnActors.has(actorId)) return;
+  try {
+    const closed = await actor.api.closeOriginal();
+    if (closed.sourceClosed) { actors.delete(actorId); grantedBudgets.delete(actorId); }
+    self.postMessage({ kind: "original-source-close", actorId, activationGeneration, ...closed });
+  } catch (failure) {
+    self.postMessage({ kind: "original-source-close", actorId, activationGeneration, operation: actor.api.originalSource.operation, generation: actor.api.originalSource.generation, sourceClosed: false });
+  }
+}
+
+// 🪶️ GUESTSLIM (design-runtime.md §3): world \`actor\` exports NO \`activate\` function — activation is
+// pure bookkeeping (load the module, cache the named asset packs the main thread fetched) until the
+// KERNEL's own first \`turn\` for this actor carries a real \`instance-open\` event (it alone knows
+// \`app-id\`/\`config\`/\`quotas\`). This worker's only job is splicing the cached asset bytes into that
+// event's \`assets\` field right before the first \`poll\` — they must be resident before the guest's
+// first \`surface-visible\`, not fetched lazily on read.
+function spliceInstanceOpenAssets(entry, events) {
+  if (entry.pendingAssets.length === 0) return events;
+  const pending = entry.pendingAssets;
+  entry.pendingAssets = [];
+  return events.map((event) => {
+    if (event.kind !== "instance-open") return event;
+    return { kind: event.kind, payload: { ...event.payload, assets: [...(event.payload.assets ?? []), ...pending] } };
+  });
+}
+
+// ⏱️ The browser twin of the host's own \`retryable_lifecycle_turn\` (\`🔌️plugin/🖥️host/🦀️.rs\`, driven
+// by \`🖥️host/🔁️lifecycle/🧫️fixtures/🔣️.json\`): a RETRYABLE \`plugin.reactor-turn-deadline\` on a turn
+// that carries at most one lifecycle event is a YIELD, not a death — the guest retained its receipt,
+// so the same events replay on the next tick and the open continues. Native \`ShardLoop::pump\` has
+// always re-granted these; without this the browser reported the identical verdict as a worker fault
+// and \`onActorTrap\` killed the actor on its very first step (ticket 26/09/09, boot #6).
+const LIFECYCLE_TURN_EVENT_KINDS = ["instance-open", "instance-close", "instance-lifecycle-ack"];
+const REACTOR_TURN_DEADLINE_CODE = "plugin.reactor-turn-deadline";
+
+function guestFaultRecord(error) {
+  for (const value of [error, error?.payload, error?.payload?.val, error?.val]) {
+    if (!value) continue;
+    if (typeof value.code === "string") return value;
+    if (value instanceof Uint8Array) {
+      try { return JSON.parse(new TextDecoder().decode(value)); } catch { return null; }
+    }
+  }
+  return null;
+}
+
+function retryableLifecycleTurn(error, events, commandPage) {
+  const fault = guestFaultRecord(error);
+  if (!fault || fault.code !== REACTOR_TURN_DEADLINE_CODE || fault.retryable !== true) return false;
+  return (commandPage === undefined || commandPage === null) && Array.isArray(events) && events.length <= 1 && events.every((entry) => entry && LIFECYCLE_TURN_EVENT_KINDS.includes(entry.kind));
+}
+
+self.addEventListener("message", async (event) => {
+  // ⏱️ FIRST statement of the handler: everything after it is already this worker's own cost, and
+  // \`postedAtEpochMs\` − this instant is the post crossing nobody could see from outside (the CDP
+  // \`Performance\` domain answers nothing on a worker target —
+  // \`📓️react-hop-latency-2026-09-14.md\` §1). Twin vocabulary: \`semio.hop.worker.*\`.
+  const receivedAtEpochMs = hopEpochNow();
+  // 📬️ The host said something. A drive in flight reads this counter every step and crosses back the
+  // moment it moves, so an ingress message, a cancel or a view-state change never waits behind a
+  // guest the worker is pumping. Bumped BEFORE any dispatch, for every kind without exception.
+  hostInputSeq += 1;
+  const msg = event.data ?? {};
+  const { kind } = msg;
+  if (kind === "attachHeartbeatSab") {
+    heartbeatShardIndex = msg.shardIndex;
+    heartbeatSabView = msg.sab ? new Int32Array(msg.sab) : null;
+    return;
+  }
+  if (kind === "original-root-refusal") {
+    const actor = actors.get(msg.actorId);
+    if (actor && actor.activationGeneration === msg.activationGeneration && actor.api.originalSource.nativeRefusal === undefined) actor.api.originalSource.holdNativeRefusal(msg.refusal);
+    return;
+  }
+  if (kind === "dispose") {
+    const actor = actors.get(msg.actorId);
+    if (!actor || actor.activationGeneration !== msg.activationGeneration) return;
+    actor.disposeRequested = true;
+    if (inFlightTurnActors.has(msg.actorId)) { actor.api.originalSource.cancel(); return; }
+    await closeOriginalActor(msg.actorId, msg.activationGeneration);
+    return;
+  }
+  // 🧪️ terra-web-bridges: an effect-complete/effect-error \`"frame"\` is a REPLY to something THIS
+  // worker sent (\`🟨️.js\`'s \`effectRequest\`), never a request expecting a \`reply()\` of its
+  // own — settled directly, before the generic requestId/actorId-gated dispatch below (which always
+  // posts a \`"result"\` back, wrong for a message that is itself already an answer).
+  if (kind === "frame" && msg.frame && msg.frame.kind === "Envelope" && msg.frame.envelope && msg.frame.envelope.payload && (msg.frame.envelope.payload.kind === "effect-complete" || msg.frame.envelope.payload.kind === "effect-error")) {
+    deliverEffectResult(msg.actorId, msg.activationGeneration, msg.frame.envelope);
+    return;
+  }
+  const { requestId, actorId } = msg;
+  if (!requestId || !actorId) return;
+  const timings = { postedAtEpochMs: typeof msg.postedAtEpochMs === "number" ? msg.postedAtEpochMs : null, receivedAtEpochMs, guestEnteredAtEpochMs: null, guestLeftAtEpochMs: null, repliedAtEpochMs: null, previousReplyCloneMs: lastReplyCloneMs, events: Array.isArray(msg.events) ? msg.events.length : 0, eventKinds: Array.isArray(msg.events) ? [...new Set(msg.events.map((entry) => (entry && typeof entry.kind === "string" ? entry.kind : "?")))].slice(0, 4).join("+") : "", patches: 0, commandPageBytes: msg.commandPage && msg.commandPage.bytes ? msg.commandPage.bytes.byteLength ?? msg.commandPage.bytes.length ?? 0 : 0 };
+  beat();
+  beginRequest();
+  faultPhase = kind;
+  faultActorId = actorId;
+  try {
+    if (kind === "activate") {
+      const entry = await loadActor(actorId, msg.activationGeneration, msg.moduleUrl, msg.originalAdmission);
+      entry.pendingAssets = msg.assets ?? [];
+      reply(requestId, undefined);
+      return;
+    }
+    const actor = actors.get(actorId);
+    // 🛑️ A cancel for an actor that is already gone is a no-op the CALLER still has to be told about:
+    // \`ShardClient.cancelJob\` awaits a \`"result"\`, so answering nothing leaves the request outstanding
+    // in \`pending\` forever and the watchdog kills the shard over it (ticket
+    // 26/09/02/PUZZLE-3D-END-TO-END wave B42). Every other kind genuinely needs the actor.
+    if (!actor && kind === "cancelJob") {
+      reply(requestId, undefined);
+      return;
+    }
+    if (!actor) throw new Error(\`shard worker: actor \${actorId} not activated\`);
+    switch (kind) {
+      case "turn": {
+        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
+        inFlightTurnActors.add(actorId);
+        faultPhase = (actor.turns ?? 0) === 0 ? "first-step" : "turn";
+        actor.turns = (actor.turns ?? 0) + 1;
+        try {
+          const admitted = spliceInstanceOpenAssets(actor, msg.events);
+          timings.guestEnteredAtEpochMs = hopEpochNow();
+          let result = await actor.api.poll(admitted, msg.commandPage, undefined, msg.budget);
+          // 🚚️ THE worker-owned MoreWork drive. A \`more-work\` answer that carried nothing is not a
+          // message for the host — it is the guest asking to be pumped, and in the browser the host
+          // round trip IS the pump. So the WORKER owns that pump: it runs the next turn itself and
+          // crosses only to deliver something the host can act on. Every discarded result satisfied
+          // \`shardTurnCarriesNothing\`, so the drive is lossless by construction.
+          //
+          // Five other stops, and each one is a promise to somebody: the guest went \`idle\`;
+          // \`hostInputSeq\` moved, so a host-owned input is pending behind the drive and must not wait
+          // for it; the actor was disposed or re-activated; the derived step ceiling is spent; the
+          // derived wall budget is spent. The ceiling and the budget come from
+          // \`shardTurnDriveSteps\`/\`shardTurnDriveBudgetMs\` — the wall the host GRANTED for this
+          // crossing divided by what one turn MEASURES — never from the reactor's own 8 ms executor
+          // slice, which is smaller than one whole turn and therefore admitted no further turn at all.
+          const originalDriveSource = actor.api.originalSource;
+          const remainingUs = originalDriveSource.deadlineUs - originalDriveSource.operationClockUs();
+          const grantWallMs = Number(remainingUs > 0n ? remainingUs : 0n) / 1000;
+          // 🚚️ The WALL bounds this drive; \`DRIVE_STEP_CEILING\` is the hard backstop against an
+          // unbounded loop, and \`shardTurnDriveSteps\` is the grant's derived EXPECTATION, reported so
+          // the host can read what one crossing was meant to cover.
+          const driveSteps = DRIVE_STEP_CEILING;
+          const driveExpectedSteps = shardTurnDriveSteps(grantWallMs, GUEST_TURN_COST_MS);
+          const driveDeadline = originalDriveSource.deadlineUs;
+          const inputMark = hostInputSeq;
+          let drivePolls = 0;
+          let driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
+          while (driveStopped === "") {
+            if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
+            if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
+            if (originalDriveSource.operationClockUs() >= driveDeadline || originalDriveSource.fuelRemaining === 0) { driveStopped = "budget"; break; }
+            if (drivePolls + 1 >= driveSteps) { driveStopped = "steps"; break; }
+            // 📬️ One macrotask before the next turn, so a message the host already posted is
+            // DELIVERED and \`hostInputSeq\` can actually move. Without it the drive is
+            // uninterruptible: an \`await\` settles on the microtask queue, which never drains the
+            // message queue.
+            await driveYield();
+            if (hostInputSeq !== inputMark) { driveStopped = "input"; break; }
+            if (actors.get(actorId) !== actor || actor.activationGeneration !== msg.activationGeneration) { driveStopped = "closed"; break; }
+            result = await actor.api.poll([], undefined, undefined, msg.budget);
+            drivePolls += 1;
+            driveStopped = shardTurnStatusTag(result) === "more-work" ? (shardTurnCarriesNothing(result) ? "" : "carried") : "idle";
+          }
+          timings.guestLeftAtEpochMs = hopEpochNow();
+          timings.drivePolls = drivePolls;
+          timings.driveSteps = driveExpectedSteps;
+          timings.driveStopped = driveStopped;
+          timings.patches = result && Array.isArray(result.uiPatches) ? result.uiPatches.length : 0;
+          timings.status = result && result.status && typeof result.status.tag === "string" ? result.status.tag : String(result && result.status);
+          // 🫀️ THE step boundary. A guest running a BUDGETED job (a resumable tessellation, a
+          // resumable boolean) crosses this point once per step and blocks the event loop in
+          // between, so the while-busy ticker cannot fire and the only thing that distinguishes it
+          // from a dead worker is a beat taken HERE, the moment the guest hands control back
+          // (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
+          // \`📓️extension-evaluate-budget-2026-09-12.md\`). It RIDES the reply rather than costing its
+          // own \`postMessage\`, because the reply is already crossing at this exact instant and
+          // \`ShardClient\` reads liveness off every inbound message it receives.
+          reply(requestId, result, timings, beat("turn-step"));
+        } finally {
+          inFlightTurnActors.delete(actorId);
+          if (actor.disposeRequested) await closeOriginalActor(actorId, actor.activationGeneration);
+        }
+        break;
+      }
+      case "startJob":
+        await actor.api.startJob(msg.job, msg.jobKind, msg.input);
+        reply(requestId, undefined);
+        break;
+      case "stepJob": {
+        // 🫀️ Same step boundary as \`turn\` above: a job step is exactly the unit a budgeted guest
+        // yields at, so it is exactly where liveness is provable.
+        const step = await actor.api.stepJob(msg.job, msg.budget);
+        reply(requestId, step, undefined, beat("turn-step"));
+        break;
+      }
+      case "cancelJob":
+        await actor.api.cancelJob(msg.job);
+        reply(requestId, undefined);
+        break;
+      case "takeSegmentedDownloadChunk": {
+        if (!Number.isSafeInteger(msg.instanceId) || msg.instanceId < 0 || typeof msg.operationId !== "bigint" || msg.operationId <= 0n || msg.operationId > ((1n << 64n) - 1n)) throw new Error("segmented-download-authority-invalid");
+        const chunk = await actor.api.takeSegmentedDownloadChunk(msg.instanceId, msg.operationId);
+        // 📤️ One bound per refusal, never one "limit" for four different violations: a chunk of the wrong
+        // TYPE is a wire-adaptation defect (the guest's \`option<list<u8>>\` reaching this worker as jco's
+        // tagged \`{ tag, val }\` object instead of a \`Uint8Array\` — what the 2026-09-12 battery read as
+        // an exceeded byte cap while nothing was over any cap), an empty or oversized one is a producer
+        // that sliced by the wrong constant.
+        if (chunk !== undefined && chunk !== null) {
+          if (Object.prototype.toString.call(chunk) !== "[object Uint8Array]") throw new Error("segmented-download-chunk-type");
+          if (chunk.byteLength === 0) throw new Error("segmented-download-chunk-empty");
+          if (chunk.byteLength > SEGMENTED_DOWNLOAD_CHUNK_BYTES) throw new Error("segmented-download-chunk-over-cap");
+        }
+        reply(requestId, chunk ?? undefined);
+        break;
+      }
+      case "checkpoint":
+        reply(requestId, await actor.api.checkpoint());
+        break;
+      case "restore":
+        await actor.api.restore(msg.state);
+        reply(requestId, undefined);
+        break;
+      case "codec": {
+        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
+        inFlightTurnActors.add(actorId);
+        try {
+          reply(requestId, await actor.api.codec(msg.request), undefined, beat("turn-step"));
+        } finally {
+          inFlightTurnActors.delete(actorId);
+        }
+        break;
+      }
+      case "frame": {
+        if (actor.activationGeneration !== msg.activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+        const result = interpretFrame(msg.frame, actorId);
+        if (result.action === "register") {
+          reply(requestId, undefined);
+          break;
+        }
+        if (result.action === "unregister") {
+          grantedBudgets.delete(actorId);
+          reply(requestId, undefined);
+          break;
+        }
+        if (result.action === "unknown") {
+          reply(requestId, { ignored: true });
+          break;
+        }
+        if (inFlightTurnActors.has(actorId)) throw new Error(\`shard worker: actor \${actorId} already has a turn in flight\`);
+        inFlightTurnActors.add(actorId);
+        try {
+          const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
+          timings.events = events.length;
+          timings.guestEnteredAtEpochMs = hopEpochNow();
+          const polled = await actor.api.poll(events, undefined, undefined, result.budget);
+          timings.guestLeftAtEpochMs = hopEpochNow();
+          reply(requestId, polled, timings);
+        } finally {
+          inFlightTurnActors.delete(actorId);
+        }
+        break;
+      }
+      default:
+        throw new Error(\`unknown shard worker message kind: \${kind}\`);
+    }
+  } catch (error) {
+    // 🩺️ Reported on BOTH channels on purpose: \`replyError\` answers the one caller that is awaiting
+    // this request, \`reportWorkerFault\` names the phase/actor/module to the shell's console for the
+    // boot faults nobody is awaiting a reply for. A retryable lifecycle-turn deadline is neither —
+    // it is a yield the client replays, so it never reaches \`onActorTrap\`.
+    const retryableLifecycle = kind === "turn" && retryableLifecycleTurn(error, msg.events, msg.commandPage);
+    if (retryableLifecycle) console.log(\`shard worker: retryable lifecycle deadline on \${faultPhase} for actor \${actorId}; receipt retained, replaying next tick\`);
+    else reportWorkerFault("handler", error, null);
+    replyError(requestId, error, msg.events, retryableLifecycle);
+  } finally {
+    endRequest();
+    faultPhase = "idle";
+  }
+});
+`;
+}
+
+/**
+ * 🌉️ Normalizes ONE actor's jco-transpiled component (`world actor`: exports `reactor`/
+ * `jobs`/`checkpoint`/`describe`, imports only `pure` — see `component.wit`) behind the flat
+ * `createActorApi()` shape `🟨️shard-worker.js` calls: `poll`/`startJob`/`stepJob`/`cancelJob`/
+ * `takeSegmentedDownloadChunk`/`checkpoint`/`restore`, and `codec` — the component's `codec` interface
+ * answered by `actorCodecAnswer` (`🎭️actor/🧬️codec/🟦️.ts`), the browser's
+ * kind identity and document genesis.
+ *
+ * DROPS the old `runSerialized` retry/reload loop entirely (design-runtime.md §3: "recovery is the
+ * kernel's job now"). Under the old ABI a guest panic (`panic = "abort"`, no unwind) permanently
+ * killed the wasm32-wasip2 instance, and — with no host-side supervisor — the ONLY recovery available
+ * was this bridge silently re-importing the module and replaying. Now `ActivationRegistry`'s
+ * `FailurePolicy` (design-runtime.md §1) owns that: a trap here just throws, `🟨️shard-worker.js`'s
+ * `replyError` propagates it to `ShardClient` as a rejected turn, and the KERNEL decides
+ * `Trapped{restarts}` → drop + re-instantiate (fresh `activate`) + `restore()` the last checkpoint —
+ * the SAME re-instantiation this bridge used to do blindly, now a supervised decision instead of a
+ * local guess with no visibility into checkpoint state.
+ *
+ * 🚧 UNVERIFIED against a real compiled artifact of the PRODUCTION `world actor` component (the
+ * wasm32-wasip2 fleet does not currently compile — a large in-flight conversion tracked elsewhere on
+ * this ticket): the exact jco-generated export shape for a world that exports several *interfaces*
+ * (rather than bare functions) is assumed here to be one JS binding per interface, named for the
+ * interface (\`reactor\`/\`jobs\`/\`checkpoint\`/\`describe\`), field names camelCased from the WIT's
+ * kebab-case. **This IS confirmed for a single-export-interface world against a real transpiled
+ * component** (📓️terra-jco-spike-report.md's jcoprobe fixture: \`export * as probe from
+ * './interfaces/...'\`, camelCased function names) — the multi-interface-export case (4 interfaces,
+ * matching \`world actor\`) is extrapolated from that single-interface evidence plus jco's documented
+ * per-interface naming convention, not independently re-confirmed here. If jco nests these
+ * differently, only the four destructured names below need to change — every other line here is
+ * interface-shape-agnostic.
+ *
+ * 🧪️ terra-web-bridges: every destructured method now returns a Promise (every WIT function in the
+ * target world is `async func`) — made EXPLICITLY `async` here rather than relying on bare pass-
+ * through. The component and its host imports use matching actor/activation/version URLs; a static
+ * relative shim import would otherwise be shared across same-package activations. Each returned API
+ * retains that immutable shim module for replies, including while other actors are interleaved.
+ */
+export function pluginComponentBridgeSource(componentBase: string, wasmFileName: string): string {
+  return `/** @generated semio actor jco component bridge */
+${originalOperationWorkerSource()}
+
+const ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES = ${ACTOR_INSTANCE_LIFECYCLE_MAXIMUM_BYTES};
+const encodeActorInstanceLifecycle = ${encodeActorInstanceLifecycle.toString()};
+const ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES = ${ACTOR_UI_PATCH_RECEIPT_MAXIMUM_BYTES};
+const encodeActorUiPatchReceipt = ${encodeActorUiPatchReceipt.toString()};
+const validateActorUiPatchPairing = ${validateActorUiPatchPairing.toString()};
+const commandIngressKinds = new Map([${COMMAND_INGRESS_KINDS.map((tag, kind) => `[${kind}, "${tag}"]`).join(", ")}]);
+${actorCodecRuntimeSourceV1()}
+const HOST_CHANNEL = ${APP_CHANNEL_VERSION};
+const admitGuestChannelVersion = ${admitGuestChannelVersion.toString()};
+
+/** 🎁️ jco lifts \`option<t>\` as a tagged \`{ tag: "none" | "some" }\` variant; every host-side reader
+ * below wants the bare value (or nothing), so unwrap exactly that shape and pass anything else through. */
+function unwrapOption(value) {
+  if (value === null || value === undefined) return undefined;
+  if (typeof value === "object" && (value.tag === "none" || value.tag === "some")) return value.tag === "none" ? undefined : value.val;
+  return value;
+}
+
+function lifecycleBody(value) {
+  return { lifetime: value.lifetime, requestSequence: BigInt(value.requestSequence), ...("closeGeneration" in value ? { closeGeneration: value.closeGeneration } : {}) };
+}
+
+function lifecycleEvent(kind, payload, activationGeneration) {
+  if (kind === "patch-ack" || kind === "patch-rejected") {
+    encodeActorUiPatchReceipt(payload.receipt);
+    if (payload.receipt.lifetime.activationGeneration !== activationGeneration || payload.surface?.instance !== payload.receipt.lifetime.instanceId) throw new Error("actor-ui-patch.activation-mismatch");
+    return { tag: kind, val: payload };
+  }
+  if (kind === "instance-open") {
+    encodeActorInstanceLifecycle({ kind: "open", activationGeneration: payload.activationGeneration, instanceId: payload.instance, requestSequence: payload.requestSequence });
+    if (payload.activationGeneration !== activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+    return { tag: kind, val: { ...payload, requestSequence: BigInt(payload.requestSequence) } };
+  }
+  if (kind === "instance-close" || kind === "instance-lifecycle-ack") {
+    if (payload?.kind !== (kind === "instance-close" ? "close" : "ack")) throw new Error("actor-lifecycle.event-kind");
+    encodeActorInstanceLifecycle(payload);
+    const receipt = kind === "instance-close" ? payload : payload.receipt;
+    if (receipt.lifetime.activationGeneration !== activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+    return { tag: kind, val: kind === "instance-close" ? lifecycleBody(receipt) : { tag: receipt.kind, val: lifecycleBody(receipt) } };
+  }
+  return kind === "wake" ? ({ tag: kind }) : ({ tag: kind, val: payload });
+}
+
+// 🧩️ \`jobs::job-step\` reaches the worker as jco's raw \`{tag, val}\` variant; \`ShardJobStep\`
+// (\`📮️shard-client/🟦️.ts\`) is the \`{status, ...}\` shape every caller declares. Converting here — the
+// one place that owns the guest boundary — keeps that declaration honest instead of leaving the two
+// shapes silently different, which is what they were while nothing on this target ever stepped a job.
+function normalizeJobStep(step) {
+  if (step?.tag === "running") return { status: "running", progress: unwrapOption(step.val) };
+  if (step?.tag === "done") return { status: "done", value: step.val };
+  if (step?.tag === "failed") return { status: "failed", value: step.val };
+  throw new Error(\`unknown job-step shape: \${JSON.stringify(step)}\`);
+}
+
+function lifecycleReceipt(raw, activationGeneration) {
+  const value = unwrapOption(raw);
+  if (value === undefined || value === null) return undefined;
+  if (value.tag !== "captured" && value.tag !== "accepted" && value.tag !== "retired") throw new Error("actor-lifecycle.receipt-required");
+  const body = value.val;
+  if (typeof body?.requestSequence !== "bigint" || body.requestSequence <= 0n || body.requestSequence > BigInt(Number.MAX_SAFE_INTEGER)) throw new Error("actor-lifecycle.request-sequence");
+  if (body.lifetime?.activationGeneration !== activationGeneration) throw new Error("actor-lifecycle.activation-mismatch");
+  return encodeActorInstanceLifecycle({ kind: value.tag, lifetime: body.lifetime, requestSequence: Number(body.requestSequence), ...(value.tag === "captured" ? {} : { closeGeneration: body.closeGeneration }) });
+}
+
+function normalizeCommandIngress(status) {
+  const tag = commandIngressKinds.get(status.kind);
+  if (!tag) throw new Error(\`unknown command ingress kind: \${status.kind}\`);
+  if (tag === "idle") return { tag };
+  if (tag === "fault") return { tag, val: { cursor: status.cursor, fault: { tag: "fault", val: status.fault } } };
+  return { tag, val: status.cursor };
+}
+
+function uiPatchReceipt(result, activationGeneration) {
+  if (!Array.isArray(result.uiPatches)) throw new Error("actor-ui-patch.envelope");
+  const receipt = unwrapOption(result.uiPatchReceipt);
+  validateActorUiPatchPairing(result.uiPatches.length, receipt);
+  if (receipt === undefined || receipt === null) return undefined;
+  if (receipt.lifetime.activationGeneration !== activationGeneration) throw new Error("actor-ui-patch.activation-mismatch");
+  return encodeActorUiPatchReceipt(receipt);
+}
+
+export async function createActorApi(actorId, activationGeneration, originalAdmission, operationClockUs, originalReturn) {
+  if (typeof activationGeneration !== "bigint" || activationGeneration <= 0n || activationGeneration > 0xffffffffffffffffn) throw new Error("actor-close.invalid-activation-generation");
+  const componentUrl = new URL("./${componentBase}.js", import.meta.url);
+  const rebuildVersion = new URL(import.meta.url).searchParams.get("v");
+  componentUrl.searchParams.set("actor", actorId);
+  componentUrl.searchParams.set("activation", activationGeneration.toString());
+  if (rebuildVersion) componentUrl.searchParams.set("v", rebuildVersion);
+  const hostUrl = new URL("./${PLUGIN_HOST_SHIM_FILE}", import.meta.url);
+  hostUrl.search = componentUrl.search;
+  const hostShim = await import(hostUrl.href);
+  const { reactor, jobs, checkpoint, describe, codec } = await import(componentUrl.href);
+  hostShim.__bindOriginalClock(operationClockUs);
+  const originalSource = new OriginalOperationSource(originalAdmission, () => hostShim.operationClockUs());
+  function receiveOriginal(call, workUnitsSpent) {
+    let receipt;
+    try { receipt = originalReceiptFromWit(call, workUnitsSpent); originalSource.receive(receipt); }
+    catch (failure) { if (receipt) originalReturn.receipt(receipt); originalSource.holdNativeRefusal(call); originalReturn.hold(call); throw failure; }
+    originalReturn.receipt(receipt);
+  }
+  let contextReady = false;
+  async function receiveContext(method) {
+    const turn = originalSource.issue();
+    const call = await reactor[method](originalTurnWit(turn.input));
+    receiveOriginal(call, 0n);
+    if (unwrapOption(call.refusal) !== undefined) throw Object.assign(new Error("original-turn.context-refused"), { originalCall: call });
+    return call;
+  }
+  async function admitContext() {
+    while (!contextReady) {
+      const call = await receiveContext("admitActorContext");
+      contextReady = call.ready;
+      if (!contextReady && call.spent.copiedItems === 0n && call.spent.copiedBytes === 0n && call.spent.retainedCapacityBytes === 0n && call.spent.releasedBytes === 0n) throw Object.assign(new Error("original-turn.context-held"), { originalCall: call });
+    }
+  }
+  const channelRefusal = admitGuestChannelVersion(await reactor.channelVersion(), HOST_CHANNEL);
+  if (channelRefusal !== null) throw Object.assign(new Error(\`\${channelRefusal.code}: \${channelRefusal.message}\`), { fault: channelRefusal });
+  return {
+    originalSource,
+    closeOriginal: async () => {
+      if (originalSource.outstanding || originalSource.nativeRefusal !== undefined || originalSource.producerRefusal !== undefined || originalSource.receiptRefusal !== undefined) throw new Error("original-turn.original-return-pending");
+      for (;;) {
+        const call = await receiveContext("closeActorContext");
+        if (call.complete) {
+          const acknowledgement = originalSource.issue();
+          if (acknowledgement.input.grant.maximumItems < 1 || acknowledgement.input.grant.maximumDepth < 1 || acknowledgement.fuel < 1) throw new Error("original-turn.source-acknowledgement-held");
+          const receipt = { input: acknowledgement.input, spent: { copiedItems: 1, copiedBytes: 0, retainedCapacityBytes: 0, releasedBytes: 0 }, workUnitsSpent: 1 };
+          originalSource.receive(receipt);
+          originalReturn.receipt(receipt);
+          originalSource.close();
+          return { operation: originalSource.operation, generation: originalSource.generation, sourceClosed: true };
+        }
+        if (call.blocked || (call.spent.copiedItems === 0n && call.spent.copiedBytes === 0n && call.spent.retainedCapacityBytes === 0n && call.spent.releasedBytes === 0n)) return { operation: originalSource.operation, generation: originalSource.generation, sourceClosed: false };
+      }
+    },
+    poll: async (events, commandPage, coldPairPage, budget) => {
+      await admitContext();
+      if (commandPage || coldPairPage || events.length) {
+        const original = { phase: "canonical-input", commandPage, coldPairPage, events };
+        originalSource.holdProducerRefusal(original);
+        originalReturn.hold(original);
+        throw Object.assign(new Error("original-turn.canonical-input-held"), { originalProducer: original });
+      }
+      const turn = originalSource.issue();
+      hostShim.__checkoutOriginal(turn);
+      let result;
+      try {
+        result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), { retained: originalTurnWit(turn.input), fuel: BigInt(turn.fuel), deadlineUs: turn.deadlineUs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: budget.maxFrames });
+      } catch (failure) {
+        try {
+          if (failure && failure.input && failure.spent && typeof failure.workUnitsSpent === "bigint") receiveOriginal(failure, failure.workUnitsSpent);
+          if (originalSource.nativeRefusal === undefined) { originalSource.holdNativeRefusal(failure); originalReturn.hold(failure); }
+        } finally {
+          const raw = hostShim.__returnOriginal(turn);
+          if (raw !== undefined) { originalSource.holdProducerRefusal(raw); originalReturn.hold(raw); }
+        }
+        throw failure;
+      }
+      let raw;
+      try { receiveOriginal(result.retainedReceipt, result.fuelUsed); }
+      finally { raw = hostShim.__returnOriginal(turn); if (raw !== undefined) { originalSource.holdProducerRefusal(raw); originalReturn.hold(raw); } }
+      if (raw !== undefined) throw Object.assign(new Error("original-turn.producer-held"), { originalProducer: raw });
+      return { ...result, nextWake: unwrapOption(result.nextWake) ?? null, lifecycleReceipt: lifecycleReceipt(result.lifecycleReceipt, activationGeneration), uiPatchReceipt: uiPatchReceipt(result, activationGeneration), commandIngress: normalizeCommandIngress(result.commandIngress) };
+    },
+    startJob: async (job, kind, input) => jobs.startJob(job, kind, input),
+    stepJob: async (job, budget) => normalizeJobStep(await jobs.stepJob(job, budget)),
+    cancelJob: async (job) => jobs.cancelJob(job),
+    // 📤️ THE 2026-09-12 segmented-export fault: this export returns \`option<list<u8>>\`, and jco's flat
+    // lift of an option yields the TAGGED variant object (\`_liftFlatOption\` delegates to
+    // \`_liftFlatVariant\`, which builds \`{ tag }\`/\`{ tag, val }\`; only \`_liftFlatEnum\` reduces to
+    // \`.tag\`). Handed on raw it reached the shard worker as \`[object Object]\` — so chunk 0 faulted the
+    // worker and the terminal \`{ tag: "none" }\` was not \`undefined\` either. Every other guest option in
+    // this bridge already routes through \`unwrapOption\`; this one is no exception.
+    takeSegmentedDownloadChunk: async (instanceId, operationId) => unwrapOption(await jobs.takeSegmentedDownloadChunk(instanceId, operationId)),
+    checkpoint: async () => checkpoint.checkpoint(),
+    restore: async (state) => checkpoint.restore(state),
+    describe: async () => describe.describe(),
+    codec: (request) => codecAnswer(codec, request),
+    resolveEffect: (requestId, value) => hostShim.__resolveEffect(requestId, value),
+    rejectEffect: (requestId, message) => hostShim.__rejectEffect(requestId, message),
+  };
+}
+`;
+}
+
+export function rewritePreview2ShimImports(componentJsPath: string, preview2VendorDir: string): void {
+  const outDir = dirname(componentJsPath);
+  const rel = relative(outDir, preview2VendorDir).replace(/\\/g, "/");
+  const prefix = rel.endsWith("/") ? rel : `${rel}/`;
+  const content = readFileSync(componentJsPath, "utf8");
+  const rewritten = rewritePreview2ShimImportSource(content, prefix);
+  if (rewritten !== content) writeFileSync(componentJsPath, rewritten);
+}
+
+const WASM_OPT_ARGS: readonly string[] = [
+  "-Oz",
+  "--low-memory-unused",
+  "--strip-debug",
+  "--strip-producers",
+  "--enable-bulk-memory",
+  "--enable-bulk-memory-opt",
+  "--enable-call-indirect-overlong",
+  "--enable-extended-const",
+  "--enable-multivalue",
+  "--enable-mutable-globals",
+  "--enable-nontrapping-float-to-int",
+  "--enable-reference-types",
+  "--enable-sign-ext",
+];
+
+/** 🪶️ Optimizes extracted component cores with the native tool prepared by Nx. */
+function optimizePluginCoreModules(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
+  if (!(ctx.optimize ?? (semioBuildMode() === "release" && process.env.SEMIO_WASM_OPT !== "0"))) return;
+  const selected = ctx.wasmOptBin ?? process.env.SEMIO_WASM_OPT_BIN;
+  const wasmOptBin = selected ? resolve(ctx.repoRoot, selected) : preparedBinaryen(ctx.repoRoot);
+  for (const file of readdirSync(outDir)) {
+    if (!file.startsWith(`${componentBase}.core`) || !file.endsWith(".wasm")) continue;
+    const coreWasm = join(outDir, file);
+    const optimized = `${coreWasm}.opt`;
+    if (runCmdStatus(wasmOptBin, [coreWasm, ...WASM_OPT_ARGS, "-o", optimized], { cwd: ctx.repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+      throw new Error(`wasm-opt failed for ${coreWasm}`);
+    }
+    renameSync(optimized, coreWasm);
+  }
+}
+
+//#region 🧬️JcoAsyncResultLifting
+const JCO_INDIRECT_RESULT_MEMORY_GUARD = "if (!ctx.memory) {\n      _debugLog('missing memory despite indirect param usage'";
+const JCO_RESOLVED_RESULT_MEMORY_GUARD = "if (!memory) {\n      _debugLog('missing memory despite indirect param usage'";
+const JCO_TASK_RETURN_DIRECT_VALUES = 16;
+
+function jcoResultField(node: ts.Node | undefined, name: string): ts.Expression {
+  if (node && ts.isObjectLiteralExpression(node)) {
+    for (const field of node.properties) {
+      if (ts.isPropertyAssignment(field) && ((ts.isIdentifier(field.name) || ts.isStringLiteral(field.name)) && field.name.text === name)) return field.initializer;
+    }
+  }
+  throw new Error(`jco task-return metadata is missing ${name}`);
+}
+
+function jcoResultEntries(node: ts.Node | undefined): readonly ts.Expression[] {
+  if (node && ts.isArrayLiteralExpression(node)) return node.elements;
+  throw new Error("jco task-return metadata must be an array");
+}
+
+function jcoResultFlatCount(node: ts.Expression): number {
+  if (node.kind === ts.SyntaxKind.NullKeyword) return 0;
+  if (ts.isIdentifier(node)) {
+    if (/^_liftFlatString/.test(node.text)) return 2;
+    if (/^_liftFlat(Bool|Char|[SU](8|16|32|64)|Float(32|64))$/.test(node.text)) return 1;
+  }
+  if (ts.isCallExpression(node) && ts.isIdentifier(node.expression)) {
+    const meta = node.arguments[0];
+    switch (node.expression.text) {
+      case "_liftFlatList": return 2;
+      case "_liftFlatEnum":
+      case "_liftFlatOwn":
+      case "_liftFlatBorrow": return 1;
+      case "_liftFlatFlags": return Math.ceil(Number(jcoResultField(meta, "size32").getText()) / 4);
+      case "_liftFlatRecord": return jcoResultEntries(jcoResultField(meta, "fieldMetas")).reduce((sum, field) => sum + jcoResultFlatCount(jcoResultEntries(field)[1]!), 0);
+      case "_liftFlatTuple": return jcoResultEntries(jcoResultField(meta, "elemLiftFns")).reduce((sum, field) => sum + jcoResultFlatCount(jcoResultEntries(field)[0]!), 0);
+      case "_liftFlatVariant":
+      case "_liftFlatOption":
+      case "_liftFlatResult": return 1 + Math.max(0, ...jcoResultEntries(jcoResultField(meta, "caseMetas")).map((field) => jcoResultFlatCount(jcoResultEntries(field)[1]!)));
+    }
+  }
+  throw new Error(`unsupported jco task-return lift: ${node.getText()}`);
+}
+
+/** 🧬️ Derives callback directness from each generated result's canonical flattened shape; memory presence alone does not distinguish direct pointer/length values from an indirect return record. */
+export function rewriteJcoAsyncResultLifting(source: string): string {
+  source = source.replace(JCO_INDIRECT_RESULT_MEMORY_GUARD, JCO_RESOLVED_RESULT_MEMORY_GUARD);
+  const parsed = ts.createSourceFile("component.js", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const edits: { start: number; end: number; value: string }[] = [];
+  const visit = (node: ts.Node): void => {
+    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && ts.isIdentifier(node.expression.expression) && node.expression.expression.text === "taskReturn" && node.expression.name.text === "bind") {
+      const context = node.arguments[node.arguments.length - 1];
+      const count = jcoResultEntries(jcoResultField(context, "liftFns")).reduce((sum, field) => sum + jcoResultFlatCount(field), 0);
+      const direct = jcoResultField(context, "useDirectParams");
+      edits.push({ start: direct.getStart(parsed), end: direct.end, value: String(count <= JCO_TASK_RETURN_DIRECT_VALUES) });
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(parsed);
+  for (const edit of edits.sort((left, right) => right.start - left.start)) source = source.slice(0, edit.start) + edit.value + source.slice(edit.end);
+  return source;
+}
+
+/** 💾️ Applies {@link rewriteJcoAsyncResultLifting} to one freshly transpiled jco module. */
+function rewriteJcoAsyncResultLiftingAt(modulePath: string): void {
+  const source = readFileSync(modulePath, "utf8");
+  const rewritten = rewriteJcoAsyncResultLifting(source);
+  if (rewritten !== source) writeFileSync(modulePath, rewritten);
+}
+//#endregion 🧬️JcoAsyncResultLifting
+
+//#region 🧊️JcoComponentAssetVersioning
+const JCO_HOST_SHIM_URL_HELPER = `function __semioActivationHostUrl() {
+  const url = new URL("./🟨️.js", import.meta.url);
+  const source = new URL(import.meta.url);
+  for (const key of ["actor", "activation", "v"]) {
+    const value = source.searchParams.get(key);
+    if (value !== null) url.searchParams.set(key, value);
+  }
+  return url;
+}`;
+
+function rewriteJcoHostShimImports(source: string): string {
+  const parsed = ts.createSourceFile("component.js", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.JS);
+  const edits: { start: number; end: number; value: string }[] = [];
+  for (const statement of parsed.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier) || statement.moduleSpecifier.text !== `./${PLUGIN_HOST_SHIM_FILE}`) continue;
+    const bindings = statement.importClause?.namedBindings;
+    if (statement.importClause?.name || !bindings || !ts.isNamedImports(bindings)) throw new Error("unsupported jco host shim import shape");
+    const fields = bindings.elements.map((field) => field.propertyName ? `${field.propertyName.getText(parsed)}: ${field.name.text}` : field.name.text).join(", ");
+    edits.push({ start: statement.getStart(parsed), end: statement.end, value: `const { ${fields} } = await import(__semioActivationHostUrl().href);` });
+  }
+  for (const edit of edits.reverse()) source = source.slice(0, edit.start) + edit.value + source.slice(edit.end);
+  return edits.length === 0 ? source : `${JCO_HOST_SHIM_URL_HELPER}\n\n${source}`;
+}
+
+const JCO_COMPONENT_ASSET_URL = /new URL\((['"])(\.\/[^'"]+\.core\d*\.wasm)\1,\s*import\.meta\.url\)/g;
+const JCO_COMPONENT_ASSET_URL_HELPER = `function __semioVersionedComponentAssetUrl(path) {
+  const url = new URL(path, import.meta.url);
+  const rebuildVersion = new URL(import.meta.url).searchParams.get("v");
+  if (rebuildVersion) url.searchParams.set("v", rebuildVersion);
+  return url;
+}`;
+
+/** 🪪️ Preserves activation identity for host imports and rebuild identity for extracted core Wasm. */
+export function rewriteJcoComponentAssetUrls(source: string): string {
+  source = rewriteJcoHostShimImports(source);
+  if (source.includes("function __semioVersionedComponentAssetUrl(path)")) return source;
+  const rewritten = source.replace(JCO_COMPONENT_ASSET_URL, (_match, quote, assetPath) => `__semioVersionedComponentAssetUrl(${quote}${assetPath}${quote})`);
+  return rewritten === source ? source : `${JCO_COMPONENT_ASSET_URL_HELPER}\n\n${rewritten}`;
+}
+
+/** 💾️ Applies {@link rewriteJcoComponentAssetUrls} to one freshly transpiled jco module. */
+function rewriteJcoComponentAssetUrlsAt(modulePath: string): void {
+  const source = readFileSync(modulePath, "utf8");
+  const rewritten = rewriteJcoComponentAssetUrls(source);
+  if (rewritten !== source) writeFileSync(modulePath, rewritten);
+}
+//#endregion 🧊️JcoComponentAssetVersioning
+
+export function transpilePluginComponent(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
+  // 🧪️ terra-web-bridges (📓️terra-jco-spike-report.md "what must change" #2): NO `--async-mode`
+  // flag — confirmed byte-identical to jco's bare/"sync" default for a component whose every WIT
+  // function is already `async func` (`--async-mode jspi` was diffed against the bare transpile of
+  // the SAME wasm and produced 0 bytes of difference). `world actor`'s import surface is now `pure`
+  // (component.wit's `interface pure { log; now-ms; trace-span; }`, still plain `func`) PLUS
+  // `host-async` (`interface host-async`, ~:887 — 24 `async func` imports + `emit`/`emit-patch`) —
+  // both map to the SAME `🟨️.js`, which now implements both interfaces' exports from one file.
+  if (
+    runNodeBinStatus(
+      ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"],
+      ctx.repoRoot,
+    ) !== 0
+  ) {
+    throw new Error(`jco transpile failed for ${artifact}`);
+  }
+  rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
+  rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
+  optimizePluginCoreModules(outDir, componentBase, ctx);
+  rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
+}
+
+function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortSignal, environment: Readonly<Record<string, string | undefined>> = process.env, control?: CompilerAdmissionControl): Promise<string> {
+  const binName = args[0]!;
+  const resolved = resolveWorkspaceBin(binName, cwd);
+  return captureOwnedCommandV1("node", [`--v8-pool-size=${compilerCapacityWorkerCountV1(environment)}`, resolved ?? binName, ...args.slice(1)], cwd, { env: { ...environment, UV_THREADPOOL_SIZE: String(compilerCapacityWorkerCountV1(environment)) }, ...(signal ? { signal } : {}), ...(control ? { control } : {}) });
+}
+
+/** 🎚️ The `wasm-opt` executable a context selects and the exact arguments every shipped core is optimized with. */
+export function pluginWasmOptToolV1(ctx: Pick<PluginWebMaterializeContext, "repoRoot" | "wasmOptBin">): Readonly<{ command: string; args: readonly string[] }> {
+  const selected = ctx.wasmOptBin ?? process.env.SEMIO_WASM_OPT_BIN;
+  return Object.freeze({ command: selected ? resolve(ctx.repoRoot, selected) : preparedBinaryen(ctx.repoRoot), args: WASM_OPT_ARGS });
+}
+
+/** 🧩️ The extracted core modules jco wrote for one component, in name order. */
+export function pluginCoreModuleFilesV1(outDir: string, componentBase: string): readonly string[] {
+  return readdirSync(outDir).filter((file) => file.startsWith(`${componentBase}.core`) && file.endsWith(".wasm")).sort();
+}
+
+/** 🪶️ Optimizes one extracted core with `wasm-opt -Oz` into `output`, on `ctx.cores` threads (Binaryen's `BINARYEN_CORES`) when the caller holds that many job slots. */
+export async function optimizePluginCoreModuleAsync(core: string, output: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  const tool = pluginWasmOptToolV1(ctx);
+  try { await captureOwnedCommandV1(tool.command, [core, ...tool.args, "-o", output], ctx.repoRoot, { env: { ...(ctx.environment ?? process.env), ...(ctx.cores === undefined ? {} : { BINARYEN_CORES: String(ctx.cores) }) }, ...(ctx.signal ? { signal: ctx.signal } : {}), ...(ctx.control ? { control: ctx.control } : {}) }); }
+  catch (cause) { ctx.signal?.throwIfAborted(); throw new Error(`wasm-opt failed for ${core}`, { cause }); }
+}
+
+/** 🪶️ Async twin of {@link optimizePluginCoreModules}: the same ship-mode-only `wasm-opt` pass over every extracted core, spawned without blocking. */
+export async function optimizePluginCoreModulesAsync(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  if (!(ctx.optimize ?? (semioBuildMode() === "release" && process.env.SEMIO_WASM_OPT !== "0"))) return;
+  for (const file of pluginCoreModuleFilesV1(outDir, componentBase)) {
+    const coreWasm = join(outDir, file);
+    await optimizePluginCoreModuleAsync(coreWasm, `${coreWasm}.opt`, ctx);
+    renameSync(`${coreWasm}.opt`, coreWasm);
+  }
+}
+
+/** 🧬️ The location-independent half of a component's transpile: jco's module files with the async result lifting and the versioned core asset URLs
+ * rewritten, before any `wasm-opt` pass and before the preview2 shim imports are pointed at a vendor directory. A pure function of the component bytes,
+ * the jco version, `componentBase` and this file, so it is cached by content. */
+export async function transpilePluginComponentModulesAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  try {
+    await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal, ctx.environment, ctx.control);
+  } catch (cause) {
+    ctx.signal?.throwIfAborted();
+    throw new Error(`jco transpile failed for ${artifact}`, { cause });
+  }
+  rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
+  rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
+}
+
+/** 🚀️ Async twin of {@link transpilePluginComponent}: the same jco invocation (no `--async-mode` flag, `pure` and `host-async` mapped to one shim, see
+ * that function's doc), the ship-mode `wasm-opt` pass and the preview2 shim import rewrite, spawned without blocking so several components overlap. */
+export async function transpilePluginComponentAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  await transpilePluginComponentModulesAsync(artifact, outDir, componentBase, ctx);
+  await optimizePluginCoreModulesAsync(outDir, componentBase, ctx);
+  rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
+}
+
+
+/**
+ * 🧬️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2/H2, design-abi.md §1) + 🧪️ terra-web-bridges
+ * (async-worlds). `pure` (`interface pure { log; now-ms; trace-span; }`, component.wit ~:823) stays
+ * plain synchronous `func` and is unchanged from H2 — the old `host` world's larger surface
+ * (`read-document`/`write-document`/`open-window`/`invoke-action`/`read-asset`/`network-fetch`/
+ * `write-blob`/`read-blob`, plus the ad hoc `backboneSend`/`backbonePoll`/`backboneStatus`
+ * worker-postMessage relay) is still gone.
+ *
+ * NEW: `host-async` (component.wit ~:887 — 24 `async func` imports plus the two fire-and-forget
+ * `emit`/`emit-patch` doors) is now ALSO implemented in this one file, mapped alongside `pure` by
+ * `transpilePluginComponent`'s `--map` pair. Every async import posts an `effect-request` and returns
+ * a Promise settled by a later `effect-complete`/`effect-error` — see `effectRequest`'s own doc below
+ * for the exact `ShardFrame`/`ShardEnvelope` shape it rides (reused verbatim from
+ * `🎭️actor/📦️packages/🟦️typescript/🧵️shard-client.ts`, never a second wire). Host state belongs to
+ * an immutable actor/activation/version module URL shared by the component and its returned API.
+ *
+ * 🚧 UNPROVEN beyond the jcoprobe fixture (📓️terra-jco-spike-report.md): (a) whether jco expects a
+ * `result<T, pack>`-returning host-async import to signal `Err` by throwing — jcoprobe's own
+ * `probe-host` never used a `result<>` return, so `effectRequest` rejecting on `effect-error` follows
+ * jco's documented host-import convention, not a spike-confirmed one; (b) generated JavaScript and
+ * ShardClient ownership tests do not establish a fresh guest round trip through every host import.
+ */
+export function hostShimSource(): string {
+  return `/** @generated semio actor host shim — implements the pure AND host-async import interfaces
+ * (component.wit ~:823 / ~:887). See plugin-web-materialize.ts's hostShimSource doc for the design
+ * this file is generated from. */
+
+//#region 🧬️pure
+let originalClock;
+export function __bindOriginalClock(clock) { if (originalClock || typeof clock !== "function") throw new Error("original-turn.clock-binding-refused"); originalClock = clock; }
+export function operationClockUs() { if (!originalClock) throw new Error("original-turn.clock-unbound"); return originalClock(); }
+let originalTurn;
+let originalProducer;
+export function __checkoutOriginal(turn) { if (originalTurn || !turn || typeof turn.deadlineUs !== "bigint") throw new Error("original-turn.checkout-refused"); originalTurn = turn; }
+export function __returnOriginal(turn) { if (originalTurn !== turn) throw new Error("original-turn.foreign-return"); originalTurn = undefined; const raw = originalProducer; originalProducer = undefined; return raw; }
+function originalCheck() { if (!originalTurn) return 6; if (originalTurn.cancelled) return 1; if (operationClockUs() >= originalTurn.deadlineUs) return 3; return 0; }
+function unsupportedProducer(phase, fields) { if (originalProducer === undefined) originalProducer = { phase, fields }; return 6; }
+export function operationBegin() { const refused = originalCheck(); if (refused) throw refused; return BigInt(originalTurn.input.grant.maximumCapacityBytes); }
+export function operationProgress(completed, total, owned) { const refused = originalCheck(); if (refused) return refused; if (completed !== 0n || total !== 0n || owned !== 0n) return unsupportedProducer("progress", { completed, total, owned }); return 0; }
+export function operationAllocation(bytes, owned, next, maximum) { const refused = originalCheck(); if (refused) return refused; if (bytes !== 0n || owned !== 0n || next !== 0n) return unsupportedProducer("allocation", { bytes, owned, next, maximum }); return maximum === BigInt(originalTurn.input.grant.maximumCapacityBytes) ? 0 : 4; }
+export function operationReserveReturn(kind, count) { const refused = originalCheck(); if (refused) return refused; return count === 0n ? 0 : unsupportedProducer("canonical-return", { kind, count }); }
+export function operationFinish(owned) { const refused = originalCheck(); if (refused) return refused; return owned === 0n ? 0 : unsupportedProducer("finish", { owned }); }
+export function log(level, message) {
+  if (level === "error") console.error(\`[actor] \${message}\`);
+  else console.log(\`[actor] \${message}\`);
+}
+
+export function nowMs() {
+  return BigInt(Date.now());
+}
+
+export function traceSpan(name) {
+  if (typeof performance !== "undefined" && typeof performance.mark === "function") performance.mark(name);
+}
+//#endregion 🧬️pure
+
+//#region 🌉️host-async
+const bindingUrl = new URL(import.meta.url);
+const boundActorId = bindingUrl.searchParams.get("actor");
+const generationText = bindingUrl.searchParams.get("activation");
+const boundActivationGeneration = generationText && /^[1-9][0-9]*$/.test(generationText) && generationText.length <= 20 ? BigInt(generationText) : null;
+let effectSeq = 0;
+const pendingEffects = new Map();
+
+function assertHostActivation() {
+  if (!boundActorId || boundActivationGeneration === null || boundActivationGeneration > 0xffffffffffffffffn) throw new Error("actor-activation.host-unbound");
+}
+
+// 🌉️ Settles the Promise \`effectRequest\` handed back for \`requestId\` — called by \`🟨️shard-worker.js\`
+// when an \`effect-complete\`/\`effect-error\` envelope for this actor arrives.
+export function __resolveEffect(requestId, value) {
+  const entry = pendingEffects.get(requestId);
+  if (!entry) return;
+  pendingEffects.delete(requestId);
+  entry.resolve(value);
+}
+
+export function __rejectEffect(requestId, message) {
+  const entry = pendingEffects.get(requestId);
+  if (!entry) return;
+  pendingEffects.delete(requestId);
+  entry.reject(new Error(message));
+}
+
+// 🌊️ jco's proven shape for a guest-consumable \`stream<u8>\` is a plain async generator yielding ONE
+// byte at a time — confirmed against a real component (jcoprobe's \`fetchBody\`/\`read-body\`, S4 in
+// 📓️terra-jco-spike-report.md), NOT a \`ReadableStream\` directly. An \`effect-complete\` for
+// \`http-fetch\`/\`blob-read\` is expected to carry a \`ReadableStream\` (structured-clone-transferable
+// across \`postMessage\`); this adapts it into the proven per-byte generator shape. Also accepts an
+// already-async-iterable value so a kernel handing back a plain byte array still works.
+async function* streamToByteGenerator(body) {
+  if (body == null) return;
+  if (typeof body[Symbol.asyncIterator] === "function") {
+    for await (const chunk of body) {
+      if (chunk instanceof Uint8Array) { for (const byte of chunk) yield byte; } else yield chunk;
+    }
+    return;
+  }
+  const reader = body.getReader();
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) return;
+      if (value instanceof Uint8Array) { for (const byte of value) yield byte; } else yield value;
+    }
+  } finally {
+    reader.releaseLock();
+  }
+}
+
+// 🚪️ Every \`host-async\` ASYNC import funnels through here — posts one \`ShardFrame::Envelope\` up to
+// the kernel over the SAME shape \`🧵️shard-client.ts\` declares (\`to\`/\`from\`/\`lane\`/\`seq\`/
+// \`deadlineMs\`/\`coalesce\`/\`cancelOf\`/\`payload\`), with \`payload: {kind: "effect-request", payload:
+// {effect, requestId, params}}\` — the SAME \`{kind, payload}\` envelope-payload shape
+// \`ShardEventEnvelope\` already uses for turn events, reused rather than inventing a new one. Resolves
+// or rejects once \`__resolveEffect\`/\`__rejectEffect\` fires for the matching \`requestId\`.
+function effectRequest(effect, params) {
+  assertHostActivation();
+  const requestId = \`\${boundActorId}:\${boundActivationGeneration}:\${effect}:\${++effectSeq}\`;
+  return new Promise((resolve, reject) => {
+    pendingEffects.set(requestId, { resolve, reject });
+    self.postMessage({
+      kind: "frame",
+      actorId: boundActorId,
+      activationGeneration: boundActivationGeneration,
+      frame: {
+        kind: "Envelope",
+        envelope: {
+          to: "kernel",
+          from: { kind: "actor", id: boundActorId },
+          lane: "Background",
+          seq: effectSeq,
+          deadlineMs: null,
+          coalesce: null,
+          cancelOf: null,
+          payload: { kind: "effect-request", payload: { effect, requestId, params } },
+        },
+      },
+    });
+  });
+}
+
+// 🚪️ \`emit\`/\`emit-patch\` are plain (non-async) WIT \`func\`s — the ONE fire-and-forget door for the
+// ~24 one-way \`effect\` variants (plus \`respond\`) and for UI patches. No \`requestId\`/Promise: posts
+// and returns immediately, same envelope shape as \`effectRequest\` above minus the correlation.
+function postFireAndForget(kind, payload) {
+  assertHostActivation();
+  self.postMessage({
+    kind: "frame",
+    actorId: boundActorId,
+    activationGeneration: boundActivationGeneration,
+    frame: {
+      kind: "Envelope",
+      envelope: { to: "kernel", from: { kind: "actor", id: boundActorId }, lane: "Background", seq: ++effectSeq, deadlineMs: null, coalesce: null, cancelOf: null, payload: { kind, payload } },
+    },
+  });
+}
+
+const call = (effect) => (params) => effectRequest(effect, params);
+export const storageRead = call("storage-read");
+export const storageWrite = call("storage-write");
+export const storageDelete = call("storage-delete");
+export const blobLoad = call("blob-load");
+export const blobWrite = call("blob-write");
+export const blobRead = (hash) => effectRequest("blob-read", { hash }).then(streamToByteGenerator);
+export const httpFetch = (params) => effectRequest("http-fetch", params).then((response) => ({ ...response, body: streamToByteGenerator(response.body) }));
+export const artifactRead = call("artifact-read");
+export const documentWrite = call("artifact-write");
+export const linkResolve = (link) => effectRequest("link-resolve", { link });
+export const registryQuery = call("registry-query");
+export const ioCompose = call("io-compose");
+export const ioRun = call("io-run");
+export const cacheDerive = call("cache-derive");
+export const cacheRead = call("cache-read");
+export const invokeExtension = call("invoke-extension");
+export const openWindow = call("open-window");
+export const openDialog = call("open-dialog");
+export const dispatchAction = call("dispatch-action");
+export const spawnPluginInstance = call("spawn-plugin-instance");
+export const requestFileOpen = call("request-file-open");
+export const requestMediaFrames = call("request-media-frames");
+export const requestCapability = call("request-capability");
+export const spawnJob = (job, kind, input, placement) => effectRequest("spawn-job", { job, kind, input, placement });
+
+export function emit(value) {
+  postFireAndForget("effect-emit", value);
+}
+
+export function emitPatch(patch) {
+  postFireAndForget("ui-patch-emit", patch);
+}
+//#endregion 🌉️host-async
+`;
+}

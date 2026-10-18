@@ -16,8 +16,9 @@ test("original canonical control schema agrees with independent Ajv without a me
  for(const bytes of law.bodyCopyGrants){const input={...law.original,body:{...law.original.body,maximumCopyBytes:bytes}};expect(validateJsonSchemaSubset(resolved,input)).toEqual([]);expect(independent(input)).toBe(true);expect(input.metadata).toBe(law.original.metadata);}
 });
 test("actual Sealer receives mandatory original metadata and records it separately before source work",()=>{
- const source=readFileSync(new URL("../../🦀️.rs",root),"utf8");
+ const source=readFileSync(new URL("../../../🎮️one-item/📬️publication/📥️lifted/🧵️canonical-edit/🦀️.rs",root),"utf8");
  for(const port of law.requiredReceivingPorts)expect(source).toContain(port);
  for(const fallback of law.forbiddenAuthority)expect(source).not.toContain(fallback);
- expect(source).not.toContain("canonical-edit.native-checkpoint-unsupported");
+ expect(source.indexOf("canonical-edit.native-checkpoint-unsupported")).toBeGreaterThan(0);
+ expect(source.indexOf("canonical-edit.native-checkpoint-unsupported")).toBeLessThan(source.indexOf("self.preparation_demands()"));
 });

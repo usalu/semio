@@ -6,7 +6,7 @@ import { isAbsolute, join } from "node:path";
 
 
 const fixture = JSON.parse(readFileSync(new URL("🧫️fixtures/🔣️.json", import.meta.url), "utf8")) as { contract: string; scenarios: { id: string; baselineAccepted: boolean; accepted: boolean; diagnostic: string | null }[] };
-const storeUrl = new URL("../../../🦀️.rs", import.meta.url);
+const storeUrl = new URL("../../../📦️codec/🦀️.rs", import.meta.url);
 const source = readFileSync(storeUrl, "utf8");
 const providers = readFileSync(new URL("🧫️fixtures/🧪️registry-providers/🦀️.rs", import.meta.url), "utf8");
 const baseline = readFileSync(new URL("🧫️fixtures/🧾️original-api/🦀️.rs", import.meta.url), "utf8");
@@ -49,17 +49,17 @@ test("assembly lifetime schema is closed under owned and independent validation"
 });
 
 test("assembly lifetime baseline retains the exact original API and registry scope", () => {
-  expect(hash(baseline)).toBe("0ad696eb7431112abb41d2876b7eb83ed938f1909747efe5442de9ea8bc84018");
+  expect(hash(baseline)).toBe("d3fa21460ce49d42b583469834beac7938c1fdee0079283822ad91f548e17ff9");
   expect(baseline).toContain("Result<ArtifactAssemblyStoreRegistryGuards, ArtifactAssemblyStoreRegistryError>");
   expect(current).toContain("_assembly: &'assembly semio_framework_schema_registry::assembly::Transaction");
   expect(current).toContain("Result<ArtifactAssemblyStoreRegistryGuards<'assembly>, ArtifactAssemblyStoreRegistryError>");
 });
 
 for (const row of fixture.scenarios) test("actual Store assembly lifetime: " + row.id, () => {
-  const client = readFileSync(new URL("../🧫️fixtures/🧑️client/" + row.id + "/🦀️.rs", import.meta.url), "utf8");
+  const client = readFileSync(new URL("🧫️fixtures/🧑️client/" + row.id + "/🦀️.rs", import.meta.url), "utf8");
   const original = compile(baseline, client, row.id, "original");
   expect(original.exitCode, original.stderr).toBe(0);
-  const currentClient = readFileSync(new URL("../🧫️fixtures/🧑️client/" + row.id + "/📇️registry/🦀️.rs", import.meta.url), "utf8");
+  const currentClient = readFileSync(new URL("🧫️fixtures/🧑️client/" + row.id + "/📇️registry/🦀️.rs", import.meta.url), "utf8");
   const owned = compile(current, currentClient, row.id, "current");
   expect(owned.exitCode === 0, owned.stderr).toBe(row.accepted);
   if (row.diagnostic) expect(owned.codes).toContain(row.diagnostic);

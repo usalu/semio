@@ -51,7 +51,7 @@ use semio_framework_plugin::NoTransientMutation;
 // 🚧️ SDK GAP: see the identical note in `✏️editor/🦀️.rs` — `ArtifactViewer`/`Viewer`/
 // `ViewEmit`/`Dialect` are only reachable through `app`, not yet in the crate-root re-export list.
 use semio_framework_plugin::app::{ArtifactViewer, Dialect, ViewEmit, Viewer};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

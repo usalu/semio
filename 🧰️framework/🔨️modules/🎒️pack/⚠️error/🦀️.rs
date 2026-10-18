@@ -1,4 +1,4 @@
-//! ⚠️ Unmounted canonical Pack producer-authority draft; no native runtime verdict.
+//! ⚠️ Canonical Pack producer-authority owner: every cause keeps its source-authored kind or its transport category.
 use semio_framework_diagnostic::{FaultOrigin,TextError};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[cfg(test)] use semio_framework_value::list::{PagedListError,PagedListAllocationError,PagedListRefusalKind};

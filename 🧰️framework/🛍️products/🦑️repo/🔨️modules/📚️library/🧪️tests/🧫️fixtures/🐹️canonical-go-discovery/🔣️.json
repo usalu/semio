@@ -1,9 +1,11 @@
 {
-  "contract": "canonical-go-input-projection-v2",
+  "contract": "canonical-go-input-projection-v3",
   "layout": {
     "testsDirectory": "🧪️tests",
     "implementationFilename": "🐹️.go",
-    "opaqueDirectoryNames": ["🧫️fixtures"],
+    "packagesDirectory": "📦️packages",
+    "languageDirectory": "🐹️go",
+    "opaqueDirectoryNames": ["🧫️fixtures", "📦️packages"],
     "sourceDirectoryNames": ["🧮️addition", "🔠️uppercase", "🎯️offset"]
   },
   "module": "example.com/semio/canonical-go-tests",
@@ -64,5 +66,42 @@
   "expectedTests": [
     "TestPrivateAddition",
     "TestPrivateUppercase"
-  ]
+  ],
+  "packageModule": {
+    "owner": "owners/area",
+    "module": "example.com/semio/canonical-go-area",
+    "package": "area",
+    "production": "func Zero() int { return 0 }",
+    "members": [
+      {
+        "domain": "🧮️addition",
+        "production": "func add(left, right int) int { return left + right + Zero() }"
+      }
+    ],
+    "cases": [
+      {
+        "case": "🔬️unit",
+        "package": "area",
+        "mapped": true,
+        "test": "func TestPackageModulePrivateAddition(t *testing.T) { if add(2, 3) != 5 { t.Fatal(\"addition\") } }"
+      },
+      {
+        "case": "🌗️external",
+        "package": "area_test",
+        "mapped": true,
+        "imports": ["example.com/semio/canonical-go-area"],
+        "test": "func TestPackageModuleExternalZero(t *testing.T) { if area.Zero() != 0 { t.Fatal(\"zero\") } }"
+      },
+      {
+        "case": "🤝️adapter",
+        "package": "adapter",
+        "mapped": false,
+        "test": "func TestPackageModuleAdapterMustStayOutside(t *testing.T) { t.Fatal(\"adapter executed\") }"
+      }
+    ],
+    "expectedPackages": ["."],
+    "expectedSources": ["🧮️addition/🐹️.go"],
+    "expectedTests": ["../../🧪️tests/🌗️external/🐹️.go", "../../🧪️tests/🔬️unit/🐹️.go"],
+    "expectedGoTests": ["TestPackageModulePrivateAddition", "TestPackageModuleExternalZero"]
+  }
 }

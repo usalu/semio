@@ -612,7 +612,7 @@ fn production_bridge_installs_vcs_authority_page_ack_retry_and_incremental_close
 
 #[test]
 fn production_reachability_fixture_and_hostile_source_census_reject_the_old_route() {
-    let production = production_source(&["🦀️.rs", "🌉️domain-impl/🦀️.rs", "🧭️dispatch/🦀️.rs", "🔗️linear-memory/🦀️.rs", "🧩️domain-adapter/🦀️.rs", "🌿️vcs-feature/🦀️.rs", "🛠️adapter-ops/🦀️.rs", "🔤️argument-helpers/🦀️.rs", "🖼️surface-presentation/🦀️.rs", "🎬️actions-a/🦀️.rs", "🎞️actions-b/🦀️.rs", "🧵️dag-input/🦀️.rs"]);
+    let production = production_source(&["🦀️.rs", "🌉️domain-impl/🦀️.rs", "🧭️dispatch/🦀️.rs", "🔗️linear-memory/🦀️.rs", "🧩️domain-adapter/🦀️.rs", "🌿️vcs-feature/🦀️.rs", "🛠️adapter-ops/🦀️.rs", "🔤️argument-helpers/🦀️.rs", "🖼️surface-presentation/🦀️.rs", "🎬️actions-a/🦀️.rs", "🎬️actions-a/🗒️catalogue-ports-and-evaluation/🦀️.rs", "🎬️actions-a/🖱️computing-hover-and-preview/🦀️.rs", "🎬️actions-a/🗜️preview-toggle-clusters-and-export/🦀️.rs", "🎬️actions-a/📝️slider-and-note-editing/🦀️.rs", "🎬️actions-a/🖼️image-schemas-and-variables/🦀️.rs", "🎬️actions-a/🔗️widget-graph-editing/🦀️.rs", "🎞️actions-b/🦀️.rs", "🎞️actions-b/⏪️undo-redo-camera-and-wheel/🦀️.rs", "🎞️actions-b/🔭️level-of-detail/🦀️.rs", "🎞️actions-b/🖼️surface-theme-reorganize-and-render/🦀️.rs", "🎞️actions-b/🎯️pointer-and-picking/🦀️.rs", "🎞️actions-b/✅️selection/🦀️.rs", "🎞️actions-b/📤️drawing-export-and-snapshots/🦀️.rs", "🧵️dag-input/🦀️.rs"]);
     let protocol_production = production_source(&["📡️protocol/🦀️.rs", "📡️protocol/🌉️bridge/🦀️.rs", "📡️protocol/🪢️domain/🦀️.rs"]);
     let schema = read_source("../../🧬️schema/📡️abi/🔣️.json");
     let host = read_source("../../🖥️host/🏃️runtime/🟨️.js");

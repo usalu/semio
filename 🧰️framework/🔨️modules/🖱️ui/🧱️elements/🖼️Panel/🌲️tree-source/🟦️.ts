@@ -1,6 +1,7 @@
 /** 🌲 Owns the tree panel source shapes that tab bars and panels exchange. */
 import * as React from "react";
-import { type TreeDataItem, type TreeDataSection, type TreeDragAndDropController, type TreeSelectionMode } from "../../🌳️Tree/🟦️.tsx";
+import { type TreeDataItem, type TreeDataSection, type TreeSelectionMode } from "../../🌳️Tree/📋️data/🟦️.ts";
+import { type TreeDragAndDropController } from "../../🌳️Tree/🧲️drag-drop/🟦️.tsx";
 
 // Collapsible panel growing from one of the display's eight anchors (four corners plus four edge middles), with tabbed content.
 // Consumers MUST provide PanelTabNode entries (see {@link PanelTabNode} in #region 🩻️Ribbon Components).

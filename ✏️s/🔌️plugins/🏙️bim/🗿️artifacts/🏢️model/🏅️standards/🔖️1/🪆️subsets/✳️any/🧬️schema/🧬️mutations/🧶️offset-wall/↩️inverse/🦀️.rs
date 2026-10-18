@@ -1,12 +1,15 @@
 //! ↩️ Inverse of `OffsetWall`: a `DeleteWall` of the created wall, none when the original is absent.
 
-use super::super::delete_wall::DeleteWall;
-use super::OffsetWall;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall;
+use crate::standards::v1::subsets::any::schema::mutations::offset_wall::OffsetWall;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &OffsetWall, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &OffsetWall, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall>,
+{
     match base.walls.contains_key(&payload.id) {
-        true => vec![ModelMutation::DeleteWall(DeleteWall { id: payload.new_id.clone() })],
+        true => vec![Op::from(DeleteWall { id: payload.new_id.clone() })],
         false => Vec::new(),
     }
 }

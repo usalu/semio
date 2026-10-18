@@ -130,7 +130,7 @@ pub const NODE_GRAPH_EDIT_VERB: &str = "nodeGraphEdit";
 /// 🛠️ ONE tool transaction of `leaves` through the ONE node-drag machine of `🛠️tool-machine` (design §13.3): the ref
 /// minted from the admission's authoring seed, the host clock and `<appId>#<verb>`, for the press `gesture`. A view
 /// without command authority publishes the leaves plainly; nothing yielded is the empty emit (zero trace).
-pub(crate) fn generation2d_node_drag_emit(doc: &ArtifactView<'_, Generation2dSnapshot>, verb: &str, gesture: &str, leaves: Vec<Generation2dMutation>) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
+pub fn generation2d_node_drag_emit(doc: &ArtifactView<'_, Generation2dSnapshot>, verb: &str, gesture: &str, leaves: Vec<Generation2dMutation>) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
     node_drag_emit(semio_s_artifact_procedural_2d_model::GENERATION2D_EDITOR_APP_ID, verb, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), gesture, leaves).into()
 }
 
@@ -146,7 +146,7 @@ pub(crate) fn slider_leaf(host_snapshot: &FlowHostSnapshot, widget_id: &str, val
 
 /// 🚚️ The `move-nodes` leaves `records` mean on `host_snapshot`, one per record that moves, each over the record's nodes the
 /// graph holds — a record naming no widget, or one whose offset moves nothing, yields no leaf.
-pub(crate) fn generation2d_node_drag_leaves(host_snapshot: &FlowHostSnapshot, records: &[NodeDragRecord]) -> Vec<Generation2dMutation> {
+pub fn generation2d_node_drag_leaves(host_snapshot: &FlowHostSnapshot, records: &[NodeDragRecord]) -> Vec<Generation2dMutation> {
     records
         .iter()
         .filter(|record| record.moves())

@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateFamily`: one created family entry. The id is free in every collection and the name is not blank. Parameters and solids come afterwards.
 
-use super::super::elements;
-use super::super::family_rules;
-use super::CreateFamily;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules;
+use crate::standards::v1::subsets::any::schema::mutations::create_family::CreateFamily;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

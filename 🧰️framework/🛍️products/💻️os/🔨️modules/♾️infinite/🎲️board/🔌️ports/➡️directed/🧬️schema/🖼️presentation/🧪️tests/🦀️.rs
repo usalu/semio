@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_value::{FromValue,ToValue};
 #[test]
 fn portable_presentation_contract_matches_json_oracle(){
- let corpus:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).expect("portable corpus");
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🖼️presentation/🔣️.json")).expect("portable corpus");
  for value in corpus["ports"].as_array().expect("ports"){
   let port:IoPortSpec=semio_framework_pack_json::from_json_str(&value.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).expect("port contract");
   let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&port.to_value())).expect("independent JSON");

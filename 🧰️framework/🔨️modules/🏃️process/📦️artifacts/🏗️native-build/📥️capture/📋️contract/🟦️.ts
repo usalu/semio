@@ -1,4 +1,4 @@
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {readScriptProcessJsonV1} from "../../../../🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
 import {CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1} from "../../🧾️receipt/🟦️.ts";
 import sourceSchema from "../../../📤️publication/📥️sources/🧬️schema/🔣️.json" with {type:"json"};

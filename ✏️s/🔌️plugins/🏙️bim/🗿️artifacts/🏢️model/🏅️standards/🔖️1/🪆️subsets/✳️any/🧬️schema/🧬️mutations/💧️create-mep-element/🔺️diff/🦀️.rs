@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `CreateMepElement`: one created MEP element entry. The id is free in every collection, the storey exists, every dimension of the section is a positive length and the path has at
 //! least two finite points of which no two consecutive ones coincide. The solid, the length, the volume and the clashes are inferred, never stored.
 
-use super::super::component_rules;
-use super::super::elements;
-use super::CreateMepElement;
+use crate::standards::v1::subsets::any::schema::mutations::component_rules;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_mep_element::CreateMepElement;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

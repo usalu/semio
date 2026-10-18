@@ -1,0 +1,13 @@
+{
+ "tag": "pbu",
+ "file": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖌️brush/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🖌️brush/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "🧪️fill-fixtures-and-mounted-session-helpers",
+  "🖌️brush-slot-laws",
+  "🧱️fill-frontier-checkpoint-and-job-laws",
+  "🔎️candidate-acceptance-preview-and-proximity",
+  "🚪️fill-base-core-tambour-and-pointer-slot-laws",
+  "📚️kind-catalog-and-free-handle-laws"
+ ]
+}

@@ -5,7 +5,7 @@ use super::*;
 //#region 🔖️Segment
 /// 📦️ The fully-encoded wire bytes of one framed segment, plus the byte offsets within
 /// them a writer needs to record chunk-table/manifest-span metadata without re-parsing.
-struct EncodedSegment {
+pub(super) struct EncodedSegment {
     pub(super) bytes: Vec<u8>,
     #[cfg(test)]
     pub(super) header_len: usize,
@@ -75,7 +75,7 @@ pub(super) async fn encode_segment(kind: u8, codec: CodecId, payload: &[u8]) -> 
 
 /// 👓️ A decoded, CRC-checked, decompressed segment plus enough position bookkeeping for
 /// callers walking a sequence of segments.
-struct DecodedSegment {
+pub(super) struct DecodedSegment {
     pub(super) kind: u8,
     pub(super) payload: Vec<u8>,
     /// ➡️ Total wire bytes consumed by this segment (frame header + stored payload + crc).

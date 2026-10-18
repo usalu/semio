@@ -37,9 +37,6 @@ const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Fixture;
 afterEach(() => cleanup());
 
 describe("GraphTimeline styled layout", () => {
-  it("validates the neutral layout contract", () => {
-  });
-
   it("measures the actual React DOM with production CSS and Chromium", async () => {
     const view = render(
       <GraphTimelineHost

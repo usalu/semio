@@ -19,7 +19,7 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
-semio-framework-2d = { workspace = true }
+semio-framework-2d-compute = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-io-base64 = { workspace = true }
 semio-framework-job = { workspace = true }

@@ -1,6 +1,7 @@
 syntax = "proto3";
 package semio.s_stdio_gif.snapshot;
-message GifSnapshot {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+
+message GifRgb { uint32 r = 1; uint32 g = 2; uint32 b = 3; }
+message GifColorTable { bool sorted = 1; repeated GifRgb colors = 2; }
+message GifImage { uint32 left = 1; uint32 top = 2; uint32 width = 3; uint32 height = 4; bool interlace = 5; optional GifColorTable lct = 6; bytes indices = 7; }
+message GifSnapshot { string schema = 1; uint32 width = 2; uint32 height = 3; optional GifColorTable gct = 4; uint32 background_color_index = 5; uint32 pixel_aspect_ratio = 6; repeated GifImage images = 7; }

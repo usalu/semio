@@ -2,16 +2,10 @@
 /// <reference types="vitest/importMeta" />
 /** 🎯️ `@semio-tech/framework` — utility and tool derivation helpers. */
 import type { IconName } from "@semio-tech/assets";
-import {
-  type ActionDefinition,
-  type ToolDefinition,
-  type ToolRef,
-  type UtilityCategory,
-  type UtilityNode,
-  type WindowMeasure,
-  SET_ACTIVE_TOOL_ACTION_ID,
-  SET_ACTIVE_UTILITY_ACTION_ID,
-} from "../🛂️manifest/🟦️.ts";
+import { type UtilityCategory, type UtilityNode } from "../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
+import { type ActionDefinition } from "../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
+import { type ToolDefinition, type ToolRef, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID } from "../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
+import { type WindowMeasure } from "../🛂️manifest/📋️app-definition-refresh-and-context-menu/🟦️.ts";
 
 //#region 🧰️ActionUtilities
 /** 🧰️ A resolved utility ready for the utility bar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */

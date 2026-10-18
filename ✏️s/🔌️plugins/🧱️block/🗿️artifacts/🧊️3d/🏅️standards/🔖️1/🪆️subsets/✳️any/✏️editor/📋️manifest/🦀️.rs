@@ -1,6 +1,7 @@
 //! 📋️ Manifest: `create_block3d_app` and the manifest stitch.
 
 use super::*;
+use semio_s_artifact_block_3d_editor_modes::BLOCK3D_UTILITY_SURFACE_BRUSH;
 
 //#region 🔖️Manifest
 pub fn create_block3d_app() -> semio_framework_plugin::AppDefinition {

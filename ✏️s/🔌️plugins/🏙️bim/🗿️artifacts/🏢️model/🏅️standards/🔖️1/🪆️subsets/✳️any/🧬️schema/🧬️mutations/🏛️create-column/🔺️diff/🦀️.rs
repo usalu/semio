@@ -1,10 +1,10 @@
 //! 🔺️ Diff constructor for `CreateColumn`: one created column entry. The storey and the column type must exist, a storey constraint
 //! must name a storey of the same building, and the authored top must lie above the base, a tilt leans by at most 60 degrees. No height is stored: it is inferred.
 
-use super::super::elements;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::tilt_flaw;
-use super::CreateColumn;
-use super::super::placement::rise;
+use crate::standards::v1::subsets::any::schema::mutations::create_column::CreateColumn;
+use crate::standards::v1::subsets::any::schema::mutations::placement::rise;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, TopConstraint}};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -7,13 +7,13 @@ use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 pub const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🏗️ifc/🏠️house/📸️snapshot/🔣️.json");
 
 /// 📁️ The directory of the committed SVG export of the house and the table the lxml + shapely oracle measured from it.
-pub const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️svg/🏠️house");
+pub const HOUSE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🚪️svg/🏠️house");
 
 /// 🪧️ The committed annotated room of the annotation inference: dimensions, tags, a note and a leader around four walls, a window, a grid line and a column.
 pub const NOTATED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪧️annotation-layout/🏠️room/📸️snapshot/🔣️.json");
 
 /// 📁️ The directory of the committed SVG export of the annotated room and the table the lxml + shapely oracle measured from it.
-pub const NOTATED_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️svg/🪧️notated");
+pub const NOTATED_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🚪️svg/🪧️notated");
 
 /// 🪧️ The decoded annotated room.
 pub fn notated() -> ModelSnapshot {

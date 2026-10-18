@@ -38,7 +38,7 @@ export function projectDashboardLaunch(current:LaunchDocument,commands:readonly 
  if(!ticketPattern.test(ticket)||current.version!=="0.2.0"||!Array.isArray(current.configurations))throw new Error("Invalid dashboard launch document");
  const prefix=`semio.dashboard.${ticket}.`,owned=(row:Record<string,any>)=>typeof row.presentation?.group==="string"&&row.presentation.group.startsWith(prefix);
  const retained=current.configurations.filter(row=>!owned(row)),position=current.configurations.findIndex(owned),configurations:Record<string,any>[]=[],inputPrefix=`semio-dashboard-${ticket.replaceAll("/","-")}-`;
- const inputs=(current.inputs??[]).filter(row=>!row.id.startsWith(inputPrefix));
+ const inputs:Record<string,unknown>[]=[];
  const ordered=[...commands].sort((a,b)=>(a.verb??"task").localeCompare(b.verb??"task","en")||a.id.localeCompare(b.id,"en"));
  const seen=new Set<string>();
  for(const command of ordered){if(!identifier.test(command.id)||!command.id.startsWith(`ticket:${ticket}/`)||seen.has(command.id))throw new Error(`Invalid or duplicate dashboard command ${command.id}`);seen.add(command.id);}
@@ -56,5 +56,6 @@ export function projectDashboardLaunch(current:LaunchDocument,commands:readonly 
    configurations.push({name:`${(verbs[verb]??verbs.task!)[index]} · ${command.id} [${language.toUpperCase()}]`,type:"node-terminal",request:"launch",command:`bun repo run @semio-tech/repo-dashboard-rs:launch -- run ${command.id}`,cwd:"${workspaceFolder}",env,presentation:{group:prefix+(index+1)+"_"+language+"."+verb,order}});
   }
  }
- return {...current,configurations:[...retained.slice(0,position<0?retained.length:position),...configurations,...retained.slice(position<0?retained.length:position)],inputs};
+ const pending=new Map(inputs.map(row=>[row.id,row])),projected=(current.inputs??[]).flatMap(row=>{if(typeof row.id!=="string"||!row.id.startsWith(inputPrefix))return[row];const current=pending.get(row.id);if(!current)return[];pending.delete(row.id);return[current];});projected.push(...pending.values());
+ return {...current,configurations:[...retained.slice(0,position<0?retained.length:position),...configurations,...retained.slice(position<0?retained.length:position)],inputs:projected};
 }

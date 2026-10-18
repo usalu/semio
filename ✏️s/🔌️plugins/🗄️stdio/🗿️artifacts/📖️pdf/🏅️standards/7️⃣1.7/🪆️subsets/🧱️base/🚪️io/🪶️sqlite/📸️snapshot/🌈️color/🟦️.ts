@@ -1,6 +1,7 @@
 import { writePdfArtifactReference,readPdfArtifactReference,PDF_ARTIFACT_REFERENCE_SQLITE_SCHEMA } from "../📦️artifact-reference/🟦️.ts";
 /** 🌈️ Handwritten PDF functions and twelve color spaces with exact owned numeric words. */
-import type { PdfFunction, PdfColorSpace, Binary64 } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfFunction, PdfColorSpace } from "../../../../🧬️schema/📸️snapshot/🌈️color/🟦️.ts";
+import type { Binary64 } from "@semio-tech/framework/value/ieee754";
 import { PdfProjection, PdfReader, pdfInteger, pdfNumber, pdfBoolean, type PdfCell, type ArtifactSqliteOptions, type SqliteDatabase, type SqliteRow } from "../🧩️entity/🟦️.ts";
 import { PDF_COS_SQLITE_SCHEMA, writePdfDictionary, readPdfDictionary } from "../🧩️cos/🟦️.ts";
 import { artifactSqliteInteger, artifactSqliteText, artifactSqliteCheckpoint } from "@semio-tech/framework/io/sqlite-snapshot/artifact";

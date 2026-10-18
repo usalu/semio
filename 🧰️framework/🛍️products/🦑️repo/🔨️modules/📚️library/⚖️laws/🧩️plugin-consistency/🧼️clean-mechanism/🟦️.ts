@@ -1,7 +1,9 @@
 /** 🧼️ Wave 4 plugin consistency policy: clean artifact standard subset mechanism rules and derived config.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
-import { canonicalPrimaryFilenameForKind, discoverPackageProblems, loadTaxonomy, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { discoverPackageProblems } from "../../../🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { checkDerivedConfig } from "../../../⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts";
 import { policyReadFileSafe, policyReaddirSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyWalkRelFiles } from "../../../🔍️discovery/🚶️file-walk/🟦️.ts";

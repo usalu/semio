@@ -4,7 +4,8 @@ import { basename, dirname, posix, resolve } from "node:path";
 import Ajv from "ajv";
 import * as TOML from "@iarna/toml";
 import ts from "typescript";
-import { inventorySchemaScopes, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { inventorySchemaScopes } from "../../🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
+import { semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 type Fixture = Readonly<{
   version: number;
@@ -22,7 +23,7 @@ type Fixture = Readonly<{
 
 const fixtureRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🧫️fixtures/🧱️framework-source-topology/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(fixtureRoot, "🧪️tests/🧫️fixtures/🧱️framework-source-topology/🔣️.json"), "utf8")) as Fixture;
 
 const expectedBasename: Readonly<Record<string, string>> = { json: "🔣️.json", css: "🎨️.css", javascript: "🟨️.js", rust: "🦀️.rs", typescript: "🟦️.ts", "typescript-jsx": "🟦️.tsx" };
 
@@ -180,7 +181,7 @@ describe("framework source topology", () => {
 });
 
 test("Hub WGPU command vectors retain source laws without corpus schema authority", async () => {
-  const owner = "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu", path = resolve(repoRoot, owner), source = readFileSync(resolve(path, "📜️script.ts"), "utf8"), vectors = JSON.parse(readFileSync(resolve(path, "🧫️fixtures/🔣️.json"), "utf8"));
+  const owner = "🌎️hub/🧪️tests/📺️renderer/🧊️wgpu", path = resolve(repoRoot, owner), source = readFileSync(resolve(path, "📜️script.ts"), "utf8"), vectors = JSON.parse(readFileSync(resolve(path, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8"));
   const parsed = ts.createSourceFile("📜️script.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS), classes = new Map(parsed.statements.filter(ts.isClassDeclaration).map(node => [node.name?.text, node.getText(parsed)]));
   const routes = new Map<string, string>();
   const visit = (node: ts.Node): void => { if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "register" && node.arguments.length === 2 && ts.isStringLiteral(node.arguments[0]!) && ts.isIdentifier(node.arguments[1]!)) routes.set(node.arguments[0]!.text, node.arguments[1]!.text); ts.forEachChild(node, visit); };

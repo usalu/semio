@@ -1,6 +1,6 @@
 //! 🦴️ Structural support and loading tools use current analytical members and emit authored semantic mutations.
-use super::plane::P;
-use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use crate::editor::bim::gestures::plane::P;
+use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::placement_of;
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::{StructuralLocation, StructuralSupport, StructuralLoad, LoadCase, Point3, Restraints}};

@@ -41,7 +41,7 @@ use semio_framework_plugin::NoPresenceMutation;
 use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
 use semio_framework_plugin::UiAssemblyResult;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Actions
 /// 🎯️ Every panel/dialog-adjacent action this app declares addresses itself through this factory —

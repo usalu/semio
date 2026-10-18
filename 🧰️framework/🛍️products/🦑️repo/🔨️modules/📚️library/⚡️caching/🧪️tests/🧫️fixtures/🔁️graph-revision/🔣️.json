@@ -15,8 +15,8 @@
     "🏗️build/👁️observation/🟨️.mjs","⚡️caching/🗃️records/🟦️.ts",
     "🏗️build/📤️arguments/🟨️.mjs",
     "🏗️build/📤️arguments/🧬️schema/🔣️.json",
-    "🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
-    "🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
+    "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json",
+    "⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/🔣️executor.json",
     "⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",
     "../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🔣️.json",
     "../../../💻️os/🔨️modules/🔌️plugin/📇️registry/🎮️playground/🧩️composition/🟨️.mjs"
@@ -36,52 +36,52 @@
     {
       "stage": "initial",
       "cache": true,
-      "executor": "nx:run-commands"
+      "executor": "repo:script"
     },
     {
       "stage": "policy",
       "cache": false,
-      "executor": "nx:run-commands"
+      "executor": "repo:script"
     },
     {
       "stage": "implementation",
       "cache": false,
-      "executor": "nx:noop"
+      "executor": "repo:noop"
     },
     {
       "stage": "helper-0",
       "cache": false,
-      "executor": "nx:noop"
+      "executor": "repo:noop"
     },
     {
       "stage": "helper-1",
       "cache": false,
-      "executor": "nx:noop"
+      "executor": "repo:noop"
     },
     {
       "stage": "helper-2",
       "cache": false,
-      "executor": "nx:noop"
+      "executor": "repo:noop"
     },
     {
       "stage": "helper-3",
       "cache": false,
-      "executor": "nx:noop"
+      "executor": "repo:noop"
     },
     {
       "stage": "helper-4",
       "cache": false,
-      "executor": "nx:noop"
+      "executor": "repo:noop"
     },
     {
       "stage": "identity-schema",
       "cache": false,
-      "executor": "nx:noop"
+      "executor": "repo:noop"
     },
     {
       "stage": "taxonomy",
       "cache": false,
-      "executor": "nx:noop"
+      "executor": "repo:noop"
     }
   ],
   "installationSchema": "../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",

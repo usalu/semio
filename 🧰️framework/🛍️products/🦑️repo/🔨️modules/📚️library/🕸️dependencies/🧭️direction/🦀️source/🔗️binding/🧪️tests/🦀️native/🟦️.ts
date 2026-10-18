@@ -5,7 +5,7 @@ import { join, resolve } from "node:path";
 const owner=resolve(import.meta.dir,"../.."), output=process.env.SEMIO_TEST_ARTIFACT_DIR;
 if(!output) throw Error("Caller-owned SEMIO_TEST_ARTIFACT_DIR is required");
 mkdirSync(output,{recursive:true});
-const corpus=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")) as {nativeCases:{id:string;source:string;accept:boolean;output?:string}[]};
+const corpus=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")) as {nativeCases:{id:string;source:string;accept:boolean;output?:string}[]};
 const root=mkdtempSync(join(output,"rust-binding-native-"));
 const provider=join(root,"provider.rs"), library=join(root,"libdifferent_library.rlib");
 writeFileSync(provider,"pub const VALUE:u32=19;");

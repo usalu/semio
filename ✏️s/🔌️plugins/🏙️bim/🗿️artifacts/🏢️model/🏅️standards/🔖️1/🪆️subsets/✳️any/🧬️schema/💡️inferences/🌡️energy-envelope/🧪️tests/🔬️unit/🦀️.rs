@@ -1,6 +1,35 @@
 //! 🧪️ The energy envelope of a closed room, a two-room house and a basement, and the aggregates, against closed-form values (ISO 6946 resistances, areas by orientation, the GEG coefficient).
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, SpaceConditions, Vertex};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{OpeningFrame, Vec3};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::spaces::{holds, inside, interior_point, obstacles_of, Obstacle, SpaceRoom, SpaceStatus, StoreyRooms};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::OpeningKind;
+#[allow(unused_imports)]
+use semio_framework_2d::booleans::BooleanOperation;
+#[allow(unused_imports)]
+use semio_framework_2d::regions::{region_boolean, Region};
+#[allow(unused_imports)]
+use semio_framework_2d::Vec2;
+#[allow(unused_imports)]
+use semio_framework_geometry::loops;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::{BTreeMap, BTreeSet};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::thermal::{FarSide, HeatFlow};
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, ModelInferenceSession};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Building, Layer, LayerFunction, LocationLine, Material, MaterialCategory, Opening, Phase, Point2, Rgb, Site, Slab, SlabType, Space, SpaceBoundary, Storey, TopConstraint, Wall, WallType, WindowType, Zone}, diff::{Entry, ModelDiff, patches::SpaceConditionsPatch}};
 use crate::standards::v1::subsets::any::schema::{diff::Assigned, inferences::ModelInference};

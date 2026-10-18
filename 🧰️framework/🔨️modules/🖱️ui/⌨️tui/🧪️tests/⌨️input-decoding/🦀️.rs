@@ -1,6 +1,6 @@
 mod input_decoding_fixture {
     use super::*;
-    use crate::tui::event::{mods, Event, Key, KeypadKey, MouseButton, MouseKind};
+    use semio_framework_ui_tui_core::event::{mods, Event, Key, KeypadKey, MouseButton, MouseKind};
     use semio_framework_pack_json::{parse, JsonMemberPolicy, Value};
 
     const FIXTURE: &str = include_str!("../🧫️fixtures/⌨️input-decoding/🔣️.json");
@@ -111,7 +111,7 @@ mod input_decoding_fixture {
 
     #[test]
     fn every_capability_vector_detects_the_shared_depth_repertoire_and_sync_support() {
-        use crate::tui::backend::{detect_capabilities, ColorDepth, UnicodeLevel};
+        use crate::backend::{detect_capabilities, ColorDepth, UnicodeLevel};
         let corpus = corpus();
         let rows = corpus["capabilities"].as_array().expect("capability rows");
         assert!(rows.len() >= 25, "the capability table keeps its breadth");

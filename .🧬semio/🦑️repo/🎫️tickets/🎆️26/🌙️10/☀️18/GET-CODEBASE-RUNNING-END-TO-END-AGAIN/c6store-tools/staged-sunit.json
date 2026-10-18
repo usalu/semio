@@ -1,0 +1,14 @@
+{
+ "tag": "sunit",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "📮️mailbox-and-backbone-envelope-laws",
+  "🧸️demo-snapshot-diff-and-mutation-fixtures",
+  "🤝️hub-hello-bootstrap-and-receive-laws",
+  "🕸️hostile-binding-heartbeat-and-wire-fixtures",
+  "🎭️native-actor-tests-module",
+  "💾️folder-storage-round-trips",
+  "♻️rebootstrap-supersession-refusal-and-presence-corpus-laws"
+ ]
+}

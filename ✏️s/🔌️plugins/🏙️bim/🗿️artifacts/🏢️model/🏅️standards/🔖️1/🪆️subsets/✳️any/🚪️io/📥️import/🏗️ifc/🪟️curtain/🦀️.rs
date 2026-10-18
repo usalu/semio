@@ -4,10 +4,10 @@
 //! geometry is a brep) and is reported by the unsupported-class note.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifccurtainwall.htm>
 
-use super::data::label;
-use super::reader::{text, Doc};
-use super::spatial::authoring_of;
-use super::Import;
+use crate::standards::v1::subsets::any::io::import::ifc::data::label;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{text, Doc};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::authoring_of;
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::schema::snapshot::{CurtainPanelOverride, CurtainWall, CurtainWallType};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use std::collections::BTreeMap;
@@ -54,6 +54,4 @@ pub fn read(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

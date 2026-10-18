@@ -57,6 +57,30 @@ use semio_framework_plugin_tool_run::TOOL_RUN_TRACE_DELTA_BYTES;
 use semio_framework_plugin_instance_commands::commands_instance_root::framework_reserved_action_kind;
 use semio_framework_plugin_instance_jobs::jobs_instance_root::OriginalRenderTreeIdentity;
 
+#[path = "🔒️close-terminal/🦀️.rs"]
+mod close_terminal;
+
+#[path = "🧾️typed-operation-results/🦀️.rs"]
+mod typed_operation_results;
+
+#[path = "🕹️ephemeral-interaction/🦀️.rs"]
+mod ephemeral_interaction;
+
+#[path = "📨️action-dispatch/🦀️.rs"]
+mod action_dispatch;
+
+#[path = "🔀️transactions/🦀️.rs"]
+mod transactions;
+
+#[path = "🗃️document-load/🦀️.rs"]
+mod document_load;
+
+#[path = "🖼️render-surface/🦀️.rs"]
+mod render_surface;
+
+#[path = "🎞️media-transfer/🦀️.rs"]
+mod media_transfer;
+
 /// 🧪 Guest laws in dependent crates (puzzle 3d) settle Isolated reserved admits the host would.
 pub async fn settle_framework_reserved_admission<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>, admitted: InvocationResult) -> Result<InvocationResult,semio_framework_job::OriginalTurnFailure> {
     let Some((job, input)) = admitted.requested_effects.iter().find_map(|effect| match effect {
@@ -167,67 +191,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         })
     }
 
-    fn close_terminal_is_empty(&self) -> bool {
-        self.constructor.constructor_terminal_is_empty()
-            && self.close.close_started
-            && self.history.pending_command_prune.is_none()
-            && !self.history.command_prune_requested()
-            && self.history.command_log.pruned_terminal_is_empty()
-            && InstanceExtensions::terminal_is_empty(&self.time_travel, &self.tool_runs)
-            && self.stores.store.close_owned_store_terminal_is_empty()
-            && self.stores.config_store.close_owned_store_terminal_is_empty()
-            && self.stores.draft_store.close_owned_store_terminal_is_empty()
-            && self.stores.interaction_store.close_owned_store_terminal_is_empty()
-            && self.close.close_presence_disposer.is_none()
-            && self.close.close_transient_disposer.is_none()
-            && self.stores.window_config_store.terminal_is_empty()
-            && self.stores.window_transient_store.terminal_is_empty()
-            && self.stores.retired_window_transient_stores.is_empty()
-            && self.stores.retired_window_transient_stores.empty_backing_byte_demand()==Some(0)
-            && self.close.close_interaction_disposer.is_none()
-            && self.tools.tool_cancellations.terminal_is_empty()
-            && self.pending.pending_document_window_admission.is_none()
-            && self.tools.pending_tool_lease_admission.is_none()
-            && self.media.pending_media_import_permit.is_none()
-            && self.tools.tool_operations.is_empty()
-            && self.child_composition.private_child_groups_terminal_is_empty()
-            && self.tools.latest_wins_commands.is_empty()
-            && self.tools.typed_operation_reservations.iter().all(Option::is_none)
-            && self.tools.latest_wins_order.len() == 0
-            && self.tools.latest_wins_keys.terminal_is_empty()
-            && self.close.close_instance_operation_owner_drained
-            && self.tools.instance_operation_owner.close_terminal_is_empty().unwrap_or(false)
-            && self.pending.render_failure_terminal_is_empty()
-            && self.tools.agent_lane_preview.is_none()
-            && self.media.media_submission_refusal_terminal_is_empty()
-            && self.ingress.action_ingress_sources_closed()
-            && self.media.media_exports.is_empty()
-            && self.pending.pending_reserved.is_empty()
-            && self.pending.reserved_commits.is_empty()
-            && self.pending.reserved_commit_outcome.is_none()
-            && self.media.media_closures.is_empty()
-            && self.media.snapshot_retirements.is_empty()
-            && self.media.segmented_downloads.is_empty()
-            && self.media.segmented_closures.is_empty()
-            && self.child_composition.child_content_retirements.is_empty()
-            && self.child_composition.child_content_retirements.empty_backing_byte_demand()==Some(0)
-            && self.close.close_child_member.is_none()
-            && self.child_composition.child_member_retirements.is_empty()
-            && self.child_composition.child_member_retirements.empty_backing_byte_demand()==Some(0)
-            && self.child_composition.children.is_empty()
-            && self.roster.peer_roster_publications.is_empty()
-            && self.roster.peer_roster_outcomes.is_empty()
-            && self.roster.peer_presence_retirements.is_empty()
-            && self.roster.presence_peer_retirements.is_empty()
-            && self.ingest.envelope_ingress.is_empty()
-            && self.ingest.envelope_decode_jobs.is_empty()
-            && self.ingest.store_replacement_jobs.is_empty()
-            && self.ingest.document_archive_loads.is_empty()
-            && self.ingest.document_archive_loads.empty_backing_byte_demand()==Some(0)
-            && self.ingest.envelope_field_decoder_retirements.is_empty()
-            && self.ingest.envelope_completed_record_retirements.is_empty()
-            && self.ladder_ref().retained_fields_terminal_is_empty()
-    }
+    fn close_terminal_is_empty(&self) -> bool { self.close_terminal_is_empty() }
 
     /// 🎡️ Visits the live-maintenance units in fair order and forwards the unchanged grant to the first that releases something.
     fn maintenance_step(&mut self, cx:&mut semio_framework_job::StepContext<'_>, loan:RetainedCloneGrant) -> Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
@@ -254,28 +218,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         ToolOwnerWitness::of::<A>()
     }
 
-    async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract> {
-        self.tools.bounded_tool_contracts
-            .iter()
-            .cloned()
-            .chain(self.tools.framework_tool_registrations.values().map(|registration| ArtifactToolPublicContract {
-                owner: registration.owner,
-                controller_id: registration.key.controller_id.clone(),
-                tool_id: registration.key.tool_id.clone(),
-                schema_id: registration.schema_id.clone(),
-                max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
-                publication_lanes: registration.publication_lanes,
-            }))
-            .chain(self.tools.app_tool_registrations.values().map(|registration| ArtifactToolPublicContract {
-                owner: registration.owner,
-                controller_id: registration.key.controller_id.clone(),
-                tool_id: registration.key.tool_id.clone(),
-                schema_id: registration.schema_id.clone(),
-                max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
-                publication_lanes: registration.publication_lanes,
-            }))
-            .collect()
-    }
+    async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract> { self.tool_public_contracts().await }
 
     async fn advance_typed_operation_publication(&mut self, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let mut retained=cx.retained_grant();if cx.should_yield(){return Ok(())}
@@ -392,32 +335,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
             || self.interaction.local_interaction_query.as_ref().is_some_and(|query| query.has_pending_work())
     }
 
-    fn begin_local_interaction_query(&mut self, request_id: u64, query_generation: u64) -> Option<protocol::LocalInteractionQueryReply> {
-        if self.close.close_started || self.tools.live_runtime_instance_id.is_none() {
-            return Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Closed });
-        }
-        if self.interaction.local_interaction_query.is_some() {
-            return Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Busy });
-        }
-        let document_revision = self.stores.store.content_revision_now();
-        let config_revision = self.stores.config_store.content_revision_now();
-        let topology_revision = match self.interaction.local_interaction_authority.revision(document_revision, config_revision) {
-            Ok(revision) => revision,
-            Err(_) => return Some(protocol::LocalInteractionQueryReply::Rejected { request_id, code: protocol::LocalInteractionQueryRejection::Closed }),
-        };
-        let identity = protocol::LocalInteractionIdentity {
-            app_instance_id: self.tools.live_runtime_instance_id.expect("live instance checked"),
-            generation: self.stores.interaction_store.generation_now(),
-            revision: self.stores.interaction_store.content_revision_now(),
-            document_revision,
-            topology_revision,
-        };
-        self.interaction.local_interaction_query =
-            Some(semio_framework_plugin_interaction::live::LocalInteractionLiveQuery::new(request_id, query_generation, identity, self.stores.store.snapshot_read().ok(), self.stores.config_store.snapshot_read().ok(), self.stores.interaction_store.snapshot_read().ok()));
-        self.interaction.local_interaction_emitted_bytes = 0;
-        self.interaction.local_interaction_retired_bytes = 0;
-        None
-    }
+    fn begin_local_interaction_query(&mut self, request_id: u64, query_generation: u64) -> Option<protocol::LocalInteractionQueryReply> { self.begin_local_interaction_query(request_id, query_generation) }
 
     fn acknowledge_local_interaction_query(&mut self, token: &protocol::LocalInteractionQueryToken) -> bool {
         self.interaction.local_interaction_query.as_mut().is_some_and(|query| query.acknowledge(token))
@@ -436,32 +354,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         reply
     }
 
-    fn publish_local_interaction_query_reply(&mut self, frames: &mut Vec<Vec<u8>>, maximum_frames: usize) -> bool {
-        let Some(query) = self.interaction.local_interaction_query.as_mut() else {
-            return false;
-        };
-        if !query.reply_ready() || frames.len() >= maximum_frames {
-            return false;
-        }
-        let mut encoded = Vec::new();
-        if frames.try_reserve_exact(1).is_err() || encoded.try_reserve_exact(512).is_err() {
-            return false;
-        }
-        let mut encoded = Some(encoded);
-        let delivered = query
-            .take_reply_admitted(|reply| {
-                if protocol::encode_local_interaction_query_frame_into(reply, encoded.as_mut().expect("one admitted reply buffer")).is_err() {
-                    return false;
-                }
-                frames.push(encoded.take().expect("one admitted reply buffer"));
-                true
-            })
-            .is_some();
-        if query.terminal_is_empty() {
-            self.interaction.local_interaction_query = None;
-        }
-        delivered
-    }
+    fn publish_local_interaction_query_reply(&mut self, frames: &mut Vec<Vec<u8>>, maximum_frames: usize) -> bool { self.publish_local_interaction_query_reply(frames, maximum_frames) }
 
     fn take_typed_operation_result_page(&mut self, receiver: u32) -> Option<TypedOperationResultPage> {
         let (index, operation_id) = (0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset| {
@@ -472,35 +365,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         self.tools.tool_operations.get_mut(operation_id)?.take_result_page()
     }
 
-    fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> {
-        if token.receiver != self.tools.live_runtime_instance_id.unwrap_or(u32::MAX) {
-            return Ok(false);
-        }
-        let download_ack = self.tools.tool_operations.get(token.operation).and_then(|operation| operation.result_page.as_ref().map(|page| (operation, page))).is_some_and(|(operation, page)| {
-            page.token == token
-                && page.lane == TypedOperationResultLane::Download
-                && operation.stage == MountedTypedCommandFullOperationStage::AwaitingAck
-                && matches!(operation.publication.as_ref(), Some(ArtifactToolCompletionValue::Download(Ok(_), _)))
-        });
-        if download_ack && (!self.media.segmented_downloads.can_insert(token.operation) || !self.media.segmented_closures.can_insert(token.operation)) {
-            return Ok(false);
-        }
-        let Some(operation) = self.tools.tool_operations.get_mut(token.operation) else { return Ok(false) };
-        let accepted = operation.acknowledge_result_page(token)?;
-        if !accepted || !download_ack {
-            return Ok(accepted);
-        }
-        let publication = operation.publication.take().ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-owner"), "download ACK lost its exact retained publication owner"))?;
-        let ArtifactToolCompletionValue::Download(Ok(download), ephemeral) = publication else {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-owner"), "download ACK resolved a non-download retained publication owner"));
-        };
-        if !ephemeral.presence.is_empty() || !ephemeral.transient.is_empty() {
-            operation.publication = Some(ArtifactToolCompletionValue::Download(Ok(download), ephemeral));
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.segmented-download-ephemeral"), "download ACK preceded retained ephemeral publication"));
-        }
-        self.media.segmented_downloads.insert_admitted(token.operation, download);
-        Ok(true)
-    }
+    fn acknowledge_typed_operation_result(&mut self, token: TypedOperationResultToken) -> Result<bool, Fault> { self.acknowledge_typed_operation_result(token) }
 
     fn take_typed_operation_effect(&mut self) -> Option<Effect> {
         self.tools.typed_effect_outbox.pop()
@@ -523,27 +388,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         Some(TypedOperationUiProgress { ui_scope, leftover: self.tools.typed_inline_interaction_leftover.take(), history_patch: self.time_travel.take_patch() })
     }
 
-    /// 🧾️ ticket 26/09/02/PUZZLE-3D-END-TO-END wave B21: the dirty set is only authoritative AFTER the
-    /// backfill. A typed operation publishes its edit through
-    /// [`Self::publish_mounted_typed_operation_unit`], which stages a batched `Edit` and never calls
-    /// `record_command` — that edit reaches the command log exclusively through
-    /// [`Self::backfill_command_log`], which runs inside [`Self::refresh_cache`], which
-    /// [`Self::history_patch`] runs FIRST. Reading `history_dirty_sequences` before that backfill
-    /// therefore answered "nothing dirty" on the very call whose publication had just landed, so the
-    /// terminal completion carried `history_patch: None` and the row surfaced on whatever later call
-    /// happened to refresh the cache — the one-command lag measured in the browser on wasm #47
-    /// (`📓️2026-09-12-wave-B19-mutation-lane-regression.md` §3).
-    ///
-    /// 🧾️ Lane-less rows (a View, a Mutation that emitted nothing) join this patch. Retirement
-    /// still records them, but only after this function has already read `history_dirty_sequences`.
-    async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault> {
-        let Some(witness) = self.tools.typed_completion_outbox.pop() else { return Ok(None) };
-        self.tools.record_settled_typed_operation_command(&mut self.history, &mut self.host_events, witness.operation);
-        self.render_ctx().refresh_cache().await?;
-        let history_patch = if self.history.history_dirty_sequences.is_empty() { None } else { Some(self.render_ctx().history_patch(false).await?) };
-        let revision = self.stores.store.content_revision_now();
-        Ok(Some(TypedOperationCompletion { operation: witness.operation, revision: u64::from_be_bytes(revision[..8].try_into().expect("revision lane width")), ui_scope: witness.ui_scope, history_patch }))
-    }
+    async fn take_typed_operation_completion(&mut self) -> Result<Option<TypedOperationCompletion>, Fault> { self.take_typed_operation_completion().await }
 
     fn take_typed_operation_composed_result(&mut self) -> Option<ComposedGestureResult> {
         self.tools.typed_composed_outbox.pop()
@@ -589,35 +434,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         self.pending.framework_reserved_commit_progress()
     }
 
-    async fn handle_action_invocation(&mut self, address: &semio_framework::manifest::ActionAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> {
-        let owner_app_id = self.app.instance_id().await;
-        if address.app_id != owner_app_id {
-            return Err((plugin_sdk_fault(format!("action app owner {} does not match {}", address.app_id, owner_app_id))).into());
-        }
-        if address.window_instance_id.trim().is_empty() {
-            return Err((plugin_sdk_fault("action window instance id must be non-empty")).into());
-        }
-        let reserved_kind = framework_reserved_action_kind(&address.action_id);
-        if reserved_kind.is_none() {
-            if !self.tools.registry.has_mode(&address.mode_id).await {
-                return Err((plugin_sdk_fault(format!("unknown action mode owner {}", address.mode_id))).into());
-            }
-            if active_mode_id != Some(address.mode_id.as_str()) {
-                return Err((plugin_sdk_fault(format!("action {} belongs to inactive mode {}", address.action_id, address.mode_id))).into());
-            }
-        }
-        let kind = match self.tools.registry.window_action(&address.window_kind_id, &address.action_id).await {
-            Some(definition) => definition.kind,
-            None => reserved_kind.ok_or_else(|| plugin_sdk_fault(format!("window kind {} does not own action {}", address.window_kind_id, address.action_id)))?,
-        };
-        if !self.ingress.action_source_capture_ready(&address.action_id, cx){return Ok(None)}
-        let log_generation_before = self.history.log_generation;
-        let previous_kind = self.host_events.invocation_kind.replace(kind);
-        let result = self.command_ctx().dispatch_action(&address.action_id, source_args, original_fault, meta, identity, cx).await;
-        self.host_events.invocation_kind = previous_kind;
-        let Some(result) = result? else{return Ok(None)};
-        Ok(Some(self.render_ctx().finish_recorded(log_generation_before, &address.action_id, result).await))
-    }
+    async fn handle_action_invocation(&mut self, address: &semio_framework::manifest::ActionAddress, source_args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, active_mode_id: Option<&str>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure> { self.handle_action_invocation(address, source_args, original_fault, active_mode_id, meta, identity, cx).await }
 
     async fn handle_response_action(&mut self, action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         if !self.ingress.action_source_capture_ready(action, cx){return Ok(None)}
@@ -675,26 +492,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         self.dispatch_ctx().dispatch_typed(command, meta, identity, cx).await
     }
 
-    /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME: decodes each lane's wire ops back into this
-    /// app's concrete `A::Mutation`/`A::ConfigMutation`/`A::DraftMutation` via `OpBinary::
-    /// decode_op` (the SAME decode idiom `dispatch_typed_command` uses for `A::Command`) and
-    /// dispatches them directly — see the trait method's own doc for why this skips `handle`.
-    async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
-        async fn decode_lane<T: ::protocol::OpBinary>(bytes: &[u8]) -> Result<Vec<T>, Fault> {
-            let op_bytes_list = protocol::decode_ops_vec(bytes).map_err(|error| error.into_fault())?;
-            let mut decoded = Vec::with_capacity(op_bytes_list.len());
-            for op_bytes in op_bytes_list.iter() {
-                decoded.push(<T as ::protocol::OpBinary>::decode_op(op_bytes).map_err(|error| error.into_fault())?);
-            }
-            Ok(decoded)
-        }
-        let log_generation_before = self.history.log_generation;
-        let artifact_mutations = decode_lane::<A::Mutation>(&artifact_ops).await?;
-        let config_mutations = decode_lane::<A::ConfigMutation>(&config_ops).await?;
-        let draft_mutations = decode_lane::<A::DraftMutation>(&draft_ops).await?;
-        let result = self.dispatch_ctx().dispatch_emit("task-resume-emit", Emit { artifact_mutations, config_mutations, draft_mutations, ..Default::default() }, meta, identity, cx).await?;
-        Ok(self.render_ctx().finish_recorded(log_generation_before, "task-resume-emit", result).await)
-    }
+    async fn resume_task_emit(&mut self, artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8>, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> { self.resume_task_emit(artifact_ops, config_ops, draft_ops, meta, identity, cx).await }
 
     async fn take_last_emit_wire(&mut self) -> Option<EmitWire> {
         self.pending.last_emit_wire.take()
@@ -708,114 +506,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         self.txn.pending_transaction_proposal.take()
     }
 
-    /// 🔀️ Decodes EITHER wire form (contract §2/§5.3): pre-planned (`prepared_ops`
-    /// non-empty) carries its own `origin`; owner-mutation (`prepared_ops` empty)
-    /// decodes the single `payload` op and has no origin on the wire — see the 🚧️ note below.
-    ///
-    /// 🚧️ The owner-mutation form carries no `origin` on the wire (contract §2/§5.3)
-    /// — this member is by construction a foreign target of someone else's
-    /// transaction, so the best available provenance is `Transaction` with an
-    /// initiator identity the wire does not convey. Flagged in `📓️w1-b-report.md`
-    /// as a contract gap for the coordinator/host lanes to close (e.g. by always
-    /// preferring the pre-planned form, which does carry `origin`).
-    async fn transaction_prepare(&mut self, txn_id: &str, _mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], prepared_child_ops: &[u8], origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome {
-        if let Some(rejection) = InstanceExtensions::transaction_refusal(&self.time_travel, &self.tool_runs, txn_id) {
-            return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(rejection) };
-        }
-        if self.txn.pending_transaction.is_some() {
-            return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", "a transaction is already pending on this instance")) };
-        }
-        let children = match ChildEmit::decode_groups(prepared_child_ops) {
-            Ok(children) => children,
-            Err(fault) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(fault) },
-        };
-        if let Some(missing) = children.iter().find(|child| !child.owner.is_empty() || self.child_composition.children.get(&(child.slot.clone(), child.child_id.clone())).is_none()) {
-            return TransactionPrepareOutcome {
-                foreign: Vec::new(),
-                rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.member-rejected", format!("owned child {:?} in slot {:?} is not held by this instance", missing.child_id, missing.slot))),
-            };
-        }
-        let (ops, resolved_origin): (Vec<A::Mutation>, protocol::MutationOrigin) = if !prepared_ops.is_empty() || !children.is_empty() {
-            let mut decoded = Vec::with_capacity(prepared_ops.len());
-            for op_bytes in prepared_ops {
-                match <A::Mutation as ::protocol::OpBinary>::decode_op(op_bytes) {
-                    Ok(op) => decoded.push(op),
-                    Err(error) => {
-                        return TransactionPrepareOutcome {
-                            foreign: Vec::new(),
-                            rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.unknown-mutation", format!("prepared op did not decode as a {} mutation: {error:?}", A::DOCUMENT_SCHEMA))),
-                        };
-                    }
-                }
-            }
-            (decoded, origin.unwrap_or_default())
-        } else {
-            match <A::Mutation as ::protocol::OpBinary>::decode_op(payload) {
-                Ok(op) => (vec![op], protocol::MutationOrigin::Transaction { initiator: protocol::ForeignTarget { artifact_id: String::new(), artifact_kind: String::new(), dialect: None } }),
-                Err(error) => {
-                    return TransactionPrepareOutcome {
-                        foreign: Vec::new(),
-                        rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.unknown-mutation", format!("owner-mutation payload did not decode as a {} mutation: {error:?}", A::DOCUMENT_SCHEMA))),
-                    };
-                }
-            }
-        };
-        let mut running = match self.stores.store.snapshot() {
-            Ok(snapshot) => snapshot,
-            Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.member-rejected", format!("{error:?}"))) },
-        };
-        let foreign = Vec::new();
-        for op in &ops {
-            match op.foreign_step_source(&running, 0) { Ok(None) => {}, Ok(Some(_)) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient")) }, Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(error.into_fault()) } }
-            let outcome = op.diff(&running);
-            if !outcome.is_applicable(protocol::MergePolicy::default()) {
-                return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages()))) };
-            }
-            running = match protocol::apply_diff(outcome.diff(), &running) {
-                Ok(next) => next,
-                Err(error) => return TransactionPrepareOutcome { foreign: Vec::new(), rejection: Some(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string())) },
-            };
-        }
-        let base_generation = self.stores.store.generation();
-        self.txn.pending_transaction = Some(PendingTransaction { txn_id: txn_id.to_string(), ops, children, origin: resolved_origin, base_generation });
-        TransactionPrepareOutcome { foreign, rejection: None }
-    }
+    async fn transaction_prepare(&mut self, txn_id: &str, _mutation_id: &str, payload: &[u8], prepared_ops: &[Vec<u8>], prepared_child_ops: &[u8], origin: Option<protocol::MutationOrigin>) -> TransactionPrepareOutcome { self.transaction_prepare(txn_id, _mutation_id, payload, prepared_ops, prepared_child_ops, origin).await }
 
-    /// 🔀️ Contract §5.8: reject commit when the base generation observed at prepare time no
-    /// longer matches the current one — the pending state is restored (not discarded) so an
-    /// explicit `TransactionRollback`/retry can still act on it.
-    ///
-    /// 🔀️ Contract §5.6: this member's prepared ops land as exactly ONE `Edit` — the
-    /// one-edit-per-member invariant `CompositionCoordinator::undo_group`'s tail-based group
-    /// undo depends on — stamped with `group_id = txn_id` and every `MutationMeta.origin`.
-    async fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, Fault> {
-        let pending = match self.txn.pending_transaction.take() {
-            Some(pending) if pending.txn_id == txn_id => pending,
-            Some(other) => {
-                let message = format!("transaction_commit: txn_id {txn_id:?} does not match the pending transaction {:?}", other.txn_id);
-                self.txn.pending_transaction = Some(other);
-                return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", message));
-            }
-            None => return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("transaction_commit: no transaction is pending (requested txn_id {txn_id:?})"))),
-        };
-        if pending.base_generation != self.stores.store.generation() {
-            let message = format!("transaction {txn_id:?}'s base generation {} no longer matches the current generation {}", pending.base_generation, self.stores.store.generation());
-            self.txn.pending_transaction = Some(pending);
-            return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.generation-mismatch", message));
-        }
-        let PendingTransaction { txn_id, ops, children, origin, .. } = pending;
-        if !children.is_empty() {
-            return self.dispatch_ctx().commit_transaction_group(&txn_id, ops, children, origin, meta, identity).await;
-        }
-        let label = ops.first().map(|op| protocol::SemanticMutation::<A::Snapshot>::label(op));
-        self.stores.store.dispatch(ArtifactCommand::Apply { mutations: ops, transaction: None }, identity).await.map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
-        self.history.cache = None;
-        self.stores.store.stamp_tail_group_id(&txn_id).await.map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
-        self.stores.store.stamp_tail_origin(origin).await.map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.commit-failed", format!("{error:?}")))?;
-        let edit_id = self.stores.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()).unwrap_or_default();
-        self.tools.record_command(&mut self.history, &format!("transaction:{txn_id}"), ActionKind::Mutation, label, Some(edit_id.clone()), Vec::new(), None);
-        Ok(edit_id)
-    }
+    async fn transaction_commit(&mut self, txn_id: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, Fault> { self.transaction_commit(txn_id, meta, identity).await }
 
     async fn transaction_rollback(&mut self, txn_id: &str) -> Result<(), Fault> {
         match &self.txn.pending_transaction {
@@ -860,58 +553,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> PluginApp 
         self.render_ctx().history_patch(true).await
     }
 
-    /// 🫥️ A pure command's head is the HEAD snapshot without history (design §20.8, `📓️api-stepped-document-load.md` §4):
-    /// it hydrates in O(snapshot) — no history fold — and marks the document head-only, so history verbs and queries answer
-    /// `pure.history-unavailable`. An empty head keeps the live document.
-    async fn hydrate_pure_head(&mut self,head:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        if head.is_empty() {
-            return Ok(true);
-        }
-        if self.pending.pending_document_window_admission.as_ref().is_some_and(|admission|admission.committed){return self.pending.close_document_window_admission(cx, false).map(|step|matches!(step,PluginLifecycleStep::Complete(_))).map_err(Into::into)}
-        if !self.tools.admit_document_window_reset(&mut self.pending, cx)?{return Ok(false)}
-        let head = <A::Snapshot as ArtifactPack>::decode_pack(head).map_err(|error| plugin_sdk_fault(format!("the pure head snapshot does not decode: {error:?}")))?;
-        let id = self.stores.store.envelope().id.clone();
-        let envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &id, head, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-        let mut window_reset=Some(self.ladder_ref().prepare_document_window_reset()?);
-        let actor = self.stores.store.local_actor_id().clone();
-        self.stores.store.reset(loaded_with_app_dialect::<A>(envelope)).await.map_err(|error| error.into_fault())?;
-        self.pending.commit_document_window_reset(&mut self.stores, &mut self.history, &mut window_reset, cx)?;
-        assert_eq!(self.stores.store.local_actor_id(), &actor, "pure head retains its opened actor");
-        self.history.cache = None;
-        self.history.retire_displaced_document_rows();
-        self.time_travel.set_history_unavailable(true);
-        Ok(false)
-    }
+    async fn hydrate_pure_head(&mut self,head:&[u8],cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> { self.hydrate_pure_head(head, cx).await }
 
-    /// 🎯️ Empty domains ⇒ empty bytes (contract-freeze §C7.6) — `encode_presence_interaction`
-    /// itself always writes at least `app_id` + a domain count, so an explicit short-circuit
-    /// is required rather than trusting the codec's own "nothing to say" shape.
-    ///
-    /// 👤️ Generation 0 ⇒ empty bytes, the presence twin of the interaction short-circuit above: a
-    /// local presence root that was never published has nothing to say, and `encode_pack` always
-    /// writes a record header, so an untouched lane would otherwise ship a pack on every frame.
-    async fn ephemeral_snapshot(&self) -> EphemeralSnapshot {
-        let hover_specs: BTreeMap<String, protocol::HoverSpec> = self.tools.registry.interactions().await.map(|def| (def.id.clone(), def.hover.clone())).collect();
-        let selection_specs: BTreeMap<String, protocol::SelectionSpec> = self.tools.registry.interactions().await.map(|def| (def.id.clone(), def.selection.clone())).collect();
-        let interaction_state = self.interaction.interaction_state(&self.stores).await;
-        let interaction = protocol::assemble_presence_interaction(self.app_id().await, &interaction_state, &hover_specs, &selection_specs).await;
-        let interaction_bytes = if interaction.domains.is_empty() {
-            Vec::new()
-        } else {
-            let mut bytes = Vec::new();
-            protocol::encode_presence_interaction(&interaction, &mut bytes).await;
-            bytes
-        };
-        let presence_generation = self.stores.presence_store.generation().await;
-        EphemeralSnapshot {
-            presence: if presence_generation == 0 { Vec::new() } else { self.stores.presence_store.local().encode_pack() },
-            presence_generation,
-            transient_generation: self.stores.transient_store.generation().await,
-            interaction: interaction_bytes,
-            tool_run: self.tool_runs.presence(),
-            history_edit: self.time_travel.presence(),
-        }
-    }
+    async fn ephemeral_snapshot(&self) -> EphemeralSnapshot { self.ephemeral_snapshot().await }
 
     fn reserve_presence_ingress(&mut self, seq: u64) -> Result<PresenceRosterAdmission, Fault> {
         let generation = self.roster.peer_roster_admission_generation.checked_add(1).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.peer-roster-generation"), "peer roster admission generation exhausted"))?;
@@ -1007,48 +651,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Ok(entries)
     }
 
-    fn begin_document_archive_load(&mut self, operation: u64, mut archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
-        if archive.members.len() > protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS {
-            return Err(document_load_fault(DOCUMENT_LOAD_TOO_MANY_MEMBERS_CODE, "document archive exceeds its fixed 1024-member authority").with_param("count", archive.members.len().to_string()).with_param("maximum", protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS.to_string()));
-        }
-        let archive_payload_bytes = archive.members.iter().fold(archive.parent_pack.len().checked_add(archive.parent_spr.len()), |total, entry| total.and_then(|total| total.checked_add(entry.envelope_pack.len())));
-        if archive_payload_bytes.is_none_or(|bytes| bytes > protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES) {
-            return Err(document_load_fault(DOCUMENT_LOAD_TOO_LARGE_CODE, "document archive typed payload exceeds its fixed byte authority").with_param("bytes", archive_payload_bytes.unwrap_or(usize::MAX).to_string()).with_param("maximum", protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES.to_string()));
-        }
-        if !self.ingest.document_archive_loads.can_insert(operation) {
-            return Err(document_load_fault(DOCUMENT_LOAD_BUSY_CODE, "document archive operation identity is already live or its fixed slot is occupied"));
-        }
-        if archive.parent_pack.is_empty() || archive.parent_spr.is_empty() {
-            return Err(document_load_fault(DOCUMENT_LOAD_INCOMPLETE_CODE, "document archive parent pack and SPR must both be present"));
-        }
-        archive.members.sort_by_key(|entry| entry.ordinal);
-        for (ordinal, entry) in archive.members.iter().enumerate() {
-            let fields = [
-                entry.reference.artifact_id.as_str(),
-                entry.reference.artifact_kind.as_str(),
-                entry.reference.standard.as_str(),
-                entry.reference.subset.as_str(),
-                entry.owner.parent.artifact_id.as_str(),
-                entry.owner.parent.artifact_kind.as_str(),
-                entry.owner.parent.standard.as_str(),
-                entry.owner.parent.subset.as_str(),
-                entry.owner.slot.as_str(),
-                entry.owner.child_id.as_str(),
-            ];
-            if usize::try_from(entry.ordinal).ok() != Some(ordinal)
-                || entry.envelope_pack.is_empty()
-                || fields.iter().any(|field| field.is_empty() || field.len() > store::MEMBER_OPEN_IDENTITY_BYTES || field.chars().any(char::is_control))
-            {
-                return Err(document_load_fault(DOCUMENT_LOAD_MEMBER_INVALID_CODE, "document archive member ordinal, identity, owner, or envelope is invalid").with_param("ordinal", (ordinal + 1).to_string()));
-            }
-        }
-        archive.members.reverse();
-        let limits =
-            protocol::RetainedSprLimits { file_bytes: protocol::DOCUMENT_ARCHIVE_MAXIMUM_BYTES as u64, frame_body_bytes: store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES as u64 * 256, records: protocol::DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS as u64 * 8 };
-        let history = protocol::RetainedHistoryDecode::new_persisted_document(archive.parent_spr.len(), limits).map_err(|error| document_load_fault(DOCUMENT_LOAD_HISTORY_INVALID_CODE, error.to_string()))?;
-        self.ingest.document_archive_loads.insert_admitted(operation, ActiveDocumentArchiveLoad::new(operation, archive, history));
-        Ok(())
-    }
+    fn begin_document_archive_load(&mut self, operation: u64, archive: protocol::DocumentArchivePack) -> Result<(), Fault> { self.begin_document_archive_load(operation, archive) }
 
     fn begin_document_archive_merge(&mut self, operation: u64, archive: protocol::DocumentArchivePack) -> Result<(), Fault> {
         PluginApp::begin_document_archive_load(self, operation, archive)?;
@@ -1194,104 +797,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Ok(())
     }
 
-    /// 🕰️ Framework-owned, snapshot-independent — served before any app body-key match.
-    ///
-    /// 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
-    /// `interaction_domain`-bound `UiTree` this render produces — see `stamp_and_cache_interaction_ui`.
-    ///
-    /// 🕹️ Materialized owned BEFORE the field-wise destructure below (same reasoning as
-    /// `stamp_and_cache_interaction_ui`'s own comment): `interaction_hover`/`peer_presence`
-    /// are only ever READ here, so a snapshot avoids an aliasing conflict against `&mut self`.
-    async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<()>,semio_framework_job::OriginalTurnFailure> {
-        if self.pending.receive_render_failure(cx)?||cx.should_yield(){return Ok(None)}
-        if self.pending.pending_render_tree.is_none()&&self.pending.pending_render_tree_close.is_none()&&self.pending.pending_render_tree_ready{self.pending.pending_render_tree_identity=None;self.pending.pending_render_tree_ready=false;}
-        if let Some(identity)=self.pending.pending_render_tree_identity.as_mut(){identity.validate(cx)?;}else{self.pending.pending_render_tree_identity=Some(OriginalRenderTreeIdentity::capture(cx)?);}
-        if self.pending.pending_render_tree.is_some(){return Ok(self.pending.pending_render_tree_ready.then_some(()));}
-        let original_render_result:crate::OriginalRenderResult<()>=async {
-        if let Some(section)=semio_framework::UiRefreshSection::from_body_key(body_key){
-            let tree=semio_framework_plugin_reactor_app::original_render_section(self,section,view_state)?;
-            self.pending.retain_pending_render_tree(tree);
-            self.pending.pending_render_tree_ready=true;
-            return Ok(Some(()));
-        }
-        self.render_ctx().refresh_cache().await?;
-        if body_key == FRAMEWORK_HISTORY_BODY_KEY {
-            let Some((_, _, _, history)) = self.history.cache.as_ref() else {
-                return Err(plugin_sdk_fault("render cache unavailable after refresh").into());
-            };
-            let mut time_travel = self.time_travel.panel();
-            if let Some(panel) = time_travel.as_mut() {
-                self.time_travel_ref().resolve_time_travel_snaps(panel, view_state);
-                self.time_travel_ref().resolve_time_travel_options(panel);
-                self.time_travel_ref().resolve_time_travel_reference_labels(panel);
-            }
-            let reprojection = self.render_ref().reprojection_status();
-            let pages = self.child_composition.history_mutation_pages(&self.stores, history, time_travel.as_ref(), view_state);
-            let root =
-                ui_history_panel(history, time_travel.as_ref(), reprojection.as_ref(), &pages, &self.tools.registry.controller_id, view_state.locale, A::ROLE == AppRole::Viewer, self.time_travel_ref().time_travel_busy(), view_state).await?;
-            self.pending.retain_pending_render_tree(built_to_component_tree(root));
-            self.pending.pending_render_tree_ready=true;
-            return Ok(Some(()));
-        }
-        if let Some(root) = InstanceExtensions::render_body(&mut self.extension_ctx(), body_key, view_state) {
-            self.pending.retain_pending_render_tree(built_to_component_tree(root?));
-            self.pending.pending_render_tree_ready=true;
-            return Ok(Some(()));
-        }
-        let interaction_state = self.interaction.interaction_state(&self.stores).await;
-        let interaction_hover = self.interaction.interaction_hover.clone();
-        let interaction_peers = std::sync::Arc::clone(&self.roster.peer_presence);
-        let draft_references = self.time_travel.draft_references();
-        let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
-        let window_config = self.stores.window_config_store.capture(Some(view_state)).await?;
-        let window_transient = self.stores.window_transient_store.capture(Some(view_state))?;
-        if let Some(json) = snapshot_override_json {
-            let snapshot: A::Snapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|plugin_sdk_fault(error.to_string()))?;
-            let history = std::sync::Arc::clone(&self.history.cache.as_ref().ok_or_else(|| plugin_sdk_fault("render cache unavailable after refresh"))?.3);
-            let doc = ArtifactView::new(&snapshot, history.as_ref()).with_instance(self.tools.instance_operation_owner.clone());
-            let config = self.stores.config_store.snapshot().unwrap_or_else(|_| A::Config::default());
-            let cfg = ConfigView { snapshot: &config, window: window_config.as_ref().map(|authority| &authority.snapshot) };
-            let transient = self.stores.transient_store.current_root();
-            let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
-            let Some(node) = A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await? else{return Ok(None)};
-            self.pending.retain_pending_render_tree(node);
-            self.render_ctx().stamp_pending_render_interaction_ui(&interaction_state, body_key).await?;
-            self.pending.pending_render_tree_ready=true;
-            return Ok(Some(()));
-        }
-        let operation_progress = self.tools.operation_progress_snapshot();
-        let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let Some(node) = ({
-            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
-            let Some((_, snapshot, config, history)) = cache.as_ref() else {
-                return Err(plugin_sdk_fault("render cache unavailable after refresh").into());
-            };
-            let doc = ArtifactView::with_render_context(
-                time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
-                history.as_ref(),
-                ChildContentView::clone(time_travel.render_children_or(tool_runs, child_content_root)),
-                render_operation,
-                parent_document_id,
-                None,
-            )
-            .await
-            .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
-            .with_instance(self.tools.instance_operation_owner.clone())
-            .with_operations(&operation_progress);
-            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
-            let transient = self.stores.transient_store.current_root();
-            let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
-            A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await?
-        }) else{return Ok(None)};
-        self.pending.retain_pending_render_tree(node);
-        InstanceExtensions::after_app_render(&mut self.extension_ctx(), body_key, view_state)?;
-        self.render_ctx().stamp_pending_render_interaction_ui(&interaction_state, body_key).await?;
-        self.pending.pending_render_tree_ready=true;
-        Ok(Some(()))
-        }.await;
-        match original_render_result{Ok(tree)=>Ok(tree),Err(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure))=>self.pending.retain_render_failure(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure), cx),Err(source)=>self.pending.retain_render_failure(source, cx)}
-    }
+    async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<()>,semio_framework_job::OriginalTurnFailure> { self.render(body_key, snapshot_override_json, view_state, cx).await }
 
     fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<ComponentTree>,semio_framework_job::OriginalTurnFailure>{
         self.pending.pending_render_tree_identity.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source has no initiating identity"))?.validate(cx)?;
@@ -1299,251 +805,21 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Ok(&mut self.pending.pending_render_tree)
     }
 
-    /// 🕹️ Same materialize-before-destructure shape the `render`/`window_measures`/`context_menu`
-    /// paths use: `interaction_hover`/`peer_presence` are read-only here, so an owned snapshot
-    /// avoids aliasing the `&mut self` field-wise destructure below.
-    async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
-        if self.render_ctx().refresh_cache().await.is_err() {
-            return HashMap::new();
-        }
-        let interaction_state = self.interaction.interaction_state(&self.stores).await;
-        let interaction_hover = self.interaction.interaction_hover.clone();
-        let interaction_peers = std::sync::Arc::clone(&self.roster.peer_presence);
-        let draft_references = self.time_travel.draft_references();
-        let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
-        let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, time_travel, tool_machines, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = ArtifactView::with_render_context(
-            time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
-            history.as_ref(),
-            ChildContentView::clone(time_travel.render_children_or(tool_runs, child_content_root)),
-            render_operation,
-            parent_document_id,
-            None,
-        )
-        .await
-        .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
-        .with_instance(self.tools.instance_operation_owner.clone());
-        let mut engagements = HashMap::new();
-        for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
-            let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
-            let window_config = match window_config_store.capture(Some(&window_view_state)).await {
-                Ok(snapshot) => snapshot,
-                Err(_) => continue,
-            };
-            let window_transient = match window_transient_store.capture(Some(&window_view_state)) {
-                Ok(snapshot) => snapshot,
-                Err(_) => continue,
-            };
-            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
-            let transient_root = transient_store.current_root();
-            let transient = TransientView { snapshot: transient_root.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
-            let mut projected = A::window_engagements_with_request_context(&doc, &cfg, &window_view_state, &transient, &interaction).await;
-            if let Some(engagement) = projected.remove(&window.id).or_else(|| projected.remove(&window.window_kind_id)) {
-                engagements.insert(window.id.clone(), engagement);
-            }
-        }
-        engagements
-    }
+    async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> { self.window_engagements(view_state).await }
 
-    async fn window_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        if self.render_ctx().refresh_cache().await.is_err() {
-            return HashMap::new();
-        }
-        let interaction_state = self.interaction.interaction_state(&self.stores).await;
-        let interaction_hover = self.interaction.interaction_hover.clone();
-        let interaction_peers = std::sync::Arc::clone(&self.roster.peer_presence);
-        let draft_references = self.time_travel.draft_references();
-        let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
-        let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = ArtifactView::with_render_context(
-            time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
-            history.as_ref(),
-            ChildContentView::clone(time_travel.render_children_or(tool_runs, child_content_root)),
-            render_operation,
-            parent_document_id,
-            None,
-        )
-        .await
-        .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
-        .with_instance(self.tools.instance_operation_owner.clone());
-        let mut measures = HashMap::new();
-        for window in view_state.window_instances.iter().take(UI_RESIDENT_SLOTS) {
-            let Some(window_view_state) = view_state.for_window_instance(&window.id) else { continue };
-            let window_config = match window_config_store.capture(Some(&window_view_state)).await {
-                Ok(snapshot) => snapshot,
-                Err(_) => continue,
-            };
-            let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
-            let mut projected = A::window_measures_with_request_context(&doc, &cfg, &window_view_state, &interaction).await;
-            if let Some(window_measures) = projected.remove(&window.id).or_else(|| projected.remove(&window.window_kind_id)) {
-                measures.insert(window.id.clone(), window_measures);
-            }
-        }
-        measures
-    }
+    async fn window_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> { self.window_measures(view_state).await }
 
-    async fn tool_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> {
-        if self.render_ctx().refresh_cache().await.is_err() {
-            return HashMap::new();
-        }
-        let window_config = match self.stores.window_config_store.capture(Some(view_state)).await {
-            Ok(snapshot) => snapshot,
-            Err(_) => return HashMap::new(),
-        };
-        let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = ArtifactView::with_render_context(
-            time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
-            history.as_ref(),
-            ChildContentView::clone(time_travel.render_children_or(tool_runs, child_content_root)),
-            render_operation,
-            parent_document_id,
-            None,
-        )
-        .await
-        .with_tool_run(tool_runs.view_for(view_state.window_id.as_deref()))
-        .with_instance(self.tools.instance_operation_owner.clone());
-        let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| tool_machines.window_config_overlay_or(&authority.snapshot)) };
-        A::tool_measures(&doc, &cfg, view_state).await
-    }
+    async fn tool_measures(&mut self, view_state: &ViewModel) -> HashMap<String, Vec<WindowMeasure>> { self.tool_measures(view_state).await }
 
     async fn app_catalogue_json(&mut self) -> String {
         A::app_catalogue_json().await
     }
 
-    /// 🔒️ The app instance's RETAINED operation owner, handed to the poll for the same
-    /// reason `render_with_request_context` gets it: window-scoped background work an app
-    /// arms from here is latched on state only that owner holds, and a poll that cannot see
-    /// it re-arms an already-pending chain once per refresh
-    /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-    ///
-    /// ⏯️ The poll sees the LIVE RUN, exactly as the four render and measure passes above do.
-    /// `ArtifactApp::pending_effects` is where a surface starts a run once its work is owed and
-    /// finalizes a complete one, and that whole ladder is written over `doc.tool_run()` — handed a
-    /// view that always answered `None` it could only ever read "no run": the generation3d preview
-    /// run started, ticked, completed and was never finalized, so the next `toolRunStart` a gesture
-    /// asked for was a no-op against a run the framework still held and the 3d preview stopped
-    /// re-evaluating for the rest of the session
-    /// (`📓️preview-rearm-after-inspector-edit-2026-09-14.md`, contract §3.7). The document itself
-    /// stays the COMMITTED snapshot: a poll decides about work over what has landed, never over a
-    /// run's own provisional overlay.
-    async fn pending_effects(&mut self, view: Option<&ViewModel>) -> Vec<Effect> {
-        if self.render_ctx().refresh_cache().await.is_err() {
-            return Vec::new();
-        }
-        let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let snapshot_is_admitted = {
-            let (_, snapshot, _, _) = self.history.cache.as_ref().expect("cache refreshed above");
-            A::mounted_job_prepare_snapshot_read(render_operation, snapshot.as_ref())
-        };
-        let snapshot_read = if snapshot_is_admitted {
-            match self.stores.store.snapshot_read() {
-                Ok(snapshot_read) => Some(snapshot_read),
-                Err(_) => return Vec::new(),
-            }
-        } else {
-            None
-        };
-        let instance_operation_owner = self.tools.instance_operation_owner.clone();
-        let effects = {
-            let VcsArtifactApp { app: _, cache, child_content_root, tool_runs, tool_machines, .. } = self;
-            let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-            let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, snapshot_read)
-                .await
-                .with_instance(instance_operation_owner.clone())
-                .with_tool_run(tool_runs.view_for(view.and_then(|view| view.window_id.as_deref())))
-                .with_provisional_generation(tool_machines.provisional_generation());
-            let cfg = ConfigView { snapshot: config.as_ref(), window: None };
-            A::pending_effects(&instance_operation_owner, &doc, &cfg, view).await
-        };
-        self.stores.stamp_polled_load_document_effects(effects)
-    }
+    async fn pending_effects(&mut self, view: Option<&ViewModel>) -> Vec<Effect> { self.pending_effects(view).await }
 
-    /// 🗂️ Every context menu is organized (D2 of the grouped-context-menu mechanism design) at this
-    /// single funnel — a raw-vec emitter is grouped for free, and an emitter that already built its own
-    /// `Menu::group(...)` rows is never re-flattened (`organize_context_menu` is idempotent on already-organized input).
-    async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> {
-        if self.render_ctx().refresh_cache().await.is_err() {
-            return Vec::new();
-        }
-        let interaction_state = self.interaction.interaction_state(&self.stores).await;
-        let interaction_hover = self.interaction.interaction_hover.clone();
-        let interaction_peers = std::sync::Arc::clone(&self.roster.peer_presence);
-        let draft_references = self.time_travel.draft_references();
-        let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
-        let window_config = match self.stores.window_config_store.capture(Some(view_state)).await {
-            Ok(snapshot) => snapshot,
-            Err(_) => return Vec::new(),
-        };
-        let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
-        let parent_document_id = self.stores.store.envelope().id.clone();
-        let VcsArtifactApp { app: _, cache, registry, child_content_root, instance_operation_owner, .. } = self;
-        let (_, snapshot, config, history) = cache.as_ref().expect("cache refreshed above");
-        let doc = ArtifactView::with_render_context(snapshot.as_ref(), history.as_ref(), ChildContentView::clone(child_content_root), render_operation, parent_document_id, None).await.with_instance(instance_operation_owner.clone());
-        let cfg = ConfigView { snapshot: config.as_ref(), window: window_config.as_ref().map(|authority| &authority.snapshot) };
-        let items = A::context_menu_with_request_context(request, &doc, &cfg, view_state, &interaction, registry).await;
-        semio_framework_ui_layout::layout::organize_context_menu(items, &|id| registry.category_of(id))
-    }
+    async fn context_menu(&mut self, request: &ContextMenuRequest, view_state: &ViewModel) -> Vec<ContextMenuItemSpec> { self.context_menu(request, view_state).await }
 
-    /// 📤️ ABI-level media delivery for ONE port — the route `AppCommand::MediaOut` reaches
-    /// through `plugin_produce_media`.
-    ///
-    /// 🎞️ Produces one document or declared media output while preserving the initiating pending turn.
-    async fn produce_media(&mut self, port: &str, owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<MediaArtifact>,semio_framework_plugin_decl_app::MediaArtifactOperationFailure> {
-        if port == NATURAL_FILE_PORT {
-            let codec = A::natural_file_codec().await.ok_or_else(|| MediaArtifactError::Payload("natural file exporter is not mounted".into()))?;
-            self.render_ctx().refresh_cache().await?;
-            let snapshot = self.history.cache.as_ref().expect("cache refreshed above").1.as_ref();
-            let data = A::encode_natural_file(snapshot).await.map_err(MediaArtifactError::Export)?;
-            return Ok(Some(MediaArtifact {
-                descriptor: MediaArtifactDescriptor {
-                    edge_id: None,
-                    port_id: Some(port.to_string()),
-                    kind_id: Some(codec.format_kind.to_string()),
-                    media_type: None,
-                    wire: MediaWireFormat::Binary { format_kind: codec.format_kind.to_string() },
-                    blob_hash: None,
-                },
-                data,
-            }));
-        }
-        if port != "artifact:out" {
-            let exported = owner.receive_nested::<Media, Result<Option<MediaArtifact>,semio_framework_plugin_decl_app::MediaArtifactOperationFailure>>(|slot, original| {
-                let media = match ::semio_framework_async::poll::resolve_ready(self.export_media(port,cx)) {
-                    Ok(Some(media))=>media,
-                    Ok(None)=>return Ok(Ok(None)),
-                    Err(error)=>return Ok(Err(error.into())),
-                };
-                *slot = Some(media);
-                let media = slot.as_ref().unwrap();
-                let artifact = match &media.payload {
-                    MediaPayload::Intrinsic { schema, value } => MediaArtifact::encode_intrinsic(port, media.media_type, schema, value, original).map_err(|error| match error { MediaArtifactError::Value(error) => error, _ => media_projection_error() })?,
-                    MediaPayload::Structured { schema, json } => {
-                        let (port, schema, text) = copy_media_text_parts(port, schema, json, original)?;
-                        original.record_progress(RetainedCloneProgress { copied_items: 1, copied_bytes: size_of::<String>(), ..Default::default() })?;
-                        MediaArtifact { descriptor: MediaArtifactDescriptor { edge_id: None, port_id: Some(port), kind_id: None, media_type: Some(media.media_type), wire: MediaWireFormat::Binary { format_kind: schema }, blob_hash: None }, data: text.into_bytes() }
-                    }
-                    MediaPayload::Binary { format_kind, blob_hash } => {
-                        let (port, format_kind, blob_hash) = copy_media_text_parts(port, format_kind, blob_hash, original)?;
-                        MediaArtifact { descriptor: MediaArtifactDescriptor { edge_id: None, port_id: Some(port), kind_id: None, media_type: Some(media.media_type), wire: MediaWireFormat::Binary { format_kind }, blob_hash: Some(blob_hash) }, data: Vec::new() }
-                    }
-                };
-                Ok(Ok(Some(artifact)))
-            })??;
-            return Ok(exported);
-        }
-        let archive = PluginApp::document_archive(self).await?;
-        whole_document_media(port, self.artifact_schema().await.to_string(), &archive).await.map(Some).map_err(Into::into)
-    }
+    async fn produce_media(&mut self, port: &str, owner: &mut semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner<'_,'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<MediaArtifact>,semio_framework_plugin_decl_app::MediaArtifactOperationFailure> { self.produce_media(port, owner, cx).await }
 
     async fn prepare_media_import(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         let source=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
@@ -1556,41 +832,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         *self.media.pending_media_import_permit=Some((permit,source));Ok(false)
     }
 
-    async fn consume_media(&mut self, port: &str, artifact: MediaArtifact, cx:&mut semio_framework_job::StepContext<'_>) -> Result<MediaConsumption, MediaArtifactError> {
-        if port != NATURAL_FILE_PORT {
-            let schema_now = self.artifact_schema().await.to_string();
-            return match artifact.descriptor.wire {
-                MediaWireFormat::Document { schema } if schema == schema_now => whole_document_archive(&artifact.data).await.map(MediaConsumption::DocumentLoad),
-                MediaWireFormat::Document { schema } => Err(MediaArtifactError::SchemaMismatch { expected: schema_now, found: schema }),
-                MediaWireFormat::Binary { format_kind } => Err(MediaArtifactError::NoImporter(format_kind)),
-                MediaWireFormat::Intrinsic { .. } => {
-                    let media = {
-                        let mut accept = |_| true;
-                        let mut control = semio_framework_value::NativeDecodeControl::new(ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES, &mut accept);
-                        artifact.decode_intrinsic(&mut control)?
-                    };
-                    let instance_id = self.tools.live_runtime_instance_id.ok_or_else(|| ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "intrinsic media import requires a bound live app instance"))?;
-                    let actor = self.stores.store.local_actor_id().0.clone();
-                    self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }, cx).await.map(|_| MediaConsumption::Applied).map_err(MediaArtifactError::Import)
-                }
-            };
-        }
-        let codec = A::natural_file_codec().await.ok_or_else(|| MediaArtifactError::NoImporter(port.to_string()))?;
-        let MediaWireFormat::Binary { format_kind } = artifact.descriptor.wire else {
-            return Err(MediaArtifactError::NoImporter(codec.format_kind.to_string()));
-        };
-        if format_kind != codec.format_kind {
-            return Err(MediaArtifactError::NoImporter(format_kind));
-        }
-        let instance_id = self.tools.live_runtime_instance_id.ok_or_else(|| MediaArtifactError::Payload("natural file import requires a bound live app instance".into()))?;
-        let actor = self.stores.store.local_actor_id().0.clone();
-        let media_type = A::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-        let media = natural_file_input_media(codec, media_type, artifact.data);
-        self.dispatch_ctx().dispatch_import_media(port, media, &ActionMeta { actor, instance_id, view_state: None }, cx)
-            .await
-            .map(|_| MediaConsumption::Applied)
-            .map_err(|fault| MediaArtifactError::Payload(fault.message))
-    }
+    async fn consume_media(&mut self, port: &str, artifact: MediaArtifact, cx:&mut semio_framework_job::StepContext<'_>) -> Result<MediaConsumption, MediaArtifactError> { self.consume_media(port, artifact, cx).await }
 
     /// 🎞️ Batch-only adapter. Registered interactive outputs are driven through the same
     /// externally addressable submission API; this loop is not used by UI/workflow entry points.
@@ -1641,46 +883,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         self.media.cancel_owned_media_export(handle).await
     }
 
-    async fn retain_media_export_result(&mut self,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let operation_id=handle.operation_id.0;let identity=(cx.operation(),cx.generation(),cx.original_source_parent()?.source_identity()?);
-        if handle.parent_document_id.len()>semio_framework_plugin_decl_views::media_contract::ARTIFACT_OUTPUT_METADATA_BYTES{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"download handle document metadata exceeds its original limit").into())}
-        self.media.snapshot_retirements.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving lost its original source"))?.validate(cx)?;
-        if self.media.media_download_preparation.is_none()&&status.is_some()&&source.is_none(){return if self.media.segmented_downloads.get(operation_id).is_some_and(|output|output.owns_media_export_loan(handle)){Ok(true)}else{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"published download lost its exact registry recipient").into())}}
-        if self.media.media_download_preparation.is_none(){
-            let active=self.media.media_closures.get(operation_id).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving lost its original completed operation"))?;
-            if active.handle.original_loan()!=handle{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving requires its exact completed business handle").into())}
-            if let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref(){if !result.chunks.same_operation(&active.output_chunks){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving requires its original supplied chunks").into())}}
-        }
-        let grant=cx.retained_grant();if cx.should_yield()||cx.is_cancelled(){return Ok(false)}
-        if self.media.media_download_preparation.is_none(){
-            if status.is_some()||!self.media.segmented_downloads.can_insert(operation_id){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving slot is occupied").into())}
-            let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving requires its retained completion").into())};
-            let bytes=size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadPreparation>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
-            *self.media.media_download_preparation=Some(semio_framework_plugin_document_media::media_export::MediaDownloadPreparation{operation_id,source_identity:identity,document_identity:(handle.parent_document_id.as_ptr()as usize,handle.parent_document_id.len()),mime_identity:(result.mime_type.as_ptr()as usize,result.mime_type.len()),chunks_identity:result.chunks.original_identity(),coordinates:(handle.app_instance_id,handle.base_revision,handle.generation),buffers:ManuallyDrop::new(Some(std::array::from_fn(|_|Vec::new()))),buffers_close:ManuallyDrop::new(None),stage:0,handle:ManuallyDrop::new(None),handle_close:ManuallyDrop::new(None),output:ManuallyDrop::new(None),output_close:ManuallyDrop::new(None),published:false});
-            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
-        }
-        let original=self.media.media_download_preparation.as_mut().unwrap();if original.operation_id!=operation_id||original.source_identity!=identity||original.coordinates!=(handle.app_instance_id,handle.base_revision,handle.generation)||original.document_identity!=(handle.parent_document_id.as_ptr()as usize,handle.parent_document_id.len()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download publication requires its unchanged original source and handle").into())}
-        if let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref(){if original.chunks_identity!=result.chunks.original_identity(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download receiving lost its same actual result root").into())}}
-        if original.published{
-            if source.is_some()||status.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"published download has inconsistent original receiving slots").into())}
-            let bytes=size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadPreparation>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}self.media.media_download_preparation.take();cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(true)
-        }
-        if original.stage<2{
-            let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"partial download metadata lost its retained result").into())};if original.mime_identity!=(result.mime_type.as_ptr()as usize,result.mime_type.len()){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"partial download requires its unchanged original MIME source").into())}
-            let input=if original.stage==0{handle.parent_document_id.as_bytes()}else{result.mime_type.as_bytes()};let output=&mut original.buffers.as_mut().unwrap()[original.stage];
-            if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
-            if output.capacity()==0&&!input.is_empty(){if grant.maximum_capacity_bytes<input.len(){return Ok(false)}output.try_reserve_exact(input.len()).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"download metadata allocation refused"))?;cx.consume_retained(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:output.capacity(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-            if output.len()<input.len(){let count=(input.len()-output.len()).min(grant.maximum_copy_bytes);if count==0{return Ok(false)}let start=output.len();output.extend_from_slice(&input[start..start+count]);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:count,..Default::default()})?;cx.consume_fuel(1);return Ok(false)}
-            if grant.maximum_copy_bytes<size_of::<usize>(){return Ok(false)}original.stage+=1;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<usize>(),..Default::default()})?;cx.consume_fuel(1);return Ok(false)
-        }
-        if original.handle.is_none()&&status.is_none(){
-            let Some(ArtifactMediaExportPoll::Complete(result))=source.as_ref()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download metadata donation lost its original result").into())};let total_bytes=result.chunks.bytes()as u64;let bytes=size_of::<ArtifactMediaExportHandle>()+size_of::<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
-            let buffers=original.buffers.as_mut().unwrap();let document=String::from_utf8(std::mem::take(&mut buffers[0])).expect("copied original document remains UTF-8");let mime_type=String::from_utf8(std::mem::take(&mut buffers[1])).expect("copied original MIME remains UTF-8");*original.handle=Some(ArtifactMediaExportHandle{app_instance_id:handle.app_instance_id,parent_document_id:document,operation_id:handle.operation_id,base_revision:handle.base_revision,generation:handle.generation});*status=Some(semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus{mime_type,total_bytes});cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(false)
-        }
-        if original.output.is_none(){let _=ArtifactDownloadOutput::receive_media_export_original(&mut original.handle,source,&mut original.output,cx)?;return Ok(false)}
-        let bytes=size_of::<ArtifactDownloadOutput>()+2*size_of::<bool>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}if !self.media.segmented_downloads.can_insert(operation_id){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download registry receiving slot changed before publication").into())}
-        self.media.segmented_downloads.insert_admitted(operation_id,original.output.take().unwrap());original.published=true;if let Some(active)=self.media.media_closures.get_mut(operation_id){active.download_pending=false}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(false)
-    }
+    async fn retain_media_export_result(&mut self,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure> { self.retain_media_export_result(handle, source, status, cx).await }
 
     async fn take_media_export_chunk(&mut self,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         cx.original_source_parent()?;if receiver.is_some(){return Ok(true)}let operation_id=handle.operation_id.0;

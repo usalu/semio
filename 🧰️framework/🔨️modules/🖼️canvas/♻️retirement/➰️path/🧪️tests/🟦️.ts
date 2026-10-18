@@ -8,6 +8,7 @@ import example from "./🧫️fixtures/🔣️.json";
 import { retirementContractSchema as contract } from "@semio-tech/value-ts/retirement/contract/schema";
 import { orderedRetirementSchema as ordered } from "@semio-tech/value-ts/ordered/retirement/schema";
 import drawList from "../../../🧬️schema/🎬️draw-list/🔣️.json";
+import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 test("Canvas path retirement preserves original capacities under canonical supplied grants",()=>{
  const ajv=new Ajv({strict:false});ajv.addSchema(ordered);ajv.addSchema(contract);
@@ -37,7 +38,7 @@ test("Canvas path retirement preserves original capacities under canonical suppl
    expect(cut).toBeGreaterThanOrEqual(0);
   }
  }
- const geometry=readFileSync(resolve(import.meta.dir,"../../../../📐️geometry/⚙️engine/🦀️.rs"),"utf8");
+ const geometry=readModuleTreeSource(resolve(import.meta.dir,"../../../../📐️geometry/⚙️engine/🦀️.rs"));
  expect(geometry).toContain("pub fn elements_slice(&self) -> &[PathEl]");
  expect(geometry).toContain("pub fn into_elements(self) -> Vec<PathEl>");
  const leaf=readFileSync(resolve(import.meta.dir,"../🦀️.rs"),"utf8");

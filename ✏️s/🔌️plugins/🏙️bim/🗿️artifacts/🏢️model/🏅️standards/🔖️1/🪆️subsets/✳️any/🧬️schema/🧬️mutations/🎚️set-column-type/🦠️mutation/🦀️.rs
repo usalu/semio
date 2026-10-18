@@ -1,6 +1,6 @@
 //! 🎚️ `set-column-type` payload. Changes exactly the provided fields of a column type; every element of the type follows by inference.
 
-use crate::standards::v1::subsets::any::schema::{diff::{patches::ColumnTypePatch, ModelDiff}, mutations::ModelMutation, snapshot::{ModelSnapshot, Profile}};
+use crate::standards::v1::subsets::any::schema::{diff::{patches::ColumnTypePatch, ModelDiff}, snapshot::{ModelSnapshot, Profile}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -28,13 +28,16 @@ impl SetColumnType {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetColumnType {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetColumnType
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetColumnType>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "column-type", kind: "set-column-type", record: "SetColumnType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_column_type::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_column_type::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change column type \"{}\"", self.id), &format!("Stützentyp \"{}\" ändern", self.id))

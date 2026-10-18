@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-2d = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }

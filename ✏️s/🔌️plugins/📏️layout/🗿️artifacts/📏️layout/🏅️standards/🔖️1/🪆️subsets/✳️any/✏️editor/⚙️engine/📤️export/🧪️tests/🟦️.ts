@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
-import { readFileSync } from "node:fs";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { resolve } from "node:path";
 import { validateJsonSchemaSubset } from "@semio-tech/framework/schema";
 import schema from "../🧪️testing/📥️source/🧬️schema/🔣️.json";
@@ -8,8 +8,8 @@ import { inspectLayoutMediaAdoptionSourceV1, type LayoutMediaAdoptionSourceV1, t
 import corpus from "./🧫️fixtures/🔣️.json";
 
 const sources: Source = {
-  editor: readFileSync(resolve(import.meta.dir, "..", corpus.contract.sources.editor), "utf8"),
-  export: readFileSync(resolve(import.meta.dir, "..", corpus.contract.sources.export), "utf8"),
+  editor: readModuleTreeSource(resolve(import.meta.dir, "..", corpus.contract.sources.editor)),
+  export: readModuleTreeSource(resolve(import.meta.dir, "..", corpus.contract.sources.export)),
 };
 
 const contract = corpus.contract as LayoutMediaAdoptionSourceV1;

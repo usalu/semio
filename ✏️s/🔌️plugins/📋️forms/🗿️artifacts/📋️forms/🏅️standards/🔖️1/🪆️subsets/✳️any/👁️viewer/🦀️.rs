@@ -25,7 +25,7 @@ use semio_framework_plugin::Viewer;
 // 🚧️ `Dialect`/`InteractionView` are only reachable through `app`, not yet in the crate-root
 // re-export list (see the identical note in the sibling editor surface's root `🦀️.rs`).
 use semio_framework_plugin::app::{Dialect, InteractionView};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

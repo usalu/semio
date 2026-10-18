@@ -166,8 +166,8 @@
     "🧰️framework/🛍️products/💻️os/📦️packages/🟦️typescript/📜️script.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📽️projection/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/*/🟦️.ts",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/*/🟦️.ts",
     "🧰️framework/🔨️modules/⏳️async/🪃️continuation/🟦️.ts"
   ],
   "goOracle": {

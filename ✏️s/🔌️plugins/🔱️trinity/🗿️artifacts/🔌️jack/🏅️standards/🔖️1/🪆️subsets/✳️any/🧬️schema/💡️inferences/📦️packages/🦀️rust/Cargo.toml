@@ -35,6 +35,7 @@ semio-framework-graph-dsl = { workspace = true }
 semio-framework-graph-layout-run = { workspace = true }
 semio-framework-graph-manifest = { workspace = true }
 semio-framework-job = { workspace = true }
+semio-framework-job-native-decode = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/⏱️context/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-job-fault-publication = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/⚠️fault/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

@@ -32,5 +32,6 @@ pub enum LinkPin {
 
 #[path="📦️codec/🦀️.rs"]
 mod codec;
+pub use codec::*;
 
 semio_framework_value::artifact_retire_struct!(ArtifactLink { target, pin, role });

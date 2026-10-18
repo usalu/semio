@@ -1,7 +1,8 @@
 //! 🛝️ The ramp rows of the entity table: how a ramp reads off the snapshot and its inferred run, how an edited value becomes a `set-ramp` mutation, what a new ramp is, and the host rows of a railing
 //! (the picker of the stair, ramp or slab it follows, its side, its slab edge and its inset) that become a `set-railing` mutation.
 
-use super::{container, first, loop_text, number, parse_flag, parse_number, parse_point, parse_text, parse_top, partial, rename_element, zoning, Created, FieldRow, InferredRow};
+use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
+use crate::editor::bim::entities::{container, first, loop_text, number, parse_flag, parse_number, parse_point, parse_text, parse_top, partial, rename_element, zoning, Created, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::mutations::set_railing::SetRailing;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::RailingPatch}, snapshot::{HostSide, ModelSnapshot, Point2, RailingHost, Vertex}, mutations::ModelMutation};
@@ -68,7 +69,7 @@ pub fn write_host(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<Mod
 
 /// 🧭️ The side of the host a railing stands on; refused for a railing without host.
 pub fn write_host_side(snapshot: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
-    let side = super::variant(value, &[HostSide::Left, HostSide::Right])?;
+    let side = crate::editor::bim::entities::variant(value, &[HostSide::Left, HostSide::Right])?;
     hosting(id, None, Some(RailingHost { side, ..host_of(snapshot, id)?.clone() }))
 }
 
@@ -99,7 +100,7 @@ pub static RAMP_FIELDS: &[FieldRow] = &[
     field!("thickness", field_thickness, Number, |s, id| s.ramps.get(id).map(|row| number(row.thickness)), parse_number => set_ramp::SetRamp),
     field!("material", field_material, Text, |s, id| s.ramps.get(id).map(|row| row.material.clone()), choices: zoning::material_choices, parse_text => set_ramp::SetRamp),
     field!("base_offset", field_base_offset, Number, |s, id| s.ramps.get(id).map(|row| number(row.base_offset)), parse_number => set_ramp::SetRamp),
-    field!("top", field_top, Text, |s, id| s.ramps.get(id).map(|row| super::top_text(&row.top)), parse_top => set_ramp::SetRamp),
+    field!("top", field_top, Text, |s, id| s.ramps.get(id).map(|row| crate::editor::bim::entities::top_text(&row.top)), parse_top => set_ramp::SetRamp),
     field!("railing_left", field_rail_left, Text, |s, id| s.ramps.get(id).map(|row| row.railing_left.to_string()), parse_flag => set_ramp::SetRamp),
     field!("railing_right", field_rail_right, Text, |s, id| s.ramps.get(id).map(|row| row.railing_right.to_string()), parse_flag => set_ramp::SetRamp),
 ];

@@ -1,0 +1,7 @@
+{
+  "title": "Get Codebase Running End To End Again",
+  "emoji": "🏁",
+  "status": "open",
+  "description": "Get the codebase running again. Finish untangling the code, finish the tool-neutral build system, set up Bazel with the build system. The architecture and technology course, semio-tech play and mit-bestand demonstrator must run end to end. Fleet: Opus 5.5 High coordinates, Sonnet 5.5 High executes, Haiku 5.5 High explores and audits. Works alongside ABSTRACT-REPO-BUILD-TOOLS-AND-ADD-BAZEL, CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT and MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES.",
+  "goal": "🎯runningproducts"
+}

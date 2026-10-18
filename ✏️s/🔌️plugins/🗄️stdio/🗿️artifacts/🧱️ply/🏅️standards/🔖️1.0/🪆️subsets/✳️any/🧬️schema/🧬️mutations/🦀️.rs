@@ -138,9 +138,9 @@ fn demo_base_snapshot() -> PlySnapshot {
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<PlyMutation> {
+pub fn demo_mutation_cases() -> Vec<PlyMutation> {
     use crate::schema::snapshot::{PlyProperty, PlyScalarType};
     let snapshot = demo_base_snapshot();
     vec![

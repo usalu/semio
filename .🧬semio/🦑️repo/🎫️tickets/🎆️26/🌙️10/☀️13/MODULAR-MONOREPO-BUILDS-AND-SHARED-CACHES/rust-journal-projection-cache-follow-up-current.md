@@ -1,0 +1,19 @@
+# Bounded Journal Projection Warm-Path Follow-Up
+
+Source inspection during the compiler recovery/snapshot fix finds storageCustodyV1 checks journalProjections only after readCleanupJournal has already read and replayed every event. The current eight-entry map therefore does not demonstrate replay CPU avoidance. Do not claim a warm-path speedup without a real replay-count measurement. No Native/default SDK/compiler/image/OS sampling was performed.
+
+The snapshot repair now detaches child and namespace DATA at all three snapshot sites. Privately held reservation identities are captured separately. A future memo can reuse only an immutable validated projection for exactly identical journal bytes under the same loaded semantic contract. It must remain bounded by the existing journal byte and entry caps, with no growing key history or disk cache.
+
+All actual backing/descriptor/inode/byte/lease observations must still run. The read path must retain cancellation/funding checks, malformed/incomplete input refusal and actual image admission. Memo DATA never becomes a provider, allocation or cleanup grant. A pure Source parser/owner may be testable without Native images, but actual wiring and eventual Native behavior must be qualified separately. Avoid a circular import if separating the pure event engine from physical journal I/O.
+
+Capacity reuse must cover the maximum charged bytes across every historical prefix (including checkpoints and charges later retired/rebudgeted), not just final used bytes. A smaller current capacity might fit the final state while canonical cold replay rejects an earlier reserve peak. Track enough facts to preserve canonical admission; when reuse cannot prove equivalent behavior, replay under the actual capacity and preserve the canonical refusal. State sequences and all schema/namespace/child association checks remain.
+
+A useful Source test is transparent counting of real JSON event parses or actual validator/replay calls on complete neutral histories: cold parses each event, an exact warm byte match avoids replay, changed bytes replay, constrained capacity preserves exact canonical failure, and returned child/namespace mutations cannot poison private memo state. Compare semantic output independently with SQLite/Python. Preserve full existing vectors, clock/reserve/frontier/output caps and physical observations. Do not infer a wall-clock host speed ratio from different scheduling or load.
+
+The compiler journal checkpoint is separate: its eight current gates pass, but it implements serialized bounded recovery and detached snapshots only. Actual hard physical ceilings, precise crate invalidation, multi-agent warm builds, CPU scaling, mode/platform behavior and the full goal remain open.
+
+## Bounded Warm Journal Replay Avoidance
+
+`rust-journal-memo-checkpoint-current.md` (SHA256 `eaf5dbfa729b5fbf2d6ed5dbe2e8f6a455087dc0a67dd87797140b15c5d53732`, 10685 bytes) moves exact immutable projection reuse before replay on the actual bounded physical reader path. Real Source counters for nine complete SQLite-checked histories: 25 cold parses → 0 warm, with the same eight-entry/1 MiB bounds. Historical charge peaks preserve capacity refusal; schema alias, cancellation/malformed/partial data, full UTF8 boundary and genuine reentrant overcapacity red are covered. Retention now evicts before insertion. All eight final commands pass, including two-file16/472, strict, Source157/1643/11 and artifacts73/713/6 both modes. Four existing launch commands remain. No clocks, reserves, caps or former vectors are raised/dropped.
+
+The Source warm memo described above is now implemented and counter-qualified in the linked checkpoint, including historical-prefix and reentrant frontier tests. Actual physical observations still run. Pure layer extraction, cold-writer performance and genuine Native throughput/quota/integration remain open; the earlier constraints remain part of acceptance.

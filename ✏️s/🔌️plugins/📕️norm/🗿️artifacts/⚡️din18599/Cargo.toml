@@ -81,6 +81,10 @@ path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀
 
 [workspace.dependencies.semio-s-artifact-stdio-semio-table-model]
 path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-model]
+path = "../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust"
+
 [workspace.dependencies.serde]
 version = "1.0.228"
 features = [ "derive" ]
@@ -100,6 +104,9 @@ path = "../../🪟️results/🎚️config/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-2d]
 path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-2d-compute]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-diagnostic]
 path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"

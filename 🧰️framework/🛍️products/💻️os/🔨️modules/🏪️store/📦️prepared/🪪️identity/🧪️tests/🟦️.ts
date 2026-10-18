@@ -17,7 +17,7 @@ test("prepared publication identity fields are native paged text owners", () => 
   expect(db.query("SELECT actor,applied,tail FROM identities").get()).toEqual({ actor, applied: fixture.id, tail: fixture.id });
   expect(JSON.parse(JSON.stringify({ actor, applied: fixture.id, tail: fixture.id }))).toEqual({ actor, applied: fixture.id, tail: fixture.id });
   db.close();
-  const store = readFileSync(new URL("../../🦀️.rs", root), "utf8");
+  const store = readFileSync(new URL("../../🎮️one-item/📬️publication/🦀️.rs", root), "utf8");
   const start = store.indexOf("pub struct ArtifactStoreOneItemPrepared<P, Mutation>");
   const fields = store.slice(start, store.indexOf("impl<P, Mutation>", start));
   expect(fields).toContain("local_actor: Option<semio_framework_value::paged::PagedUtf8<{usize::MAX}>>");

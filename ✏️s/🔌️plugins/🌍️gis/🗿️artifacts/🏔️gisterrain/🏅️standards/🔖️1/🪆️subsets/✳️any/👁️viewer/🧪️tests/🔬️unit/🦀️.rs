@@ -11,7 +11,7 @@ use crate::{GisTerrainSnapshot, GIS_3D_TERRAIN_SCHEMA};
 #[allow(unused_imports)]
 use {semio_framework_plugin::ArtifactView, semio_framework_plugin::ConfigView, semio_framework_artifact_reference::Dialect, semio_framework_plugin::Fault, semio_framework_plugin::NoConfig, semio_framework_plugin::NoConfigMutation, semio_framework_plugin::NoPresence, semio_framework_plugin::NoPresenceMutation, semio_framework_plugin::NoTransient, semio_framework_plugin::NoTransientMutation, semio_framework_plugin::ViewEmit};
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::viewer::gisterrain::*;
 
 #[semio_framework_async_macros::async_test]

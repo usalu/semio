@@ -60,5 +60,17 @@
         }
       }
     }
-  ]
+  ],
+  "definitions": {
+    "ControlDescendant": {
+      "const": {
+        "version": 1,
+        "purpose": "exact-issued-control-lineage",
+        "includeSelf": true,
+        "liveIssuance": true,
+        "relation": "private-parent-control",
+        "restrictionEquivalence": false
+      }
+    }
+  }
 }

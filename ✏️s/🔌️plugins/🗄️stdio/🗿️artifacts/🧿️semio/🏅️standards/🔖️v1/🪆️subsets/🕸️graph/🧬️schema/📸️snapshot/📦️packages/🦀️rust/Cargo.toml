@@ -38,6 +38,7 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-base-examples = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
 
 [dev-dependencies]

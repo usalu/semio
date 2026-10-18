@@ -4,6 +4,8 @@ import Ajv from "ajv";
 import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import { frameworkSourceUrl } from "@semio-tech/framework/test/source-text";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { fileURLToPath } from "node:url";
 
 /** 🧾️ The original contribution worker consumes actual effects before yielding or refusing. */
 export function testFlowContributionsReceiver():void{
@@ -23,7 +25,7 @@ assert.equal(testingSchemaExists(new URL("../../🧬️schema/🎟️contributio
   assert.equal(row.failed,row.status==="refused"||!fits);assert.equal(row.ready,fits&&row.status==="complete"&&progressValues(row.progress).every(value=>value===0));assertions+=2;
  }
  db.close();
- const source=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
+ const source=readModuleTreeSource(fileURLToPath(new URL("../../🦀️.rs",import.meta.url)));
  const receiver=source.slice(source.indexOf("fn flow_contributions_registry_receipt"),source.indexOf("impl FlowContributionsWork"));
  assert.ok(receiver.includes("cx.consume_retained(progress)"),"the original receiver records the actual child receipt");assertions++;
  assert.ok(receiver.indexOf("cx.consume_retained(progress)")<receiver.indexOf("match result"),"success and failed child effects reach the same context before result propagation");assertions++;

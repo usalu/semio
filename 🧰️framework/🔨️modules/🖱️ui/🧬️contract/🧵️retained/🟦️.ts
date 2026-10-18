@@ -1,6 +1,6 @@
 //#region 🧬️Contract
 import { NumericIndex, type NumericIndexRetirement, type NumericIndexGrant } from "../../../🌱️value/📦️packages/🟦️typescript/🗂️ordered/🔢️numeric/🟦️.ts";
-import type { AccessibilitySpec, ActionBinding, Component, PatchRejection, UiContractViolation, UiDocumentLimits, UiNodeRecord, UiPatch, UiPatchOp, UiSnapshot } from "../../../🛂️manifest/🟦️.ts";
+import type { AccessibilitySpec, ActionBinding, Component, PatchRejection, UiContractViolation, UiDocumentLimits, UiNodeRecord, UiPatch, UiPatchOp, UiSnapshot } from "../../../🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts";
 import { retainedUiGraphValidation, closeRetainedUiGraphFrame, type RetainedUiGraphFrontier } from "./🛡️validation/🔬️graph/🟦️.ts";
 import { type Program, RetainedUiSiblingKeys as SiblingKeys, RetainedUiNumericTable as Table } from "./🧮️tables/🟦️.ts";
 

@@ -4,6 +4,7 @@ import { applyPatch } from "fast-json-patch";
 import {consumeRetainedProgress,remainingRetainedGrant} from "../../../⏱️budget/🟨️.js";
 import { readFileSync, existsSync } from "node:fs";
 import fixture from "./🧫️fixtures/🔣️.json" with { type: "json" };
+import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 test("retained step context neutral ledger alias and whole-frame authority", () => {
   for (const row of fixture.cases) {
@@ -46,7 +47,7 @@ test("original job budget consumes only actual independent retained receipts", (
   }
   expect(original).toEqual(law.remaining);
   expect(Buffer.from(law.source).byteLength).toBe(law.receipts[1].copiedBytes);
-  const source=readFileSync(new URL("../../../🦀️.rs",import.meta.url),"utf8");
+  const source=readModuleTreeSource(new URL("../../../🦀️.rs",import.meta.url));
   for(const method of ["pub retained: RetainedCloneGrant","pub fn retained_grant","pub fn consume_retained","pub fn retained_progress"])expect(source).toContain(method);
   expect(source).toContain("budget.retained");
 });

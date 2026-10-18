@@ -1,6 +1,10 @@
 //! 🧪️ The title block and the revision table: cells tile the block without gaps, empty fields fall back to what the sheet shows, the revision table grows upward from the block.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::Sheet;
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, TitleBlock, TitleField};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{RevisionRow, RevisionTable, TitleCell};
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::*;
 use crate::standards::v1::subsets::any::schema::snapshot::SheetRevision;
 
 fn frame() -> PaperRect {

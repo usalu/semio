@@ -47,10 +47,10 @@ use semio_framework_value_retirement_owner::{retirement_owner_close, retirement_
 
 #[derive(Clone)]
 pub struct CursorRevisionRecord {
-    pub(crate) ledger_key: Option<ArtifactHistoryKey>,
-    pub(crate) id_digest: [u8; 32],
-    pub(crate) edit_digest: [u8; 32],
-    pub(crate) prefix_digest: [u8; 32],
+    pub ledger_key: Option<ArtifactHistoryKey>,
+    pub id_digest: [u8; 32],
+    pub edit_digest: [u8; 32],
+    pub prefix_digest: [u8; 32],
 }
 
 impl CursorRevisionRecord {

@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateClassificationSystem`: one created system entry. The id must be free in every collection (and not `entry`, the tag of a diff entry, which would collide with the system id used as a key of
 //! an element's classifications), the system needs a name and an entry table with unique codes whose parents are rows of the table and form a forest.
 
-use super::super::elements;
-use super::CreateClassificationSystem;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_classification_system::CreateClassificationSystem;
 use crate::standards::v1::subsets::any::schema::{snapshot::{entries_problem, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

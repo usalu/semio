@@ -16,7 +16,7 @@ use semio_hub_directory_service::{ArtifactCasSweepRequest, ArtifactDirectoryComm
 use directory::os_directory::{ArtifactCheckpoint, ArtifactHash, ArtifactRetention, DirectoryActor, DirectoryActorKind, DirectoryCommand, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceRole, DirectorySpaceVisibility, DirectoryStreamMessage, DocumentDescriptor, DocumentScope, Hlc, PublishedArtifactBlob, PublishedArtifactCheckpoint};
 use semio_hub_directory_contract::error::{DirectoryError, DirectoryResult};
 use semio_hub_directory_dispatch::HubDirectories;
-use semio_hub_directory::{MemoryArtifactProjection, ProjectionRebuildControl, ProjectionRebuildProgress, bounded_event_read, checkpoint_identity_input, checkpoint_projection_rebuild, published_artifact_checkpoint, validate_checkpoint_shape, validate_document_descriptor, validate_retention_shape, validate_verified_checkpoint_append};
+use semio_hub_directory::{AdminOperationDirectory, ArtifactCasDirectory, ArtifactCreationDirectory, AuthSessionDirectory, DocumentDirectory, EventLog, InviteDirectory, ProjectionRebuild, ReceiptDirectory, SpaceDirectory, UserDirectory, MemoryArtifactProjection, ProjectionRebuildControl, ProjectionRebuildProgress, bounded_event_read, checkpoint_identity_input, checkpoint_projection_rebuild, published_artifact_checkpoint, validate_checkpoint_shape, validate_document_descriptor, validate_retention_shape, validate_verified_checkpoint_append};
 use semio_framework_hash::Sha256;
 use directory::os_directory::io::binary::descriptor_digest::descriptor_digest_v1;
 use directory::os_identity::time_ordered_id;

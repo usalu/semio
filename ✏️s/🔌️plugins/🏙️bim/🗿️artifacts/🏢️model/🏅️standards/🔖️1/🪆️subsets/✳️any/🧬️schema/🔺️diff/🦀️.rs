@@ -8,8 +8,7 @@ use protocol::{ApplyCapability, DiffAlgebra, DiffRegions, MutationApplyError, Mu
 use schema::ArtifactSchema;
 use std::collections::BTreeMap;
 
-#[path = "🧮️algebra/🦀️.rs"]
-pub mod algebra;
+pub use semio_s_artifact_bim_model_authored::standards::v1::subsets::any::schema::diff::algebra;
 #[path = "🩹️patches/🦀️.rs"]
 pub mod patches;
 

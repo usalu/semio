@@ -5,7 +5,7 @@ use semio_framework_value::RetainedCloneGrant;
 
 #[test]
 fn original_prepared_raster_refusal_preserves_unfunded_backings_and_exact_release(){
- let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/♻️prepared-refusal/🔣️.json")).unwrap();
  let grant:RetainedCloneGrant=serde_json::from_value(law["grant"].clone()).unwrap();
  let source=vec![3;law["sourceBytes"].as_u64().unwrap()as usize];
  let retained=vec![7;law["retainedBytes"].as_u64().unwrap()as usize];

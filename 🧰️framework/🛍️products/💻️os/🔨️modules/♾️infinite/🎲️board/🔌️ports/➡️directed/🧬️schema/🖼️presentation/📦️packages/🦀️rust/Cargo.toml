@@ -23,6 +23,8 @@ semio-framework-dsl-record = { path = "../../../../../../../../../../../🔨️m
 semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { path = "../../../../../../../../../📦️packages/🦀️rust" }
 graph = { package = "semio-framework-graph-engine", path = "../../../../../../../../../../../🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-graph-dsl = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-graph-manifest = { path = "../../../../../../../../../../../🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust" }
 ui_styling = { package = "semio-framework-ui-styling", path = "../../../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust" }
 
 [dev-dependencies]

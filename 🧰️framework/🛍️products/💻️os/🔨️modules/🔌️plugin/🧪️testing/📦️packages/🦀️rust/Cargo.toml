@@ -29,7 +29,7 @@ semio-framework-plugin-extension = { path = "../../../🧩️extension/📦️pa
 semio-framework-plugin-builder = { path = "../../../🏗️builder/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-app = { path = "../../../🧵️instance/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-2d = { path = "../../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-composition-admission = { path = "../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

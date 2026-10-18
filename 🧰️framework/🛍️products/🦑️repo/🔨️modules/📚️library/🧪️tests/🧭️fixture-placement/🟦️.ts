@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import fg from "fast-glob";
 import { minimatch } from "minimatch";
-import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { runtimeFixturePathV1 } from "../../🔍️discovery/🕸️runtime/🟦️.ts";
 import { inspectTestLayoutSources } from "../../../🧪️test/🗺️test-layout/🟦️.ts";
 import { testTaxonomy } from "../../../🧪️test/🗂️taxonomy/🟦️.ts";

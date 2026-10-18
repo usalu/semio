@@ -31,7 +31,7 @@ struct CacheEntry {
     tick: u64,
 }
 
-/// 🧠 Content-addressed inference value cache — mirrors `semio_framework_2d::compute::EngineCache`'s LRU/byte-budget
+/// 🧠 Content-addressed inference value cache — mirrors `semio_framework_2d_compute::EngineCache`'s LRU/byte-budget
 /// mechanism, keyed by [`DepHash`] instead of a raw content hash of caller-supplied input. Values are held typed
 /// and in memory (no encode/decode round trip), recency is a monotonic tick so a hit is O(log n), and an entry that
 /// alone exceeds the budget is never stored, so `used_bytes` never exceeds `budget_bytes`.

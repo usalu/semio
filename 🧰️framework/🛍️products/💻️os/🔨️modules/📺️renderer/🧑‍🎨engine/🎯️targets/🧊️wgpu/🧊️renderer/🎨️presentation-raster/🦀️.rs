@@ -51,7 +51,7 @@ impl RuntimePresentationAuthority {
     /// presenter's gate is there to refuse a packet from some OTHER build, which this pair still
     /// catches exactly.
     ///
-    /// One writer, one reader, no race: `poll_runtime_and_resubmit` admits at most one build at a
+    /// One writer, one reader, no race: `poll_runtime_on_original_caller` admits at most one build at a
     /// time, and `redraw_core` admits the finished frame and takes its `BeginGpu` step inside the
     /// SAME host tick, before any later build can write here.
     pub fn admit_build(&self, witness: RuntimePresentationWitness) {
@@ -345,7 +345,7 @@ impl NativeReferenceDecodeJob {
         }
     }
 
-    pub fn try_schedule(self: &Arc<Self>, mailbox: RuntimeMailbox) -> bool {
+    pub fn try_schedule<R: MailboxRuntime>(self: &Arc<Self>, mailbox: RuntimeMailbox<R>) -> bool {
         if self.phase.compare_exchange(0, 1, Ordering::AcqRel, Ordering::Acquire).is_err() {
             return false;
         }

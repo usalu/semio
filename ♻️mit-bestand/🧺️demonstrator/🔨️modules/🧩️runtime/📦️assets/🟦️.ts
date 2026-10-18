@@ -1,5 +1,6 @@
 import {repositoryCachePartitionRootDataV1} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📂️paths/🟦️.ts";
 import {frameworkOsViteArtifactPathsV1} from "@semio-tech/framework-os-dev/builder/vite/artifacts";
+import { builtPluginModulesRootIn } from "@semio-tech/framework-os-dev/activation";
 import { COMPONENT_MODULE_DIRECTORIES } from "@semio-tech/s-dev-catalog-ts/generated/plugins";
 import { join } from "node:path";
 import { DEMONSTRATOR_RUNTIME_TARGETS } from "../🟦️.ts";
@@ -18,7 +19,7 @@ export function demonstratorRuntimeComponentIds(): string[] {
 export function demonstratorRuntimeAssetSources(workspace: string, profile: "prototype" | "release"): readonly BrowserArtifactSource[] {
   if (!["prototype", "release"].includes(profile)) throw new Error(`Unknown Demonstrator profile: ${profile}`);
   const staged = frameworkOsViteArtifactPathsV1(repositoryCachePartitionRootDataV1(workspace, "products"), profile);
-  const moduleRoot = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+  const moduleRoot = builtPluginModulesRootIn(workspace, profile);
   const components = [...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS], catalog = new Map(components.map(row => [row.pluginId, row]));
   const ids = demonstratorRuntimeComponentIds(), pluginRoute = MODULE_PLUGIN_ROUTE.slice(1);
   return [

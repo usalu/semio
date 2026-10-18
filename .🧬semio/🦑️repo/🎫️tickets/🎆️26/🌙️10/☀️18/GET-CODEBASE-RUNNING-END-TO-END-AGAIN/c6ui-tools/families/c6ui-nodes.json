@@ -1,0 +1,6 @@
+{
+ "name": "c6ui-nodes",
+ "crates": ["semio-framework-ui-retained-tree-tree"],
+ "base": {"rev": "HEAD", "crates": ["semio-framework-ui-retained-tree-tree"]},
+ "note": "P18 nodes"
+}

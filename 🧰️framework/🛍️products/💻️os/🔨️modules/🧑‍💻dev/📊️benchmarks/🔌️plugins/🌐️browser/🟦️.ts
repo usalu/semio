@@ -4,7 +4,7 @@ import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 

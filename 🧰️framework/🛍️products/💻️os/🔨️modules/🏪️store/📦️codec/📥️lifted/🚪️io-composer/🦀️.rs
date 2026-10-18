@@ -89,6 +89,37 @@ pub enum IoFidelityClass {
     Semantic,
     Lossy,
 }
+
+impl IoFidelityClass {
+    pub async fn as_str(self) -> &'static str {
+        match self {
+            Self::Exact => "exact",
+            Self::Canonical => "canonical",
+            Self::Semantic => "semantic",
+            Self::Lossy => "lossy",
+        }
+    }
+
+    pub async fn parse(s: &str) -> Result<Self, String> {
+        match s {
+            "exact" => Ok(Self::Exact),
+            "canonical" => Ok(Self::Canonical),
+            "semantic" => Ok(Self::Semantic),
+            "lossy" => Ok(Self::Lossy),
+            other => Err(format!("unknown io fidelity class {other:?}")),
+        }
+    }
+
+    /// Ordered strength: Exact > Canonical > Semantic > Lossy
+    pub async fn rank(self) -> u8 {
+        match self {
+            Self::Exact => 3,
+            Self::Canonical => 2,
+            Self::Semantic => 1,
+            Self::Lossy => 0,
+        }
+    }
+}
 //#endregion 🔖️SubsetValidator
 //#endregion 🔖️ErasedRegistry
 

@@ -1,10 +1,10 @@
 import{createHash}from"node:crypto";
+import{compareRustUnitTextV1 as compare}from"../📋️plan/🔏️identity/🟦️.ts";
 import{compileJsonSchemaSubset}from"../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type{RustUnitV1}from"../🧬️definition/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json";
 const contract=compileJsonSchemaSubset(schema);
 export interface RustUnitCompilerContextV1{version:4;facts:ReturnType<typeof facts>;digest:string;metadata:string}
-const compare=(a:string,b:string):number=>Buffer.compare(Buffer.from(a,"utf8"),Buffer.from(b,"utf8"));
 function canonical(value:unknown):unknown{if(typeof value==="string"){if(Buffer.from(value,"utf8").toString("utf8")!==value)throw Error("Unicode scalar compiler context required");return value;}if(Array.isArray(value))return value.map(canonical);if(value&&typeof value==="object")return Object.fromEntries(Object.entries(value).map(([key,item])=>{canonical(key);return[key,canonical(item)] as const;}).sort(([a],[b])=>compare(a,b)));return value;}
 
 function facts(unit:RustUnitV1,predecessors:readonly{unit:string;context:string}[]){const index=new Map(predecessors.map(row=>[row.unit,row.context]));if(index.size!==predecessors.length||index.size!==unit.dependencies.length)throw Error("Exact predecessor compiler contexts required");return{adapter:"direct-rlib-v4" as const,package:unit.package,packageIdentity:unit.packageIdentity,manifest:unit.manifest,target:unit.target,operation:unit.operation,execution:unit.execution,mode:unit.mode,profileData:unit.profileData,features:[...unit.features].sort(compare),cfg:[...unit.cfg].sort(compare),cfgSnapshot:[...unit.cfgSnapshot].sort(compare),compiler:unit.compiler,arguments:[...unit.arguments],environment:unit.environment,dependencies:unit.dependencies.map(edge=>{const context=index.get(edge.unit);if(!context)throw Error("Missing predecessor compiler context");return{externName:edge.externName,public:edge.public,noprelude:edge.noprelude,context};}).sort((a,b)=>a.externName<b.externName?-1:a.externName>b.externName?1:0)};}

@@ -1,5 +1,5 @@
 use super::*;
-use crate::tui::text::display_width;
+use crate::text::display_width;
 
 const APPEARANCES: [AppearanceName; 2] = [AppearanceName::Dark, AppearanceName::Light];
 const STATUSES: [Status; 7] = [Status::Waiting, Status::Running, Status::Success, Status::Failure, Status::Fault, Status::Warning, Status::Info];

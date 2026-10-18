@@ -1,5 +1,21 @@
 use super::*;
 
+/// 📚️ The session module as the unsplit file held it: the root, then every mounted child in declaration order.
+fn session_source() -> String {
+    [
+        include_str!("../../🦀️.rs"),
+        include_str!("../../🪪️session-constants-and-owner-catalog/🦀️.rs"),
+        include_str!("../../🏗️model-build-job/🦀️.rs"),
+        include_str!("../../🏁️model-build-close/🦀️.rs"),
+        include_str!("../../🗂️mounted-state-and-preparation/🦀️.rs"),
+        include_str!("../../🔁️mounted-state-step/🦀️.rs"),
+        include_str!("../../🧹️mounted-state-close/🦀️.rs"),
+        include_str!("../../📍️snapshot-admission-and-registry/🦀️.rs"),
+        include_str!("../../💼️job-bridge-and-live-mount/🦀️.rs"),
+    ]
+    .concat()
+}
+
 const TEST_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 1 };
 
 #[test]
@@ -127,7 +143,8 @@ fn interrupted_model_close_releases_one_retained_root_per_grant() {
 
 #[test]
 fn mounted_revision_restart_keeps_cancel_before_spawn() {
-    let source = include_str!("../../🦀️.rs");
+    let source = session_source();
+    let source = source.as_str();
     let admission = &source[source.find("pub fn prepare_snapshot_read(").expect("admission")..source.find("pub fn reconcile(").expect("reconcile")];
     let reconcile = &source[source.find("pub fn reconcile(").expect("reconcile")..source.find("pub fn with_live_visual").expect("visual boundary")];
     assert!(reconcile.find("Effect::CancelJob").expect("cancel effect") < reconcile.find("Effect::SpawnJob").expect("spawn effect"));
@@ -147,7 +164,8 @@ fn commit_identity_requires_base_revision_and_generation() {
 
 #[test]
 fn source_contract_keeps_one_semantic_child_step_and_live_visual_consumer() {
-    let source = include_str!("../../🦀️.rs");
+    let source = session_source();
+    let source = source.as_str();
     for needle in [
         "FemJobGraph::new",
         "MeshJob::new",

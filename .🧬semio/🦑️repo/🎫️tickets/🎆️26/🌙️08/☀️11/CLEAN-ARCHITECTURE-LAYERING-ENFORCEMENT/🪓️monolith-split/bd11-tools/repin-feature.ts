@@ -1,0 +1,13 @@
+import { readFileSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import Parser from "web-tree-sitter";
+const root = "/Users/ueli/Documents/semio", plugin = root + "/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin";
+const file = plugin + "/🧪️tests/📦️units/📋️feature-owner.json";
+const owner = JSON.parse(readFileSync(file, "utf8"));
+await Parser.init({ wasmBinary: readFileSync(Bun.resolveSync("web-tree-sitter/tree-sitter.wasm", root)) });
+const p = new Parser(); p.setLanguage(await Parser.Language.load(Bun.resolveSync("tree-sitter-wasms/out/tree-sitter-rust.wasm", root)));
+const facade = readFileSync(plugin + "/🧪️testing/🦀️.rs", "utf8");
+const tree = p.parse(facade);
+owner.remainingFunctions = tree.rootNode.descendantsOfType("function_item").map(n => ({ name: n.childForFieldName("name")?.text, sha256: createHash("sha256").update(n.text).digest("hex") }));
+writeFileSync(file, JSON.stringify(owner, null, 2) + "\n");
+console.log("functions", owner.remainingFunctions.length);

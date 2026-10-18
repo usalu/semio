@@ -115,7 +115,7 @@ macro_rules! graph_keyboard_command {
             /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`) —
             /// the real `graph` selection, handed in as raw ids because plugin code cannot construct an
             /// `app::InteractionView` (its fields are `pub(crate)` to the framework crate).
-            pub(crate) fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+            pub fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
                 super::step_emit(doc, selected, STEP)
             }
         }
@@ -146,7 +146,7 @@ pub mod activate_selection {
     }
 
     /// 🕹️ Retained-command-job entry point (`generation3d_retained_reduce`, editor `🦀️.rs`).
-    pub(crate) fn apply_ports(doc: &ArtifactView<'_, Generation3dSnapshot>, ports_by_node: &std::collections::BTreeMap<String, Vec<String>>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+    pub fn apply_ports(doc: &ArtifactView<'_, Generation3dSnapshot>, ports_by_node: &std::collections::BTreeMap<String, Vec<String>>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
         super::activate_emit(doc, ports_by_node, selected)
     }
 }

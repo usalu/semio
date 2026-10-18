@@ -464,14 +464,14 @@ pub fn history_id_stack_is_empty(stack: &HistoryPageStack<String>) -> bool {
     stack.is_empty()
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl<T: serde::Serialize> serde::Serialize for HistoryPageStack<T> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         serializer.collect_seq(self.iter())
     }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryPageStack<T> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         let values = Vec::<T>::deserialize(deserializer)?;

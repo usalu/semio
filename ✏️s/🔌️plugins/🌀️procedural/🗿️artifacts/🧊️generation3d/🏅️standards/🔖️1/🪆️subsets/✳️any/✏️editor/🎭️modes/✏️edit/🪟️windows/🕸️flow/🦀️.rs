@@ -98,7 +98,7 @@ pub fn window_measures(lod_mode: &str, is_de: bool, on_change: impl Fn(&str, Opt
 /// (`parse_interaction_targets` in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) — a renderer
 /// serialises its whole pick/hover batch into the single `targets` text arg, and a semantic row is just
 /// a batch of one.
-pub(crate) fn graph_targets_json(granularity: &str, id: &str) -> String {
+pub fn graph_targets_json(granularity: &str, id: &str) -> String {
     let mut target = semio_framework_pack_json::Object::new();
     target.insert("granularity", semio_framework_pack_json::Value::String(granularity.to_string()));
     target.insert("id", semio_framework_pack_json::Value::String(id.to_string()));
@@ -190,7 +190,7 @@ fn wire_row(edge: &NodeGraphEdgeRecord) -> UiAssemblyResult<BuiltNode> {
 /// 🪟️ Both sections and every node's port list are WINDOWED: each states its full `total` and
 /// materialises only the rows the host's viewport asked for, so a graph with hundreds of widgets
 /// scrolls instead of refusing at the 33rd row (ticket 26/09/16/ARTIFACT-TREE-VIRTUALISED-STREAMING).
-pub(crate) fn graph_outline(windows: &TreeWindows<'_>, nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord], status_json: Option<&String>, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
+pub fn graph_outline(windows: &TreeWindows<'_>, nodes: &[NodeGraphNodeRecord], edges: &[NodeGraphEdgeRecord], status_json: Option<&String>, labels: &Generation3dLabels) -> UiAssemblyResult<BuiltNode> {
     let factory = ActionFactory::new(GENERATION_3D_PLAY_APP_ID);
     PanelTreeBuilder::new(GENERATION_3D_PLAY_OUTLINE_MAIN)?
         .window_section_or_placeholder(windows, GENERATION_3D_PLAY_OUTLINE_NODES, Some(semio_s_procedural_core_semantic_ui::ui_label(labels.graph_nodes.as_str())?), true, nodes, |node| {

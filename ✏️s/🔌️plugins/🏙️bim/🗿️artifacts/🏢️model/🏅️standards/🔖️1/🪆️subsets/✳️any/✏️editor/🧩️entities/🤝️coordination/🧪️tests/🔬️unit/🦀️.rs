@@ -1,6 +1,7 @@
 //! 🧪️ The coordination rows: selector and scope text round trips, field reads and writes, the pickers, the create defaults and the inferred counts.
 
-use super::{CLASH_SET, CLASH_SET_INFERRED, ISSUE, ISSUE_COMMENT, RULE, RULE_INFERRED, create_clash_set, create_comment, create_issue, create_rule, kind_choices, latest_moment, parse_scope, parse_selector, priority_choices, scope_text, selector_text, severity_choices, status_choices};
+use crate::editor::bim::entities::coordination::{author};
+use crate::editor::bim::entities::coordination::{CLASH_SET, CLASH_SET_INFERRED, ISSUE, ISSUE_COMMENT, RULE, RULE_INFERRED, create_clash_set, create_comment, create_issue, create_rule, kind_choices, latest_moment, parse_scope, parse_selector, priority_choices, scope_text, selector_text, severity_choices, status_choices};
 use crate::editor::bim::entities::{EntityKind, InferredRow};
 use crate::standards::v1::subsets::any::schema::snapshot::{ClashSet, DEFAULT_TOLERANCE, ElementClass, ElementSelector, Issue, IssueComment, IssuePriority, IssueStatus, ModelSnapshot, Phase, Rule, RuleKind, RuleScope, RuleSeverity};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;

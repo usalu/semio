@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetFamily`: a sparse family patch of exactly the provided fields that differ. The name stays non-blank; a profile family cannot leave its category while a type uses it as a profile.
 //! Providing only equal values, or no field, is a no-op.
 
-use super::super::family_rules;
-use super::SetFamily;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules;
+use crate::standards::v1::subsets::any::schema::mutations::set_family::SetFamily;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{FamilyCategory, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 

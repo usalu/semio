@@ -11,7 +11,7 @@ use crate::{GisMapSnapshot, GISMAP_DIALECT, GIS_MAP_SCHEMA};
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use {semio_framework_plugin::AppOperationContext,semio_framework_plugin::ArtifactOwnedToolJobRequest,semio_framework_plugin::ArtifactToolFactoryRegistry,semio_framework_plugin::ArtifactToolPublicationContract,semio_framework_plugin::ArtifactToolPublicationLane,semio_framework_plugin::ArtifactView,semio_framework_plugin::ArtifactViewer,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::Emit,semio_framework_plugin::Fault,semio_framework_plugin::FaultCode,semio_framework_plugin::FaultOrigin,semio_framework_plugin::HistoryView,semio_framework_plugin::InteractiveJobClassification,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoDraftMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_plugin::ToolExecutionContract,semio_framework_plugin::ToolFactoryKey,semio_framework_plugin::ToolJobFactoryError,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer,semio_framework_plugin::ViewerApp};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🏷️ActionIds
 /// 🏷️ Every dispatchable verb of this VIEWER, exactly once: the map window's camera.

@@ -3,9 +3,9 @@
 //! the record and carries the message.
 //! 📎 https://github.com/buildingSMART/BCF-XML
 
-use super::values::{ClashRef, ElementClass, ElementSelector, IssueViewpoint, OpeningKind, Phase, RuleScope};
-use super::entities::{ClashSet, Issue, IssueComment, Rule};
-use super::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, ElementClass, ElementSelector, IssueViewpoint, OpeningKind, Phase, RuleScope};
+use crate::standards::v1::subsets::any::schema::snapshot::entities::{ClashSet, Issue, IssueComment, Rule};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
 //#region 🔖️Defaults
 /// 📏️ The largest tolerance of a clash set in metres.
@@ -89,7 +89,7 @@ fn invariant(field: &'static str, message: impl Into<String>) -> Option<Coordina
     Some(CoordinationProblem { missing: false, field, message: message.into() })
 }
 
-fn missing(field: &'static str, message: impl Into<String>) -> Option<CoordinationProblem> {
+pub fn missing(field: &'static str, message: impl Into<String>) -> Option<CoordinationProblem> {
     Some(CoordinationProblem { missing: true, field, message: message.into() })
 }
 
@@ -99,7 +99,7 @@ pub fn valid_timestamp(text: &str) -> bool {
         Some((date, time)) => (date, Some(time)),
         None => (text, None),
     };
-    if date.is_empty() || !super::sheets::valid_date(date) {
+    if date.is_empty() || !crate::standards::v1::subsets::any::schema::snapshot::sheets::valid_date(date) {
         return false;
     }
     let Some(time) = time else { return true };
@@ -177,7 +177,7 @@ pub fn rule_problem(base: &ModelSnapshot, _id: &str, rule: &Rule) -> Option<Coor
     scope_problem(base, &rule.scope)
 }
 
-fn point_finite(point: &super::values::Point3) -> bool {
+fn point_finite(point: &crate::standards::v1::subsets::any::schema::snapshot::values::Point3) -> bool {
     point.x.is_finite() && point.y.is_finite() && point.z.is_finite()
 }
 
@@ -269,9 +269,7 @@ pub fn comments_of<'a>(base: &'a ModelSnapshot, issue: &str) -> Vec<(&'a String,
     rows
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+
 
 /// 🪜️ The storey the element `id` stands on: its own, the storey of the host for an opening or a wall sweep; none for an id without a storey.
 pub fn storey_of<'a>(base: &'a ModelSnapshot, id: &str) -> Option<&'a String> {

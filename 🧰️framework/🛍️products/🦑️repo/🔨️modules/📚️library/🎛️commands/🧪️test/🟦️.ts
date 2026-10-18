@@ -5,7 +5,17 @@ import { scriptCompilerAdmissionControlV1 } from "../../../../../../🔨️modul
 import { resolveTestLevel, testLevelRank, testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { type TestLevel } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-import { coverageDir, coverageEnabled, devToolingEnv, enforceCoverageThreshold, getRepoMetaDir, goCoverageArgs, goLevelTestArgs, goProfileToLcov, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveMcpBin, runCmd, runCanonicalGoBuild, runCanonicalGoTests, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, type LcovFileRecord } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { coverageDir } from "../../🏃️process/📋️context/🔣️policy/🟦️.ts";
+import { coverageEnabled, enforceCoverageThreshold, goCoverageArgs, summarizeCoverage } from "../../🧪️testing/📊️coverage/🟦️.ts";
+import { devToolingEnv } from "../../🏃️process/🌿️environment/🟦️.ts";
+import { getRepoMetaDir } from "../../🗂️workspaces/🧬️metadata/🟦️.ts";
+import { goLevelTestArgs } from "../../🧪️testing/🎚️levels/🟦️.ts";
+import { goProfileToLcov, mergeLcov, parseLcov, renderLcov, type LcovFileRecord } from "../../🧪️testing/🗄️lcov/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
+import { resolveMcpBin } from "../../🚨️policy/🖥️cli/🟦️.ts";
+import { runCanonicalGoBuild, runCanonicalGoTests } from "../../🧪️testing/🐹️go-plan/🟦️.ts";
+import { runRepositoryTestCommand } from "../../🧪️testing/🎛️repository-command/🟦️.ts";
+import { spawnDaemon } from "../../🏃️process/👹️daemon/🟦️.ts";
 import { Script, scriptInvocationEnvironment, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { existsSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
@@ -35,7 +45,7 @@ export class TestScript extends Script {
     if (rest[0] === "canvas") {
       if (rest[1] !== "native" && rest[1] !== "react") throw Error("Expected test canvas native|react [arguments]");
       const native = rest[1] === "native", cwd = join(this.root, "🧰️framework/🔨️modules/🖼️canvas", native ? "📦️packages/🦀️rust" : "🎨️react-renderer/📦️packages/🟦️typescript");
-      const { repositoryProcessOwnerContextV1, repositoryCargoTestPolicyV1, repositoryVitestPolicyV1 } = await import("../../🟦️.ts");
+      const { repositoryProcessOwnerContextV1, repositoryVitestPolicyV1 } = await import("../../🏃️process/📋️context/🔣️policy/🟦️.ts"), { repositoryCargoTestPolicyV1 } = await import("../../🏃️process/🦀️cargo/🔣️policy/🟦️.ts");
       const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_TEST_LEVEL: level });
       if (native) {
         const [{ repositoryCargoPreparationStorageV1 }, { prepareCargoWorkspaceInvocation }] = await Promise.all([import("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts"), import("../../🗂️workspaces/🦀️cargo/🟦️.ts")]);

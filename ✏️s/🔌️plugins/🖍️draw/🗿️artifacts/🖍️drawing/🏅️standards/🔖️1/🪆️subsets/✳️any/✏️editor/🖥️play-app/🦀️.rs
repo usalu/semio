@@ -1,6 +1,7 @@
 //! 🖥️ Drawing play app: the `DrawingPlayApp` editor, its body render and its `ArtifactEditor` implementation.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️DrawingPlayApp
 /// 🧪️ Drawing editor owner; durable content stays in the document while concrete Canvas windows own

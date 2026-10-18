@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { BundleScript, ScriptRouter, receiveScriptProcessInvocation } from "../../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runRepositoryCargoTests } from "../../../../../../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import Ajv from "ajv";
@@ -11,7 +11,7 @@ class SourceScript extends BundleScript {
  async run(args:string[]):Promise<void>{
   if(args.length)throw Error("test-source accepts no arguments");
   const schema=JSON.parse(readFileSync(resolve(this.root,"../../🔣️.json"),"utf8"));
-  const corpus=JSON.parse(readFileSync(resolve(this.root,"../../🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
+  const corpus=JSON.parse(readFileSync(resolve(this.root,"../../../../🧪️tests/🧫️fixtures/🖼️presentation/🔣️.json"),"utf8"));
   const validate=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/IoPortSpec"});
   for(const port of corpus.ports){if(this.invocation.control.signal.aborted)throw Error("presentation source check cancelled");if(!validate(port))throw Error(JSON.stringify(validate.errors));}
   const snapshot=new Ajv({strict:false}).compile({...schema,$ref:"#/$defs/DagHostSnapshot"});

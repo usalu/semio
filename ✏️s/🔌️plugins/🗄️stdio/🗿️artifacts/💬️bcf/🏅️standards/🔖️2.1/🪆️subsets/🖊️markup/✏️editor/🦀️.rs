@@ -7,7 +7,7 @@ use crate::editor::bcf::modes::edit::windows::main;
 use crate::standards::v2_1::subsets::any::schema::mutations::{insert_topic::InsertTopic,remove_topic::RemoveTopic,set_topic_markup::SetTopicMarkup,BcfMutation};
 
 use crate::standards::v2_1::subsets::any::schema::snapshot::{BcfSnapshot, BcfTopic};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;

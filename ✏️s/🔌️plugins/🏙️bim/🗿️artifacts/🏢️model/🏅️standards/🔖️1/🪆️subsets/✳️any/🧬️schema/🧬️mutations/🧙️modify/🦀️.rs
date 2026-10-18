@@ -88,6 +88,4 @@ impl ArrayPattern {
 pub const MAX_COPIES: u32 = 1024;
 //#endregion 🔖️Vocabulary
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

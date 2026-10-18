@@ -20,6 +20,4 @@ pub fn handle(payload: &WorldPointerMove, doc: &ArtifactView<'_, ModelSnapshot>,
     run(ctx, doc, |pointer| ToolEvent::Move(*pointer), &Raw { ground: Some(ground), ..Raw::default() })
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

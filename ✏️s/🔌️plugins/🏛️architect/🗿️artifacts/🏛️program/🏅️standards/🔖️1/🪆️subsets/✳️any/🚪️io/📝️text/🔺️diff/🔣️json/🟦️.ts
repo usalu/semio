@@ -1,11 +1,12 @@
 import {architectProgramArtifactGuardExactObject,architectProgramArtifactGuardArray} from "../../../../🧬️schema/🟦️.ts";
-import {parseProgramDiff,PROGRAM_DIFF_FIELDS,type ProgramDiff} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
+import {parseProgramDiff,PROGRAM_DIFF_FIELDS} from "../../../../🧬️schema/🔺️diff/🟦️.ts";
+import type {ProgramDiff} from "../../../../🧬️schema/🔺️diff/🧾️program-diff/🟦️.ts";
 import {header,rows,accessibilityRequirement,adjacency,benchmarkRecord,changeRecord,conflict,costRequirement,decision,environmentalRequirement,equipment,flexibilityRequirement,flowRequirement,growthPlan,infrastructureRequirement,operationalRequirement,optionEvaluation,performanceCriterion,priorityRecord,quantityRequirement,relationship,requirement,resource,risk,scenario,siteContext,statusRecord,storageRequirement,survey,sustainabilityRequirement,wayfindingRequirement,workshop,activity,functionRow,programElement,organizationalRequirement,serviceRequirement,analysisRecord,searchFilter,templateRecord,knowledgeRecord} from "../../📸️snapshot/🔣️json/🟦️.ts";
 
 
 function delta(value:unknown,convert:(value:unknown,decode:boolean)=>unknown,decode:boolean):unknown{
- const row=architectProgramArtifactGuardExactObject(value,"Program JSON delta",["added","removed","patched","reordered"]);
- return{...row,added:rows(row.added,convert,decode),patched:architectProgramArtifactGuardArray(row.patched,"Program JSON patched").map(value=>{const entry=architectProgramArtifactGuardExactObject(value,"Program JSON patch",["id","patch"]);return{...entry,patch:convert===header?entry.patch:convert(entry.patch,decode)}})};
+ const row=architectProgramArtifactGuardExactObject(value,"Program JSON delta",["removed","inserted","moved","modified"]);
+ return{...row,inserted:architectProgramArtifactGuardArray(row.inserted,"Program JSON inserted").map(value=>{const entry=architectProgramArtifactGuardExactObject(value,"Program JSON insertion",["index","row"]);return{...entry,row:rows([entry.row],convert,decode)[0]}}),modified:architectProgramArtifactGuardArray(row.modified,"Program JSON modified").map(value=>{const entry=architectProgramArtifactGuardExactObject(value,"Program JSON patch",["id","patch"]);return{...entry,patch:convert===header?entry.patch:convert(entry.patch,decode)}})};
 }
 
 function diff(value:unknown,decode:boolean):Record<string,unknown>{

@@ -1,6 +1,7 @@
 import {requireRecord,requireString,requireStringArray,requireExactKeys} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import {inspectRustBindingFacts,rustExternProviders,type RustBindingFacts} from "../🔗️binding/🟦️.ts";
-import { projectCargoProviderManifest, rustModuleScopeProof, type RustModuleGraph } from "../../../../🔍️discovery/🟦️.ts";
+import { projectCargoProviderManifest } from "../../../../🔍️discovery/🚚️cargo-provider/🟦️.ts";
+import { rustModuleScopeProof, type RustModuleGraph } from "../../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
 import { rustTokens, rustTokenPairs, rustIdentifierSymbol, type RustToken } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 import {rustSourceTargets,rustSourceTargetProblem,type RustSourceInputInventory} from "../🟦️.ts";
 
@@ -75,9 +76,9 @@ export function rustFamilyOwnershipActive(input:Readonly<{sources:ReadonlyMap<st
     for(;;){const candidate=read([...directory,"Cargo.toml"].join("/"));if(candidate?.workspaceDeclared){workspace=candidate;break;}if(!directory.length)break;directory=directory.slice(0,-1);}
    }
    values=[...manifest.dependencies,...manifest.developmentDependencies,...manifest.buildDependencies].filter(dependency=>{
-    if(dependency.packageOverride==="semio-framework-2d")return true;
+    if(dependency.packageOverride==="semio-framework-2d"||dependency.packageOverride==="semio-framework-2d-compute")return true;
     const inherited=workspace?.workspaceDeclared&&dependency.workspaceInherited?workspace.workspaceDependencies.filter(row=>row.key===dependency.key&&!row.targetCondition):[];
-    return inherited.length===1&&inherited[0]!.packageOverride==="semio-framework-2d";
+    return inherited.length===1&&["semio-framework-2d","semio-framework-2d-compute"].includes(inherited[0]!.packageOverride??"");
    }).map(dependency=>dependency.key.replaceAll("-","_"));
   }catch{}
   aliasesByManifest.set(path,values);return values;
@@ -87,7 +88,7 @@ export function rustFamilyOwnershipActive(input:Readonly<{sources:ReadonlyMap<st
   const tokens=rustTokens(source),pairs=rustTokenPairs(tokens),facts=inspectRustBindingFacts(source,{checkCancellation}),enums=localEnumFacts(source,tokens,pairs,facts);
   const variantOnly=(token:RustToken,index:number):boolean=>enums.some(row=>row.variants.get(rustIdentifierSymbol(token)??"")===token.start||tokens[index-1]?.text==="::"&&localEnumVariant(enums,[rustIdentifierSymbol(tokens[index-2])??"",rustIdentifierSymbol(token)??""],token.start,facts,tokens,pairs));
   if(tokens.some((token,index)=>token.kind==="identifier"&&tokens[index-1]?.text!=="'"&&COMPUTE_FAMILY_SYMBOLS.some(name=>name===rustIdentifierSymbol(token))&&!variantOnly(token,index)))return true;
-  const roots=["semio_framework_2d","semio_framework_os_kernel","store",...[...(manifestsBySource.get(path)??[])].flatMap(aliases)];
+  const roots=["semio_framework_2d","semio_framework_2d_compute","semio_framework_os_kernel","store",...[...(manifestsBySource.get(path)??[])].flatMap(aliases)];
   const familyRoute=(path:readonly string[]):boolean=>roots.includes(path[0]??"")&&(path.includes("Engine")||path[0]==="semio_framework_2d"&&path.includes("compute")&&tokens.some(token=>rustIdentifierSymbol(token)==="Engine"));
   if(facts.imports.some(fact=>familyRoute(fact.path))||facts.problems.some(problem=>problem.kind==="unproven-path-namespace"&&familyRoute(rustTokens(problem.path).filter(token=>token.kind==="identifier").map(token=>rustIdentifierSymbol(token)!))))return true;
   if(tokens.some((_,index)=>engineFamilyItem(tokens,pairs,index)))return true;
@@ -106,7 +107,7 @@ export function readRustFamilyOwnershipContract(value:unknown):RustFamilyOwnersh
  const field=(key:string):string=>requireString(row[key],label+"."+key);
  const path=(key:string):string=>{const value=field(key);if(value.includes("\\")||value.includes("\0")||value.startsWith("/")||/^[A-Za-z]:/.test(value)||value.split("/").some(p=>!p||p==="."||p===".."))throw Error(label+" requires a canonical relative "+key);return value;};
  const symbols=requireStringArray(row.symbols,label+".symbols"),modulePath=requireStringArray(row.modulePath,label+".modulePath");
- if(!symbols.length||new Set(symbols).size!==symbols.length||!modulePath.length||[...symbols,...modulePath].some(value=>typeof value!=="string")||[...symbols,...modulePath,field("traitName"),field("externName")].some(name=>!/^[_\p{L}][_\p{L}\p{N}]*$/u.test(name)))throw Error(label+" requires distinct canonical Rust symbols");
+ if(!symbols.length||new Set(symbols).size!==symbols.length||[...symbols,...modulePath].some(value=>typeof value!=="string")||[...symbols,...modulePath,field("traitName"),field("externName")].some(name=>!/^[_\p{L}][_\p{L}\p{N}]*$/u.test(name)))throw Error(label+" requires distinct canonical Rust symbols");
  return {version:1,ownerManifest:path("ownerManifest"),ownerRoot:path("ownerRoot"),declarationSource:path("declarationSource"),modulePath,externName:field("externName"),packageName:field("packageName"),symbols,traitName:field("traitName")};
 }
 
@@ -117,9 +118,10 @@ export function inspectRustFamilyOwnership(input:Readonly<{contract:RustFamilyOw
  const names=new Set(contract.symbols),facts=new Map<string,RustBindingFacts>(),providers=new Map<string,ReturnType<typeof rustExternProviders>>();
  const fact=(path:string):RustBindingFacts=>{if(!facts.has(path))facts.set(path,inspectRustBindingFacts(input.sources.get(path)??"",{checkCancellation:input.checkCancellation}));return facts.get(path)!;};
  const add=(code:RustFamilyOwnershipProblem["code"],from:string,detail:string,to?:string):void=>{const problem={code,from,detail,...(to?{to}:{})};if(!problems.some(p=>JSON.stringify(p)===JSON.stringify(problem)))problems.push(problem);};
+ const declared=(crateRoot:string,modulePath:readonly string[]):string|undefined=>modulePath.length===0?crateRoot:graph.targets.get(crateRoot+"\0"+modulePath.join("::"));
  const ownerContexts=graph.contexts.get(contract.declarationSource)??[];
  const canonical=(context:typeof ownerContexts[number]):boolean=>context.manifestPath===contract.ownerManifest&&context.crateRoot===contract.ownerRoot;
- const owner=ownerContexts.find(c=>canonical(c)&&c.modulePath.join("::")===contract.modulePath.join("::")&&graph.targets.get(c.crateRoot+"\0"+c.modulePath.join("::"))===contract.declarationSource);
+ const owner=ownerContexts.find(c=>canonical(c)&&c.modulePath.join("::")===contract.modulePath.join("::")&&declared(c.crateRoot,c.modulePath)===contract.declarationSource);
  if(!owner||!input.sources.has(contract.ownerManifest)||!input.sources.has(contract.ownerRoot))add("unproven-family-declaration",contract.declarationSource,"Canonical declaration source lacks its exact admitted Cargo/module owner",contract.ownerManifest);
  try {
   const metadata=projectCargoProviderManifest({locator:contract.ownerManifest,source:input.sources.get(contract.ownerManifest)??""});
@@ -150,7 +152,7 @@ export function inspectRustFamilyOwnership(input:Readonly<{contract:RustFamilyOw
    if(!ownedContext)return false;
    const scope=scopeAt(offset);if(!scope)return false;
    if(from===contract.declarationSource)return scope.modulePath.length===0&&!observed.declarations.some(row=>row.name===name&&row.blockScope.length>0&&row.modulePath.join("::")===scope.modulePath.join("::")&&row.blockScope.length<=scope.blocks.length&&row.blockScope.every((block,index)=>block===scope.blocks[index]))&&!observed.imports.some(row=>visible(row,offset)&&(row.alias??row.path.at(-1))===name)&&observed.declarations.filter(row=>row.name===name&&row.modulePath.length===0&&row.blockScope.length===0).length===1;
-   return contexts.filter(context=>context.sourceScope.length<=scope.modulePath.length&&context.sourceScope.every((part,index)=>part===scope.modulePath[index])).every(context=>observed.imports.some(row=>visible(row,offset)&&row.glob&&row.path.every(part=>part==="super")&&[...context.modulePath,...scope.modulePath.slice(context.sourceScope.length)].slice(0,-row.path.length).join("::")===contract.modulePath.join("::")&&graph.targets.get(context.crateRoot+"\0"+contract.modulePath.join("::"))===contract.declarationSource))&&!observed.declarations.some(row=>row.name===name)&&!observed.imports.some(row=>visible(row,offset)&&(row.glob&&!row.path.every(part=>part==="super")||!row.glob&&(row.alias??row.path.at(-1))===name));
+   return contexts.filter(context=>context.sourceScope.length<=scope.modulePath.length&&context.sourceScope.every((part,index)=>part===scope.modulePath[index])).every(context=>observed.imports.some(row=>visible(row,offset)&&row.glob&&row.path.every(part=>part==="super")&&[...context.modulePath,...scope.modulePath.slice(context.sourceScope.length)].slice(0,-row.path.length).join("::")===contract.modulePath.join("::")&&declared(context.crateRoot,contract.modulePath)===contract.declarationSource))&&!observed.declarations.some(row=>row.name===name)&&!observed.imports.some(row=>visible(row,offset)&&(row.glob&&!row.path.every(part=>part==="super")||!row.glob&&(row.alias??row.path.at(-1))===name));
   };
   const familyRoute=(parts:readonly string[],offset:number):boolean=>{
    const index=parts.findIndex(name=>names.has(name)||name===contract.traitName);if(index<0)return false;

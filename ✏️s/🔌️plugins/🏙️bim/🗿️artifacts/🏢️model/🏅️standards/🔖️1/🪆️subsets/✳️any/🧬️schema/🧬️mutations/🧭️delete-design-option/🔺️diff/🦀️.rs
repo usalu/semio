@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative delete-design-option diff.
-use super::DeleteDesignOption;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::mutations::delete_design_option::DeleteDesignOption;
+use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &DeleteDesignOption, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {
     if !base.design_options.contains_key(&payload.id) { return MutationOutcome::refuse(OutcomeCode::TargetMissing, "Record is missing.", [payload.id.clone()]); }

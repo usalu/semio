@@ -1,4 +1,21 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::parts;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, direction, layer_thicknesses, stack};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidBuilder, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Slab, SlabType};
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::{self, Vertex};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude_loops, TriMesh};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::ZPlane;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::slabs::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelNode};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::testing::{assert_matches_oracle, case, close, group_extent, raised};
@@ -6,18 +23,19 @@ use crate::standards::v1::subsets::any::schema::inferences::element_solids::Soli
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_element_solids;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_text;
 
-const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/⬜️slabs-holes-slope/🔣️.json");
+static CASE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/⬜️slabs-holes-slope/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn slabs_reproduce_the_third_party_oracle_table() {
-    let case = case(CASE);
+    let case = case((*CASE));
     assert_matches_oracle(&case, &compute_element_solids(&case.snapshot), SolidFamily::Slab);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn a_slab_with_a_hole_has_the_net_area_times_the_layer_thickness() {
-    let solids = compute_element_solids(&case(CASE).snapshot);
+    let solids = compute_element_solids(&case((*CASE)).snapshot);
     assert!(close((24.0 - 1.0) * 0.25, solids["s-holed"].volume, 1e-12), "6 x 4 less a 1 x 1 hole, wood 0.05 + concrete 0.2");
     assert!(close(5.0 * 4.0 * 0.15, solids["s-sloped"].volume, 1e-12), "a slope does not change the volume: the thickness stays vertical");
     let net = 16.0 + 2.0 * std::f64::consts::PI - std::f64::consts::PI * 0.25;
@@ -26,7 +44,7 @@ async fn a_slab_with_a_hole_has_the_net_area_times_the_layer_thickness() {
 
 #[semio_framework_async_macros::async_test]
 async fn layers_stack_downward_from_the_top_first_layer_topmost() {
-    let solids = compute_element_solids(&case(CASE).snapshot);
+    let solids = compute_element_solids(&case((*CASE)).snapshot);
     let holed = &solids["s-holed"];
     assert_eq!(holed.groups.iter().map(|g| (g.part.as_str(), g.material.as_str(), g.layer)).collect::<Vec<_>>(), vec![(parts::LAYER, "m-wood", 0), (parts::LAYER, "m-concrete", 1)]);
     let (low0, high0, volume0) = group_extent(holed, 0);
@@ -38,7 +56,7 @@ async fn layers_stack_downward_from_the_top_first_layer_topmost() {
 
 #[semio_framework_async_macros::async_test]
 async fn a_slope_tilts_the_plane_about_the_uphill_edge() {
-    let solids = compute_element_solids(&case(CASE).snapshot);
+    let solids = compute_element_solids(&case((*CASE)).snapshot);
     let sloped = &solids["s-sloped"];
     let fall = 5.0 * 0.05f64.tan();
     assert!(close(-0.05, sloped.bounds.max.z, 1e-12), "the uphill edge keeps the reference height: storey + offset");
@@ -51,7 +69,7 @@ async fn a_slope_tilts_the_plane_about_the_uphill_edge() {
 
 #[semio_framework_async_macros::async_test]
 async fn changing_a_storey_height_lifts_the_slabs_of_the_storeys_above_only() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let (before, after) = (compute_element_solids(&snapshot), compute_element_solids(&raised(&snapshot, "st-ground", 0.4)));
     for id in ["s-diagonal-slope", "s-curved"] {
         assert!(close(after[id].bounds.max.z - before[id].bounds.max.z, 0.4, 1e-9), "{id} stands on the storey above");
@@ -64,7 +82,7 @@ async fn changing_a_storey_height_lifts_the_slabs_of_the_storeys_above_only() {
 
 #[semio_framework_async_macros::async_test]
 async fn slabs_without_layers_or_type_are_absent_and_the_result_is_deterministic() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(inferred, ModelInference::infer(&snapshot).expect("infers"));
     assert!(["s-bare", "s-unknown-type"].iter().all(|id| !inferred.element_solids.contains_key(*id)));

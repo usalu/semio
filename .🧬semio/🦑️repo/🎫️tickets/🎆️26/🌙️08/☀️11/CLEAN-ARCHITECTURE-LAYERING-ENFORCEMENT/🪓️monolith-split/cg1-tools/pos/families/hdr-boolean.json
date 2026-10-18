@@ -1,0 +1,6 @@
+{
+ "name": "hdr-boolean",
+ "crates": ["semio-framework-3d-brep-boolean", "semio-framework-3d-brep-boolean-unit-tests"],
+ "base": {"rev": "b84bf526c7ba26f99c4054b47da1c1a4d5064e3d", "crates": ["semio-framework-3d-brep-boolean"]},
+ "note": "HDR-2: boolean unit tests moved to a companion with testkit accessors"
+}

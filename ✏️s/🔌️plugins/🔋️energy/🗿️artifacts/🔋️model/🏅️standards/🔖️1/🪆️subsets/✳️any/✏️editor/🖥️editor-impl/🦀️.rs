@@ -1,6 +1,7 @@
 //! 🖥️ The `EnergyModelEditor` type with its `ArtifactEditor` implementation and the body renderer.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]

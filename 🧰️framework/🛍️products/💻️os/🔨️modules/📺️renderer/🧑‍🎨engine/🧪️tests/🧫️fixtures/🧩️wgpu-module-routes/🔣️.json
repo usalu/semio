@@ -1,6 +1,6 @@
 {
   "profiles": [
-    "dev",
+    "prototype",
     "release"
   ],
   "routes": {

@@ -1,0 +1,16 @@
+🔬️_test.go	🔬️ Tests of the cli domain: shared harness helpers.	42-156,313-403,473-485
+🥾️bootstrap_test.go	🥾️ Tests of the cli domain: MCP bootstrap assets.	158-311
+🔃️sync_test.go	🔃️ Tests of the cli domain: sync command.	405-471
+🧾️export_test.go	🧾️ Tests of the cli domain: event-log export.	512-761
+📋️list_test.go	📋️ Tests of the cli domain: policy, list and tree commands and list identifiers.	487-500,763-908,1084-1248
+🏷️ticket_test.go	🏷️ Tests of the cli domain: ticket commands, paths and effort.	910-955,2714-2747,3537-3617
+🥅️goal_test.go	🥅️ Tests of the cli domain: goal commands and goal resources.	957-1082
+🙅️wrong_args_test.go	🙅️ Tests of the cli domain: wrong arguments and error output.	1250-1696
+🖼️format_test.go	🖼️ Tests of the cli domain: result formatting.	1698-1966
+📑️markdown_test.go	📑️ Tests of the cli domain: markdown result formatting.	1968-2362
+🧷️hook_test.go	🧷️ Tests of the cli domain: hook, configure and micro-commit commands.	2364-2450,3119-3488,3520-3535
+🔗️mcp_test.go	🔗️ Tests of the cli domain: MCP tool schemas and prompt rendering.	2452-2514,3083-3117
+🛠️tool_test.go	🛠️ Tests of the cli domain: tool functions and their fixtures.	2516-2712,2749-2825
+🌲️tree_test.go	🌲️ Tests of the cli domain: tree flags and single-line output.	2827-3081
+🧭️command_test.go	🧭️ Tests of the cli domain: command wiring and argument dispatch.	502-510,3490-3518,3887-4013
+🎲️g1_test.go	🎲️ Tests of the cli domain: G1 contract fixtures.	3619-3885

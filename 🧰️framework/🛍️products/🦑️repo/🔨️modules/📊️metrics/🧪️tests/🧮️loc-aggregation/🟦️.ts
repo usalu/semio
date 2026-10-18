@@ -7,7 +7,7 @@
 //#endregion 🧲️Header
 
 //#region 🔌️Adapters
-import { countUnifiedLocForFile } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { countUnifiedLocForFile } from "../../../📚️library/🎛️commands/📝️commit/📊️metrics/🔢️uloc/🟦️.ts";
 import { defineTestAdapter } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 //#endregion 🔌️Adapters
 

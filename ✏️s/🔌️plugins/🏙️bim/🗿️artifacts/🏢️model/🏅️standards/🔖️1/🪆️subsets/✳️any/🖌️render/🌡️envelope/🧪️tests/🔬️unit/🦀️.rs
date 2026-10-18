@@ -1,4 +1,18 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidPlacement;
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSpace, EnvelopeSurface};
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::Vec3;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::placement_of;
+#[allow(unused_imports)]
+use semio_framework_geometry::triangulation::triangulate;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_plugin::{MeshData, World3dColorRamp};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::render::envelope::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::SurfaceKind;
 

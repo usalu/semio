@@ -1,6 +1,6 @@
-use crate::schema::snapshot::SemioDocumentSnapshot;
+use semio_s_artifact_stdio_semio_document_examples::schema::snapshot::SemioDocumentSnapshot;
 use semio_framework_plugin::MeshWindowKit;
-use crate::editor::modes::edit::windows::main::*;
+use semio_s_artifact_stdio_semio_document_examples::editor::modes::edit::windows::main::*;
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_editable_mesh_window_kit() {

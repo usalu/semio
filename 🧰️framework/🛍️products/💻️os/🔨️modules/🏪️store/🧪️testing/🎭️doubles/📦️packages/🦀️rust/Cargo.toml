@@ -32,6 +32,7 @@ semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/�
 semio-framework-os-store-engine = { path = "../../../../⚙️engine/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../../../🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../../../🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-publication = { path = "../../../../🎮️one-item/📬️publication/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-store-snapshot-clone = { path = "../../../../🧬️snapshot-clone/📦️packages/🦀️rust" }
 semio-framework-os-store-testing-fixtures = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-os-store-text-io = { path = "../../../../🚪️io/📦️packages/🦀️rust" }

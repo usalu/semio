@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetComponent`: an absolute `SetComponent` restoring the base value of exactly the fields the forward really changes, none when the component is absent or nothing changes.
 
-use super::SetComponent;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_component::SetComponent;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetComponent, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetComponent, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_component::SetComponent>,
+{
     let Some(record) = base.components.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetComponent, base: &ModelSnapshot) -> Vec<ModelMutatio
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetComponent(SetComponent::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetComponent::from_patch(payload.id.clone(), restore))]
 }

@@ -60,7 +60,7 @@ export function guestLifecycleOracle(): number {
   }
   const reactor = readModuleTreeSource(new URL("../../⚛️reactor/🦀️.rs", import.meta.url));
   assert(reactor.includes("pub use turn::poll_kernel;"), "production reducer must be native-testable");
-  const turn = readFileSync(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url), "utf8");
+  const turn = readModuleTreeSource(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url));
   assert(!turn.includes("plugin_destroy_app(runtime"), "exact captured close must not admit twice");
   for (const token of ["guest_lifetimes", "stage_ack", "finish_turn", "record_close_admission"]) assert(turn.includes(token), token);
   const owner = readFileSync(new URL("../../⚛️reactor/🚪️lifetime/🦀️.rs", import.meta.url), "utf8");
@@ -147,11 +147,11 @@ export function documentBackboneBindingOracle(repoRoot: string): number {
   for (const row of fixture.hostile) assert.equal(validate(row.value), false, row.id);
   const binding = readFileSync(new URL("../../📡️backbone/🔗️binding/🦀️.rs", import.meta.url), "utf8");
   const batchFixture = JSON.parse(readFileSync(backboneBatchV1FixtureUrl, "utf8"));
-  const store = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+  const store = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"));
   const causal = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs"), "utf8");
   const sync = ["🦀️.rs", "🖥️native/🦀️.rs", "🌐️wasm/🦀️.rs"].map((root) => readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync", root))).join("\n");
   const component = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
-  const reactor = readFileSync(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url), "utf8");
+  const reactor = readModuleTreeSource(new URL("../../⚛️reactor/🔄️turn/🦀️.rs", import.meta.url));
   for (const marker of ["DocumentBackboneBindingStateV1", "binding-noncanonical", "binding-live", "stale-generation"]) assert(binding.includes(marker), marker);
   for (const marker of ["ActorBackboneChannelOwner", "attach_hot_backbone", "decode_hot_backbone_message_exact", "hot backbone transport refuses genesis packs"]) assert(store.includes(marker), marker);
   for (const marker of ["decode_document_backbone_envelopes_exact_with_limits", "nonminimal-varint", "DOCUMENT_BACKBONE_PENDING_MAXIMUM_BYTES"]) assert(causal.includes(marker), marker);

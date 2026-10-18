@@ -3,7 +3,7 @@ import { pdfCosFromNativeJson,pdfDictionaryFromNativeJson } from "../../../../�
 /** 🧩️ PDF COS owner laws against neutral vectors and an independent SQLite engine. */
 import { expect, test } from "bun:test";
 import { Database } from "bun:sqlite";
-import type { PdfObject, PdfStreamFilter } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfObject, PdfStreamFilter } from "../../../../../🧬️schema/📸️snapshot/🧩️cos/🟦️.ts";
 import { parsePdfObject, parsePdfDictEntry, parsePdfIndirectObject } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { PDF_COS_SQLITE_SCHEMA, pdfObjectToSqliteDatabase, pdfObjectFromSqliteDatabase } from "../../🧩️cos/🟦️.ts";
 import { exportSqliteDatabase, importSqliteDatabase } from "@semio-tech/framework/io/sqlite-snapshot";

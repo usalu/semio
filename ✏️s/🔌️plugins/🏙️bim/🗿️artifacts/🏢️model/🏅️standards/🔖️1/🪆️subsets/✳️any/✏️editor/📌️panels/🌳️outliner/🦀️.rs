@@ -105,7 +105,7 @@ pub fn entity_item(snapshot: &ModelSnapshot, row: &EntityKind, id: &str, descrip
 }
 
 /// 🪜️ Whether the kind stands on a storey the user may change: its table row has a writable `storey` field.
-fn movable(row: &EntityKind) -> bool {
+pub fn movable(row: &EntityKind) -> bool {
     fields_of(row).any(|field| field.key == "storey" && field.write.is_some())
 }
 

@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/replication/mutation/canonical/authority/fixture.json",
+  "title": "Canonical semantic authority comparison corpus",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "authority",
+    "actorSuffix",
+    "actorRepeats",
+    "copyCapacityLimit",
+    "turnLimit",
+    "pauses",
+    "cases"
+  ],
+  "properties": {
+    "authority": {
+      "$ref": "#/$defs/Authority"
+    },
+    "actorSuffix": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actorRepeats": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "copyCapacityLimit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "turnLimit": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pauses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "edit",
+          "accepted"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "edit": {
+            "$ref": "#/$defs/Edit"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Clock": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "physical_ms",
+        "logical"
+      ],
+      "properties": {
+        "actor": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "physical_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "logical": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Edit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "actor",
+        "line",
+        "author",
+        "group",
+        "sequence",
+        "clock",
+        "forwardCount",
+        "metaCount"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "actor": {
+          "type": "string"
+        },
+        "line": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "author": {
+          "type": "string"
+        },
+        "group": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clock": {
+          "$ref": "#/$defs/Clock"
+        },
+        "forwardCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "metaCount": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Authority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "actor",
+        "line",
+        "group",
+        "sequence",
+        "clock"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "line": {
+          "type": "string"
+        },
+        "group": {
+          "type": "string"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "clock": {
+          "$ref": "#/$defs/Clock"
+        }
+      }
+    }
+  }
+}

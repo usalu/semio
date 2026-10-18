@@ -290,7 +290,7 @@ semio-framework-os-renderer-wgpu-shell-windows = { path = "../../🔲️shell-wi
 semio-framework-os-renderer-wgpu-ui-engine = { path = "../../🖱️ui-engine/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-ui-engine-dump = { path = "../../🔎️ui-engine-dump/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-ui-engine-focus = { path = "../../👆️ui-engine-focus/📦️packages/🦀️rust", features = ["testkit"] }
-semio-framework-os-renderer-wgpu-test-support = { path = "../../🧿️test-support/📦️packages/🦀️rust" }
+semio-framework-os-renderer-wgpu-test-support = { path = "../../🧯️test-support/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu-ui-engine-tests = { path = "../../🧿️ui-engine-tests/📦️packages/🦀️rust" }
 semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-ui-runtime = { workspace = true }

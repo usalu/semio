@@ -106,7 +106,7 @@ const negativeWitness = (bundle: string): boolean => {
   return existsSync(outcome) && (read(outcome) as { code?: unknown }).code === "mutation.invariant";
 };
 const wires = (subset: string): Wire[] =>
-  bundles(join(subset, "🧫️fixtures/🧬️mutations"))
+  bundles(join(subset, "🧪️tests/🧫️fixtures/🧬️mutations"))
     .sort()
     .flatMap((bundle) => [
       { path: join(bundle, "🦠️mutation/🔣️.json"), role: "mutation" as const, negative: negativeWitness(bundle) },

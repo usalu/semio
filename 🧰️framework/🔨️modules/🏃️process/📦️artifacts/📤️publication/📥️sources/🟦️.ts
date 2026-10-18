@@ -3,7 +3,7 @@ import{open,lstat,type FileHandle}from"node:fs/promises";
 import{dirname,isAbsolute,resolve}from"node:path";
 import{createHash}from"node:crypto";
 import schema from"./🧬️schema/🔣️.json";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
 
 export type ArtifactSourceSetV1=Readonly<{readonly artifactSourceSet:unique symbol}>;

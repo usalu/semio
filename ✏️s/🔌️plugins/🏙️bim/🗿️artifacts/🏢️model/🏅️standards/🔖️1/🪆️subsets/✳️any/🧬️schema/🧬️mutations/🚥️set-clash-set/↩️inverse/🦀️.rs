@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetClashSet`: an absolute `SetClashSet` restoring the base value of exactly the fields the forward really changes, none when the clash set is absent or nothing changes.
 
-use super::SetClashSet;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_clash_set::SetClashSet;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetClashSet, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetClashSet, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_clash_set::SetClashSet>,
+{
     let Some(record) = base.clash_sets.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetClashSet, base: &ModelSnapshot) -> Vec<ModelMutation
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetClashSet(SetClashSet::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetClashSet::from_patch(payload.id.clone(), restore))]
 }

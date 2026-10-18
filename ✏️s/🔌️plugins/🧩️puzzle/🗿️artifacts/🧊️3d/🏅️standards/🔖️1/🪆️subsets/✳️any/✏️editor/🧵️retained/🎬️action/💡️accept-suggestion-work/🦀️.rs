@@ -1,6 +1,7 @@
 //! 💡️ Accept suggestion work: the staged acceptance of one suggestion, its target, candidate, vortices and existing attractions, then the published object, attraction and result.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dAcceptSuggestionStage {

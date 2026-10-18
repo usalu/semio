@@ -1,4 +1,4 @@
-use super::{baseboard, create_wall_sweep, slab_choices, surface_choices};
+use crate::editor::bim::entities::wall_sweeps::{baseboard, create_wall_sweep, slab_choices, surface_choices};
 use crate::editor::bim::entities::FieldRow;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Profile, TopConstraint, WallSide};

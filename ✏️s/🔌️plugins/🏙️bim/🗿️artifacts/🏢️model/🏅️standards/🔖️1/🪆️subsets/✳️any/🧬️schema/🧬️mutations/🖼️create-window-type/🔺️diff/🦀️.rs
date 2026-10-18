@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateWindowType`: one created window type entry. The id must be free, the material must exist and every dimension must be valid.
 
-use super::super::elements;
-use super::CreateWindowType;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_window_type::CreateWindowType;
 use crate::standards::v1::subsets::any::schema::{snapshot::{is_non_negative_length, is_positive_length, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

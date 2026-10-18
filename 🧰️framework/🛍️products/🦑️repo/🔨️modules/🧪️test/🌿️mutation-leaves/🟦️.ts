@@ -7,7 +7,7 @@
 import { type MutationOutcomeClass, MUTATION_OUTCOME_CLASSES } from "@semio-tech/framework/test/adapter";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { type BreachRecord } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../📚️library/🚨️policy/🔖️breach/🟦️.ts";
 import { TAXONOMY_REL_PATH, testFilenameForKind, testTaxonomy } from "../🗂️taxonomy/🟦️.ts";
 import { subsetCoordinatesOfOwner } from "../🪆️subset-policy/🟦️.ts";
 import { isFixtureOwnedPath, rawTaxonomy, schemaJsonDialect, schemaModuleDirName } from "../📐️schema-contracts/🟦️.ts";

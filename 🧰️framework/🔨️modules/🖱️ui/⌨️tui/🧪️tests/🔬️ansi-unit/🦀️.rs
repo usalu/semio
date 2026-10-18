@@ -1,8 +1,8 @@
 mod ansi_unit {
     use super::*;
-    use crate::tui::event::{mods, Event, Key, KeyEvent, KeypadKey};
-    use crate::tui::geometry::Pos;
-    use crate::tui::widget::{CursorShape, CursorSpec};
+    use semio_framework_ui_tui_core::event::{mods, Event, Key, KeyEvent, KeypadKey};
+    use semio_framework_ui_tui_core::geometry::Pos;
+    use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec};
 
     fn decode(bytes: &[u8]) -> Vec<Event> {
         let mut parser = AnsiParser::new();

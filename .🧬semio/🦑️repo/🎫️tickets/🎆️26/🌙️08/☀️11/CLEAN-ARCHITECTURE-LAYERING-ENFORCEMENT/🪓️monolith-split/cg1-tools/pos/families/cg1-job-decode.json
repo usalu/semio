@@ -1,0 +1,6 @@
+{
+ "name": "cg1-job-decode",
+ "crates": ["semio-framework-job", "semio-framework-job-native-decode"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-job"]},
+ "note": "CG1: native decode source peeled out of the job core"
+}

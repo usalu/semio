@@ -23,7 +23,7 @@ import{readRustUnitV1}from"../../../🟦️.ts";
 import units from"../../../🧪️tests/🧫️fixtures/🔣️.json";
 test("neutral compiler state requires captured execution root before a context plan exists",()=>{const missing=structuredClone(units.units[0]!)as Record<string,unknown>;delete missing.execution;expect(()=>readRustUnitV1(missing)).toThrow();});
 
-import{nativeStorageEventV1,nativeStorageStateV1,nativeStorageUsedBytesV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import{nativeStorageEventV1,nativeStorageStateV1,nativeStorageUsedBytesV1}from"../../../../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 import policy from"../🔣️policy.json";
 test("neutral compiler state has a distinct genuine journal charge including retiring bytes",()=>{let state=nativeStorageStateV1();state=nativeStorageEventV1(state,{type:"reserved",allocation:{id:"a".repeat(32),owner:"repo:compiler-state:prototype",kind:"compiler-state",bytes:policy.chargeBytes,phase:"reserved"}},17179869184);for(const phase of["committed","retiring"]as const){state=nativeStorageEventV1(state,{type:phase,id:"a".repeat(32)},17179869184);expect(nativeStorageUsedBytesV1(state)).toBe(policy.chargeBytes);}expect(policy.maximumBackingBytes+policy.parentMetadataBytes).toBe(policy.chargeBytes);expect(policy.filesystemBytes+1048576).toBe(policy.maximumBackingBytes);});
 

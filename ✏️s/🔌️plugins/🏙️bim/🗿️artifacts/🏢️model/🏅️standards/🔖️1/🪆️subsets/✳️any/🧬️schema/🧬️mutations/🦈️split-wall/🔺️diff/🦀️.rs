@@ -3,9 +3,9 @@
 //! patch with its offset re-based onto the new wall, and every sweep of the wall is repeated on the new wall (as `<sweep id>-<new wall id>`), because a sweep runs along the whole face of its host. Both parts of an arc keep the sweep share of their arc length
 //! (`bulge = tan(sweep / 4)`); an opening belongs to the part that contains its offset.
 
-use super::super::{component_rules, elements};
+use crate::standards::v1::subsets::any::schema::mutations::{component_rules, elements};
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{snap, split, Split};
-use super::SplitWall;
+use crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::{OpeningPatch, WallPatch}}, snapshot::{ModelSnapshot, Opening, Wall, WallSweep}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

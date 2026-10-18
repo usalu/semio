@@ -11,7 +11,7 @@ test("borrowed semantic schema fragments reproduce original forward and inverse 
  expect(Buffer.concat([forward,Buffer.from(".inverse")]).toString()).toBe("semio.fixture.operation.inverse");
  expect(JSON.parse(JSON.stringify({schema:forward.toString()})).schema).toBe("semio.fixture.operation");
  const source=await Bun.file(new URL("../🦀️.rs",import.meta.url)).text();
- expect(source.includes("pub(crate) schema_separator: &'a str")).toBe(true);
+ expect(source.includes("pub schema_separator: &'a str")).toBe(true);
 });
 
 test("original mounted receipt bytes preserve denied backing and bounded exact copies", async () => {

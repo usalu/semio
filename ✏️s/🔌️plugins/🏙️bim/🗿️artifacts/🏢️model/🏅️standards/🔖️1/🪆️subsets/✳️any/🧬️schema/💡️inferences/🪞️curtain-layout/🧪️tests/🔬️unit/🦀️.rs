@@ -1,10 +1,23 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{CurtainWall, CurtainWallType};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::{panels};
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelNode};
 use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainGrid, CurtainPanel}, diff::{Entry, ModelDiff, patches::StoreyPatch}};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_curtain_layout;
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
 
 fn curtain(storey: &str, top: serde_json::Value, base_offset: f64, length: f64) -> serde_json::Value {
     serde_json::json!({
@@ -18,7 +31,7 @@ fn curtain(storey: &str, top: serde_json::Value, base_offset: f64, length: f64) 
 }
 
 fn model() -> ModelSnapshot {
-    let mut value: serde_json::Value = serde_json::from_str(HOUSE).expect("house is JSON");
+    let mut value: serde_json::Value = serde_json::from_str((*HOUSE)).expect("house is JSON");
     value["curtain_wall_types"] = serde_json::json!({
         "cwt": {
             "name": "Facade",

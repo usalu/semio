@@ -1,6 +1,7 @@
 //! 🔄️ Transform work: the staged selection transform (gumball, target volume relocation, Relocate drop, inspector nudge) that reads the gesture, scans a drop page by page and commits one transform tool transaction.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dTransformStage {

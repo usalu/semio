@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetAreaScheme`: a sparse area scheme patch of exactly the provided fields that differ from the base. Counted zones must
 //! exist and counted usages must not be blank (the rule of `create-area-scheme`); providing only equal values is a no-op.
 
-use super::super::elements;
-use super::SetAreaScheme;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::set_area_scheme::SetAreaScheme;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

@@ -24,6 +24,8 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
+semio-framework-os-store-read = { path = "../../../🔗️read/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
@@ -49,6 +51,5 @@ semio-framework-schema-state = { path="../../../../../../../🔨️modules/🧬�
 semio-framework-os-command = { path="../../../../📡️spr/🎮️command/📦️packages/🦀️rust", features=["mutation-testing"] }
 semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }

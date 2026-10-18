@@ -1,0 +1,1 @@
+{"name": "c6db1-neo", "crates": ["semio-framework-os-kernel-db-storage-neo4j"], "base": {"rev": "overlay", "crates": ["semio-framework-os-kernel-db-storage-neo4j"]}}

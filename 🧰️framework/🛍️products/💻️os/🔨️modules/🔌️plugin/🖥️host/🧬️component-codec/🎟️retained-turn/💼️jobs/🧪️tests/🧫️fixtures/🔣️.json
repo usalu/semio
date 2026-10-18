@@ -100,27 +100,27 @@
   "ownedCalls": [
     {
       "name": "step_job",
-      "parameters": 12,
+      "parameters": 20,
       "resultBytes": 160
     },
     {
       "name": "read_job_output",
-      "parameters": 12,
+      "parameters": 20,
       "resultBytes": 160
     },
     {
       "name": "acknowledge_job_output",
-      "parameters": 12,
+      "parameters": 20,
       "resultBytes": 160
     },
     {
       "name": "cancel_job",
-      "parameters": 12,
+      "parameters": 20,
       "resultBytes": 160
     },
     {
       "name": "close_jobs",
-      "parameters": 11,
+      "parameters": 19,
       "resultBytes": 160
     }
   ],

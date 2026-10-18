@@ -925,9 +925,9 @@ fn md_b() -> Vec<MdBlock> {
 /// `all_inline_kinds`), both tri-states (`List.start`, `CodeBlock.info`), and both
 /// `MdBlocksDiff`/`MdListItemsDiff` triples at multiple nesting depths (top-level,
 /// `BlockQuote.blocks`, `List.items`), all declared by hand.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<MdDiff> {
+pub fn demo_diff_cases() -> Vec<MdDiff> {
     let mut cases = vec![
         MdDiff::default(),
         MdDiff {

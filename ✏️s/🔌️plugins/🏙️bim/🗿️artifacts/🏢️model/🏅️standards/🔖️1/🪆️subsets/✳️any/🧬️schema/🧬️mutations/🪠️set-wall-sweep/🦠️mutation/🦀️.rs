@@ -1,6 +1,6 @@
 //! 🪠️ `set-wall-sweep` payload. Sets exactly the provided fields of a wall sweep: host wall, face, profile, height above the base, inset, material and name; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::WallSweepPatch}, mutations::ModelMutation, snapshot::{ModelSnapshot, Profile, WallSide}};
+use crate::standards::v1::subsets::any::schema::{diff::{ModelDiff, patches::WallSweepPatch}, snapshot::{ModelSnapshot, Profile, WallSide}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -36,13 +36,16 @@ impl SetWallSweep {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetWallSweep {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetWallSweep
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetWallSweep>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "wall-sweep", kind: "set-wall-sweep", record: "SetWallSweep" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_wall_sweep::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_wall_sweep::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change wall sweep \"{}\"", self.id), &format!("Wandprofil \"{}\" ändern", self.id))

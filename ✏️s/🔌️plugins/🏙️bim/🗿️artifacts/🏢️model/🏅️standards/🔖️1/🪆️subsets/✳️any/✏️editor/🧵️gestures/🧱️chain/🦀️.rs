@@ -3,8 +3,8 @@
 //! of walls goes on from the end of the last one until it closes on its first point, is finished or escapes. A railing and a ramp are written whole when the chain finishes. The measure
 //! writes nothing, ever.
 
-use super::plane::{axis_of, bulge_through, dist, flatten, point2, same, P};
-use super::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
+use crate::editor::bim::gestures::plane::{axis_of, bulge_through, dist, flatten, point2, same, P};
+use crate::editor::bim::gestures::session::{length_label, Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, STOREY_MISSING, TYPE_MISSING};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::snapshot::{Beam, CurtainWall, GridLine, LocationLine, Phase, Railing, Ramp, TopConstraint, Vertex, Wall};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
@@ -42,7 +42,7 @@ pub struct Chain {
     vertices: Vec<P>,
     segments: usize,
     measured: Option<(P, P)>,
-    hover: Option<super::snap::SnapHit>,
+    hover: Option<crate::editor::bim::gestures::snap::SnapHit>,
 }
 
 impl Chain {
@@ -291,6 +291,4 @@ impl Tool for Chain {
 }
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

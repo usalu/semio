@@ -1,7 +1,8 @@
 /** 🛠 Shared fixtures of the PluginRuntime suites: packed carriers, fake handles and the shard-client swap. */
 import type { HistoryPatch } from "@semio-tech/framework";
 import type { LocalInteractionCapture } from "@semio-tech/framework-replication";
-import type { ShardBudget, ShardClient, ShardEventEnvelope } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import type { ShardBudget, ShardEventEnvelope } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
+import type { ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
 import type { PluginManifest } from "../../🧱️elements/🔌️PluginRuntime/🧷️handle-contract/🟦️.ts";
 import type { PluginRuntimeTestDependenciesV1, PluginWasmHandle } from "../../🧱️elements/🔌️PluginRuntime/🟦️.tsx";
 

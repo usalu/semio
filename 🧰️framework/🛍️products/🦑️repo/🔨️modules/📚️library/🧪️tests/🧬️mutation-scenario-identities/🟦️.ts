@@ -2,11 +2,12 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
-import { loadCatalogTaxonomy, semanticProjectionCatalogProblems } from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { semanticProjectionCatalogProblems } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
 import { mutationCatalogProblems } from "../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
-const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧬️mutation-scenario-identities/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🧬️mutation-scenario-identities/🔣️.json"), "utf8"));
 
 
 test("logical mutation scenario ids and physical case names are independent exact identities", () => {

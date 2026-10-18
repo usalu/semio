@@ -1,6 +1,6 @@
 //! 🔺️ Diff constructor for `DeleteAnnotationStyle`: one deleted style entry; refused while a dimension, tag, text note or leader still uses it.
 
-use super::DeleteAnnotationStyle;
+use crate::standards::v1::subsets::any::schema::mutations::delete_annotation_style::DeleteAnnotationStyle;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

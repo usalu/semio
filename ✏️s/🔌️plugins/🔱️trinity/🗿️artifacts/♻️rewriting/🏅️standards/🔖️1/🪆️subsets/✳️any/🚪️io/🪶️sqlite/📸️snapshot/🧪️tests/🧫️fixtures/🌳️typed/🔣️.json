@@ -2,11 +2,13 @@
   "schemaDocuments": [
     "../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json",
     "../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json",
+    "../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🔣️.json",
     "../../../../../../../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔣️.json",
     "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🏷️type/🧬️schema/🔣️.json",
     "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json",
     "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json",
-    "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json"
+    "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json",
+    "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json"
   ],
   "snapshot": {
     "workingGraph": {

@@ -7,7 +7,7 @@ import { dirname, join, relative, resolve } from "node:path";
 import { PassThrough } from "node:stream";
 import type { ChildProcess } from "node:child_process";
 import ts from "typescript";
-import { loadTaxonomy, semanticDirectoryKindId } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { readMcpGatewaySource } from "@semio-tech/framework-os-mcp";
 import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
@@ -26,13 +26,13 @@ const repoRoot = resolve(import.meta.dir, "../../..");
 const hubRoot = join(repoRoot, "🌎️hub");
 
 test("Hub consumes retained OS document mounts and the bound session authority",()=>{
-  const source=readFileSync(join(hubRoot,consumerContracts.source),"utf8");
+  const source=readFileSync(join(hubRoot,consumerContracts.mount.source),"utf8");
   const start=source.indexOf(consumerContracts.mount.start),end=source.indexOf(consumerContracts.mount.end,start);
   expect(start).toBeGreaterThanOrEqual(0);expect(end).toBeGreaterThan(start);
   const mount=source.slice(start,end);
   for(const marker of consumerContracts.mount.required)expect(mount).toContain(marker);
   for(const marker of consumerContracts.mount.forbidden)expect(mount).not.toContain(marker);
-  for(const marker of consumerContracts.session.required)expect(source).toContain(marker);
+  const session=readFileSync(join(hubRoot,consumerContracts.session.source),"utf8");for(const marker of consumerContracts.session.required)expect(session).toContain(marker);
 });
 const fixturePath = join(hubRoot, "🧪️tests/🧫️fixtures/🧱️foundation-source/🔣️.json");
 const fixtureSource = readFileSync(fixturePath, "utf8");
@@ -309,7 +309,7 @@ test("source definition boundaries match TypeScript AST and reject stale credent
 
   const native = {
     entrypoint: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/🦀️.rs"), "utf8"),
-    credential: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), "utf8"),
+    credential: readModuleTreeSource(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs"), { crates: false }),
     runner: readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/📜️script.ts"), "utf8"),
     project: readFileSync(join(hubRoot, "📦️packages/🦀️rust/📋️project.json"), "utf8"),
   };

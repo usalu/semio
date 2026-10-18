@@ -1,0 +1,49 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🔄️transaction-v2/🟦️.ts",
+ "keepParentIn": ".",
+ "cap": 950,
+ "chunks": [
+  {
+   "dir": ".",
+   "leaf": "🟦️.ts",
+   "units": [
+    62
+   ]
+  },
+  {
+   "dir": "📜️boundary-contracts",
+   "ranges": [
+    [
+     0,
+     22
+    ],
+    [
+     25,
+     25
+    ]
+   ]
+  },
+  {
+   "dir": "🏗️fixture-builders",
+   "ranges": [
+    [
+     26,
+     41
+    ]
+   ]
+  },
+  {
+   "dir": "💥️child-control",
+   "ranges": [
+    [
+     23,
+     24
+    ],
+    [
+     42,
+     61
+    ]
+   ]
+  }
+ ]
+}

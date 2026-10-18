@@ -758,9 +758,9 @@ impl DiffAlgebra<GifSnapshot> for GifDiff {
 /// `conformance_laws` module), built declaratively: the empty diff, every scalar field with both tri-states (`gct`, `loop_count`),
 /// `GifFrameDiff`'s nested tri-states (`lct`/`transparent_index`/`plain_text`) and all three collection triples (`frames`, `comments`,
 /// `app_extensions`) at once.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<GifDiff> {
+pub fn demo_diff_cases() -> Vec<GifDiff> {
     let palette = |seed: u8| GifColorTable { sorted: false, colors: vec![GifRgb { r: seed, g: seed, b: seed }; 2] };
     let frame = |seed: u8| GifFrame {
         left: 0,

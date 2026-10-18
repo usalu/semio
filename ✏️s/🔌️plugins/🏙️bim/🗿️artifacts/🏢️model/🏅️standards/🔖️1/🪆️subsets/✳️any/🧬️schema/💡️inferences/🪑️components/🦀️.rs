@@ -9,12 +9,12 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Family_(building_information_modeling)>.
 
-use super::super::element_solids::plan_kit::seg;
-use super::super::element_solids::{dep_object, dep_value, Anonymous, SolidBounds, SolidPoint};
-use super::super::families::{self, issues, FamilyIssue, FamilyValue, ResolvedParameter};
-use super::super::mep;
-use super::super::storey_levels::StoreyLevel;
-use super::super::wall_layout::WallLayout;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::seg;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, Anonymous, SolidBounds, SolidPoint};
+use crate::standards::v1::subsets::any::schema::inferences::families::{self, issues, FamilyIssue, FamilyValue, ResolvedParameter};
+use crate::standards::v1::subsets::any::schema::inferences::mep;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use crate::standards::v1::subsets::any::schema::snapshot::{Component, FamilyCategory, MepSystem, ModelSnapshot, Point2, Point3};
 use semio_framework_geometry::vector::{cross, perp};
 use semio_framework_geometry::Vec2;
@@ -210,7 +210,7 @@ fn bounds_of(family: &FamilyValue) -> Option<([f64; 3], [f64; 3])> {
     family.visible().filter(|(_, solid)| !solid.indices.is_empty()).map(|(_, solid)| ([solid.bounds.min.x, solid.bounds.min.y, solid.bounds.min.z], [solid.bounds.max.x, solid.bounds.max.y, solid.bounds.max.z])).reduce(|(lo, hi), (a, b)| ([lo[0].min(a[0]), lo[1].min(a[1]), lo[2].min(a[2])], [hi[0].max(b[0]), hi[1].max(b[1]), hi[2].max(b[2])]))
 }
 
-fn signed_area(ring: &[Point2]) -> f64 {
+pub fn signed_area(ring: &[Point2]) -> f64 {
     let count = ring.len();
     (0..count).map(|index| ring[index].x * ring[(index + 1) % count].y - ring[(index + 1) % count].x * ring[index].y).sum::<f64>() / 2.0
 }
@@ -283,10 +283,6 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str) -> DslValue {
 pub const READS: &[&str] = &["components", "component_overrides", "families", "family_parameters", "family_solids", "materials", "walls", "storeys", "buildings", "sites"];
 //#endregion 🔖️Value
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
 
-#[cfg(test)]
-#[path = "🧪️tests/🕸️graph/🦀️.rs"]
-mod graph_tests;
+
+

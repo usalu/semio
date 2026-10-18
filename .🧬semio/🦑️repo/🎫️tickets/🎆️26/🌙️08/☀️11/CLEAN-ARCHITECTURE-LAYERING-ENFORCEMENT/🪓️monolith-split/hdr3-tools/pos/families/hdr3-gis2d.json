@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-gis2d",
+ "crates": ["semio-s-artifact-gis-gismap-gis2d", "semio-s-artifact-gis-gismap-gis2d-unit-tests"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-s-artifact-gis-gismap-gis2d"]},
+ "note": "HDR-3: gis2d unit tests to a companion"
+}

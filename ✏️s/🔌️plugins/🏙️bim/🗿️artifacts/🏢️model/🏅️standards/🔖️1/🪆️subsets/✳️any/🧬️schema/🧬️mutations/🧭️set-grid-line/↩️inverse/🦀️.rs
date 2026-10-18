@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetGridLine`: an absolute `SetGridLine` restoring the base value of exactly the fields the forward really changes, none when the grid line is absent or nothing changes.
 
-use super::SetGridLine;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_grid_line::SetGridLine;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetGridLine, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetGridLine, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_grid_line::SetGridLine>,
+{
     let Some(record) = base.grids.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetGridLine, base: &ModelSnapshot) -> Vec<ModelMutation
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetGridLine(SetGridLine::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetGridLine::from_patch(payload.id.clone(), restore))]
 }

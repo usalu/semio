@@ -16,7 +16,7 @@ class TestScript extends BundleScript{
   await runOwnedCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--noUncheckedIndexedAccess","--skipLibCheck","--target","ES2022","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions",resolve(this.root,"🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});
  }
 }
-/** 🧪️ Executes every portable case and the actual discovery, catalog and Nx receiving ports. */
+/** 🧪️ Executes every portable case and the actual discovery, catalog and build receiving ports. */
 class WorkerScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   if(segments.length)throw Error("playground composition worker accepts no arguments");

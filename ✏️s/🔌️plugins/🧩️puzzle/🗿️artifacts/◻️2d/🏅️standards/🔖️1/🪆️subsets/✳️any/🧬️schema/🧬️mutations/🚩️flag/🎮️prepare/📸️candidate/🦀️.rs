@@ -19,7 +19,7 @@ pub struct Puzzle2dFlagCandidateState<T:Puzzle2dFlagIntent> {
     plan: Option<Puzzle2dFlagPlan>,
     candidate: Option<Puzzle2dSnapshot>,
     candidate_close: Option<ControlledRetirement<Puzzle2dSnapshot>>,
-    phase: u8,
+    pub phase: u8,
     closing: bool,
 }
 

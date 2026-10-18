@@ -24,7 +24,7 @@ export const EXAMPLE_GEOMETRY_FIXTURE_SCHEMA = "s.procedural.generation3d.exampl
  * @see 🦀️.rs — the Rust half reaches the same two locations with `include_str!`.
  */
 export const EXAMPLE_ASSETS_DIR = "🖼️assets";
-export const EXAMPLE_FIXTURE_PATH = join("🧫️fixtures", "🧩️example", "🔣️.json");
+export const EXAMPLE_FIXTURE_PATH = join("🧪️tests", "🧫️fixtures", "🧩️example", "🔣️.json");
 
 /**
  * 🚧️ The machine-readable kernel standings a fixture may declare, mirroring `🦀️.rs`'s
@@ -183,7 +183,7 @@ export function assertBudgetContract(fixture: ExampleGeometryFixture): void {
  *
  * @see 🦀️.rs — the Rust half runs that workload and divides its own reading by this reference.
  */
-export const EXAMPLE_BUDGET_CALIBRATION_PATH = join("🧫️fixtures", "⏱️budget-calibration", "🔣️.json");
+export const EXAMPLE_BUDGET_CALIBRATION_PATH = join("🧪️tests", "🧫️fixtures", "⏱️budget-calibration", "🔣️.json");
 export const EXAMPLE_BUDGET_CALIBRATION_SCHEMA = "s.procedural.generation3d.example-budget-calibration/v1";
 
 /**

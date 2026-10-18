@@ -6,7 +6,6 @@
 #![allow(long_running_const_eval)]
 
 #[cfg(test)]
-pub(crate) use semio_framework_io_sqlite_snapshot_testing_backing as snapshot_test_backing;
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;

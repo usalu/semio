@@ -5,7 +5,8 @@ import { resolve, sep } from "node:path";
 import Ajv from "ajv";
 import * as toml from "@iarna/toml";
 import { validateJsonSchemaSubset } from "@semio-tech/schema-validator-ts";
-import { inspectRustCargoManifest, inspectRustModuleGraphFacts, inspectRustStructure } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { inspectRustCargoManifest, inspectRustModuleGraphFacts } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🌐️rust-module-graph/🟦️.ts";
+import { inspectRustStructure } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🏛️rust-structure/🟦️.ts";
 import { inspectRustCompileReferences, rustTokenPairs, rustTokens } from "@semio-tech/compiler-syntax-rust-ts";
 import { packagesForOwner } from "@semio-tech/repo-test/dependencies";
 import contract from "../🧫️fixtures/🧩️composition/🔣️.json";
@@ -204,7 +205,8 @@ describe("canonical complete Stdio oracle ownership", () => {
       expect(dependencies, row.package).toBeDefined();
       expect(Object.keys(dependencies).sort()).toEqual([...row.references].sort());
       for (const name of row.references) {
-        expect(externalDependencies[name], name).toEqual(dependencies[name]);
+        if (name === "semio-framework-test-fixtures") expect(dependencies[name], name).toHaveProperty("path");
+        else expect(externalDependencies[name], name).toEqual(dependencies[name]);
       }
       expect(rustTokens(read(row.source)).some((token, index, tokens) => token.text === "fn" && tokens[index + 1]?.kind === "identifier"), row.source).toBe(true);
       expect(read(row.source).includes("#[ignore]"), row.source).toBe(row.ignored);

@@ -90,6 +90,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📏️world3d-modelling/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/📷️framing/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/*/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎬️scene/🧬️schema/🧩️block-list/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🔢️number-format/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🧬️contract/🖼️presentation/🕰️host-temporal-format/🟦️.ts",

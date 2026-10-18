@@ -54,7 +54,7 @@ test("Rewriting Nakagin scenario parents retain complete separately owned typed 
   ["","nakagin-rewriting-content",180,179,364],
   ["🏢️nakagin-ground-floor/","nakagin-ground-floor-rewriting-content",2,1,2]
  ]as const){
-  const root="../../../../🧫️fixtures/♻️mutate-rewrite-1"+folder,parent=read(root+"🔣️.snapshot.json");
+  const root="../../../../🧪️tests/🧫️fixtures/♻️mutate-rewrite-1/"+folder,parent=read(root+"🔣️.snapshot.json");
   expect(parentSchema(parent)).toBe(true);
   expect(parent.workingGraph.content).toEqual({childId:id,target:{artifactId:id,dialect:{artifactKind:"s.stdio.semio",standard:"v1",subset:"graph"}}});
   const child=read(root+"🪆️content/🔣️.snapshot.json");
@@ -170,7 +170,7 @@ test("Rewriting actual Semio child public JSON codec preserves all words and int
   const kinds=decoded.nodes[0].properties.map((entry:any)=>entry.value.kind);expect(kinds).toEqual(["null","bool","int","float","str","bytes","list","map","ref"]);
   const view=new DataView(new ArrayBuffer(8));view.setBigUint64(0,BigInt("0x"+word));expect(view.getBigUint64(0)).toBe(decoded.nodes[0].width.bits);
  }
- const snapshotRoot=new URL("../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations",trinityTests);
+ const snapshotRoot=new URL("../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧪️tests/🧫️fixtures/🧬️mutations/",trinityTests);
  const owners=["✂️delete-edge/✂️removes","✋️drag-nodes/✋️drags","🌉️create-edge/🌉️connects","🏗️create-node/🔎️appends","🏷️rename-node/🏷️renames","📍move-node/📍️moves","📐resize-node/📐️resizes","🔌add-node-port/🔌️inserts","🔚remove-node-port/🔚️detaches","🔧change-node-kind/🔧️retypes","🖍️change-node-label/🔤️relabels","🗑️delete-node/🚫️removes","➕add-edge-property/⚖️inserts","➕add-node-property/⚖️inserts","➖remove-edge-property/➖️detaches","➖remove-node-property/➖️detaches","🎚️set-edge-property/🎚️sets","🎛️set-node-property/🎛️sets"];
  const expected=owners.flatMap(owner=>[`${owner}/📸️snapshot/⬅️before/🔣️.json`,`${owner}/📸️snapshot/➡️after/🔣️.json`]).sort();
  const snapshots=readdirSync(snapshotRoot,{recursive:true}).map(String).filter(path=>path.endsWith("/📸️snapshot/⬅️before/🔣️.json")||path.endsWith("/📸️snapshot/➡️after/🔣️.json")).sort();expect(snapshots).toEqual(expected);expect(snapshots.length).toBe(36);
@@ -184,7 +184,7 @@ test("Rewriting all twenty-eight scenario owners declare complete before after a
  const read=(relative:string)=>JSON.parse(readFileSync(new URL(relative,trinityTests),"utf8")),ajv=semioSchemaAjvV1({allErrors:true});
  for(const relative of read("./🧫️fixtures/🌳️typed/🔣️.json").schemaDocuments)ajv.addSchema(read(relative));
  const parentSchema=ajv.compile(read("../../../../🧬️schema/🔣️.json")),childSchema=ajv.compile(read("../../../../🧬️schema/📸️snapshot/🌳️typed/🪆️child/🔣️.json"));
- const input=(row:typeof feature.scenarios[number],role:string)=>{const steps=row.steps.filter(step=>step.text.startsWith(role+" shared://"));expect({scenario:row.id,role,count:steps.length}).toEqual({scenario:row.id,role,count:1});const uri=steps[0]!.text.slice(role.length+1);return{uri,value:read("../../../../🧫️fixtures"+uri.slice("shared://".length))}};
+ const input=(row:typeof feature.scenarios[number],role:string)=>{const steps=row.steps.filter(step=>step.text.startsWith(role+" shared://"));expect({scenario:row.id,role,count:steps.length}).toEqual({scenario:row.id,role,count:1});const uri=steps[0]!.text.slice(role.length+1);return{uri,value:read("../../../../🧪️tests/🧫️fixtures/"+uri.slice("shared://".length))}};
  const children=new Map<string,any>();let pairs=0;
  const bind=(row:typeof feature.scenarios[number],parentRole:string,childRole:string)=>{const parent=input(row,parentRole),child=input(row,childRole);expect(parentSchema(parent.value)).toBe(true);expect(childSchema(child.value)).toBe(true);expect(parent.value.workingGraph.content.target.dialect).toEqual({artifactKind:"s.stdio.semio",standard:"v1",subset:"graph"});expect(parent.value.workingGraph.content.childId.length).toBeGreaterThan(0);expect(parent.value.workingGraph.content.target.artifactId.length).toBeGreaterThan(0);children.set(child.uri,child.value);pairs++;return parent.value};
  for(const row of feature.scenarios){

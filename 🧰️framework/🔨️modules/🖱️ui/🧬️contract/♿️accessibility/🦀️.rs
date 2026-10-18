@@ -1,5 +1,12 @@
 //! ♿️ Canonical component and document accessibility projection.
 use crate::*;
+use serde::{Deserialize, Serialize};
+
+/// ♿️ Skips serializing a field that still equals its default.
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn is_default<T: Default + PartialEq>(value: &T) -> bool {
+    *value == T::default()
+}
 
 //#region 🔖️AccessibilityProjection
 /// ♿️ The ARIA role a component IMPLIES. [`AccessibilitySpec`] carries no `role` on purpose — a

@@ -4,7 +4,7 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../../../🔨️mod
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 
 /** 🎨️ Proves the closed mutation verb ontology with Ajv, Rust source and native membership laws. */
 export async function checkMutationVerbVocabulary(invocation: ScriptInvocation, control:ResourceLeaseControl, repoRoot: string, segments: string[]): Promise<void> {

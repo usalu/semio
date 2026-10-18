@@ -8,23 +8,13 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 /// 🚚️ The carrier this facet's `parse`/`print` speak.
 pub type ModelInferenceText = String;
 
-#[path = "🗺️plan-linework/🦀️.rs"]
-pub mod plan_linework;
-#[path = "🪜️stair-runs/🦀️.rs"]
-pub mod stair_runs;
-#[path = "🧮️quantities/🦀️.rs"]
-pub mod quantities;
-#[path = "🏠️spaces/🦀️.rs"]
-pub mod spaces;
-#[path = "⚠️diagnostics/🦀️.rs"]
-pub mod diagnostics;
-#[path = "🧊️element-solids/🦀️.rs"]
-pub mod element_solids;
-#[path = "🛝️ramp-runs/🦀️.rs"]
-pub mod ramp_runs;
-#[path = "🪑️components/🦀️.rs"]
-pub mod components;
-#[path = "🖼️view-linework/🦀️.rs"]
-pub mod view_linework;
-#[path = "📋️schedules/🦀️.rs"]
-pub mod schedules;
+pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::text::inferences::plan_linework;
+pub use semio_s_artifact_bim_model_storey_levels::standards::v1::subsets::any::io::text::inferences::stair_runs;
+pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::io::text::inferences::quantities;
+pub use semio_s_artifact_bim_model_spaces::standards::v1::subsets::any::io::text::inferences::spaces;
+pub use semio_s_artifact_bim_model_components::standards::v1::subsets::any::io::text::inferences::diagnostics;
+pub use semio_s_artifact_bim_model_diff::standards::v1::subsets::any::io::text::inferences::element_solids;
+pub use semio_s_artifact_bim_model_ramp_runs::standards::v1::subsets::any::io::text::inferences::ramp_runs;
+pub use semio_s_artifact_bim_model_wall_geometry::standards::v1::subsets::any::io::text::inferences::components;
+pub use semio_s_artifact_bim_model_plan_linework::standards::v1::subsets::any::io::text::inferences::view_linework;
+pub use semio_s_artifact_bim_model_quantities::standards::v1::subsets::any::io::text::inferences::schedules;

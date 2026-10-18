@@ -6,17 +6,15 @@
  *
  * @see `🐍️u4-pinch-diagram-contrast-probe.mjs` (ticket 26/09/18) — the live twin on the `s` dag window.
  */
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
+import { readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { GRAPH_WHEEL_ZOOM_NOTCH, graphPinchWheelPlan } from "../../🟦️.tsx";
 
 /** 🗂️ The repo root, walked up from the runner's cwd (`import.meta.url` is a vite `/@fs` URL here). */
-const repoRoot = (() => {
-  let at = process.cwd();
-  while (!existsSync(resolve(at, "nx.json")) && dirname(at) !== at) at = dirname(at);
-  return at;
-})();
+const repoRoot = findWorkspaceRoot(process.cwd());
 const step = (scale: number, panX = 0, panY = 0) => ({ scale, panX, panY, rotation: 0, centroidX: 320, centroidY: 240 });
 
 describe("🤏️ node-graph pinch → wheel plan", () => {
@@ -46,9 +44,9 @@ describe("🤏️ node-graph pinch → wheel plan", () => {
     const tokens = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs"), "utf8");
     expect(tokens).toContain(`pub const WHEEL_ZOOM_IN_FACTOR: f64 = ${GRAPH_WHEEL_ZOOM_NOTCH.in};`);
     expect(tokens).toContain(`pub const WHEEL_ZOOM_OUT_FACTOR: f64 = ${GRAPH_WHEEL_ZOOM_NOTCH.out};`);
-    const flow = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/🦀️.rs"), "utf8");
+    const flow = readModuleTreeSource(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🖥️host/✏️host-authoring/🦀️.rs"));
     expect(flow).toMatch(/WHEEL_ZOOM_IN_FACTOR \} else \{ ui_styling::metrics::camera::WHEEL_ZOOM_OUT_FACTOR/u);
-    const dag = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🗺️surface/🕸️node-graph/🦀️.rs"), "utf8");
-    expect(dag).toContain(`if delta_y < 0.0 { ${GRAPH_WHEEL_ZOOM_NOTCH.in} } else { ${GRAPH_WHEEL_ZOOM_NOTCH.out} }`);
+    const camera = readFileSync(resolve(repoRoot, "🧰️framework/🔨️modules/🖼️canvas/📷️camera/🦀️.rs"), "utf8");
+    expect(camera).toMatch(/if delta_y < 0\.0 \{ ui_styling::metrics::camera::WHEEL_ZOOM_IN_FACTOR \} else \{ ui_styling::metrics::camera::WHEEL_ZOOM_OUT_FACTOR \}/u);
   });
 });

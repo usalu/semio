@@ -34,22 +34,22 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_bytes(b: &[u8]) -> String {
+pub fn enc_bytes(b: &[u8]) -> String {
     hex_encode(b)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
+pub fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     hex_decode(s)
 }
 
@@ -59,7 +59,7 @@ pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -82,12 +82,12 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
@@ -95,7 +95,7 @@ pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> S
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -108,12 +108,12 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// plain `Vec<T>` fields (`labels`, `exceptions`, `selection`, `coloring`, ...) that are
 /// whole-value replaced rather than key-diffed.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
@@ -171,7 +171,7 @@ pub(crate) fn dec_point3(s: &str) -> Result<BcfPoint3, String> {
 /// (Orthogonal) -- single-letter tag prefix, the `xs:choice` made concrete (same convention as
 /// `enc_xml_node`'s `E`/`T`/`D`/`M`/`P` tags in svg's hand-rolled codec).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_camera(c: &BcfCamera) -> String {
+pub fn enc_camera(c: &BcfCamera) -> String {
     match c {
         BcfCamera::Perspective { view_point, direction, up_vector, field_of_view } => {
             format!("P[{},{},{},{}]", enc_point3(view_point), enc_point3(direction), enc_point3(up_vector), field_of_view)
@@ -183,7 +183,7 @@ pub(crate) fn enc_camera(c: &BcfCamera) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_camera(s: &str) -> Result<BcfCamera, String> {
+pub fn dec_camera(s: &str) -> Result<BcfCamera, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     let parts = split_top_level(inner, ',');
@@ -220,43 +220,43 @@ pub(crate) fn dec_coloring(s: &str) -> Result<BcfColoring, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_components(c: &BcfComponents) -> String {
+pub fn enc_components(c: &BcfComponents) -> String {
     format!("[{},{},{}]", enc_list(&c.selection, |s: &String| enc_str(s)), enc_visibility(&c.visibility), enc_list(&c.coloring, enc_coloring))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_components(s: &str) -> Result<BcfComponents, String> {
+pub fn dec_components(s: &str) -> Result<BcfComponents, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [selection, visibility, coloring] = parts.as_slice() else { return Err(format!("components: expected 3 fields, got {}", parts.len())) };
     Ok(BcfComponents { selection: dec_list(selection, dec_str)?, visibility: dec_visibility(visibility)?, coloring: dec_list(coloring, dec_coloring)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_comment(c: &BcfComment) -> String {
+pub fn enc_comment(c: &BcfComment) -> String {
     format!("[{},{},{},{},{}]", enc_str(&c.guid), enc_str(&c.date), enc_str(&c.author), enc_str(&c.text), encode_option(&c.viewpoint_ref, |v: &String| enc_str(v)),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_comment(s: &str) -> Result<BcfComment, String> {
+pub fn dec_comment(s: &str) -> Result<BcfComment, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, date, author, text, viewpoint_ref] = parts.as_slice() else { return Err(format!("comment: expected 5 fields, got {}", parts.len())) };
     Ok(BcfComment { guid: dec_str(guid)?, date: dec_str(date)?, author: dec_str(author)?, text: dec_str(text)?, viewpoint_ref: decode_option(viewpoint_ref, dec_str)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_viewpoint(v: &BcfViewpoint) -> String {
+pub fn enc_viewpoint(v: &BcfViewpoint) -> String {
     format!("[{},{},{},{}]", enc_str(&v.guid), encode_option(&v.camera, enc_camera), encode_option(&v.components, enc_components), encode_option(&v.snapshot, |b: &Vec<u8>| enc_bytes(b)),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_viewpoint(s: &str) -> Result<BcfViewpoint, String> {
+pub fn dec_viewpoint(s: &str) -> Result<BcfViewpoint, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, camera, components, snapshot] = parts.as_slice() else { return Err(format!("viewpoint: expected 4 fields, got {}", parts.len())) };
     Ok(BcfViewpoint { guid: dec_str(guid)?, camera: decode_option(camera, dec_camera)?, components: decode_option(components, dec_components)?, snapshot: decode_option(snapshot, dec_bytes)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_topic(t: &BcfTopic) -> String {
+pub fn enc_topic(t: &BcfTopic) -> String {
     format!(
         "[{},{},{},{},{},{},{},{},{},{}]",
         enc_str(&t.guid),
@@ -273,7 +273,7 @@ pub(crate) fn enc_topic(t: &BcfTopic) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_topic(s: &str) -> Result<BcfTopic, String> {
+pub fn dec_topic(s: &str) -> Result<BcfTopic, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [guid, title, description, status, priority, labels, creation_date, creation_author, comments, viewpoints] = parts.as_slice() else {
         return Err(format!("topic: expected 10 fields, got {}", parts.len()));
@@ -293,12 +293,12 @@ pub(crate) fn dec_topic(s: &str) -> Result<BcfTopic, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_part(p: &BcfRawPart) -> String {
+pub fn enc_part(p: &BcfRawPart) -> String {
     format!("[{},{}]", enc_str(&p.name), enc_bytes(&p.data))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_part(s: &str) -> Result<BcfRawPart, String> {
+pub fn dec_part(s: &str) -> Result<BcfRawPart, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, data] = parts.as_slice() else { return Err(format!("part: expected 2 fields, got {}", parts.len())) };
     Ok(BcfRawPart { name: dec_str(name)?, data: dec_bytes(data)? })

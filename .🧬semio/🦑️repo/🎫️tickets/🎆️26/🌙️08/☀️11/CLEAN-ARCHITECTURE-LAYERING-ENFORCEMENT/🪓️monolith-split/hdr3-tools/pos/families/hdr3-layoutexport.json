@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-layoutexport",
+ "crates": ["semio-s-artifact-layout-layout-engine-export", "semio-s-artifact-layout-layout-engine-export-unit-tests"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-s-artifact-layout-layout-engine-export"]},
+ "note": "HDR-3: layout export laws moved to a companion"
+}

@@ -77,24 +77,18 @@ pub mod editor {
                             #[path = "."]
                             pub mod grid {
                                 pub use semio_s_artifact_flow_flow_mutations::editor::flow::modes::edit::windows::main::options::grid::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../🎭️modes/✏️edit/🪟️windows/🌊️main/☑️options/🌐️grid/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
                             }
                             #[path = "."]
                             pub mod lod {
                                 pub use semio_s_artifact_flow_flow_mutations::editor::flow::modes::edit::windows::main::options::lod::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../🎭️modes/✏️edit/🪟️windows/🌊️main/☑️options/🔭️lod/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
                             }
                             #[path = "."]
                             pub mod proximity {
                                 pub use semio_s_artifact_flow_flow_mutations::editor::flow::modes::edit::windows::main::options::proximity::*;
-                                #[cfg(test)]
-                                #[path = "../../../../../🎭️modes/✏️edit/🪟️windows/🌊️main/☑️options/📏️proximity/🧪️tests/🔬️unit/🦀️.rs"]
-                                pub mod tests;
                             }
+                            #[cfg(test)]
+                            #[path = "../../../../../🎭️modes/✏️edit/🪟️windows/🌊️main/☑️options/🧪️tests/🔬️unit/🦀️.rs"]
+                            pub mod tests;
                         }
                     }
                     #[path = "../../../../../🎭️modes/✏️edit/🪟️windows/🗣️compiled/🦀️.rs"]

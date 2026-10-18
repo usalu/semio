@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `FlipWall`: a one-field wall patch writing the reversed axis. A wall whose axis is its own reverse is a no-op.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flipped;
-use super::FlipWall;
+use crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

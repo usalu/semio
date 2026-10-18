@@ -2,9 +2,9 @@
 //! two lines, an arc into two arcs that keep the sweep share of their arc length; an inclined beam is cut where its top is, so both parts meet at the same height. The split
 //! point snaps to a nanometre. Refused: an unknown beam, a taken new id and a fraction that is not strictly inside the beam or leaves a part without length.
 
-use super::super::elements;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{snap, split, Split};
-use super::SplitBeam;
+use crate::standards::v1::subsets::any::schema::mutations::split_beam::SplitBeam;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::BeamPatch, Entry, KeyedDelta, ModelDiff}, snapshot::{Beam, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

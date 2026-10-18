@@ -4,7 +4,7 @@ import { workerLawFakesV1, WORKER_LAW_ACTOR_IDENTITY_GRANT } from "../🧰️wor
 import type { TestSource } from "../🧰️worker-law-fakes/🟦️.ts";
 
 type ArtifactActorConfig = import("../../🟦️.ts").ArtifactActorConfig;
-type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🟦️.ts").ArtifactState;
+type ArtifactState = import("../../🔨️modules/🏪️store/👷️worker/🧾️document-state/🟦️.ts").ArtifactState;
 type BackboneWorkerResponse = import("../../🟦️.ts").BackboneWorkerResponse;
 type MutationEnvelope = import("@semio-tech/framework-replication").MutationEnvelope;
 type Vitest = NonNullable<ImportMeta["vitest"]>;

@@ -952,7 +952,7 @@
         "budgetMs": 15000,
         "target": "test-rust-divergence-callback-source",
         "command": "bun ./📜️script.ts test rust-divergence-callback-source",
-        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-source"
+        "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-source"
       },
       {
         "phase": "native",
@@ -961,7 +961,7 @@
         "budgetMs": 15000,
         "target": "test-rust-divergence-callback-native",
         "command": "bun ./📜️script.ts test rust-divergence-callback-native",
-        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-native"
+        "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-native"
       },
       {
         "phase": "syn",
@@ -970,7 +970,7 @@
         "budgetMs": 120000,
         "target": "test-rust-divergence-callback-syn",
         "command": "bun ./📜️script.ts test rust-divergence-callback-syn",
-        "packageCommand": "nx run @semio-tech/repo-lib:test-rust-divergence-callback-syn"
+        "packageCommand": "bun --cwd \"../../../../../../..\" repo run @semio-tech/repo-lib:test-rust-divergence-callback-syn"
       }
     ]
   },

@@ -10,7 +10,8 @@ import corpus from "../🧫️fixtures/🧫️mutation-inputs/🔣️.json" with
 import glossaryDocument from "../../🔣️input-labels.json" with { type: "json" };
 import manifestSchema from "../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseInputLabelGlossary, parseInputUi } from "../../🧬️schema/🟦️.ts";
-import { argControl, InputSchemaError, inputLabelGlossary, mutationInputAudit, mutationInputDefs, mutationInputInstance, referenceIdText, referenceIdValue, type ActionArgDef, type ArgSchema, type ReferenceIdType } from "../../🟦️.ts";
+import { argControl, referenceIdText, referenceIdValue, type ActionArgDef, type ArgSchema, type ReferenceIdType } from "../../🎬️action-types-and-semantics/🟦️.ts";
+import { InputSchemaError, inputLabelGlossary, mutationInputAudit, mutationInputDefs, mutationInputInstance } from "../../📥️mutation-input-schema/🟦️.ts";
 import { semioSchemaAjvV1 } from "@semio-tech/schema-ts/oracles/validator";
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };

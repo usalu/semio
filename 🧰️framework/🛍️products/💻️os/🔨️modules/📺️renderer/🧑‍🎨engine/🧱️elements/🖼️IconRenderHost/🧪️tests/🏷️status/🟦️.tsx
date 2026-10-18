@@ -9,9 +9,6 @@ import fixture from "../🧫️fixtures/🏷️status/🔣️.json";
 
 afterEach(cleanup);
 
-it("validates the neutral icon status contract", () => {
-});
-
 it("renders actual icon host states in each selected language", async () => {
   for (const pack of fixture.locales) {
     if (pack.locale !== "en" && pack.locale !== "de") throw new Error("Invalid fixture locale");

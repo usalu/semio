@@ -1,0 +1,14 @@
+{
+ "tag": "etests",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/⚙️engine/🧪️tests/🔬️unit/🦀️.rs",
+ "folders": [
+  "🧸️fixtures-batch-and-concurrent-ensure",
+  "🏊️worker-pool-use-and-mount-owner-laws",
+  "📣️mount-fanout-shutdown-and-mount-failure-laws",
+  "🔌️mount-cleanup-fault-round-trip-and-deferred-seams",
+  "✍️writer-residency-compaction-and-hello",
+  "📚️history-wake-and-terminal-close-laws",
+  "🧭️long-module-and-source-laws"
+ ]
+}

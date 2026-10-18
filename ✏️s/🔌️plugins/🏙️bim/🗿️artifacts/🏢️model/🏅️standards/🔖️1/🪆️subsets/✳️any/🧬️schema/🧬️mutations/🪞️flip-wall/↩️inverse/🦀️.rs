@@ -2,12 +2,15 @@
 //! absent or has no direction to flip.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flipped;
-use super::FlipWall;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &FlipWall, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &FlipWall, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::flip_wall::FlipWall>,
+{
     match base.walls.get(&payload.id) {
-        Some(wall) if flipped(&wall.axis) != wall.axis => vec![ModelMutation::FlipWall(FlipWall { id: payload.id.clone() })],
+        Some(wall) if flipped(&wall.axis) != wall.axis => vec![Op::from(FlipWall { id: payload.id.clone() })],
         _ => Vec::new(),
     }
 }

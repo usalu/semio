@@ -89,10 +89,10 @@ fn drain_blocks(mut work:Vec<MdBlock>){
  }
 }
 pub(crate) fn retire_parts(blocks:Vec<MdBlock>,inlines:Vec<MdInline>){drain_blocks(blocks);drain_inlines(inlines)}
-pub(crate) trait RetireNode{fn retire_nodes(values:Vec<Self>)where Self:Sized;fn retire_node(self);}
+pub trait RetireNode{fn retire_nodes(values:Vec<Self>)where Self:Sized;fn retire_node(self);}
 impl RetireNode for MdBlock{fn retire_nodes(values:Vec<Self>){retire_parts(values,Vec::new())}fn retire_node(self){match self{MdBlock::Heading{inlines,..}|MdBlock::Paragraph{inlines}=>retire_parts(Vec::new(),inlines),MdBlock::List{items,..}=>{for blocks in items{retire_parts(blocks,Vec::new())}},MdBlock::BlockQuote{blocks}=>retire_parts(blocks,Vec::new()),MdBlock::CodeBlock{..}|MdBlock::ThematicBreak|MdBlock::HtmlBlock{..}=>{}}}}
 impl RetireNode for MdInline{fn retire_nodes(values:Vec<Self>){retire_parts(Vec::new(),values)}fn retire_node(self){match self{MdInline::Emphasis{inlines}|MdInline::Strong{inlines}=>retire_parts(Vec::new(),inlines),MdInline::Link{text,..}=>retire_parts(Vec::new(),text),MdInline::Text{..}|MdInline::Code{..}|MdInline::Image{..}|MdInline::SoftBreak|MdInline::HardBreak|MdInline::HtmlInline{..}=>{}}}}
-pub(crate) struct OwnedNodes<T:RetireNode>(pub(crate) Vec<T>);
+pub struct OwnedNodes<T:RetireNode>(pub(crate) Vec<T>);
 impl<T:RetireNode> std::ops::Deref for OwnedNodes<T>{type Target=Vec<T>;fn deref(&self)->&Vec<T>{&self.0}}
 impl<T:RetireNode> std::ops::DerefMut for OwnedNodes<T>{fn deref_mut(&mut self)->&mut Vec<T>{&mut self.0}}
 impl RetireNode for Vec<MdBlock>{fn retire_nodes(values:Vec<Self>){for blocks in values{retire_parts(blocks,Vec::new())}}fn retire_node(self){retire_parts(self,Vec::new())}}
@@ -116,8 +116,8 @@ pub(crate) fn encode_owned(value:&MdSnapshot,encoding:store::sqlite_snapshot::Sn
 
 pub(crate) fn retire_owned(value:MdSnapshot){retire_parts(value.blocks,Vec::new())}
 
-#[cfg(test)]
-pub(crate) fn duplicate_roots_payload_for_test(value:&MdSnapshot)->store::io_schema::IoPayload{let mut record=Snapshot::from(value).__dsl_to_record();let Some(semio_framework_dsl_record::FieldValue::List(roots))=record.fields.get_mut(&1)else{panic!("owned logical roots field must be a list")};assert_eq!(roots.len(),1);roots.push(semio_framework_dsl_record::FieldValue::UInt(0));let body=semio_framework_dsl_record::print(&record,&Snapshot::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.md",store::semio_format::Component::Dsl,1).unwrap();store::io_schema::IoPayload::Text(store::semio_format::wrap_text(&envelope,&body))}
+#[cfg(any(test, feature = "testkit"))]
+pub fn duplicate_roots_payload_for_test(value:&MdSnapshot)->store::io_schema::IoPayload{let mut record=Snapshot::from(value).__dsl_to_record();let Some(semio_framework_dsl_record::FieldValue::List(roots))=record.fields.get_mut(&1)else{panic!("owned logical roots field must be a list")};assert_eq!(roots.len(),1);roots.push(semio_framework_dsl_record::FieldValue::UInt(0));let body=semio_framework_dsl_record::print(&record,&Snapshot::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.md",store::semio_format::Component::Dsl,1).unwrap();store::io_schema::IoPayload::Text(store::semio_format::wrap_text(&envelope,&body))}
 
 #[cfg(test)]
 std::thread_local!{
@@ -127,12 +127,12 @@ std::thread_local!{
  static RETIRE_LIVE_BYTES:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};
  static RETIRE_VISITS:std::cell::Cell<usize>=const{std::cell::Cell::new(0)};
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 fn retirement_test_visit(){RETIRE_VISITS.with(|count|count.set(count.get()+1));}
+#[cfg(any(test, feature = "testkit"))]
+pub fn reset_retirement_visits_for_test(){RETIRE_VISITS.with(|count|count.set(0));}
 #[cfg(test)]
-pub(crate) fn reset_retirement_visits_for_test(){RETIRE_VISITS.with(|count|count.set(0));}
-#[cfg(test)]
-pub(crate) fn retirement_visits_for_test()->usize{RETIRE_VISITS.with(std::cell::Cell::get)}
+pub fn retirement_visits_for_test()->usize{RETIRE_VISITS.with(std::cell::Cell::get)}
 #[cfg(test)]
 pub(crate) struct RetireObservedAllocator;
 #[cfg(test)]

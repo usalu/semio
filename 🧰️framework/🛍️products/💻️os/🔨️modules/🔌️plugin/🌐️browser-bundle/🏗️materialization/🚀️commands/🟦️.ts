@@ -23,10 +23,18 @@ import { componentModuleOwnerV1, MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, mod
 import type { ComponentSourceOwnerV1 } from "../../../📇️registry/🔎️discovery/🟦️.ts";
 import { builtPluginModulesRootIn } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE,encodeComponentReceiptV1, readComponentReceiptV1, type ComponentDeliverableV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
-import {CATALOG_DESCRIPTOR_MAX_BYTES} from "../../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../../📇️registry/✅️catalog-verification/🟦️.ts";
 import { PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../🛂️descriptor/🟦️.ts";
 import { artifactFiles, fileDigest,readArtifactBytesV1 } from "../../📦️distribution/📋️inventory/🟦️.ts";
-import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, optimizePluginCoreModuleAsync, PLUGIN_HOST_SHIM_FILE, pluginCoreModuleFilesV1, pluginComponentBridgeSource, pluginWasmOptToolV1, PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImports, SHARD_WORKER_FILE, shardWorkerSource, transpilePluginComponentModulesAsync } from "../🟦️.ts";
+import { ensureGuestSlimTypstFontsAt } from "../🔤️guestslim-fonts/🟦️.ts";
+import { ensurePreview2ShimVendorAt } from "../🩹️preview2-shim-patches/🟦️.ts";
+import { hostShimSource } from "../🪢️host-shim-source/🟦️.ts";
+import { optimizePluginCoreModuleAsync, pluginCoreModuleFilesV1, pluginWasmOptToolV1 } from "../🪶️wasm-opt/🟦️.ts";
+import { PLUGIN_HOST_SHIM_FILE, SHARD_WORKER_FILE } from "../🧾️contract/🟦️.ts";
+import { pluginComponentBridgeSource } from "../🌉️component-bridge-source/🟦️.ts";
+import { PREVIEW2_VENDOR_RELATIVE } from "../../🕸️imports/🟦️.ts";
+import { rewritePreview2ShimImports, transpilePluginComponentModulesAsync } from "../🟦️.ts";
+import { shardWorkerSource } from "../🧵️shard-worker-source/🟦️.ts";
 import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -90,12 +98,18 @@ function toolIdentityV1(key: string, compute: () => Promise<string>): Promise<st
   return known;
 }
 
+/** 🧬️ The identity of the sources the transpile stage runs: the transpile orchestration, the jco module rewrites and the contract they share. */
+async function materializationIdentityV1(): Promise<string> {
+  const digests = await Promise.all(["../🟦️.ts", "../🧬️jco-module-rewrites/🟦️.ts", "../🧾️contract/🟦️.ts"].map((source) => fileDigest(fileURLToPath(new URL(source, import.meta.url)))));
+  return createHash("sha256").update(digests.join("\n")).digest("hex");
+}
+
 /** 🧬️ The transpile stage: jco's location-independent module files of the component, cached by the component's digest, the jco version, this module's
  * implementation and the module name. */
 export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): Promise<string> {
   checkResourceLeaseControl(work.control);
   const base = componentBaseV1(work.target), output = join(work.work, "transpiled");
-  const [component, jco, materialization] = await Promise.all([fileDigest(work.deliverable.wasm, work.control.signal), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", () => fileDigest(fileURLToPath(new URL("../🟦️.ts", import.meta.url))))]);
+  const [component, jco, materialization] = await Promise.all([fileDigest(work.deliverable.wasm, work.control.signal), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", materializationIdentityV1)]);
   await work.cache.run({ stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base } }, output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, preview2VendorDir: join(builtPluginModulesRootIn(work.repoRoot, work.deliverable.profile), PREVIEW2_VENDOR_RELATIVE), environment: work.environment, control: work.control }), work.control.signal);
   checkResourceLeaseControl(work.control);
   return output;

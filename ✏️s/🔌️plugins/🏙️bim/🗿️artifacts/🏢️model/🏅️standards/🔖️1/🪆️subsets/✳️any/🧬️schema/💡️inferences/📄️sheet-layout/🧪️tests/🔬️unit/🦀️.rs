@@ -1,6 +1,14 @@
 //! 🧪️ The layout of a sheet: where the frame, the windows, the title block and the revision table go, which findings it raises and what its dependency reads.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
+use semio_framework_value::DslValue;
+use std::collections::{BTreeMap, BTreeSet};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{revisions_of, viewports_of};
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::*;
 use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{PlanBounds, PlanKind, PlanLinework, PlanPolyline, PlanStyle, PlanVertex};
 use crate::standards::v1::subsets::any::schema::snapshot::{DetailLevel, IsoSize, Orientation, Paper, Point2, Sheet, SheetRevision, View, Viewport};
 

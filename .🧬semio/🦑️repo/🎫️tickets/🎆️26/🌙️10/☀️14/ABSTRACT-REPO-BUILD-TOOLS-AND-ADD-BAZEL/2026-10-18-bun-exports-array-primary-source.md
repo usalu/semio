@@ -1,0 +1,7 @@
+# Bun Exports Array Primary Source
+
+Pinned Bun1.3.14 ESModule.resolveTarget array handling records InvalidPackageTarget or Null as last_exception, but only continues the loop for an Undefined status. It then returns the result immediately. Thus a first invalid target AND a first null both terminate this Bun array algorithm; neither skips to a later valid target. This directly explains Root observed resolveSync refusal for an invalid-first array. The implementation comment describes continuation but the executable control flow does not implement that comment. [Pinned Bun array branch](https://github.com/oven-sh/bun/blob/bun-v1.3.14/src/resolver/package_json.zig#L1783-L1801).
+
+The same file's ExportsMap.parse returns no map for a root null, separately corroborating absent-profile classification for exports:null. [Pinned root parser](https://github.com/oven-sh/bun/blob/bun-v1.3.14/src/resolver/package_json.zig#L1001-L1013).
+
+Node24.15.0 does continue past invalid-package-target and null array entries, so runtime profiles must explicitly distinguish these implementations rather than label one result universal. Numeric condition keys may remain refused by the portable authored grammar even when Bun is permissive. No claim is made that the codec resolves or physically qualifies entrypoint files. No actual Bun CLI import was executed for this primary-source review; Root actual resolveSync oracle is separate runtime evidence.

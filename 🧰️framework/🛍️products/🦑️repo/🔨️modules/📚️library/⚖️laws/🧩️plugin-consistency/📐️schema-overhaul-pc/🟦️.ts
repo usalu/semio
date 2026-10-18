@@ -1,15 +1,15 @@
 /** 📐️ Wave 4 plugin consistency policy: schema overhaul phase 2 pilot-closer rules.
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
-import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { policyReadFileSafe, policyReaddirSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME, policyStripEmoji } from "../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { POLICY_STDIO_ARTIFACTS_REL } from "../🚪️artifact-io/🟦️.ts";
+import { POLICY_STDIO_ARTIFACTS_REL } from "../🚪️artifact-io/📋️owner-table/🟦️.ts";
 import { policyAllRustFiles, policyExtractFnBody, policyNormalizeRelPath } from "../🏛️foundation/🟦️.ts";
 import { POLICY_PROTOCOL_SPEC_LEAF } from "../✍️handcrafted-mutation/🟦️.ts";
-import { policyListStdioSchemaOwningEntries, policyStdioStandardKey } from "../🧬️schema-overhaul-s2/🟦️.ts";
+import { policyListStdioSchemaOwningEntries, policyStdioStandardKey } from "../🧬️schema-overhaul-s2/📇️stdio-entries/🟦️.ts";
 
 //#region 🔧️PolicyRuleSchemaOverhaulPC
 /**

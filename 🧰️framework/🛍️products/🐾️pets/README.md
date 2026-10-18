@@ -36,14 +36,14 @@ frames (`🎯️targets/⚛️react`, `@semio-tech/pets-react`).
 | `🔨️modules/✅️validation/` | `menagerieIssues`, `speciesIssues`, `ensembleIssues` without any schema library, and `assembleMenagerie`. |
 | `🔨️modules/<module>/🧪️tests/🔬️unit/` | The unit suite of a module: `🟦️.ts` (vitest, found by a glob) and `🦀️.rs` (attached with `#[path]`). A suite that outgrew one file sits in topic folders `🔨️modules/<module>/🧪️tests/<topic>/` with both languages next to each other (the clearance suite: `🌍️reference-world`, `🧰️clearance-tools`, `📦️boxes-and-places`, `📜️claims-and-order`, `🪑️seating-and-heads`, `🏛️world-laws`), listed in `🧪️tests/🎚️config/🟦️.ts`; the Rust hub stays at `🔬️unit/🦀️.rs`. |
 | `📦️packages/🟦️typescript/` | `@semio-tech/pets`: package glue only, a barrel over `🧬️schema` and `🔨️modules`. Zero runtime imports. |
-| `🦀️.rs`, `📦️packages/🦀️rust/` | The façade crate `semio-framework-pets` (lib `pets`), nx `@semio-tech/pets-rs`: `🦀️.rs` is its lib root and holds no code, only explicit `pub use` of the names the Protocol v2 subject hosts call and the `serde_json` codec they decode the vectors with. The Rust twins below are carved into seven producer crates, each below the next. |
-| `🔨️modules/📜️contract/` | Crate `semio-framework-pets-contract`, nx `@semio-tech/pets-contract-rs`: `#[path]` glue over `🧬️schema/🦀️.rs` and `🔨️modules/✅️validation/🦀️.rs`, and the `testkit` feature (`🧬️schema/🧪️tests/🧰️testkit/`) every other crate's unit tests share. |
-| `🔨️modules/⚙️kinematics/` | Crate `semio-framework-pets-kinematics`, nx `@semio-tech/pets-kinematics-rs`: trigonometry, randomness, rig, animation and terrain. |
-| `🔨️modules/🚧️clearance/` | Crate `semio-framework-pets-clearance`, nx `@semio-tech/pets-clearance-rs`: the clearance module is its lib root. |
-| `🔨️modules/🧭️traversal/` | Crate `semio-framework-pets-traversal`, nx `@semio-tech/pets-traversal-rs`: swing and climbing. |
-| `🔨️modules/🖱️interaction/` | Crate `semio-framework-pets-interaction`, nx `@semio-tech/pets-interaction-rs`: gesture, effects and mischief. |
-| `🔨️modules/🎭️character/` | Crate `semio-framework-pets-character`, nx `@semio-tech/pets-character-rs`: behavior and feeling. |
-| `🔨️modules/🎬️staging/` | Crate `semio-framework-pets-staging`, nx `@semio-tech/pets-staging-rs`: draft, spacing, schedule, attention, locomotion, sociability, choice, population, clock, projection and the stage. |
+| `🦀️.rs`, `📦️packages/🦀️rust/` | The façade crate `semio-framework-pets` (lib `pets`), project `@semio-tech/pets-rs`: `🦀️.rs` is its lib root and holds no code, only explicit `pub use` of the names the Protocol v2 subject hosts call and the `serde_json` codec they decode the vectors with. The Rust twins below are carved into seven producer crates, each below the next. |
+| `🔨️modules/📜️contract/` | Crate `semio-framework-pets-contract`, project `@semio-tech/pets-contract-rs`: `#[path]` glue over `🧬️schema/🦀️.rs` and `🔨️modules/✅️validation/🦀️.rs`, and the `testkit` feature (`🧬️schema/🧪️tests/🧰️testkit/`) every other crate's unit tests share. |
+| `🔨️modules/⚙️kinematics/` | Crate `semio-framework-pets-kinematics`, project `@semio-tech/pets-kinematics-rs`: trigonometry, randomness, rig, animation and terrain. |
+| `🔨️modules/🚧️clearance/` | Crate `semio-framework-pets-clearance`, project `@semio-tech/pets-clearance-rs`: the clearance module is its lib root. |
+| `🔨️modules/🧭️traversal/` | Crate `semio-framework-pets-traversal`, project `@semio-tech/pets-traversal-rs`: swing and climbing. |
+| `🔨️modules/🖱️interaction/` | Crate `semio-framework-pets-interaction`, project `@semio-tech/pets-interaction-rs`: gesture, effects and mischief. |
+| `🔨️modules/🎭️character/` | Crate `semio-framework-pets-character`, project `@semio-tech/pets-character-rs`: behavior and feeling. |
+| `🔨️modules/🎬️staging/` | Crate `semio-framework-pets-staging`, project `@semio-tech/pets-staging-rs`: draft, spacing, schedule, attention, locomotion, sociability, choice, population, clock, projection and the stage. |
 | `🎯️targets/⚛️react/` | `@semio-tech/pets-react`: the inline SVG depiction, the DOM survey, the pacer, the decorative pet layer and the stories gallery. |
 | `🧪️tests/🎚️config/🟦️.ts` | Vitest configuration of the TypeScript core; its `include` is a glob over every module's unit suite. It also tells the suites how much to sample at the test level of the run (`sampled(few, full, more)`). |
 | `🧪️tests/<case>/` | The language-agnostic Protocol v2 cases (`🥒️.feature` with one adapter per language) and the suites of the React target (`🟦️.tsx`). |

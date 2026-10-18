@@ -1,7 +1,8 @@
 //! 🖼️ The view browser of the outliner: below each building one `Views` node whose children are the views of the building, grouped by kind (plans, ceiling plans, sections, elevations, 3D views) and ordered
 //! by the level of their storey and their name. A row is the id of its view, so a click selects the view in the same `elements` domain as every other element, and the properties panel edits it.
 
-use super::{entity_item, item, leaf};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::editor::bim::panels::outliner::{entity_item, item, leaf};
 use crate::editor::bim::entities::kind_of;
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, ViewKind};
@@ -10,7 +11,7 @@ use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::UiAssemblyResult;
 
 /// 🗂️ The browser group of a kind: plans, ceiling plans, sections, elevations, cameras.
-fn group_of(kind: ViewKind) -> usize {
+pub fn group_of(kind: ViewKind) -> usize {
     match kind {
         ViewKind::Plan => 0,
         ViewKind::CeilingPlan => 1,
@@ -37,7 +38,7 @@ pub fn groups(snapshot: &ModelSnapshot, building: &str) -> Vec<(usize, Vec<Strin
     (0..5).filter_map(|group| Some((group, rows.iter().filter(|row| row.0 == group).map(|row| row.3.clone()).collect::<Vec<_>>())).filter(|(_, ids)| !ids.is_empty())).collect()
 }
 
-fn scale_text(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
+pub fn scale_text(snapshot: &ModelSnapshot, id: &str) -> Option<String> {
     snapshot.views.get(id).map(|view| format!("1:{}", view.scale))
 }
 
@@ -60,6 +61,4 @@ pub fn views_row(windows: &TreeWindows<'_>, snapshot: &ModelSnapshot, labels: &B
     }))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

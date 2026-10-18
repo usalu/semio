@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🧱️root-taxonomy-workflow-source/🔣️.json"), "utf8"));
@@ -56,5 +56,5 @@ test("registers one Bun and Nx route", () => {
   const packageRoot = resolve(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript"), route = fixture.route;
   const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
   expect(project.targets[route.target]?.options?.command).toBe(route.command);
-  expect(JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8")).scripts[route.target]).toBe(`nx run @semio-tech/repo-lib:${route.target}`);
+  expect(JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8")).scripts[route.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${route.target}`);
 });

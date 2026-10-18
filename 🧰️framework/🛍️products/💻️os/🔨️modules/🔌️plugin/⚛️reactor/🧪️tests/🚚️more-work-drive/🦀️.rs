@@ -129,7 +129,7 @@ struct TurnOutcome {
 }
 
 /// 🚚️ The worker-owned drive, as the test model of the loop
-/// `🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts` emits into `🟨️shard-worker.js`.
+/// `🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts` emits into `🟨️shard-worker.js`.
 ///
 /// It lives here, not in production Rust, for the same reason `🔬️reconcile-spin`'s `settle_tracker`
 /// does: the production owner of this loop is the browser worker, and this module's job is to price

@@ -24,7 +24,7 @@
     "files": {
       "type": "array",
       "minItems": 1,
-      "maxItems": 512,
+      "maxItems": 2048,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -63,7 +63,7 @@
   "definitions": {
     "Policy": {
       "const": {
-        "maximumFiles": 512,
+        "maximumFiles": 2048,
         "maximumFileBytes": 4194304,
         "maximumSourceBytes": 16777216,
         "maximumSnapshotBytes": 25165824,

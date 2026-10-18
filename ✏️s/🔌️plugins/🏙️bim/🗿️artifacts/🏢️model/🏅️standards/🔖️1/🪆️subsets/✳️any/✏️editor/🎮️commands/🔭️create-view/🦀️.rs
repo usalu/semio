@@ -195,6 +195,4 @@ pub fn handle(payload: &CreateView, doc: &ArtifactView<'_, ModelSnapshot>, _cfg:
     Ok(emit)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

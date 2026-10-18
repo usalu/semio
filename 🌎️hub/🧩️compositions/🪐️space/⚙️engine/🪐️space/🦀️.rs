@@ -50,7 +50,7 @@ use semio_framework_plugin::{
 };
 use semio_framework_ui_locale::{Label, LocalizedLabel};
 use std::collections::HashMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_hub_space_foundation::{S_PLAY_APP_ID, S_PLAY_CATALOGUE_BODY_KEY, S_PLAY_CONTROLLER_ID, S_PLAY_INSPECTOR_BODY_KEY, S_PLAY_INTERACTION_DOMAIN, S_PLAY_PARAMETERS_BODY_KEY, S_STUDIO_EXAMPLES};
 
 #[path = "🧰️document-helpers/🦀️.rs"]

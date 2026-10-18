@@ -2,7 +2,6 @@
 //! MECHANISM). Exports `standard() -> StandardDeclaration`, mounting subset `any` (this artifact's
 //! only subset).
 
-use crate::standards::v1::subsets;
 use semio_framework_plugin::app::declarations::{MediaDeclaration, StandardDeclaration};
 use {semio_framework_artifact_reference::StandardId};
 

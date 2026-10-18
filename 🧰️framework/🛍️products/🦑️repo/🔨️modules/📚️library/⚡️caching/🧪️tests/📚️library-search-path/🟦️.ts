@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { stringify, parse } from "@iarna/toml";
-import { getWorkspaceRoot } from "../../../🟦️.ts";
+import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 
 test("pinned Cargo launches a large static graph and its procedural macro without a compiler wrapper", async () => {
   const workspace=getWorkspaceRoot(), artifact=process.env.SEMIO_TEST_ARTIFACT_DIR;

@@ -1,6 +1,6 @@
 //! 🔏️ `set-classification-system` payload. Sets any of a classification system's name, edition, source and entry table (an assigned null removes the source); absent fields stay untouched and the entry table replaces the whole table.
 
-use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ClassificationSystemPatch, ModelDiff}, snapshot::{ClassificationItem, ModelSnapshot}, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ClassificationSystemPatch, ModelDiff}, snapshot::{ClassificationItem, ModelSnapshot}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -30,13 +30,16 @@ impl SetClassificationSystem {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetClassificationSystem {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetClassificationSystem
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetClassificationSystem>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "classification-system", kind: "set-classification-system", record: "SetClassificationSystem" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_classification_system::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_classification_system::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit classification system \"{}\"", self.id), &format!("Klassifikationssystem \"{}\" ändern", self.id))

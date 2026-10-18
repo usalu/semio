@@ -1,7 +1,8 @@
 /** 📟️ `stdio` command family: ledger and structural gates.
  * @see 📜️script.ts
  */
-import { orchestratorBudgetOpts, runCmd, semioBuildParallelFlag } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
+import { semioBuildParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { stdioArtifactLedger, stdioRequireClosed, stdioRunStructuralGate } from "../../🗄️stdio-ledger/🟦️.ts";
 

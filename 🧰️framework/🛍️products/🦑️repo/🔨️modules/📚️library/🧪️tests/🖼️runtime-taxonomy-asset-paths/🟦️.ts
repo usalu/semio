@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import picomatch from "picomatch";
-import { loadCatalogTaxonomy, validateTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy, validateTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
 const vector = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🖼️runtime-taxonomy-asset-paths/🔣️.json"), "utf8"));

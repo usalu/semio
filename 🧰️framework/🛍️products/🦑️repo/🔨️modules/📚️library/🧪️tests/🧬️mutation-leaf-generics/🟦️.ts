@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { planArtifactCrates } from "../../🏗️authoring/📦️crate-tree/🟦️.ts";
-import { isMutationCrateLabel, mutationCrateLabel, mutationFamilyOf } from "../../🏗️authoring/📦️crate-tree/🗺️plan/🟦️.ts";
+import { isMutationCrateLabel, mutationCrateLabel, mutationFamilyOf } from "../../🏗️authoring/📦️crate-tree/🗺️plan/🏷️naming/🟦️.ts";
 import { inherentSelf } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🧰️support-hoist/🟦️.ts";
 import { aggregateScope, convertMutationLeaves, decoupleFromAggregate, findMutationAggregates } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🟦️.ts";
 import { hoistAggregateSupport } from "../../🏗️authoring/📦️crate-tree/🧬️mutation-families/🧰️support-hoist/🟦️.ts";

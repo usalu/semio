@@ -1,6 +1,22 @@
 //! 🗃️ Io and retained commands of the BIM editor: the io ports and the bounded command job factory. See [`super`].
 
-use super::*;
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, BIM_MODEL_DOCUMENT_SCHEMA};
+use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
+use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
+use semio_framework_plugin::AppIo;
+use semio_framework_plugin::ArtifactToolPublicationContract;
+use semio_framework_plugin::ArtifactView;
+use semio_framework_plugin::ConfigView;
+use semio_framework_plugin::EditorApp;
+use semio_framework_plugin::EphemeralEmit;
+use semio_framework_plugin::Fault;
+use semio_framework_plugin::InteractiveJobClassification;
+use semio_framework_plugin::MediaClass;
+use semio_framework_plugin::MediaForm;
+use semio_framework_plugin::MediaType;
+use crate::editor::bim::{BIM_RETAINED_PAYLOAD_SCHEMA, BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS};
+use crate::editor::bim::*;
 
 //#region 🔖️Io
 /// 🔌️ This app's typed media I/O surface: the implicit document in/out ports only.
@@ -21,19 +37,19 @@ fn bim_bounded_contract() -> ToolExecutionContract {
     ToolExecutionContract::bounded_first_step(BIM_BOUNDED_RAW_BYTES, BIM_BOUNDED_WORK_ITEMS, 1, 262_144, 7_500)
 }
 
-pub(super) fn bim_bounded_extent(command: &BimCommand) -> Option<usize> {
+pub(crate) fn bim_bounded_extent(command: &BimCommand) -> Option<usize> {
     BIM_TOOL_IDS.contains(&command.command_id()).then_some(1)
 }
 
 /// 🧵️ The single step of a bounded command: dispatches against the retained roots with the addressed window's config and the local presence, and publishes the presence the handler asked for.
-pub(super) struct BimCommandWork {
-    pub(super) tool_id: &'static str,
-    pub(super) owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
-    pub(super) completed: bool,
+pub(crate) struct BimCommandWork {
+    pub(crate) tool_id: &'static str,
+    pub(crate) owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+    pub(crate) completed: bool,
 }
 
 impl BimCommandWork {
-    pub(super) fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub(crate) fn new(tool_id: &'static str, owner: semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> Self {
         Self { tool_id, owner, completed: false }
     }
 }
@@ -75,12 +91,12 @@ impl ArtifactCommandWork<EditorApp<BimModelApp>> for BimCommandWork {
     }
 }
 
-pub(super) struct BimCommandJobFactory {
-    pub(super) keys: Vec<ToolFactoryKey>,
+pub(crate) struct BimCommandJobFactory {
+    pub(crate) keys: Vec<ToolFactoryKey>,
 }
 
 impl BimCommandJobFactory {
-    pub(super) fn new(controller_id: &str) -> Self {
+    pub(crate) fn new(controller_id: &str) -> Self {
         Self { keys: BIM_TOOL_IDS.iter().map(|tool_id| ToolFactoryKey::new(controller_id, *tool_id)).collect() }
     }
 }

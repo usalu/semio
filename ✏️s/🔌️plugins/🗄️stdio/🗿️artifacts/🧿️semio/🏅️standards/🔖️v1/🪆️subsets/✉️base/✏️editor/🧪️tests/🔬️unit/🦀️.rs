@@ -74,7 +74,7 @@ use semio_framework_plugin::EditorApp;
 #[allow(unused_imports)]
 use semio_framework_plugin::InteractiveJobClassification;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::*;
 
 #[semio_framework_async_macros::async_test]

@@ -55,6 +55,7 @@ semio-s-artifact-procedural-3d-model = { workspace = true }
 semio-s-artifact-procedural-3d-mut-widgets = { workspace = true }
 
 [dev-dependencies]
+semio-s-artifact-procedural-3d-geometry-compute = { workspace = true, features = ["testkit"] }
 parry3d = "0.17"
 semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-job = { workspace = true, features = ["testkit"] }

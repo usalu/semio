@@ -104,7 +104,7 @@ pub fn overview_orbit(bounds: Option<Bounds>) -> store::Viewport3dOrbit {
 //#endregion 🔖️Camera
 
 //#region 🔖️Scene
-fn instance(snapshot: &ModelSnapshot, id: &str, solid: &ElementSolid, view: &WorldView<'_>) -> DslValue {
+pub fn instance(snapshot: &ModelSnapshot, id: &str, solid: &ElementSolid, view: &WorldView<'_>) -> DslValue {
     let half = solid.placement.rotation / 2.0;
     DslValue::object([
         ("id".to_string(), DslValue::String(id.to_string())),
@@ -112,7 +112,7 @@ fn instance(snapshot: &ModelSnapshot, id: &str, solid: &ElementSolid, view: &Wor
         ("position".to_string(), [solid.placement.x, solid.placement.y, solid.placement.z].to_value()),
         ("rotation".to_string(), [0.0, 0.0, half.sin(), half.cos()].to_value()),
         ("scale".to_string(), [1.0_f64; 3].to_value()),
-        ("label".to_string(), DslValue::String(super::element_name(snapshot, id).to_string())),
+        ("label".to_string(), DslValue::String(crate::render::element_name(snapshot, id).to_string())),
         ("selected".to_string(), DslValue::Bool(view.selected.iter().any(|selected| selected == id))),
         ("hovered".to_string(), DslValue::Bool(view.hovered.iter().any(|hovered| hovered == id))),
         ("interactionId".to_string(), DslValue::String(id.to_string())),
@@ -145,6 +145,4 @@ pub fn scene(snapshot: &ModelSnapshot, solids: &BTreeMap<String, ElementSolid>, 
 }
 //#endregion 🔖️Scene
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

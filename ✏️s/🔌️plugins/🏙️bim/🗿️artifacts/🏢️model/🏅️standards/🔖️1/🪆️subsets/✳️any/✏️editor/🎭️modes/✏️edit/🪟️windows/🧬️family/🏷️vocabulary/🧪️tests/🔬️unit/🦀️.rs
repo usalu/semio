@@ -1,4 +1,9 @@
-use super::*;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::inferences::families::ParameterValue;
+use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, ParameterKind};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::SolidAxis;
+use crate::editor::bim::modes::edit::windows::family::vocabulary::*;
 use crate::editor::bim::modes::edit::windows::family::edit::{AXES, CATEGORIES, KINDS, SHAPES};
 
 #[test]

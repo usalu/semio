@@ -1,0 +1,6 @@
+{
+ "name": "hdr3-interp",
+ "crates": ["semio-framework-plugin-interpreter", "semio-framework-plugin-interpreter-core-laws"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-plugin-interpreter"]},
+ "note": "HDR-3: interpreter core laws to a companion"
+}

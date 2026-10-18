@@ -1,6 +1,6 @@
 import { writePdfArtifactReference,readPdfArtifactReference } from "../../📦️artifact-reference/🟦️.ts";
 /** 🌈️ Handwritten shading functions, mesh octets and tiling or shading patterns. */
-import type { PdfShading,PdfShadingKind,PdfPattern,PdfPatternKind } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfShading, PdfShadingKind, PdfPattern, PdfPatternKind } from "../../../../../🧬️schema/📸️snapshot/🖼️resource/🌈️shading/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,pdfBoolean,type Binary64,type SqliteRow } from "../../🧩️entity/🟦️.ts";
 import { writePdfDictionary,readPdfDictionary } from "../../🧩️cos/🟦️.ts";
 import { writePdfColorSpace,readPdfColorSpace,writePdfFunction,readPdfFunction } from "../../🌈️color/🟦️.ts";

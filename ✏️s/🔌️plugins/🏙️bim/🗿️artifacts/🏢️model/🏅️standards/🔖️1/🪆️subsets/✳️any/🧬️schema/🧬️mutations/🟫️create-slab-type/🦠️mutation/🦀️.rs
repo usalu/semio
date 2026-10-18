@@ -1,6 +1,6 @@
 //! 🟫️ `create-slab-type` payload. Brings a new layered slab type into the library; every layer names an existing material and has a positive thickness.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, SlabType}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, SlabType}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateSlabType {
     pub slab_type: SlabType,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateSlabType {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateSlabType
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateSlabType> + From<crate::standards::v1::subsets::any::schema::mutations::delete_slab_type::DeleteSlabType>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "slab-type", kind: "create-slab-type", record: "CreateSlabType" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_slab_type::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_slab_type::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create slab type \"{}\"", self.slab_type.name), &format!("Deckentyp \"{}\" anlegen", self.slab_type.name))

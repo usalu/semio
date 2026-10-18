@@ -26,7 +26,7 @@ semio-hub-artifact-authority = { workspace = true }
 semio-hub-inference-catalog = { workspace = true }
 semio-hub-native-openable = { workspace = true }
 semio-hub-testing = { workspace = true }
-semio-hub-trusted-catalog = { workspace = true }
+semio-hub-trusted-catalog = { workspace = true, features = ["integration-fixtures"] }
 semio-hub-trusted-catalog-contract = { workspace = true }
 semio-hub-trusted-catalog-descriptor = { workspace = true }
 semio-framework-value = { path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
@@ -41,4 +41,3 @@ semio-framework-plugin = { workspace = true }
 directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 
 [dev-dependencies]
-semio-hub-trusted-catalog = { workspace = true, features = ["integration-fixtures"] }

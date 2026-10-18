@@ -132,7 +132,7 @@ export async function testNativeDependencies(workspace: string, output: string,i
     assert.equal(existsSync(join(root, "target")), false, "Lock refresh must not compile deliverables");
     const custodySchemaPath="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/🧾️custody/🧬️schema/🔣️.json";
     const schema=JSON.parse(readFileSync(join(workspace,custodySchemaPath),"utf8")),Ajv=require("ajv"),validate=new Ajv({strict:false}).compile(schema);
-    const {inventorySchemaScopes}=await import("../../../🔍️discovery/🟦️.ts");
+    const {inventorySchemaScopes}=await import("../../../🔍️discovery/🧾️schema-scope-catalog/🟦️.ts");
     const inventory=inventorySchemaScopes(workspace,JSON.parse(readFileSync(join(workspace,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"),"utf8"))),scope=inventory.modules.find(module=>module.modulePath===dirname(custodySchemaPath));
     writeFileSync(join(output,"cargo-custody-inventory.json"),JSON.stringify({scope,diagnostics:inventory.diagnostics},null,2)+"\n");
     assert.ok(scope?.level);assert.equal(scope.scopeId,"repo.library.workspaces.cargo.preparation.custody");const document=scope.documents[0];assert.ok(document);assert.deepEqual([...document.exports].sort(),Object.keys(schema.$defs).sort());

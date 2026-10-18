@@ -1,0 +1,479 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-bim-model-mut-any-190"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Component crate of semio-s-artifact-bim-model: mut-any"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-ui-contract.workspace = true
+semio-framework-job.workspace = true
+gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"], optional = true }
+quick-xml = { version = "0.39.4", optional = true }
+semio-framework = { path = "../../../../../../../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
+semio-framework-2d = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-composition-admission = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
+semio-framework-deflate = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-dsl = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-dsl-record-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-expression = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧮️expression/📦️packages/🦀️rust" }
+semio-framework-geometry = { workspace = true }
+semio-framework-io-base64 = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-pack = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework-schema = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust", optional = true }
+semio-framework-ui-locale = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-derive = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
+semio-s-artifact-bim-model-authored = { path = "../../../../📏️authored/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-components = { path = "../../../../💡️inferences/🪑️components/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-diff = { path = "../../../../🔺️diff/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-examples = { path = "../../../../../📚️examples/🏡️house/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-family-tests = { path = "../../../../💡️inferences/🕸️model-graph/🧪️tests/🧬️families/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-inferences = { path = "../../../../💡️inferences/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-modify = { path = "../../../../🧬️mutations/🧙️modify/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any = { path = "../../../../🧬️mutations/🏷️rename-storey/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-10 = { path = "../../../../🧬️mutations/🎞️set-beam-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-100 = { path = "../../../../🧬️mutations/🗳️set-area-scheme/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-101 = { path = "../../../../🧬️mutations/🧻️delete-area-scheme/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-102 = { path = "../../../../🧬️mutations/📊️create-schedule/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-103 = { path = "../../../../🧬️mutations/🕰️set-element-phase/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-104 = { path = "../../../../🧬️mutations/📒️delete-sheet/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-105 = { path = "../../../../🧬️mutations/📕️delete-viewport/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-106 = { path = "../../../../🧬️mutations/📘️delete-sheet-revision/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-107 = { path = "../../../../🧬️mutations/🏪️delete-curtain-panel-override/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-108 = { path = "../../../../🧬️mutations/🧰️create-property-template/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-109 = { path = "../../../../🧬️mutations/🔡️set-family-parameter/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-11 = { path = "../../../../🧬️mutations/🔅️set-window-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-110 = { path = "../../../../🧬️mutations/🔶️create-family-solid/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-111 = { path = "../../../../🧬️mutations/🪡️delete-wall-sweep/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-112 = { path = "../../../../🧬️mutations/🦴️create-support/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-113 = { path = "../../../../🧬️mutations/🦴️create-load-case/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-114 = { path = "../../../../🧬️mutations/🦴️create-load/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-115 = { path = "../../../../🧬️mutations/🧭️create-option-group/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-116 = { path = "../../../../🧬️mutations/🧭️create-design-option/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-117 = { path = "../../../../🧬️mutations/🧭️create-workset/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-118 = { path = "../../../../🧬️mutations/💢️delete-clash-set/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-119 = { path = "../../../../🧬️mutations/❗️delete-rule/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-12 = { path = "../../../../🧬️mutations/🔑️set-door-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-120 = { path = "../../../../🧬️mutations/📢️delete-issue/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-121 = { path = "../../../../🧬️mutations/💭️delete-issue-comment/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-122 = { path = "../../../../🧬️mutations/🚽️delete-component/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-123 = { path = "../../../../🧬️mutations/💦️delete-mep-element/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-124 = { path = "../../../../🧬️mutations/🌍️create-site/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-125 = { path = "../../../../🧬️mutations/🏢️create-building/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-126 = { path = "../../../../🧬️mutations/🪜️create-storey/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-127 = { path = "../../../../🧬️mutations/🛤️create-railing/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-128 = { path = "../../../../🧬️mutations/🛋️create-space/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-129 = { path = "../../../../🧬️mutations/⬜️create-slab/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-13 = { path = "../../../../🧬️mutations/🖌️set-material/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-130 = { path = "../../../../🧬️mutations/🏠️create-roof/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-131 = { path = "../../../../🧬️mutations/🧗️create-stair/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-132 = { path = "../../../../🧬️mutations/🔲️create-grid-line/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-133 = { path = "../../../../🧬️mutations/🚚️move-elements/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-134 = { path = "../../../../🧬️mutations/🎡️rotate-elements/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-135 = { path = "../../../../🧬️mutations/🏞️create-ceiling/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-136 = { path = "../../../../🧬️mutations/🛝️create-ramp/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-137 = { path = "../../../../🧬️mutations/📽️create-view/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-138 = { path = "../../../../🧬️mutations/↔️create-dimension/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-139 = { path = "../../../../🧬️mutations/🔖️create-tag/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-14 = { path = "../../../../🧬️mutations/🔨️set-wall-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-140 = { path = "../../../../🧬️mutations/🗒️create-text-note/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-141 = { path = "../../../../🧬️mutations/↗️create-leader/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-142 = { path = "../../../../🧬️mutations/🗾️create-zone/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-143 = { path = "../../../../🧬️mutations/🗃️create-area-scheme/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-144 = { path = "../../../../🧬️mutations/🎢️set-element-storey/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-145 = { path = "../../../../🧬️mutations/📄️create-sheet/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-146 = { path = "../../../../🧬️mutations/📓️create-viewport/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-147 = { path = "../../../../🧬️mutations/📖️create-sheet-revision/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-148 = { path = "../../../../🧬️mutations/📚️create-classification-system/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-149 = { path = "../../../../🧬️mutations/🧩️create-family/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-15 = { path = "../../../../🧬️mutations/🟧️set-slab-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-150 = { path = "../../../../🧬️mutations/🚨️create-clash-set/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-151 = { path = "../../../../🧬️mutations/⚖️create-rule/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-152 = { path = "../../../../🧬️mutations/🚩️create-issue/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-153 = { path = "../../../../🧬️mutations/💬️create-issue-comment/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-154 = { path = "../../../../🧬️mutations/🛏️create-component/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-155 = { path = "../../../../🧬️mutations/🛁️set-component/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-156 = { path = "../../../../🧬️mutations/🚿️set-component-override/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-157 = { path = "../../../../🧬️mutations/💧️create-mep-element/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-158 = { path = "../../../../🧬️mutations/💨️set-mep-element/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-159 = { path = "../../../../🧬️mutations/🏛️create-column/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-16 = { path = "../../../../🧬️mutations/🏕️set-roof-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-160 = { path = "../../../../🧬️mutations/➖️create-beam/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-161 = { path = "../../../../🧬️mutations/〰️set-wall-axis/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-162 = { path = "../../../../🧬️mutations/🪞️flip-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-163 = { path = "../../../../🧬️mutations/🪝️set-beam-axis/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-164 = { path = "../../../../🧬️mutations/🗽️set-column-tilt/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-165 = { path = "../../../../🧬️mutations/🏟️create-curtain-wall-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-166 = { path = "../../../../🧬️mutations/🏤️set-curtain-wall-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-167 = { path = "../../../../🧬️mutations/🏧️set-curtain-wall-grid/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-168 = { path = "../../../../🧬️mutations/🏨️create-curtain-panel-override/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-169 = { path = "../../../../🧬️mutations/🏩️set-curtain-panel-override/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-17 = { path = "../../../../🧬️mutations/📇️set-project-info/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-170 = { path = "../../../../🧬️mutations/📐️set-beam/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-171 = { path = "../../../../🧬️mutations/🔆️set-curtain-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-172 = { path = "../../../../🧬️mutations/🏬️create-curtain-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-173 = { path = "../../../../🧬️mutations/🧱️create-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-174 = { path = "../../../../🧬️mutations/🔝️set-wall-top/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-175 = { path = "../../../../🧬️mutations/🕳️create-opening/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-176 = { path = "../../../../🧬️mutations/🕹️set-opening/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-177 = { path = "../../../../🧬️mutations/🦈️split-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-178 = { path = "../../../../🧬️mutations/🧷️set-wall-end-join/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-179 = { path = "../../../../🧬️mutations/👯️copy-elements/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-18 = { path = "../../../../🧬️mutations/🗺️set-site/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-180 = { path = "../../../../🧬️mutations/💠️array-elements/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-181 = { path = "../../../../🧬️mutations/📋️align-elements/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-182 = { path = "../../../../🧬️mutations/🧶️offset-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-183 = { path = "../../../../🧬️mutations/🔪️trim-extend-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-184 = { path = "../../../../🧬️mutations/🍰️split-slab/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-185 = { path = "../../../../🧬️mutations/🥖️split-beam/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-186 = { path = "../../../../🧬️mutations/🪛️create-wall-sweep/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-187 = { path = "../../../../🧬️mutations/🪠️set-wall-sweep/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-188 = { path = "../../../../🧬️mutations/🪔️set-wall-base-slab/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-189 = { path = "../../../../🧬️mutations/🔀️mirror-elements/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-19 = { path = "../../../../🧬️mutations/🏗️set-building/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-2 = { path = "../../../../🧬️mutations/📏️set-storey-height/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-20 = { path = "../../../../🧬️mutations/🧭️set-grid-line/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-21 = { path = "../../../../🧬️mutations/🔽️set-wall-base-offset/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-22 = { path = "../../../../🧬️mutations/🥞️set-wall-type-of/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-23 = { path = "../../../../🧬️mutations/🦚️set-wall-location/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-24 = { path = "../../../../🧬️mutations/🎬️set-storey-cut-height/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-25 = { path = "../../../../🧬️mutations/🎐️set-ceiling-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-26 = { path = "../../../../🧬️mutations/🌇️set-ceiling-boundary/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-27 = { path = "../../../../🧬️mutations/🌄️set-ceiling/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-28 = { path = "../../../../🧬️mutations/🔭️set-view/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-29 = { path = "../../../../🧬️mutations/🖊️set-annotation-style/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-3 = { path = "../../../../🧬️mutations/🔢️set-storey-level/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-30 = { path = "../../../../🧬️mutations/📌️set-dimension/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-31 = { path = "../../../../🧬️mutations/🏴️set-tag/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-32 = { path = "../../../../🧬️mutations/📝️set-text-note/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-33 = { path = "../../../../🧬️mutations/⤴️set-leader/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-34 = { path = "../../../../🧬️mutations/🪄️set-zone/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-35 = { path = "../../../../🧬️mutations/📈️set-schedule/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-36 = { path = "../../../../🧬️mutations/📑️set-sheet/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-37 = { path = "../../../../🧬️mutations/📔️set-viewport/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-38 = { path = "../../../../🧬️mutations/📗️set-sheet-revision/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-39 = { path = "../../../../🧬️mutations/🏦️set-curtain-wall-type-of/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-4 = { path = "../../../../🧬️mutations/🪑️set-space/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-40 = { path = "../../../../🧬️mutations/🛠️set-property-template/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-41 = { path = "../../../../🧬️mutations/🔏️set-classification-system/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-42 = { path = "../../../../🧬️mutations/🪆️set-family/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-43 = { path = "../../../../🧬️mutations/📦️set-family-solid/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-44 = { path = "../../../../🧬️mutations/🦴️set-support/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-45 = { path = "../../../../🧬️mutations/🦴️set-load-case/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-46 = { path = "../../../../🧬️mutations/🦴️set-load/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-47 = { path = "../../../../🧬️mutations/🧭️set-option-group/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-48 = { path = "../../../../🧬️mutations/🧭️set-design-option/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-49 = { path = "../../../../🧬️mutations/🧭️set-workset/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-5 = { path = "../../../../🧬️mutations/🔷️set-slab-boundary/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-50 = { path = "../../../../🧬️mutations/🧭️set-element-option/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-51 = { path = "../../../../🧬️mutations/🧭️set-element-workset/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-52 = { path = "../../../../🧬️mutations/🚥️set-clash-set/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-53 = { path = "../../../../🧬️mutations/🚦️set-rule/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-54 = { path = "../../../../🧬️mutations/🏁️set-issue/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-55 = { path = "../../../../🧬️mutations/🗨️set-issue-comment/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-56 = { path = "../../../../🧬️mutations/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-57 = { path = "../../../../🧬️mutations/♨️set-type-thermal-data/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-58 = { path = "../../../../🧬️mutations/🧹️delete-site/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-59 = { path = "../../../../🧬️mutations/🏚️delete-building/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-6 = { path = "../../../../🧬️mutations/🔸️set-slab/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-60 = { path = "../../../../🧬️mutations/🚮️delete-storey/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-61 = { path = "../../../../🧬️mutations/💥️delete-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-62 = { path = "../../../../🧬️mutations/🪚️delete-railing/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-63 = { path = "../../../../🧬️mutations/🔧️set-railing/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-64 = { path = "../../../../🧬️mutations/🧽️delete-space/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-65 = { path = "../../../../🧬️mutations/🪦️delete-column/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-66 = { path = "../../../../🧬️mutations/🎛️set-column/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-67 = { path = "../../../../🧬️mutations/✂️delete-beam/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-68 = { path = "../../../../🧬️mutations/🔻️delete-slab/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-69 = { path = "../../../../🧬️mutations/🏘️delete-roof/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-7 = { path = "../../../../🧬️mutations/👣️set-roof-footprint/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-70 = { path = "../../../../🧬️mutations/🗼️create-column-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-71 = { path = "../../../../🧬️mutations/🌉️create-beam-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-72 = { path = "../../../../🧬️mutations/🖼️create-window-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-73 = { path = "../../../../🧬️mutations/🛗️create-door-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-74 = { path = "../../../../🧬️mutations/🪨️create-material/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-75 = { path = "../../../../🧬️mutations/🪵️create-wall-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-76 = { path = "../../../../🧬️mutations/🟫️create-slab-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-77 = { path = "../../../../🧬️mutations/🛖️create-roof-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-78 = { path = "../../../../🧬️mutations/🪓️delete-opening/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-79 = { path = "../../../../🧬️mutations/🛷️move-opening/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-8 = { path = "../../../../🧬️mutations/🏔️set-roof-shape/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-80 = { path = "../../../../🧬️mutations/🧨️delete-stair/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-81 = { path = "../../../../🧬️mutations/🧮️set-stair/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-82 = { path = "../../../../🧬️mutations/🔳️delete-grid-line/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-83 = { path = "../../../../🧬️mutations/🦖️delete-curtain-wall/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-84 = { path = "../../../../🧬️mutations/🪧️place-elements/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-85 = { path = "../../../../🧬️mutations/💣️delete-elements/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-86 = { path = "../../../../🧬️mutations/🪪️rename-element/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-87 = { path = "../../../../🧬️mutations/🧾️set-element-property/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-88 = { path = "../../../../🧬️mutations/🗂️set-element-classification/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-89 = { path = "../../../../🧬️mutations/🎑️create-ceiling-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-9 = { path = "../../../../🧬️mutations/🎚️set-column-type/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-90 = { path = "../../../../🧬️mutations/🌆️delete-ceiling/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-91 = { path = "../../../../🧬️mutations/🛹️set-ramp/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-92 = { path = "../../../../🧬️mutations/🛼️delete-ramp/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-93 = { path = "../../../../🧬️mutations/📺️delete-view/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-94 = { path = "../../../../🧬️mutations/🎨️create-annotation-style/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-95 = { path = "../../../../🧬️mutations/📎️delete-dimension/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-96 = { path = "../../../../🧬️mutations/🎫️delete-tag/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-97 = { path = "../../../../🧬️mutations/📃️delete-text-note/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-98 = { path = "../../../../🧬️mutations/↪️delete-leader/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-mut-any-99 = { path = "../../../../🧬️mutations/🧯️delete-zone/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-ramp-runs = { path = "../../../../💡️inferences/🛝️ramp-runs/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-schema = { path = "../../../../📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-snapshot = { path = "../../../../📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-spaces = { path = "../../../../💡️inferences/🏠️spaces/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-storey-levels = { path = "../../../../💡️inferences/🏢️storey-levels/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-tests-5 = { path = "../../../../💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-wall-geometry = { path = "../../../../🧬️mutations/🦉️wall-geometry/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
+semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+serde_json = { workspace = true, optional = true }
+
+[features]
+testkit = ["dep:serde_json", "dep:quick-xml", "dep:gltf", "dep:semio-framework-test-fixtures", "semio-framework-plugin/artifact-app-testing", "semio-framework-os-kernel/protocol-laws", "semio-framework-os-kernel/mutation-testing", "semio-s-artifact-bim-model-schema/testkit", "semio-s-artifact-bim-model-examples/testkit", "semio-s-artifact-bim-model-snapshot/testkit", "semio-s-artifact-bim-model-authored/testkit", "semio-s-artifact-bim-model-storey-levels/testkit", "semio-s-artifact-bim-model-diff/testkit", "semio-s-artifact-bim-model-ramp-runs/testkit", "semio-s-artifact-bim-model-mut-any/testkit", "semio-s-artifact-bim-model-mut-any-2/testkit", "semio-s-artifact-bim-model-mut-any-3/testkit", "semio-s-artifact-bim-model-mut-any-4/testkit", "semio-s-artifact-bim-model-mut-any-5/testkit", "semio-s-artifact-bim-model-mut-any-6/testkit", "semio-s-artifact-bim-model-mut-any-7/testkit", "semio-s-artifact-bim-model-mut-any-8/testkit", "semio-s-artifact-bim-model-mut-any-9/testkit", "semio-s-artifact-bim-model-mut-any-10/testkit", "semio-s-artifact-bim-model-mut-any-11/testkit", "semio-s-artifact-bim-model-mut-any-12/testkit", "semio-s-artifact-bim-model-mut-any-13/testkit", "semio-s-artifact-bim-model-mut-any-14/testkit", "semio-s-artifact-bim-model-mut-any-15/testkit", "semio-s-artifact-bim-model-mut-any-16/testkit", "semio-s-artifact-bim-model-mut-any-17/testkit", "semio-s-artifact-bim-model-mut-any-18/testkit", "semio-s-artifact-bim-model-mut-any-19/testkit", "semio-s-artifact-bim-model-mut-any-20/testkit", "semio-s-artifact-bim-model-mut-any-21/testkit", "semio-s-artifact-bim-model-mut-any-22/testkit", "semio-s-artifact-bim-model-mut-any-23/testkit", "semio-s-artifact-bim-model-mut-any-24/testkit", "semio-s-artifact-bim-model-mut-any-25/testkit", "semio-s-artifact-bim-model-mut-any-26/testkit", "semio-s-artifact-bim-model-mut-any-27/testkit", "semio-s-artifact-bim-model-mut-any-28/testkit", "semio-s-artifact-bim-model-mut-any-29/testkit", "semio-s-artifact-bim-model-mut-any-30/testkit", "semio-s-artifact-bim-model-mut-any-31/testkit", "semio-s-artifact-bim-model-mut-any-32/testkit", "semio-s-artifact-bim-model-mut-any-33/testkit", "semio-s-artifact-bim-model-mut-any-34/testkit", "semio-s-artifact-bim-model-mut-any-35/testkit", "semio-s-artifact-bim-model-mut-any-36/testkit", "semio-s-artifact-bim-model-mut-any-37/testkit", "semio-s-artifact-bim-model-mut-any-38/testkit", "semio-s-artifact-bim-model-mut-any-39/testkit", "semio-s-artifact-bim-model-mut-any-40/testkit", "semio-s-artifact-bim-model-mut-any-41/testkit", "semio-s-artifact-bim-model-mut-any-42/testkit", "semio-s-artifact-bim-model-mut-any-43/testkit", "semio-s-artifact-bim-model-mut-any-44/testkit", "semio-s-artifact-bim-model-mut-any-45/testkit", "semio-s-artifact-bim-model-mut-any-46/testkit", "semio-s-artifact-bim-model-mut-any-47/testkit", "semio-s-artifact-bim-model-mut-any-48/testkit", "semio-s-artifact-bim-model-mut-any-49/testkit", "semio-s-artifact-bim-model-mut-any-50/testkit", "semio-s-artifact-bim-model-mut-any-51/testkit", "semio-s-artifact-bim-model-mut-any-52/testkit", "semio-s-artifact-bim-model-mut-any-53/testkit", "semio-s-artifact-bim-model-mut-any-54/testkit", "semio-s-artifact-bim-model-mut-any-55/testkit", "semio-s-artifact-bim-model-mut-any-56/testkit", "semio-s-artifact-bim-model-mut-any-57/testkit", "semio-s-artifact-bim-model-mut-any-58/testkit", "semio-s-artifact-bim-model-mut-any-59/testkit", "semio-s-artifact-bim-model-mut-any-60/testkit", "semio-s-artifact-bim-model-mut-any-61/testkit", "semio-s-artifact-bim-model-mut-any-62/testkit", "semio-s-artifact-bim-model-mut-any-63/testkit", "semio-s-artifact-bim-model-mut-any-64/testkit", "semio-s-artifact-bim-model-mut-any-65/testkit", "semio-s-artifact-bim-model-mut-any-66/testkit", "semio-s-artifact-bim-model-mut-any-67/testkit", "semio-s-artifact-bim-model-mut-any-68/testkit", "semio-s-artifact-bim-model-mut-any-69/testkit", "semio-s-artifact-bim-model-mut-any-70/testkit", "semio-s-artifact-bim-model-mut-any-71/testkit", "semio-s-artifact-bim-model-mut-any-72/testkit", "semio-s-artifact-bim-model-mut-any-73/testkit", "semio-s-artifact-bim-model-mut-any-74/testkit", "semio-s-artifact-bim-model-mut-any-75/testkit", "semio-s-artifact-bim-model-mut-any-76/testkit", "semio-s-artifact-bim-model-mut-any-77/testkit", "semio-s-artifact-bim-model-mut-any-78/testkit", "semio-s-artifact-bim-model-mut-any-79/testkit", "semio-s-artifact-bim-model-mut-any-80/testkit", "semio-s-artifact-bim-model-mut-any-81/testkit", "semio-s-artifact-bim-model-mut-any-82/testkit", "semio-s-artifact-bim-model-mut-any-83/testkit", "semio-s-artifact-bim-model-mut-any-84/testkit", "semio-s-artifact-bim-model-mut-any-85/testkit", "semio-s-artifact-bim-model-mut-any-86/testkit", "semio-s-artifact-bim-model-mut-any-87/testkit", "semio-s-artifact-bim-model-mut-any-88/testkit", "semio-s-artifact-bim-model-mut-any-89/testkit", "semio-s-artifact-bim-model-mut-any-90/testkit", "semio-s-artifact-bim-model-mut-any-91/testkit", "semio-s-artifact-bim-model-mut-any-92/testkit", "semio-s-artifact-bim-model-mut-any-93/testkit", "semio-s-artifact-bim-model-mut-any-94/testkit", "semio-s-artifact-bim-model-mut-any-95/testkit", "semio-s-artifact-bim-model-mut-any-96/testkit", "semio-s-artifact-bim-model-mut-any-97/testkit", "semio-s-artifact-bim-model-mut-any-98/testkit", "semio-s-artifact-bim-model-mut-any-99/testkit", "semio-s-artifact-bim-model-mut-any-100/testkit", "semio-s-artifact-bim-model-mut-any-101/testkit", "semio-s-artifact-bim-model-mut-any-102/testkit", "semio-s-artifact-bim-model-mut-any-103/testkit", "semio-s-artifact-bim-model-mut-any-104/testkit", "semio-s-artifact-bim-model-mut-any-105/testkit", "semio-s-artifact-bim-model-mut-any-106/testkit", "semio-s-artifact-bim-model-mut-any-107/testkit", "semio-s-artifact-bim-model-mut-any-108/testkit", "semio-s-artifact-bim-model-mut-any-109/testkit", "semio-s-artifact-bim-model-mut-any-110/testkit", "semio-s-artifact-bim-model-mut-any-111/testkit", "semio-s-artifact-bim-model-mut-any-112/testkit", "semio-s-artifact-bim-model-mut-any-113/testkit", "semio-s-artifact-bim-model-mut-any-114/testkit", "semio-s-artifact-bim-model-mut-any-115/testkit", "semio-s-artifact-bim-model-mut-any-116/testkit", "semio-s-artifact-bim-model-mut-any-117/testkit", "semio-s-artifact-bim-model-mut-any-118/testkit", "semio-s-artifact-bim-model-mut-any-119/testkit", "semio-s-artifact-bim-model-mut-any-120/testkit", "semio-s-artifact-bim-model-mut-any-121/testkit", "semio-s-artifact-bim-model-mut-any-122/testkit", "semio-s-artifact-bim-model-mut-any-123/testkit", "semio-s-artifact-bim-model-mut-any-124/testkit", "semio-s-artifact-bim-model-mut-any-125/testkit", "semio-s-artifact-bim-model-mut-any-126/testkit", "semio-s-artifact-bim-model-mut-any-127/testkit", "semio-s-artifact-bim-model-mut-any-128/testkit", "semio-s-artifact-bim-model-mut-any-129/testkit", "semio-s-artifact-bim-model-mut-any-130/testkit", "semio-s-artifact-bim-model-mut-any-131/testkit", "semio-s-artifact-bim-model-mut-any-132/testkit", "semio-s-artifact-bim-model-mut-any-133/testkit", "semio-s-artifact-bim-model-mut-any-134/testkit", "semio-s-artifact-bim-model-mut-any-135/testkit", "semio-s-artifact-bim-model-mut-any-136/testkit", "semio-s-artifact-bim-model-mut-any-137/testkit", "semio-s-artifact-bim-model-mut-any-138/testkit", "semio-s-artifact-bim-model-mut-any-139/testkit", "semio-s-artifact-bim-model-mut-any-140/testkit", "semio-s-artifact-bim-model-mut-any-141/testkit", "semio-s-artifact-bim-model-mut-any-142/testkit", "semio-s-artifact-bim-model-mut-any-143/testkit", "semio-s-artifact-bim-model-mut-any-144/testkit", "semio-s-artifact-bim-model-mut-any-145/testkit", "semio-s-artifact-bim-model-mut-any-146/testkit", "semio-s-artifact-bim-model-mut-any-147/testkit", "semio-s-artifact-bim-model-mut-any-148/testkit", "semio-s-artifact-bim-model-mut-any-149/testkit", "semio-s-artifact-bim-model-mut-any-150/testkit", "semio-s-artifact-bim-model-mut-any-151/testkit", "semio-s-artifact-bim-model-mut-any-152/testkit", "semio-s-artifact-bim-model-mut-any-153/testkit", "semio-s-artifact-bim-model-mut-any-154/testkit", "semio-s-artifact-bim-model-mut-any-155/testkit", "semio-s-artifact-bim-model-mut-any-156/testkit", "semio-s-artifact-bim-model-mut-any-157/testkit", "semio-s-artifact-bim-model-mut-any-158/testkit", "semio-s-artifact-bim-model-spaces/testkit", "semio-s-artifact-bim-model-components/testkit", "semio-s-artifact-bim-model-inferences/testkit", "semio-s-artifact-bim-model-wall-geometry/testkit", "semio-s-artifact-bim-model-modify/testkit", "semio-s-artifact-bim-model-mut-any-159/testkit", "semio-s-artifact-bim-model-mut-any-160/testkit", "semio-s-artifact-bim-model-mut-any-161/testkit", "semio-s-artifact-bim-model-mut-any-162/testkit", "semio-s-artifact-bim-model-mut-any-163/testkit", "semio-s-artifact-bim-model-mut-any-164/testkit", "semio-s-artifact-bim-model-mut-any-165/testkit", "semio-s-artifact-bim-model-mut-any-166/testkit", "semio-s-artifact-bim-model-mut-any-167/testkit", "semio-s-artifact-bim-model-mut-any-168/testkit", "semio-s-artifact-bim-model-mut-any-169/testkit", "semio-s-artifact-bim-model-mut-any-170/testkit", "semio-s-artifact-bim-model-mut-any-171/testkit", "semio-s-artifact-bim-model-mut-any-172/testkit", "semio-s-artifact-bim-model-tests-5/testkit", "semio-s-artifact-bim-model-mut-any-173/testkit", "semio-s-artifact-bim-model-mut-any-174/testkit", "semio-s-artifact-bim-model-mut-any-175/testkit", "semio-s-artifact-bim-model-mut-any-176/testkit", "semio-s-artifact-bim-model-mut-any-177/testkit", "semio-s-artifact-bim-model-mut-any-178/testkit", "semio-s-artifact-bim-model-mut-any-179/testkit", "semio-s-artifact-bim-model-mut-any-180/testkit", "semio-s-artifact-bim-model-mut-any-181/testkit", "semio-s-artifact-bim-model-mut-any-182/testkit", "semio-s-artifact-bim-model-mut-any-183/testkit", "semio-s-artifact-bim-model-mut-any-184/testkit", "semio-s-artifact-bim-model-mut-any-185/testkit", "semio-s-artifact-bim-model-mut-any-186/testkit", "semio-s-artifact-bim-model-mut-any-187/testkit", "semio-s-artifact-bim-model-mut-any-188/testkit", "semio-s-artifact-bim-model-family-tests/testkit", "semio-s-artifact-bim-model-mut-any-189/testkit"]
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
+gltf = { version = "1.4.1", default-features = false, features = ["utils", "names", "extras"] }
+quick-xml = "0.39.4"
+semio-framework-async-macros = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
+semio-s-artifact-bim-model-authored = { path = "../../../../📏️authored/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-components = { path = "../../../../💡️inferences/🪑️components/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-diff = { path = "../../../../🔺️diff/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-examples = { path = "../../../../../📚️examples/🏡️house/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-family-tests = { path = "../../../../💡️inferences/🕸️model-graph/🧪️tests/🧬️families/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-inferences = { path = "../../../../💡️inferences/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-modify = { path = "../../../../🧬️mutations/🧙️modify/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any = { path = "../../../../🧬️mutations/🏷️rename-storey/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-10 = { path = "../../../../🧬️mutations/🎞️set-beam-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-100 = { path = "../../../../🧬️mutations/🗳️set-area-scheme/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-101 = { path = "../../../../🧬️mutations/🧻️delete-area-scheme/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-102 = { path = "../../../../🧬️mutations/📊️create-schedule/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-103 = { path = "../../../../🧬️mutations/🕰️set-element-phase/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-104 = { path = "../../../../🧬️mutations/📒️delete-sheet/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-105 = { path = "../../../../🧬️mutations/📕️delete-viewport/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-106 = { path = "../../../../🧬️mutations/📘️delete-sheet-revision/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-107 = { path = "../../../../🧬️mutations/🏪️delete-curtain-panel-override/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-108 = { path = "../../../../🧬️mutations/🧰️create-property-template/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-109 = { path = "../../../../🧬️mutations/🔡️set-family-parameter/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-11 = { path = "../../../../🧬️mutations/🔅️set-window-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-110 = { path = "../../../../🧬️mutations/🔶️create-family-solid/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-111 = { path = "../../../../🧬️mutations/🪡️delete-wall-sweep/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-112 = { path = "../../../../🧬️mutations/🦴️create-support/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-113 = { path = "../../../../🧬️mutations/🦴️create-load-case/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-114 = { path = "../../../../🧬️mutations/🦴️create-load/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-115 = { path = "../../../../🧬️mutations/🧭️create-option-group/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-116 = { path = "../../../../🧬️mutations/🧭️create-design-option/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-117 = { path = "../../../../🧬️mutations/🧭️create-workset/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-118 = { path = "../../../../🧬️mutations/💢️delete-clash-set/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-119 = { path = "../../../../🧬️mutations/❗️delete-rule/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-12 = { path = "../../../../🧬️mutations/🔑️set-door-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-120 = { path = "../../../../🧬️mutations/📢️delete-issue/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-121 = { path = "../../../../🧬️mutations/💭️delete-issue-comment/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-122 = { path = "../../../../🧬️mutations/🚽️delete-component/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-123 = { path = "../../../../🧬️mutations/💦️delete-mep-element/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-124 = { path = "../../../../🧬️mutations/🌍️create-site/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-125 = { path = "../../../../🧬️mutations/🏢️create-building/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-126 = { path = "../../../../🧬️mutations/🪜️create-storey/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-127 = { path = "../../../../🧬️mutations/🛤️create-railing/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-128 = { path = "../../../../🧬️mutations/🛋️create-space/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-129 = { path = "../../../../🧬️mutations/⬜️create-slab/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-13 = { path = "../../../../🧬️mutations/🖌️set-material/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-130 = { path = "../../../../🧬️mutations/🏠️create-roof/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-131 = { path = "../../../../🧬️mutations/🧗️create-stair/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-132 = { path = "../../../../🧬️mutations/🔲️create-grid-line/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-133 = { path = "../../../../🧬️mutations/🚚️move-elements/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-134 = { path = "../../../../🧬️mutations/🎡️rotate-elements/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-135 = { path = "../../../../🧬️mutations/🏞️create-ceiling/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-136 = { path = "../../../../🧬️mutations/🛝️create-ramp/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-137 = { path = "../../../../🧬️mutations/📽️create-view/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-138 = { path = "../../../../🧬️mutations/↔️create-dimension/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-139 = { path = "../../../../🧬️mutations/🔖️create-tag/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-14 = { path = "../../../../🧬️mutations/🔨️set-wall-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-140 = { path = "../../../../🧬️mutations/🗒️create-text-note/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-141 = { path = "../../../../🧬️mutations/↗️create-leader/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-142 = { path = "../../../../🧬️mutations/🗾️create-zone/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-143 = { path = "../../../../🧬️mutations/🗃️create-area-scheme/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-144 = { path = "../../../../🧬️mutations/🎢️set-element-storey/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-145 = { path = "../../../../🧬️mutations/📄️create-sheet/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-146 = { path = "../../../../🧬️mutations/📓️create-viewport/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-147 = { path = "../../../../🧬️mutations/📖️create-sheet-revision/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-148 = { path = "../../../../🧬️mutations/📚️create-classification-system/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-149 = { path = "../../../../🧬️mutations/🧩️create-family/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-15 = { path = "../../../../🧬️mutations/🟧️set-slab-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-150 = { path = "../../../../🧬️mutations/🚨️create-clash-set/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-151 = { path = "../../../../🧬️mutations/⚖️create-rule/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-152 = { path = "../../../../🧬️mutations/🚩️create-issue/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-153 = { path = "../../../../🧬️mutations/💬️create-issue-comment/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-154 = { path = "../../../../🧬️mutations/🛏️create-component/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-155 = { path = "../../../../🧬️mutations/🛁️set-component/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-156 = { path = "../../../../🧬️mutations/🚿️set-component-override/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-157 = { path = "../../../../🧬️mutations/💧️create-mep-element/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-158 = { path = "../../../../🧬️mutations/💨️set-mep-element/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-159 = { path = "../../../../🧬️mutations/🏛️create-column/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-16 = { path = "../../../../🧬️mutations/🏕️set-roof-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-160 = { path = "../../../../🧬️mutations/➖️create-beam/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-161 = { path = "../../../../🧬️mutations/〰️set-wall-axis/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-162 = { path = "../../../../🧬️mutations/🪞️flip-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-163 = { path = "../../../../🧬️mutations/🪝️set-beam-axis/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-164 = { path = "../../../../🧬️mutations/🗽️set-column-tilt/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-165 = { path = "../../../../🧬️mutations/🏟️create-curtain-wall-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-166 = { path = "../../../../🧬️mutations/🏤️set-curtain-wall-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-167 = { path = "../../../../🧬️mutations/🏧️set-curtain-wall-grid/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-168 = { path = "../../../../🧬️mutations/🏨️create-curtain-panel-override/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-169 = { path = "../../../../🧬️mutations/🏩️set-curtain-panel-override/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-17 = { path = "../../../../🧬️mutations/📇️set-project-info/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-170 = { path = "../../../../🧬️mutations/📐️set-beam/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-171 = { path = "../../../../🧬️mutations/🔆️set-curtain-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-172 = { path = "../../../../🧬️mutations/🏬️create-curtain-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-173 = { path = "../../../../🧬️mutations/🧱️create-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-174 = { path = "../../../../🧬️mutations/🔝️set-wall-top/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-175 = { path = "../../../../🧬️mutations/🕳️create-opening/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-176 = { path = "../../../../🧬️mutations/🕹️set-opening/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-177 = { path = "../../../../🧬️mutations/🦈️split-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-178 = { path = "../../../../🧬️mutations/🧷️set-wall-end-join/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-179 = { path = "../../../../🧬️mutations/👯️copy-elements/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-18 = { path = "../../../../🧬️mutations/🗺️set-site/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-180 = { path = "../../../../🧬️mutations/💠️array-elements/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-181 = { path = "../../../../🧬️mutations/📋️align-elements/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-182 = { path = "../../../../🧬️mutations/🧶️offset-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-183 = { path = "../../../../🧬️mutations/🔪️trim-extend-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-184 = { path = "../../../../🧬️mutations/🍰️split-slab/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-185 = { path = "../../../../🧬️mutations/🥖️split-beam/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-186 = { path = "../../../../🧬️mutations/🪛️create-wall-sweep/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-187 = { path = "../../../../🧬️mutations/🪠️set-wall-sweep/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-188 = { path = "../../../../🧬️mutations/🪔️set-wall-base-slab/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-189 = { path = "../../../../🧬️mutations/🔀️mirror-elements/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-19 = { path = "../../../../🧬️mutations/🏗️set-building/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-2 = { path = "../../../../🧬️mutations/📏️set-storey-height/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-20 = { path = "../../../../🧬️mutations/🧭️set-grid-line/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-21 = { path = "../../../../🧬️mutations/🔽️set-wall-base-offset/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-22 = { path = "../../../../🧬️mutations/🥞️set-wall-type-of/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-23 = { path = "../../../../🧬️mutations/🦚️set-wall-location/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-24 = { path = "../../../../🧬️mutations/🎬️set-storey-cut-height/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-25 = { path = "../../../../🧬️mutations/🎐️set-ceiling-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-26 = { path = "../../../../🧬️mutations/🌇️set-ceiling-boundary/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-27 = { path = "../../../../🧬️mutations/🌄️set-ceiling/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-28 = { path = "../../../../🧬️mutations/🔭️set-view/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-29 = { path = "../../../../🧬️mutations/🖊️set-annotation-style/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-3 = { path = "../../../../🧬️mutations/🔢️set-storey-level/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-30 = { path = "../../../../🧬️mutations/📌️set-dimension/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-31 = { path = "../../../../🧬️mutations/🏴️set-tag/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-32 = { path = "../../../../🧬️mutations/📝️set-text-note/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-33 = { path = "../../../../🧬️mutations/⤴️set-leader/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-34 = { path = "../../../../🧬️mutations/🪄️set-zone/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-35 = { path = "../../../../🧬️mutations/📈️set-schedule/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-36 = { path = "../../../../🧬️mutations/📑️set-sheet/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-37 = { path = "../../../../🧬️mutations/📔️set-viewport/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-38 = { path = "../../../../🧬️mutations/📗️set-sheet-revision/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-39 = { path = "../../../../🧬️mutations/🏦️set-curtain-wall-type-of/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-4 = { path = "../../../../🧬️mutations/🪑️set-space/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-40 = { path = "../../../../🧬️mutations/🛠️set-property-template/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-41 = { path = "../../../../🧬️mutations/🔏️set-classification-system/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-42 = { path = "../../../../🧬️mutations/🪆️set-family/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-43 = { path = "../../../../🧬️mutations/📦️set-family-solid/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-44 = { path = "../../../../🧬️mutations/🦴️set-support/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-45 = { path = "../../../../🧬️mutations/🦴️set-load-case/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-46 = { path = "../../../../🧬️mutations/🦴️set-load/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-47 = { path = "../../../../🧬️mutations/🧭️set-option-group/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-48 = { path = "../../../../🧬️mutations/🧭️set-design-option/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-49 = { path = "../../../../🧬️mutations/🧭️set-workset/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-5 = { path = "../../../../🧬️mutations/🔷️set-slab-boundary/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-50 = { path = "../../../../🧬️mutations/🧭️set-element-option/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-51 = { path = "../../../../🧬️mutations/🧭️set-element-workset/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-52 = { path = "../../../../🧬️mutations/🚥️set-clash-set/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-53 = { path = "../../../../🧬️mutations/🚦️set-rule/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-54 = { path = "../../../../🧬️mutations/🏁️set-issue/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-55 = { path = "../../../../🧬️mutations/🗨️set-issue-comment/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-56 = { path = "../../../../🧬️mutations/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-57 = { path = "../../../../🧬️mutations/♨️set-type-thermal-data/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-58 = { path = "../../../../🧬️mutations/🧹️delete-site/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-59 = { path = "../../../../🧬️mutations/🏚️delete-building/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-6 = { path = "../../../../🧬️mutations/🔸️set-slab/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-60 = { path = "../../../../🧬️mutations/🚮️delete-storey/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-61 = { path = "../../../../🧬️mutations/💥️delete-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-62 = { path = "../../../../🧬️mutations/🪚️delete-railing/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-63 = { path = "../../../../🧬️mutations/🔧️set-railing/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-64 = { path = "../../../../🧬️mutations/🧽️delete-space/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-65 = { path = "../../../../🧬️mutations/🪦️delete-column/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-66 = { path = "../../../../🧬️mutations/🎛️set-column/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-67 = { path = "../../../../🧬️mutations/✂️delete-beam/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-68 = { path = "../../../../🧬️mutations/🔻️delete-slab/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-69 = { path = "../../../../🧬️mutations/🏘️delete-roof/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-7 = { path = "../../../../🧬️mutations/👣️set-roof-footprint/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-70 = { path = "../../../../🧬️mutations/🗼️create-column-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-71 = { path = "../../../../🧬️mutations/🌉️create-beam-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-72 = { path = "../../../../🧬️mutations/🖼️create-window-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-73 = { path = "../../../../🧬️mutations/🛗️create-door-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-74 = { path = "../../../../🧬️mutations/🪨️create-material/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-75 = { path = "../../../../🧬️mutations/🪵️create-wall-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-76 = { path = "../../../../🧬️mutations/🟫️create-slab-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-77 = { path = "../../../../🧬️mutations/🛖️create-roof-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-78 = { path = "../../../../🧬️mutations/🪓️delete-opening/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-79 = { path = "../../../../🧬️mutations/🛷️move-opening/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-8 = { path = "../../../../🧬️mutations/🏔️set-roof-shape/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-80 = { path = "../../../../🧬️mutations/🧨️delete-stair/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-81 = { path = "../../../../🧬️mutations/🧮️set-stair/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-82 = { path = "../../../../🧬️mutations/🔳️delete-grid-line/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-83 = { path = "../../../../🧬️mutations/🦖️delete-curtain-wall/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-84 = { path = "../../../../🧬️mutations/🪧️place-elements/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-85 = { path = "../../../../🧬️mutations/💣️delete-elements/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-86 = { path = "../../../../🧬️mutations/🪪️rename-element/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-87 = { path = "../../../../🧬️mutations/🧾️set-element-property/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-88 = { path = "../../../../🧬️mutations/🗂️set-element-classification/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-89 = { path = "../../../../🧬️mutations/🎑️create-ceiling-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-9 = { path = "../../../../🧬️mutations/🎚️set-column-type/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-90 = { path = "../../../../🧬️mutations/🌆️delete-ceiling/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-91 = { path = "../../../../🧬️mutations/🛹️set-ramp/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-92 = { path = "../../../../🧬️mutations/🛼️delete-ramp/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-93 = { path = "../../../../🧬️mutations/📺️delete-view/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-94 = { path = "../../../../🧬️mutations/🎨️create-annotation-style/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-95 = { path = "../../../../🧬️mutations/📎️delete-dimension/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-96 = { path = "../../../../🧬️mutations/🎫️delete-tag/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-97 = { path = "../../../../🧬️mutations/📃️delete-text-note/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-98 = { path = "../../../../🧬️mutations/↪️delete-leader/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-mut-any-99 = { path = "../../../../🧬️mutations/🧯️delete-zone/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-ramp-runs = { path = "../../../../💡️inferences/🛝️ramp-runs/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-schema = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-snapshot = { path = "../../../../📸️snapshot/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-spaces = { path = "../../../../💡️inferences/🏠️spaces/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-storey-levels = { path = "../../../../💡️inferences/🏢️storey-levels/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-tests-5 = { path = "../../../../💡️inferences/🧪️tests/🔬️unit/📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-artifact-bim-model-wall-geometry = { path = "../../../../🧬️mutations/🦉️wall-geometry/📦️packages/🦀️rust", features = ["testkit"] }

@@ -1,9 +1,9 @@
-import receiverSchema from"../📥️receiver/🧬️schema/🔣️.json";
+import receiverSchema from"../📥️receiver/🧬️schema/🔣️.json" with{type:"json"};
 import operationSchema from "../📥️operation/🧬️schema/🔣️.json" with {type:"json"};
 import commandSchema from "../🎛️command/🧬️schema/🔣️.json" with {type:"json"};
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import continuation from "../🧬️schema/📥️continuation.json" with {type:"json"};
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 /** 🪙️ Describes already accepted finite time; this immutable data is never an execution grant. */
 export type NativeImageCleanupFundingV1=Readonly<{version:1;acceptedAtMilliseconds:number;wholeDeadlineMilliseconds:number;bodyDeadlineMilliseconds:number;reserveMilliseconds:10000}>;

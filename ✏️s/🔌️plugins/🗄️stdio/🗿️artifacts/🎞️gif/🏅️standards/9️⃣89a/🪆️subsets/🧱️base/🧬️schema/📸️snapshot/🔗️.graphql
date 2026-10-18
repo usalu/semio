@@ -1,8 +1,18 @@
-type GifEntry {
-  name: String!
-  data: [Int!]!
-}
+type GifRgb { r: Int! g: Int! b: Int! }
+type GifColorTable { sorted: Boolean! colors: [GifRgb!]! }
+enum GifDisposal { UNSPECIFIED DO_NOT_DISPOSE RESTORE_TO_BACKGROUND RESTORE_TO_PREVIOUS }
+type GifPlainText { left: Int! top: Int! width: Int! height: Int! cellWidth: Int! cellHeight: Int! fgColorIndex: Int! bgColorIndex: Int! text: String! }
+type GifAppExtension { identifier: [Int!]! authCode: [Int!]! data: [Int!]! }
+type GifFrame { left: Int! top: Int! width: Int! height: Int! interlace: Boolean! lct: GifColorTable indices: [Int!]! delayCs: Int! disposal: GifDisposal! transparentIndex: Int userInput: Boolean! plainText: GifPlainText }
 type GifSnapshot {
   schema: String! @state(class: ARTIFACT)
-  entries: [GifEntry!]! @state(class: ARTIFACT)
+  width: Int! @state(class: ARTIFACT)
+  height: Int! @state(class: ARTIFACT)
+  gct: GifColorTable @state(class: ARTIFACT)
+  backgroundColorIndex: Int! @state(class: ARTIFACT)
+  pixelAspectRatio: Int! @state(class: ARTIFACT)
+  loopCount: Int @state(class: ARTIFACT)
+  frames: [GifFrame!]! @state(class: ARTIFACT)
+  comments: [String!]! @state(class: ARTIFACT)
+  appExtensions: [GifAppExtension!]! @state(class: ARTIFACT)
 }

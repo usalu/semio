@@ -12,11 +12,12 @@ import faultCustodySchema from "../⚠️fault/🧬️schema/🔣️.json";
 import {MountedFaultCustody} from "../⚠️fault/🟦️.ts";
 import { familyText } from "../../../../🧷️companions/🧯️test-support/🧵️instance-family/🟦️.ts";
 import { pluginFamilyText } from "../../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 test("member replay and cancellation borrow the actual original context through both parent paths",()=>{
  expect(new Ajv({strict:true}).compile(schema)(corpus)).toBe(true);expect(corpus.originalClose.memberPaths).toEqual(["storeReplacement","privateChildGroup"]);
  const db=new Database(":memory:");try{expect(db.query("select ? as debit, ? as paths").get(1,corpus.originalClose.memberPaths.length)).toEqual({debit:1,paths:2});}finally{db.close();}
- const root=join(import.meta.dir,"../../../.."),document=readFileSync(join(root,"🗃️document/🦀️.rs"),"utf8"),start=document.indexOf("fn drive_member_open("),member=document.slice(start,document.indexOf("fn ",start+40));
+ const root=join(import.meta.dir,"../../../.."),document=readModuleTreeSource(join(root,"🗃️document/🦀️.rs")),start=document.indexOf("fn drive_member_open("),member=document.slice(start,document.indexOf("fn ",start+40));
  expect(member).toContain("cx:&mut semio_framework_job::StepContext<'_>");expect(member).not.toContain("StepContext::new");expect(member).not.toContain("StepBudget::new");
  const closeStart=document.indexOf("fn drive_rejected_members("),close=document.slice(closeStart,document.indexOf("fn drive_initializer",closeStart));
  expect(close).toContain("MemberOpenOperation::close_step(open,same.original_source_parent()?,same)");expect(close).toContain("with_retained_loan(child");expect(close).not.toContain("plugin_sdk_fault(error.into_message())");

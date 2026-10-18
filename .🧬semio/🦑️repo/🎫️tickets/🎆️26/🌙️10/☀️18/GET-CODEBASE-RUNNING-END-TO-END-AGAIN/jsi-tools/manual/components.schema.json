@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/build/inference-components/v1",
+  "title": "Build inference component roster",
+  "description": "The ordered components the build inference module is made of. Each component is loaded under the module's revision token and wired in this order from only the earlier components it names as needs, so the graph is acyclic by construction and a reload can never mix stale and current components.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "components"],
+  "properties": {
+    "version": { "const": 1 },
+    "components": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/definitions/Component" }
+    }
+  },
+  "definitions": {
+    "Name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$"
+    },
+    "Component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "path", "needs"],
+      "properties": {
+        "name": { "$ref": "#/definitions/Name" },
+        "path": {
+          "description": "Portable relative module specifier from the module that owns the roster, without query or fragment.",
+          "type": "string",
+          "pattern": "^\\./(?:[^/\\\\?#.][^/\\\\?#]*/)*[^/\\\\?#.][^/\\\\?#]*$"
+        },
+        "needs": {
+          "description": "Names of earlier components whose exports this component reads once wired.",
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/definitions/Name" }
+        }
+      }
+    }
+  }
+}

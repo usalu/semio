@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-raster-raster-host-retirement-bounds = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }

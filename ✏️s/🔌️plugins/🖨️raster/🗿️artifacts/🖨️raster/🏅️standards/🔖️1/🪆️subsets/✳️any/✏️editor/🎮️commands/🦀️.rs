@@ -19,20 +19,8 @@ use semio_s_artifact_raster_raster_mutations::RasterMutation;
 //#region 🪢️TaxonomyMounts
 #[path = "."]
 pub mod commands {
-    #[path = "➕️add-layer/🦀️.rs"]
-    pub mod add_layer;
     #[path = "🌈️apply-filter/🦀️.rs"]
     pub mod apply_filter;
-    #[path = "📷️camera/🦀️.rs"]
-    pub mod camera;
-    #[path = "🗑️delete-layer/🦀️.rs"]
-    pub mod delete_layer;
-    #[path = "📥️drop-layer-kind/🦀️.rs"]
-    pub mod drop_layer_kind;
-    #[path = "📋️duplicate-layer/🦀️.rs"]
-    pub mod duplicate_layer;
-    #[path = "📤️export-png/🦀️.rs"]
-    pub mod export_png;
     #[path = "🪣️fill-region/🦀️.rs"]
     pub mod fill_region;
     #[path = "🫗️fill-selection/🦀️.rs"]
@@ -43,42 +31,25 @@ pub mod commands {
     pub mod mask_from_selection;
     #[path = "🫳️merge-down/🦀️.rs"]
     pub mod merge_down;
-    #[path = "🚚️move-layer/🦀️.rs"]
-    pub mod move_layer;
     #[path = "🖌️paint-stroke/🦀️.rs"]
     pub mod paint_stroke;
-    #[path = "🩹️patch-layer/🦀️.rs"]
-    pub mod patch_layer;
-    #[path = "🧵️patch-layers/🦀️.rs"]
-    pub mod patch_layers;
-    #[path = "🎬️set-active-example/🦀️.rs"]
-    pub mod set_active_example;
     #[path = "🎨️set-brush-color/🦀️.rs"]
     pub mod set_brush_color;
-    #[path = "🖌️set-brush-hardness/🦀️.rs"]
-    pub mod set_brush_hardness;
     #[path = "🌫️set-brush-opacity/🦀️.rs"]
     pub mod set_brush_opacity;
-    #[path = "📏️set-brush-size/🦀️.rs"]
-    pub mod set_brush_size;
     #[path = "🖥️set-composite-viewport/🦀️.rs"]
     pub mod set_composite_viewport;
     #[path = "🌊️set-fill-tolerance/🦀️.rs"]
     pub mod set_fill_tolerance;
-    #[path = "👓️set-layer-visible/🦀️.rs"]
-    pub mod set_layer_visible;
     #[path = "🎭️set-mask-value/🦀️.rs"]
     pub mod set_mask_value;
-    #[path = "🎭️set-paint-target/🦀️.rs"]
-    pub mod set_paint_target;
     #[path = "🎯️set-pixel-selection/🦀️.rs"]
     pub mod set_pixel_selection;
-    #[path = "👁️toggle-layer-visible/🦀️.rs"]
-    pub mod toggle_layer_visible;
     #[path = "🔄️transform-image/🦀️.rs"]
     pub mod transform_image;
     #[path = "🧰️work-app/🦀️.rs"]
     pub mod work_app;
+    pub use semio_s_artifact_raster_raster_editor_commands_2::commands::{add_layer, camera, delete_layer, drop_layer_kind, duplicate_layer, export_png, move_layer, patch_layer, patch_layers, set_active_example, set_brush_hardness, set_brush_size, set_layer_visible, set_paint_target, toggle_layer_visible};
 }
 //#endregion 🪢️TaxonomyMounts
 
@@ -135,3 +106,4 @@ use crate::commands::camera::{set_camera, set_camera_zoom};
 use crate::commands::set_composite_viewport;
 
 //#endregion 🔖️Commands
+

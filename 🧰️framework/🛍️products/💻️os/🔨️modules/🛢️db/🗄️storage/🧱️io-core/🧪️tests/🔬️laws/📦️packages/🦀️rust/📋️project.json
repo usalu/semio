@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-kernel-db-io-core-laws-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

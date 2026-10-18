@@ -1,0 +1,7 @@
+{
+ "name": "bd12",
+ "crates": [
+  "semio-framework-plugin-reactor-turn"
+ ],
+ "note": "BD12 item 3: poll_kernel_turn decomposition in the reactor turn crate"
+}

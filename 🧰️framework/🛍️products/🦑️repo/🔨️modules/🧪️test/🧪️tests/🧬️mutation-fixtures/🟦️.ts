@@ -8,9 +8,9 @@ import vectors from "../🧫️fixtures/🧬️mutation-fixtures/🔣️.json";
 import htmlPairs from "../🧫️fixtures/🌐️html-source-pair/🔣️.json";
 
 import { parse, serialize } from "parse5";
-import { loadCatalogTaxonomy, semanticDescendantNodeRelativePath, semanticDirectoryKindId } from "../../../📚️library/🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy, semanticDescendantNodeRelativePath, semanticDirectoryKindId } from "../../../📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { verifyFixture } from "../../🧷️fixture-evidence/🟦️.ts";
-import { inventoryTaxonomy } from "../../../📚️library/🧹️normalization/🟦️.ts";
+import { inventoryTaxonomy } from "../../../📚️library/🧹️normalization/🔍️inventory-planning/🟦️.ts";
 
 const taxonomy = testTaxonomy(repoRootFromHere());
 const catalog = { id: "thing-v1", capability: "thing-mutate", standardDirectoryName: "🔖️1", subsetDirectoryName: "✳️any", kinds: ["change-value"], vectors: [{ mutationId: "change-value", sourceMutationDirectoryName: vectors.mutation, mutationDirectoryName: vectors.mutation, scenarios: [{ id: "changes-the-value", directoryName: vectors.scenario }] }] };

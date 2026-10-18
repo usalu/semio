@@ -287,6 +287,10 @@ semio-s-artifact-lowpoly-lowpoly-viewer = { path = "../✏️s/🔌️plugins/�
 semio-s-artifact-reasoning-wires = { path = "../✏️s/🔌️plugins/💡️reasoning/🗿️artifacts/🔌️wires/📦️packages/🦀️rust" }
 semio-s-artifact-forms-forms = { path = "../✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/📦️packages/🦀️rust" }
 semio-s-artifact-layout-layout = { path = "../✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-editor = { path = "../✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-editor-commands = { path = "../✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-editor-panels = { path = "../✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-viewer = { path = "../✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-cad-cad = { path = "../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust" }
 semio-s-artifact-cad-cad-viewer = { path = "../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-cad-cad-editor = { path = "../✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }

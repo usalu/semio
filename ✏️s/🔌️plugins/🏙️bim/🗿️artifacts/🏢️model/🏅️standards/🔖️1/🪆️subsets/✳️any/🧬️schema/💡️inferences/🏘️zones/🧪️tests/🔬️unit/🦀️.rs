@@ -1,15 +1,29 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{AreaMeasure, AreaScheme, ModelSnapshot};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::finishes::FinishSurface;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::quantities::ElementQuantity;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{Space, Zone};
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::zones::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use crate::standards::v1::subsets::any::schema::diff::{Assigned, patches::{AreaSchemePatch, SpacePatch, ZonePatch}, Entry, ModelDiff};
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const ZONING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json");
-const ZONING_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/💡️inference/🏘️zones/🔣️.json");
+static ZONING: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/📸️snapshot/🔣️.json"));
+static ZONING_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏘️zones/🏡️zoning/💡️inference/🏘️zones/🔣️.json"));
 
 fn zoning() -> ModelSnapshot {
-    from_json_str(ZONING, JsonMemberPolicy::Reject).expect("the fixture decodes")
+    from_json_str((*ZONING), JsonMemberPolicy::Reject).expect("the fixture decodes")
 }
 
 fn infer(snapshot: &ModelSnapshot) -> ModelInference {
@@ -37,7 +51,7 @@ fn disagreements(expected: &serde_json::Value, actual: &serde_json::Value, path:
 async fn the_subject_reproduces_the_third_party_oracle_table() {
     let inferred = infer(&zoning());
     let produced: serde_json::Value = serde_json::from_str(&table_json(&inferred.zone_totals, &inferred.scheme_totals)).expect("JSON table");
-    let expected: serde_json::Value = serde_json::from_str(ZONING_TABLE).expect("JSON table");
+    let expected: serde_json::Value = serde_json::from_str((*ZONING_TABLE)).expect("JSON table");
     let problems = disagreements(&expected, &produced, "");
     assert!(problems.is_empty(), "{problems:#?}");
 }

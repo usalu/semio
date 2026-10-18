@@ -12,14 +12,26 @@ import { parseInstallationDirectoryV1, installationDirectoryCollision, installat
 import { MODULE_BRIDGE_FILE, MODULE_EXTENSION_ROUTE, moduleRoutePath } from "../../📇️registry/📦️deployment/🟦️.ts";
 import {
   PLUGIN_HOST_SHIM_FILE,
-  PREVIEW2_VENDOR_RELATIVE,
   SHARD_WORKER_FILE,
-  ensurePreview2ShimVendorAt,
-  hostShimSource,
-  pluginComponentBridgeSource,
-  shardWorkerSource,
-  transpilePluginComponent,
   type PluginWebMaterializeContext,
+} from "../../🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts";
+import {
+  PREVIEW2_VENDOR_RELATIVE,
+} from "../../🌐️browser-bundle/🕸️imports/🟦️.ts";
+import {
+  ensurePreview2ShimVendorAt,
+} from "../../🌐️browser-bundle/🏗️materialization/🩹️preview2-shim-patches/🟦️.ts";
+import {
+  hostShimSource,
+} from "../../🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts";
+import {
+  pluginComponentBridgeSource,
+} from "../../🌐️browser-bundle/🏗️materialization/🌉️component-bridge-source/🟦️.ts";
+import {
+  shardWorkerSource,
+} from "../../🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts";
+import {
+  transpilePluginComponent,
 } from "../../🌐️browser-bundle/🏗️materialization/🟦️.ts";
 
 //#region 🔖️Constants

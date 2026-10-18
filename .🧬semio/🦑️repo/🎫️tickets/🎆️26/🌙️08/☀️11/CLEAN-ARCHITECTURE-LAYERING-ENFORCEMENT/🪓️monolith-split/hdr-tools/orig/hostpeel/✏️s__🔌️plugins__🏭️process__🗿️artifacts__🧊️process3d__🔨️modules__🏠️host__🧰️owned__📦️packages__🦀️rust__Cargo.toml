@@ -1,0 +1,47 @@
+[package]
+workspace = "../../../../.."
+name = "semio-s-artifact-process-process3d-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "process3d document store and publication authorities"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-s-artifact-process-process3d-host-retained-cursors/testkit"]
+
+[dependencies]
+semio-s-artifact-process-process3d-host-retained-cursors = { workspace = true }
+semio-framework-job-publication = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
+semio-framework-job-registry = { path = "../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/🗄️registry/📦️packages/🦀️rust" }
+
+framework_hash = { workspace = true }
+machine = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-process-process3d-model = { workspace = true }
+semio-s-artifact-process-process3d-mut-machines = { workspace = true }
+semio-s-artifact-process-process3d-mut-steps = { workspace = true }
+semio-s-artifact-process-process3d-mut-stock = { workspace = true }
+semio-s-artifact-process-process3d-mutations = { workspace = true }
+semio-s-artifact-stdio-semio-brep = { workspace = true }
+semio-s-artifact-stdio-semio-flow = { workspace = true }
+
+[dev-dependencies]
+semio-s-artifact-process-process3d-host-retained-cursors = { workspace = true, features = ["testkit"] }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+serde_json = { workspace = true }
+semio-s-artifact-process-process3d-mutations = { workspace = true, features = ["testkit"] }

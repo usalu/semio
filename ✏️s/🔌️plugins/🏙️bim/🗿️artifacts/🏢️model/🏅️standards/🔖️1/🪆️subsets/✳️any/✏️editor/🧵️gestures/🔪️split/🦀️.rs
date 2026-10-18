@@ -1,9 +1,9 @@
 //! ✂️ The split tool: the pointer hovers a wall of the storey, the cut across it shows where the wall would part, and one click writes the `split-wall` that parts it there, the new
 //! half getting an id minted from the authoring seed. A cut at an end of the wall (or one the model would refuse) shows as a warning and writes nothing. Curtain walls do not split.
 
-use super::opening::nearest_host;
-use super::plane::{axis_point_at, axis_tangent_at, P};
-use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
+use crate::editor::bim::gestures::opening::nearest_host;
+use crate::editor::bim::gestures::plane::{axis_point_at, axis_tangent_at, P};
+use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 
@@ -69,6 +69,4 @@ impl Tool for Split {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

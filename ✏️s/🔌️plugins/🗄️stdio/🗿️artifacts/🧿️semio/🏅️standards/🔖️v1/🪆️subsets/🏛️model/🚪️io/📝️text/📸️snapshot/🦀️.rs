@@ -36,12 +36,12 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
@@ -56,7 +56,7 @@ pub(crate) fn dec_f64(s: &str) -> Result<f64, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
+pub fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> String {
     match opt {
         None => "[0]".to_string(),
         Some(v) => format!("[1,{}]", enc(v)),
@@ -64,7 +64,7 @@ pub(crate) fn encode_option<T>(opt: &Option<T>, enc: impl Fn(&T) -> String) -> S
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
+pub fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
     let inner = strip_brackets(s)?;
     match split_top_level(inner, ',').as_slice() {
         ["0"] => Ok(None),
@@ -74,12 +74,12 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
@@ -108,19 +108,19 @@ pub(crate) fn dec_quat(s: &str) -> Result<SemioQuaternion, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_transform(t: &SemioTransform) -> String {
+pub fn enc_transform(t: &SemioTransform) -> String {
     format!("[{},{},{}]", enc_point3(&t.translation), enc_quat(&t.rotation), enc_point3(&t.scale))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
+pub fn dec_transform(s: &str) -> Result<SemioTransform, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [translation, rotation, scale] = parts.as_slice() else { return Err(format!("transform: expected 3 fields, got {}", parts.len())) };
     Ok(SemioTransform { translation: dec_point3(translation)?, rotation: dec_quat(rotation)?, scale: dec_point3(scale)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
+pub fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
     match k {
         SpatialKind::Site => "S",
         SpatialKind::Building => "B",
@@ -130,7 +130,7 @@ pub(crate) fn enc_spatial_kind(k: &SpatialKind) -> &'static str {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
+pub fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
     match s {
         "S" => Ok(SpatialKind::Site),
         "B" => Ok(SpatialKind::Building),
@@ -141,7 +141,7 @@ pub(crate) fn dec_spatial_kind(s: &str) -> Result<SpatialKind, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_element_class(c: &ElementClass) -> String {
+pub fn enc_element_class(c: &ElementClass) -> String {
     match c {
         ElementClass::Wall => "WA".to_string(),
         ElementClass::Slab => "SL".to_string(),
@@ -157,7 +157,7 @@ pub(crate) fn enc_element_class(c: &ElementClass) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_element_class(s: &str) -> Result<ElementClass, String> {
+pub fn dec_element_class(s: &str) -> Result<ElementClass, String> {
     match s {
         "WA" => Ok(ElementClass::Wall),
         "SL" => Ok(ElementClass::Slab),
@@ -174,7 +174,7 @@ pub(crate) fn dec_element_class(s: &str) -> Result<ElementClass, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_geometry_ref(g: &GeometryRef) -> String {
+pub fn enc_geometry_ref(g: &GeometryRef) -> String {
     match g {
         GeometryRef::None => "N".to_string(),
         GeometryRef::Brep { brep_id } => format!("B[{}]", enc_str(brep_id)),
@@ -183,7 +183,7 @@ pub(crate) fn enc_geometry_ref(g: &GeometryRef) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
+pub fn dec_geometry_ref(s: &str) -> Result<GeometryRef, String> {
     if s == "N" {
         return Ok(GeometryRef::None);
     }
@@ -230,43 +230,43 @@ pub(crate) fn dec_property(s: &str) -> Result<Property, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_property_set(ps: &PropertySet) -> String {
+pub fn enc_property_set(ps: &PropertySet) -> String {
     format!("[{},{}]", enc_str(&ps.name), enc_list(&ps.properties, enc_property))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_property_set(s: &str) -> Result<PropertySet, String> {
+pub fn dec_property_set(s: &str) -> Result<PropertySet, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, properties] = parts.as_slice() else { return Err(format!("property set: expected 2 fields, got {}", parts.len())) };
     Ok(PropertySet { name: dec_str(name)?, properties: dec_list(properties, dec_property)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_spatial_node(n: &SpatialNode) -> String {
+pub fn enc_spatial_node(n: &SpatialNode) -> String {
     format!("[{},{},{},{},{}]", enc_str(&n.id), enc_spatial_kind(&n.kind), enc_str(&n.name), encode_option(&n.parent_id, |v: &String| enc_str(v)), enc_transform(&n.placement))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
+pub fn dec_spatial_node(s: &str) -> Result<SpatialNode, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, name, parent_id, placement] = parts.as_slice() else { return Err(format!("spatial node: expected 5 fields, got {}", parts.len())) };
     Ok(SpatialNode { id: dec_str(id)?, kind: dec_spatial_kind(kind)?, name: dec_str(name)?, parent_id: decode_option(parent_id, dec_str)?, placement: dec_transform(placement)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_element(e: &SemioModelElement) -> String {
+pub fn enc_element(e: &SemioModelElement) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&e.id), enc_element_class(&e.class), enc_transform(&e.placement), enc_geometry_ref(&e.geometry), encode_option(&e.spatial_id, |v: &String| enc_str(v)), enc_list(&e.psets, enc_property_set),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_element(s: &str) -> Result<SemioModelElement, String> {
+pub fn dec_element(s: &str) -> Result<SemioModelElement, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, class, placement, geometry, spatial_id, psets] = parts.as_slice() else { return Err(format!("element: expected 6 fields, got {}", parts.len())) };
     Ok(SemioModelElement { id: dec_str(id)?, class: dec_element_class(class)?, placement: dec_transform(placement)?, geometry: dec_geometry_ref(geometry)?, spatial_id: decode_option(spatial_id, dec_str)?, psets: dec_list(psets, dec_property_set)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_relation_kind(k: &RelationKind) -> String {
+pub fn enc_relation_kind(k: &RelationKind) -> String {
     match k {
         RelationKind::Aggregates => "AG".to_string(),
         RelationKind::ContainedIn => "CI".to_string(),
@@ -278,7 +278,7 @@ pub(crate) fn enc_relation_kind(k: &RelationKind) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
+pub fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
     match s {
         "AG" => Ok(RelationKind::Aggregates),
         "CI" => Ok(RelationKind::ContainedIn),
@@ -291,12 +291,12 @@ pub(crate) fn dec_relation_kind(s: &str) -> Result<RelationKind, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_relation(r: &ModelRelation) -> String {
+pub fn enc_relation(r: &ModelRelation) -> String {
     format!("[{},{},{},{}]", enc_str(&r.id), enc_relation_kind(&r.kind), enc_str(&r.from), enc_str(&r.to))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_relation(s: &str) -> Result<ModelRelation, String> {
+pub fn dec_relation(s: &str) -> Result<ModelRelation, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, kind, from, to] = parts.as_slice() else { return Err(format!("relation: expected 4 fields, got {}", parts.len())) };
     Ok(ModelRelation { id: dec_str(id)?, kind: dec_relation_kind(kind)?, from: dec_str(from)?, to: dec_str(to)? })

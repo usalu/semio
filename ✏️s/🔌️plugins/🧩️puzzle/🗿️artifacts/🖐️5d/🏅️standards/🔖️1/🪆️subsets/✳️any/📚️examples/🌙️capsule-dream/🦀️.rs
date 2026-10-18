@@ -48,7 +48,7 @@ pub fn dsl_bytes() -> &'static [u8] {
 fn repository_file(name: &str) -> &'static [u8] {
     static BYTES: std::sync::OnceLock<&'static [u8]> = std::sync::OnceLock::new();
     BYTES.get_or_init(|| {
-        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|candidate| candidate.join("nx.json").is_file()).expect("the repository root holds nx.json");
+        let root = semio_framework_test_fixtures::repo_root!();
         Box::leak(std::fs::read(root.join(name)).unwrap_or_else(|error| panic!("{name}: {error}")).into_boxed_slice())
     })
 }

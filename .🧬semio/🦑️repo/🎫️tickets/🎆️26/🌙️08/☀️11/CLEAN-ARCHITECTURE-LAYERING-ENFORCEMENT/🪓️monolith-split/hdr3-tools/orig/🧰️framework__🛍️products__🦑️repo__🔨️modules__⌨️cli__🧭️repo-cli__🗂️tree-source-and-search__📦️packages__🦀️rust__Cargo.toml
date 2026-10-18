@@ -1,0 +1,38 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-framework-repo-cli-tree-source-and-search"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "semio repo CLI tree source: the filesystem tree source, the model ids and the list-verb stream options"
+
+[package.metadata.semio]
+role = "library"
+id = "repo-cli-tree-source-and-search"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-repo-cli-command-framework = { path = "../../../🎮️command-framework/📦️packages/🦀️rust" }
+semio-framework-repo-cli-event-stream = { path = "../../../../📡️event-stream/📦️packages/🦀️rust" }
+semio-framework-repo-codebase = { path = "../../../../../🗂️codebase/📦️packages/🦀️rust" }
+semio-framework-repo-events = { path = "../../../../../📡️events/📦️packages/🦀️rust" }
+semio-framework-repo-graphql = { path = "../../../../../🔗️graphql/📦️packages/🦀️rust" }
+semio-framework-repo-identity = { path = "../../../../../🪪️identity/📦️packages/🦀️rust" }
+semio-framework-repo-languages = { path = "../../../../../🗣️languages/📦️packages/🦀️rust" }
+semio-framework-repo-model = { path = "../../../../../📐️model/📦️packages/🦀️rust" }
+semio-framework-repo-search = { path = "../../../../../🔎️search/📦️packages/🦀️rust" }
+semio-framework-repo-tree = { path = "../../../../../🌳️tree/📦️packages/🦀️rust" }
+semio-framework-repo-workspace = { path = "../../../../../🏠️workspace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+
+[dev-dependencies]

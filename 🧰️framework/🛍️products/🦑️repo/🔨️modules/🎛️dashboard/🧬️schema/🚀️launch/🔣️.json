@@ -147,6 +147,49 @@
         "BUN_RUNTIME_TRANSPILER_CACHE_PATH": "0",
         "NODE_DISABLE_COMPILE_CACHE": "1"
       }
+    },
+    "InputOrderCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "inputs",
+        "patch"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "inputs": {
+          "type": "array",
+          "items": {
+            "type": "object"
+          }
+        },
+        "patch": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "op",
+              "path"
+            ],
+            "properties": {
+              "op": {
+                "enum": [
+                  "add",
+                  "remove",
+                  "replace"
+                ]
+              },
+              "path": {
+                "type": "string"
+              },
+              "value": {}
+            }
+          }
+        }
+      }
     }
   }
 }

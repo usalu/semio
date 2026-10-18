@@ -1,6 +1,6 @@
 //! 🔺️ Diff constructor for `RenameStorey`: a one-field storey patch; renaming to the current name is a `mutation.no-op` warning.
 
-use super::RenameStorey;
+use crate::standards::v1::subsets::any::schema::mutations::rename_storey::RenameStorey;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::StoreyPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

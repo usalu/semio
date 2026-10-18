@@ -1,0 +1,78 @@
+package main
+
+import (
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"sort"
+	"strings"
+)
+
+func recvName(fd *ast.FuncDecl) string {
+	if fd.Recv == nil || len(fd.Recv.List) == 0 {
+		return ""
+	}
+	t := fd.Recv.List[0].Type
+	if s, ok := t.(*ast.StarExpr); ok {
+		t = s.X
+	}
+	if id, ok := t.(*ast.Ident); ok {
+		return id.Name
+	}
+	if ix, ok := t.(*ast.IndexExpr); ok {
+		if id, ok := ix.X.(*ast.Ident); ok {
+			return id.Name
+		}
+	}
+	return "?"
+}
+
+func main() {
+	fs := token.NewFileSet()
+	f, err := parser.ParseFile(fs, os.Args[1], nil, parser.ParseComments)
+	if err != nil {
+		panic(err)
+	}
+	for _, d := range f.Decls {
+		start := d.Pos()
+		var doc *ast.CommentGroup
+		kind, name := "", ""
+		switch x := d.(type) {
+		case *ast.FuncDecl:
+			doc = x.Doc
+			kind = "func"
+			name = x.Name.Name
+			if r := recvName(x); r != "" {
+				kind = "method"
+				name = r + "." + name
+			}
+		case *ast.GenDecl:
+			doc = x.Doc
+			kind = x.Tok.String()
+			var names []string
+			for _, s := range x.Specs {
+				switch sp := s.(type) {
+				case *ast.TypeSpec:
+					names = append(names, sp.Name.Name)
+				case *ast.ValueSpec:
+					for _, n := range sp.Names {
+						names = append(names, n.Name)
+					}
+				case *ast.ImportSpec:
+					names = append(names, sp.Path.Value)
+				}
+			}
+			sort.Strings(names)
+			name = strings.Join(names, ",")
+			if len(name) > 60 {
+				name = name[:60]
+			}
+		}
+		if doc != nil {
+			start = doc.Pos()
+		}
+		fmt.Printf("%d-%d\t%s\t%s\n", fs.Position(start).Line, fs.Position(d.End()).Line, kind, name)
+	}
+}

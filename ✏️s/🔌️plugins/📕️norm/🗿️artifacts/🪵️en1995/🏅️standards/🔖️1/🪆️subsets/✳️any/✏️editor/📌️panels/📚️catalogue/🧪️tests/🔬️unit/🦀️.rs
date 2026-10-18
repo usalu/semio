@@ -15,7 +15,7 @@ async fn renders_this_standards_catalogue_headline() {
 }
 
 fn projected(locale: Locale) -> String {
-    let node = render(semio_s_artifact_norm_en1995_model::examples(), locale, "norm.catalogue").expect("catalogue");
+    let node = render(semio_s_artifact_norm_en1995_examples::examples(), locale, "norm.catalogue").expect("catalogue");
     semio_framework_plugin::artifact_app_laws::project_and_retire_fixture_tree(semio_framework_plugin::built_to_component_tree(node)).expect("project")
 }
 
@@ -23,7 +23,7 @@ fn projected(locale: Locale) -> String {
 fn renders_reference_tables_with_examples() {
     let json = projected(Locale::En);
     assert!(json.contains("norm-catalogue.examples"), "{json}");
-    for example in semio_s_artifact_norm_en1995_model::examples() {
+    for example in semio_s_artifact_norm_en1995_examples::examples() {
         assert!(json.contains(&format!("norm-catalogue.{}", example.id())), "missing example {}: {json}", example.id());
     }
     for table in reference_tables(Locale::En) {

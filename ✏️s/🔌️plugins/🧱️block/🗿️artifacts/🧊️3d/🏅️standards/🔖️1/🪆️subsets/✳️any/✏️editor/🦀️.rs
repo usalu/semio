@@ -28,9 +28,7 @@ use semio_s_artifact_block_3d_editor_commands::{edit, set_active_example};
 use semio_s_artifact_block_3d_editor_commands::{hover_surface, leave_surface, place_vortex, set_brush_flip, set_brush_radius, set_brush_vortex_kind};
 use semio_s_artifact_block_3d_editor_commands::{set_active_representation, set_window_arrangement, set_window_representations, set_window_spacing, toggle_window_representation};
 use semio_s_artifact_block_3d_editor_config::{Block3dConfig, Block3dConfigMutation};
-use semio_s_artifact_block_3d_editor_modes::edit as edit_mode;
-use semio_s_artifact_block_3d_editor_modes::edit::windows::world;
-use semio_s_artifact_block_3d_editor_modes::edit::windows::world::transient::{Block3dBrushPreview, Block3dWorldWindowTransientOwner, SetBrushPreview};
+use semio_s_artifact_block_3d_editor_modes::{edit as edit_mode, edit::windows::world, edit::windows::world::transient::{Block3dBrushPreview, Block3dWorldWindowTransientOwner, SetBrushPreview}, BLOCK3D_PLAY_APP_ID};
 use crate::panels::{document as document_panel, inspection as inspection_panel};
 use semio_s_artifact_block_3d_editor_terminology::block3d_labels;
 use semio_s_plugin_block::BlockCamera3d;
@@ -71,7 +69,7 @@ use semio_framework::{DomainTopology, GranularityDefinition, HierarchyProvider, 
 use semio_framework_plugin::app::{Dialect, InteractionView};
 use semio_framework_pack_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const BLOCK3D_DEFAULT_WINDOW_ID: &str = "block3d-world";

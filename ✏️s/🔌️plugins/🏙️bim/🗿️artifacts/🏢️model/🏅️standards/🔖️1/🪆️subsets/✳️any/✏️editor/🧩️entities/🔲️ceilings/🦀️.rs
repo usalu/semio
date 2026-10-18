@@ -1,7 +1,7 @@
 //! 🔲️ The ceiling rows of the entity table: how a ceiling and a ceiling type read off the snapshot, how an edited value becomes a `set-ceiling`, `set-ceiling-boundary` or `set-ceiling-type` mutation,
 //! what a new ceiling or ceiling type is, and the picker of the ceiling type row.
 
-use super::{container, first, holes_text, layers, loop_text, number, parse_holes, parse_loop, parse_number, parse_text, partial, rectangle, rename_element, Created, FieldRow};
+use crate::editor::bim::entities::{container, first, parse_slope, slope_text, holes_text, layers, loop_text, number, parse_holes, parse_loop, parse_number, parse_text, partial, rectangle, rename_element, Created, FieldRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::{ModelSnapshot, Slope}};
 use semio_framework_plugin::plugin_app_close_prelude::InputKind;
@@ -17,21 +17,6 @@ pub fn type_choices(snapshot: &ModelSnapshot, _: &BimLabels) -> Vec<(String, Str
 //#endregion 🔖️Choices
 
 //#region 🔖️Writes
-/// 📐️ The text of a slope: its fall direction and its angle in radians, empty when the ceiling is level.
-pub fn slope_text(slope: Option<Slope>) -> String {
-    slope.map_or_else(String::new, |slope| format!("{}, {}", number(slope.direction), number(slope.angle)))
-}
-
-/// 📐️ The slope a text names: `direction, angle` in radians, empty for none; text that is neither is no slope at all.
-pub fn parse_slope(text: &str) -> Option<Option<Slope>> {
-    let text = text.trim();
-    if text.is_empty() {
-        return Some(None);
-    }
-    let (direction, angle) = text.split_once(',')?;
-    Some(Some(Slope { direction: parse_number(direction)?, angle: parse_number(angle)? }))
-}
-
 fn write_slope(_: &ModelSnapshot, id: &str, value: &str) -> Option<ModelMutation> {
     partial::<crate::standards::v1::subsets::any::schema::mutations::set_ceiling::SetCeiling, _>(id, "slope", &Assigned::new(parse_slope(value)?)).map(ModelMutation::SetCeiling)
 }

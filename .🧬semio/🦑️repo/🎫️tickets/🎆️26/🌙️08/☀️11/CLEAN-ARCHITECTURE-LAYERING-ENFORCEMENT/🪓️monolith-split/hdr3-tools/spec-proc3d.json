@@ -1,0 +1,5 @@
+{"owner": "semio-s-artifact-procedural-3d-editor", "suffix": "unit-tests", "kind": "artifact",
+ "new_root": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🧪️tests/🔬️laws/🦀️.rs",
+ "moves": [
+  {"mount_file": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌉️wasm/🦀️.rs", "module_path": "", "mount_name": "mounted_registry", "as": "mounted_registry"}
+ ]}

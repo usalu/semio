@@ -2,7 +2,7 @@
 //! sections, default panel and materials follow the create rules; a patch that changes nothing is a no-op. Every curtain wall of the type follows by inference.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{grid_flaw, material_flaw, panel_flaw, profile_flaw, Flaw};
-use super::SetCurtainWallType;
+use crate::standards::v1::subsets::any::schema::mutations::set_curtain_wall_type::SetCurtainWallType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

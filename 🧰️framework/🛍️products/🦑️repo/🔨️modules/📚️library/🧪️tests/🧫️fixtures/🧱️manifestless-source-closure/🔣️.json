@@ -75,8 +75,20 @@
           "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts",
           "language": "typescript",
           "anchors": [
-            "export function shardWorkerSource",
-            "export async function transpilePluginComponentAsync",
+            "export async function transpilePluginComponentAsync"
+          ]
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
+            "export function shardWorkerSource"
+          ]
+        },
+        {
+          "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🪢️host-shim-source/🟦️.ts",
+          "language": "typescript",
+          "anchors": [
             "export function hostShimSource"
           ]
         }

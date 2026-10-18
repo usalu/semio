@@ -1,5 +1,11 @@
-use super::fixtures::{case, CASES};
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_framework_geometry::mesh::TriMesh;
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::fixtures::{case, CASES};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{MaterialPatch, StoreyPatch}, ModelDiff}, snapshot::TopConstraint};
 use semio_framework_geometry::placement::ZPlane;
@@ -141,7 +147,7 @@ async fn five_hundred_walls_are_tessellated_within_a_generous_bound() {
 /// 🧫️ A case with more triangles than this commits no meshes (a finely tessellated arc would weigh half a megabyte); its measures are checked against the closed forms only.
 const MESH_LIMIT: usize = 2000;
 
-const FIXTURES_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids");
+const FIXTURES_ROOT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids");
 
 fn welded_row(solid: &ElementSolid) -> serde_json::Value {
     let mesh = solid.mesh().welded();

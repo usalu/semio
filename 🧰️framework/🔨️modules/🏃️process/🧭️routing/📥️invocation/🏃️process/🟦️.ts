@@ -169,3 +169,7 @@ export function readIssuedScriptProcessEnvelopeV1(invocation:ScriptInvocation):S
 
 /** 🪪️ Binds a Native owner to this enrollment's exact issued body control before physical effects. */
 export function requireAcceptedPhysicalCleanupControlV1(token:AcceptedPhysicalCleanupV1,control:ResourceLeaseControl):void{const accepted=cleanupOf(token);if(controls.get(control)!==accepted.body)throw Error("Exact accepted physical body control required");}
+
+
+/** 🧬️ Requires exact issued control ancestry independently of equivalent inherited restrictions. */
+export function requireIssuedResourceControlDescendantV1(ancestor:ResourceLeaseControl,control:ResourceLeaseControl):void{requireIssuedResourceControlV1(ancestor);requireIssuedResourceControlV1(control);const expected=controls.get(ancestor)!,policy=schema.definitions.ControlDescendant.const;if(!policy.includeSelf||!policy.liveIssuance||policy.restrictionEquivalence)throw Error("Closed actual control lineage policy required");for(let row:ControlScope|undefined=controls.get(control);row;row=row.parentControl)if(row===expected)return;throw Error("Exact issued resource control descendant required");}

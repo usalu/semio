@@ -23,7 +23,7 @@ use semio_framework_plugin::UiAssemblyResult;
 // re-export list (same gap the sibling editor surface's own note documents).
 use semio_framework_plugin::app::InteractionView;
 use {semio_framework_plugin::ArtifactViewer,semio_framework_artifact_reference::Dialect,semio_framework_plugin::ViewEmit,semio_framework_plugin::Viewer};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

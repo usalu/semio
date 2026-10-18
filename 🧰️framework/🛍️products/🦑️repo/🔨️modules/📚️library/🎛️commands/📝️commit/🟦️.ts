@@ -1,7 +1,8 @@
 /** 📝️ `micro-commit` and `commit` commands.
  * @see 📜️script.ts
  */
-import { runCommit, runMicroCommit } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { runCommit } from "./🔀️run-commit/🟦️.ts";
+import { runMicroCommit } from "./🪙️micro-commit/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
 //#region 🔖️MicroCommitScript

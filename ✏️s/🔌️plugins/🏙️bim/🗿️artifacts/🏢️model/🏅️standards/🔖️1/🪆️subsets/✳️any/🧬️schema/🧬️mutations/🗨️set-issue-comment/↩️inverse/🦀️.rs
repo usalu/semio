@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetIssueComment`: an absolute `SetIssueComment` restoring the base value of exactly the fields the forward really changes, none when the comment is absent or nothing changes.
 
-use super::SetIssueComment;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_issue_comment::SetIssueComment;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetIssueComment, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetIssueComment, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_issue_comment::SetIssueComment>,
+{
     let Some(record) = base.issue_comments.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetIssueComment, base: &ModelSnapshot) -> Vec<ModelMuta
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetIssueComment(SetIssueComment::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetIssueComment::from_patch(payload.id.clone(), restore))]
 }

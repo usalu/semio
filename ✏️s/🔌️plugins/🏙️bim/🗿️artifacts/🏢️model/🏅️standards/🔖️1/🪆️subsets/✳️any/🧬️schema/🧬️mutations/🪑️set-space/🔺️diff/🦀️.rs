@@ -2,7 +2,7 @@
 //! storey, a new boundary must be drawable (finite seed, or an outline of three finite vertices enclosing area), a zone must exist and a
 //! finish must name a material; providing only equal values is a no-op. Outline, area, volume and finish areas stay inferred.
 
-use super::SetSpace;
+use crate::standards::v1::subsets::any::schema::mutations::set_space::SetSpace;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::{ModelSnapshot, SpaceBoundary, Vertex}};
 use protocol::{MutationOutcome, OutcomeCode};
 

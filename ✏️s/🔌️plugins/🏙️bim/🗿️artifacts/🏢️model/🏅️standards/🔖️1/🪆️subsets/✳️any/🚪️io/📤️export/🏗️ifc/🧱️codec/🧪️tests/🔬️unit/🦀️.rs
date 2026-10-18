@@ -1,4 +1,17 @@
-use super::*;
+use semio_s_artifact_stdio_contract::part21::Part21Document;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::decode_ifc2x3;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::encode_ifc2x3;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
+#[allow(unused_imports)]
+use std::collections::BTreeSet;
+use crate::standards::v1::subsets::any::io::export::ifc::codec::*;
 use semio_s_artifact_stdio_contract::part21::{Part21Header, Part21Instance, Part21Value};
 
 fn header(schema: &str) -> Part21Header {

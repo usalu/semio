@@ -9,7 +9,7 @@ import {acquireQueuedResourceLease} from "../../../../../../../../../🔨️modu
 import {type ScriptInvocation} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runOwnedCommand,type OwnedCommandOptions} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {readNativeOwnerCapabilities} from "../../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import callerSchema from "../../../../../🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
+import callerSchema from "../../../../../⚡️caching/🚀️bootstrap/🔌️nx-plugin/📤️arguments/🧬️schema/📥️native-caller.json";
 import schema from "../../../../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json";
 import {cargoExecutionSchemaV1 as cargoExecutionSchema} from "../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🦀️execution/🟦️.ts";
 

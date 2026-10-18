@@ -1,0 +1,1 @@
+{"name": "hdr3-pre-dock", "crates": ["semio-framework-os-renderer-wgpu-dock"], "base": {"rev": "7880cc36f78", "crates": ["semio-framework-os-renderer-wgpu-dock"]}, "note": "pre-check"}

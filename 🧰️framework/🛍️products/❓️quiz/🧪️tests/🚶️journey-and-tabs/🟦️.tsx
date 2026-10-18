@@ -5,12 +5,16 @@
  */
 import { act, cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import { type HttpTransport } from "@semio-tech/framework-server";
 import { handleActorId, learnerTag, type RecordAnswerCommand } from "@semio-tech/quiz";
 import { DEFAULT_BOARD, ProctorClient, ProctorUnavailable, QuizApp, QuizSession, lastSubmittedRunOf, learnerName, localStore, memoryStorageOrigin, newId, openRunOf, overallLeaderboard, quizText, shownLeaderboard, type PresenceConnect, type PresenceSocket } from "@semio-tech/quiz-react";
 import { quizStylesheet as stylesheet } from "@semio-tech/quiz-react/stylesheet";
 import { QUIZ, CATALOG, decoder, PROJECTION_LAG, FakeProctor, sloppyAnswer, seedAnonymousRival, TIMING, QUIET_PRESENCE, navbar, app, answerCurrentTask, sessionOn, startedRun, classification, everyItemTo } from "../🧰️learner-journey-kit/🟦️.tsx";
+
+beforeAll(async () => {
+  await Promise.all([import("../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx"), import("../../🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx")]);
+}, 180_000);
 
 describe("🚶️ learner journey", () => {
   it("goes from the introduction through a submitted run to the leaderboard and resumes after a reload", { timeout: 60_000 }, async () => {

@@ -139,7 +139,6 @@ pub use history_read_admission::PreparedHistoryReadRetirement;
 
 use semio_framework_os_store_retirement::resident_backing;
 
-
 pub(crate) use semio_framework_value_snapshot_read::{SnapshotReadRegistryHandle, SnapshotReadRegistryAliasRetirement, snapshot_registry_alias_demands, snapshot_registry_alias_close_step};
 pub use semio_framework_value_snapshot_read::snapshot_read_projection;
 pub use semio_framework_value_snapshot_read::SnapshotReadProjection;
@@ -153,9 +152,7 @@ use semio_framework_os_spr::conflict::ProtocolConflictRetirement as ArtifactStor
 
 use semio_framework_value::retirement::frame::admit_retirement_frame as admit_artifact_retirement;
 
-
 use semio_framework_value::factory::FactorySharedRetirement as ReturnedSnapshotReadRetirement;
-
 
 //#endregion 🧬️OpaqueSnapshotRead
 use semio_framework_os_store_text_io::operation_identity;
@@ -176,7 +173,6 @@ use replay::{PendingLocalStep,PendingReprojection,ReprojectionAdvance,TailStep};
 //#endregion 🔖️Schemas
 //#region 🔖️Composition
 
-
 use semio_framework_os_store_child::artifact_child_retained_clone;
 
 /// 🏠️ The ownership stamp placed on the CHILD's own `ArtifactEnvelope.owner` (not only on
@@ -188,12 +184,11 @@ pub use artifact_child_owner_schema::OwnerRef;
 
 pub use semio_framework_os_store_link_schema::{ArtifactLink,LinkPin};
 
-
 //#region 🔖️CompositionDsl
 pub use semio_framework_os_store_child as artifact_child;
 use artifact_child::{ArtifactChild, ArtifactChildMaterializationError, ArtifactChildRetainedParts, ChildRef};
-use artifact_child::{ArtifactChildLocalText, artifact_child_from_record, artifact_child_spec, artifact_child_spec_controlled, artifact_child_spec_producer, artifact_child_to_record, artifact_link_from_record, artifact_link_from_record_controlled, artifact_link_spec, artifact_link_spec_controlled, artifact_link_spec_producer, artifact_link_to_record, artifact_link_to_record_controlled, link_pin_borrowed_spec, link_pin_from_record, link_pin_from_record_controlled, link_pin_spec, link_pin_spec_controlled, link_pin_spec_producer, link_pin_to_record, link_pin_to_record_controlled, owner_ref_from_record, owner_ref_spec, owner_ref_spec_controlled, owner_ref_spec_producer, owner_ref_to_record, validate_link_pin_record};
-
+use artifact_child::{ArtifactChildLocalText, artifact_child_from_record, artifact_child_spec, artifact_child_spec_controlled, artifact_child_spec_producer, artifact_child_to_record};
+use semio_framework_os_store_link_schema::{artifact_link_from_record, artifact_link_from_record_controlled, artifact_link_spec, artifact_link_spec_controlled, artifact_link_spec_producer, artifact_link_to_record, artifact_link_to_record_controlled, link_pin_borrowed_spec, link_pin_from_record, link_pin_from_record_controlled, link_pin_spec, link_pin_spec_controlled, link_pin_spec_producer, link_pin_to_record, link_pin_to_record_controlled, validate_link_pin_record};
 
 //#endregion 🔖️CompositionDsl
 //#endregion 🔖️Composition
@@ -205,7 +200,6 @@ use artifact_child::{ArtifactChildLocalText, artifact_child_from_record, artifac
 //#region 📡️Events
 //#endregion 📡️Events
 //#endregion 🔮️Projection
-
 
 //#region 🔖️EphemeralLanes
 
@@ -317,189 +311,20 @@ pub use sqlite_snapshot_native_encoding::encode_sqlite_snapshot_record_native;
 //#region 🗃️BoundedArtifactStoreOwners
 //#endregion 🗃️BoundedArtifactStoreOwners
 
-
 //#endregion 🔖️CodecRegistry
 //#region 🔖️DialectMigration
 //#endregion 🔖️DialectMigration
 //#region 🔖️MergeHelpers
 
-
 //#endregion 🔖️MergeHelpers
 //#region 🔖️Config
 
-
 pub use semio_framework_mutation_diff::{KeyedRow,KeyedRows,keyed_rows_apply,keyed_rows_inverse,keyed_rows_changing,keyed_rows_absorb};
 
-/// 🎚️ Generates `$set`, the per-field set mutations of `$record`: one `Set…(value)` variant per field whose diff sets that one
-/// slot of `$diff` (empty when the base already holds the value) and whose inverse is the same variant carrying the base value.
-/// There is deliberately no whole-record variant: a caller holding a whole next record dispatches `$set::setting(&base, &next)`, one set
-/// mutation per changed field. (The one exception is an ephemeral transient root, whose transfer moves a whole root — see
-/// `transient_root!` in the plugin crate.) The enum owns its leaf descriptors (`owner/kind`), its `{"kind": …, "value": …}` wire shape
-/// and semantic value lowering. Representation owners explicitly declare their text and binary codecs.
-#[macro_export]
-macro_rules! field_set_mutations {
-    (
-        record: $record:ident,
-        diff: $diff:ident,
-        set: $set:ident,
-        owner: $owner:literal,
-        payload_schema: $schema:literal,
-        emoji: $emoji:literal,
-        fields: { $($field:ident : $ty:ty => $variant:ident $kind:literal),+ $(,)? } $(,)?
-    ) => {
-        #[doc = concat!("🎚️ The set mutations of [`", stringify!($record), "`].")]
-        #[derive(Clone, Debug, PartialEq, $crate::__value::RetainedClone)]
-        pub enum $set {
-            $($variant($ty)),+
-        }
+#[macro_use]
+#[path = "🧶️config-record-macros/🦀️.rs"]
+mod config_record_macros;
 
-        impl $crate::snapshot_clone_preparation::ConfigApplyMutation<$record> for $set {
-            fn exchange(self, post: &mut $record) -> Result<Self, ($crate::__value::ValueError, Self)> {
-                Ok(match self {
-                    $(Self::$variant(value) => Self::$variant(std::mem::replace(&mut post.$field, value))),+
-                })
-            }
-        }
-
-        impl $crate::__value::retirement::RetireOwned for $set {
-            fn retirement(self)->Box<dyn $crate::__value::retirement::RetirementCursor>{match self{$(Self::$variant(original)=>$crate::__value::retirement::RetireOwned::retirement(original)),+}}
-            fn retirement_birth_bytes(&self)->Option<usize>{match self{$(Self::$variant(original)=>$crate::__value::retirement::RetireOwned::retirement_birth_bytes(original)),+}}
-            fn controlled_retirement_supported()->bool{true}
-        }
-
-        impl $crate::__value::ToValue for $set {
-            fn to_value(&self) -> $crate::__value::DslValue {
-                match self {
-                    $(Self::$variant(value) => $crate::__value::DslValue::object(vec![
-                        ("kind".to_string(), $crate::__value::DslValue::String($kind.to_string())),
-                        ("value".to_string(), $crate::__value::ToValue::to_value(value)),
-                    ]),)+
-                }
-            }
-        }
-
-        impl $crate::__value::FromValue for $set {
-            fn from_value(value: $crate::__value::DslValue) -> Result<Self, $crate::__value::ValueError> {
-                let entries = value.into_object()?;
-                if let Some((member, _)) = entries.iter().find(|(key, _)| key != "kind" && key != "value") {
-                    return Err($crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, format!("unknown {} member {member}", stringify!($set))));
-                }
-                let kind = match entries.iter().find(|(key, _)| key == "kind") {
-                    Some((_, $crate::__value::DslValue::String(kind))) => kind.clone(),
-                    _ => return Err($crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, concat!(stringify!($set), " requires a string kind"))),
-                };
-                let entry = |name: &str| {
-                    entries
-                        .iter()
-                        .find(|(key, _)| key == name)
-                        .map(|(_, value)| value.clone())
-                        .ok_or_else(|| $crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, format!("{} {kind} requires {name}", stringify!($set))))
-                };
-                $(if kind == $kind {
-                    return Ok(Self::$variant(<$ty as $crate::__value::FromValue>::from_value(entry("value")?).map_err(|error| error.under("value"))?));
-                })+
-                Err($crate::__value::ValueError::new($crate::__value::ValueRefusalKind::InvalidValue, format!("unknown {} kind {kind}", stringify!($set))))
-            }
-        }
-
-        impl $crate::Mutation<$record> for $set {
-            type Diff = $diff;
-
-            const DESCRIPTORS: &'static [$crate::MutationLeafDescriptor] = &[
-                $($crate::MutationLeafDescriptor {
-                    schema_version: 1,
-                    owner: concat!($owner, "/", $kind),
-                    semantic_kind: $kind,
-                    display_name: $kind,
-                    emoji: $emoji,
-                    aggregate_variant: stringify!($variant),
-                    payload_schema: $schema,
-                    text_opcode: None,
-                    binary_tag: None,
-                    invertibility: $crate::MutationInvertibility::ExplicitMutation,
-                    diff_participation: $crate::MutationDiffParticipation::Detect,
-                    outcome_classes: &[$crate::MutationOutcomeClass::Applied],
-                    composition: $crate::MutationComposition::Atomic,
-                    required_language_surfaces: &[$crate::MutationLanguageSurface::Rust, $crate::MutationLanguageSurface::JsonSchema],
-                }),+
-            ];
-
-            fn descriptor(&self) -> &'static $crate::MutationLeafDescriptor {
-                let variant = match self {
-                    $(Self::$variant(_) => stringify!($variant)),+
-                };
-                Self::DESCRIPTORS.iter().find(|descriptor| descriptor.aggregate_variant == variant).expect("every set mutation variant declares its descriptor")
-            }
-
-            fn diff(&self, base: &$record) -> $crate::MutationOutcome<$diff> {
-                match self {
-                    $(Self::$variant(value) => {
-                        if base.$field == *value {
-                            return $crate::MutationOutcome::empty();
-                        }
-                        $crate::MutationOutcome::new($diff { $field: Some(value.clone()), ..<$diff as Default>::default() })
-                    })+
-                }
-            }
-
-            fn inverse(&self, base: &$record) -> Result<Vec<Self>, $crate::__value::ValueError> {
-                Ok(vec![match self {
-                    $(Self::$variant(_) => Self::$variant(base.$field.clone())),+
-                }])
-            }
-        }
-
-        impl $set {
-            #[doc = concat!("🎚️ The set mutations that turn `base` into `next`: one per field where they differ, in field order.")]
-            pub fn setting(base: &$record, next: &$record) -> Vec<Self> {
-                let mut mutations = Vec::new();
-                $(if base.$field != next.$field {
-                    mutations.push(Self::$variant(next.$field.clone()));
-                })+
-                mutations
-            }
-        }
-
-    };
-}
-
-/// 🎯️ Declares a config record's sparse diff ([`sparse_record_diff!`]), its per-field set mutations ([`field_set_mutations!`]; no
-/// whole-record variant, callers dispatch `$set::setting(&base, &next)`) and its `ConfigRecord` mark in one invocation: `config_record! { record: X, diff: XDiff, set: XSet, owner: "…", payload_schema:
-/// "…", emoji: "…", fields: { field: Type => SetField "set-field", … } }`. Configs that keep a hand-written mutation enum use
-/// `config_diff!` for the diff alone.
-#[macro_export]
-macro_rules! config_record {
-    (
-        record: $record:ident,
-        diff: $diff:ident,
-        set: $set:ident,
-        owner: $owner:literal,
-        payload_schema: $schema:literal,
-        emoji: $emoji:literal,
-        fields: { $($field:ident : $ty:ty => $variant:ident $kind:literal),+ $(,)? } $(,)?
-    ) => {
-        impl $crate::ConfigRecord for $record {}
-        $crate::sparse_record_diff! { record: $record, diff: $diff, fields: { $($field: $ty),+ } }
-        $crate::field_set_mutations! {
-            record: $record, diff: $diff, set: $set, owner: $owner, payload_schema: $schema, emoji: $emoji,
-            fields: { $($field: $ty => $variant $kind),+ }
-        }
-    };
-}
-
-/// 🎯️ Declares a config record's `ConfigRecord` mark and sparse diff ([`sparse_record_diff!`]) for a config whose mutation enum is
-/// hand-written: `config_diff! { record: X, diff: XDiff, fields: { field: Type, … } [, keyed: { map_field: ValueType, … }] }`.
-#[macro_export]
-macro_rules! config_diff {
-    (record: $record:ident, diff: $diff:ident, fields: { $($field:ident : $ty:ty),+ $(,)? }, keyed: { $($kf:ident : $kv:ty),* $(,)? } $(,)?) => {
-        impl $crate::ConfigRecord for $record {}
-        $crate::sparse_record_diff! { record: $record, diff: $diff, fields: { $($field: $ty),+ }, keyed: { $($kf: $kv),* } }
-    };
-    (record: $record:ident, diff: $diff:ident, fields: { $($field:ident : $ty:ty),+ $(,)? } $(,)?) => {
-        impl $crate::ConfigRecord for $record {}
-        $crate::sparse_record_diff! { record: $record, diff: $diff, fields: { $($field: $ty),+ } }
-    };
-}
 //#endregion 🔖️Config
 //#region 🔖️Materialize
 pub mod document_materialize {
@@ -537,12 +362,10 @@ use command_format::{CommandHeaderLine, OpsAuthor, OpsHeaderLine, OpsPin, OpsSup
 //#region 🔖️OpCodec
 //#endregion 🔖️OpCodec
 
-semio_framework_diagnostic::fault_from_error!(CommandDecodeError, semio_framework_diagnostic::FaultOrigin::Module, "module.store.command");
 
 //#endregion 🔖️CommandFormat
 //#region 🔖️History
 //#region 🔖️History
-
 
 //#endregion 🔖️History
 //#region 🔖️ArtifactStore
@@ -550,7 +373,6 @@ semio_framework_diagnostic::fault_from_error!(CommandDecodeError, semio_framewor
 pub use semio_framework_os_store_ledger as ledger;
 use ledger::{ArtifactEditMessageLedger, ArtifactEditMessageLedgerIter, ArtifactEditMessageLedgerRejected, edit_from_operation_envelope, fold_envelope_history, fold_event_log};
 use ledger::{ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES, ARTIFACT_EDIT_MESSAGE_ID_BYTES, ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY, ARTIFACT_EDIT_MESSAGE_INDEX_EMPTY, ARTIFACT_EDIT_MESSAGE_INDEX_TOMBSTONE, ARTIFACT_EDIT_MESSAGE_LEDGER_BYTES, ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE, ARTIFACT_EDIT_MESSAGE_OWNER_BYTES, ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS, ARTIFACT_EDIT_MESSAGE_SLOT_PAGES, ARTIFACT_EDIT_MESSAGE_TARGET_BYTES, ArtifactEditMessageLedgerRetirement, ArtifactEditMessageTicket, ArtifactStoreHistoryCommitReservation, ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, CursorRevisionRecord, EditDigestChains, PendingCommandReport, ReplayProjection, StackMirrorDirt, edit_timestamp, envelope_viewer_head, operation_semantic_kind, retire_replayed_projection, retire_scratch_edits, retire_scratch_operations, retire_supersede_inputs, stamp_edit_semantics, validate_composition_pins};
-
 
 use semio_framework_os_store_initialization_runtime::initialization_catalog_close;
 
@@ -563,7 +385,6 @@ mod initialization_replay {
 }
 pub use semio_framework_os_store_initialization_runtime::lifted_initialization_replay::ArtifactStoreInitializationNext;
 pub use semio_framework_os_store_initialization_replay::{ArtifactStoreReplayInitializer, ARTIFACT_STORE_REPLAY_FIELD_BYTES};
-
 
 //#region 📬️OneItemPublication
 pub mod one_item_publication {
@@ -613,7 +434,6 @@ pub use semio_framework_os_store_initialization_replay::original_store_genesis_f
 use semio_framework_os_store_initialization_runtime::native_publication_producer;
 pub use semio_framework_os_store_initialization_runtime::native_publication_producer::{ArtifactStorePublication, ArtifactSnapshotPublication};
 
-
 //#endregion 🔖️ArtifactStore
 //#region 🔖️PairMerge
 pub mod replay {
@@ -622,7 +442,6 @@ pub mod replay {
 }
 use replay::{DRAFT_SUPERSESSION_ID, EditReplay, EditReplayResult, EffectiveOperation, EffectiveSupersessions, PairMerge, ReplayEdits, ReplayMode, ReplayOwnedState, ReplayProgress, ReplayResultOwnedState, ReplayStep, admit_replacement, apply_operation, apply_outcome, draft_supersessions, effective_forwards, effective_operation, fold_operation};
 use replay::{FoldProjection, IndexedAppliedReplayEdits, PREFIX_SNAPSHOT_RING_CAPACITY, PREFIX_SNAPSHOT_RING_FLOOR, PrefixSnapshot, REPROJECTION_OWNER_SLOTS, ReplayConvergence, edit_supersession_digest, effective_operation_with_supersession, fold_effective_edit, fold_recorded, forward_prefix_digests, forward_prefix_genesis, forward_prefix_step, mirror_id_suffix, order_ledger_as, retire_shared_projection, same_effective_inputs, shared_prefix_len, superseded_positions, supersession_digest};
-
 
 //#endregion 🔖️PairMerge
 //#region 🔖️EffectiveForwards
@@ -649,322 +468,14 @@ use backbone_retirement::ArtifactStoreBackboneRetirement;
 //#region 🔖️BlobStore
 pub use semio_framework_os_store_blob_identity::BlobRef;
 
-
 //#endregion 🔖️BlobStore
 //#region 🔖️Space
 //#region SpaceMember
 
+#[macro_use]
+#[path = "🎲️space-members-macro/🦀️.rs"]
+mod space_members_macro;
 
-/// 🧬️ Generates a per-plugin `SpaceMember`+`MemberFactory` enum spanning several document
-/// kinds composed under one `SpaceHost`/`CompositionCoordinator` — the O1 replacement for a
-/// `Box<dyn SpaceMember>` heterogeneous registry. Delegation arms are written ONCE here, next to
-/// `trait SpaceMember` itself, so drift between the trait and the macro is a compile error, never a
-/// silent bug. Usage:
-/// ```ignore
-/// space_members! {
-///     native_producer:&semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
-///     history_limits: HistoryReadLimits { file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64 },
-///     maximum_history_allocation_bytes:8388608,
-///     pub enum NoteMembers, NoteMembersOpen {
-///         Text("s.note.text", "1", "*", "note.text/v1") => (TextSnapshot, TextMutation, TextMemberStoreProducer, TextMemberStoreProducer),
-///         Sketch("s.note.sketch", "1", "*", "note.sketch/v1") => (SketchSnapshot, SketchMutation, SketchMemberStoreProducer, SketchMemberStoreProducer),
-///     }
-/// }
-/// ```
-/// expands to the enum, `impl SpaceMember for NoteMembers` (match-delegation over every required
-/// method), and `impl MemberFactory for NoteMembers` with an exact coordinate per typed store.
-#[macro_export]
-macro_rules! space_members {
-    (native_producer:$native_producer:expr,history_limits:$history_limits:expr,maximum_history_allocation_bytes:$history_allocation_bytes:expr,pub enum $enum_name:ident, $open_name:ident { $($variant:ident($kind:literal, $standard:literal, $subset:literal, $schema:literal) => ($snapshot:ty, $mutation:ty, $catalog:ty, $catalog_value:expr)),+ $(,)? }) => {
-        pub enum $enum_name {
-            $($variant(Box<$crate::os_store::ArtifactStore<$snapshot, $mutation>>)),+
-        }
-
-        pub enum $open_name {
-            $($variant(Box<$crate::os_store::InitialMemberStoreOpen<$enum_name, $snapshot, $mutation,$catalog>>)),+
-            , ReturningSource(::semio_framework_job::OriginalCallerSourceLoan), Closed
-        }
-
-        impl $crate::os_store::MemberOpenOperation for $open_name {
-            type Member = $enum_name;
-
-            fn step(&mut self, cx: &mut semio_framework_job::StepContext<'_>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<$crate::os_store::MemberOpenStep<Self::Member>,::semio_framework_job::OriginalTurnFailure> {
-                Ok(match self {
-                    $(Self::$variant(open) => match open.step_store(cx, grant)? {
-                        $crate::os_store::MemberOpenStep::Pending(progress) => $crate::os_store::MemberOpenStep::Pending(progress),
-                        $crate::os_store::MemberOpenStep::Ready(member) => $crate::os_store::MemberOpenStep::Ready($enum_name::$variant(member)),
-                        $crate::os_store::MemberOpenStep::Rejected(diagnostic) => $crate::os_store::MemberOpenStep::Rejected(diagnostic),
-                    }),+,
-                    Self::ReturningSource(_) | Self::Closed => $crate::os_store::MemberOpenStep::Rejected($crate::os_store::MemberOpenDiagnostic::Stale),
-                })
-            }
-
-            fn close_step(&mut self,parent:&::semio_framework_job::OriginalCallerSourceParent,cx:&mut ::semio_framework_job::StepContext<'_>)->Result<::semio_framework_value::retained_clone::RetainedCloneStep,::semio_framework_job::OriginalTurnFailure>{
-                if let Self::ReturningSource(loan)=self{let step=loan.close_step(parent,cx)?;let progress=step.progress();if loan.terminal_is_empty(){*self=Self::Closed}return Ok(if matches!(self,Self::Closed){::semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress)}else{::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)})}
-                let extent=match self{$(Self::$variant(open)if open.payload_terminal_is_empty()=>{open.validate_source_context(cx)?;Some(::std::mem::size_of_val(open.as_ref()))},)+Self::Closed=>return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Complete(Default::default())),_=>None};
-                if let Some(extent)=extent{let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<extent{return Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(Default::default()))}let loan=match self{$(Self::$variant(open)=>open.take_source_before_shell_return(cx)?,)+_=>unreachable!()};let original=::std::mem::replace(self,Self::ReturningSource(loan));drop(original);return $crate::os_store::member_open::receive_member_close(cx,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(::semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,released_bytes:extent,..Default::default()})))}
-                match self{$(Self::$variant(open)=>$crate::os_store::MemberOpenOperation::close_step(open.as_mut(),parent,cx).map(|step|::semio_framework_value::retained_clone::RetainedCloneStep::Progress(step.progress())),)+Self::ReturningSource(_)|Self::Closed=>unreachable!()}
-            }
-            fn next_copy_byte_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) if !open.payload_terminal_is_empty() => $crate::os_store::MemberOpenOperation::next_copy_byte_demand(open.as_ref()),)+ _ => Ok(0) }
-            }
-            fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) if !open.payload_terminal_is_empty() => $crate::os_store::MemberOpenOperation::next_capacity_byte_demand(open.as_ref(), body),)+ _ => Ok(0) }
-            }
-            fn next_release_byte_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) => if open.payload_terminal_is_empty() { Ok(::std::mem::size_of_val(open.as_ref())) } else { $crate::os_store::MemberOpenOperation::next_release_byte_demand(open.as_ref()) },)+ Self::ReturningSource(_)|Self::Closed => Ok(0) }
-            }
-            fn next_depth_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(open) => if open.payload_terminal_is_empty() { Ok(1) } else { $crate::os_store::MemberOpenOperation::next_depth_demand(open.as_ref()) },)+ Self::ReturningSource(_) => Ok(1),Self::Closed => Ok(0) }
-            }
-
-            fn terminal_is_empty(&self) -> bool {
-                matches!(self, Self::Closed)
-            }
-            fn terminal_drop_byte_demand(&self) -> Option<usize> {
-                matches!(self, Self::Closed).then_some(0)
-            }
-        }
-
-        impl $crate::os_store::SpaceMember for $enum_name {
-            fn local_actor_id(&self) -> &$crate::os_spr::ActorId {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::local_actor_id(m.as_ref())),+ }
-            }
-            async fn document_id(&self) -> &str {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_id(m.as_ref()).await),+ }
-            }
-            fn artifact_ref(&self) -> Option<::semio_framework_artifact_reference::ArtifactRef> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::artifact_ref(m.as_ref())),+ }
-            }
-            fn owner_ref(&self) -> Option<$crate::os_store::OwnerRef> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owner_ref(m.as_ref())),+ }
-            }
-            fn child_restore_projection(&self) -> Result<$crate::semio_framework_composition_admission::ChildRestoreProjection<'_>, $crate::semio_framework_composition_admission::ChildRestoreProjectionError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::child_restore_projection(m.as_ref())),+ }
-            }
-            fn child_restore_projection_for_read<'read>(&self,read:&'read $crate::os_store::snapshot_read::ErasedSnapshotRead)->Result<$crate::semio_framework_composition_admission::ChildRestoreProjection<'read>,$crate::semio_framework_composition_admission::ChildRestoreProjectionError>{
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::child_restore_projection_for_read(m.as_ref(),read)),+ }
-            }
-            fn one_item_publication_identity(&self) -> (u64, [u8; 32]) {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_publication_identity(m.as_ref())),+ }
-            }
-            fn one_item_wire_publication_supported(&self) -> bool {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_wire_publication_supported(m.as_ref())),+ }
-            }
-            fn begin_one_item_wire_publication(&self, request: $crate::os_store::one_item_publication::MemberStoreOneItemWireRequest) -> Result<Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>, $crate::os_store::one_item_publication::ArtifactStoreBatchAdmissionRejected<$crate::os_store::one_item_publication::MemberStoreOneItemWire>> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_wire_publication(m.as_ref(), request)),+ }
-            }
-            fn owned_publication_birth_bytes(&self, request: &$crate::os_store::MemberStoreOwnedBatchRequest) -> Result<usize, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owned_publication_birth_bytes(m.as_ref(), request)),+ }
-            }
-            fn begin_one_item_owned_publication(&self, request: &mut $crate::os_store::MemberStoreOwnedBatchRequest, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>>, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_owned_publication(m.as_ref(), request, grant)),+ }
-            }
-            fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m.as_mut(), publication, grant)),+ }
-            }
-            fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m.as_mut(), publication, grant)),+ }
-            }
-            fn stage_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stage_one_item_publication(m.as_mut(), publication, visibility, grant)),+ }
-            }
-            fn adopt_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::adopt_one_item_publication(m.as_mut(), publication, visibility, grant)),+ }
-            }
-            fn snapshot_read_erased_for_publication(&self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], $crate::os_store::snapshot_read::ErasedSnapshotRead, ::semio_framework_value::retained_clone::RetainedCloneProgress)>, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased_for_publication(m.as_ref(), publication, visibility, grant)),+ }
-            }
-            fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, snapshot: $crate::os_store::snapshot_read::ErasedSnapshotRead, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::RetainedCloneStep, (::semio_framework_value::ValueError, $crate::os_store::snapshot_read::ErasedSnapshotRead)> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::return_prepared_snapshot_read_erased(m.as_ref(), publication, visibility, snapshot, grant)),+ }
-            }
-            fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m.as_mut(), publication, grant)),+ }
-            }
-            fn snapshot_read_erased_now(&self) -> Result<$crate::os_store::snapshot_read::ErasedSnapshotRead, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased_now(m.as_ref())),+ }
-            }
-            async fn snapshot_read_erased(&self) -> Result<$crate::os_store::snapshot_read::ErasedSnapshotRead, String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased(m.as_ref()).await),+ }
-            }
-            fn retire_snapshot_read_erased(&mut self, snapshot: &mut Option<$crate::os_store::snapshot_read::ErasedSnapshotRead>, grant: $crate::os_store::RetainedCloneGrant) -> Result<(Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, $crate::os_store::RetainedCloneProgress), ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::retire_snapshot_read_erased(m.as_mut(), snapshot, grant)),+ }
-            }
-            fn take_returned_snapshot_read_retirement(&mut self, grant: $crate::os_store::RetainedCloneGrant) -> Result<(Option<Box<dyn $crate::os_store::ErasedSnapshotRetirement>>, $crate::os_store::RetainedCloneProgress), ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::take_returned_snapshot_read_retirement(m.as_mut(), grant)),+ }
-            }
-            fn snapshot_read_retirement_demand(&self) -> ::semio_framework_value::RetirementDemand {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_retirement_demand(m.as_ref())),+ }
-            }
-            fn returned_snapshot_read_retirement_demand(&self) -> Result<::semio_framework_value::RetirementDemand, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::returned_snapshot_read_retirement_demand(m.as_ref())),+ }
-            }
-            fn snapshot_read_leases_terminal_is_empty(&self) -> bool {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_leases_terminal_is_empty(m.as_ref())),+ }
-            }
-            fn close_owned_step(&mut self, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_step(m.as_mut(), grant)),+ }
-            }
-            fn close_owned_terminal_is_empty(&self) -> bool {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_terminal_is_empty(m.as_ref())),+ }
-            }
-            fn close_owned_demands(&self, maximum_body_bytes: usize) -> Result<::semio_framework_value::RetirementDemand, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::close_owned_demands(m.as_ref(), maximum_body_bytes)),+ }
-            }
-            fn content_revision_now(&self) -> [u8; 32] {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision_now(m.as_ref())),+ }
-            }
-            async fn content_revision(&self) -> [u8; 32] {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::content_revision(m.as_ref()).await),+ }
-            }
-            async fn is_dirty(&self) -> bool {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::is_dirty(m.as_ref()).await),+ }
-            }
-            async fn commit_checkpoint(&mut self, message: String, authors: Vec<$crate::os_store::Author>, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::commit_checkpoint(m.as_mut(), message, authors, identity).await),+ }
-            }
-            async fn current_checkpoint_id(&self) -> Option<String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_checkpoint_id(m.as_ref()).await),+ }
-            }
-            async fn current_alternative_id(&self) -> Option<String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_alternative_id(m.as_ref()).await),+ }
-            }
-            async fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::checkout(m.as_mut(), checkpoint_id, alternative_id, identity).await),+ }
-            }
-            async fn create_alternative(&mut self, name: String, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<String, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::create_alternative(m.as_mut(), name, identity).await),+ }
-            }
-            async fn last_local_edit_timestamp(&self) -> Option<$crate::os_spr::HybridLogicalTimestamp> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_local_edit_timestamp(m.as_ref()).await),+ }
-            }
-            async fn last_undone_local_edit_timestamp(&self) -> Option<$crate::os_spr::HybridLogicalTimestamp> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_undone_local_edit_timestamp(m.as_ref()).await),+ }
-            }
-            async fn undo(&mut self, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::undo(m.as_mut(), identity).await),+ }
-            }
-            async fn redo(&mut self, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo(m.as_mut(), identity).await),+ }
-            }
-            async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::as_any_mut(m.as_mut()).await),+ }
-            }
-            async fn preview_wire(&self, ops: &[Vec<u8>]) -> Vec<$crate::os_spr::MutationMessage> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::preview_wire(m.as_ref(), ops).await),+ }
-            }
-            async fn dispatch_wire(&mut self, cmd_bytes: &[u8], identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire(m.as_mut(), cmd_bytes, identity).await),+ }
-            }
-            async fn dispatch_wire_with_policy(&mut self, cmd_bytes: &[u8], policy: $crate::os_spr::MergePolicy, identity: &mut $crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<$crate::os_store::CommandReceipt, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::dispatch_wire_with_policy(m.as_mut(), cmd_bytes, policy, identity).await),+ }
-            }
-            async fn event_log_payload(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::event_log_payload(m.as_ref()).await),+ }
-            }
-            async fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::announce_tail_edit_payload(m.as_mut()).await),+ }
-            }
-            async fn ingest_remote_payload(&mut self, envelopes: &[u8]) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::ingest_remote_payload(m.as_mut(), envelopes).await),+ }
-            }
-            async fn tail_group_id(&self) -> Option<String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_group_id(m.as_ref()).await),+ }
-            }
-            async fn tail_edit_id(&self) -> Option<String> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::tail_edit_id(m.as_ref()).await),+ }
-            }
-            async fn redo_tail(&self) -> Option<(String, Option<String>)> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo_tail(m.as_ref()).await),+ }
-            }
-            async fn stamp_tail_group_id(&mut self, group_id: &str) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_group_id(m.as_mut(), group_id).await),+ }
-            }
-            async fn stamp_tail_origin(&mut self, origin: $crate::os_spr::MutationOrigin) -> Result<(), $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stamp_tail_origin(m.as_mut(), origin).await),+ }
-            }
-            async fn set_owner(&mut self, owner: Option<$crate::os_store::OwnerRef>) {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::set_owner(m.as_mut(), owner).await),+ }
-            }
-            async fn document_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::document_pack_bytes(m.as_ref()).await),+ }
-            }
-            async fn envelope_pack_bytes(&self) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::envelope_pack_bytes(m.as_ref()).await),+ }
-            }
-            async fn merge_persisted_envelope(&mut self, envelope_pack: &[u8]) -> Result<$crate::os_store::replay::PairMerge, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::merge_persisted_envelope(m.as_mut(), envelope_pack).await),+ }
-            }
-            async fn pack_at_checkpoint(&self, checkpoint_id: &str) -> Result<Vec<u8>, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::pack_at_checkpoint(m.as_ref(), checkpoint_id).await),+ }
-            }
-            async fn merge_policy(&self) -> $crate::os_spr::MergePolicy {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::merge_policy(m.as_ref()).await),+ }
-            }
-        }
-
-        impl $crate::os_store::MemberFactory for $enum_name {
-            const OPEN_DECLARATIONS: &'static [$crate::os_store::MemberOpenDeclaration] = &[
-                $($crate::os_store::MemberOpenDeclaration { kind: $kind, standard: $standard, subset: $subset, schema: $schema,history_limits:$history_limits,maximum_history_allocation_bytes:$history_allocation_bytes }),+
-            ];
-
-            type Open = $open_name;
-
-            fn open_birth_demand(request: &$crate::os_store::MemberOpenRequest) -> Result<$crate::os_store::RetainedCloneBirthDemand, $crate::os_store::MemberOpenDiagnostic> {
-                let dialect = &request.admitted_expected()?.dialect;
-                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => {
-                        let child = $crate::os_store::InitialMemberStoreOpen::<Self, $snapshot, $mutation,$catalog>::begin_birth_demand(request,&$catalog_value)?;
-                        let capacity_bytes = child.capacity_bytes.checked_add(::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self, $snapshot, $mutation,$catalog>>()).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity)?;
-                        let depth = child.depth.checked_add(1).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity)?;
-                        Ok($crate::os_store::RetainedCloneBirthDemand { capacity_bytes, depth })
-                    },)+
-                    _ => Err($crate::os_store::MemberOpenDiagnostic::Identity),
-                }
-            }
-
-            fn member_frame_bytes(&self) -> usize {
-                match self { $(Self::$variant(member) => ::std::mem::size_of_val(member.as_ref())),+ }
-            }
-
-            fn begin_open(admission:&mut $crate::os_store::MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut ::semio_framework_job::StepContext<'_>,parent:&::semio_framework_job::OriginalCallerSourceParent)->Result<bool,::semio_framework_job::OriginalTurnFailure>{
-                if opened.is_some(){return Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale).into())}
-                if !admission.admit_source(parent,cx)?||cx.should_yield(){return Ok(false)}
-                let retained=admission.request().ok_or_else(||$crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale))?;
-                let required=Self::open_birth_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
-                let grant=cx.retained_grant();
-                if grant.maximum_items==0||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Ok(false)}
-                let dialect=&retained.admitted_expected().map_err($crate::os_store::member_open::member_admission_diagnostic)?.dialect;
-                match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){
-                    $(($kind,$standard,$subset)=>{let(open,mut progress)=$crate::os_store::InitialMemberStoreOpen::begin(admission,cx,::semio_framework_value::retained_clone::RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self,$snapshot,$mutation,$catalog>>(),maximum_depth:grant.maximum_depth-1,..grant},$catalog_value)?;progress.retained_capacity_bytes+=::std::mem::size_of_val(&open);*opened=Some($open_name::$variant(Box::new(open)));$crate::os_store::member_open::receive_member_close(cx,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)))?;Ok(true)},)+
-                    _=>Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Identity).into()),
-                }
-            }
-
-            async fn create(id: &str, dialect: &::semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: $crate::os_spr::ActorId) -> Result<Self, $crate::os_store::VcsError> {
-                match (dialect.artifact_kind.as_str(), dialect.standard.as_str(), dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::create_member_store($schema, id, dialect, initial_pack, actor, $native_producer,&$catalog_value).await?))),)+
-                    _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", ::semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText::to_coordinate(dialect), stringify!($enum_name)))),
-                }
-            }
-            async fn open(expected: &::semio_framework_artifact_reference::ArtifactRef, owner: Option<&$crate::os_store::OwnerRef>, envelope_pack: &[u8], actor: $crate::os_spr::ActorId) -> Result<Self, $crate::os_store::VcsError> {
-                match (expected.dialect.artifact_kind.as_str(), expected.dialect.standard.as_str(), expected.dialect.subset.as_str()) {
-                    $(($kind, $standard, $subset) => Ok(Self::$variant(Box::new($crate::os_store::open_member_store($schema, expected, owner, envelope_pack, actor, $native_producer,&$catalog_value).await?))),)+
-                    _ => Err($crate::os_store::VcsError::ValidationFailed(format!("no member dialect '{}' registered in {}", ::semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText::to_coordinate(&expected.dialect), stringify!($enum_name)))),
-                }
-            }
-        }
-
-        impl $crate::os_store::MemberVisit for $enum_name {
-            fn visit_member<V: $crate::os_store::MemberStoreVisitor>(&self, visitor: V) -> V::Output {
-                match self { $(Self::$variant(m) => visitor.visit(m.as_ref())),+ }
-            }
-            async fn visit_member_mut<V: $crate::os_store::MemberStoreVisitorMut>(&mut self, visitor: V) -> V::Output {
-                match self { $(Self::$variant(m) => visitor.visit_mut(m.as_mut()).await),+ }
-            }
-        }
-    };
-}
 //#endregion SpaceMember
 //#region SpaceHistoryDocument
 pub use semio_framework_os_store_space_schema::space_history_document;
@@ -1017,18 +528,8 @@ pub use semio_framework_os_store_test_support as test_support;
 
 //#region 🧪️Tests
 
-
 //#endregion 🔖️InteractionStatePack
 //#region 🔖️SchemaExports
 
-
 //#endregion 🔖️SchemaExports
-
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
-
-
-// ♻️ `HistoryColumn` belongs to the engine core, so its retirement impl and the command custody test live beside it until the engine crates land.
-semio_framework_value::artifact_retire_struct!(HistoryColumn { checkpoint_id, timestamp, labels, authors, parent_checkpoint_id, description, lane, alternative_ids });
-
 

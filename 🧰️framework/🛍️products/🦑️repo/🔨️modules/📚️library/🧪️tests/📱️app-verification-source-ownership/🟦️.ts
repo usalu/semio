@@ -3,7 +3,9 @@ import { basename, dirname, relative, resolve } from "node:path";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import ts from "typescript";
-import { fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { fixedFilenameContractIdsForPath } from "../../🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts";
+import { fixedSourceDispositionDecision } from "../../🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 /** 🧾️ Reads the parse diagnostics every `createSourceFile` result carries and the public `SourceFile` type omits. */
 const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
@@ -21,7 +23,7 @@ type Fixture = Readonly<{
 
 const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
-const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/📱️app-verification-source-ownership/🔣️.json"), "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧪️tests/🧫️fixtures/📱️app-verification-source-ownership/🔣️.json"), "utf8")) as Fixture;
 
 
 function exportedNames(path: string): ReadonlySet<string> {
@@ -133,7 +135,7 @@ describe("app verification source ownership", () => {
     const project = JSON.parse(readFileSync(resolve(packageRoot, "📋️project.json"), "utf8"));
     expect(project.targets[fixture.registration.target]?.options?.command).toBe("bun ./📜️script.ts test app-verification-source-ownership");
     const manifest = JSON.parse(readFileSync(resolve(packageRoot, "package.json"), "utf8"));
-    expect(manifest.scripts[fixture.registration.target]).toBe(`nx run @semio-tech/repo-lib:${fixture.registration.target}`);
+    expect(manifest.scripts[fixture.registration.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${fixture.registration.target}`);
     const commandSource = readFileSync(resolve(packageRoot, "📜️script.ts"), "utf8");
     expect(commandSource).toContain('segments[0] === "app-verification-source-ownership"');
   });

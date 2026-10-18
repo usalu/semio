@@ -1,9 +1,10 @@
-use crate::tui::cell::{attr, Cell, CellBuffer};
-use crate::tui::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect, Size};
-use crate::tui::text::{display_width, display_width_in, WidthMode};
-use crate::tui::theme::{GlyphSet, Role, Status, Theme};
-use crate::tui::widget::{CursorShape, InputState, ListState, LogState, ProgressState, ScrollableState, SelectState, TableAlign, TableColumn, TableRow, TableState, ToggleState, TreeItem, TreeState, WidgetSignal, WidgetState, WizardState};
+use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_framework_ui_tui_core::text::{display_width, display_width_in, WidthMode};
+use semio_framework_ui_tui_core::theme::{GlyphSet, Role, Status, Theme};
+use semio_framework_ui_tui_core::signal::{CursorShape, WidgetSignal};
+use semio_framework_ui_tui_widgets::widget::{InputState, ListState, LogState, ProgressState, ScrollableState, SelectState, TableAlign, TableColumn, TableRow, TableState, ToggleState, TreeItem, TreeState, WidgetState, WizardState};
 use std::time::Instant;
 use ui_styling::appearance::AppearanceName;
 

@@ -1,7 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { loadCatalogTaxonomy as loadTaxonomy, subsetIdForDirectoryName } from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy as loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { subsetIdForDirectoryName } from "../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { newScaffoldArtifactTree, newScaffoldStandardTree, newScaffoldSubsetTree } from "../🗿️artifact-tree/🟦️.ts";
 import { assessMutationCrateBudget, newScaffoldMutationTree } from "../🧬️mutation-tree/🟦️.ts";
@@ -36,7 +37,7 @@ export class CleanMechanismNewScript extends Script {
       console.error("   or: bun ./📜️script.ts new standard <artifact-root> <new-standard-dir>");
       console.error("   or: bun ./📜️script.ts new subset <standard-root> <new-subset-dir> [--dry-run]");
       console.error("   or: bun ./📜️script.ts new mutation <owner-mutation-root> <emoji-semantic-name> [--composite] [--text] [--binary] [--typescript] [--graphql] [--protobuf] [--json-schema] [--family-crate] [--dry-run]");
-      console.error("   or: bun ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--explain] [--no-test-rewrites] [--no-test-aggregate] [--inline-root-modules] [--mutation-families=off|on|auto] [--lift=<module-path>,...] [--target=<files>/<bytes>/<lines>] [--backup=<dir>] [--verify [--oracle] [--keep] --sandbox=<dir>] | --check-applied [--base=<git-ref>] [--samples=<count>] [--keep] --sandbox=<dir>");
+      console.error("   or: bun ./📜️script.ts new crates <artifact-package-dir> [--dry-run] [--explain] [--no-test-rewrites] [--no-test-aggregate] [--inline-root-modules] [--mutation-families=off|on|auto] [--lift=<module-path>,...] [--target=<files>/<bytes>/<lines>] [--hard=<files>/<bytes>/<lines>] [--backup=<dir>] [--verify [--oracle] [--keep] --sandbox=<dir>] | --check-applied [--base=<git-ref>] [--samples=<count>] [--keep] --sandbox=<dir>");
       console.error("   or: bun ./📜️script.ts new leaves <rust-file> [--dry-run] [--json-schema]   (serve typescript/graphql/proto facet companions, and with --json-schema the JSON Schema leaves, from their documents)");
       process.exit(1);
       return;
@@ -44,8 +45,8 @@ export class CleanMechanismNewScript extends Script {
     const taxonomy = loadTaxonomy();
     const rest = segments.slice(1);
     const flags = new Set(rest.filter((arg) => arg.startsWith("--")));
-    const knownFlags = new Set(["--verify", "--check-applied", "--oracle", "--dry-run", "--composite", "--text", "--binary", "--typescript", "--graphql", "--protobuf", "--json-schema", "--rust", "--no-test-rewrites", "--no-test-aggregate", "--inline-root-modules", "--family-crate", "--keep", "--explain"]);
-    for (const flag of flags) if (!knownFlags.has(flag) && !flag.startsWith("--backup=") && !flag.startsWith("--sandbox=") && !flag.startsWith("--base=") && !flag.startsWith("--samples=") && !flag.startsWith("--mutation-families=") && !flag.startsWith("--lift=") && !flag.startsWith("--target=")) throw new Error(`new ${kind}: unknown option ${flag}`);
+    const knownFlags = new Set(["--verify", "--check-applied", "--oracle", "--dry-run", "--composite", "--text", "--binary", "--typescript", "--graphql", "--protobuf", "--json-schema", "--rust", "--no-test-rewrites", "--no-test-aggregate", "--inline-root-modules", "--family-crate", "--keep", "--explain", "--unmirror"]);
+    for (const flag of flags) if (!knownFlags.has(flag) && !flag.startsWith("--backup=") && !flag.startsWith("--sandbox=") && !flag.startsWith("--base=") && !flag.startsWith("--samples=") && !flag.startsWith("--mutation-families=") && !flag.startsWith("--lift=") && !flag.startsWith("--target=") && !flag.startsWith("--hard=")) throw new Error(`new ${kind}: unknown option ${flag}`);
     const dryRun = flags.has("--dry-run");
     const positional = rest.filter((a) => !a.startsWith("--"));
     const repoRoot = this.root;
@@ -127,11 +128,13 @@ export class CleanMechanismNewScript extends Script {
       if (admission.length || shared.length || Object.values(report.layout).some((row) => row.onlyCombined > 0)) { process.exit(1); return; }
       return;
     }
+    if (flags.has("--unmirror")) { await this.unmirror(packageDir, !dryRun); return; }
     const mode = [...flags].find((flag) => flag.startsWith("--mutation-families="))?.slice("--mutation-families=".length) ?? "auto";
     if (mode !== "off" && mode !== "on" && mode !== "auto") throw new Error(`--mutation-families expects off, on or auto, got ${JSON.stringify(mode)}`);
     const lift = [...flags].find((flag) => flag.startsWith("--lift="))?.slice("--lift=".length).split(",").filter(Boolean);
     const targetFlag = [...flags].find((flag) => flag.startsWith("--target="))?.slice("--target=".length);
-    const plan = await planArtifactCrates(this.root, packageDir, { mutationFamilies: mode, lift, target: targetFlag === undefined ? undefined : parseCrateBudget(targetFlag), inlineRootModules: flags.has("--inline-root-modules"), tests: flags.has("--no-test-rewrites") ? undefined : { fixtures: true, aggregate: !flags.has("--no-test-aggregate"), hoist: true, detach: true } });
+    const hardFlag = [...flags].find((flag) => flag.startsWith("--hard="))?.slice("--hard=".length);
+    const plan = await planArtifactCrates(this.root, packageDir, { mutationFamilies: mode, lift, target: targetFlag === undefined ? undefined : parseCrateBudget(targetFlag), hard: hardFlag === undefined ? undefined : parseCrateBudget(hardFlag), inlineRootModules: flags.has("--inline-root-modules"), tests: flags.has("--no-test-rewrites") ? undefined : { fixtures: true, aggregate: !flags.has("--no-test-aggregate"), hoist: true, detach: true } });
     for (const crate of plan.crates) console.log(`crate ${crate.name}  ${crate.packageDir}  lib ${crate.lib?.files}/${crate.lib?.bytes}/${crate.lib?.lines}  test ${crate.test?.files}/${crate.test?.bytes}/${crate.test?.lines}  deps [${crate.dependsOn.map((id) => plan.crates.find((entry) => entry.id === id)?.name).join(", ")}]`);
     for (const note of plan.overlay.notes) console.log(`note: ${note}`);
     if (plan.problems.length) {
@@ -162,6 +165,16 @@ export class CleanMechanismNewScript extends Script {
     const owners = registerBuildOwnerRows(this.root, plan, backup);
     console.log(`owner rows: ${owners.length ? owners.join(", ") : "none added"}`);
     console.log(`new crates: ${plan.artifactCrate} — wrote ${writes.length} file(s) for ${plan.crates.length} crate(s).`);
+    await this.unmirror(packageDir, true);
+  }
+
+  private async unmirror(packageDir: string, apply: boolean): Promise<void> {
+    const { runUnmirror } = await import("../📦️crate-tree/🪞️unmirror/🏃️run/🟦️.ts");
+    const result = runUnmirror({ repoRoot: this.root, artifacts: [dirname(dirname(packageDir))], apply, log: (line) => console.log(`  ${line}`) });
+    const report = result.report;
+    console.log(`new crates --unmirror: ${report.edits.size} file(s), ${result.manifests.size} manifest(s), ${report.removedLeaves} mirror re-export(s) removed, ${report.repointedLeaves + report.repointedChains} path(s) re-pointed, ${report.addedImports} import(s) added, ${report.removedModules} module(s) removed${apply ? `, ${result.written} written` : " (dry-run)"}.`);
+    for (const line of [...report.unresolvedMirrors.map((entry) => `unresolved mirror re-export ${entry}`), ...report.multiMounted.map((entry) => `file mounted more than once, not edited ${entry}`), ...result.cycles.map((entry) => `dependency cycle ${entry}`), ...result.conflicts.map((entry) => `file changed while planning ${entry}`)]) console.error(`problem: ${line}`);
+    if (result.cycles.length || result.conflicts.length || report.unresolvedMirrors.length) process.exit(1);
   }
 
   private report(rel: string, created: string[], skipped: string[], dryRun: boolean): void {

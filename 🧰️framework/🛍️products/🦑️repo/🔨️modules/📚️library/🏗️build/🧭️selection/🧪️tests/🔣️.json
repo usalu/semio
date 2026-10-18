@@ -14,6 +14,11 @@
             "execution": {
               "kind": "noop"
             }
+          },
+          "test": {
+            "execution": {
+              "kind": "noop"
+            }
           }
         }
       },
@@ -217,6 +222,36 @@
       "path": "packages/lib/main.ts",
       "selected": false,
       "global": false
+    },
+    {
+      "name": "global-last-false",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files",
+        "--include-global-files=false",
+        "--",
+        "callback",
+        "--include-global-files"
+      ],
+      "path": "README.md",
+      "selected": false,
+      "global": false
+    },
+    {
+      "name": "global-last-true",
+      "args": [
+        "watch",
+        "--projects=app",
+        "--include-global-files=false",
+        "--include-global-files",
+        "--",
+        "callback",
+        "--include-global-files=false"
+      ],
+      "path": "README.md",
+      "selected": false,
+      "global": true
     }
   ],
   "tasks": [
@@ -476,6 +511,126 @@
         "app:repo-exec"
       ],
       "forwarded": []
+    },
+    {
+      "name": "all-last-false",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--files=apps/app/main.ts",
+        "--all",
+        "--all=false"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "all-last-true",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--files=apps/app/main.ts",
+        "--all=false",
+        "--all"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "untracked-last-false",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--untracked",
+        "--untracked=false"
+      ],
+      "git": [
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "diff",
+          "--name-only",
+          "-z",
+          "HEAD"
+        ],
+        [
+          "-c",
+          "core.fsmonitor=false",
+          "ls-files",
+          "--others",
+          "--exclude-standard",
+          "-z"
+        ]
+      ],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "repeated-projects",
+      "args": [
+        "run-many",
+        "--projects=app",
+        "-p=lib",
+        "--targets=build"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "repeated-targets",
+      "args": [
+        "run-many",
+        "--projects=app",
+        "--targets=build",
+        "--target=test"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build",
+        "app:test"
+      ],
+      "forwarded": []
+    },
+    {
+      "name": "repeated-exclusions",
+      "args": [
+        "run-many",
+        "--targets=build",
+        "--exclude=app",
+        "--exclude=lib"
+      ],
+      "git": [],
+      "tasks": [],
+      "forwarded": []
+    },
+    {
+      "name": "repeated-affected-files",
+      "args": [
+        "affected",
+        "--targets=build",
+        "--files=apps/app/main.ts",
+        "--files=packages/lib/main.ts"
+      ],
+      "git": [],
+      "tasks": [
+        "app:build",
+        "lib:build"
+      ],
+      "forwarded": []
     }
   ],
   "bail": [
@@ -554,6 +709,192 @@
         "--bail"
       ],
       "expected": false
+    }
+  ],
+  "booleans": [
+    {
+      "name": "cache-last-false",
+      "args": [
+        "run",
+        "app:build",
+        "--skip-cache",
+        "--skip-cache=false"
+      ],
+      "field": "skipCache",
+      "flag": "skip-cache",
+      "expected": false
+    },
+    {
+      "name": "cache-last-true",
+      "args": [
+        "run",
+        "app:build",
+        "--skip-cache=false",
+        "--skip-cache"
+      ],
+      "field": "skipCache",
+      "flag": "skip-cache",
+      "expected": true
+    },
+    {
+      "name": "remote-last-false",
+      "args": [
+        "run",
+        "app:build",
+        "--skip-remote-cache=true",
+        "--skip-remote-cache=false"
+      ],
+      "field": "skipRemoteCache",
+      "flag": "skip-remote-cache",
+      "expected": false
+    },
+    {
+      "name": "dependencies-last-false",
+      "args": [
+        "run",
+        "app:build",
+        "--exclude-dependencies",
+        "--exclude-task-dependencies=false"
+      ],
+      "field": "excludeDependencies",
+      "flag": "exclude-dependencies",
+      "expected": false
+    },
+    {
+      "name": "dependencies-last-true",
+      "args": [
+        "run",
+        "app:build",
+        "--exclude-task-dependencies=false",
+        "--exclude-dependencies=true"
+      ],
+      "field": "excludeDependencies",
+      "flag": "exclude-dependencies",
+      "expected": true
+    },
+    {
+      "name": "verbose-last-false",
+      "args": [
+        "run",
+        "app:build",
+        "--verbose",
+        "--verbose=false"
+      ],
+      "field": "verbose",
+      "flag": "verbose",
+      "expected": false
+    },
+    {
+      "name": "verbose-explicit-overrides-environment",
+      "args": [
+        "run",
+        "app:build",
+        "--verbose=false"
+      ],
+      "field": "verbose",
+      "flag": "verbose",
+      "environment": true,
+      "expected": false
+    },
+    {
+      "name": "verbose-environment-default",
+      "args": [
+        "run",
+        "app:build"
+      ],
+      "field": "verbose",
+      "flag": "verbose",
+      "environment": true,
+      "expected": true
+    },
+    {
+      "name": "bail-last-false",
+      "args": [
+        "run",
+        "app:build",
+        "--bail",
+        "--bail=false"
+      ],
+      "field": "bail",
+      "flag": "bail",
+      "expected": false
+    },
+    {
+      "name": "literal-tail-unparsed",
+      "args": [
+        "run",
+        "app:build",
+        "--skip-cache=false",
+        "--",
+        "--skip-cache"
+      ],
+      "field": "skipCache",
+      "flag": "skip-cache",
+      "expected": false
+    }
+  ],
+  "lists": [
+    {
+      "name": "projects-alias",
+      "args": [
+        "--projects=app",
+        "-p=lib"
+      ],
+      "names": [
+        "projects",
+        "p"
+      ],
+      "expected": [
+        "app",
+        "lib"
+      ]
+    },
+    {
+      "name": "target-alias",
+      "args": [
+        "--targets=build",
+        "--target=test",
+        "-t=lint"
+      ],
+      "names": [
+        "targets",
+        "target",
+        "t"
+      ],
+      "expected": [
+        "build",
+        "test",
+        "lint"
+      ]
+    },
+    {
+      "name": "exclude",
+      "args": [
+        "--exclude",
+        "app",
+        "--exclude=lib"
+      ],
+      "names": [
+        "exclude"
+      ],
+      "expected": [
+        "app",
+        "lib"
+      ]
+    },
+    {
+      "name": "literal-boundary",
+      "args": [
+        "--files=a.ts",
+        "--",
+        "--files=b.ts"
+      ],
+      "names": [
+        "files"
+      ],
+      "expected": [
+        "a.ts"
+      ]
     }
   ]
 }

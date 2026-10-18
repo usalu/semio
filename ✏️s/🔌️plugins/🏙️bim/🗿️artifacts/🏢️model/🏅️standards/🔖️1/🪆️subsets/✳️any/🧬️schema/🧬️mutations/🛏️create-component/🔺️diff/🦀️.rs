@@ -1,9 +1,9 @@
 //! 🔺️ Diff constructor for `CreateComponent`: one created component entry. The id is free in every collection, the storey exists, the family exists and is no profile, every number is finite and a host is a
 //! wall of the same storey. The solids, the fit onto the host, the volume and the issues of the instance are inferred, never stored.
 
-use super::super::component_rules;
-use super::super::elements;
-use super::CreateComponent;
+use crate::standards::v1::subsets::any::schema::mutations::component_rules;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_component::CreateComponent;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

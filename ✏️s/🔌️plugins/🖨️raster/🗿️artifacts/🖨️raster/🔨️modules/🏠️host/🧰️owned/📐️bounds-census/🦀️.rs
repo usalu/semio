@@ -3,11 +3,11 @@
 use super::*;
 
 impl RasterOwnerTotals {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { source_items: 0, source_bytes: 0, candidate_items: 0, candidate_bytes: 0 }
     }
 
-    pub(super) fn add(&mut self, items: usize, bytes: usize, candidate_items: usize, candidate_bytes: usize) -> Result<(), &'static str> {
+    pub fn add(&mut self, items: usize, bytes: usize, candidate_items: usize, candidate_bytes: usize) -> Result<(), &'static str> {
         self.source_items = self.source_items.checked_add(items).ok_or("raster-store.preflight-source-item-overflow")?;
         self.source_bytes = self.source_bytes.checked_add(bytes).ok_or("raster-store.preflight-source-byte-overflow")?;
         self.candidate_items = self.candidate_items.checked_add(candidate_items).ok_or("raster-store.preflight-candidate-item-overflow")?;
@@ -46,7 +46,7 @@ impl RasterOwnerTotals {
         self.add(1, source_bytes, 1, candidate_bytes)
     }
 
-    pub(super) fn map<V>(&mut self, value: &RasterOwnedMap<V>, candidate_extra_entries: usize) -> Result<(), &'static str> {
+    pub fn map<V>(&mut self, value: &RasterOwnedMap<V>, candidate_extra_entries: usize) -> Result<(), &'static str> {
         let source_pages = value.allocated_page_count();
         let candidate_entries = value.len().checked_add(candidate_extra_entries).ok_or("raster-store.preflight-map-entry-overflow")?;
         if candidate_entries > semio_s_artifact_raster_raster_model::RASTER_OWNED_MAP_CAPACITY {
@@ -57,7 +57,7 @@ impl RasterOwnerTotals {
         self.add(source_pages, source_pages.checked_mul(page_bytes).ok_or("raster-store.preflight-map-source-byte-overflow")?, candidate_pages, candidate_pages.checked_mul(page_bytes).ok_or("raster-store.preflight-map-candidate-byte-overflow")?)
     }
 
-    pub(super) fn observe_candidate_capacity(&mut self, requested: usize, observed: usize, element_bytes: usize) -> Result<(), &'static str> {
+    pub fn observe_candidate_capacity(&mut self, requested: usize, observed: usize, element_bytes: usize) -> Result<(), &'static str> {
         if observed < requested {
             return Err("raster-store.candidate-capacity-underflow");
         }
@@ -70,31 +70,31 @@ impl RasterOwnerTotals {
     }
 }
 
-pub(super) struct RasterMapKeyCursor {
-    pub(super) index: usize,
+pub struct RasterMapKeyCursor {
+    pub index: usize,
 }
 
 impl RasterMapKeyCursor {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { index: 0 }
     }
 
-    pub(super) fn next<'a, T>(&self, values: &'a RasterOwnedMap<T>) -> Option<(&'a String, &'a T)> {
+    pub fn next<'a, T>(&self, values: &'a RasterOwnedMap<T>) -> Option<(&'a String, &'a T)> {
         values.entry_at(self.index)
     }
 
-    pub(super) fn advance(&mut self, _key: &str) -> Result<(), &'static str> {
+    pub fn advance(&mut self, _key: &str) -> Result<(), &'static str> {
         self.index = self.index.checked_add(1).ok_or("raster-store.map-index-overflow")?;
         Ok(())
     }
 }
 
 impl RasterDslValueBoundsAuthority {
-    pub(super) fn new(layer_depth: usize) -> Self {
+    pub fn new(layer_depth: usize) -> Self {
         Self { layer_depth, depth: 0, path: [0; RASTER_MAXIMUM_NESTED_DEPTH], frames: [RasterTraversalFrame::EMPTY; RASTER_MAXIMUM_NESTED_DEPTH], terminal: false }
     }
 
-    pub(super) fn value_at<'a>(root: &'a semio_framework_value::DslValue, path: &[usize]) -> Option<&'a semio_framework_value::DslValue> {
+    pub fn value_at<'a>(root: &'a semio_framework_value::DslValue, path: &[usize]) -> Option<&'a semio_framework_value::DslValue> {
         let mut value = root;
         for index in path {
             value = match value {
@@ -106,7 +106,7 @@ impl RasterDslValueBoundsAuthority {
         Some(value)
     }
 
-    pub(super) fn step(&mut self, root: &semio_framework_value::DslValue, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, root: &semio_framework_value::DslValue, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -172,11 +172,11 @@ impl RasterDslValueBoundsAuthority {
 }
 
 impl RasterLayerBoundsAuthority {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { depth: 0, path: [0; RASTER_MAXIMUM_NESTED_DEPTH], frames: [RasterTraversalFrame::EMPTY; RASTER_MAXIMUM_NESTED_DEPTH], parameter_key: RasterMapKeyCursor::new(), parameter_value: None, terminal: false }
     }
 
-    pub(super) fn layer_at<'a>(root: &'a RasterLayerNode, path: &[usize]) -> Option<&'a RasterLayerNode> {
+    pub fn layer_at<'a>(root: &'a RasterLayerNode, path: &[usize]) -> Option<&'a RasterLayerNode> {
         let mut value = root;
         for index in path {
             let RasterLayerNode::Group { children, .. } = value else { return None };
@@ -185,13 +185,13 @@ impl RasterLayerBoundsAuthority {
         Some(value)
     }
 
-    pub(super) fn strings(layer: &RasterLayerNode) -> [&String; 3] {
+    pub fn strings(layer: &RasterLayerNode) -> [&String; 3] {
         match layer {
             RasterLayerNode::Pixel { id, name, blend_mode, .. } | RasterLayerNode::Group { id, name, blend_mode, .. } | RasterLayerNode::Adjustment { id, name, blend_mode, .. } => [id, name, blend_mode],
         }
     }
 
-    pub(super) fn step(&mut self, root: &RasterLayerNode, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, root: &RasterLayerNode, totals: &mut RasterOwnerTotals, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -306,22 +306,22 @@ impl RasterLayerBoundsAuthority {
     }
 }
 
-pub(super) struct RasterSnapshotBoundsAuthority {
-    pub(super) totals: RasterOwnerTotals,
-    pub(super) layer: Option<RasterLayerBoundsAuthority>,
-    pub(super) asset_key: RasterMapKeyCursor,
-    pub(super) phase: u8,
-    pub(super) index: usize,
-    pub(super) asset_field: u8,
-    pub(super) terminal: bool,
+pub struct RasterSnapshotBoundsAuthority {
+    pub totals: RasterOwnerTotals,
+    pub layer: Option<RasterLayerBoundsAuthority>,
+    pub asset_key: RasterMapKeyCursor,
+    pub phase: u8,
+    pub index: usize,
+    pub asset_field: u8,
+    pub terminal: bool,
 }
 
 impl RasterSnapshotBoundsAuthority {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { totals: RasterOwnerTotals::new(), layer: None, asset_key: RasterMapKeyCursor::new(), phase: 0, index: 0, asset_field: 0, terminal: false }
     }
 
-    pub(super) fn step(&mut self, source: &RasterSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, source: &RasterSnapshot, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -424,42 +424,42 @@ impl RasterSnapshotBoundsAuthority {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) struct RasterLayerAddress {
-    pub(super) length: usize,
-    pub(super) indices: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
+pub struct RasterLayerAddress {
+    pub length: usize,
+    pub indices: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
 }
 
 impl RasterLayerAddress {
-    pub(super) fn parent(self) -> Option<Self> {
+    pub fn parent(self) -> Option<Self> {
         (self.length > 1).then(|| Self { length: self.length - 1, indices: self.indices })
     }
 
-    pub(super) fn index(self) -> usize {
+    pub fn index(self) -> usize {
         self.indices[self.length - 1]
     }
 }
 
-pub(super) struct RasterLayerLocator {
-    pub(super) root: usize,
-    pub(super) depth: usize,
-    pub(super) path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
-    pub(super) frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
-    pub(super) found: Option<RasterLayerAddress>,
-    pub(super) terminal: bool,
+pub struct RasterLayerLocator {
+    pub root: usize,
+    pub depth: usize,
+    pub path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
+    pub frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
+    pub found: Option<RasterLayerAddress>,
+    pub terminal: bool,
 }
 
 impl RasterLayerLocator {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { root: 0, depth: 0, path: [0; RASTER_MAXIMUM_NESTED_DEPTH], frames: [RasterTraversalFrame::EMPTY; RASTER_MAXIMUM_NESTED_DEPTH], found: None, terminal: false }
     }
 
-    pub(super) fn node_id(node: &RasterLayerNode) -> &String {
+    pub fn node_id(node: &RasterLayerNode) -> &String {
         match node {
             RasterLayerNode::Pixel { id, .. } | RasterLayerNode::Group { id, .. } | RasterLayerNode::Adjustment { id, .. } => id,
         }
     }
 
-    pub(super) fn node_at(snapshot: &RasterSnapshot, address: RasterLayerAddress) -> Option<&RasterLayerNode> {
+    pub fn node_at(snapshot: &RasterSnapshot, address: RasterLayerAddress) -> Option<&RasterLayerNode> {
         let mut value = snapshot.layers.get(address.indices[0])?;
         for index in &address.indices[1..address.length] {
             let RasterLayerNode::Group { children, .. } = value else { return None };
@@ -468,7 +468,7 @@ impl RasterLayerLocator {
         Some(value)
     }
 
-    pub(super) fn node_at_mut(snapshot: &mut RasterSnapshot, address: RasterLayerAddress) -> Option<&mut RasterLayerNode> {
+    pub fn node_at_mut(snapshot: &mut RasterSnapshot, address: RasterLayerAddress) -> Option<&mut RasterLayerNode> {
         fn descend<'a>(value: &'a mut RasterLayerNode, path: &[usize]) -> Option<&'a mut RasterLayerNode> {
             let Some((head, tail)) = path.split_first() else { return Some(value) };
             let RasterLayerNode::Group { children, .. } = value else { return None };
@@ -477,7 +477,7 @@ impl RasterLayerLocator {
         descend(snapshot.layers.get_mut(address.indices[0])?, &address.indices[1..address.length])
     }
 
-    pub(super) fn container_mut(snapshot: &mut RasterSnapshot, parent: Option<RasterLayerAddress>) -> Option<&mut Vec<RasterLayerNode>> {
+    pub fn container_mut(snapshot: &mut RasterSnapshot, parent: Option<RasterLayerAddress>) -> Option<&mut Vec<RasterLayerNode>> {
         match parent {
             None => Some(&mut snapshot.layers),
             Some(address) => match Self::node_at_mut(snapshot, address)? {
@@ -487,7 +487,7 @@ impl RasterLayerLocator {
         }
     }
 
-    pub(super) fn step(&mut self, snapshot: &RasterSnapshot, target: &str, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
+    pub fn step(&mut self, snapshot: &RasterSnapshot, target: &str, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         if self.terminal {
             return Ok(true);
         }
@@ -542,44 +542,44 @@ impl RasterLayerLocator {
 }
 
 #[derive(Clone, Copy)]
-pub(super) struct RasterTraversalFrame {
-    pub(super) phase: u8,
-    pub(super) child: usize,
+pub struct RasterTraversalFrame {
+    pub phase: u8,
+    pub child: usize,
 }
 
 impl RasterTraversalFrame {
-    pub(super) const EMPTY: Self = Self { phase: 0, child: 0 };
+    pub const EMPTY: Self = Self { phase: 0, child: 0 };
 }
 
-pub(super) struct RasterOwnerTotals {
+pub struct RasterOwnerTotals {
     source_items: usize,
-    pub(super) source_bytes: usize,
+    pub source_bytes: usize,
     candidate_items: usize,
-    pub(super) candidate_bytes: usize,
+    pub candidate_bytes: usize,
 }
 
-pub(super) struct RasterDslValueBoundsAuthority {
+pub struct RasterDslValueBoundsAuthority {
     layer_depth: usize,
-    pub(super) depth: usize,
-    pub(super) path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
-    pub(super) frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
-    pub(super) terminal: bool,
+    pub depth: usize,
+    pub path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
+    pub frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
+    pub terminal: bool,
 }
 
-pub(super) struct RasterLayerBoundsAuthority {
-    pub(super) depth: usize,
-    pub(super) path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
-    pub(super) frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
-    pub(super) parameter_key: RasterMapKeyCursor,
-    pub(super) parameter_value: Option<RasterDslValueBoundsAuthority>,
-    pub(super) terminal: bool,
+pub struct RasterLayerBoundsAuthority {
+    pub depth: usize,
+    pub path: [usize; RASTER_MAXIMUM_NESTED_DEPTH],
+    pub frames: [RasterTraversalFrame; RASTER_MAXIMUM_NESTED_DEPTH],
+    pub parameter_key: RasterMapKeyCursor,
+    pub parameter_value: Option<RasterDslValueBoundsAuthority>,
+    pub terminal: bool,
 }
 
-pub(super) fn raster_frozen_now_us() -> Option<u64> {
+pub fn raster_frozen_now_us() -> Option<u64> {
     Some(0)
 }
 
-pub(super) fn raster_combined_depth_requirement(layer_depth: usize, value_depth: usize) -> Result<usize, &'static str> {
+pub fn raster_combined_depth_requirement(layer_depth: usize, value_depth: usize) -> Result<usize, &'static str> {
     let required = layer_depth.checked_add(value_depth.checked_mul(2).ok_or("raster-store.preflight-combined-depth-overflow")?).and_then(|value| value.checked_add(16)).ok_or("raster-store.preflight-combined-depth-overflow")?;
     if required > RASTER_COMBINED_DEPTH_CAPACITY {
         return Err("raster-store.preflight-combined-depth");

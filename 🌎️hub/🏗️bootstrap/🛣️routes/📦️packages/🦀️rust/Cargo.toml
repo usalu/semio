@@ -34,5 +34,6 @@ axum = { version = "0.8", features = ["ws"] }
 semio-framework-job = { workspace = true }
 directory = { path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 db = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/📦️packages/🦀️rust", package = "semio-framework-os-kernel-db" }
+semio-framework-server = { workspace = true }
 
 [dev-dependencies]

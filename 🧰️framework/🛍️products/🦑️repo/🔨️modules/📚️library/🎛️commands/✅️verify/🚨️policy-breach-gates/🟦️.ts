@@ -1,8 +1,11 @@
 /** 🚨️ Single-rule stdio-artifact policy gates behind `verify policy-breach <rule>`.
  * @see 📜️script.ts
  */
-import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
-import { policyArtifactAnalyzerBreaches, policyArtifactBuilderBreaches, policyArtifactBuilderMigratedBreaches, policyArtifactComposerBreaches, policyArtifactDecomposerBreaches, policyCodecFidelityBreaches, policyIoSerializerMatrixBreaches, policyIoTerminalityBreaches, policySchemaRepresentationBreaches, policyStandardsCoverageBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
+import { policyArtifactAnalyzerBreaches, policyArtifactBuilderBreaches, policyArtifactBuilderMigratedBreaches, policyArtifactComposerBreaches, policyArtifactDecomposerBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🗂️stdio-catalog/🟦️.ts";
+import { policyCodecFidelityBreaches, policyIoSerializerMatrixBreaches, policyIoTerminalityBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🔌️io-matrix/🟦️.ts";
+import { policySchemaRepresentationBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🧬️schema-representation/🟦️.ts";
+import { policyStandardsCoverageBreaches } from "../../../⚖️laws/🧩️plugin-consistency/🚪️artifact-io/🧾️standards/🟦️.ts";
 import { policyContributionTargetBreaches, policyPluginDependencyParityBreaches } from "../../../⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
 
 /**

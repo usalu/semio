@@ -64,12 +64,12 @@ pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
+pub fn write_str_lp(out: &mut Vec<u8>, s: &str) {
     write_bytes_lp(out, s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
+pub fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
     String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
 }
 
@@ -77,7 +77,7 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 /// `2`=InlineString/`3`=Boolean/`4`=Formula/`5`=Empty), matching `enc_cell_value`'s own
 /// `N`/`S`/`I`/`B`/`F`/`E` text-tag numbering.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_cell_value_bin(v: &XlsxCellValue, out: &mut Vec<u8>) {
+pub fn enc_cell_value_bin(v: &XlsxCellValue, out: &mut Vec<u8>) {
     match v {
         XlsxCellValue::Number(n) => {
             out.push(0);
@@ -112,7 +112,7 @@ pub(crate) fn enc_cell_value_bin(v: &XlsxCellValue, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_cell_value_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellValue, String> {
+pub fn dec_cell_value_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCellValue, String> {
     match reader.read_u8().map_err(|e| e.to_string())? {
         0 => {
             let bytes = reader.read_bytes(8).map_err(|e| e.to_string())?;
@@ -149,7 +149,7 @@ pub(crate) fn dec_cell_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxCel
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_sheet_bin(s: &XlsxSheet, out: &mut Vec<u8>) {
+pub fn enc_sheet_bin(s: &XlsxSheet, out: &mut Vec<u8>) {
     write_str_lp(out, &s.name);
     store::pack_rt::write_varint_u64(out, s.cells.len() as u64);
     for c in &s.cells {
@@ -158,7 +158,7 @@ pub(crate) fn enc_sheet_bin(s: &XlsxSheet, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_sheet_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheet, String> {
+pub fn dec_sheet_bin(reader: &mut store::ByteReader<'_>) -> Result<XlsxSheet, String> {
     let name = read_str_lp(reader)?;
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut cells = Vec::with_capacity(count as usize);

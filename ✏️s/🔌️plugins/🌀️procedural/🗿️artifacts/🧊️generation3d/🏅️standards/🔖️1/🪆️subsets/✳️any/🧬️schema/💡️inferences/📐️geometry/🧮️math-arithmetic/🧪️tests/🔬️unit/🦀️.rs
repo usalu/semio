@@ -1,4 +1,5 @@
 use super::*;
+use semio_s_artifact_procedural_3d_geometry_compute::StartFn;
 use std::collections::BTreeMap;
 
 use semio_s_artifact_procedural_3d_io_text::snapshot::catalogue::catalogue;

@@ -8,7 +8,7 @@ use std::cell::Cell;
 thread_local!{static NOW:Cell<Option<u64>>=const{Cell::new(Some(1000))};}
 fn clock()->Option<u64>{NOW.with(Cell::get)}
 fn grant()->Grant{Grant{maximum_items:64,maximum_copy_bytes:9,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap()}
 
 #[test]
 fn original_fixture_caller_keeps_one_stock_recipient_fuel_and_paid_root_close(){

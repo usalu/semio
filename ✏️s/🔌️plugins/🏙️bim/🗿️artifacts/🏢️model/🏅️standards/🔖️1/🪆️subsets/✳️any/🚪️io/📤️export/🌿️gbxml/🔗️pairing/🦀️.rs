@@ -121,6 +121,4 @@ pub fn merge<'a>(envelopes: &'a BTreeMap<String, EnvelopeSpace>) -> Vec<Merged<'
     merged
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,7 +1,15 @@
 import { posix } from "node:path";
-import type { BreachRecord } from "../../../🟦️.ts";
-import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🟦️.ts";
-import { createRustMutationCodecOwnershipInspector, createRustMutationInputInspector, inspectRustModuleGraphFacts, rustModuleScopeProof, inspectRustMutationMetadataFacts, inspectRustRunnableTests, inspectRustSourceIdentities, inspectRustStructure, jsonDocumentDuplicateKeys, mutationOwnerIdentity, mutationPayloadSchemaProblems, mutationPayloadSchemaRelativePath } from "../../../🔍️discovery/🟦️.ts";
+import type { BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { createRustMutationCodecOwnershipInspector } from "../../../🔍️discovery/🛡️mutation-codec-ownership/🟦️.ts";
+import { createRustMutationInputInspector, inspectRustSourceIdentities } from "../../../🔍️discovery/🔎️rust-source-identities/🟦️.ts";
+import { inspectRustModuleGraphFacts, rustModuleScopeProof } from "../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
+import { inspectRustMutationMetadataFacts, inspectRustStructure } from "../../../🔍️discovery/🏛️rust-structure/🟦️.ts";
+import { inspectRustRunnableTests } from "../../../🔍️discovery/🏃️rust-runnable-tests/🟦️.ts";
+import { jsonDocumentDuplicateKeys } from "../../../🧬️schema/🔣️json-document/🟦️.ts";
+import { mutationOwnerIdentity } from "../../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
+import { mutationPayloadSchemaProblems } from "../../../🔍️discovery/📄️implementation-findings/🟦️.ts";
+import { mutationPayloadSchemaRelativePath } from "../../../🔍️discovery/🗂️file-kind-resolution/🟦️.ts";
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { MUTATION_DESCRIPTOR_SCHEMA_REL, mutationTaxonomyCompare, mutationTaxonomyStructuralView, type MutationTaxonomyStructuralSourceView } from "../📸️captured-source/🟦️.ts";
 import { mutationTaxonomySourceIndex } from "../📇️index/🟦️.ts";

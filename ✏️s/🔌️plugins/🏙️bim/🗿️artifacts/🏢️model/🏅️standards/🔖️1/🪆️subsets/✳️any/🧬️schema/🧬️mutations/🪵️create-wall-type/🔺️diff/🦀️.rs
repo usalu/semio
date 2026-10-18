@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateWallType`: one created wall type entry. Every layer names an existing material and has a positive finite
 //! thickness; a wall type has at least one layer.
 
-use super::super::elements;
-use super::CreateWallType;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_wall_type::CreateWallType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{Layer, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 

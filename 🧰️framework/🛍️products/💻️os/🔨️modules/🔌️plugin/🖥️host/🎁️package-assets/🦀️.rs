@@ -35,9 +35,20 @@ pub fn package_file_assets(repo_root: &Path, declared: &[AssetDeclaration]) -> R
     Ok(delivered)
 }
 
-/// 🔍️ The nearest ancestor of `start` (or `start` itself) that is the repository root, marked by `nx.json`.
+/// 🔍️ The nearest ancestor of `start` (or `start` itself, at most 32 levels) that is the declared package workspace with build authority: regular `📋️project.json` and `package.json` files, the latter holding a top-level `workspaces` array or object. A malformed `package.json` beside a build marker ends the search with `None`. Mirrors `find_workspace_root` in `🧰️framework/🔨️modules/🏃️process/🧭️routing/🏠️workspace/🦀️.rs`.
 pub fn repository_root_above(start: &Path) -> Option<PathBuf> {
-    start.ancestors().find(|candidate| candidate.join("nx.json").is_file()).map(Path::to_path_buf)
+    for directory in start.ancestors().take(32) {
+        let regular = |name: &str| std::fs::symlink_metadata(directory.join(name)).is_ok_and(|metadata| metadata.file_type().is_file());
+        if regular("📋️project.json") && regular("package.json") {
+            let declared = std::fs::read_to_string(directory.join("package.json")).ok().and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok()).map(|document| matches!(document.get("workspaces"), Some(serde_json::Value::Array(_) | serde_json::Value::Object(_))));
+            match declared {
+                Some(true) => return Some(directory.to_path_buf()),
+                Some(false) => {}
+                None => return None,
+            }
+        }
+    }
+    None
 }
 
 /// 🔍️ The `assets` a package descriptor JSON document declares (`🔣️.json` beside a served module); an absent list is empty.

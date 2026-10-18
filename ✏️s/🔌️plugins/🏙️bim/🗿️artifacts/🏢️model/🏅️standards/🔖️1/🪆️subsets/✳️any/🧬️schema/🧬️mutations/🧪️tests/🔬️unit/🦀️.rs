@@ -1,6 +1,10 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::diff::ModelDiff;
+use crate::standards::v1::subsets::any::schema::mutations::*;
 use crate::standards::v1::subsets::any::io::binary::mutations::{decode_op, encode_op};
 use protocol::{Mutation, OpText};
+use semio_framework_test_fixtures::fixture_text;
 
 fn descriptors() -> Vec<(&'static str, u32)> {
     <ModelMutation as Mutation<ModelSnapshot>>::DESCRIPTORS.iter().map(|descriptor| (descriptor.semantic_kind, descriptor.binary_tag.expect("every leaf declares a wire tag"))).collect()
@@ -21,7 +25,7 @@ async fn binary_tags_are_unique_and_registered_in_the_protocol() {
     tags.sort_unstable();
     tags.dedup();
     assert_eq!(tags.len(), descriptors().len(), "every leaf owns its own wire tag");
-    let protocol = include_str!("../../../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio");
+    let protocol = fixture_text!("../../../../../🚪️io/💾️binary/🧬️mutations/📡️.protocol.semio");
     for (kind, tag) in descriptors() {
         assert!(protocol.contains(&format!("record {kind} tag={tag}\n")), "{kind} has its wire tag in the protocol");
     }
@@ -29,7 +33,7 @@ async fn binary_tags_are_unique_and_registered_in_the_protocol() {
 
 #[semio_framework_async_macros::async_test]
 async fn every_committed_mutation_round_trips_text_and_binary() {
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/🧬️mutations");
     let (operations, files) = protocol::mutation_fixture_ops::<ModelMutation>(&root);
     assert!(files >= KINDS.len() * 2, "every kind commits at least an applied and a rejected case, found {files} fixtures");
     assert_eq!(operations.len(), files, "every committed mutation decodes as the aggregate");
@@ -41,14 +45,14 @@ async fn every_committed_mutation_round_trips_text_and_binary() {
 
 #[semio_framework_async_macros::async_test]
 async fn delete_storey_declares_a_bounded_footprint_and_the_others_one_row() {
-    use super::super::delete_storey::DeleteStorey;
-    use super::super::set_storey_height::SetStoreyHeight;
+    use crate::standards::v1::subsets::any::schema::mutations::delete_storey::DeleteStorey;
+    use crate::standards::v1::subsets::any::schema::mutations::set_storey_height::SetStoreyHeight;
     assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::DeleteStorey(DeleteStorey { id: "st".into() })), 8191);
     assert_eq!(Mutation::<ModelSnapshot>::inverse_rows(&ModelMutation::SetStoreyHeight(SetStoreyHeight { id: "st".into(), height: 3.0 })), 1);
 }
 
 fn house() -> ModelSnapshot {
-    semio_framework_pack_json::from_json_str(include_str!("../../../../🖼️assets/🏡️house/📸️snapshot.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the house decodes")
+    semio_framework_pack_json::from_json_str(fixture_text!("../../../../../🖼️assets/🏡️house/📸️snapshot.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the house decodes")
 }
 
 #[semio_framework_async_macros::async_test]
@@ -95,7 +99,7 @@ async fn the_rise_to_another_storey_is_the_elevation_gap() {
 #[semio_framework_async_macros::async_test]
 async fn the_inverse_of_every_committed_applied_modify_and_delete_case_fits_the_rows_its_leaf_declares() {
     use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
+    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/🧬️mutations");
     let kinds = ["copy-elements", "mirror-elements", "array-elements", "align-elements", "offset-wall", "trim-extend-wall", "split-slab", "split-beam", "set-wall-end-join", "delete-elements", "delete-site", "delete-building", "delete-storey"];
     let mut checked = 0;
     for leaf in std::fs::read_dir(&root).expect("the fixture root").flatten().filter(|leaf| kinds.contains(&leaf.file_name().to_string_lossy().trim_start_matches(|character: char| !character.is_ascii())))

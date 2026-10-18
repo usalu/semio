@@ -7,6 +7,7 @@ type Fixture = { routeCount: number; retainedRoutes: string[]; groups: Group[]; 
 
 const root = resolve(import.meta.dir, "../..");
 const sourcePath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
+const commandEnumPath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎼️command-enum/🦀️.rs");
 const retainedPath = resolve(root, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧵️retained/🦀️.rs");
 const fixturePath = resolve(root, "🧪️tests/🧫️fixtures/🧪️action-cohort/🔣️.json");
 
@@ -17,7 +18,8 @@ test("Note source and fixture have one exact hostile census", async () => {
   const fixture = await Bun.file(fixturePath).json() as Fixture;
   const source = await Bun.file(sourcePath).text();
   const retainedSource = await Bun.file(retainedPath).text();
-  const commands = [...source.matchAll(/^\s*"([^"]+)" as "[^"]+" =>/gm)].map((match) => match[1]!);
+  const commandSource = await Bun.file(commandEnumPath).text();
+  const commands = [...commandSource.matchAll(/^\s*"([^"]+)" as "[^"]+" =>/gm)].map((match) => match[1]!);
   const manifests = new Map([...source.matchAll(/\.action_interactive_job\("([^"]+)",\s*(?:semio_framework_plugin::)?InteractiveJobClassification::(Migrated|BatchOnlyPendingRewrite)\)/g)].map((match) => [match[1]!, match[2]!]));
   const classified = fixture.groups.flatMap((group) => group.routes);
   const retained = fixture.groups.filter((group) => group.status === "migrated").flatMap((group) => group.routes);
@@ -54,7 +56,7 @@ test("hostile source rejects global ids, copied digests, and scan-then-monolith 
   expect(retainedSource).not.toMatch(/fn\s+note_store_edit_digest/);
   expect(retainedSource).not.toContain("ArtifactStoreOneItemPrepared {");
   expect(retainedSource).not.toContain("fn prepare_note_artifact");
-  expect(retainedSource).toContain("bounded_config_store_one_item_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>");
+  expect(retainedSource).toContain("store::mutation_apply_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>");
   expect(retainedSource).toContain("if self.cursor + 1 < self.units.len()");
   expect(schemaSource).not.toContain("static NEXT");
   expect(schemaSource).not.toContain("AtomicU64");

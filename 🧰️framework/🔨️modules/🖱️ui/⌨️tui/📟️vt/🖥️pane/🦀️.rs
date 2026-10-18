@@ -1,12 +1,12 @@
 use super::encode::{encode_focus, encode_key, encode_mouse, encode_paste, encode_wheel_as_arrows, MouseReporting};
 use super::palette::Palette;
 use super::screen::{CellPoint, Match, VtScreen};
-use crate::tui::cell::{attr, Cell, CellBuffer};
-use crate::tui::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect, Size};
-use crate::tui::text::display_width;
-use crate::tui::theme::{Role, Surface, Theme};
-use crate::tui::widget::{CursorSpec, WidgetSignal};
+use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_framework_ui_tui_core::text::display_width;
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_framework_ui_tui_core::signal::{CursorSpec, WidgetSignal};
 
 const WHEEL_LINES: i64 = 3;
 
@@ -482,7 +482,7 @@ impl TerminalState {
         }
         if let Some(search) = &self.search {
             let x = (1 + display_width(&search.query)).min(rect.width - 1);
-            return Some(CursorSpec { pos: Pos { x: rect.x + x, y: rect.y + rect.height - 1 }, shape: crate::tui::widget::CursorShape::Bar, blink: true });
+            return Some(CursorSpec { pos: Pos { x: rect.x + x, y: rect.y + rect.height - 1 }, shape: semio_framework_ui_tui_core::signal::CursorShape::Bar, blink: true });
         }
         if !self.screen.modes.cursor_visible {
             return None;

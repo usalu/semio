@@ -1,0 +1,44 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-os-kernel-db-sync-laws"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "x"
+
+[package.metadata.semio]
+role = "framework"
+id = "os-kernel-db-sync-laws"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+
+[dev-dependencies]
+semio-framework-os-kernel-db-sync = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-async = { workspace = true, features = ["testkit"] }
+semio-framework-async-macros = { path = "../../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-actor = { path = "../../../../../🎭️actor/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-durability = { path = "../../../../../💾️durability/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-ids = { path = "../../../../../🆔️ids/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-io-core = { path = "../../../../../🗄️storage/🧱️io-core/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-driver = { path = "../../../../../🗄️storage/🚦️io-driver/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-io-registry = { path = "../../../../../🗄️storage/📇️io-registry/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage = { path = "../../../../../🗄️storage/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-storage-fs = { path = "../../../../../🗄️storage/📁️fs/📦️packages/🦀️rust" }
+semio-framework-os-kernel-db-storage-memory = { path = "../../../../../🗄️storage/🗃️memory/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-wal = { path = "../../../../../📝️wal/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-kernel-db-wal-log = { path = "../../../../../📝️wal/🧾️log/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-replication = { workspace = true }
+semio-framework-test-fixtures = { path = "../../../../../../../../../🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
+serde_json = { workspace = true }

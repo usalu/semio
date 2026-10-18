@@ -15,7 +15,7 @@ use semio_framework_value::{DslValue, ToValue};
 pub const FLATTEN_TOLERANCE: f64 = 5e-4;
 /// 🔤️ Text height in metres.
 pub const TEXT_SIZE: f64 = 0.22;
-const ACCENT: [f64; 4] = [0.95, 0.5, 0.1, 1.0];
+pub const ACCENT: [f64; 4] = [0.95, 0.5, 0.1, 1.0];
 const FRAMING_PADDING: f64 = 48.0;
 //#endregion 🔖️Constants
 
@@ -38,7 +38,7 @@ pub fn canvas_bounds(plan: &PlanLinework) -> Option<[f64; 4]> {
 //#endregion 🔖️Coordinates
 
 //#region 🔖️Paths
-fn ring(vertices: &[PlanVertex], closed: bool) -> Vec<PathSegment> {
+pub fn ring(vertices: &[PlanVertex], closed: bool) -> Vec<PathSegment> {
     let Some(first) = vertices.first() else { return Vec::new() };
     let mut points = vec![Point::new(first.x, first.y)];
     let spans = if closed { vertices.len() } else { vertices.len() - 1 };
@@ -82,7 +82,7 @@ fn paint(kind: PlanKind, style: PlanStyle, filled: bool, selected: bool) -> Pain
 //#endregion 🔖️Paint
 
 //#region 🔖️Records
-fn record(id: &str, role: &str, segments: Vec<PathSegment>, paint: &Paint) -> DslValue {
+pub fn record(id: &str, role: &str, segments: Vec<PathSegment>, paint: &Paint) -> DslValue {
     let color = |values: [f64; 4]| values.to_vec().to_value();
     let stroke = [
         ("color".to_string(), color(paint.stroke)),
@@ -190,6 +190,4 @@ pub fn scene(plan: Option<&PlanLinework>, viewport: &store::Viewport2d, framed: 
 }
 //#endregion 🔖️Scene
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

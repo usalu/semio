@@ -14,9 +14,9 @@ export async function registerRetainedAndStoreTests(vitest: TypedWireVitest, dep
 
   type RetainedUiTransaction = import("../../../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts").RetainedUiTransaction;
 
-  type UiPatch = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiPatch;
+  type UiPatch = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiPatch;
 
-  type UiSnapshot = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiSnapshot;
+  type UiSnapshot = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiSnapshot;
 
   const retainedFixture = await loadUiRetainedPatchFixture();
 

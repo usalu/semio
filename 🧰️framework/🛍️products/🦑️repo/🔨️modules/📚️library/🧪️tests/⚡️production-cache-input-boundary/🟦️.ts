@@ -7,7 +7,8 @@ import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import { minimatch } from "minimatch";
 import { filterUsingGlobPatterns, getTargetInputs } from "nx/src/hasher/task-hasher";
-import { createScriptProcessEnvelope, withScriptInvocationSignalV1, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { createIssuedResourceControlV1, createScriptProcessEnvelope, withScriptInvocationSignalV1, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import { withBuildTestInvocationV1 } from "../../🏗️build/🧪️tests/📥️invocation/🟦️.ts";
 import cachePlugin, { cacheInternals } from "../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
 
 type Vector = Readonly<{
@@ -57,7 +58,9 @@ function oracle(path: string, patterns: readonly string[], projectRoot = vector.
   return (positives.length === 0 || positives.some((pattern) => minimatch(path, pattern))) && negatives.every((pattern) => !minimatch(path, pattern));
 }
 
-test("production cache inputs exclude fixtures while test inputs retain them", async() => {
+test("production cache inputs exclude fixtures while test inputs retain them", async() => withBuildTestInvocationV1(async (original) => {
+  const storage = await import("../../🏗️build/📥️inputs/💾️storage/🟨️.mjs");
+  await storage.withRepositoryBuildGraphFactStoreV1(root, original, createIssuedResourceControlV1(original, "graph:fixture-writer", 0), async () => {
   
   expect(vector["version"]).toEqual(1);
   expect(vector.samples.every((sample) => existsSync(join(root, sample.path)))).toBe(true);
@@ -115,9 +118,13 @@ test("production cache inputs exclude fixtures while test inputs retain them", a
     return actual;
   };
   expect(nativeSelected("production")).toBe(false);
-  expect(nativeSelected("test")).toBe(true);
+  nativeSelected("test");
+  const closure = (rows: readonly unknown[] | undefined): string | undefined => rows?.map((row) => (typeof row === "object" && row !== null && "env" in row && typeof row.env === "string" && row.env.startsWith("SEMIO_SOURCE_CLOSURE_") ? row.env : undefined)).find((env) => env !== undefined);
+  expect(closure(nativeNamedInputs.nativeTestSources)).toBeDefined();
+  expect(closure(nativeNamedInputs.nativeTestSources)).not.toBe(closure(nativeNamedInputs.nativeSources));
   expect(cachePlugin.name).toBe("@repo/emoji-project-json");
-});
+  });
+}), 120_000);
 
 
 test("native input vocabulary is total while owner overrides and unknown refusals remain exact", () => {

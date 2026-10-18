@@ -46,7 +46,7 @@ use semio_framework_plugin::SelectionMode;
 use semio_framework_plugin::SelectionSpec;
 use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_tool_machine::node_drag_emit;
 use semio_s_artifact_stdio_semio_graph::schema::mutations::drag_nodes::DragNodes;
 

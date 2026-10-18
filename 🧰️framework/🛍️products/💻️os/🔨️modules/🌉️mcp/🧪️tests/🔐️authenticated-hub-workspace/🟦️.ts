@@ -7,7 +7,7 @@ import Ajv from "ajv";
 import { describe, expect, test } from "vitest";
 
 const remoteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../🏠️workspace/🔗️remote");
-const schema = JSON.parse(readFileSync(resolve(remoteRoot, "🧬️schema/🔣️.json"), "utf8"));
+const schema = JSON.parse(readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "🧬️schema/🔣️.json"), "utf8"));
 const validateDescriptorIndex = (() => {
   const ajv = new Ajv({ strict: true, allErrors: true });
   ajv.addSchema(schema);

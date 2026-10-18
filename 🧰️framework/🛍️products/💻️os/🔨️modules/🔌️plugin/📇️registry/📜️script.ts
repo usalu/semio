@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🧪️vitest/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
@@ -70,14 +70,14 @@ const router = new ScriptRouter(import.meta.dir)
   .registerLazy("check-generated", async () => (await import("./📽️projection/🟦️.ts")).CheckGeneratedScript)
   .registerLazy("rust-taxonomy-mounts-check", async () => (await import("./🗿️taxonomy-validation/🟦️.ts")).RustTaxonomyMountsCheckScript)
   .registerLazy("plugin-root-ownership-check", async () => (await import("./🗿️taxonomy-validation/🟦️.ts")).PluginRootOwnershipCheckScript)
-  .registerLazy("native-catalog-selection-check", async () => (await import("./✅️catalog-verification/🟦️.ts")).NativeCatalogSelectionCheckScript)
-  .registerLazy("catalog-complete", async () => (await import("./✅️catalog-verification/🟦️.ts")).CatalogCompleteScript)
+  .registerLazy("native-catalog-selection-check", async () => (await import("./✅️catalog-verification/🎛️commands/🟦️.ts")).NativeCatalogSelectionCheckScript)
+  .registerLazy("catalog-complete", async () => (await import("./✅️catalog-verification/🎛️commands/🟦️.ts")).CatalogCompleteScript)
   .registerLazy("check", async () => (await import("./📽️projection/🟦️.ts")).CheckScript)
   .registerLazy("plan-check", async () => (await import("./🔁️rebuild/🟦️.ts")).RebuildPlanCheckScript)
   .registerLazy("rebuild-all", async () => (await import("./🔁️rebuild/🟦️.ts")).RebuildAllScript)
   .registerLazy("guest-framework-check", async () => (await import("./🔁️rebuild/🟦️.ts")).GuestFrameworkCheckScript)
-  .registerLazy("test", async () => (await import("./✅️catalog-verification/🟦️.ts")).RegistryTestScript)
-  .registerLazy("test-catalog-contract", async () => (await import("./✅️catalog-verification/🟦️.ts")).CatalogContractTestScript)
+  .registerLazy("test", async () => (await import("./✅️catalog-verification/🎛️commands/🟦️.ts")).RegistryTestScript)
+  .registerLazy("test-catalog-contract", async () => (await import("./✅️catalog-verification/🎛️commands/🟦️.ts")).CatalogContractTestScript)
   .register("test-asset-contract", AssetContractTestScript)
   .register("test-deployment-contract", DeploymentContractTestScript)
   .register("test-rebuild-contract", RebuildContractTestScript)

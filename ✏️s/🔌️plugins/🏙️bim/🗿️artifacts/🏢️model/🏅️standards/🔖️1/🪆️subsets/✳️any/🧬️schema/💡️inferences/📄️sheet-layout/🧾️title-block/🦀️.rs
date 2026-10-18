@@ -2,7 +2,7 @@
 //! grows upward from it. Cells carry the text to print and the rectangle to print it in; the heading of a cell is the localized name of its [`TitleField`] and belongs to whoever draws the sheet.
 //! 📎 https://www.iso.org/standard/72482.html (ISO 7200, data fields in title blocks)
 
-use super::{PaperRect, RevisionRow, RevisionTable, TitleBlock, TitleCell, TitleField};
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, RevisionRow, RevisionTable, TitleBlock, TitleCell, TitleField};
 use crate::standards::v1::subsets::any::schema::snapshot::{Sheet, SheetRevision};
 
 /// 📏️ The width of the title block and the revision table on a roomy sheet; a narrow frame shrinks both to its width.
@@ -76,6 +76,4 @@ pub fn revision_table(title: &PaperRect, rows: &[(&String, &SheetRevision)]) -> 
     RevisionTable { rect, rows }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

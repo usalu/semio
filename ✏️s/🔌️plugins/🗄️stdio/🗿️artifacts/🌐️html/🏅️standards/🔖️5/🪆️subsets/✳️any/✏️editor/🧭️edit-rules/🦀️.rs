@@ -4,7 +4,7 @@
 //! The table itself is empty because the kinds are addressed by a recursive path, not by a fixed pointer shape.
 
 use crate::standards::v5::subsets::any::schema::mutations::{insert_node, remove_node, set_attribute, set_comment, set_doctype, set_element_name, set_raw_text, set_text, HtmlMutation};
-use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot};
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot};
 use semio_framework_plugin::Fault;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{edited_subtree, EditRules, SnapshotEditEvent};

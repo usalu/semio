@@ -3,7 +3,7 @@
 //! `mutation.no-op`. Nothing downstream is written: the absolute elevation of every storey of the building follows the building
 //! elevation by inference (`storey-levels`).
 
-use super::SetBuilding;
+use crate::standards::v1::subsets::any::schema::mutations::set_building::SetBuilding;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

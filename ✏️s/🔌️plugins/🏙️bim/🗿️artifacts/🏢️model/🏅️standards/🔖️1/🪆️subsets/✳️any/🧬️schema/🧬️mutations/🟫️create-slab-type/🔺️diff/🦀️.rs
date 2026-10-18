@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `CreateSlabType`: one created slab type entry. Every layer names an existing material and has a positive finite
 //! thickness; a slab type has at least one layer.
 
-use super::super::elements;
-use super::CreateSlabType;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_slab_type::CreateSlabType;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{Layer, ModelSnapshot}};
 use protocol::{MutationOutcome, OutcomeCode};
 

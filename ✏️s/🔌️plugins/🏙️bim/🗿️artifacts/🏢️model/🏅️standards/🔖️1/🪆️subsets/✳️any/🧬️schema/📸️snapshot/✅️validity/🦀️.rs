@@ -1,7 +1,7 @@
 //! ✅️ Authored-value validity rules shared by every leaf that writes a length, a profile or an outline: pure, total and base-free.
 
-use super::values::{Baluster, Infill, Point2, Profile, RiserKind, StairStringer, StringerKind, Vertex};
-use super::entities::{Railing, Ramp, Stair};
+use crate::standards::v1::subsets::any::schema::snapshot::values::{Baluster, Infill, Point2, Profile, RiserKind, StairStringer, StringerKind, Vertex};
+use crate::standards::v1::subsets::any::schema::snapshot::entities::{Railing, Ramp, Stair};
 
 const AREA_EPSILON: f64 = 1e-9;
 

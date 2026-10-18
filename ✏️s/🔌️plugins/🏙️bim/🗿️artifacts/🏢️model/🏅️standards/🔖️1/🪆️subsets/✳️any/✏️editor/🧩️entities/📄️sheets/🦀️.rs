@@ -1,8 +1,8 @@
 //! 📄️ The sheet rows of the entity table: how an authored sheet, viewport and revision row read off the snapshot, how an edited value becomes a `set-*` mutation, what a new one is, and the pickers (orientation, sheets, drawable views) the
 //! properties panel offers. The size of the paper, the scales and the window of a viewport are inferred rows of the `sheet-layout` inference.
 
-use super::views::{pair_text, parse_crop};
-use super::{number, parse_count, parse_point, parse_text, partial, point, Created, EntityKind, FieldRow, InferredRow};
+use crate::editor::bim::entities::views::{pair_text, parse_crop};
+use crate::editor::bim::entities::{number, parse_count, parse_point, parse_text, partial, point, Created, EntityKind, FieldRow, InferredRow};
 use crate::editor::bim::terminology::BimLabels;
 use crate::standards::v1::subsets::any::io::export::sheets;
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::title_block::scale_text;
@@ -208,6 +208,4 @@ pub const REVISION: EntityKind = EntityKind {
 };
 //#endregion 🔖️Kinds
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

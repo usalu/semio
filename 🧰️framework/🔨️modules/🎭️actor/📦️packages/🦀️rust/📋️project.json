@@ -8,6 +8,7 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/**/*.rs",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📬️mailbox/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/📮️shard-client/*/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧪️tests/🧬️typegen/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/🏃️execution/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📋️plan/🟦️.ts",

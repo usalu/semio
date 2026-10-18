@@ -16,12 +16,12 @@
 //! host that has its full thickness (the join-trimmed extent) and strictly below the top, with the one tolerance [`LENGTH_EPS`]; a hole that touches the
 //! border of the face is [`OpeningIssue::OutsideTrimmedExtent`].
 
-use super::super::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
-use super::super::element_solids::plan_kit::{depth_of, mark, seg};
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::{CurtainLayout, DEFAULT_MULLION_DEPTH};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{depth_of, mark, seg};
 use crate::standards::v1::subsets::any::schema::authored::sizes::{resolve_size, Resolved};
-use super::super::storey_levels::StoreyLevel;
-use super::super::wall_layout::attach::{elevation_at, ElevationPoint};
-use super::super::wall_layout::{face_ends, WallLayout};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{elevation_at, ElevationPoint};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{face_ends, WallLayout};
 use crate::standards::v1::subsets::any::schema::snapshot::{Axis, CurtainWall, DoorLeaves, DoorType, ModelSnapshot, Opening, OpeningKind, Point2, Profile, Swing, Wall, WindowType};
 use semio_framework_geometry::placement::Affine3;
 use semio_framework_geometry::vector::{perp, LENGTH_EPS};
@@ -407,6 +407,4 @@ pub fn dependency(snapshot: &ModelSnapshot, opening: &Opening) -> DslValue {
 
 //#endregion 🔖️Projection
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

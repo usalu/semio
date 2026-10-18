@@ -24,7 +24,7 @@ use semio_framework_plugin::Viewer;
 // 🕹️ `InteractionView` — see `✏️editor/🦀️.rs`'s identical import comment (missing top-level
 // re-export from `semio_framework_plugin`, flagged to the coordinator, not fixed here).
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

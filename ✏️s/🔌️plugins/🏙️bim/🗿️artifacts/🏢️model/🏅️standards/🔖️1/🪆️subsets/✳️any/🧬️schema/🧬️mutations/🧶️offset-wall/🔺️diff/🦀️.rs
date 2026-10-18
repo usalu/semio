@@ -3,10 +3,10 @@
 //! classifications stay with the original. Refused: an unknown wall, a taken new id, a distance that is not finite or has no effect and an
 //! offset that collapses an arc into its centre.
 
-use super::super::elements;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::modify::cut::offset_axis;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flaw;
-use super::OffsetWall;
+use crate::standards::v1::subsets::any::schema::mutations::offset_wall::OffsetWall;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::{ModelSnapshot, Wall}};
 use protocol::{MutationOutcome, OutcomeCode};
 

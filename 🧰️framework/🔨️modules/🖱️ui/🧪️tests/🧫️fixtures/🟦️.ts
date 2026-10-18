@@ -12,7 +12,7 @@ export { default as presenceOverlayFixture } from "../../🧬️contract/🧪️
 export { default as vfsDescriptorFixture } from "../../🧱️elements/⚙️VirtualFileSystem/🧪️tests/🧫️fixtures/🧾️descriptors/🔣️.json" with { type: "json" };
 export { posesFixture as viewportPoseFixture } from "@semio-tech/framework-ui-viewport-ts/testing/fixtures/poses";
 export { default as surfaceHostRetentionFixture } from "../../🧬️contract/🧪️tests/🧫️fixtures/🪪️surface-host-retention.json" with { type: "json" };
-export const loadSceneMathResourceFixture = () => import("../../🎬️scene/📐️math/📦️resource/🧫️fixtures/🔣️.json").then(module => module.default);
+export const loadSceneMathResourceFixture = () => import("../../🎬️scene/📐️math/📦️resource/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export const loadSceneMathResourceSchema = () => import("../../🎬️scene/📐️math/📦️resource/🧬️schema/🔣️.json").then(module => module.default);
 export { default as uiSceneFramingFixture } from "../../🎬️scene/📷️framing/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 export const loadComponentSelectionMergesFixture = () => import("../../🎬️scene/🧪️tests/🧫️fixtures/🎯️component-selection-merges/🔣️.json").then(module => module.default);
@@ -33,7 +33,7 @@ export { default as uiRenderDeadlineFixture } from "../../🖌️render/🧪️t
 export const uiRenderDeadlineFixtureUrl = fixtureUrl(import.meta.url, "../../🖌️render/🧪️tests/🧫️fixtures/⏱️deadline/🔣️.json");
 export { default as world3dInlineSurfaceFixture } from "../../🖌️render/🧪️tests/🧫️fixtures/🎨️world3d-inline-surface/🔣️.json" with { type: "json" };
 export const inputOrderedScrollFixtureUrl = fixtureUrl(import.meta.url, "../../🖥️host/📥️input/🎡️ordered-scroll/🧪️tests/🧫️fixtures/🔣️.json");
-export const loadPresentResourcesTransportFixture = () => import("../../🧠️runtime/🎭️present/📦️resources/📤️transport/🧫️fixtures/🔣️.json").then(module => module.default);
+export const loadPresentResourcesTransportFixture = () => import("../../🧠️runtime/🎭️present/📦️resources/📤️transport/🧪️tests/🧫️fixtures/🔣️.json").then(module => module.default);
 export const loadPresentResourcesTransportSchema = () => import("../../🧠️runtime/🎭️present/📦️resources/📤️transport/🧬️schema/🔣️.json").then(module => module.default);
 export { default as uiArrowChordsFixture } from "./⌨️arrow-chords/🔣️.json" with { type: "json" };
 export const inlineTreeControlsFixtureUrl = fixtureUrl(import.meta.url, "./🎛️inline-tree-controls/🔣️.json");

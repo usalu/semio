@@ -92,7 +92,7 @@ it("canonical checkpoint pair framing has an explicit IO owner", () => {
   const owner = here("../🧫️fixtures/📇️directory/🪢️checkpoint-pair-io-owner-v1.json");
   const directory = new URL("../../🔨️modules/📇️directory/", import.meta.url);
   const semanticRust = readFileSync(new URL("🧬️schema/🪢️canonical-checkpoint-pair-v1/🦀️.rs", directory), "utf8");
-  const semanticTs = readFileSync(new URL("🧬️schema/🟦️.ts", directory), "utf8");
+  const semanticTs = readFileSync(new URL("../../../../🔨️modules/📇️directory/🧬️schema/🟦️.ts", import.meta.url), "utf8");
   for (const body of owner.physicalBodies) expect(semanticRust).not.toContain(body);
   for (const body of owner.typescriptBodies) expect(semanticTs).not.toContain(body);
   const native = readFileSync(new URL("🚪️io/🧱️binary/🪢️checkpoint-pair/🦀️.rs", directory), "utf8");

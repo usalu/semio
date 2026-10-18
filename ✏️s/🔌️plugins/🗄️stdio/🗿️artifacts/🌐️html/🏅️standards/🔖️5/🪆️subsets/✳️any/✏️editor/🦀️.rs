@@ -6,12 +6,11 @@
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
 use crate::editor::html::modes::edit;
-use crate::editor::html::modes::edit::windows::main;
 use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
 
-use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 use crate::{HTML_DIALECT, STDIO_HTML_DOCUMENT_SCHEMA};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;
@@ -118,8 +117,8 @@ fn html_retained_contract() -> ToolExecutionContract {
 /// sends for "the app's own default document" — opens the genesis document.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn html_example_snapshot(example_id: &str) -> HtmlSnapshot {
-    if example_id == crate::examples::demo::ID {
-        <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+    if example_id == semio_s_artifact_stdio_html_inferences::examples::demo::ID {
+        <HtmlSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_html_inferences::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         HtmlSnapshot::default()
     }
@@ -245,7 +244,7 @@ pub struct HtmlEditor;
 impl ArtifactEditor for HtmlEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
+        vec![semio_s_artifact_stdio_html_inferences::examples::demo::source()]
     }
     type Snapshot = HtmlSnapshot;
     type Mutation = HtmlMutation;
@@ -267,12 +266,12 @@ impl ArtifactEditor for HtmlEditor {
     }
 
     fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework_plugin::MediaError> {
-        Ok(crate::standards::v5::subsets::any::io::text::snapshot::write_html_document(snapshot).into_bytes())
+        Ok(semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::write_html_document(snapshot).into_bytes())
     }
 
     fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework_plugin::MediaError> {
         let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))?;
-        crate::standards::v5::subsets::any::io::text::snapshot::parse_html_document(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
+        semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot::parse_html_document(text).map_err(|error| semio_framework_plugin::MediaError::Payload("artifact:native".into(), error.to_string()))
     }
 
     fn import_media(port: &str, media: &semio_framework_plugin::app::Media, _doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Emit<Self::Mutation, Self::ConfigMutation, Self::DraftMutation>, semio_framework_plugin::MediaError> {
@@ -380,9 +379,9 @@ impl ArtifactEditor for HtmlEditor {
 
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
-            main::BODY_KEY => {
+            semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::BODY_KEY => {
                 let publication_revision = semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?;
-                main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
+                semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::render(doc.snapshot, view_state.locale, publication_revision).map(semio_framework_plugin::built_to_component_tree)
             }
             semio_s_artifact_stdio_contract::editing::SNAPSHOT_DETAILS_BODY_KEY => semio_s_artifact_stdio_contract::editing::render_snapshot_details(
                 doc,
@@ -422,12 +421,12 @@ pub fn create_html_editor() -> semio_framework_plugin::AppDefinition {
         .icon_id("file-text")
         .mode_def(edit::definition())
         .default_mode_id(edit::MODE_ID)
-        .window_kind_def(main::definition())
+        .window_kind_def(semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::definition())
         .window_kind_def(semio_s_artifact_stdio_contract::editing::snapshot_details_window_definition())
-        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "HTML"))
+        .default_layout(semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(semio_s_artifact_stdio_html_inferences::editor::html::modes::edit::windows::main::WINDOW_KIND_ID, "HTML"))
         // 🎬️ Example picker — one option per example `register_apps` publishes for this dialect.
         .action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_html_inferences::examples::demo::ID, semio_s_artifact_stdio_html_inferences::examples::demo::label())], semio_s_artifact_stdio_html_inferences::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated);
@@ -469,7 +468,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 pub mod artifact_items_5 {
 use crate::{STDIO_HTML_DOCUMENT_SCHEMA};
 pub use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
-pub use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 
 pub fn native_codec() -> store::os_store::serialization::ArtifactCodec {
     let mut codec = store::artifact_codec::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA);
@@ -488,7 +487,7 @@ use crate::{native_codec};
 use crate::{ARTIFACT_DEFINITION_SCHEMA};
 use {semio_framework_plugin::ArtifactKindSpec, semio_framework_artifact_reference::Dialect, semio_framework_plugin::MediaClass, semio_framework_plugin::MediaForm, semio_framework_plugin::MediaType, semio_framework_plugin::OsMediaCapability, semio_framework_artifact_reference::StandardId, semio_framework_artifact_reference::SubsetId};
 pub use crate::standards::v5::subsets::any::schema::mutations::HtmlMutation;
-pub use crate::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
+use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 
 pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_framework_plugin::PluginAssemblyError> {
     let factories = native_codecs();
@@ -512,7 +511,7 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
-    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(crate::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).formats(formats).document_codec_bare::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }).try_build()
+    semio_framework_plugin::ArtifactDeclaration::builder(definition).schema(semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::schema::html_artifact_schema_descriptor()).formats(formats).document_codec_bare::<HtmlSnapshot, HtmlMutation>(STDIO_HTML_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.html", standard: StandardId("5"), subset: SubsetId("*") }).try_build()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

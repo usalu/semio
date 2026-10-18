@@ -4,7 +4,7 @@ import Ajv from "ajv";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
 
 /** 🧪️ Runs the original extension contribution laws with their defining Flow owner. */
 class ExtensionRegistryScript extends BundleScript {

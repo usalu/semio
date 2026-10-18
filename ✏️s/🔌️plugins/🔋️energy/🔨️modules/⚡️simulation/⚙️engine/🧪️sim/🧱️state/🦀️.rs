@@ -88,13 +88,13 @@ pub(super) enum WarmupConvergenceStage {
     Complete,
 }
 
-#[cfg(test)]
-pub(super) const P7C1_WARMUP_CONVERGENCE_STAGES: [WarmupConvergenceStage; 5] =
+#[cfg(any(test, feature = "testkit"))]
+pub const P7C1_WARMUP_CONVERGENCE_STAGES: [WarmupConvergenceStage; 5] =
     [WarmupConvergenceStage::TemperatureCheck, WarmupConvergenceStage::LoadCheck, WarmupConvergenceStage::TemperatureHistory, WarmupConvergenceStage::LoadHistory, WarmupConvergenceStage::Complete];
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(super) struct WarmupConvergenceWork {
-    pub(super) stage: WarmupConvergenceStage,
+    pub stage: WarmupConvergenceStage,
     pub(super) cursor: usize,
     pub(super) temperature_converged: bool,
     pub(super) load_converged: bool,
@@ -121,8 +121,8 @@ pub(super) enum ValidationStage {
     Complete,
 }
 
-#[cfg(test)]
-pub(super) const P7C1_VALIDATION_STAGES: [ValidationStage; 16] = [
+#[cfg(any(test, feature = "testkit"))]
+pub const P7C1_VALIDATION_STAGES: [ValidationStage; 16] = [
     ValidationStage::ReserveZones,
     ValidationStage::ReserveMaterials,
     ValidationStage::ReserveConstructions,
@@ -143,7 +143,7 @@ pub(super) const P7C1_VALIDATION_STAGES: [ValidationStage; 16] = [
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(super) struct ValidationWork {
-    pub(super) stage: ValidationStage,
+    pub stage: ValidationStage,
     pub(super) cursor: usize,
     pub(super) child_cursor: usize,
     pub(super) zone_reference_family: u8,
@@ -171,8 +171,8 @@ pub(super) enum FinalizationStage {
     Complete,
 }
 
-#[cfg(test)]
-pub(super) const P7C1_FINALIZATION_STAGES: [FinalizationStage; 13] = [
+#[cfg(any(test, feature = "testkit"))]
+pub const P7C1_FINALIZATION_STAGES: [FinalizationStage; 13] = [
     FinalizationStage::MeterTotals,
     FinalizationStage::FloorArea,
     FinalizationStage::HistoryResilience,
@@ -190,7 +190,7 @@ pub(super) const P7C1_FINALIZATION_STAGES: [FinalizationStage; 13] = [
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(super) struct FinalizationWork {
-    pub(super) stage: FinalizationStage,
+    pub stage: FinalizationStage,
     pub(super) cursor: usize,
     pub(super) electricity_kwh: f64,
     pub(super) gas_kwh: f64,
@@ -236,12 +236,12 @@ pub(super) enum ResultBuildStage {
     Complete,
 }
 
-#[cfg(test)]
-pub(super) const P7C1_RESULT_BUILD_STAGES: [ResultBuildStage; 5] = [ResultBuildStage::ModelName, ResultBuildStage::ModelVersion, ResultBuildStage::WeatherLocation, ResultBuildStage::Assemble, ResultBuildStage::Complete];
+#[cfg(any(test, feature = "testkit"))]
+pub const P7C1_RESULT_BUILD_STAGES: [ResultBuildStage; 5] = [ResultBuildStage::ModelName, ResultBuildStage::ModelVersion, ResultBuildStage::WeatherLocation, ResultBuildStage::Assemble, ResultBuildStage::Complete];
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(super) struct ResultBuildWork {
-    pub(super) stage: ResultBuildStage,
+    pub stage: ResultBuildStage,
     pub(super) cursor: usize,
     pub(super) reserved: bool,
     pub(super) model_name: String,
@@ -264,12 +264,12 @@ pub(super) enum AggregateZoneStage {
     Complete,
 }
 
-#[cfg(test)]
-pub(super) const P7C1_AGGREGATE_STAGES: [AggregateZoneStage; 5] = [AggregateZoneStage::Temperature, AggregateZoneStage::Heating, AggregateZoneStage::Cooling, AggregateZoneStage::Fan, AggregateZoneStage::Complete];
+#[cfg(any(test, feature = "testkit"))]
+pub const P7C1_AGGREGATE_STAGES: [AggregateZoneStage; 5] = [AggregateZoneStage::Temperature, AggregateZoneStage::Heating, AggregateZoneStage::Cooling, AggregateZoneStage::Fan, AggregateZoneStage::Complete];
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(super) struct AggregateZoneWork {
-    pub(super) stage: AggregateZoneStage,
+    pub stage: AggregateZoneStage,
     pub(super) phase: u8,
     pub(super) copy_index: usize,
     pub(super) cursor: usize,
@@ -359,7 +359,7 @@ impl Default for CommitCensusWork {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
-pub(super) enum WeatherFault {
+pub enum WeatherFault {
     SlotRejected,
 }
 
@@ -384,16 +384,16 @@ impl Default for ValidationWork {
 #[doc(hidden)]
 pub struct EnergyJobAuthority {
     pub operation: Operation,
-    pub(super) model: Model,
+    pub model: Model,
     pub(super) config: SimulationConfig,
     pub(super) numerical_census: EnergyNumericalCensus,
     pub stage: EnergyJobStage,
     pub tier: EnergyQualityTier,
-    pub(super) weather: FixedTable<usize, WeatherRecord>,
+    pub weather: FixedTable<usize, WeatherRecord>,
     pub weather_cursor: usize,
     pub weather_target: usize,
-    pub(super) precompute: Option<PrecomputeBuilder>,
-    pub(super) validation: ValidationWork,
+    pub precompute: Option<PrecomputeBuilder>,
+    pub validation: ValidationWork,
     pub(super) pre: Option<PrecomputedModel>,
     pub(super) state: Option<SimulationModel>,
     pub(super) initialize_cursor: usize,
@@ -401,17 +401,17 @@ pub struct EnergyJobAuthority {
     pub warmup_hour: u32,
     pub(super) previous_temperatures: Vec<f64>,
     pub(super) previous_loads: Vec<f64>,
-    pub(super) warmup_convergence: Option<WarmupConvergenceWork>,
+    pub warmup_convergence: Option<WarmupConvergenceWork>,
     pub(super) run_hours: Option<calendar::RunPeriodHours>,
     pub total_timesteps: u32,
     pub run_backing_stage: u8,
     pub hour_index: u32,
     pub aggregate_zone_cursor: usize,
-    pub(super) aggregate_zone_work: Option<AggregateZoneWork>,
+    pub aggregate_zone_work: Option<AggregateZoneWork>,
     pub aggregate_facility_cursor: u8,
-    pub(super) aggregate_facility_work: Option<AggregateZoneWork>,
-    pub(super) timestep_work: Option<TimestepWork>,
-    pub(super) timestep_builder: Option<TimestepBuilder>,
+    pub aggregate_facility_work: Option<AggregateZoneWork>,
+    pub timestep_work: Option<TimestepWork>,
+    pub timestep_builder: Option<TimestepBuilder>,
     pub rng_state: u64,
     pub checkpoint_due: bool,
     pub result_backing: EnergyAdmittedResultBacking,
@@ -421,18 +421,18 @@ pub struct EnergyJobAuthority {
     pub(super) meter_order: Vec<String>,
     pub zone_temperature_history: Vec<f64>,
     pub(super) facility_electricity_j: f64,
-    pub(super) publication: EnergyPublicationChannels,
+    pub publication: EnergyPublicationChannels,
     pub restore_input: Option<EnergyWirePacket>,
-    pub(super) wire_build: Option<EnergyWireBuild>,
+    pub wire_build: Option<EnergyWireBuild>,
     pub wire_ready: Option<EnergyWirePacket>,
     pub(super) result: Option<Results>,
-    pub(super) sizing_builder: Option<SizingBuilder>,
+    pub sizing_builder: Option<SizingBuilder>,
     pub(super) final_sizing: Option<SizingTables>,
     pub(super) final_summaries: SummaryTables,
     pub(super) final_environmental: Option<EnvironmentalMetrics>,
     pub(super) final_resilience: Option<ResilienceMetrics>,
-    pub(super) finalization: FinalizationWork,
-    pub(super) result_build: ResultBuildWork,
+    pub finalization: FinalizationWork,
+    pub result_build: ResultBuildWork,
     pub(super) output_writer: Option<semio_framework_job::RetainedJobPayloadWriter>,
     pub(super) output_payload: Option<RetainedJobPayload>,
     pub(super) commit_census: Option<CommitCensusWork>,
@@ -443,13 +443,13 @@ pub struct EnergyJobAuthority {
     pub(super) pending_outcome: Option<EnergyRun>,
     pub(super) commit_pages_mounted: usize,
     pub(super) commit_items_encoded: usize,
-    pub(super) encode_section: u8,
+    pub encode_section: u8,
     pub(super) encode_record_cursor: usize,
     pub(super) encode_sample_cursor: usize,
     pub(super) encode_fragment_phase: u8,
     pub(super) encode_name_cursor: usize,
     pub(super) output_fault: Option<OutputFault>,
-    pub(super) weather_fault: Option<WeatherFault>,
+    pub weather_fault: Option<WeatherFault>,
     pub(super) started: Instant,
     pub(super) closing: bool,
     pub(super) close_string_owner: String,

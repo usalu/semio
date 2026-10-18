@@ -2,8 +2,8 @@
 //! (see the shared cascade), including the properties and classifications of every removed element. A storey that a
 //! surviving element's top constraint still points at cannot cascade and is refused as `mutation.target-referenced`.
 
-use super::super::cascade;
-use super::DeleteSite;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_site::DeleteSite;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

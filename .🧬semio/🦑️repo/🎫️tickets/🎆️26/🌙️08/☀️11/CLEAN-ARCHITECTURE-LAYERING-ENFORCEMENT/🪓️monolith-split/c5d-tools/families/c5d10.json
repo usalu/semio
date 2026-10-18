@@ -1,0 +1,5 @@
+{
+ "name": "c5d10",
+ "crates": ["semio-framework-value-retained-clone"],
+ "note": "CENSUS5-D package 10: the owning crate of the retained clone contract (geometry primitives compile for real in oracle5)"
+}

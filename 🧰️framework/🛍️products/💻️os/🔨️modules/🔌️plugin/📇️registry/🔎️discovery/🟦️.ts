@@ -1,7 +1,11 @@
 import { readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import type { AreaState, DiscoveredPackage, RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { canonicalPrimaryFilenameForKind, declaredComponentKind, discoverCatalogPackages, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import type { AreaState } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📜️taxonomy-contracts/🟦️.ts";
+import type { DiscoveredPackage } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
+import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/📇️registry-catalog-inputs/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadCatalogTaxonomy, registryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { declaredComponentKind } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
+import { discoverCatalogPackages } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🧲️registry-catalog-projection/🟦️.ts";
 import { declaredComponentDeploymentDirectoryV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { decodeRegistryDescriptorV1, REGISTRY_HOST_APP_CHANNEL_VERSION, StaleChannelDescriptorError } from "../🧬️schema/🟦️.ts";

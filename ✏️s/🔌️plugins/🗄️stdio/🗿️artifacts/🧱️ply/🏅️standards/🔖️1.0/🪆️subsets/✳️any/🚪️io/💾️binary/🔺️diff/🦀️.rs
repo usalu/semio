@@ -40,18 +40,18 @@ pub(crate) fn read_bin_blob(r: &mut dsl::ByteReader<'_>) -> Result<Vec<u8>, dsl:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
+pub fn write_bin_str(w: &mut dsl::ByteWriter, s: &str) {
     write_bin_blob(w, s.as_bytes());
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackRefusal> {
+pub fn read_bin_str(r: &mut dsl::ByteReader<'_>) -> Result<String, dsl::PackRefusal> {
     let bytes = read_bin_blob(r)?;
     String::from_utf8(bytes).map_err(|e| dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "ply binary utf8 string", offset: 0, detail: e.to_string() })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
+pub fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item: impl Fn(&mut dsl::ByteWriter, &T)) {
     w.write_varint_u64(items.len() as u64);
     for item in items {
         write_item(w, item);
@@ -59,7 +59,7 @@ pub(crate) fn write_bin_vec<T>(w: &mut dsl::ByteWriter, items: &[T], write_item:
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>) -> Result<Vec<T>, dsl::PackRefusal> {
+pub fn read_bin_vec<T>(r: &mut dsl::ByteReader<'_>, mut read_item: impl FnMut(&mut dsl::ByteReader<'_>) -> Result<T, dsl::PackRefusal>) -> Result<Vec<T>, dsl::PackRefusal> {
     let n = r.read_varint_u64()? as usize;
     let mut out = Vec::with_capacity(n);
     for _ in 0..n {
@@ -90,7 +90,7 @@ pub(crate) fn read_bin_option<T>(r: &mut dsl::ByteReader<'_>, read_value: impl F
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_format(w: &mut dsl::ByteWriter, f: PlyFormat) {
+pub fn write_bin_format(w: &mut dsl::ByteWriter, f: PlyFormat) {
     w.write_u8(match f {
         PlyFormat::Ascii => 0,
         PlyFormat::BinaryLittleEndian => 1,
@@ -99,7 +99,7 @@ pub(crate) fn write_bin_format(w: &mut dsl::ByteWriter, f: PlyFormat) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_format(r: &mut dsl::ByteReader<'_>) -> Result<PlyFormat, dsl::PackRefusal> {
+pub fn read_bin_format(r: &mut dsl::ByteReader<'_>) -> Result<PlyFormat, dsl::PackRefusal> {
     match r.read_u8()? {
         0 => Ok(PlyFormat::Ascii),
         1 => Ok(PlyFormat::BinaryLittleEndian),
@@ -142,7 +142,7 @@ pub(crate) fn read_bin_scalar_type(r: &mut dsl::ByteReader<'_>) -> Result<PlySca
 /// recursive `List(Vec<PlyValue>)` variant (self-recursion, real — not opaque, `write_bin_vec`
 /// calling back into `write_bin_value` for every item).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_value(w: &mut dsl::ByteWriter, v: &PlyValue) {
+pub fn write_bin_value(w: &mut dsl::ByteWriter, v: &PlyValue) {
     match v {
         PlyValue::Char(x) => {
             w.write_u8(0);
@@ -184,7 +184,7 @@ pub(crate) fn write_bin_value(w: &mut dsl::ByteWriter, v: &PlyValue) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_value(r: &mut dsl::ByteReader<'_>) -> Result<PlyValue, dsl::PackRefusal> {
+pub fn read_bin_value(r: &mut dsl::ByteReader<'_>) -> Result<PlyValue, dsl::PackRefusal> {
     let malformed = |offset: usize, detail: String| dsl::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "ply binary value", offset: offset as u64, detail };
     match r.read_u8()? {
         0 => Ok(PlyValue::Char(i8::from_le_bytes(r.read_bytes(1)?.try_into().map_err(|_| malformed(r.position(), "expected 1 byte".into()))?))),
@@ -228,17 +228,17 @@ pub(crate) fn read_bin_property(r: &mut dsl::ByteReader<'_>) -> Result<PlyProper
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_row(w: &mut dsl::ByteWriter, row: &PlyRow) {
+pub fn write_bin_row(w: &mut dsl::ByteWriter, row: &PlyRow) {
     write_bin_vec(w, &row.values, write_bin_value);
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_row(r: &mut dsl::ByteReader<'_>) -> Result<PlyRow, dsl::PackRefusal> {
+pub fn read_bin_row(r: &mut dsl::ByteReader<'_>) -> Result<PlyRow, dsl::PackRefusal> {
     Ok(PlyRow { values: read_bin_vec(r, read_bin_value)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
+pub fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
     write_bin_str(w, &e.name);
     w.write_varint_u64(e.count as u64);
     write_bin_vec(w, &e.properties, write_bin_property);
@@ -246,7 +246,7 @@ pub(crate) fn write_bin_element(w: &mut dsl::ByteWriter, e: &PlyElement) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bin_element(r: &mut dsl::ByteReader<'_>) -> Result<PlyElement, dsl::PackRefusal> {
+pub fn read_bin_element(r: &mut dsl::ByteReader<'_>) -> Result<PlyElement, dsl::PackRefusal> {
     let name = read_bin_str(r)?;
     let count = r.read_varint_u64()?;
     let properties = read_bin_vec(r, read_bin_property)?;

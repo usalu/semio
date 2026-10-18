@@ -95,7 +95,9 @@
         "files",
         "expectedFiles",
         "policyCases",
-        "lifetimeCases"
+        "lifetimeCases",
+        "terminalResults",
+        "fixtureOutput"
       ],
       "properties": {
         "version": {
@@ -159,8 +161,8 @@
         },
         "lifetimeCases": {
           "type": "array",
-          "minItems": 10,
-          "maxItems": 10,
+          "minItems": 15,
+          "maxItems": 15,
           "uniqueItems": true,
           "items": {
             "enum": [
@@ -173,10 +175,41 @@
               "terminal-failure",
               "cohort-limit",
               "sibling-drain",
-              "path-code-units"
+              "path-code-units",
+              "terminal-stream",
+              "result-undefined",
+              "result-frozen",
+              "result-child-drain",
+              "result-missing"
             ]
           }
+        },
+        "terminalResults": {
+          "const": {
+            "required": true,
+            "exactlyOnce": true,
+            "beforeCohortSettlement": true,
+            "authoredResultOrder": true,
+            "genuineChild": true,
+            "acceptedChildDrain": true
+          }
+        },
+        "fixtureOutput": {
+          "const": {
+            "fileBytes": 2048,
+            "cohortFileBytes": 12288
+          }
         }
+      }
+    },
+    "TerminalResults": {
+      "const": {
+        "required": true,
+        "exactlyOnce": true,
+        "beforeCohortSettlement": true,
+        "authoredResultOrder": true,
+        "genuineChild": true,
+        "acceptedChildDrain": true
       }
     }
   }

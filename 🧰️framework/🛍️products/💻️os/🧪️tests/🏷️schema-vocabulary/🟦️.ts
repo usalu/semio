@@ -1,7 +1,6 @@
-/** 🏷️ The `x-semio-*` vendor annotation vocabulary (`🧪️tests/🧬️schema-oracle/🔣️.json`) against the schemas that use it: every
+/** 🏷️ The `x-semio-*` vendor annotation vocabulary (`🧰️framework/🔨️modules/🧬️schema/🧬️vendor-annotation-vocabulary/🔣️.json`) against the schemas that use it: every
  * annotation any os or hub schema carries is declared (with a value its meta-schema admits), the shared strict oracle compiles
- * the schemas that failed before it existed (`📇️directory/🧬️schema`, `🌎️hub/🧬️schema/🤝️two-client-document-v1` carry
- * `x-semio-note`), and strictness survives: an undeclared keyword or an ill-typed annotation still refuses to compile. */
+ * the schema that failed before it existed (`📇️directory/🧬️schema` carries `x-semio-note`), and strictness survives: an undeclared keyword or an ill-typed annotation still refuses to compile. */
 import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
@@ -35,8 +34,7 @@ describe("🏷️ x-semio vendor annotation vocabulary", () => {
     const declared = SEMIO_SCHEMA_VENDOR_VOCABULARY_V1.keywords as Record<string, object>;
     const undeclared = new Set<string>();
     const illTyped: string[] = [];
-    const vocabularyFile = fileURLToPath(new URL("../🧬️schema-oracle/🔣️.json", import.meta.url));
-    for (const path of [...schemaFiles(os), ...schemaFiles(hub)].filter((candidate) => candidate !== vocabularyFile)) {
+    for (const path of [...schemaFiles(os), ...schemaFiles(hub)]) {
       let document: unknown;
       try {
         document = json(path);
@@ -52,12 +50,10 @@ describe("🏷️ x-semio vendor annotation vocabulary", () => {
     expect(illTyped).toEqual([]);
   }, 120_000);
 
-  it("compiles the schemas carrying x-semio-note in strict mode", () => {
+  it("compiles the schema carrying x-semio-note in strict mode", () => {
     const directory = json(fileURLToPath(directorySchemaUrl));
-    const twoClient = json(join(hub, "🧬️schema/🤝️two-client-document-v1/🔣️.json"));
     expect(annotations(directory).some(([keyword]) => keyword === "x-semio-note")).toBe(true);
-    expect(() => semioSchemaAjvV1({ allErrors: true }).addSchema(directory).addSchema(twoClient).compile({ $ref: directory.$id })).not.toThrow();
-    expect(() => semioSchemaAjvV1().compile(twoClient)).not.toThrow();
+    expect(() => semioSchemaAjvV1({ allErrors: true }).addSchema(directory).compile({ $ref: directory.$id })).not.toThrow();
   });
 
   it("keeps strict mode: an undeclared x-semio keyword and an ill-typed annotation both refuse to compile", () => {

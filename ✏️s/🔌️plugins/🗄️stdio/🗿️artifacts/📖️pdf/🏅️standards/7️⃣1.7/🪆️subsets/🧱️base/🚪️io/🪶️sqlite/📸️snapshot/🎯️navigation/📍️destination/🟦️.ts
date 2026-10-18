@@ -1,5 +1,5 @@
 /** 📍️ Handwritten destinations, complete fit scalars and file specifications. */
-import type { PdfDestination,PdfDestinationFit,PdfFileSpecification } from "../../../../../🧬️schema/📸️snapshot/🟦️.ts";
+import type { PdfDestination, PdfDestinationFit, PdfFileSpecification } from "../../../../../🧬️schema/📸️snapshot/🎯️navigation/🟦️.ts";
 import { PdfProjection,PdfReader,pdfInteger,pdfNumber,type PdfCell } from "../../🧩️entity/🟦️.ts";
 import { artifactSqliteText } from "@semio-tech/framework/io/sqlite-snapshot/artifact";
 

@@ -34,7 +34,7 @@ use framework_schema::ArtifactSchema;
 /// shape) is the honest, single-source-of-truth choice — same boundary `🌊️flow`'s/`🔺️mesh`'s/
 /// `🖼️image`'s own pilots each independently reached for their own shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn hex_encode(bytes: &[u8]) -> String {
+pub fn hex_encode(bytes: &[u8]) -> String {
     bytes.iter().map(|b| format!("{b:02x}")).collect()
 }
 
@@ -57,7 +57,7 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
+pub fn parse_u32(s: &str) -> Result<u32, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 
@@ -74,7 +74,7 @@ pub fn enc_format(f: SemioAudioFormat) -> &'static str {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
+pub fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
     match s {
         "pcm8" => Ok(SemioAudioFormat::Pcm8),
         "pcm16" => Ok(SemioAudioFormat::Pcm16),
@@ -91,12 +91,12 @@ pub(crate) fn dec_format(s: &str) -> Result<SemioAudioFormat, String> {
 /// convention this subset's own `🔺️diff` facet's `enc_f32_list` uses (duplicated, not imported —
 /// see this region's own doc comment for why).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_f32_list(v: &[f32]) -> String {
+pub fn enc_f32_list(v: &[f32]) -> String {
     format!("[{}]", v.iter().map(|f| format!("{:08x}", f.to_bits())).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
+pub fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
     let inner = strip_brackets(s)?;
     if inner.is_empty() {
         return Ok(Vec::new());
@@ -105,22 +105,22 @@ pub(crate) fn dec_f32_list(s: &str) -> Result<Vec<f32>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_channel(c: &SemioAudioChannel) -> String {
+pub fn enc_channel(c: &SemioAudioChannel) -> String {
     enc_f32_list(&c.samples)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
+pub fn dec_channel(s: &str) -> Result<SemioAudioChannel, String> {
     Ok(SemioAudioChannel { samples: dec_f32_list(s)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_tag(t: &SemioAudioTag) -> String {
+pub fn enc_tag(t: &SemioAudioTag) -> String {
     format!("[{},{}]", enc_str(&t.key), enc_str(&t.value))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
+pub fn dec_tag(s: &str) -> Result<SemioAudioTag, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [key, value] = parts.as_slice() else { return Err(format!("tag: expected 2 fields, got {}", parts.len())) };
     Ok(SemioAudioTag { key: dec_str(key)?, value: dec_str(value)? })
@@ -245,12 +245,12 @@ use protocol::MutationDiff;
 /// payload (via the mutations module) and directly nowhere else; kept here alongside its sibling
 /// value codecs.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_snapshot(s: &SemioAudioSnapshot) -> String {
+pub fn enc_snapshot(s: &SemioAudioSnapshot) -> String {
     format!("[{},{},{},[{}],[{}]]", hex_encode(s.schema.as_bytes()), s.sample_rate, enc_format(s.format), s.channels.iter().map(enc_channel).collect::<Vec<_>>().join(","), s.tags.iter().map(enc_tag).collect::<Vec<_>>().join(","),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_snapshot(s: &str) -> Result<SemioAudioSnapshot, String> {
+pub fn dec_snapshot(s: &str) -> Result<SemioAudioSnapshot, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [schema_hex, sample_rate, format, channels_s, tags_s] = parts.as_slice() else {
         return Err(format!("snapshot: expected 5 fields, got {}", parts.len()));

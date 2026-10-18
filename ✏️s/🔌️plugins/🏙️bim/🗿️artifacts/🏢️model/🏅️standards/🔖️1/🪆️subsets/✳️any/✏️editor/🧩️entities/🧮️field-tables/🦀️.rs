@@ -1,6 +1,8 @@
 //! 🧮️ Field tables of the BIM entity table: the authored parameter rows and inferred rows of every entity kind. See [`super`].
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, snapshot::OpeningKind, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::diff::Assigned;
+use crate::editor::bim::entities::*;
 
 //#region 🔖️Fields
 pub static SITE_FIELDS: &[FieldRow] = &[
@@ -68,7 +70,7 @@ pub static COLUMN_FIELDS: &[FieldRow] = &[
     field!("column_type", field_column_type, Text, |s, id| s.columns.get(id).map(|row| row.column_type.clone()), parse_text => set_column::SetColumn),
     field!("position", field_position, Text, |s, id| s.columns.get(id).map(|row| point(row.position.x, row.position.y)), parse_point => set_column::SetColumn),
     field!("rotation", field_rotation, Number, |s, id| s.columns.get(id).map(|row| number(row.rotation)), parse_number => set_column::SetColumn),
-    field!("tilt", field_tilt, Text, |s, id| s.columns.get(id).map(|row| ceilings::slope_text(row.tilt)), |s, id, value| frame::write_tilt(s, id, value)),
+    field!("tilt", field_tilt, Text, |s, id| s.columns.get(id).map(|row| slope_text(row.tilt)), |s, id, value| frame::write_tilt(s, id, value)),
     field!("base_offset", field_base_offset, Number, |s, id| s.columns.get(id).map(|row| number(row.base_offset)), parse_number => set_column::SetColumn),
     field!("top", field_top, Text, |s, id| s.columns.get(id).map(|row| top_text(&row.top)), parse_top => set_column::SetColumn),
 ];

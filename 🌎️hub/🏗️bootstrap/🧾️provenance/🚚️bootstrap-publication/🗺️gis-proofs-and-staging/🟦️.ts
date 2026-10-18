@@ -13,7 +13,7 @@ import { DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES } from "@semio-tech/frame
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema";
 import { DOCUMENT_BROWSER_ACTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema/browser-actor";
 import { TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { trustedBootstrapBuildControl, type TrustedBootstrapBundleV1, trustedBootstrapFsyncDirectory, trustedBootstrapGenerationReceipt, type TrustedBootstrapGenerationReceiptV1, type TrustedBootstrapMaterializationV1, trustedBootstrapVerifyGeneration, trustedBootstrapWriteNew } from "../../🗃️bootstrap-bundle/🟦️.ts";
 import { trustedBootstrapPluginModuleBlobPath } from "../../🧮️bootstrap-claims/🟦️.ts";
 import { trustedBootstrapReadRegular } from "../../🧭️bootstrap-selection/🟦️.ts";

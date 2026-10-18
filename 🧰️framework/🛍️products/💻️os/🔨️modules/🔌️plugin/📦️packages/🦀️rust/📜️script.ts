@@ -7,7 +7,11 @@ import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules
 
 
 /** 🦀️ Awaited plugin SDK checks and exact-filter native regression tests. */
-import { runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, runRepositoryTestCommand, nextestArtifactLocation, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
+import { nextestArtifactLocation } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🔣️policy/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import assert from "node:assert/strict";
@@ -183,17 +187,6 @@ class FixtureChannelInterfacesScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw Error("test-fixture-channel-interfaces accepts no arguments");
     await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🔬️app-declarations-fixture/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 15_000 });
-  }
-}
-
-/** 🤝️ Keeps actual host pump ownership and all retained native host witnesses in the plugin. */
-class CooperativeHostCheckScript extends BundleScript {
-  async run(segments: string[]): Promise<void> {
-    if (segments.length > 1 || (segments.length && segments[0] !== "--native")) throw new Error("cooperative-host-check accepts only --native");
-    await runRepositoryTestCommand(process.execPath, ["test", resolve(this.root, "../../🧪️tests/🤝️cooperative-pump/🟦️.ts")], { cwd: this.repoRoot, budgetMs: 15_000 });
-    if (segments[0] !== "--native") return;
-    const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: Number(process.env.SEMIO_BUILD_BUDGET_MS ?? 3_600_000), listMilliseconds: 60_000, lawMilliseconds: 120_000 },cwd: this.repoRoot,env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-framework-plugin-tests-09", target: { kind: "lib" }, laws: ["cooperative_pump_tests::cooperative_maintenance_live_host_revisits_queued_owner"] }],progress(event) { console.log(`cooperative-host-native ${event.stage}: ${event.law ?? ""} artifacts=${event.artifactDir}`); }});
-    for (const receipt of receipts) console.log(`cooperative-host-native-receipt: ${JSON.stringify(receipt)}`);
   }
 }
 
@@ -465,7 +458,6 @@ class MountedReceivingScript extends BundleScript {
     const artifactDir = process.env.SEMIO_TEST_ARTIFACT_DIR;
     if (!artifactDir) throw Error("mounted receiving requires explicit owned artifact storage");
       const receipts = await runRepositoryExactCargoLaws({control:exactCargoCallerControlV1(this.invocation,"exact-cargo:caller",0),preparation: configuredRepositoryCargoPreparationPolicyV1(),invocation: this.invocation,policy: { version:1, buildMilliseconds:300000, listMilliseconds:60000, lawMilliseconds:60000, transport:{maximumBuildOutputBytes:268435456,maximumNativeOutputBytes:8388608} },cwd: this.root,env: process.env,nativeEnv: { RUST_MIN_STACK: "268435456" },groups: [{ package: "semio-framework-plugin", target: { kind: "lib" }, cargoArgs: ["--offline"], laws: [
-          "component::cooperative_pump_tests::cooperative_maintenance_live_host_revisits_queued_owner",
           "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_does_not_publish_terminal_before_watchdog",
           "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_deadline_resume_never_reenters_completed_work",
           "component::plugin_runtime::plugin_builder_contract_tests::local_interaction_dispatch::instance_lifetime_close_late_physical_step_retains_its_exact_outcome",
@@ -558,7 +550,6 @@ const router = new ScriptRouter(import.meta.dir).register("test-original-fixture
   .register("test-window-registry",WindowRegistryScript)
   .register("test-window-preparation-source",WindowPreparationSourceScript)
   .register("canonical-architecture", CanonicalArchitectureScript)
-  .register("cooperative-host-check", CooperativeHostCheckScript)
   .register("document-backbone-binding-check", DocumentBackboneBindingCheckScript)
   .register("cold-document-pair-ingress-check", ColdDocumentPairIngressCheckScript)
   .register("guest-lifecycle-check", GuestLifecycleCheckScript)

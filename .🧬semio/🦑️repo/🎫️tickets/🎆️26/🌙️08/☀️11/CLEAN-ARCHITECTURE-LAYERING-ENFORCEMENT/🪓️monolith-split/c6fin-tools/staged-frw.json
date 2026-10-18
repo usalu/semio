@@ -1,0 +1,15 @@
+{
+ "tag": "frw",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧪️tests/🔬️wgpu-renderer-async-boundary/🦀️.rs",
+ "folders": [
+  "🧭️source-readers-and-frame-input-laws",
+  "🖼️raster-contract-upload-cache-and-asset-probe",
+  "🧱️glb-materials-and-independent-decoder-jobs",
+  "👷️decoder-worker-session-recovery-and-asset-transfer",
+  "🗜️reference-decode-staging-and-runtime-mailbox",
+  "🚦️dispatch-cursors-frame-deferred-and-maintenance",
+  "🛰️text-stream-maintenance-queue-and-presenter-retirement",
+  "🧊️glb-world-mesh-swapchain-and-original-decoder-close"
+ ]
+}

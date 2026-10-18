@@ -1,21 +1,57 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_records, dep_types, dep_value};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::DEFAULT_CUT_HEIGHT;
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::BulgeSeg;
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::Vertex as Corner;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, OpeningKind, Phase, Point2, TopConstraint}, inferences::ModelInference};
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeSet;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_plan_linework;
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json");
-const CURVED: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🌀️curved/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🏡️house/📸️snapshot/🔣️.json"));
+static CURVED: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🗺️plan-linework/🌀️curved/📸️snapshot/🔣️.json"));
 
 fn house() -> ModelSnapshot {
-    from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes")
+    from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("house decodes")
 }
 
 fn curved() -> ModelSnapshot {
-    from_json_str(CURVED, JsonMemberPolicy::Reject).expect("curved decodes")
+    from_json_str((*CURVED), JsonMemberPolicy::Reject).expect("curved decodes")
 }
 
 fn plan(snapshot: &ModelSnapshot, storey: &str) -> PlanLinework {
@@ -304,10 +340,10 @@ fn editing_the_cut_height_of_a_storey_redraws_its_plan_only() {
     assert_eq!(incremental, ModelInference::infer(&edited).expect("infers"), "and the result equals a fresh inference");
 }
 
-const RAMPS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json");
+static RAMPS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🛝️ramp-runs/🏞️ramps/📸️snapshot/🔣️.json"));
 
 fn ramps() -> ModelSnapshot {
-    from_json_str(RAMPS, JsonMemberPolicy::Reject).expect("ramps decode")
+    from_json_str((*RAMPS), JsonMemberPolicy::Reject).expect("ramps decode")
 }
 
 fn area_of(vertices: &[PlanVertex]) -> f64 {

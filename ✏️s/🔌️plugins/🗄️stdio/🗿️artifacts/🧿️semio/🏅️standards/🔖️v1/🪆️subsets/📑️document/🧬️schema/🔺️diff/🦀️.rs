@@ -83,9 +83,4 @@ pub fn demo_diff_cases() -> Vec<SemioDocumentDiff> {
 }
 //#endregion 🔖️Demo
 
-//#region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🔖️Tests
 //#endregion 🔖️DocumentDiffLogic

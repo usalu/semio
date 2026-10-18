@@ -1,12 +1,15 @@
 //! ↩️ Inverse of `CreateCurtainPanelOverride`: the concrete `DeleteCurtainPanelOverride` of the id it created, none when the id was already taken.
 
-use super::super::delete_curtain_panel_override::DeleteCurtainPanelOverride;
-use super::CreateCurtainPanelOverride;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride;
+use crate::standards::v1::subsets::any::schema::mutations::create_curtain_panel_override::CreateCurtainPanelOverride;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &CreateCurtainPanelOverride, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &CreateCurtainPanelOverride, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_curtain_panel_override::DeleteCurtainPanelOverride>,
+{
     if base.curtain_panel_overrides.contains_key(&payload.id) {
         return Vec::new();
     }
-    vec![ModelMutation::DeleteCurtainPanelOverride(DeleteCurtainPanelOverride { id: payload.id.clone() })]
+    vec![Op::from(DeleteCurtainPanelOverride { id: payload.id.clone() })]
 }

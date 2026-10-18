@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `DeleteClassificationSystem`: the system leaves together with every classification that names it: an element or type that has no other classification loses its whole entry, one that has
 //! others is patched to no code in this system. The cascade is restorable (one `set-element-classification` per removed classification), so it never refuses except for more rows than one removal restores.
 
-use super::super::cascade;
-use super::DeleteClassificationSystem;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_classification_system::DeleteClassificationSystem;
 use crate::standards::v1::subsets::any::schema::{diff::{ClassificationSetPatch, Entry, KeyedDelta, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

@@ -3,11 +3,11 @@
 //! `crate::tui::chrome` (see that mod's `use crate::tui::footer::paint_footer;`). Hints and status never overlap:
 //! the status keeps up to a third of the row before hints are cut, and whatever is cut ends in an ellipsis.
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::chrome::FooterState;
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::text::{display_width, elide, Elision};
-use crate::tui::theme::{Role, Surface, Theme};
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use crate::chrome::FooterState;
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::text::{display_width, elide, Elision};
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
 
 const STATUS_GAP: u16 = 1;
 

@@ -22,9 +22,15 @@ test("native Architect sparse collection roles preserve schema and independent S
   const db = new Database(":memory:");
   db.run("CREATE TABLE owners(id TEXT PRIMARY KEY, ordinal INTEGER NOT NULL)");
   fixture.ids.forEach((id:string, ordinal:number) => db.run("INSERT INTO owners VALUES (?,?)", [id, ordinal]));
-  fixture.delta.removed.forEach((id:string) => db.run("DELETE FROM owners WHERE id=?", [id]));
-  fixture.delta.reordered.forEach((id:string, ordinal:number) => db.run("UPDATE owners SET ordinal=? WHERE id=?", [ordinal, id]));
-  expect(db.query("SELECT id FROM owners ORDER BY ordinal").all().map((row:any) => row.id)).toEqual(fixture.expected);
+  fixture.delta.removed.forEach((row:{id:string}) => db.run("DELETE FROM owners WHERE id=?", [row.id]));
+  const ordered = (): string[] => db.query("SELECT id FROM owners ORDER BY ordinal").all().map((row:any) => row.id);
+  fixture.delta.moved.forEach((move:{id:string; from:number; to:number}) => {
+    const ids = ordered();
+    ids.splice(move.from, 1);
+    ids.splice(move.to, 0, move.id);
+    ids.forEach((id, ordinal) => db.run("UPDATE owners SET ordinal=? WHERE id=?", [ordinal, id]));
+  });
+  expect(ordered()).toEqual(fixture.expected);
   db.close();
   const source = readFileSync(resolve(root, "🦀️.rs"), "utf8");
   for(const name of ["ProgramDiff", "ProgramStakeholdersDelta", "ProgramStakeholdersPatchEntry"]) {

@@ -11,7 +11,8 @@ import { FONT_ASSET } from "../../../../../../../../🔨️modules/🖼️canvas
 import { repoCacheDirectory } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { existsSync, readFileSync, watch, type FSWatcher } from "node:fs";
 import { basename, dirname, join, resolve } from "node:path";
-import { semioEmojiIndexHtmlVitePlugin, staticDirVitePlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { semioEmojiIndexHtmlVitePlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🌐️site-html/🟦️.ts";
+import { staticDirVitePlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import type { OwnedBuildConfig, OwnedBuildPlugin } from "../../../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
 import { semioAgentBridgeRendezvousVitePlugin } from "../../../../../🧑‍💻dev/🔌️vite-plugins/🛰️agent-bridge-rendezvous/🟦️.ts";
 
@@ -33,7 +34,7 @@ export type WgpuBrowserConfiguration = {
   readonly assetServeMode: AssetDeliveryModeV1;
 };
 
-/** ♻️ Reloads browsers only after Nx activation publishes its completion marker. */
+/** ♻️ Reloads browsers only after build activation publishes its completion marker. */
 function completedArtifactReload(path: string): OwnedBuildPlugin {
   let watcher: FSWatcher | undefined;
   return {
@@ -136,7 +137,7 @@ export function createWgpuBrowserConfig(options: WgpuBrowserConfiguration): Owne
       completedArtifactReload(options.reloadFile),
       wgpuBrowserSelectionPlugin(options.variant),
       { name: "wgpu-supplied-catalog", transformIndexHtml: () => [{ tag: "script", attrs: { id: "semio-plugin-catalog", type: "application/json" }, children: JSON.stringify(options.catalog).replaceAll("<", "\\u003c"), injectTo: "head" },{tag:"script",attrs:{id:"semio-native-catalog",type:"application/json"},children:JSON.stringify(readNativeCatalogV1(options.nativeCatalog??emptyNativeCatalogV1())).replaceAll("<","\\u003c"),injectTo:"head"}] },
-      { name: "wgpu-serve-only", config(_config, environment) { if (environment.command !== "serve") throw new Error("Build the finite WGPU wasm target through Nx"); } },
+      { name: "wgpu-serve-only", config(_config, environment) { if (environment.command !== "serve") throw new Error("Build the finite WGPU wasm target through the build tool"); } },
     ],
   };
 }

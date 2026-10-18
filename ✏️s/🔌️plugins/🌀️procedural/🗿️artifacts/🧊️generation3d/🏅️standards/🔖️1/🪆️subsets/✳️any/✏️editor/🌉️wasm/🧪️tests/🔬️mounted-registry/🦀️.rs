@@ -488,11 +488,11 @@ mod mounted_laws {
 
     #[test]
     fn domain_local_static_verifier_rejects_raw_routes_and_proves_three_dimensional_coverage() {
-        let owner_source = &std::fs::read_to_string(fixture_path!("../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs")).expect("scanned source");
-        let snapshot_source = &std::fs::read_to_string(fixture_path!("../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs")).expect("scanned source");
-        let lifecycle_fixture = super::fixture_text!("../../../🧪️tests/🧫️fixtures/🧷️p8yz-b-retained-mounted-laws.json");
-        let owner_fixture = super::fixture_text!("../../../🧪️tests/🧫️fixtures/👑️p8yz-b-owner-catalog-laws.json");
-        let oracle_fixture = super::fixture_text!("../../../🧪️tests/🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
+        let owner_source = &std::fs::read_to_string(fixture_path!("../../../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs")).expect("scanned source");
+        let snapshot_source = &std::fs::read_to_string(fixture_path!("../../../../../../🚪️io/💾️binary/📸️snapshot/🦀️.rs")).expect("scanned source");
+        let lifecycle_fixture = super::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🧷️p8yz-b-retained-mounted-laws.json");
+        let owner_fixture = super::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/👑️p8yz-b-owner-catalog-laws.json");
+        let oracle_fixture = super::fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🔬️p8yz-b-third-party-oracle-laws.json");
 
         assert!(owner_source.contains("mutations.delete-widget-position.3d-only"));
         assert!(owner_source.contains("GENERATION3D_RETAINED_SCHEMA_DISCRIMINATOR"));

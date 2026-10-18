@@ -72,6 +72,4 @@ pub fn pair(faces: &[Face]) -> Vec<(usize, usize)> {
     pairs
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

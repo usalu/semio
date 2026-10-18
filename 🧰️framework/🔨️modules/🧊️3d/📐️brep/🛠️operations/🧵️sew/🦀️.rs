@@ -359,8 +359,5 @@ mod tests;
 
 // #region 🧪️HealTests
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️heal/🦀️.rs"]
-mod heal_tests;
 
 // #endregion 🧪️HealTests

@@ -18,6 +18,4 @@ pub fn handle(payload: &EngagementInput, _doc: &ArtifactView<'_, ModelSnapshot>,
     Ok(Emit::default())
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

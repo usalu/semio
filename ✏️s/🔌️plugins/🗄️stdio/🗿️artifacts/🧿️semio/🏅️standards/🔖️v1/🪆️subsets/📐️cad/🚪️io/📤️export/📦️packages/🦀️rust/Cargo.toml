@@ -21,12 +21,15 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-cad = { workspace = true }
 # 🧩️ Capability Dependencies
 semio-s-artifact-stdio-dwg-model = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
+semio-s-artifact-stdio-step-snapshot = { workspace = true }
 # /🧩️ Capability Dependencies
 
 [dev-dependencies]

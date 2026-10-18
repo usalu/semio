@@ -1,0 +1,2481 @@
+//! 🔀 Exact imprint→classify→select→stitch boolean pipeline for solids bounded by planes,
+//! cylinders, cones, spheres and tori (and NURBS via [`semio_framework_3d_brep_intersect`]'s marching SSI): face-pair
+//! candidates via AABB overlap → [`intersect_surface_surface`] (W2-A) → the SSI curve's domain
+//! clipped to both faces' trims → an imprint edge shared by both operands (so stitching needs no
+//! fuzzy vertex welding, only shared-edge adjacency) → [`semio_framework_3d_brep_construction::euler::split_face_by_chain`]/
+//! [`semio_framework_3d_brep_construction::euler::split_face_by_interior_curve`] imprint each side → every resulting piece classified
+//! against the OTHER solid via [`semio_framework_3d_brep_queries::classification::point_in_solid`] → selected per [`BooleanOp`] → stitched into
+//! shell(s)/solid(s) → [`semio_framework_3d_brep_validation::validate_body`]. No tessellate→triangle-soup rebuild on this path — the
+//! old mesh pipeline survives only as the explicit opt-in [`boolean_solid_mesh_preview`]. A
+//! trivial disjoint/contained fast path and a box-specific exact-analytic fast path (both still
+//! genuinely exact, not mesh-derived) run before the general engine when they apply.
+//!
+//! Documented scope (see `📓️w2b-booleans.md` for the full account, and this ticket's
+//! `📓️boolean-kernel-2026-09-09.md` for what the 2026-09-09 pass changed): the general imprint
+//! engine handles curves that are fully interior to both faces (closed loop → hole + new face),
+//! that graze a periodic seam at one point (seam crossing), or that reach each face's boundary at
+//! two points — where "a curve" now means a CHAIN of segments assembled by [`chain_open_pendings`],
+//! so a segment that ends on ANOTHER segment rather than on the boundary is legal as long as the
+//! chain as a whole reaches it. An imprint that lands exactly along pre-existing topology
+//! subdivides and REUSES that boundary edge ([`coincident_boundary_edge`]) instead of minting a
+//! duplicate. Coincident/adjacent duplicate faces on the same surface (e.g. two operands sharing a
+//! face exactly) are detected and merged into one rather than kept twice.
+//!
+//! ♻️ Input lifetime: a boolean OWNS everything it answers with and frees nothing it did not
+//! create. The general engine plans on deep copies of both operands ([`BooleanJob::new`]), every
+//! fast-path branch that "returns an operand" returns a [`copy_solid`] of it, and the post-stitch
+//! orphan sweep is scoped to the entities the job itself minted. The operands are read-only
+//! throughout, because the evaluator above this kernel serves an unchanged input node from cache
+//! and re-presents the SAME handle on the next evaluation — a boolean that consumed its inputs made
+//! `sphere-box-fuse`/`sphere-cut-with-torus` answer `missing handle: <digest>` from the second
+//! evaluation onwards (`📓️brep-boolean-input-lifetime-2026-09-15.md`).
+//!
+//! Still out of scope, surfacing as a `BooleanError` rather than a silently wrong result: a set of
+//! open segments that closes into a cycle with no free end, and a clip whose endpoints fall on a
+//! pole or exactly along a trim boundary — `refine_boundary` locates those only to within the
+//! caller's tolerance, which is why the two procedural-3d boolean examples still fail (see the
+//! ticket report's §4.3).
+//!
+//! Lane 4-boolean of ticket `26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`, rewritten from
+//! the tessellate-and-classify pipeline in `26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME` wave 2
+//! (W2-B) — see `📓️w2b-booleans.md`.
+
+use std::collections::{HashMap, HashSet};
+
+use semio_framework_3d_brep_construction::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex};
+use semio_framework_3d_brep_intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
+use semio_framework_3d_brep_construction::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+use semio_framework_3d_brep_construction::staged::{drive, drive_solid, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_construction::transform::{copy_solid, transform_solid};
+use semio_framework_3d_brep_vector::matrix::Affine3;
+use semio_framework_3d_brep_representation::contract::{MeshTransfer, PointClassification};
+use semio_framework_3d_brep_queries::bounding_volume::face_aabb;
+use semio_framework_3d_brep_queries::classification::{point_in_face_uv, point_in_face_uv_closure};
+use semio_framework_3d_brep_queries::mass_properties::{closest_point_on_solid, shell_signed_volume, solid_bounding_box, solid_volume, AxisAlignedBox};
+use semio_framework_3d_brep_tessellation::tessellate_solid;
+use semio_framework_3d_brep_validation::BodyValidationJob;
+#[cfg(test)]
+use semio_framework_3d_brep_validation::validate_body;
+use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
+use semio_framework_3d_brep_curve::curve_ops::closest_parameter;
+use semio_framework_3d_brep_curve::Curve2;
+use semio_framework_3d_brep_representation::error::{BooleanError, KernelError, ValidationIssue};
+use semio_framework_3d_brep_surface::surface_ops::closest_uv;
+use semio_framework_3d_brep_surface::Surface;
+use semio_framework_3d_brep_tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_vector::{Pnt2, Pnt3, Vec2, Vec3};
+
+// #region 🔖️Api
+
+/// 🔀 Boolean combination kind for [`boolean_solid`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum BooleanOp {
+    Unite,
+    Cut,
+    Intersect,
+}
+
+/// 🔀 Combines solids `a` and `b` under `op`: a trivial disjoint/contained check, then a
+/// box-specific exact-analytic shortcut when both operands genuinely are axis boxes, then the
+/// general exact imprint→classify→select→stitch engine — never the mesh path (see
+/// [`boolean_solid_mesh_preview`] for that, behind explicit opt-in). `rec` accumulates the whole
+/// operation's [`semio_framework_3d_brep_representation::topology::history::OpDelta`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    match boolean_job(body, a, b, op, tol, rec)? {
+        BooleanAdmission::Answered(id) => Ok(id),
+        BooleanAdmission::Job(job) => job.run_to_completion(body, rec),
+    }
+}
+
+/// 🔀 Successively cuts `tools` from `target` (folded [`BooleanOp::Cut`]). Every intermediate is a
+/// solid this fold minted and nobody else can name, so it is dropped as soon as the next round
+/// supersedes it — `target` and the tools, which the caller DOES name, are never touched (see
+/// [`BooleanJob::new`]).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn compound_cut(body: &mut Body, target: SolidId, tools: &[SolidId], tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    drive_solid(&mut BooleanFoldJob::compound_cut(body, target, tools, tol)?, body, rec)
+}
+
+/// 🔀 Planar section of `solid` by the plane `(origin, normal)`.
+///
+/// Collects in-plane vertices and edge/plane hits, then builds one planar face from those points.
+/// Exact for polygonal/planar-boundary solids (kept from the prior pass); a genuinely curved-face
+/// section (a plane cutting a cylinder/sphere/cone/torus) is not yet routed through the new
+/// imprint engine — documented gap, see `📓️w2b-booleans.md`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn section_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
+    match drive(&mut SectionJob::new(body, solid, origin, normal, tol)?, body, rec)? {
+        StageOutput::Faces(faces) => Ok(faces),
+        other => Err(KernelError::Operation(format!("section did not yield faces: {other:?}"))),
+    }
+}
+
+/// 🔀 Splits `solid` by the plane `(origin, normal)` into two solids (classified triangle soups;
+/// hull fallback). Exact for polygonal/planar-boundary solids (kept from the prior pass); a
+/// genuinely curved-face split is not yet routed through the new imprint engine — documented gap,
+/// see `📓️w2b-booleans.md`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn split_solid_by_plane(body: &mut Body, solid: SolidId, origin: Pnt3, normal: Vec3, tol: f64, rec: &mut OpRecorder) -> Result<(SolidId, SolidId), KernelError> {
+    match drive(&mut SplitJob::new(body, solid, origin, normal, tol)?, body, rec)? {
+        StageOutput::Solids(solids) if solids.len() == 2 => Ok((solids[0], solids[1])),
+        other => Err(KernelError::Operation(format!("split did not yield two solids: {other:?}"))),
+    }
+}
+
+// #endregion 🔖️Api
+
+// #region 🔖️TrivialFastPath
+
+/// 🔀 Checks that don't depend on box-ness at all: disjoint operands (gap ≥ tol) and full
+/// containment (one operand's boundary lies entirely inside/outside the other), verified with a
+/// real [`point_in_solid`] probe of several boundary points, not just AABB containment (AABB
+/// containment alone is necessary but not sufficient — used only to decide whether the probe is
+/// worth running).
+/// 🐛 Every branch that "returns an operand" returns a DEEP COPY of it ([`copy_solid`],
+/// [`detached_copy_of_outer_faces`]). The former `clone_solid_shells` minted a second solid/shell
+/// wrapper over the operand's OWN faces, so one face belonged to two shells at once and the
+/// operand's lifetime became the result's — see this module's header.
+/// 🕳️ A tool strictly inside the target cuts a CAVITY: the tool's faces become an inner shell wound
+/// inward (every face flipped), so the void's signed volume opposes the outer shell's. Unflipped,
+/// every such cut (`sphere-cut-with-torus` at any radius past the torus) failed validation with
+/// `void-shell-not-inverted` and the preview had nothing to paint.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn trivial_topology_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb_b): (&AxisAlignedBox, &AxisAlignedBox), op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
+    let gap = aabb_gap(bb_a, bb_b);
+    if gap >= tol {
+        return match op {
+            BooleanOp::Unite => {
+                let mut faces = detached_copy_of_outer_faces(body, a, rec)?;
+                faces.extend(detached_copy_of_outer_faces(body, b, rec)?);
+                Ok(Some(solid_from_outer_faces(body, faces, Vec::new(), rec)?))
+            }
+            BooleanOp::Cut => Ok(Some(copy_solid(body, a, rec)?)),
+            BooleanOp::Intersect => Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty (operands disjoint)".into()))),
+        };
+    }
+    if aabb_contains(bb_b, bb_a, tol) && solid_wholly_inside(body, a, b, tol)? {
+        return match op {
+            BooleanOp::Unite => Ok(Some(copy_solid(body, b, rec)?)),
+            BooleanOp::Intersect => Ok(Some(copy_solid(body, a, rec)?)),
+            BooleanOp::Cut => Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cut is empty (tool contains target)".into()))),
+        };
+    }
+    if aabb_contains(bb_a, bb_b, tol) && solid_wholly_inside(body, b, a, tol)? {
+        return match op {
+            BooleanOp::Unite => Ok(Some(copy_solid(body, a, rec)?)),
+            BooleanOp::Intersect => Ok(Some(copy_solid(body, b, rec)?)),
+            // 🕳️ A tool that only TOUCHES the target's boundary (a pocket flush with the top and both
+            // sides — process3d's lap joint) is not a void: its coplanar faces must be imprinted and
+            // merged by the general engine. Answering a void shell here read the notch as an enclosed
+            // cavity whose faces were wound outward, and the "cut" ADDED the tool's volume.
+            BooleanOp::Cut if solid_strictly_inside(body, b, a, tol)? => {
+                let outer = detached_copy_of_outer_faces(body, a, rec)?;
+                let inner = detached_copy_of_outer_faces(body, b, rec)?;
+                for &face in &inner {
+                    flip_face(body, face);
+                }
+                Ok(Some(solid_from_outer_faces(body, outer, vec![inner], rec)?))
+            }
+            BooleanOp::Cut => Ok(None),
+        };
+    }
+    Ok(None)
+}
+
+/// 🔀 `true` when every boundary vertex of `inner` classifies strictly `Inside` `outer` — no vertex on
+/// its boundary — so `inner` can only ever be a genuine cavity of `outer`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_strictly_inside(body: &Body, inner: SolidId, outer: SolidId, tol: f64) -> Result<bool, KernelError> {
+    let points = solid_probe_points(body, inner, tol);
+    if points.is_empty() {
+        return Ok(false);
+    }
+    for p in points {
+        if !matches!(local_point_in_solid(body, outer, p, tol)?, PointClassification::Inside) {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+/// 🔀 `true` when every boundary vertex of `inner` classifies as `Inside` or `OnBoundary` against
+/// `outer` — a real (if sampling-based) containment proof, not an AABB heuristic.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_wholly_inside(body: &Body, inner: SolidId, outer: SolidId, tol: f64) -> Result<bool, KernelError> {
+    let points = solid_probe_points(body, inner, tol);
+    if points.is_empty() {
+        return Ok(false);
+    }
+    for p in points {
+        if !matches!(local_point_in_solid(body, outer, p, tol)?, PointClassification::Inside | PointClassification::OnBoundary) {
+            return Ok(false);
+        }
+    }
+    Ok(true)
+}
+
+// #endregion 🔖️TrivialFastPath
+
+// #region 🔖️BoxFastPath
+
+/// 🔀 When BOTH operands are genuinely axis boxes (6 faces, volume matching their AABB volume),
+/// `Intersect` is always another axis box (the AABB intersection), and `Unite` is one too — but
+/// ONLY when the two boxes agree on two of the three axis intervals and merely extend each other
+/// along the third ([`boxes_union_is_a_box`]); a general partial overlap unions into an L/cross
+/// shape, which this shortcut must hand back to the general imprint engine rather than silently
+/// returning the (strictly larger) AABB union. `Cut` is likewise left to the general engine.
+/// 🐛 The result is built at the union/intersection's own min corner: [`make_box`] always builds
+/// at the origin, so the shortcut used to return a correctly-SIZED box in the wrong PLACE
+/// whenever either operand was not itself origin-anchored — invisible to a volume-only assertion.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn box_fast_path(body: &mut Body, a: SolidId, b: SolidId, (bb_a, bb_b): (&AxisAlignedBox, &AxisAlignedBox), op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Option<SolidId>, KernelError> {
+    if !matches!(op, BooleanOp::Unite | BooleanOp::Intersect) {
+        return Ok(None);
+    }
+    if !(is_aabb_box_solid(body, a, bb_a)? && is_aabb_box_solid(body, b, bb_b)?) {
+        return Ok(None);
+    }
+    let target = match op {
+        BooleanOp::Unite => {
+            if !boxes_union_is_a_box(bb_a, bb_b, tol) {
+                return Ok(None);
+            }
+            aabb_union(bb_a, bb_b)
+        }
+        BooleanOp::Intersect => {
+            let Some(inter) = aabb_intersection(bb_a, bb_b) else {
+                return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty".into())));
+            };
+            let (w, d, h) = aabb_dims(&inter);
+            if w <= tol || d <= tol || h <= tol {
+                return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean intersect is empty within tolerance".into())));
+            }
+            inter
+        }
+        BooleanOp::Cut => unreachable!(),
+    };
+    let (w, d, h) = aabb_dims(&target);
+    let built = make_box(body, w, d, h, rec)?;
+    let origin = Vec3::new(target.min.x, target.min.y, target.min.z);
+    if origin.norm_sq() <= 0.0 {
+        return Ok(Some(built));
+    }
+    Ok(Some(transform_solid(body, built, &Affine3::translation(origin), rec)?))
+}
+
+/// 🔀 `true` when two axis boxes' union is itself an axis box: they must coincide on two of the
+/// three axis intervals and overlap or abut along the remaining one. Any other configuration
+/// unions into a non-box (L, cross, or two disjoint lumps).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn boxes_union_is_a_box(a: &AxisAlignedBox, b: &AxisAlignedBox, tol: f64) -> bool {
+    let spans = [(a.min.x, a.max.x, b.min.x, b.max.x), (a.min.y, a.max.y, b.min.y, b.max.y), (a.min.z, a.max.z, b.min.z, b.max.z)];
+    let mut extended = 0usize;
+    for (a0, a1, b0, b1) in spans {
+        if (a0 - b0).abs() <= tol && (a1 - b1).abs() <= tol {
+            continue;
+        }
+        if gap_1d(a0, a1, b0, b1) > tol {
+            return false;
+        }
+        extended += 1;
+    }
+    extended <= 1
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn is_aabb_box_solid(body: &Body, solid: SolidId, bb: &AxisAlignedBox) -> Result<bool, KernelError> {
+    let faces = body.solid_faces(solid);
+    if faces.len() != 6 {
+        return Ok(false);
+    }
+    let bv = aabb_volume(bb);
+    if !(bv.is_finite() && bv > 0.0) {
+        return Ok(false);
+    }
+    let v = solid_volume(body, solid, 1e-6)?;
+    Ok((v - bv).abs() <= 1e-6)
+}
+
+// #endregion 🔖️BoxFastPath
+
+// #region 🔖️ExactImprintEngine
+
+/// 🔀 One clipped piece of an intersection curve queued for imprint on one original face: `edge_id` is shared verbatim between the
+/// two originating faces' queues (built once, used twice), so the two resulting halves share topology, not just geometry.
+/// `pcurve_id` over `prange` is this face's own p-curve of that edge, in the edge's own order.
+struct Pending {
+    edge_id: EdgeId,
+    pcurve_id: Curve2Id,
+    prange: (f64, f64),
+}
+
+/// 🔀 One (face-of-A, face-of-B) imprint unit: intersect the two supports, clip every resulting
+/// curve to both trims, and queue the imprint each side owes. The atomic unit of
+/// [`BooleanPhase::Imprint`] — extracted verbatim out of the former `exact_imprint_boolean`'s inner
+/// loop so the budgeted walk and the unbudgeted one run the SAME code (ticket
+/// `26/09/09/PROCEDURAL-3D-END-TO-END`). A pair with nothing to imprint returns `Ok(())`.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+#[allow(clippy::too_many_arguments)]
+fn imprint_face_pair(
+    body: &mut Body,
+    (fa, fb): (FaceId, FaceId),
+    (sa, bb_a): (&Surface, &semio_framework_3d_brep_representation::contract::Aabb),
+    tol: f64,
+    weld: &mut Vec<(Pnt3, VertexId)>,
+    (pending_a, pending_b): (&mut HashMap<FaceId, Vec<Pending>>, &mut HashMap<FaceId, Vec<Pending>>),
+    rec: &mut OpRecorder,
+) -> Result<(), KernelError> {
+    let Ok(bb_b) = face_aabb(body, fb) else { return Ok(()) };
+    if !aabb_overlap(bb_a, &bb_b, tol) {
+        return Ok(());
+    }
+    let Some(face_b) = body.faces.get(fb).cloned() else { return Ok(()) };
+    let Some(sb) = body.surfaces.get(face_b.surface).cloned() else { return Ok(()) };
+    let Ok(curves) = intersect_surface_surface(sa, &sb, tol) else { return Ok(()) };
+    for ic in &curves {
+        // A near-tangent pair (e.g. two spheres offset by barely more than the sum of
+        // their radii) can still produce a genuine but near-zero-radius contact circle
+        // from `intersect_surface_surface`'s own tolerant overlap test — a real curve
+        // object, not a numerical error, but one whose enclosed area/length is below the
+        // tolerance at which its precise topology (which side of the seam it grazes, its
+        // own trim gap) is even meaningful. Physically this is single-point external
+        // tangency: zero intersection area, nothing to imprint. Skipping it here (rather
+        // than imprinting a degenerate sliver) is what keeps the tangent-sphere union's
+        // volume the exact, un-carved sum of both spheres.
+        let bracket = intcurve_finite_bracket(body, ic, fa, fb);
+        if curve3_extent(&ic.curve3, bracket) <= tol {
+            continue;
+        }
+        for (t0, t1, full_period, touches) in clip_intcurve_to_faces(body, ic, fa, fb, tol) {
+            if (t1 - t0).abs() < 1e-9 {
+                continue;
+            }
+            let p0 = ic.curve3.eval(t0);
+            let p1 = ic.curve3.eval(t1);
+            if !full_period && p0.distance(p1) <= tol.max(1e-9) {
+                continue; // degenerate near-zero chord — nothing useful to imprint
+            }
+            let along_a = coincident_boundary_edge(body, fa, ic, (t0, t1), tol);
+            let along_b = coincident_boundary_edge(body, fb, ic, (t0, t1), tol);
+            let (t0, t1) = if full_period {
+                if let Some(edge) = along_a.or(along_b).and_then(|id| body.edges.get(id)) {
+                    let point = body.vertices.get(edge.v0).ok_or_else(|| KernelError::MissingEntity(format!("vertex {}", edge.v0)))?.position;
+                    let anchor = closest_parameter(&ic.curve3, (t0, t1), point, tol).t;
+                    (anchor, anchor + (t1 - t0))
+                } else { (t0, t1) }
+            } else { (t0, t1) };
+            // A segment can run exactly ALONG one operand's pre-existing boundary edge (a plane through a sphere's centre
+            // containing its axis meets it in that sphere's own seam meridian). Imprinting a second, geometrically identical
+            // edge there would leave duplicate topology, so the existing edge is subdivided and REUSED as the shared edge,
+            // and that operand queues no imprint of its own — the boundary it needs is already there.
+            let endpoints = (ic.curve3.eval(t0), ic.curve3.eval(t1));
+            // 🧱 A segment running along BOTH operands' boundaries (two boxes flush on a face: the stock's side face meets the
+            // tool's top face exactly along the stock's own top edge) is already topology on each side; neither face needs an
+            // imprint, only the two boundary subedges must become ONE edge so the pieces stitch by shared-edge adjacency.
+            if let (Some(existing_a), Some(existing_b)) = (along_a, along_b) {
+                let ea = if full_period { existing_a } else { boundary_subedge(body, fa, endpoints, (tol, weld), rec)? };
+                let eb = if full_period { existing_b } else { boundary_subedge(body, fb, endpoints, (tol, weld), rec)? };
+                if full_period { unify_closed_boundary_vertices(body, eb, ea, tol, weld)?; }
+                if ea != eb {
+                    unify_boundary_edges(body, eb, ea)?;
+                }
+                continue;
+            }
+            if along_a.is_some() || along_b.is_some() {
+                let edge_id = match (along_a, along_b) {
+                    (Some(existing), _) => if full_period { existing } else { boundary_subedge(body, fa, endpoints, (tol, weld), rec)? },
+                    (None, Some(existing)) => if full_period { existing } else { boundary_subedge(body, fb, endpoints, (tol, weld), rec)? },
+                    (None, None) => unreachable!("one operand runs along the segment"),
+                };
+                let reversed = if full_period {
+                    let tangent = body.edges.get(edge_id).and_then(|edge| body.curves3.get(edge.curve).and_then(|curve| curve.tangent(edge.range.0)));
+                    tangent.zip(ic.curve3.tangent(t0)).is_some_and(|(a, b)| a.dot(b) < 0.0)
+                } else {
+                    oriented_prange(body, edge_id, endpoints, (t0, t1)).0 != t0
+                };
+                let orient = |(s0, s1): (f64, f64)| if reversed { (s1, s0) } else { (s0, s1) };
+                if along_a.is_none() {
+                    let (curve, range) = pcurve_for_clip(sa, &ic.curve3, &ic.pcurve_a, (t0, t1), tol);
+                    pending_a.entry(fa).or_default().push(Pending { edge_id, pcurve_id: body.curves2.insert(curve), prange: orient(range) });
+                }
+                if along_b.is_none() {
+                    let (curve, range) = pcurve_for_clip(&sb, &ic.curve3, &ic.pcurve_b, (t0, t1), tol);
+                    pending_b.entry(fb).or_default().push(Pending { edge_id, pcurve_id: body.curves2.insert(curve), prange: orient(range) });
+                }
+                continue;
+            }
+            // 🧭️ A fresh imprint is cut into pieces wherever it meets either face's boundary — a periodic seam it crosses, a pole it
+            // passes through — so every piece lies inside one chart of both faces and the arrangement sees a plain planar map.
+            let marks = if full_period { touches } else { boundary_touch_parameters(body, ic, (fa, fb), (t0, t1), false, tol) };
+            for (r0, r1, closed) in split_ranges((t0, t1), full_period, &marks) {
+                let edge_id = build_imprint_edge(body, ic, (r0, r1), closed, (tol, weld), rec);
+                let (curve_a, range_a) = pcurve_for_clip(sa, &ic.curve3, &ic.pcurve_a, (r0, r1), tol);
+                let (curve_b, range_b) = pcurve_for_clip(&sb, &ic.curve3, &ic.pcurve_b, (r0, r1), tol);
+                pending_a.entry(fa).or_default().push(Pending { edge_id, pcurve_id: body.curves2.insert(curve_a), prange: range_a });
+                pending_b.entry(fb).or_default().push(Pending { edge_id, pcurve_id: body.curves2.insert(curve_b), prange: range_b });
+            }
+        }
+    }
+    Ok(())
+}
+
+/// 🧭️ The sub-ranges a fresh imprint over `(t0, t1)` is built from when it must be cut at `marks`: an open run splits at every
+/// interior mark; a closed one is re-anchored at its first mark and splits at the rest (a single mark leaves one closed edge
+/// whose vertex sits on the boundary, none leaves the plain closed hole).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn split_ranges((t0, t1): (f64, f64), closed: bool, marks: &[f64]) -> Vec<(f64, f64, bool)> {
+    let period = t1 - t0;
+    let mut cuts: Vec<f64> = marks.iter().map(|&m| if closed { t0 + (m - t0).rem_euclid(period) } else { m }).filter(|&m| closed || (m > t0 + 1e-9 && m < t1 - 1e-9)).collect();
+    cuts.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    cuts.dedup_by(|a, b| (*a - *b).abs() < 1e-9);
+    if closed {
+        match cuts.len() {
+            0 => vec![(t0, t1, true)],
+            1 => vec![(cuts[0], cuts[0] + period, true)],
+            n => (0..n).map(|i| (cuts[i], if i + 1 < n { cuts[i + 1] } else { cuts[0] + period }, false)).collect(),
+        }
+    } else {
+        let mut bounds = vec![t0];
+        bounds.extend(cuts);
+        bounds.push(t1);
+        bounds.windows(2).map(|w| (w[0], w[1], false)).collect()
+    }
+}
+
+// #endregion 🔖️Imprint
+
+// #region ⏱️ResumableBoolean
+
+/// ⏱️ What a [`BooleanJob`] is currently doing. Phases run in declaration order; `Complete` and
+/// `Cancelled` are terminal.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum BooleanPhase {
+    /// ✂️ Imprinting one (face-of-A, face-of-B) pair per unit.
+    #[default]
+    Imprint,
+    /// 🧩 Applying A's queued imprints, one face per unit.
+    ApplyA,
+    /// 🧩 Applying B's queued imprints, one face per unit.
+    ApplyB,
+    /// 🎯 Classifying one piece of A against B per unit.
+    ClassifyA,
+    /// 🎯 Classifying one piece of B against A per unit.
+    ClassifyB,
+    /// 🧵 Stitching the selected faces into shells/solids and retiring the operands.
+    Stitch,
+    /// 🩺 Validating the result, one [`BodyValidationJob`] unit per unit.
+    Validate,
+    Complete,
+    Cancelled,
+}
+
+impl BooleanPhase {
+    /// 🏷️ The stable wire tag every host/extension/UI layer names this phase by.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn tag(self) -> &'static str {
+        match self {
+            Self::Imprint => "imprint",
+            Self::ApplyA => "applyA",
+            Self::ApplyB => "applyB",
+            Self::ClassifyA => "classifyA",
+            Self::ClassifyB => "classifyB",
+            Self::Stitch => "stitch",
+            Self::Validate => "validate",
+            Self::Complete => "complete",
+            Self::Cancelled => "cancelled",
+        }
+    }
+}
+
+/// 📈 Progress of one resumable boolean. `units_done` never decreases. `units_total` is the plan
+/// known SO FAR and is revised upward exactly once — when the stitch lands and the result's
+/// validation plan (how many entities there are to check) can finally be read; nothing about the
+/// post-stitch body is knowable before the stitch.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct BooleanProgress {
+    pub units_done: usize,
+    pub units_total: usize,
+    pub faces_done: usize,
+    pub faces_total: usize,
+    pub phase: BooleanPhase,
+}
+
+/// ⏱️ Outcome of one budgeted [`BooleanJob::step`].
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BooleanStep {
+    /// 🔁 Budget spent, work remains — call `step` again.
+    Working(BooleanProgress),
+    /// ✅ Terminal: the result solid is live in the body.
+    Done(SolidId),
+    /// 🛑 Terminal: [`BooleanJob::cancel`] retired the job; no solid is produced.
+    Cancelled(BooleanProgress),
+}
+
+/// 🔀 What [`boolean_job`] admitted: either a fast path already answered (microseconds, nothing to
+/// resume), or the general engine owes a resumable job.
+pub enum BooleanAdmission {
+    /// ⚡️ A trivial/box fast path answered exactly, in place.
+    Answered(SolidId),
+    /// ⏱️ The general exact engine, as a budgetable job.
+    Job(BooleanJob),
+}
+
+/// ⏱️ The general exact imprint→classify→select→stitch→validate pipeline split into budgetable
+/// units, so a host can run it inside an interactive step ceiling across many turns, report
+/// progress, and cancel it — the boolean twin of
+/// [`semio_framework_3d_brep_tessellation::TessellationJob`].
+///
+/// One unit is one face PAIR (imprint), one face (apply/classify) or one
+/// [`BodyValidationJob`] unit (validate). Measured on `🍩️sphere-cut-with-torus` in a native debug
+/// build the whole operation costs 4.5 s, of which the stitch is 1.5 s and the validation 3.0 s —
+/// so the validation's per-face units are the ones that actually make this preemptible, and the
+/// stitch (one unit, group + signed-volume probe + containment) is the coarsest step this design
+/// admits (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
+///
+/// 🚧️ A cancelled or failed job leaves the imprints it already applied in the body. Those imprints
+/// live on the job's OWN working copies of the operands ([`BooleanJob::new`]), never on the
+/// operands themselves, so a cancelled boolean leaves its inputs byte-identical and leaves behind
+/// only unreachable garbage the next compaction reclaims; nothing is rolled back, because the
+/// kernel has no transaction.
+pub struct BooleanJob {
+    a: SolidId,
+    b: SolidId,
+    op: BooleanOp,
+    tol: f64,
+    pre_existing_solids: HashSet<SolidId>,
+    /// ♻️ Every edge/vertex that already existed when this job was planned. [`gc_orphan_edges_and_vertices`]
+    /// may free only what the job itself minted: a bare wire's edges carry no coedge at all, so a
+    /// whole-arena orphan sweep would eat every live `Wire` handle's geometry as collateral.
+    protected_edges: HashSet<EdgeId>,
+    protected_vertices: HashSet<VertexId>,
+    coincident_a: HashMap<FaceId, bool>,
+    /// 🧱 Pieces of B found coincident with a piece of A AFTER imprinting (a tool face lying within a
+    /// stock face — the flush notch), dropped in `ClassifyB` the way a whole coincident B face is
+    /// dropped up front; their A twins join `coincident_a`.
+    coincident_b: HashSet<FaceId>,
+    faces_a: Vec<FaceId>,
+    faces_b: Vec<FaceId>,
+    /// 🔗 Per-face-of-A support cache: the surface and AABB the whole `fb` row is tested against,
+    /// read once per row instead of once per pair.
+    row: Option<(Surface, semio_framework_3d_brep_representation::contract::Aabb)>,
+    weld: Vec<(Pnt3, VertexId)>,
+    pending_a: HashMap<FaceId, Vec<Pending>>,
+    pending_b: HashMap<FaceId, Vec<Pending>>,
+    pieces_a: Vec<FaceId>,
+    pieces_b: Vec<FaceId>,
+    selected: Vec<FaceId>,
+    result: Option<SolidId>,
+    validation: Option<BodyValidationJob>,
+    cursor_a: usize,
+    cursor_b: usize,
+    apply_a: usize,
+    apply_b: usize,
+    classify_a: usize,
+    classify_b: usize,
+    units_done: usize,
+    units_total: usize,
+    phase: BooleanPhase,
+}
+
+impl BooleanJob {
+    /// 🎟️ Runs the existing result-validation producer on its actual supplied caller turn.
+    pub fn step(&mut self, body:&mut Body, _rec:&mut OpRecorder, cx:&mut semio_framework_job::StepContext<'_>)->Result<BooleanStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_value::{ValueError,ValueRefusalKind};
+        if self.phase!=BooleanPhase::Validate{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original boolean phase has no funded producer yet").into())}
+        let validation=self.validation.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original boolean result lost its validation producer"))?;
+        let grant=cx.retained_grant();let demand=validation.funded_demands(body)?;
+        if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(BooleanStep::Working(self.progress()))}
+        cx.consume_fuel(1);
+        let(receipt,units)=validation.step_funded(body,1,grant).map_err(|primary|semio_framework_job::OriginalTurnFailure::debit_original(primary,cx))?;
+        cx.consume_retained(receipt).map_err(|primary|semio_framework_job::OriginalTurnFailure::from(primary.with_retained_progress(receipt)))?;
+        self.units_done+=units;self.units_total=self.units_total.max(self.units_done.saturating_add(validation.progress().units_total.saturating_sub(validation.progress().units_done)));
+        Ok(BooleanStep::Working(self.progress()))
+    }
+
+    /// 🔀 Plans the general exact boolean of `a` and `b`. Every plan input (which faces exist,
+    /// which pairs are coincident, the weld table) is read ONCE here, so the walk below is a pure
+    /// cursor advance.
+    ///
+    /// 🐛 The engine imprints DESTRUCTIVELY (it splits the faces it classifies) and the stitch then
+    /// drops whatever the selection did not keep, so the plan runs on deep copies of both operands
+    /// ([`copy_solid`]) and the operands themselves are never touched. Without that, one
+    /// `brep.bool.fuse`/`brep.bool.cut` freed the arena entities of BOTH its inputs, and since the
+    /// evaluator serves an unchanged input node from cache, the next evaluation of the same graph
+    /// answered `missing handle: <digest>` for a node whose own parameters never moved
+    /// (`📓️brep-boolean-input-lifetime-2026-09-15.md`).
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn new(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Self, KernelError> {
+        let pre_existing_solids: HashSet<SolidId> = body.solids.iter().map(|(id, _)| id).collect();
+        let protected_edges: HashSet<EdgeId> = body.edges.iter().map(|(id, _)| id).collect();
+        let protected_vertices: HashSet<VertexId> = body.vertices.iter().map(|(id, _)| id).collect();
+        let a = copy_solid(body, a, rec)?;
+        let b = copy_solid(body, b, rec)?;
+        let faces_a_all = body.solid_faces(a);
+        let faces_b_all = body.solid_faces(b);
+        let coincident = find_coincident_face_pairs(body, &faces_a_all, &faces_b_all, tol);
+        let coincident_b: HashSet<FaceId> = coincident.iter().map(|&(_, fb, _)| fb).collect();
+        let coincident_a: HashMap<FaceId, bool> = coincident.iter().map(|&(fa, _, aligned)| (fa, aligned)).collect();
+        let faces_b: Vec<FaceId> = faces_b_all.iter().copied().filter(|f| !coincident_b.contains(f)).collect();
+        let faces_a: Vec<FaceId> = faces_a_all;
+        // 🔗 Imprint endpoints are welded against each other AND against both operands' existing
+        // boundary vertices: an intersection segment that ends exactly on a pole (a plane through a
+        // sphere's centre ends its arc there) must reuse that pole's vertex, otherwise the chain's
+        // end is a fresh id that `splice_boundary_vertex` cannot find on the ring.
+        let mut weld: Vec<(Pnt3, VertexId)> = Vec::new();
+        for &face in faces_a.iter().chain(faces_b_all.iter()) {
+            for coedge_id in body.face_coedges(face) {
+                let Some((vertex_id, _)) = body.coedge_endpoints(coedge_id) else { continue };
+                let Some(vertex) = body.vertices.get(vertex_id) else { continue };
+                if !weld.iter().any(|&(_, existing)| existing == vertex_id) {
+                    weld.push((vertex.position, vertex_id));
+                }
+            }
+        }
+        let units_total = faces_a.len() * faces_b.len() + 2 * (faces_a.len() + faces_b.len()) + 1;
+        Ok(Self {
+            a,
+            b,
+            op,
+            tol,
+            pre_existing_solids,
+            protected_edges,
+            protected_vertices,
+            coincident_a,
+            coincident_b: HashSet::new(),
+            faces_a,
+            faces_b,
+            row: None,
+            weld,
+            pending_a: HashMap::new(),
+            pending_b: HashMap::new(),
+            pieces_a: Vec::new(),
+            pieces_b: Vec::new(),
+            selected: Vec::new(),
+            result: None,
+            validation: None,
+            cursor_a: 0,
+            cursor_b: 0,
+            apply_a: 0,
+            apply_b: 0,
+            classify_a: 0,
+            classify_b: 0,
+            units_done: 0,
+            units_total,
+            phase: BooleanPhase::Imprint,
+        })
+    }
+
+    /// 📈 This job's progress right now — safe to read between steps and after termination.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn progress(&self) -> BooleanProgress {
+        BooleanProgress {
+            units_done: self.units_done,
+            units_total: self.units_total.max(self.units_done),
+            faces_done: self.apply_a + self.apply_b + self.classify_a + self.classify_b,
+            faces_total: 2 * (self.faces_a.len() + self.faces_b.len()),
+            phase: self.phase,
+        }
+    }
+
+    /// 🛑 Retires this job at the next observable boundary. A completed job is never cancelled —
+    /// supersession may only retire work still in flight, never destroy a result already paid for
+    /// (the same law `TessellationJob::cancel` states).
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn cancel(&mut self) {
+        if matches!(self.phase, BooleanPhase::Complete) {
+            return;
+        }
+        self.phase = BooleanPhase::Cancelled;
+        self.pending_a.clear();
+        self.pending_b.clear();
+        self.weld.clear();
+        self.validation = None;
+    }
+
+    /// ✅ True once the job reached a terminal phase.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn is_terminal(&self) -> bool {
+        matches!(self.phase, BooleanPhase::Complete | BooleanPhase::Cancelled)
+    }
+
+    /// ♾️ Runs every remaining unit in one call — the unbudgeted façade [`boolean_solid`] is.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub fn run_to_completion(mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+        loop {
+            match self.step_unbudgeted(body, rec, usize::MAX)? {
+                BooleanStep::Done(id) => return Ok(id),
+                BooleanStep::Cancelled(_) => return Err(KernelError::Boolean(BooleanError::InvalidResult("boolean cancelled".into()))),
+                BooleanStep::Working(_) => continue,
+            }
+        }
+    }
+
+    /// ⏱️ Advances by at most `budget` units. A `budget` of zero is a legal progress probe that
+    /// performs no work.
+    // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+    pub(crate) fn step_unbudgeted(&mut self, body: &mut Body, rec: &mut OpRecorder, budget: usize) -> Result<BooleanStep, KernelError> {
+        match self.phase {
+            BooleanPhase::Complete => return Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
+            BooleanPhase::Cancelled => return Ok(BooleanStep::Cancelled(self.progress())),
+            _ => {}
+        }
+        let mut spent = 0usize;
+        while spent < budget {
+            match self.phase {
+                BooleanPhase::Imprint => {
+                    if self.cursor_a >= self.faces_a.len() {
+                        self.phase = BooleanPhase::ApplyA;
+                        continue;
+                    }
+                    let fa = self.faces_a[self.cursor_a];
+                    if self.coincident_a.contains_key(&fa) || self.faces_b.is_empty() {
+                        self.cursor_a += 1;
+                        self.cursor_b = 0;
+                        self.row = None;
+                        continue;
+                    }
+                    if self.row.is_none() {
+                        let Some(face_a) = body.faces.get(fa).cloned() else {
+                            self.cursor_a += 1;
+                            self.cursor_b = 0;
+                            continue;
+                        };
+                        let Some(sa) = body.surfaces.get(face_a.surface).cloned() else {
+                            self.cursor_a += 1;
+                            self.cursor_b = 0;
+                            continue;
+                        };
+                        let Ok(bb_a) = face_aabb(body, fa) else {
+                            self.cursor_a += 1;
+                            self.cursor_b = 0;
+                            continue;
+                        };
+                        self.row = Some((sa, bb_a));
+                    }
+                    if self.cursor_b >= self.faces_b.len() {
+                        self.cursor_a += 1;
+                        self.cursor_b = 0;
+                        self.row = None;
+                        continue;
+                    }
+                    let fb = self.faces_b[self.cursor_b];
+                    let (sa, bb_a) = self.row.take().expect("row cached above");
+                    let outcome = imprint_face_pair(body, (fa, fb), (&sa, &bb_a), self.tol, &mut self.weld, (&mut self.pending_a, &mut self.pending_b), rec);
+                    self.row = Some((sa, bb_a));
+                    outcome?;
+                    self.cursor_b += 1;
+                }
+                BooleanPhase::ApplyA => {
+                    if self.apply_a >= self.faces_a.len() {
+                        self.phase = BooleanPhase::ApplyB;
+                        continue;
+                    }
+                    let fa = self.faces_a[self.apply_a];
+                    if self.coincident_a.contains_key(&fa) {
+                        self.pieces_a.push(fa);
+                    } else {
+                        match self.pending_a.remove(&fa) {
+                            Some(list) => {
+                                let pieces = arrangement::split_face(body, fa, &list, self.tol, rec)?;
+                                self.pieces_a.extend(pieces);
+                            }
+                            None => self.pieces_a.push(fa),
+                        }
+                    }
+                    self.apply_a += 1;
+                }
+                BooleanPhase::ApplyB => {
+                    if self.apply_b >= self.faces_b.len() {
+                        self.phase = BooleanPhase::ClassifyA;
+                        continue;
+                    }
+                    let fb = self.faces_b[self.apply_b];
+                    match self.pending_b.remove(&fb) {
+                        Some(list) => {
+                            let pieces = arrangement::split_face(body, fb, &list, self.tol, rec)?;
+                            self.pieces_b.extend(pieces);
+                        }
+                        None => self.pieces_b.push(fb),
+                    }
+                    self.apply_b += 1;
+                }
+                BooleanPhase::ClassifyA => {
+                    if self.classify_a == 0 {
+                        // 🧱 Imprinting can carve a piece of A that coincides exactly with a piece of B
+                        // (the stock's top face over a flush notch, its side faces beside it). Such a
+                        // pair is one boundary, not two: A's piece follows the whole-face coincident
+                        // rule below and B's piece is dropped, or both survived as duplicate topology
+                        // (edges used by three coedges) and the stitch failed validation.
+                        for (fa, fb, aligned) in find_coincident_face_pairs(body, &self.pieces_a, &self.pieces_b, self.tol) {
+                            self.coincident_a.insert(fa, aligned);
+                            self.coincident_b.insert(fb);
+                        }
+                    }
+                    if self.classify_a >= self.pieces_a.len() {
+                        self.phase = BooleanPhase::ClassifyB;
+                        continue;
+                    }
+                    let f = self.pieces_a[self.classify_a];
+                    if let Some(&aligned) = self.coincident_a.get(&f) {
+                        if keep_coincident_boundary(self.op, aligned) {
+                            self.selected.push(f);
+                        }
+                    } else {
+                        let class = classify_face_against_solid(body, f, self.b, self.tol)?;
+                        if keep_face(self.op, true, class) {
+                            self.selected.push(f);
+                        }
+                    }
+                    self.classify_a += 1;
+                }
+                BooleanPhase::ClassifyB => {
+                    if self.classify_b >= self.pieces_b.len() {
+                        self.phase = BooleanPhase::Stitch;
+                        continue;
+                    }
+                    let f = self.pieces_b[self.classify_b];
+                    if self.coincident_b.contains(&f) {
+                        self.classify_b += 1;
+                        continue;
+                    }
+                    let class = classify_face_against_solid(body, f, self.a, self.tol)?;
+                    if keep_face(self.op, false, class) {
+                        if matches!(self.op, BooleanOp::Cut) {
+                            flip_face(body, f);
+                        }
+                        self.selected.push(f);
+                    }
+                    self.classify_b += 1;
+                }
+                BooleanPhase::Stitch => {
+                    if self.selected.is_empty() {
+                        return Err(KernelError::Boolean(BooleanError::InvalidResult("exact boolean selection kept no faces".into())));
+                    }
+                    let selected_set: HashSet<FaceId> = self.selected.iter().copied().collect();
+                    let result = stitch_selected_faces(body, &self.selected, self.tol, rec)?;
+                    remove_solid_and_orphans(body, self.a, &selected_set, rec);
+                    remove_solid_and_orphans(body, self.b, &selected_set, rec);
+                    gc_orphan_edges_and_vertices(body, (&self.protected_edges, &self.protected_vertices), rec);
+                    self.result = Some(result);
+                    let validation = BodyValidationJob::new(body);
+                    self.units_total = self.units_done + 1 + validation.progress().units_total;
+                    self.validation = Some(validation);
+                    self.phase = BooleanPhase::Validate;
+                    self.units_done += 1;
+                    spent += 1;
+                    continue;
+                }
+                BooleanPhase::Validate => {
+                    let Some(validation) = self.validation.as_mut() else {
+                        self.phase = BooleanPhase::Complete;
+                        continue;
+                    };
+                    if validation.is_complete() {
+                        let issues = issues_scoped_to_new_solids(body, &self.pre_existing_solids, self.validation.take().expect("checked above").into_issues());
+                        if !issues.is_empty() {
+                            let listed: Vec<String> = issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect();
+                            return Err(KernelError::Boolean(BooleanError::InvalidResult(format!("exact boolean result failed validation: {} issue(s): {}", issues.len(), listed.join(" | ")))));
+                        }
+                        self.phase = BooleanPhase::Complete;
+                        continue;
+                    }
+                    let before = validation.progress().units_done;
+                    let after = validation.step(body, budget - spent).units_done;
+                    let advanced = after.saturating_sub(before).max(1);
+                    self.units_done += advanced;
+                    self.units_total = self.units_total.max(self.units_done.saturating_add(validation.progress().units_total.saturating_sub(after)));
+                    spent += advanced;
+                    continue;
+                }
+                BooleanPhase::Complete => return Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
+                BooleanPhase::Cancelled => return Ok(BooleanStep::Cancelled(self.progress())),
+            }
+            self.units_done += 1;
+            spent += 1;
+        }
+        match self.phase {
+            BooleanPhase::Complete => Ok(BooleanStep::Done(self.result.ok_or_else(|| KernelError::Boolean(BooleanError::InvalidResult("completed boolean carries no solid".into())))?)),
+            BooleanPhase::Cancelled => Ok(BooleanStep::Cancelled(self.progress())),
+            _ => Ok(BooleanStep::Working(self.progress())),
+        }
+    }
+}
+
+/// 🔀 Admits a boolean: runs the microsecond-cheap trivial/box fast paths in place and, when
+/// neither applies, hands back the general engine as a resumable [`BooleanJob`]. This is the
+/// entry point an interactive host drives; [`boolean_solid`] is the unbudgeted façade over it.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn boolean_job(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<BooleanAdmission, KernelError> {
+    require_tol(tol)?;
+    require_solid(body, a)?;
+    require_solid(body, b)?;
+    if a == b {
+        return Err(KernelError::InvalidInput("boolean operands must be distinct solids".into()));
+    }
+    let bb_a = solid_bounding_box(body, a)?;
+    let bb_b = solid_bounding_box(body, b)?;
+    if aabb_finite(&bb_a) && aabb_finite(&bb_b) {
+        if let Some(id) = trivial_topology_fast_path(body, a, b, (&bb_a, &bb_b), op, tol, rec)? {
+            return Ok(BooleanAdmission::Answered(id));
+        }
+        if let Some(id) = box_fast_path(body, a, b, (&bb_a, &bb_b), op, tol, rec)? {
+            return Ok(BooleanAdmission::Answered(id));
+        }
+    }
+    Ok(BooleanAdmission::Job(BooleanJob::new(body, a, b, op, tol, rec)?))
+}
+
+// #endregion ⏱️ResumableBoolean
+
+// #region 🔖️Scoping
+/// 🔀 Filters `issues` down to the ones attributable to solids the boolean just CREATED — a
+/// pre-existing operand may already have carried invalid topology, and the boolean must not be
+/// blamed for it. Resolves each issue's `entity` string against a forward map of every string
+/// [`validate_body`]'s checks can emit for something owned by a `pre_existing_solids` member
+/// (built by [`pre_existing_entity_strings`]) rather than inverting `raw_index()` back into an id,
+/// which would silently desync the moment either side's format changes independently. An entity
+/// that resolves to neither a pre-existing nor a new solid (orphaned, or unparseable) is kept —
+/// conservative, since a boolean that leaves an unattributable issue is a real failure.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn issues_scoped_to_new_solids(body: &Body, pre_existing_solids: &HashSet<SolidId>, issues: Vec<ValidationIssue>) -> Vec<ValidationIssue> {
+    let stale = pre_existing_entity_strings(body, pre_existing_solids);
+    issues.into_iter().filter(|issue| !stale.contains(&issue.entity)).collect()
+}
+
+/// 🔀 Every `entity` string [`validate_body`]'s checks can emit for something owned — directly, or
+/// via shell/face/loop/coedge containment down to the edge and vertex level — by one of `solids`.
+/// See [`issues_scoped_to_new_solids`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pre_existing_entity_strings(body: &Body, solids: &HashSet<SolidId>) -> HashSet<String> {
+    let mut owned = HashSet::new();
+    for &solid_id in solids {
+        owned.insert(format!("solid-{}", solid_id.raw_index()));
+        let Some(solid) = body.solids.get(solid_id) else { continue };
+        for &void_shell in &solid.inners {
+            owned.insert(format!("solid-{}-void-shell-{}", solid_id.raw_index(), void_shell.raw_index()));
+        }
+        let faces = body.solid_faces(solid_id);
+        for i in 0..faces.len() {
+            for j in (i + 1)..faces.len() {
+                owned.insert(format!("face-{}-face-{}", faces[i].raw_index(), faces[j].raw_index()));
+            }
+        }
+        for &face_id in &faces {
+            owned.insert(format!("face-{}", face_id.raw_index()));
+            for loop_id in body.face_loops(face_id) {
+                owned.insert(format!("loop-{}", loop_id.raw_index()));
+                for coedge_id in body.loop_coedges(loop_id) {
+                    owned.insert(format!("coedge-{}", coedge_id.raw_index()));
+                    let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+                    owned.insert(format!("edge-{}", coedge.edge.raw_index()));
+                    let Some(edge) = body.edges.get(coedge.edge) else { continue };
+                    owned.insert(format!("vertex-{}", edge.v0.raw_index()));
+                    owned.insert(format!("vertex-{}", edge.v1.raw_index()));
+                }
+            }
+        }
+        for shell_id in body.solid_shells(solid_id) {
+            for face_id in body.shell_faces(shell_id) {
+                for coedge_id in body.face_coedges(face_id) {
+                    let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+                    owned.insert(format!("shell-{}-edge-{}", shell_id.raw_index(), coedge.edge.raw_index()));
+                }
+            }
+        }
+    }
+    owned
+}
+
+// #region 🔖️Clip
+
+/// 🔀 Clips `ic`'s shared parameter domain to the sub-ranges where BOTH `pcurve_a` (on `face_a`)
+/// and `pcurve_b` (on `face_b`) land inside their own face's trim, sampling at a fixed resolution
+/// (matching [`semio_framework_3d_brep_intersect::surface_surface::general_marching`]'s own documented-simplification sampling style).
+/// A periodic curve whose valid runs cover (within 0.1% of the period) the WHOLE domain is
+/// returned as ONE fully-closed range (`closed = true`) — this covers both "never touches either
+/// boundary" and "touches a seam at exactly one physical point," which reads as a narrow gap
+/// splitting one closed loop into two adjacent open runs (a latitude circle's seam touch can land
+/// at any phase, not just the circle's own `t=0`/`t=period` ends). Otherwise every maximal valid
+/// sub-run becomes an open range with its boundary refined by bisection (`closed = false`). Does
+/// not handle a genuinely PARTIAL run that wraps across the periodic domain's own `t=lo`/`t=hi`
+/// seam (documented gap — not hit by the analytic primitive pairs this wave targets).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn clip_intcurve_to_faces(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: FaceId, tol: f64) -> Vec<(f64, f64, bool, Vec<f64>)> {
+    let (lo, hi) = intcurve_finite_bracket(body, ic, face_a, face_b);
+    if hi.partial_cmp(&lo) != Some(std::cmp::Ordering::Greater) {
+        return Vec::new();
+    }
+    let periodic = ic.curve3.is_periodic() && ic.curve3.period().is_some_and(|p| (hi - lo - p).abs() < 1e-6 * p.max(1.0));
+    const N: usize = 64;
+    // The trim's CLOSURE, not its interior: a clip that treats "on the boundary" as outside stops
+    // one sample short of a sphere's pole (which IS its `v = ±π/2` boundary), never reaches a
+    // periodic seam, and shreds an arc that runs exactly along an operand's own edge into
+    // borderline fragments — all three of the procedural examples' failure modes. See
+    // `classification::point_in_face_uv_closure`.
+    let valid = |t: f64| -> bool {
+        let ua = wrap_uv_for_surface(body, face_a, ic.pcurve_a.eval(t));
+        let ub = wrap_uv_for_surface(body, face_b, ic.pcurve_b.eval(t));
+        point_in_face_uv_closure_periodic(body, face_a, ua, tol) && point_in_face_uv_closure_periodic(body, face_b, ub, tol)
+    };
+    let mut inside = [false; N + 1];
+    for (i, slot) in inside.iter_mut().enumerate() {
+        let t = lo + (hi - lo) * (i as f64 / N as f64);
+        *slot = valid(t);
+    }
+    let cell = (hi - lo) / N as f64;
+    let reach = (cell, curve3_extent(&ic.curve3, (lo, lo + cell)).max(1e-12) * 2.0);
+    let mut runs: Vec<(f64, f64)> = Vec::new();
+    let mut i = 0usize;
+    while i <= N {
+        if inside[i] {
+            let start = i;
+            while i <= N && inside[i] {
+                i += 1;
+            }
+            let end = i - 1;
+            let t_at = |k: usize| lo + (hi - lo) * (k as f64 / N as f64);
+            let t0 = if start > 0 { snap_clip_endpoint(body, ic, (face_a, face_b), refine_boundary(&valid, t_at(start - 1), t_at(start)), reach, tol) } else { t_at(start) };
+            let t1 = if end < N { snap_clip_endpoint(body, ic, (face_a, face_b), refine_boundary(&valid, t_at(end + 1), t_at(end)), reach, tol) } else { t_at(end) };
+            if t1 > t0 {
+                runs.push((t0, t1));
+            }
+        } else {
+            i += 1;
+        }
+    }
+    if periodic && !runs.is_empty() {
+        // A periodic curve whose valid runs account for (essentially) the whole period never
+        // leaves either trim: it is ONE closed loop, not the two adjacent open runs a seam touch
+        // used to read as. Under the closed trim test a seam touch leaves no gap at all, so the
+        // touch parameters can no longer be read off the gaps and are solved for directly
+        // ([`boundary_touch_parameters`]) — which is also strictly more accurate, since a gap's
+        // midpoint was only ever as good as the sampling that produced the gap.
+        let covered: f64 = runs.iter().map(|&(t0, t1)| t1 - t0).sum();
+        if (hi - lo - covered) < (hi - lo) * 1e-3 {
+            return vec![(lo, hi, true, boundary_touch_parameters(body, ic, (face_a, face_b), (lo, hi), true, tol))];
+        }
+    }
+    runs.into_iter().map(|(t0, t1)| (t0, t1, false, Vec::new())).collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn refine_boundary(valid: &impl Fn(f64) -> bool, mut outside: f64, mut inside: f64) -> f64 {
+    for _ in 0..40 {
+        let mid = 0.5 * (outside + inside);
+        if valid(mid) {
+            inside = mid;
+        } else {
+            outside = mid;
+        }
+    }
+    inside
+}
+
+/// 🔀 [`IntCurve::domain`] is infinite for an unbounded [`semio_framework_3d_brep_curve::Curve3::Line`] (e.g. plane/plane,
+/// coincident-cylinder-axis lines); windows it to the parameter run where the line passes through
+/// the two faces' AABB INTERSECTION (a slab clip per axis, each slab widened by a small margin), so
+/// [`clip_intcurve_to_faces`]'s fixed 64-cell sampling spends its cells where an imprint can exist
+/// at all — a line's own `domain` (finite or not) is intersected with that window too. 🐛 The window
+/// used to be a radius of 4× the LARGER face's diagonal around the pair's centroid: for a box slab cutting through a beam (process3d's crosscut, 0.02 m of a 3 m
+/// stock) the valid run was a fraction of one sampling cell, every pair clipped to nothing, no
+/// imprint was queued, and the stitch answered a non-manifold body (ticket
+/// 26/09/15/DEV-PROCESS-REACT-E2E). A line that never enters the intersection AABB answers an
+/// empty (`hi < lo`) bracket; a non-line unbounded curve keeps the old radius window.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn intcurve_finite_bracket(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: FaceId) -> (f64, f64) {
+    let (lo, hi) = (ic.domain.min, ic.domain.max);
+    let is_line = matches!(ic.curve3, semio_framework_3d_brep_curve::Curve3::Line { .. });
+    if lo.is_finite() && hi.is_finite() && !is_line {
+        return (lo, hi);
+    }
+    let Ok((ba, bb)) = face_aabb(body, face_a).and_then(|ba| face_aabb(body, face_b).map(|bb| (ba, bb))) else {
+        return (if lo.is_finite() { lo } else { -100.0 }, if hi.is_finite() { hi } else { 100.0 });
+    };
+    if let semio_framework_3d_brep_curve::Curve3::Line { origin, dir } = &ic.curve3 {
+        let extent = (0..3).map(|axis| (ba.max[axis] - ba.min[axis]).max(bb.max[axis] - bb.min[axis])).fold(0.0f64, f64::max).max(1e-9);
+        let margin = extent * 1e-3;
+        let (mut t_lo, mut t_hi) = (f64::NEG_INFINITY, f64::INFINITY);
+        for axis in 0..3 {
+            let (min, max) = (ba.min[axis].max(bb.min[axis]) - margin, ba.max[axis].min(bb.max[axis]) + margin);
+            let (o, d) = ([origin.x, origin.y, origin.z][axis], [dir.x, dir.y, dir.z][axis]);
+            if d.abs() <= 1e-12 {
+                if o < min || o > max {
+                    return (1.0, 0.0);
+                }
+                continue;
+            }
+            let (a, b) = ((min - o) / d, (max - o) / d);
+            t_lo = t_lo.max(a.min(b));
+            t_hi = t_hi.min(a.max(b));
+        }
+        if t_lo.is_finite() && t_hi.is_finite() {
+            return (if lo.is_finite() { lo.max(t_lo) } else { t_lo }, if hi.is_finite() { hi.min(t_hi) } else { t_hi });
+        }
+    }
+    let dx = (ba.max[0] - ba.min[0]).max(bb.max[0] - bb.min[0]);
+    let dy = (ba.max[1] - ba.min[1]).max(bb.max[1] - bb.min[1]);
+    let dz = (ba.max[2] - ba.min[2]).max(bb.max[2] - bb.min[2]);
+    let radius = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0) * 4.0;
+    (if lo.is_finite() { lo } else { -radius }, if hi.is_finite() { hi } else { radius })
+}
+
+/// 🔀 Diameter (max pairwise distance) of 16 samples of `curve` across `domain` — a cheap,
+/// curve-kind-agnostic stand-in for "how big is this intersection curve", used to distinguish a
+/// genuine contact circle/ellipse from a near-zero-radius numerical artifact of a tolerant
+/// overlap test (see the near-tangent-spheres skip at this function's call site).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn curve3_extent(curve: &semio_framework_3d_brep_curve::Curve3, domain: (f64, f64)) -> f64 {
+    const K: usize = 16;
+    let (lo, hi) = domain;
+    if hi.partial_cmp(&lo) != Some(std::cmp::Ordering::Greater) {
+        return 0.0;
+    }
+    let pts: Vec<Pnt3> = (0..=K).map(|i| curve.eval(lo + (hi - lo) * (i as f64 / K as f64))).collect();
+    let mut max_d = 0.0f64;
+    for i in 0..pts.len() {
+        for j in (i + 1)..pts.len() {
+            max_d = max_d.max(pts[i].distance(pts[j]));
+        }
+    }
+    max_d
+}
+
+/// 🔀 `true` when `point` lies within `tol` of `loop_id`'s own boundary edges — distinguishes a
+/// closed imprint curve that genuinely bounds a small interior sub-region from one that grazes a
+/// doubly-used seam edge (see [`ImprintKind::SeamCrossing`]). Uses [`closest_parameter`]'s
+/// certified/analytic projection (exact for `Line`/`Circle`/`Ellipse`, Newton-refined for
+/// `Nurbs`), not a fixed sample grid: 24 discrete samples per edge (the previous approach) are
+/// almost always MORE than `tol` away from the true closest point on the curve even when `point`
+/// lies exactly ON it — e.g. a great-circle seam edge sampled every ~0.13 rad has no reason to
+/// land within `1e-6` of an arbitrary touch parameter — silently misclassifying every genuine
+/// seam touch as `Interior`. 🐛 Found live: a sphere/sphere lens's touch point at the seam's own
+/// v≈0.6435 rad sampled false under the old 24-point check, misrouting the split to `Interior`,
+/// whose resulting polar-cap face then has a UV boundary that is a straight line across the full
+/// periodic `u` domain (zero enclosed area in flat UV) — `interior_point_of_face`'s grid scan
+/// then correctly, but unhelpfully, finds no inside point at all.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_touches_loop_boundary(body: &Body, loop_id: LoopId, point: Pnt3, tol: f64) -> bool {
+    let linear = tol.max(1e-9);
+    for cid in body.loop_coedges(loop_id) {
+        let Some(co) = body.coedges.get(cid) else { continue };
+        let Some(edge) = body.edges.get(co.edge) else { continue };
+        let Some(curve) = body.curves3.get(edge.curve) else { continue };
+        let cp = closest_parameter(curve, edge.range, point, linear);
+        if cp.distance <= linear {
+            return true;
+        }
+    }
+    false
+}
+
+/// 🔀 Wraps a p-curve sample into the face's own surface's natural periodic domain before a trim
+/// test — a periodic curve's own parametrization can legitimately produce `u`/`v` outside
+/// `[0, 2π)` (e.g. a phase-shifted azimuthal line), which is still the same physical point.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn wrap_uv_for_surface(body: &Body, face: FaceId, uv: Pnt2) -> Pnt2 {
+    let Some(face_data) = body.faces.get(face) else { return uv };
+    let Some(surface) = body.surfaces.get(face_data.surface) else { return uv };
+    let mut out = uv;
+    if surface.is_u_periodic() {
+        out.x = out.x.rem_euclid(std::f64::consts::TAU);
+    }
+    if surface.is_v_periodic() {
+        out.y = out.y.rem_euclid(std::f64::consts::TAU);
+    }
+    out
+}
+
+/// 🔀 `point_in_face_uv`, but tolerant of a periodic loop's own UV representation having drifted
+/// by any whole number of periods from `wrap_uv_for_surface`'s canonical `[0, 2π)` window.
+/// `classification::loop_uv_polygon_sampled` unwraps each face's OWN boundary polygon
+/// continuously starting from its own first sample (chaining `unwrap_angle` across coedges), so
+/// two DIFFERENT faces' polygons can legitimately end up centered on different multiples of `2π`
+/// even for the "same" physical seam — comparing a single canonically-wrapped query point against
+/// that polygon is not reliable. Instead of assuming any particular offset, tries the query at
+/// every small integer shift and accepts the first that lands inside — cheap (a handful of extra
+/// `point_in_face_uv` calls) and correct regardless of which offset either polygon settled on.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_in_face_uv_periodic(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> bool {
+    uv_probe_over_period_shifts(body, face, uv, |candidate| point_in_face_uv(body, face, candidate, tol).unwrap_or(false))
+}
+
+/// 🔀 [`point_in_face_uv_periodic`] against the trim's CLOSURE — see
+/// [`semio_framework_3d_brep_queries::classification::point_in_face_uv_closure`]
+/// for why a clip must use the closed test (poles, seams and coincident arcs all live exactly on
+/// the boundary and are invisible to the open one).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn point_in_face_uv_closure_periodic(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> bool {
+    uv_probe_over_period_shifts(body, face, uv, |candidate| point_in_face_uv_closure(body, face, candidate, tol).unwrap_or(false))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn uv_probe_over_period_shifts(body: &Body, face: FaceId, uv: Pnt2, probe: impl Fn(Pnt2) -> bool) -> bool {
+    let Some(face_data) = body.faces.get(face) else { return false };
+    let Some(surface) = body.surfaces.get(face_data.surface) else { return false };
+    let tau = std::f64::consts::TAU;
+    let u_shifts: &[f64] = if surface.is_u_periodic() { &[0.0, tau, -tau, 2.0 * tau, -2.0 * tau, 3.0 * tau, -3.0 * tau] } else { &[0.0] };
+    let v_shifts: &[f64] = if surface.is_v_periodic() { &[0.0, tau, -tau, 2.0 * tau, -2.0 * tau] } else { &[0.0] };
+    for &du in u_shifts {
+        for &dv in v_shifts {
+            if probe(Pnt2::new(uv.x + du, uv.y + dv)) {
+                return true;
+            }
+        }
+    }
+    false
+}
+
+/// 🔀 Every boundary curve (3D curve + its edge's own range) of `face`'s outer ring — the exact
+/// geometry a clip endpoint has to land ON, and the geometry a closed imprint curve grazes when it
+/// crosses a seam.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn outer_boundary_curves(body: &Body, face: FaceId) -> Vec<(semio_framework_3d_brep_curve::Curve3, (f64, f64))> {
+    let mut out = Vec::new();
+    let Some(outer) = body.faces.get(face).and_then(|f| f.outer) else { return out };
+    for coedge_id in body.loop_coedges(outer) {
+        let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+        let Some(edge) = body.edges.get(coedge.edge) else { continue };
+        let Some(curve) = body.curves3.get(edge.curve) else { continue };
+        out.push((curve.clone(), edge.range));
+    }
+    out
+}
+
+/// 🔀 Distance from `point` to the nearest of `curves`, and that curve's index — [`closest_parameter`]
+/// is analytic for `Line`/`Circle`/`Ellipse` (including a POINT edge, whose zero-direction line
+/// projects to its own origin) and Newton-refined for `Nurbs`, so this is the certified distance,
+/// not a sampled estimate.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn nearest_boundary_curve(curves: &[(semio_framework_3d_brep_curve::Curve3, (f64, f64))], point: Pnt3, tol: f64) -> Option<(usize, f64)> {
+    nearest_transversal_boundary_curve(curves, point, None, tol)
+}
+
+/// 🔀 [`nearest_boundary_curve`] restricted to curves the intersection curve actually CROSSES at
+/// `point`: a boundary the curve runs ALONG (tangents parallel — a segment lying on an operand's own
+/// edge, the flush-box case) is at distance 0 everywhere and would pin the endpoint where it already
+/// is, while the crossing that really ends the run is the perpendicular boundary a few `tol` away.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn nearest_transversal_boundary_curve(curves: &[(semio_framework_3d_brep_curve::Curve3, (f64, f64))], point: Pnt3, along: Option<Vec3>, tol: f64) -> Option<(usize, f64)> {
+    let mut best: Option<(usize, f64)> = None;
+    for (index, (curve, range)) in curves.iter().enumerate() {
+        let closest = closest_parameter(curve, *range, point, tol);
+        if let (Some(direction), Some(tangent)) = (along, curve.tangent(closest.t)) {
+            if direction.cross(tangent).norm() <= 1e-6 * direction.norm().max(1e-12) * tangent.norm().max(1e-12) {
+                continue;
+            }
+        }
+        if best.is_none_or(|(_, bd)| closest.distance < bd) {
+            best = Some((index, closest.distance));
+        }
+    }
+    best
+}
+
+/// 🔀 Pulls a bisection-refined clip endpoint onto the trim boundary it approximates, EXACTLY.
+///
+/// [`refine_boundary`] can only ever locate the crossing to wherever the (tolerant) trim predicate
+/// flips, i.e. to within `tol` of the truth — and the two faces of a pair flip in different
+/// directions, so the SAME physical corner comes out of two different face pairs up to `2·tol`
+/// apart, which is outside the imprint weld radius and leaves two arcs that physically meet as an
+/// unconnected pair. Alternating projection fixes that at the source: project the endpoint onto the
+/// boundary curve it is closest to, re-solve the intersection curve's own parameter for that
+/// projected point, repeat. For the transversal crossings a clip produces this is a contraction
+/// and converges to the true curve/curve intersection in a handful of steps, so both face pairs
+/// land on the identical point and the weld — and therefore the chain — succeeds.
+///
+/// Returns `t_guess` unchanged when no boundary curve is near enough to be the crossing (the run
+/// ended at the sampled domain's own edge, not at a trim), so a genuinely unbounded run is left
+/// alone.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn snap_clip_endpoint(body: &Body, ic: &IntCurve, (face_a, face_b): (FaceId, FaceId), t_guess: f64, (param_reach, space_reach): (f64, f64), tol: f64) -> f64 {
+    let linear = tol.max(1e-12);
+    let mut curves = outer_boundary_curves(body, face_a);
+    curves.extend(outer_boundary_curves(body, face_b));
+    if curves.is_empty() {
+        return t_guess;
+    }
+    let mut point = ic.curve3.eval(t_guess);
+    let Some((index, distance)) = nearest_transversal_boundary_curve(&curves, point, ic.curve3.tangent(t_guess), linear) else { return t_guess };
+    if distance > space_reach {
+        return t_guess;
+    }
+    let (curve, range) = &curves[index];
+    let mut t = t_guess;
+    for _ in 0..8 {
+        let projected = closest_parameter(curve, *range, point, linear).point;
+        let solved = closest_parameter(&ic.curve3, (t_guess - param_reach, t_guess + param_reach), projected, linear);
+        if (solved.t - t).abs() <= 1e-15 {
+            return solved.t;
+        }
+        t = solved.t;
+        point = solved.point;
+    }
+    t
+}
+
+/// 🔀 Parameters at which a CLOSED imprint curve grazes either support face's own boundary ring —
+/// the seam touches that decide [`ImprintKind::SeamCrossing`] and anchor its imprint vertex.
+///
+/// Derived from the geometry directly rather than from gaps in the trim sampling: once the clip
+/// uses the trim's CLOSURE (as it must, so a curve reaching a pole or running along a seam is not
+/// truncated), a seam touch leaves NO gap to read it off. Scans the distance to the nearest
+/// boundary curve, keeps every local minimum that actually reaches within tolerance, and refines
+/// each by golden-section search so the anchor lands on the seam edge itself — which is exactly
+/// what `splice_boundary_vertex`'s point-on-edge test requires. A curve that is within tolerance of
+/// a boundary over a large fraction of its length is not grazing it but COINCIDENT with it
+/// ([`coincident_boundary_edge`]'s case), and yields no touches here.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn boundary_touch_parameters(body: &Body, ic: &IntCurve, (face_a, face_b): (FaceId, FaceId), (lo, hi): (f64, f64), closed: bool, tol: f64) -> Vec<f64> {
+    const N: usize = 512;
+    let linear = tol.max(1e-9);
+    let mut curves = outer_boundary_curves(body, face_a);
+    curves.extend(outer_boundary_curves(body, face_b));
+    if curves.is_empty() || hi <= lo {
+        return Vec::new();
+    }
+    let step = (hi - lo) / N as f64;
+    let at = |i: usize| lo + step * i as f64;
+    let distance = |t: f64| nearest_boundary_curve(&curves, ic.curve3.eval(t), linear).map_or(f64::INFINITY, |(_, d)| d);
+    let count = if closed { N } else { N + 1 };
+    let samples: Vec<f64> = (0..count).map(|i| distance(at(i))).collect();
+    if samples.iter().filter(|&&d| d <= linear).count() * 4 > count {
+        return Vec::new();
+    }
+    let mut touches = Vec::new();
+    let range = if closed { 0..N } else { 1..N };
+    for i in range {
+        let prev = samples[(i + count - 1) % count];
+        let next = samples[(i + 1) % count];
+        if !(samples[i] <= prev && samples[i] < next) {
+            continue;
+        }
+        let refined = golden_section_minimum(&distance, at(i) - step, at(i) + step);
+        if distance(refined) <= linear {
+            touches.push(refined);
+        }
+    }
+    touches
+}
+
+/// 🔀 The p-curve to imprint over the CLIPPED sub-range `(t0, t1)` and the p-curve parameter range that sub-range spans, repaired if
+/// the one `intersect_surface_surface` supplied does not actually hold there.
+///
+/// An SSI p-curve is certified against the intersection curve's FULL natural domain, and where no closed form exists it is a global
+/// interpolation of 33 inversion samples. A boolean never uses the full domain — it imprints a clipped sub-range — and a global fit
+/// can be arbitrarily wrong on one: a great circle through a sphere's POLES has a `u` that jumps by π there, which no single
+/// interpolation can represent. The supplied curve is therefore measured on the range actually used (to the edge's own tolerance,
+/// which `validate_body`'s same-parameter check enforces) and rebuilt there when it misses: first AFFINELY (exact for every
+/// latitude circle, meridian branch and ruling — the sub-arcs this stage produces on analytic supports), then by an adaptive
+/// uniform-parameter interpolation of exact surface inversions refined until the measured deviation is within tolerance.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn pcurve_for_clip(surface: &Surface, curve3: &semio_framework_3d_brep_curve::Curve3, pcurve: &Curve2, (t0, t1): (f64, f64), tol: f64) -> (Curve2, (f64, f64)) {
+    const K: usize = 33;
+    let edge_tol = tol.min(Tol::DEFAULT.value()) * 0.5;
+    let at = |i: usize| t0 + (t1 - t0) * i as f64 / (K - 1) as f64;
+    let deviation = |candidate: &Curve2| (0..K).map(|i| { let uv = candidate.eval(at(i)); surface.eval(uv.x, uv.y).distance(curve3.eval(at(i))) }).fold(0.0f64, f64::max);
+    if deviation(pcurve) <= edge_tol {
+        return (pcurve.clone(), (t0, t1));
+    }
+    let domain = surface.domain();
+    let mut samples: Vec<Pnt2> = Vec::with_capacity(K);
+    let mut degenerate: Vec<bool> = Vec::with_capacity(K);
+    for i in 0..K {
+        let found = closest_uv(surface, domain, curve3.eval(at(i)), tol.max(1e-12));
+        samples.push(Pnt2::new(found.u, found.v));
+        degenerate.push(surface.is_degenerate_uv(found.u, found.v));
+    }
+    if let Some(anchor) = (0..K).find(|&i| !degenerate[i]) {
+        for i in (0..anchor).rev() {
+            samples[i].x = samples[i + 1].x;
+        }
+        for i in (anchor + 1)..K {
+            if degenerate[i] {
+                samples[i].x = samples[i - 1].x;
+            }
+        }
+        let mut previous = samples[anchor];
+        for i in 0..K {
+            if surface.is_u_periodic() {
+                samples[i].x = unwrap_to(previous.x, samples[i].x);
+            }
+            if surface.is_v_periodic() {
+                samples[i].y = unwrap_to(previous.y, samples[i].y);
+            }
+            previous = samples[i];
+        }
+        let fitted = affine_pcurve_through(&samples, (t0, t1));
+        if deviation(&fitted) <= edge_tol {
+            return (fitted, (t0, t1));
+        }
+    }
+    arrangement::fitted_pcurve(surface, curve3, (t0, t1), edge_tol)
+}
+
+/// 🔀 Least-squares affine `Curve2::Line` through UV `samples` taken at evenly spaced parameters
+/// across `(t0, t1)`, in the SAME absolute parametrization the samples were taken in (so the
+/// result is a drop-in replacement for the p-curve it repairs).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn affine_pcurve_through(samples: &[Pnt2], (t0, t1): (f64, f64)) -> Curve2 {
+    let n = samples.len();
+    let at = |i: usize| t0 + (t1 - t0) * i as f64 / (n - 1) as f64;
+    let mean_t: f64 = (0..n).map(at).sum::<f64>() / n as f64;
+    let mean_u: f64 = samples.iter().map(|p| p.x).sum::<f64>() / n as f64;
+    let mean_v: f64 = samples.iter().map(|p| p.y).sum::<f64>() / n as f64;
+    let mut stt = 0.0;
+    let mut stu = 0.0;
+    let mut stv = 0.0;
+    for (i, sample) in samples.iter().enumerate() {
+        let dt = at(i) - mean_t;
+        stt += dt * dt;
+        stu += dt * (sample.x - mean_u);
+        stv += dt * (sample.y - mean_v);
+    }
+    let (du, dv) = if stt > 1e-30 { (stu / stt, stv / stt) } else { (0.0, 0.0) };
+    Curve2::Line { origin: Pnt2::new(mean_u - du * mean_t, mean_v - dv * mean_t), dir: Vec2::new(du, dv) }
+}
+
+/// 🔀 Parameter minimizing `f` on `[lo, hi]` by golden-section search — used to pin a seam touch
+/// (a smooth, strictly unimodal distance minimum within one sampling cell) to full precision.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn golden_section_minimum(f: &impl Fn(f64) -> f64, mut lo: f64, mut hi: f64) -> f64 {
+    const INV_PHI: f64 = 0.618_033_988_749_894_9;
+    let (mut c, mut d) = (hi - (hi - lo) * INV_PHI, lo + (hi - lo) * INV_PHI);
+    let (mut fc, mut fd) = (f(c), f(d));
+    for _ in 0..80 {
+        if fc < fd {
+            hi = d;
+            d = c;
+            fd = fc;
+            c = hi - (hi - lo) * INV_PHI;
+            fc = f(c);
+        } else {
+            lo = c;
+            c = d;
+            fc = fd;
+            d = lo + (hi - lo) * INV_PHI;
+            fd = f(d);
+        }
+    }
+    0.5 * (lo + hi)
+}
+
+// #endregion 🔖️Clip
+
+// #region 🔖️Imprint
+
+/// 🔀 A `closed` imprint vertex gets spliced onto a PRE-EXISTING boundary edge (e.g. a sphere's
+/// own seam, built by `primitives` at `Tol::DEFAULT`) — `validate_body` requires a vertex's own
+/// tolerance to never exceed any edge that references it, so the vertex can't just inherit the
+/// caller's (possibly looser) `tol`; it is clamped to at least as tight as the kernel's own
+/// baseline (`Tol::DEFAULT`) so it never exceeds ANY edge it might get spliced into.
+/// 🔀 Mints — or REUSES — the imprint vertex at `position`. Two intersection segments that meet at
+/// one physical point (three planes cutting one sphere give quarter arcs that share their
+/// endpoints) must share one vertex id, otherwise the segments never read as a connected chain and
+/// each half-open segment fails the two-crossing chord rule on its own.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn welded_imprint_vertex(body: &mut Body, weld: &mut Vec<(Pnt3, VertexId)>, position: Pnt3, tol_v: Tol, tol: f64, rec: &mut OpRecorder) -> VertexId {
+    let radius = tol.max(1e-9);
+    if let Some(&(_, existing)) = weld.iter().find(|(p, _)| p.distance(position) <= radius) {
+        return existing;
+    }
+    let created = make_vertex(body, position, tol_v, rec);
+    weld.push((position, created));
+    created
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn build_imprint_edge(body: &mut Body, ic: &IntCurve, (t0, t1): (f64, f64), closed: bool, (tol, weld): (f64, &mut Vec<(Pnt3, VertexId)>), rec: &mut OpRecorder) -> EdgeId {
+    let curve_id = body.curves3.insert(ic.curve3.clone());
+    let tol_v = Tol::new(tol.min(Tol::DEFAULT.value()));
+    if closed {
+        let v = welded_imprint_vertex(body, weld, ic.curve3.eval(t0), tol_v, tol, rec);
+        make_edge(body, curve_id, (t0, t1), v, v, tol_v, rec)
+    } else {
+        let va = welded_imprint_vertex(body, weld, ic.curve3.eval(t0), tol_v, tol, rec);
+        let vb = welded_imprint_vertex(body, weld, ic.curve3.eval(t1), tol_v, tol, rec);
+        make_edge(body, curve_id, (t0, t1), va, vb, tol_v, rec)
+    }
+}
+
+/// 🔀 The pre-existing boundary edge of `face` that the clipped segment `ic[t0, t1]` runs ALONG
+/// (every sample within tolerance of that edge's own curve), if there is one. This is the
+/// "imprint lands exactly on existing topology" case: the boundary the boolean needs on this side
+/// already exists, and minting a second, geometrically identical edge for it would leave the
+/// result with duplicate — and therefore non-manifold — topology.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn coincident_boundary_edge(body: &Body, face: FaceId, ic: &IntCurve, (t0, t1): (f64, f64), tol: f64) -> Option<EdgeId> {
+    const SAMPLES: usize = 8;
+    let linear = tol.max(1e-9);
+    let samples: Vec<Pnt3> = (0..=SAMPLES).map(|i| ic.curve3.eval(t0 + (t1 - t0) * i as f64 / SAMPLES as f64)).collect();
+    for coedge_id in body.face_coedges(face) {
+        let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+        let Some(edge) = body.edges.get(coedge.edge) else { continue };
+        let Some(curve) = body.curves3.get(edge.curve) else { continue };
+        if samples.iter().all(|&p| closest_parameter(curve, edge.range, p, linear).distance <= linear * 10.0) {
+            return Some(coedge.edge);
+        }
+    }
+    None
+}
+
+/// 🔀 The vertex of `face`'s outer ring at `position` — an existing ring vertex when one is
+/// already there, otherwise the welded imprint vertex for that point, spliced in (which subdivides
+/// whichever boundary edge carries it, updating every occurrence of that edge in the ring).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn boundary_vertex_at(body: &mut Body, face: FaceId, position: Pnt3, (tol, weld): (f64, &mut Vec<(Pnt3, VertexId)>), rec: &mut OpRecorder) -> Result<VertexId, KernelError> {
+    let outer = body.faces.get(face).and_then(|f| f.outer).ok_or_else(|| KernelError::Operation(format!("face {face} has no outer loop")))?;
+    let linear = tol.max(1e-9);
+    for coedge_id in body.loop_coedges(outer) {
+        let Some((start, _)) = body.coedge_endpoints(coedge_id) else { continue };
+        if body.vertices.get(start).is_some_and(|v| v.position.distance(position) <= linear) {
+            if !weld.iter().any(|&(_, existing)| existing == start) {
+                weld.push((position, start));
+            }
+            return Ok(start);
+        }
+    }
+    let vertex = welded_imprint_vertex(body, weld, position, Tol::new(tol.min(Tol::DEFAULT.value())), tol, rec);
+    splice_boundary_vertex(body, outer, vertex, position, tol, rec)?;
+    Ok(vertex)
+}
+
+/// 🔀 Subdivides `face`'s coincident boundary so exactly one edge spans `endpoints`, and returns
+/// it — the shared edge the OTHER operand imprints against. See [`coincident_boundary_edge`].
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn boundary_subedge(body: &mut Body, face: FaceId, (p0, p1): (Pnt3, Pnt3), (tol, weld): (f64, &mut Vec<(Pnt3, VertexId)>), rec: &mut OpRecorder) -> Result<EdgeId, KernelError> {
+    let va = boundary_vertex_at(body, face, p0, (tol, weld), rec)?;
+    let vb = boundary_vertex_at(body, face, p1, (tol, weld), rec)?;
+    if va == vb {
+        return Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("coincident imprint on face {face} collapsed to a single boundary vertex"))));
+    }
+    let outer = body.faces.get(face).and_then(|f| f.outer).ok_or_else(|| KernelError::Operation(format!("face {face} has no outer loop")))?;
+    for coedge_id in body.loop_coedges(outer) {
+        let Some(coedge) = body.coedges.get(coedge_id) else { continue };
+        let Some(edge) = body.edges.get(coedge.edge) else { continue };
+        if (edge.v0 == va && edge.v1 == vb) || (edge.v0 == vb && edge.v1 == va) {
+            return Ok(coedge.edge);
+        }
+    }
+    Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("coincident imprint on face {face} did not resolve to one boundary edge between its endpoints"))))
+}
+
+/// 🔗️ Retains one existing seam vertex for geometrically coincident closed operand boundaries.
+fn unify_closed_boundary_vertices(body: &mut Body, from: EdgeId, to: EdgeId, tol: f64, weld: &mut [(Pnt3, VertexId)]) -> Result<(), KernelError> {
+    let from_vertex = body.edges.get(from).map(|edge| edge.v0).ok_or_else(|| KernelError::MissingEntity(format!("edge {from}")))?;
+    let to_vertex = body.edges.get(to).map(|edge| edge.v0).ok_or_else(|| KernelError::MissingEntity(format!("edge {to}")))?;
+    let a = body.vertices.get(from_vertex).ok_or_else(|| KernelError::MissingEntity(format!("vertex {from_vertex}")))?.position;
+    let b = body.vertices.get(to_vertex).ok_or_else(|| KernelError::MissingEntity(format!("vertex {to_vertex}")))?.position;
+    if a.distance(b) > tol { return Err(KernelError::Boolean(BooleanError::ImprintFailed("closed coincident boundaries have distinct seam anchors".into()))); }
+    if from_vertex != to_vertex {
+        for (_, edge) in body.edges.iter_mut() {
+            if edge.v0 == from_vertex { edge.v0 = to_vertex; }
+            if edge.v1 == from_vertex { edge.v1 = to_vertex; }
+        }
+        for (_, vertex) in weld.iter_mut() { if *vertex == from_vertex { *vertex = to_vertex; } }
+    }
+    Ok(())
+}
+
+/// 🔀 Re-points every coedge of `from` at `to` — the same physical segment, already bounded by the
+/// same welded vertices on both operands — flipping the coedge's sense when the two edges run in
+/// opposite vertex order. A coedge's p-curve is parameterised along its own edge's curve, so one
+/// carried over from `from` is dropped (a planar ring needs none; a periodic one is rebuilt by the
+/// splitters from the shared edge). `from` is left without coedges for the job's orphan sweep.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unify_boundary_edges(body: &mut Body, from: EdgeId, to: EdgeId) -> Result<(), KernelError> {
+    let (from_v0, from_v1) = body.edges.get(from).map(|edge| (edge.v0, edge.v1)).ok_or_else(|| KernelError::MissingEntity(format!("edge {from}")))?;
+    let (to_v0, to_v1) = body.edges.get(to).map(|edge| (edge.v0, edge.v1)).ok_or_else(|| KernelError::MissingEntity(format!("edge {to}")))?;
+    let same_order = if from_v0 == from_v1 && to_v0 == to_v1 {
+        body.edges.get(from).and_then(|edge| body.curves3.get(edge.curve).and_then(|curve| curve.tangent(edge.range.0)))
+            .zip(body.edges.get(to).and_then(|edge| body.curves3.get(edge.curve).and_then(|curve| curve.tangent(edge.range.0))))
+            .is_some_and(|(a, b)| a.dot(b) >= 0.0)
+    } else { from_v0 == to_v0 && from_v1 == to_v1 };
+    if !same_order && !(from_v0 == to_v1 && from_v1 == to_v0) {
+        return Err(KernelError::Boolean(BooleanError::ImprintFailed(format!("boundary edges {from} and {to} do not span the same welded vertices"))));
+    }
+    let coedges: Vec<CoedgeId> = body.coedges.iter().filter(|(_, co)| co.edge == from).map(|(id, _)| id).collect();
+    for cid in coedges {
+        if let Some(co) = body.coedges.get_mut(cid) {
+            co.edge = to;
+            if !same_order {
+                co.forward = !co.forward;
+            }
+            co.pcurve = None;
+        }
+    }
+    Ok(())
+}
+
+/// 🔀 Orders the shared edge's p-curve range to match the edge's own `v0 → v1` direction, so the
+/// linear `prange → edge.range` map the same-parameter check applies stays consistent whether the
+/// edge was freshly built (already in that order) or reused from an operand's own boundary
+/// (whose direction is whatever the primitive chose).
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn oriented_prange(body: &Body, edge_id: EdgeId, (p0, p1): (Pnt3, Pnt3), (t0, t1): (f64, f64)) -> (f64, f64) {
+    let Some(edge) = body.edges.get(edge_id) else { return (t0, t1) };
+    let Some(start) = body.vertices.get(edge.v0) else { return (t0, t1) };
+    if start.position.distance(p1) < start.position.distance(p0) {
+        (t1, t0)
+    } else {
+        (t0, t1)
+    }
+}
+
+// #endregion 🔖️Imprint
+
+// #region 🔖️Classify
+
+/// 🔀 A UV point inside `face`'s own trim (outer minus every hole), for use as a representative
+/// 3D sample when classifying the whole piece: the outer loop's sampled centroid first, then a
+/// coarse grid scan of the loop's UV bounding box.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn interior_point_of_face(body: &Body, face: FaceId, tol: f64) -> Option<Pnt3> {
+    let face_data = body.faces.get(face)?;
+    let surface = body.surfaces.get(face_data.surface)?.clone();
+    let outer = face_data.outer?;
+    let pts = sample_loop_uv(body, outer, &surface, 12);
+    if pts.is_empty() {
+        return None;
+    }
+    let cx = pts.iter().map(|p| p.x).sum::<f64>() / pts.len() as f64;
+    let cy = pts.iter().map(|p| p.y).sum::<f64>() / pts.len() as f64;
+    let (mut umin, mut umax, mut vmin, mut vmax) = (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY);
+    for p in &pts {
+        umin = umin.min(p.x);
+        umax = umax.max(p.x);
+        vmin = vmin.min(p.y);
+        vmax = vmax.max(p.y);
+    }
+    if point_in_face_uv_periodic(body, face, Pnt2::new(cx, cy), tol) {
+        return Some(surface.eval(cx, cy));
+    }
+    const STEPS: usize = 16;
+    for i in 0..STEPS {
+        for j in 0..STEPS {
+            let u = umin + (umax - umin) * (i as f64 + 0.5) / STEPS as f64;
+            let v = vmin + (vmax - vmin) * (j as f64 + 0.5) / STEPS as f64;
+            if point_in_face_uv_periodic(body, face, Pnt2::new(u, v), tol) {
+                return Some(surface.eval(u, v));
+            }
+        }
+    }
+    None
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn sample_loop_uv(body: &Body, loop_id: LoopId, surface: &Surface, per_edge: usize) -> Vec<Pnt2> {
+    let mut pts = Vec::new();
+    let mut prev_u: Option<f64> = None;
+    let mut prev_v: Option<f64> = None;
+    for cid in body.loop_coedges(loop_id) {
+        let Some(co) = body.coedges.get(cid) else { continue };
+        let Some(pc_id) = co.pcurve else { continue };
+        let Some(pc) = body.curves2.get(pc_id) else { continue };
+        let (t0, t1) = if co.forward { co.prange } else { (co.prange.1, co.prange.0) };
+        for k in 0..per_edge {
+            let s = k as f64 / per_edge as f64;
+            let mut p = pc.eval(t0 + (t1 - t0) * s);
+            // Unwrap continuously across coedges (matching `classification::loop_uv_polygon_sampled`'s
+            // own periodic handling) so a loop that grazes a periodic seam still yields a compact,
+            // consistently-signed UV bounding box instead of a bogus near-full-domain one.
+            if surface.is_u_periodic() {
+                if let Some(pu) = prev_u {
+                    p.x = unwrap_to(pu, p.x);
+                }
+                prev_u = Some(p.x);
+            }
+            if surface.is_v_periodic() {
+                if let Some(pv) = prev_v {
+                    p.y = unwrap_to(pv, p.y);
+                }
+                prev_v = Some(p.y);
+            }
+            pts.push(p);
+        }
+    }
+    pts
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn unwrap_to(prev: f64, u: f64) -> f64 {
+    let tau = std::f64::consts::TAU;
+    let diff = u - prev;
+    prev + diff - tau * ((diff + std::f64::consts::PI) / tau).floor()
+}
+
+/// 🔀 Six fixed irrational-ish ray directions for [`local_point_in_solid`]'s retry consensus —
+/// same role as `classification.rs`'s own private `RAY_RETRY_DIRS` (kept independent since that
+/// one isn't `pub`).
+/// 🐛 All six used to have a POSITIVE `z`, so every retry left the query point through the same
+/// hemisphere: one damaged face in that hemisphere loses every vote at once, and the classifier
+/// reports `Outside` unanimously rather than disagreeing. Half of them are negated here so the set
+/// spans both hemispheres and no single face can shadow the whole consensus.
+const LOCAL_RAY_RETRY_DIRS: [[f64; 3]; 6] = [
+    [0.573_576_436_351_046, 0.740_535_693_464_567_5, 0.350_889_803_483_932_2],
+    [0.350_889_803_483_932_2, -0.573_576_436_351_046, -0.740_535_693_464_567_5],
+    [0.267_261_241_941_149_4, 0.534_522_483_882_298_8, 0.801_783_725_737_219],
+    [-0.577_350_269_189_625_8, -0.577_350_269_189_625_8, -0.577_350_269_189_625_7],
+    [0.308_608_313_448_298, 0.904_511_432_523_735, 0.293_892_626_045_885],
+    [-0.843_391_445_261_857, -0.214_298_755_144_806, -0.491_975_172_042_98],
+];
+
+/// 🔀 Local replacement for `classification::point_in_solid`, needed to work around a confirmed
+/// bug there rather than editing that file (outside this file's ownership per the ticket brief —
+/// see the report for the exact diff `classification.rs` would need instead).
+/// `point_in_face_trim_status`'s `Surface::Sphere` branch builds its own trim "polygon" from the
+/// face's real 3D VERTICES (`face_boundary_points`) — correct for the pre-this-ticket
+/// two-hemisphere sphere topology, but wrong for W1-E's new single-face/one-seam sphere (only 2
+/// real vertices: the two poles), where that "polygon" degenerates to two collinear points, so
+/// `point_in_polygon_3d` returns `false` for every hit and EVERY ray reports zero crossings.
+/// Confirmed directly (not assumed): `point_in_solid` on a bare, unsplit unit sphere returns
+/// `Outside` for `(0,0,0)` (its own center) and for `(2,0,0)` (clearly outside) identically. This
+/// reimplements the same multi-ray-parity vote, but routes every face's trim test through
+/// `classification::point_in_face_uv` (the UV-sampled path, unaffected by the bug above) using the
+/// `(u, v)` [`intersect_curve_surface`] already returns per hit, instead of the broken 3D-vertex
+/// shortcut.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn local_point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> Result<PointClassification, KernelError> {
+    let (_, dist) = closest_point_on_solid(body, solid, point)?;
+    if dist <= tol {
+        return Ok(PointClassification::OnBoundary);
+    }
+    let faces = body.solid_faces(solid);
+    let mut inside_votes = 0u32;
+    let mut outside_votes = 0u32;
+    for raw_dir in LOCAL_RAY_RETRY_DIRS {
+        let dir = Vec3::new(raw_dir[0], raw_dir[1], raw_dir[2]);
+        let ray = semio_framework_3d_brep_curve::Curve3::Line { origin: point, dir };
+        let mut grazing = false;
+        let mut hits: Vec<f64> = Vec::new();
+        for &face in &faces {
+            let Some(face_data) = body.faces.get(face) else { continue };
+            let Some(surface) = body.surfaces.get(face_data.surface) else { continue };
+            let face_hits = match intersect_curve_surface(&ray, surface, tol) {
+                Ok(h) => h,
+                Err(_) => {
+                    grazing = true;
+                    break;
+                }
+            };
+            for h in face_hits {
+                if h.t <= 1e-9 {
+                    continue;
+                }
+                if let Some(n) = surface.normal(h.u, h.v) {
+                    if let Some(nn) = n.normalized() {
+                        if nn.dot(dir).abs() < 1e-6 {
+                            grazing = true;
+                            break;
+                        }
+                    }
+                }
+                // 🌀 The trim test must try the hit's UV at every period shift: a split piece of a
+                // periodic face keeps its own boundary polygon on whatever `2π` branch its imprint
+                // settled on (the piece ABOVE a seam-crossing circle on a cylinder), and a single
+                // canonically-wrapped probe missed it — every ray through a blind bore's upper
+                // lateral piece counted zero crossings and the bore's floor disc classified Outside.
+                if point_in_face_uv_periodic(body, face, Pnt2::new(h.u, h.v), tol) {
+                    hits.push(h.t);
+                }
+            }
+            if grazing {
+                break;
+            }
+        }
+        if grazing {
+            continue;
+        }
+        hits.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+        let merge_tol = tol * 10.0;
+        let mut crossings = 0u32;
+        let mut last: Option<f64> = None;
+        for t in hits {
+            if last.is_none_or(|l| (t - l).abs() > merge_tol) {
+                crossings += 1;
+                last = Some(t);
+            }
+        }
+        if crossings % 2 == 1 {
+            inside_votes += 1;
+        } else {
+            outside_votes += 1;
+        }
+        if inside_votes >= 2 {
+            return Ok(PointClassification::Inside);
+        }
+        if outside_votes >= 2 {
+            return Ok(PointClassification::Outside);
+        }
+    }
+    if inside_votes > outside_votes {
+        Ok(PointClassification::Inside)
+    } else if outside_votes > inside_votes {
+        Ok(PointClassification::Outside)
+    } else {
+        Err(KernelError::Operation("local point classification: every retry direction was grazing or degenerate".into()))
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn classify_face_against_solid(body: &Body, face: FaceId, other: SolidId, tol: f64) -> Result<PointClassification, KernelError> {
+    let Some(p) = interior_point_of_face(body, face, tol) else {
+        return Err(KernelError::Boolean(BooleanError::ClassificationAmbiguous(format!("no interior UV sample found for face {face}"))));
+    };
+    local_point_in_solid(body, other, p, tol)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn keep_face(op: BooleanOp, from_a: bool, class: PointClassification) -> bool {
+    match op {
+        BooleanOp::Unite => matches!(class, PointClassification::Outside | PointClassification::OnBoundary),
+        BooleanOp::Intersect => matches!(class, PointClassification::Inside | PointClassification::OnBoundary),
+        BooleanOp::Cut => {
+            if from_a {
+                matches!(class, PointClassification::Outside | PointClassification::OnBoundary)
+            } else {
+                matches!(class, PointClassification::Inside)
+            }
+        }
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn flip_face(body: &mut Body, face: FaceId) {
+    if let Some(f) = body.faces.get_mut(face) {
+        f.flipped = !f.flipped;
+    }
+}
+
+// #endregion 🔖️Classify
+
+// #region 🔖️Coincident
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// ↔️ Selects the surviving operand boundary for a coincident face pair.
+fn keep_coincident_boundary(op: BooleanOp, aligned: bool) -> bool {
+    match op { BooleanOp::Unite | BooleanOp::Intersect => aligned, BooleanOp::Cut => !aligned }
+}
+
+/// 🧭️ Compares outward normals at the same boundary point on both analytic surfaces.
+fn coincident_face_alignment(body: &Body, fa: FaceId, fb: FaceId, tol: f64) -> Option<bool> {
+    let a = body.faces.get(fa)?;
+    let b = body.faces.get(fb)?;
+    let sa = body.surfaces.get(a.surface)?;
+    let sb = body.surfaces.get(b.surface)?;
+    body.face_coedges(fa).into_iter().find_map(|coedge| {
+        let edge = body.edges.get(body.coedges.get(coedge)?.edge)?;
+        let point = body.curves3.get(edge.curve)?.eval((edge.range.0 + edge.range.1) * 0.5);
+        let ua = closest_uv(sa, sa.domain(), point, tol);
+        let ub = closest_uv(sb, sb.domain(), point, tol);
+        let na = sa.normal(ua.u, ua.v)? * if a.flipped { -1.0 } else { 1.0 };
+        let nb = sb.normal(ub.u, ub.v)? * if b.flipped { -1.0 } else { 1.0 };
+        Some(na.dot(nb) > 0.0)
+    })
+}
+
+fn find_coincident_face_pairs(body: &Body, faces_a: &[FaceId], faces_b: &[FaceId], tol: f64) -> Vec<(FaceId, FaceId, bool)> {
+    let mut out = Vec::new();
+    for &fa in faces_a {
+        let Some(face_a) = body.faces.get(fa) else { continue };
+        let Some(outer_a) = face_a.outer else { continue };
+        let Some(sa) = body.surfaces.get(face_a.surface) else { continue };
+        for &fb in faces_b {
+            let Some(face_b) = body.faces.get(fb) else { continue };
+            let Some(outer_b) = face_b.outer else { continue };
+            let Some(sb) = body.surfaces.get(face_b.surface) else { continue };
+            if surfaces_equal(sa, sb, tol) && loops_coincide(body, outer_a, outer_b, tol) {
+                if let Some(aligned) = coincident_face_alignment(body, fa, fb, tol) { out.push((fa, fb, aligned)); }
+            }
+        }
+    }
+    out
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn surfaces_equal(sa: &Surface, sb: &Surface, tol: f64) -> bool {
+    match (sa, sb) {
+        (Surface::Plane { frame: fa }, Surface::Plane { frame: fb }) => fa.z.dot(fb.z).abs() > 1.0 - 1e-9 && (fa.origin - fb.origin).dot(fa.z).abs() < tol,
+        (Surface::Cylinder { frame: fa, radius: ra }, Surface::Cylinder { frame: fb, radius: rb }) => (ra - rb).abs() < tol && fa.z.cross(fb.z).norm() < 1e-9 && (fa.origin - fb.origin).cross(fa.z).norm() < tol,
+        (Surface::Sphere { frame: fa, radius: ra }, Surface::Sphere { frame: fb, radius: rb }) => (ra - rb).abs() < tol && (fa.origin - fb.origin).norm() < tol,
+        _ => false,
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn loop_positions(body: &Body, loop_id: LoopId) -> Vec<Pnt3> {
+    body.loop_coedges(loop_id).into_iter().filter_map(|c| body.coedge_endpoints(c)).filter_map(|(v, _)| body.vertices.get(v).map(|x| x.position)).collect()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn loops_coincide(body: &Body, la: LoopId, lb: LoopId, tol: f64) -> bool {
+    let pa = loop_positions(body, la);
+    let pb = loop_positions(body, lb);
+    if pa.is_empty() || pa.len() != pb.len() {
+        return false;
+    }
+    pa.iter().all(|p| pb.iter().any(|q| p.distance(*q) <= tol))
+}
+
+// #endregion 🔖️Coincident
+
+// #region 🔖️Stitch
+
+/// 🔀 Groups `selected` faces into connected shells via shared edges, orients every group outward
+/// (flipping the whole group when its net signed volume comes out negative), then assembles ONE
+/// solid out of all of them: a group that a containment test ([`solid_wholly_inside`]) places
+/// inside another becomes an inverted VOID shell, and every remaining group joins the outer shell.
+/// 🐛 This used to return only the largest-volume group and leave the rest live-but-unreturned,
+/// which silently dropped every other lump: two barely-tangent spheres united to the volume of ONE
+/// sphere. Disjoint lumps sharing one shell is the same representation
+/// [`trivial_topology_fast_path`]'s own disjoint-union branch already produces.
+/// 🐛 The sign probe's own `chord_tol` used to be `1e-6`: for a full-circle imprint edge that made
+/// `segments_for_chord_deviation` sample ~1700+ boundary points, and `ear_clip`'s O(n³) worst case
+/// over that many points took minutes. Only the SIGN of this volume is used here (to decide
+/// whether to flip a group's faces), so it now matches `validation_report`'s own sign-probe
+/// tolerance (`PROBE_TOL = 1e-3`) instead of a precision this call never needed.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn stitch_selected_faces(body: &mut Body, selected: &[FaceId], tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    let groups = group_shells(body, selected);
+    if groups.is_empty() {
+        return Err(KernelError::Boolean(BooleanError::InvalidResult("stitch produced no shells".into())));
+    }
+    let mut lumps: Vec<(Vec<FaceId>, ShellId, SolidId)> = Vec::with_capacity(groups.len());
+    for group in groups {
+        let shell = add_shell(body, group.clone(), rec);
+        if shell_signed_volume(body, shell, 1e-3).unwrap_or(0.0) < 0.0 {
+            for &f in &group {
+                flip_face(body, f);
+            }
+        }
+        let solid = add_solid(body, shell, Vec::new(), rec);
+        lumps.push((group, shell, solid));
+    }
+    let mut void_of: Vec<Option<usize>> = vec![None; lumps.len()];
+    for inner in 0..lumps.len() {
+        for outer in 0..lumps.len() {
+            if inner == outer || void_of[outer] == Some(inner) {
+                continue;
+            }
+            if solid_wholly_inside(body, lumps[inner].2, lumps[outer].2, tol)? {
+                void_of[inner] = Some(outer);
+                break;
+            }
+        }
+    }
+    let mut outer_faces: Vec<FaceId> = Vec::new();
+    let mut void_shells: Vec<ShellId> = Vec::new();
+    for (index, (group, shell, _)) in lumps.iter().enumerate() {
+        if void_of[index].is_some() {
+            for &f in group {
+                flip_face(body, f);
+            }
+            void_shells.push(*shell);
+        } else {
+            outer_faces.extend(group.iter().copied());
+        }
+    }
+    for (index, (_, shell, solid)) in lumps.iter().enumerate() {
+        if let Some(label) = body.solids.get(*solid).map(|s| s.label) {
+            rec.record_deleted(label);
+        }
+        body.solids.remove(*solid);
+        if void_of[index].is_none() {
+            if let Some(label) = body.shells.get(*shell).map(|s| s.label) {
+                rec.record_deleted(label);
+            }
+            body.shells.remove(*shell);
+        }
+    }
+    if outer_faces.is_empty() {
+        return Err(KernelError::Boolean(BooleanError::InvalidResult("stitch found only enclosed shells and no outer boundary".into())));
+    }
+    let outer = add_shell(body, outer_faces, rec);
+    Ok(add_solid(body, outer, void_shells, rec))
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn group_shells(body: &Body, selected: &[FaceId]) -> Vec<Vec<FaceId>> {
+    let mut edge_to_faces: HashMap<EdgeId, Vec<FaceId>> = HashMap::new();
+    for &f in selected {
+        for cid in body.face_coedges(f) {
+            if let Some(co) = body.coedges.get(cid) {
+                edge_to_faces.entry(co.edge).or_default().push(f);
+            }
+        }
+    }
+    let mut adjacency: std::collections::BTreeMap<FaceId, std::collections::BTreeSet<FaceId>> = std::collections::BTreeMap::new();
+    for &f in selected {
+        adjacency.entry(f).or_default();
+    }
+    for faces in edge_to_faces.values() {
+        for i in 0..faces.len() {
+            for j in (i + 1)..faces.len() {
+                adjacency.entry(faces[i]).or_default().insert(faces[j]);
+                adjacency.entry(faces[j]).or_default().insert(faces[i]);
+            }
+        }
+    }
+    let mut visited: HashSet<FaceId> = HashSet::new();
+    let mut groups = Vec::new();
+    for &f in selected {
+        if visited.contains(&f) {
+            continue;
+        }
+        let mut stack = vec![f];
+        visited.insert(f);
+        let mut comp = Vec::new();
+        while let Some(cur) = stack.pop() {
+            comp.push(cur);
+            if let Some(neighbors) = adjacency.get(&cur) {
+                for &n in neighbors {
+                    if visited.insert(n) {
+                        stack.push(n);
+                    }
+                }
+            }
+        }
+        groups.push(comp);
+    }
+    groups
+}
+
+// #endregion 🔖️Stitch
+
+// #region 🔖️Cleanup
+
+/// 🔀 Removes every face of `solid`'s original shells that is NOT in `keep` (a face that WAS kept
+/// survives as a floating face until [`stitch_selected_faces`]'s new shell picks it back up), then
+/// drops the now-superseded shell(s)/solid wrapper itself.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn remove_solid_and_orphans(body: &mut Body, solid: SolidId, keep: &HashSet<FaceId>, rec: &mut OpRecorder) {
+    let Some(data) = body.solids.get(solid).cloned() else { return };
+    let shells: Vec<ShellId> = std::iter::once(data.outer).chain(data.inners.iter().copied()).collect();
+    for shell_id in shells {
+        let Some(shell) = body.shells.get(shell_id).cloned() else { continue };
+        for f in shell.faces {
+            if !keep.contains(&f) {
+                remove_face(body, f, rec);
+            }
+        }
+        if let Some(label) = body.shells.get(shell_id).map(|s| s.label) {
+            rec.record_deleted(label);
+        }
+        body.shells.remove(shell_id);
+    }
+    if let Some(label) = body.solids.get(solid).map(|s| s.label) {
+        rec.record_deleted(label);
+    }
+    body.solids.remove(solid);
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn remove_face(body: &mut Body, face: FaceId, rec: &mut OpRecorder) {
+    let Some(data) = body.faces.get(face).cloned() else { return };
+    let mut loops = Vec::new();
+    if let Some(o) = data.outer {
+        loops.push(o);
+    }
+    loops.extend(data.inners.iter().copied());
+    for loop_id in loops {
+        for cid in body.loop_coedges(loop_id) {
+            body.coedges.remove(cid);
+        }
+        body.loops.remove(loop_id);
+    }
+    rec.record_deleted(data.label);
+    body.faces.remove(face);
+}
+
+/// 🔀 Drops every edge/vertex THIS boolean minted that no live coedge/edge references any more —
+/// the imprint pipeline creates edges/vertices speculatively (both faces of a pair queue the same
+/// shared edge even when only one side ends up selected) and `remove_face` only clears coedges, not
+/// the shared geometry underneath them.
+/// 🐛 `protected` is every edge/vertex that predates the job, and the sweep may never cross it: a
+/// bare [`semio_framework_3d_brep_representation::topology::Wire`]'s member edges
+/// carry no coedge at all, so an unscoped orphan sweep read every live wire handle's geometry as
+/// garbage and freed it — the same "a boolean frees what it did not create" law its operands are
+/// now protected by.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn gc_orphan_edges_and_vertices(body: &mut Body, (protected_edges, protected_vertices): (&HashSet<EdgeId>, &HashSet<VertexId>), rec: &mut OpRecorder) {
+    let used_edges: HashSet<EdgeId> = body.coedges.iter().map(|(_, c)| c.edge).collect();
+    let dead_edges: Vec<EdgeId> = body.edges.iter().map(|(id, _)| id).filter(|id| !used_edges.contains(id) && !protected_edges.contains(id)).collect();
+    for e in dead_edges {
+        if let Some(data) = body.edges.get(e) {
+            rec.record_deleted(data.label);
+        }
+        body.edges.remove(e);
+    }
+    let mut used_verts: HashSet<VertexId> = HashSet::new();
+    for (_, e) in body.edges.iter() {
+        used_verts.insert(e.v0);
+        used_verts.insert(e.v1);
+    }
+    let dead_verts: Vec<VertexId> = body.vertices.iter().map(|(id, _)| id).filter(|id| !used_verts.contains(id) && !protected_vertices.contains(id)).collect();
+    for v in dead_verts {
+        if let Some(data) = body.vertices.get(v) {
+            rec.record_deleted(data.label);
+        }
+        body.vertices.remove(v);
+    }
+}
+
+// #endregion 🔖️Cleanup
+
+// #endregion 🔖️ExactImprintEngine
+
+// #region 🔖️MeshPreview
+
+/// 🔀 The pre-rewrite tessellate→centroid-classify→triangle-soup boolean, kept as an explicit
+/// opt-in for callers that pass `OpQuality::MeshDerivedBRep` — `boolean_solid` itself never calls
+/// this.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn boolean_solid_mesh_preview(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    require_tol(tol)?;
+    require_solid(body, a)?;
+    require_solid(body, b)?;
+    let deflection = tol.max(1e-3);
+    let mesh_a = tessellate_solid(body, a, deflection)?;
+    let mesh_b = tessellate_solid(body, b, deflection)?;
+    let mut points = Vec::new();
+    let mut triangles: Vec<[Pnt3; 3]> = Vec::new();
+    append_kept_triangles(body, &mesh_a, b, op, true, tol, (&mut points, &mut triangles))?;
+    append_kept_triangles(body, &mesh_b, a, op, false, tol, (&mut points, &mut triangles))?;
+    if triangles.is_empty() {
+        return Err(KernelError::Boolean(BooleanError::InvalidResult("mesh boolean produced no triangles".into())));
+    }
+    match solid_from_triangle_soup(body, &triangles, rec) {
+        Ok(id) => Ok(id),
+        Err(_) => make_convex_hull(body, &points, rec).map_err(|e| match e {
+            KernelError::InvalidInput(msg) => KernelError::Boolean(BooleanError::InvalidResult(msg)),
+            other => other,
+        }),
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn append_kept_triangles(body: &Body, mesh: &MeshTransfer, other: SolidId, op: BooleanOp, from_a: bool, tol: f64, (out_points, out_tris): (&mut Vec<Pnt3>, &mut Vec<[Pnt3; 3]>)) -> Result<(), KernelError> {
+    let npos = mesh.position.len() / 3;
+    if !mesh.index.len().is_multiple_of(3) {
+        return Err(KernelError::InvalidInput("mesh index length must be a multiple of 3".into()));
+    }
+    for tri in mesh.index.as_chunks::<3>().0 {
+        let i0 = tri[0] as usize;
+        let i1 = tri[1] as usize;
+        let i2 = tri[2] as usize;
+        if i0 >= npos || i1 >= npos || i2 >= npos {
+            return Err(KernelError::InvalidInput("mesh index out of range".into()));
+        }
+        let p0 = mesh_position(mesh, i0);
+        let p1 = mesh_position(mesh, i1);
+        let p2 = mesh_position(mesh, i2);
+        let centroid = Pnt3::new((p0.x + p1.x + p2.x) / 3.0, (p0.y + p1.y + p2.y) / 3.0, (p0.z + p1.z + p2.z) / 3.0);
+        let class = local_point_in_solid(body, other, centroid, tol)?;
+        if keep_face(op, from_a, class) {
+            out_points.push(p0);
+            out_points.push(p1);
+            out_points.push(p2);
+            out_tris.push([p0, p1, p2]);
+        }
+    }
+    Ok(())
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn mesh_position(mesh: &MeshTransfer, i: usize) -> Pnt3 {
+    let o = i * 3;
+    Pnt3::new(mesh.position[o] as f64, mesh.position[o + 1] as f64, mesh.position[o + 2] as f64)
+}
+
+// #endregion 🔖️MeshPreview
+
+// #region 🔖️ShellHelpers
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_from_outer_faces(body: &mut Body, outer_faces: Vec<FaceId>, inner_face_sets: Vec<Vec<FaceId>>, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
+    if outer_faces.is_empty() {
+        return Err(KernelError::InvalidInput("outer shell requires at least one face".into()));
+    }
+    let outer = add_shell(body, outer_faces, rec);
+    let mut inners = Vec::with_capacity(inner_face_sets.len());
+    for faces in inner_face_sets {
+        if faces.is_empty() {
+            return Err(KernelError::InvalidInput("inner shell requires at least one face".into()));
+        }
+        inners.push(add_shell(body, faces, rec));
+    }
+    Ok(add_solid(body, outer, inners, rec))
+}
+
+/// 🔀 A deep copy of `solid`'s OUTER faces, detached from any shell/solid wrapper and ready to be
+/// re-assembled into somebody else's shell — the operand-owning counterpart of [`outer_faces`],
+/// which hands back the operand's own face ids and therefore may only ever be READ from.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn detached_copy_of_outer_faces(body: &mut Body, solid: SolidId, rec: &mut OpRecorder) -> Result<Vec<FaceId>, KernelError> {
+    let copy = copy_solid(body, solid, rec)?;
+    let faces = outer_faces(body, copy)?;
+    let keep: HashSet<FaceId> = faces.iter().copied().collect();
+    remove_solid_and_orphans(body, copy, &keep, rec);
+    Ok(faces)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn outer_faces(body: &Body, solid: SolidId) -> Result<Vec<FaceId>, KernelError> {
+    let data = body.solids.get(solid).ok_or_else(|| KernelError::MissingEntity(format!("solid {solid}")))?;
+    let shell = body.shells.get(data.outer).ok_or_else(|| KernelError::MissingEntity(format!("shell {}", data.outer)))?;
+    Ok(shell.faces.clone())
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_vertex_positions(body: &Body, solid: SolidId) -> Vec<Pnt3> {
+    let mut seen: HashSet<VertexId> = HashSet::new();
+    let mut points = Vec::new();
+    for face in body.solid_faces(solid) {
+        let Some(face_ent) = body.faces.get(face) else {
+            continue;
+        };
+        let mut loops = Vec::new();
+        if let Some(outer) = face_ent.outer {
+            loops.push(outer);
+        }
+        loops.extend(face_ent.inners.iter().copied());
+        for loop_id in loops {
+            let Some(loop_ent) = body.loops.get(loop_id) else {
+                continue;
+            };
+            let start = loop_ent.first;
+            let mut cur = start;
+            loop {
+                if let Some((v0, _)) = body.coedge_endpoints(cur) {
+                    if seen.insert(v0) {
+                        if let Some(v) = body.vertices.get(v0) {
+                            points.push(v.position);
+                        }
+                    }
+                }
+                let Some(coedge) = body.coedges.get(cur) else {
+                    break;
+                };
+                cur = coedge.next;
+                if cur == start {
+                    break;
+                }
+            }
+        }
+    }
+    points
+}
+
+/// 🔀 Surface samples proving a containment claim: every vertex, seven points along every edge and a grid of interior points on every
+/// face. Vertices alone prove nothing for a curved solid — a sphere has two, both on its axis.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn solid_probe_points(body: &Body, solid: SolidId, tol: f64) -> Vec<Pnt3> {
+    let mut points = solid_vertex_positions(body, solid);
+    let mut seen_edges: HashSet<EdgeId> = HashSet::new();
+    for face in body.solid_faces(solid) {
+        for coedge in body.face_coedges(face) {
+            let Some(edge_id) = body.coedges.get(coedge).map(|c| c.edge) else { continue };
+            if !seen_edges.insert(edge_id) {
+                continue;
+            }
+            let Some(edge) = body.edges.get(edge_id) else { continue };
+            let Some(curve) = body.curves3.get(edge.curve) else { continue };
+            for k in 1..8 {
+                points.push(curve.eval(edge.range.0 + (edge.range.1 - edge.range.0) * k as f64 / 8.0));
+            }
+        }
+        let Some(face_data) = body.faces.get(face) else { continue };
+        let (Some(surface), Some(outer)) = (body.surfaces.get(face_data.surface), face_data.outer) else { continue };
+        let ring = sample_loop_uv(body, outer, surface, 12);
+        if ring.is_empty() {
+            continue;
+        }
+        let (mut u0, mut u1, mut v0, mut v1) = (f64::INFINITY, f64::NEG_INFINITY, f64::INFINITY, f64::NEG_INFINITY);
+        for p in &ring {
+            u0 = u0.min(p.x);
+            u1 = u1.max(p.x);
+            v0 = v0.min(p.y);
+            v1 = v1.max(p.y);
+        }
+        const GRID: usize = 5;
+        for i in 0..GRID {
+            for j in 0..GRID {
+                let uv = Pnt2::new(u0 + (u1 - u0) * (i as f64 + 0.5) / GRID as f64, v0 + (v1 - v0) * (j as f64 + 0.5) / GRID as f64);
+                if point_in_face_uv_periodic(body, face, uv, tol) {
+                    points.push(surface.eval(uv.x, uv.y));
+                }
+            }
+        }
+    }
+    points
+}
+
+// #endregion 🔖️ShellHelpers
+
+// #region 🔖️AabbMath
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn aabb_finite(bb: &AxisAlignedBox) -> bool {
+    bb.min.x.is_finite() && bb.min.y.is_finite() && bb.min.z.is_finite() && bb.max.x.is_finite() && bb.max.y.is_finite() && bb.max.z.is_finite()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn aabb_dims(bb: &AxisAlignedBox) -> (f64, f64, f64) {
+    (bb.max.x - bb.min.x, bb.max.y - bb.min.y, bb.max.z - bb.min.z)
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn aabb_volume(bb: &AxisAlignedBox) -> f64 {
+    let (w, d, h) = aabb_dims(bb);
+    w * d * h
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn aabb_gap(a: &AxisAlignedBox, b: &AxisAlignedBox) -> f64 {
+    let dx = gap_1d(a.min.x, a.max.x, b.min.x, b.max.x);
+    let dy = gap_1d(a.min.y, a.max.y, b.min.y, b.max.y);
+    let dz = gap_1d(a.min.z, a.max.z, b.min.z, b.max.z);
+    (dx * dx + dy * dy + dz * dz).sqrt()
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
+    if a1 < b0 {
+        b0 - a1
+    } else if b1 < a0 {
+        a0 - b1
+    } else {
+        0.0
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn aabb_intersection(a: &AxisAlignedBox, b: &AxisAlignedBox) -> Option<AxisAlignedBox> {
+    let min = Pnt3::new(a.min.x.max(b.min.x), a.min.y.max(b.min.y), a.min.z.max(b.min.z));
+    let max = Pnt3::new(a.max.x.min(b.max.x), a.max.y.min(b.max.y), a.max.z.min(b.max.z));
+    if min.x < max.x && min.y < max.y && min.z < max.z {
+        Some(AxisAlignedBox { min, max })
+    } else {
+        None
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn aabb_union(a: &AxisAlignedBox, b: &AxisAlignedBox) -> AxisAlignedBox {
+    AxisAlignedBox { min: Pnt3::new(a.min.x.min(b.min.x), a.min.y.min(b.min.y), a.min.z.min(b.min.z)), max: Pnt3::new(a.max.x.max(b.max.x), a.max.y.max(b.max.y), a.max.z.max(b.max.z)) }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn aabb_contains(outer: &AxisAlignedBox, inner: &AxisAlignedBox, tol: f64) -> bool {
+    outer.min.x <= inner.min.x + tol && outer.min.y <= inner.min.y + tol && outer.min.z <= inner.min.z + tol && outer.max.x + tol >= inner.max.x && outer.max.y + tol >= inner.max.y && outer.max.z + tol >= inner.max.z
+}
+
+/// 🔀 Overlap test for the small `engine::Aabb` shape ([`face_aabb`]'s return type) rather than
+/// [`AxisAlignedBox`] — inflated by `tol` on every side so a face pair whose supports are exactly
+/// tangent still gets a chance to intersect.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn aabb_overlap(a: &semio_framework_3d_brep_representation::contract::Aabb, b: &semio_framework_3d_brep_representation::contract::Aabb, tol: f64) -> bool {
+    (0..3).all(|i| a.min[i] - tol <= b.max[i] + tol && b.min[i] - tol <= a.max[i] + tol)
+}
+
+// #endregion 🔖️AabbMath
+
+// #region 🔖️Stage
+
+/// 🔀 A boolean as a staged operation. The fast paths answer in one unit; the general engine runs
+/// one [`BooleanJob`] unit per advance plus one finishing unit for its terminal transition.
+pub struct BooleanStage {
+    job: Option<BooleanJob>,
+    answered: Option<SolidId>,
+    finished: bool,
+}
+
+impl BooleanStage {
+    /// 🔀 Admits `a op b` against `body` (the fast paths run here).
+    pub fn new(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<Self, KernelError> {
+        Ok(match boolean_job(body, a, b, op, tol, rec)? {
+            BooleanAdmission::Answered(solid) => Self { job: None, answered: Some(solid), finished: false },
+            BooleanAdmission::Job(job) => Self { job: Some(job), answered: None, finished: false },
+        })
+    }
+}
+
+impl StagedOperation for BooleanStage {
+    fn progress(&self) -> StageProgress {
+        match &self.job {
+            None => StageProgress { done: usize::from(self.finished), total: 1, phase: "boolean" },
+            Some(job) => {
+                let progress = job.progress();
+                StageProgress { done: progress.units_done + usize::from(self.finished), total: progress.units_total.max(progress.units_done) + 1, phase: progress.phase.tag() }
+            }
+        }
+    }
+
+    fn advance(&mut self, body: &mut Body, rec: &mut OpRecorder) -> Result<StageStep, KernelError> {
+        if let Some(solid) = self.answered {
+            self.finished = true;
+            return Ok(StageStep::Done(StageOutput::Solid(solid)));
+        }
+        let job = self.job.as_mut().ok_or_else(|| KernelError::Operation("boolean stage already finished".into()))?;
+        match job.step_unbudgeted(body, rec, 1)? {
+            BooleanStep::Working(_) => Ok(StageStep::Working),
+            BooleanStep::Done(solid) => {
+                self.finished = true;
+                Ok(StageStep::Done(StageOutput::Solid(solid)))
+            }
+            BooleanStep::Cancelled(_) => Err(KernelError::Operation("boolean stage was cancelled".into())),
+        }
+    }
+}
+
+// #endregion 🔖️Stage
+
+// #region 🔖️Jobs
+
+#[path = "⏱️jobs/🦀️.rs"]
+mod jobs;
+#[path = "🧭️arrangement/🦀️.rs"]
+mod arrangement;
+pub use jobs::{BooleanFoldJob, SectionJob, SplitJob};
+
+// #endregion 🔖️Jobs
+
+// #region 🔖️Validate
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_tol(tol: f64) -> Result<(), KernelError> {
+    if tol.is_finite() && tol > 0.0 {
+        Ok(())
+    } else {
+        Err(KernelError::InvalidInput("tolerance must be positive and finite".into()))
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn require_solid(body: &Body, solid: SolidId) -> Result<(), KernelError> {
+    if body.solids.get(solid).is_some() {
+        Ok(())
+    } else {
+        Err(KernelError::MissingEntity(format!("solid {solid}")))
+    }
+}
+
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+fn plane_normal(normal: Vec3) -> Result<Vec3, KernelError> {
+    normal.normalized().ok_or_else(|| KernelError::InvalidInput("plane normal must be non-zero".into()))
+}
+
+// #endregion 🔖️Validate
+
+#[cfg(test)]
+pub(crate) use semio_framework_3d_testing_support as test_support;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🔬️differential/🦀️.rs"]
+mod differential;

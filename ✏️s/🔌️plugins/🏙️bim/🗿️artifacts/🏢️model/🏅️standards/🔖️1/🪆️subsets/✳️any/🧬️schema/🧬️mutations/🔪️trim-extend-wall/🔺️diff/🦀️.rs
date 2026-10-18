@@ -6,9 +6,9 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::modify::cut::{trim_extend, TrimFlaw, Trimmed};
 use crate::standards::v1::subsets::any::schema::mutations::modify::WallEnd;
-use super::super::placement::width_of;
+use crate::standards::v1::subsets::any::schema::mutations::placement::width_of;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, snap};
-use super::TrimExtendWall;
+use crate::standards::v1::subsets::any::schema::mutations::trim_extend_wall::TrimExtendWall;
 use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, KeyedDelta, ModelDiff, patches::{OpeningPatch, WallPatch}}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

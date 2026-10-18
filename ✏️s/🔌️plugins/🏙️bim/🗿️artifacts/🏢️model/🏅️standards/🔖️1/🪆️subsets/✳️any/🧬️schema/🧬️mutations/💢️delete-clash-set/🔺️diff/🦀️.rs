@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteClashSet`: the clash set leaves in one sparse diff together with its properties and classifications (see the shared cascade).
 
-use super::super::cascade;
-use super::DeleteClashSet;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_clash_set::DeleteClashSet;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

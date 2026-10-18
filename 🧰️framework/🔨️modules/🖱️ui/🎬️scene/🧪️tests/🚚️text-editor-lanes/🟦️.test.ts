@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 
 import fixture from "../🧫️fixtures/🚚️text-editor-lanes/🔣️.json";
-import { TEXT_EDITOR_SCENE_LANES, textEditorSceneFromLanes } from "../../🟦️.ts";
+import { TEXT_EDITOR_SCENE_LANES, textEditorSceneFromLanes } from "../../🕸️node-graph/🟦️.ts";
 
 test("text buffer carriers match their language-neutral schema", () => {
   expect(TEXT_EDITOR_SCENE_LANES).toEqual<readonly { lane: string; field: string; bodyKey: string; optional: boolean }[]>([{ lane: "buffer", field: fixture.field, bodyKey: fixture.laneKey, optional: false }]);

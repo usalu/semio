@@ -71,7 +71,7 @@ use semio_framework_plugin::ToolRef;
 use semio_framework_plugin::TransientView;
 use semio_framework_plugin::WindowConfigMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 #[path = "🎛️command-and-action-bridge/🦀️.rs"]
 mod command_and_action_bridge;

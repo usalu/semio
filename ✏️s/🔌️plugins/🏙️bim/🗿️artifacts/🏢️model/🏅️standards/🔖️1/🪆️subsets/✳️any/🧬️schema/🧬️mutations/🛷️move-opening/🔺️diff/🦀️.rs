@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `MoveOpening`: a patch of the opening's centre offset and, when it is re-hosted, its host. The new host
 //! (a wall or curtain wall) must exist and the opening must still fit inside its axis and clear of its neighbours.
 
-use super::super::placement::{host_length, placement_issue, width_of};
-use super::MoveOpening;
+use crate::standards::v1::subsets::any::schema::mutations::placement::{host_length, placement_issue, width_of};
+use crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::OpeningPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

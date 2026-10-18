@@ -2,11 +2,46 @@
   "version": 1,
   "packageRouting": {
     "cases": [
-      {"platform":"posix","root":"/workspace/repo","package":"packages/space owner","command":"bun --cwd \"../..\" repo --tool=bazel run fixture:test -- \"two words\" \"\"","arguments":["--tool=bazel","run","fixture:test","--","two words",""]},
-      {"platform":"win32","root":"C:\\workspace\\repo","package":"packages/space owner","command":"bun --cwd \"../..\" repo run fixture:test -- \"literal$()\"","arguments":["run","fixture:test","--","literal$()"]},
-      {"platform":"posix","root":"/workspace/🧪 repo","package":"a/b/c","command":"bun --cwd \"../../..\" repo --tool=nx run fixture:test --skip-cache","arguments":["--tool=nx","run","fixture:test","--skip-cache"]}
+      {
+        "platform": "posix",
+        "root": "/workspace/repo",
+        "package": "packages/space owner",
+        "command": "bun --cwd \"../..\" repo --tool=bazel run fixture:test -- \"two words\" \"\"",
+        "arguments": [
+          "--tool=bazel",
+          "run",
+          "fixture:test",
+          "--",
+          "two words",
+          ""
+        ]
+      },
+      {
+        "platform": "win32",
+        "root": "C:\\workspace\\repo",
+        "package": "packages/space owner",
+        "command": "bun --cwd \"../..\" repo run fixture:test -- \"literal$()\"",
+        "arguments": [
+          "run",
+          "fixture:test",
+          "--",
+          "literal$()"
+        ]
+      },
+      {
+        "platform": "posix",
+        "root": "/workspace/🧪 repo",
+        "package": "a/b/c",
+        "command": "bun --cwd \"../../..\" repo --tool=nx run fixture:test --skip-cache",
+        "arguments": [
+          "--tool=nx",
+          "run",
+          "fixture:test",
+          "--skip-cache"
+        ]
+      }
     ],
-    "sourceCaller":"🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
+    "sourceCaller": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts"
   },
   "scripts": {
     "repo": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts repo",
@@ -214,6 +249,9 @@
     "🌎️hub/🧪️tests/💡️inference-fixtures/🟦️.ts",
     "🌎️hub/🧪️tests/🌍️gis-map-fixtures/🟦️.ts",
     "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🪪️browser-actor-and-opened-root-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🗺️gis-retained-collaboration-and-publication-fixtures/🟦️.ts",
+    "🌎️hub/🧪️tests/🏛️trusted-catalog-fixtures/🚀️stdio-gis-bootstrap-and-compiled-dependencies-fixtures/🟦️.ts",
     "🌎️hub/🧪️tests/📮️trusted-publication-fixtures/🟦️.ts",
     "🌎️hub/🏗️bootstrap/🧾️provenance/🧭️bootstrap-selection/🟦️.ts",
     "🌎️hub/🏗️bootstrap/🧾️provenance/🌍️gis-browser-proof/🟦️.ts",
@@ -251,11 +289,22 @@
     "🌎️hub/🏗️bootstrap/🎭️actors/🟦️.ts",
     "🌎️hub/🚀️local-bootstrap/👷️dev-owner/🟦️.ts",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🔵️.ps1",
-    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts"
   ],
   "editorAnswers": [
-    {"repoBuildTool":"nx","repoBuildTask":"@semio-tech/repo-lib:test-build-surfaces","repoBuildProject":"@semio-tech/repo-lib","repoBuildProjects":"@semio-tech/repo-*"},
-    {"repoBuildTool":"bazel","repoBuildTask":"@semio-tech/repo-lib:test-build-surfaces:release","repoBuildProject":"@semio-tech/repo-lib","repoBuildProjects":"@semio-tech/repo-lib,@semio-tech/os-*"}
+    {
+      "repoBuildTool": "nx",
+      "repoBuildTask": "@semio-tech/repo-lib:test-build-surfaces",
+      "repoBuildProject": "@semio-tech/repo-lib",
+      "repoBuildProjects": "@semio-tech/repo-*"
+    },
+    {
+      "repoBuildTool": "bazel",
+      "repoBuildTask": "@semio-tech/repo-lib:test-build-surfaces:release",
+      "repoBuildProject": "@semio-tech/repo-lib",
+      "repoBuildProjects": "@semio-tech/repo-lib,@semio-tech/os-*"
+    }
   ],
   "editorInputs": [
     {
@@ -303,16 +352,16 @@
       "site",
       "proctor"
     ],
-    "command": "bun repo dependencies sync --scope .",
+    "command": "bun repo dependencies sync --all",
     "cases": [
       {
-        "name": "root-scope",
-        "command": "bun repo dependencies sync --scope .",
+        "name": "complete-all",
+        "command": "bun repo dependencies sync --all",
         "accepted": true
       },
       {
-        "name": "quoted-root",
-        "command": "bun repo dependencies sync --scope \".\"",
+        "name": "quoted-all",
+        "command": "bun repo dependencies sync \"--all\"",
         "accepted": true
       },
       {
@@ -326,8 +375,8 @@
         "accepted": false
       },
       {
-        "name": "broader-all",
-        "command": "bun repo dependencies sync --all",
+        "name": "root-subset",
+        "command": "bun repo dependencies sync --scope .",
         "accepted": false
       },
       {
@@ -345,6 +394,101 @@
         "command": "bun repo dependencies sync --scope . --ignore-scripts",
         "accepted": false
       }
+    ]
+  },
+  "implicitExecutors": [
+    {
+      "name": "implicit-command",
+      "target": {
+        "options": {
+          "command": "bun ./📜️script.ts test",
+          "args": [
+            "literal value"
+          ],
+          "cwd": "{projectRoot}"
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "implicit-sequential",
+      "target": {
+        "options": {
+          "commands": [
+            "first",
+            {
+              "command": "second",
+              "forwardAllArgs": false
+            }
+          ],
+          "parallel": false
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "implicit-literal",
+      "target": {
+        "options": {
+          "program": "bun",
+          "args": [
+            "--version"
+          ]
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "explicit-command",
+      "target": {
+        "executor": "repo:script",
+        "options": {
+          "command": "bun ./📜️script.ts build"
+        },
+        "configurations": {
+          "release": {
+            "args": [
+              "--release"
+            ]
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "noop",
+      "target": {
+        "executor": "repo:noop"
+      },
+      "accepted": true
+    },
+    {
+      "name": "foreign-executor",
+      "target": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "echo wrong"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "foreign-inference-default",
+      "target": {
+        "executor": "@nx/js:node",
+        "options": {
+          "command": "echo wrong"
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "journalDataOwner": {
+    "owner": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts",
+    "retired": "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/💾️storage/🧬️schema/🟦️.ts",
+    "exports": [
+      "nativeStorageSchemaV1",
+      "readNativeStorageDataV1"
     ]
   }
 }

@@ -30,7 +30,7 @@ pub(super) const DRAWING_GESTURE_PUBLICATION_CONTRACTS: &[semio_framework_plugin
 ];
 
 pub struct DrawingGestureOperationOwner {
-    pub(super) session: Option<DrawingSession>,
+    pub session: Option<DrawingSession>,
     pub(super) closing: bool,
     /// 🧾️ The declared `DRAWING_GESTURE_RETAINED_BYTES` budget still to be handed back to the
     /// registry. The session itself is dropped on the first granted close step; its budget is
@@ -82,8 +82,8 @@ impl FixedOperationOwner for DrawingGestureOperationOwner {
 pub(super) const DRAWING_GESTURE_OPERATION_SLOTS: usize = 64;
 
 pub struct DrawingInstanceOperationOwner {
-    pub(super) operations: semio_framework_job_registry::FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS>,
-    pub(super) active: Option<(semio_framework_job_registry::FixedOperationKey, SceneIdentity)>,
+    pub operations: semio_framework_job_registry::FixedOperationRegistry<DrawingGestureOperationOwner, DRAWING_GESTURE_OPERATION_SLOTS>,
+    pub active: Option<(semio_framework_job_registry::FixedOperationKey, SceneIdentity)>,
     pub(super) closing: bool,
     /// 🚪️ Every slot has been marked closing. `FixedOperationRegistry::begin_close_step` and
     /// `close_step` share one cursor and each advance it by one, so a close that calls both per step
@@ -303,7 +303,7 @@ impl DrawingInstanceOperationOwner {
         Ok(Some((emit, window_transient)))
     }
 
-    pub(super) fn preview_projection(&mut self, source_identity: SceneIdentity, active_utility: &str) -> Option<DrawingGesturePreview> {
+    pub fn preview_projection(&mut self, source_identity: SceneIdentity, active_utility: &str) -> Option<DrawingGesturePreview> {
         let (key, observed_revision) = self.active?;
         if !observed_revision.matches(source_identity) {
             self.operations.cancel(key);

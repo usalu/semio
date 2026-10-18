@@ -1,4 +1,27 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{DoorLeaves, LayerFunction, MaterialCategory, PropertyValue, Swing};
+use semio_s_artifact_stdio_contract::part21::Part21Value;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, refs, text, Doc};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::data::{parent_key, PARENTS_SET};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::Schema;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{number_of, single_values, string_of};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::ifc4::{applicable_entity, measure_type};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{entries_problem, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget, BeamType, CeilingType, ClassificationItem, ClassificationSystem, ColumnType, DoorType, Layer, Material, Profile, Rgb, RoofType, SlabType, WallType, WindowType};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::ifc::walls::{ATTACH_SET, REVEAL_SET};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::io::import::ifc::data::{category, function, door_operation};
+use crate::standards::v1::subsets::any::io::import::ifc::data::*;
 use semio_s_artifact_stdio_contract::part21::Part21Decimal;
 
 fn typed(name: &str, item: Part21Value) -> Part21Value {

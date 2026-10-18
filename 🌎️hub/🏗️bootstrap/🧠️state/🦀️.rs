@@ -476,7 +476,7 @@ impl HubState {
     }
 
     /// 💓️ Refreshes only the matching live owner and admits only a bounded visible roster.
-    pub(crate) async fn refresh_presence(&self, key: &str, space_id: &str, document_id: &str, actor: &str, socket_live_id: &str, peer: Vec<u8>, now: tokio::time::Instant) -> PresenceLeaseTransition {
+    pub async fn refresh_presence(&self, key: &str, space_id: &str, document_id: &str, actor: &str, socket_live_id: &str, peer: Vec<u8>, now: tokio::time::Instant) -> PresenceLeaseTransition {
         if peer.len() > PRESENCE_ROSTER_MAXIMUM_ENTRY_BYTES {
             return PresenceLeaseTransition::Rejected;
         }

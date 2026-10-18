@@ -7,6 +7,7 @@ use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::terminology::Puzzle2dLabels;
 use crate::editor::puzzle2d::snapshot::{puzzle2d_action, PUZZLE2D_GRANULARITY_EDGE, PUZZLE2D_GRANULARITY_HANDLE, PUZZLE2D_GRANULARITY_NODE};
 use semio_framework_plugin::WindowMeasure;
+use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::PUZZLE2D_PLAY_CONTROLLER_ID;
 
 pub fn measure(runtime: &Puzzle2dPlayRuntime, labels: &Puzzle2dLabels) -> WindowMeasure {
     let kinds = runtime.selectable_kinds;

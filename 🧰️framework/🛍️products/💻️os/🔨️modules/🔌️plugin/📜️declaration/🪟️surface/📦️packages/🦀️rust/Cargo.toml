@@ -48,7 +48,7 @@ semio-framework-schema-registry = { path = "../../../../../../../../🔨️modul
 semio-framework-tool-machine = { workspace = true }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-framework-2d = { path = "../../../../../../../../🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }
 semio-framework-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }

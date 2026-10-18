@@ -3,10 +3,10 @@
 //! their host and are never patched. Refused: an empty selection, unknown ids, elements without a placement and a target that is not
 //! finite; elements already on the target are left out and a selection with none to move is `mutation.no-op`.
 
-use super::super::elements::{self, Change, Refusal};
+use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Change, Refusal};
 use crate::standards::v1::subsets::any::schema::mutations::modify::map::{align_gap, bounds};
 use crate::standards::v1::subsets::any::schema::mutations::modify::AlignAxis;
-use super::AlignElements;
+use crate::standards::v1::subsets::any::schema::mutations::align_elements::AlignElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Point2}};
 use protocol::{MutationOutcome, OutcomeCode};
 

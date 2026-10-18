@@ -71,6 +71,4 @@ pub fn value_text(labels: &BimLabels, value: &ParameterValue) -> String {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -3,6 +3,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import TOML from "@iarna/toml";
 import { rustTokens, rustTokenPairs } from "@semio-tech/compiler-syntax-rust-ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 type Mapping = Readonly<{ role: string; source: string; destination: string }>;
 type Corpus = Readonly<{
@@ -16,7 +17,7 @@ const root = resolve(import.meta.dir, "../../../../../../.."), owner = resolve(r
 const read = (path: string): string => readFileSync(resolve(root, path), "utf8");
 const corpus = JSON.parse(readFileSync(resolve(owner, "🧪️tests/🧫️fixtures/🧱️ownership/🔣️.json"), "utf8")) as Corpus;
 const grammar = corpus.mappings.find(row => row.role === "grammar")!;
-const actualGrammar = (): string => read(grammar.destination);
+const actualGrammar = (): string => readModuleTreeSource(resolve(root, grammar.destination));
 const tokens = (source: string): readonly string[] => rustTokens(source).map(token => token.text);
 const method = (source: string, ownerType: string, name: string): Readonly<{ parameters: string; result: string; body: string }> => {
   const stream = rustTokens(source), pairs = rustTokenPairs(stream);
@@ -97,8 +98,8 @@ test("diagnostic and span identities have an acyclic canonical owner beneath DSL
   expect(diagnostic.dependencies["semio-framework-value"]).toBeDefined();
   expect(diagnostic.dependencies["semio-framework-dsl"]).toBeUndefined();
   expect(diagnostic.dependencies["semio-framework-replication"]).toBeUndefined();
-  for (const module of ["🗣️dsl", "📡️replication"]) {
-    const packageManifest = TOML.parse(read("🧰️framework/🔨️modules/" + module + "/📦️packages/🦀️rust/Cargo.toml")) as any;
+  for (const manifestPath of ["🗣️dsl/📦️packages/🦀️rust/Cargo.toml", "📡️replication/⚠️error/📦️packages/🦀️rust/Cargo.toml"]) {
+    const packageManifest = TOML.parse(read("🧰️framework/🔨️modules/" + manifestPath)) as any;
     expect(packageManifest.dependencies["semio-framework-diagnostic"]).toBeDefined();
   }
   const dslManifest = TOML.parse(read(corpus.package.manifest)) as any;

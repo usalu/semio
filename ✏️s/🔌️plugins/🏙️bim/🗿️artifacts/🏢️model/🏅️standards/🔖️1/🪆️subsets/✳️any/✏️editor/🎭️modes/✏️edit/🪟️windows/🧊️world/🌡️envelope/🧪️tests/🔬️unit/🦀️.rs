@@ -1,4 +1,15 @@
-use super::*;
+use crate::editor::bim::terminology::BimLabels;
+use crate::render::envelope::{self, Mode};
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{Boundary, EnvelopeSurface, SurfaceKind};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_framework_plugin::{World3dAnnotation, World3dColorRamp, World3dScalarDomain, World3dText};
+use crate::editor::bim::modes::edit::windows::world::config::BimWorldWindowConfig;
+#[allow(unused_imports)]
+use crate::render::envelope::Part;
+#[allow(unused_imports)]
+use semio_framework_plugin::{DslValue, World3dAnnotationLayer, World3dScalarField, World3dScalarRange, WORLD3D_ANNOTATIONS_MAX};
+use crate::editor::bim::modes::edit::windows::world::envelope::{instance, marker};
+use crate::editor::bim::modes::edit::windows::world::envelope::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
 use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::EnvelopeSpace;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference;

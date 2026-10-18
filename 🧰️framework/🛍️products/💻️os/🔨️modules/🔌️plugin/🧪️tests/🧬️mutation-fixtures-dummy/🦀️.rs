@@ -24,7 +24,7 @@ use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::ViewModel;
 use protocol::MutationDiff;
 use semio_framework::{action_bus, ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};

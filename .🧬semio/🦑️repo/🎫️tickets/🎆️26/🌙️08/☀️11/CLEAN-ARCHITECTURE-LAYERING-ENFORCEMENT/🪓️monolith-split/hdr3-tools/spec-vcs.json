@@ -1,0 +1,11 @@
+{"owner": "semio-s-artifact-vcs-vcs-editor", "suffix": "unit-tests", "kind": "artifact",
+ "new_root": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️laws/🦀️.rs",
+ "remaps": [["crate::editor::vcs::unit_tests", "crate::unit_tests"]],
+ "moves": [
+  {"mount_file": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "mount_name": "unit_tests", "as": "unit_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📝️editor/🦀️.rs", "mount_name": "tests", "as": "editor_window_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🪞️mirror/🦀️.rs", "mount_name": "tests", "match_path": "📜️history/🧪️tests", "as": "history_window_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️inspection/🦀️.rs", "mount_name": "tests", "as": "inspection_panel_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🪞️mirror/🦀️.rs", "mount_name": "leaf_tests", "match_path": "🎮️commands/🧪️tests", "as": "commands_tests", "super_super": "editor::vcs::commands"},
+  {"mount_file": "✏️s/🔌️plugins/🌿️vcs/🗿️artifacts/🌿️vcs/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🦀️.rs", "mount_name": "tests", "as": "artifact_panel_tests"}
+ ]}

@@ -155,9 +155,9 @@ impl Default for SemioTableSnapshot {
 /// tag, no runtime enforcement, matching a lenient real-world tabular format). Single source of
 /// truth for `📚️examples/📃️sheet/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` and for the
 /// conformance-law tests in `🚪️io/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_table_snapshot() -> SemioTableSnapshot {
+pub fn demo_table_snapshot() -> SemioTableSnapshot {
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "label".into(), kind: SemioTableCellKind::Str }, SemioTableColumn { name: "score".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "active".into(), kind: SemioTableCellKind::Bool }],

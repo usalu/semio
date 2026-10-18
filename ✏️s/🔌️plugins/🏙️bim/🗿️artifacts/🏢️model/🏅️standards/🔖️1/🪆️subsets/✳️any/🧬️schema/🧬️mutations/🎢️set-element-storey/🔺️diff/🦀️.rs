@@ -2,8 +2,8 @@
 //! hosted openings follow their host by reference, the components mounted on a wall move to its new storey with it (a mounted component itself cannot change its storey), and the heights, layouts, solids and quantities of the element follow by inference. The move is refused when the resolved top of the element would no longer lie above its base, or when
 //! an opening that fits its host today would rise above the host at its new height.
 
-use super::super::{component_rules, elements, placement};
-use super::SetElementStorey;
+use crate::standards::v1::subsets::any::schema::mutations::{component_rules, elements, placement};
+use crate::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Component, ModelSnapshot}, diff::{patches::ComponentPatch, Entry, KeyedDelta, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

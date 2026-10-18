@@ -1,7 +1,7 @@
 /** 🔎 Renderer twins of language-neutral contracts: label fit, camera, boot example, cancel, safe area, compute status and port types. */
 import { chromePanelSafeAreaFixture } from "../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
 import { chromePanelSafeArea, type Anchor, type SafeAreaYield } from "@semio-tech/ui-react";
-import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🟦️.ts";
+import { world3dComputeStatusV1 } from "../../../../../../../🔨️modules/🖱️ui/🎬️scene/🌐️world3d/🟦️.ts";
 import surfaceControlsFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/🛑️surface-controls/🔣️.json";
 import bootExampleFixture from "../../🧱️elements/🐚️Shell/🧪️tests/🧫️fixtures/📚️boot-example/🔣️.json";
 import { BOOT_QUERY_CAPACITY, BOOT_QUERY_EXAMPLE_PARAM, resolveBootQueryExampleId } from "../../../../🧑‍💻dev/🔗️boot-query/🟦️.ts";

@@ -2,7 +2,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🏁️run/🟦️.ts
  */
 import { type InteractivityToolRunSource, type InteractivityToolRunRequirement, INTERACTIVITY_TOOL_RUN_TRIGGER, interactivityToolRunWithin, interactivityToolRunScopePath, interactivityToolRunCode, interactivityToolRunEnclosing } from "../../../🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts";
-import { type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SKIP_DIRS, policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyWalkRelFiles } from "../../../🔍️discovery/🚶️file-walk/🟦️.ts";
 import { readFileSync } from "node:fs";

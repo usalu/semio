@@ -11,7 +11,7 @@ import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution
 import { DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES } from "@semio-tech/framework/directory/schema";
 import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { browserActorImportAdmissionV1 } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
-import { readStableBuildFile } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { readStableBuildFile } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
 import { documentOpenNeutralObject, type TrustedBootstrapCodec, trustedBootstrapCodecOrder, trustedBootstrapDescriptorClaims, trustedBootstrapResolveClosure } from "../🧮️bootstrap-claims/🟦️.ts";
 
 /** 🛫️ The selection-level rules the final staging and the hub's `validate_bundle` hold a publication to, judged from the package

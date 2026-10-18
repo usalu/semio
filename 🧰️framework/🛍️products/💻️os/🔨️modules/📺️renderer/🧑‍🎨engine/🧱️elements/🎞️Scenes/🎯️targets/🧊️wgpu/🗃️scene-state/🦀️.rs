@@ -141,7 +141,7 @@ impl HostTemporalPresentation {
         true
     }
 
-    pub(crate) fn refuse(&mut self, generation: u64) {
+    pub fn refuse(&mut self, generation: u64) {
         if self.pending_generation == Some(generation) {
             self.pending_generation = None;
         }
@@ -226,9 +226,9 @@ pub struct GraphTimelineAccessibilityControl {
 }
 
 #[derive(Clone, Debug)]
-struct SceneAccessibilityPresentation<T> {
+pub struct SceneAccessibilityPresentation<T> {
     pub candidate: Option<Vec<T>>,
-    pub(crate) candidate_epoch: Option<u64>,
+    pub candidate_epoch: Option<u64>,
     pub queued_candidate: Option<Vec<T>>,
     pub accepted: Vec<T>,
 }
@@ -248,13 +248,13 @@ impl<T> SceneAccessibilityPresentation<T> {
         }
     }
 
-    pub(crate) fn seal(&mut self, epoch: u64) {
+    pub fn seal(&mut self, epoch: u64) {
         if self.candidate.is_some() && self.candidate_epoch.is_none() {
             self.candidate_epoch = Some(epoch);
         }
     }
 
-    pub(crate) fn acknowledge(&mut self, epoch: u64) {
+    pub fn acknowledge(&mut self, epoch: u64) {
         if self.candidate_epoch != Some(epoch) {
             return;
         }
@@ -263,7 +263,7 @@ impl<T> SceneAccessibilityPresentation<T> {
         self.candidate_epoch = None;
     }
 
-    pub(crate) fn discard(&mut self, epoch: u64) {
+    pub fn discard(&mut self, epoch: u64) {
         if self.candidate_epoch == Some(epoch) {
             self.candidate = self.queued_candidate.take();
             self.candidate_epoch = None;
@@ -273,8 +273,16 @@ impl<T> SceneAccessibilityPresentation<T> {
 
 #[derive(Clone, Debug, Default)]
 pub struct SceneSurfaceState {
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub mount_owner: Option<crate::element_contracts::ScenePointerTarget>,
+    #[cfg(not(any(test, feature = "testkit")))]
     pub(crate) mount_owner: Option<crate::element_contracts::ScenePointerTarget>,
     pub(crate) engine_token: Option<EngineSurfaceToken>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub scroll_offsets: BTreeMap<String, f32>,
+    #[cfg(not(any(test, feature = "testkit")))]
     pub(crate) scroll_offsets: BTreeMap<String, f32>,
     pub viewport: Viewport,
     pub(crate) canvas_camera_owner: Option<crate::element_contracts::ScenePointerTarget>,
@@ -289,6 +297,10 @@ pub struct SceneSurfaceState {
     pub hovered_control_id: Option<String>,
     #[cfg(test)]
     node_positions: BTreeMap<String, (f32, f32)>,
+    #[cfg(any(test, feature = "testkit"))]
+    #[doc(hidden)]
+    pub selected_ids: BTreeSet<String>,
+    #[cfg(not(any(test, feature = "testkit")))]
     pub(crate) selected_ids: BTreeSet<String>,
     pub paint_stroke_active: bool,
     pub vfs_expanded_ids: BTreeSet<String>,

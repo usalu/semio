@@ -6,8 +6,14 @@ import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import fastGlob from "fast-glob";
 import { findNodeAtLocation, getNodeValue, parseTree } from "jsonc-parser";
-import { clearDiscoveryCache, discoverPackageProblems, loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts, type FrozenCoordinateEvidenceContract, type GeneratorContract, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
-import { applyTaxonomyPlan, frozenCoordinateEvidenceCoordinates, inventoryTaxonomy, planTaxonomy } from "../../🧹️normalization/🟦️.ts";
+import { clearDiscoveryCache, discoverPackageProblems } from "../../🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { validateFrozenCoordinateEvidenceContracts, type FrozenCoordinateEvidenceContract, type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
+import { type GeneratorContract } from "../../🔍️discovery/📦️package-projection-contracts/🟦️.ts";
+import { applyTaxonomyPlan } from "../../🧹️normalization/🚀️apply/🟦️.ts";
+import { frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/❄️frozen-evidence/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
+import { planTaxonomy } from "../../🧹️normalization/🧠️planning/🟦️.ts";
 //#endregion Imports
 
 /** 🧬️ A deeply mutable projection of one frozen contract record, for the `structuredClone`-then-mutate probe below. */
@@ -152,7 +158,7 @@ test("a frozen package-owner census naming moved Draw files stays byte-identical
   const taxonomy: ProbeTaxonomy = { ...base, semanticDirectoryKinds: { ...base.semanticDirectoryKinds, ...commandBundle.directoryKinds }, semanticDescendantContracts: { ...base.semanticDescendantContracts, "draw-editor-command-bundle-v1": commandBundle.descendantContract } };
   const schemaPath = golden.taxonomy.path;
   const historyPath = relative(repoRoot, goldenPath).replaceAll("\\", "/");
-  const catalog = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8"));
+  const catalog = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8"));
   const projection = catalog.projections[1];
   const owner = `${projection.sourceRoot}/🔄️fsm/✨️macros`, moved = projection.mappings.find(({ sourcePath }: { sourcePath: string }) => sourcePath === `${owner}/🦀️.rs`)!;
   const row = [...golden.mappings[29]];

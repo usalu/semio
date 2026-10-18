@@ -5,7 +5,7 @@
 //! cells of about a spacing, or the explicit interior grid lines. The panel of every cell is the default panel of the type unless an override
 //! addresses the cell (`curtain_panel_overrides`, keyed by wall, `u` and `v`); overrides outside the grid and grid lines outside the extent are reported, never dropped silently.
 
-use super::super::storey_levels::{vertical_of, StoreyLevel};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
 use crate::standards::v1::subsets::any::schema::authored::plan::axis_length;
 use crate::standards::v1::subsets::any::schema::snapshot::{CurtainGrid, CurtainPanel, CurtainWall, CurtainWallType, ModelSnapshot};
 use semio_framework_value::DslValue;
@@ -65,7 +65,7 @@ pub const DEFAULT_MULLION_DEPTH: f64 = 0.1;
 
 const EPS: f64 = 1e-9;
 
-fn panels(extent: f64, spacing: f64) -> u32 {
+pub fn panels(extent: f64, spacing: f64) -> u32 {
     if spacing > 0.0 && extent > 0.0 {
         ((extent / spacing) - 1e-9).ceil().max(1.0) as u32
     } else {
@@ -137,6 +137,4 @@ pub fn dependency(snapshot: &ModelSnapshot, id: &str, curtain: &CurtainWall) -> 
 }
 //#endregion 🔖️Geometry
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -3,11 +3,12 @@
 //! generic family named after its type: one cuboid solid of the bounding box of its body (swept, faceted, triangulated or mapped), placed by its inferred position, elevation and heading; its system is the group it is assigned to.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcsharedbldgserviceelements/lexical/ifcflowterminal.htm>
 
-use super::data::{label, type_authoring};
-use super::frames::Rigid;
-use super::reader::{opt_text, real, text, Doc, Section};
-use super::spatial::{authoring_of, set_of, string_of};
-use super::Import;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::import::ifc::data::{label, type_authoring};
+use crate::standards::v1::subsets::any::io::import::ifc::frames::Rigid;
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, real, text, Doc, Section};
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{authoring_of, set_of, string_of};
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 pub use crate::standards::v1::subsets::any::io::export::ifc::components::OVERRIDES_SET;
 use crate::standards::v1::subsets::any::io::export::ifc::components::{FAMILY_ROWS, RECORD_ROW};
 use crate::standards::v1::subsets::any::schema::authored::formula;
@@ -47,7 +48,7 @@ pub fn assignments(i: &Import<'_>) -> BTreeMap<u64, MepSystem> {
         let Some((class, args)) = group.primary().filter(|(class, _)| matches!(*class, "IFCSYSTEM" | "IFCDISTRIBUTIONSYSTEM")) else { continue };
         let predefined = if class == "IFCDISTRIBUTIONSYSTEM" { args.get(7).and_then(Part21Value::as_enum).unwrap_or_default().to_string() } else { String::new() };
         let Some(system) = [text(args, 2), text(args, 4), predefined].iter().find_map(|name| system_named(name)) else { continue };
-        for member in super::reader::refs(relation, 4) {
+        for member in crate::standards::v1::subsets::any::io::import::ifc::reader::refs(relation, 4) {
             found.insert(member, system);
         }
     }
@@ -262,6 +263,4 @@ pub fn read(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

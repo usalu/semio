@@ -2,13 +2,14 @@
 //! length), both parts share type, top and height, and openings hosted beyond the split point change host with a re-based offset while
 //! the others stay.
 
-use super::SplitWall;
+use crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall;
 use crate::standards::v1::subsets::any::schema::mutations::apply_model_mutation;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::testing::{close, decode, layout};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_framework_test_fixtures::fixture_text;
 
-const WITH_OPENINGS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🪝️hands-openings-over/📸️snapshot/⬅️before/🔣️.json");
-const WITH_ARC: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🌀️splits-an-arc/📸️snapshot/⬅️before/🔣️.json");
+static WITH_OPENINGS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🪝️hands-openings-over/📸️snapshot/⬅️before/🔣️.json"));
+static WITH_ARC: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/🦈️split-wall/🌀️splits-an-arc/📸️snapshot/⬅️before/🔣️.json"));
 
 fn split(base: &ModelSnapshot, id: &str, t: f64) -> ModelSnapshot {
     apply_model_mutation(base, &ModelMutation::SplitWall(SplitWall { id: id.into(), t, new_id: format!("{id}-2") })).expect("the split applies")
@@ -16,7 +17,7 @@ fn split(base: &ModelSnapshot, id: &str, t: f64) -> ModelSnapshot {
 
 #[semio_framework_async_macros::async_test]
 async fn the_parts_of_a_straight_wall_add_up_to_the_whole() {
-    let before = decode(WITH_OPENINGS);
+    let before = decode((*WITH_OPENINGS));
     let after = split(&before, "w-south", 0.25);
     let (whole, first, second) = (layout(&before, "w-south"), layout(&after, "w-south"), layout(&after, "w-south-2"));
     assert!(close(first.length, 2.0) && close(second.length, 6.0) && close(first.length + second.length, whole.length));
@@ -28,7 +29,7 @@ async fn the_parts_of_a_straight_wall_add_up_to_the_whole() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_parts_of_an_arc_add_up_to_the_arc_length() {
-    let before = decode(WITH_ARC);
+    let before = decode((*WITH_ARC));
     let after = split(&before, "w-arc", 0.5);
     let (whole, first, second) = (layout(&before, "w-arc"), layout(&after, "w-arc"), layout(&after, "w-arc-2"));
     assert!((whole.length - 4.0 * std::f64::consts::PI).abs() < 1e-9, "a semicircle of radius 4 has arc length 4 pi");
@@ -38,7 +39,7 @@ async fn the_parts_of_an_arc_add_up_to_the_arc_length() {
 
 #[semio_framework_async_macros::async_test]
 async fn openings_beyond_the_split_point_change_host_with_a_rebased_offset() {
-    let before = decode(WITH_OPENINGS);
+    let before = decode((*WITH_OPENINGS));
     let after = split(&before, "w-south", 0.5);
     let placed = |id: &str| (after.openings[id].host.clone(), after.openings[id].offset);
     assert_eq!(placed("o-1"), ("w-south".to_string(), 1.0), "before the split point it stays");

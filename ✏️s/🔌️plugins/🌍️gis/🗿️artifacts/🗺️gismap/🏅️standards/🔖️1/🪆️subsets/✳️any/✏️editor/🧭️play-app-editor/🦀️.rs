@@ -1,6 +1,7 @@
 //! 🧭️ Editor impl of the GIS 2D play app: the context menu, the dispatch-only artifact editor surface and the window actions. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Gis2dPlayApp
 /// 🕹️ `interactionSelect` args for a single-feature pick against the `"features"` domain's

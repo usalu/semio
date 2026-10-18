@@ -1,0 +1,10 @@
+{"owner": "semio-s-artifact-gis-gismap-gis2d", "suffix": "unit-tests", "kind": "artifact",
+ "new_root": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️laws/🦀️.rs",
+ "remaps": [["crate::editor::gis2d::unit_tests", "crate::unit_tests"]],
+ "moves": [
+  {"mount_file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs", "mount_name": "unit_tests", "as": "unit_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🪞️mirror/🦀️.rs", "mount_name": "leaf_tests", "match_path": "🎮️commands/🧪️tests", "as": "commands_tests", "super_super": "editor::gis2d::commands"},
+  {"mount_file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🪞️mirror/🦀️.rs", "mount_name": "leaf_tests", "match_path": "📌️panels/🧪️tests", "as": "panels_tests", "super_super": "editor::gis2d::panels"},
+  {"mount_file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🪞️mirror/🦀️.rs", "mount_name": "tests", "match_path": "🗺️map/🧪️tests", "as": "map_window_tests"},
+  {"mount_file": "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗺️features/🦀️.rs", "mount_name": "tests", "as": "features_tests"}
+ ]}

@@ -1,5 +1,5 @@
 import{types}from"node:util";
-import schema from"./🧬️schema/🔣️.json";
+import schema from"./🧬️schema/🔣️.json" with{type:"json"};
 /** 📥️ Carries immutable UTF-8 text or canonical binary DATA under one finite input policy. */
 export type OwnedCommandInputV1=Readonly<{version:1;text:string}>|Readonly<{version:1;base64:string}>;
 const policy=Object.freeze({...schema.definitions.Policy.const});

@@ -1,12 +1,38 @@
-use super::*;
+use crate::editor::bim::terminology::BimLabels;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{categories, Diagnostic, Severity};
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+use semio_framework_plugin::TreeWindows;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::{kind_holding, kind_of};
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{bim_action, ui_capacity_error, ui_label, ui_value_list, ui_value_map, ui_value_text};
+#[allow(unused_imports)]
+use crate::editor::bim::panels::outliner::{item, leaf};
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::editor::bim::panels::diagnostics::{CLIP, clip};
+use crate::editor::bim::panels::diagnostics::*;
 use crate::standards::v1::subsets::any::schema::inferences::diagnostics::DiagnosticCode;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use semio_framework_plugin::ViewModel;
+use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_locale::{Locale, Terminology};
 
-const DEFECTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json");
-const CLEAN: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json");
+static DEFECTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/💥️defects/📸️snapshot/🔣️.json"));
+static CLEAN: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/⚠️diagnostics/🏡️clean/📸️snapshot/🔣️.json"));
 
 fn model(text: &str) -> (ModelSnapshot, ModelInference) {
     let snapshot: ModelSnapshot = from_json_str(text, JsonMemberPolicy::Reject).expect("fixture decodes");
@@ -30,7 +56,7 @@ fn demo_with(found: Vec<Diagnostic>) -> (ModelSnapshot, ModelInference) {
 
 #[semio_framework_async_macros::async_test]
 async fn the_groups_partition_the_findings_by_severity_storey_and_kind() {
-    let (snapshot, inference) = model(DEFECTS);
+    let (snapshot, inference) = model((*DEFECTS));
     let found = &inference.diagnostics;
     let mut seen: Vec<usize> = SEVERITIES.iter().flat_map(|severity| groups(&snapshot, found, *severity)).flat_map(|group| group.kinds.into_iter().flat_map(|kind| kind.findings)).collect();
     seen.sort_unstable();
@@ -47,7 +73,7 @@ async fn the_groups_partition_the_findings_by_severity_storey_and_kind() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_group_table_lists_the_severities_in_order_with_a_count_per_kind() {
-    let (snapshot, inference) = model(DEFECTS);
+    let (snapshot, inference) = model((*DEFECTS));
     let table: serde_json::Value = serde_json::from_str(&groups_json(&snapshot, &inference.diagnostics)).expect("JSON");
     assert_eq!(table.as_object().expect("an object").keys().cloned().collect::<std::collections::BTreeSet<_>>(), ["error", "note", "warning"].map(String::from).into());
     let total: f64 = table.as_object().expect("an object").values().flat_map(|rows| rows.as_array().expect("rows").iter()).flat_map(|row| row["kinds"].as_object().expect("kinds").values()).map(|count| count.as_f64().expect("count")).sum();
@@ -77,7 +103,7 @@ async fn kinds_follow_the_order_of_the_codes() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_defect_model_lists_its_findings_by_severity_with_counts_in_english_and_german() {
-    let (snapshot, inference) = model(DEFECTS);
+    let (snapshot, inference) = model((*DEFECTS));
     let english = text(&snapshot, &inference, Locale::En);
     let counts = |severity: Severity| inference.diagnostics.iter().filter(|found| found.severity == severity).count();
     assert!(english.contains(&format!("Errors ({})", counts(Severity::Error))) && english.contains(&format!("Warnings ({})", counts(Severity::Warning))), "{english}");
@@ -92,7 +118,7 @@ async fn the_defect_model_lists_its_findings_by_severity_with_counts_in_english_
 
 #[semio_framework_async_macros::async_test]
 async fn a_finding_row_says_its_severity_in_words_and_activates_select_findings() {
-    let (snapshot, inference) = model(DEFECTS);
+    let (snapshot, inference) = model((*DEFECTS));
     let rendered = text(&snapshot, &inference, Locale::En);
     assert!(rendered.contains("Error ·") && rendered.contains("selectFindings"), "{rendered}");
     assert!(rendered.contains("alert-circle") && rendered.contains(&format!("{ROOT}.finding.")), "{rendered}");
@@ -100,7 +126,7 @@ async fn a_finding_row_says_its_severity_in_words_and_activates_select_findings(
 
 #[semio_framework_async_macros::async_test]
 async fn a_clean_model_says_so_in_both_languages() {
-    let (snapshot, inference) = model(CLEAN);
+    let (snapshot, inference) = model((*CLEAN));
     assert!(text(&snapshot, &inference, Locale::En).contains("No problems found"));
     assert!(text(&snapshot, &inference, Locale::De).contains("Keine Probleme gefunden"));
 }

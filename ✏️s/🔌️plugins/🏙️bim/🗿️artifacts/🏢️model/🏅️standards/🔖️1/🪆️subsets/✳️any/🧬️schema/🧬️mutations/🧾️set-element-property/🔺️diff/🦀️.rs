@@ -2,8 +2,8 @@
 //! properties collection, otherwise its property set is patched. Refused: an unknown element, an empty set or property name, and a value
 //! whose measure is not finite. The value type itself makes a kind mismatch unrepresentable.
 
-use super::super::elements;
-use super::SetElementProperty;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::set_element_property::SetElementProperty;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, PropertySetPatch}, snapshot::{ModelSnapshot, PropertySet, PropertyValue}};
 use protocol::{MutationOutcome, OutcomeCode};
 use std::collections::BTreeMap;

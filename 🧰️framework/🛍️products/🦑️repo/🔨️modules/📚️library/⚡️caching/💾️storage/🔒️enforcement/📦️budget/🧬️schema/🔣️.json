@@ -2,27 +2,124 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "maximumBytes", "maximumControlBytes", "partitions"],
+  "required": [
+    "version",
+    "maximumBytes",
+    "maximumControlBytes",
+    "partitions"
+  ],
   "properties": {
-    "version": {"const": 1},
-    "maximumBytes": {"type": "integer", "minimum": 1048576, "maximum": 68719476736},
-    "maximumControlBytes": {"type": "integer", "minimum": 4096, "maximum": 1048576},
+    "version": {
+      "const": 1
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1048576,
+      "maximum": 68719476736
+    },
+    "maximumControlBytes": {
+      "type": "integer",
+      "minimum": 4096,
+      "maximum": 1048576
+    },
     "partitions": {
-      "type": "object", "additionalProperties": false,
-      "required": ["rust", "tools", "graph", "dependencies", "products", "diagnostics", "leases"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rust",
+        "tools",
+        "graph",
+        "dependencies",
+        "products",
+        "diagnostics",
+        "leases"
+      ],
       "properties": {
-        "rust": {"$ref": "#/$defs/partition"}, "tools": {"$ref": "#/$defs/partition"},
-        "graph": {"$ref": "#/$defs/partition"}, "dependencies": {"$ref": "#/$defs/partition"},
-        "products": {"$ref": "#/$defs/partition"}, "diagnostics": {"$ref": "#/$defs/partition"},
-        "leases": {"$ref": "#/$defs/partition"}
+        "rust": {
+          "$ref": "#/$defs/partition"
+        },
+        "tools": {
+          "$ref": "#/$defs/partition"
+        },
+        "graph": {
+          "$ref": "#/$defs/partition"
+        },
+        "dependencies": {
+          "$ref": "#/$defs/partition"
+        },
+        "products": {
+          "$ref": "#/$defs/partition"
+        },
+        "diagnostics": {
+          "$ref": "#/$defs/partition"
+        },
+        "leases": {
+          "$ref": "#/$defs/partition"
+        }
       }
     }
   },
-  "$defs": {"partition": {
-    "type": "object", "additionalProperties": false, "required": ["directory", "capacityBytes"],
-    "properties": {
-      "directory": {"type": "string", "minLength": 1, "maxLength": 100},
-      "capacityBytes": {"type": "integer", "minimum": 33554432, "maximum": 68719476736}
+  "$defs": {
+    "partition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directory",
+        "capacityBytes",
+        "maximumLogicalBytes"
+      ],
+      "properties": {
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "maximum": 68719476736
+        },
+        "maximumLogicalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 68719476736
+        }
+      }
+    },
+    "logicalCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "maximumLogicalBytes",
+        "missing",
+        "accepted"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumLogicalBytes": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "missing": {
+          "type": "boolean"
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
     }
-  }}
+  }
 }

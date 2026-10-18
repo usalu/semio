@@ -1,0 +1,215 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schemas/os/mcp/authenticated-hub-workspace/descriptor-index/v1",
+  "title": "Authenticated hub descriptor index fixture corpus",
+  "$defs": {
+    "AuthenticatedHubDescriptorIndexCaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tokenPresent",
+        "responses",
+        "expected"
+      ],
+      "properties": {
+        "tokenPresent": {
+          "type": "boolean"
+        },
+        "responses": {
+          "type": "array",
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 599
+              },
+              "body": {},
+              "canonicalBody": {
+                "type": "string"
+              }
+            },
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "body"
+                ],
+                "properties": {
+                  "body": {}
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "canonicalBody"
+                ],
+                "properties": {
+                  "canonicalBody": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "streamMessage": {
+          "type": "object"
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "state",
+            "errorCode",
+            "cacheAction",
+            "resourceUris",
+            "noTokenLeak"
+          ],
+          "properties": {
+            "state": {
+              "enum": [
+                "unbound",
+                "refreshing",
+                "ready",
+                "revoked"
+              ]
+            },
+            "errorCode": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "cacheAction": {
+              "enum": [
+                "none",
+                "publish",
+                "invalidate"
+              ]
+            },
+            "resourceUris": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "pattern": "^semio://"
+              }
+            },
+            "noTokenLeak": {
+              "const": true
+            },
+            "requests": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string",
+                "pattern": "^/"
+              }
+            }
+          }
+        }
+      }
+    },
+    "AuthenticatedHubDescriptorIndexV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contractVersion",
+        "limits",
+        "cases"
+      ],
+      "properties": {
+        "contractVersion": {
+          "const": 1
+        },
+        "limits": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maxDocuments",
+            "maxTokenBytes",
+            "maxDiagnosticBytes",
+            "operationTimeoutMs"
+          ],
+          "properties": {
+            "maxDocuments": {
+              "const": 4096
+            },
+            "maxTokenBytes": {
+              "const": 4096
+            },
+            "maxDiagnosticBytes": {
+              "const": 4096
+            },
+            "operationTimeoutMs": {
+              "const": 10000
+            }
+          }
+        },
+        "cases": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "noToken",
+            "expiredToken",
+            "publicWithoutMembership",
+            "memberReady",
+            "sameDocumentOtherSpace",
+            "memberRevoked",
+            "streamReconnect",
+            "agentBelowMembership",
+            "humanBelowMembership",
+            "principalAboveMembership",
+            "pagedWindows",
+            "pagesCrossAnAuthorizationChange"
+          ],
+          "properties": {
+            "noToken": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "expiredToken": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "publicWithoutMembership": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "memberReady": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "sameDocumentOtherSpace": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "memberRevoked": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "streamReconnect": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "agentBelowMembership": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "humanBelowMembership": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "principalAboveMembership": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "pagedWindows": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            },
+            "pagesCrossAnAuthorizationChange": {
+              "$ref": "#/$defs/AuthenticatedHubDescriptorIndexCaseV1"
+            }
+          }
+        }
+      }
+    }
+  }
+}

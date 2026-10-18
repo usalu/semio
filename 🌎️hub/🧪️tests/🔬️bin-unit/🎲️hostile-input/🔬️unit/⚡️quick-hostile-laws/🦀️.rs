@@ -2,6 +2,7 @@
 
 mod quick {
 use semio_hub_route_models::admin::ADMIN_OPERATION_DEADLINE;
+use semio_hub_directory::AdminOperationDirectory;
 use std::sync::Arc;
 use semio_hub_runtime::readiness::{CheckpointPolicyLedgerV1, CheckpointPolicyTallyV1, HUB_CHECKPOINT_POLICY, HubCheckpointPolicyV1, HubMode, hub_readiness, with_checkpoint_policy};
 use semio_hub_artifact_checkin::DocumentCheckInKey;

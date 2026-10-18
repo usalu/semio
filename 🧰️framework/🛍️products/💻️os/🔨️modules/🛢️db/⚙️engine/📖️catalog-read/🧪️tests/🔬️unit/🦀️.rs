@@ -661,7 +661,7 @@ async fn database_catalog_read_terminal_result_drop_hands_back_exact_result() {
 //#region 🔖️Source laws
 #[test]
 fn retained_retry_owners_release_their_guard_before_resubmission() {
-    for (name, source) in [("db_engine_catalog_read", include_str!("../../🦀️.rs"))] {
+    for (name, source) in [("db_engine_catalog_read", concat!(include_str!("../../🎟️read-admission/🦀️.rs"), include_str!("../../🔑️read-results-and-rejections/🦀️.rs"), include_str!("../../🧱️read-state-and-lease/🦀️.rs"), include_str!("../../⚙️read-state-operations/🦀️.rs"), include_str!("../../📬️read-future-and-terminal-handles/🦀️.rs"), include_str!("../../🦀️.rs")))] {
         let lines: Vec<&str> = source.lines().collect();
         for (index, line) in lines.iter().enumerate() {
             let trimmed = line.trim_start().trim_start_matches("} else ");

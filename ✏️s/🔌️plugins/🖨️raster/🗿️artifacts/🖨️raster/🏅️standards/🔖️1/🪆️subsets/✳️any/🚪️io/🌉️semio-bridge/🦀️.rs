@@ -95,7 +95,7 @@ fn page_node(node: &DrawNode, matrix: [f64; 6]) -> DrawNode {
 /// 📄️ A WORLD drawing (y up, a CAD file's model space) fitted onto a page (y down): the page is the
 /// painted bounds (at least 1×1 unit), every vertex moves by `(x − min_x, max_y − y)`. An empty drawing
 /// becomes an empty 1×1 page.
-pub(super) fn page_drawing_from_world(world: &SemioDrawingSnapshot) -> SemioDrawingSnapshot {
+pub fn page_drawing_from_world(world: &SemioDrawingSnapshot) -> SemioDrawingSnapshot {
     let [min_x, min_y, max_x, max_y] = world_drawing_bounds(world).unwrap_or([0.0; 4]);
     let matrix = [1.0, 0.0, 0.0, -1.0, -min_x, max_y];
     SemioDrawingSnapshot {
@@ -113,7 +113,7 @@ pub(super) fn page_drawing_from_world(world: &SemioDrawingSnapshot) -> SemioDraw
 /// rasterize_svg_to_png_base64` call below then fails to parse as XML at all ("unknown token at
 /// 1:1"); every downstream consumer of this function's return value wants a bare `<svg>…</svg>`
 /// document, matching 🗒️note's/🖍️draw's own `write_svg_xml` usage for the identical bridge).
-pub(super) fn dispatch_drawing_to_svg(snapshot: &SemioDrawingSnapshot) -> Result<String, String> {
+pub fn dispatch_drawing_to_svg(snapshot: &SemioDrawingSnapshot) -> Result<String, String> {
     ensure_stdio_semio_and_png_registered();
     let payload = IoPayload::Binary(<SemioDrawingSnapshot as pack::snapshot::ArtifactPack>::encode_pack(snapshot));
     let key = semio_io_key(&SEMIO_DRAWING_DIALECT, IoDirection::Export, &SVG_DIALECT);

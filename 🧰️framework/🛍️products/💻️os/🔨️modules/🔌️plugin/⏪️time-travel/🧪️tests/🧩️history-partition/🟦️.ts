@@ -3,11 +3,20 @@ import { test, expect } from "bun:test";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join, normalize } from "node:path";
 import fixture from "../🧫️fixtures/🧩️history-partition.json" with { type: "json" };
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const pluginRoot = join(import.meta.dir, "../../..");
 type Item = { name: string; kind: string; crate: string };
 const strip = (text: string): string => text.replace(/\/\*[\s\S]*?\*\//gu, "").replace(/\/\/[^\n]*/gu, "").replace(/"(?:[^"\\\n]|\\.)*"/gu, '""');
-const read = (rel: string): string => readFileSync(join(pluginRoot, rel), "utf8");
+const trees = new Map<string, string>();
+const read = (rel: string): string => {
+  let text = trees.get(rel);
+  if (text === undefined) {
+    text = readModuleTreeSource(join(pluginRoot, rel));
+    trees.set(rel, text);
+  }
+  return text;
+};
 const defines = (text: string, item: Item): boolean => new RegExp(`^[ \\t]*(?:pub(?:\\([a-z:]+\\))?\\s+)?(?:const\\s+|unsafe\\s+|async\\s+)*${item.kind}\\s+${item.name}\\b`, "mu").test(strip(text));
 const mentions = (text: string, name: string): boolean => new RegExp(`(?<![A-Za-z0-9_])${name}(?![A-Za-z0-9_])`, "u").test(strip(text));
 

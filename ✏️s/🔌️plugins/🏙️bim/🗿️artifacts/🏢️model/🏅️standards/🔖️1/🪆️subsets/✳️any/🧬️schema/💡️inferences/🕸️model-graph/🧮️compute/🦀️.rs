@@ -1,40 +1,40 @@
 //! 🧮️ What a node of the model graph is: its dependency (the honesty contract of `dep_input`: everything `value` reads of the snapshot that is not a parent) and its value, by dispatch to the pure
 //! functions of the leaf modules. Parents are found by key in an [`Index`] built once per call.
 
-use super::super::super::annotation_layout::{self, StoreyAnnotations};
-use super::super::super::clash_sets::{self, ClashSetResult, SolidProbe};
-use super::super::super::rule_results::{self, RuleResult};
-use super::super::super::zones::ZoneTotals;
-use super::super::super::curtain_layout::{self, curtain_layout_of, CurtainLayout};
-use super::super::super::diagnostics::{self, Inputs as FindingInputs};
-use super::super::super::effective_properties::{self, EffectiveProperties};
-use super::super::super::energy_envelope::{self, EnvelopeSpace};
-use super::super::super::element_solids::roofs::RoofFallback;
-use super::super::super::element_solids::{self, beams, ceilings, columns, curtain_walls, dep_object, dep_value, fillers, placement_of, rail_hosts, railings, ramps, roofs, slabs, stairs, wall_sweeps, walls, SolidEntry, SolidFamily};
-use super::super::super::opening_frames::{self, cut_rect, frame_of, CutRect, HostExtent, OpeningCut, OpeningFrame};
-use super::super::super::components::{self, ComponentEntry, ComponentValue};
-use super::super::super::element_solids::components as component_solids;
-use super::super::super::element_solids::mep as mep_solids;
-use super::super::super::families::{self, FamilyProfiles, FamilyValue};
-use super::super::super::mep::clash::{self, MepClashes};
-use super::super::super::mep::{self, MepValue};
-use super::super::super::phase_visibility;
-use super::super::super::plan_linework::{self, Inputs as PlanInputs};
-use super::super::super::quantities::{self, totals_of, ElementQuantity};
-use super::super::super::schedules::{self, ScheduleTable};
-use super::super::super::spaces::{self, obstacles_of, rooms_from, StoreyRooms};
-use super::super::super::zones;
-use super::super::super::ramp_runs::{self, RampRun};
-use super::super::super::stair_runs::{self, run_of, StairRun};
-use super::super::super::storey_levels::{self, resolve, StoreyLevel};
-use super::super::super::sheet_layout;
-use super::super::super::view_linework::{self, ViewInputs, ViewLinework};
-use super::super::super::wall_layout::attach::{self, AttachSurface};
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{self, StoreyAnnotations};
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{self, ClashSetResult, SolidProbe};
+use crate::standards::v1::subsets::any::schema::inferences::rule_results::{self, RuleResult};
+use crate::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::{self, curtain_layout_of, CurtainLayout};
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{self, Inputs as FindingInputs};
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::{self, EffectiveProperties};
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{self, EnvelopeSpace};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::roofs::RoofFallback;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{self, beams, ceilings, columns, curtain_walls, dep_object, dep_value, fillers, placement_of, rail_hosts, railings, ramps, roofs, slabs, stairs, wall_sweeps, walls, SolidEntry, SolidFamily};
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{self, cut_rect, frame_of, CutRect, HostExtent, OpeningCut, OpeningFrame};
+use crate::standards::v1::subsets::any::schema::inferences::components::{self, ComponentEntry, ComponentValue};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::components as component_solids;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::mep as mep_solids;
+use crate::standards::v1::subsets::any::schema::inferences::families::{self, FamilyProfiles, FamilyValue};
+use crate::standards::v1::subsets::any::schema::inferences::mep::clash::{self, MepClashes};
+use crate::standards::v1::subsets::any::schema::inferences::mep::{self, MepValue};
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility;
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{self, Inputs as PlanInputs};
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{self, totals_of, ElementQuantity};
+use crate::standards::v1::subsets::any::schema::inferences::schedules::{self, ScheduleTable};
+use crate::standards::v1::subsets::any::schema::inferences::spaces::{self, obstacles_of, rooms_from, StoreyRooms};
+use crate::standards::v1::subsets::any::schema::inferences::zones;
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::{self, RampRun};
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{self, run_of, StairRun};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{self, resolve, StoreyLevel};
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::{self, ViewInputs, ViewLinework};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::{self, AttachSurface};
 use crate::standards::v1::subsets::any::schema::authored::references;
-use super::super::super::wall_layout::joins::Band;
-use super::super::super::wall_layout::{self, band_of, layout_of, WallLayout};
-use super::plan::{element_storey, opening_storey};
-use super::{Data, DiagnosticScope, ModelNode, ModelValue, TotalsScope};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::{self, band_of, layout_of, WallLayout};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::plan::{element_storey, opening_storey};
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::{Data, DiagnosticScope, ModelNode, ModelValue, TotalsScope};
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, TopConstraint};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;
@@ -249,10 +249,10 @@ pub fn dependency(snapshot: &ModelSnapshot, key: &ModelNode) -> DslValue {
         ModelNode::Properties(id) => effective_properties::dependency(snapshot, id),
         ModelNode::Family(id) => families::dependency(snapshot, id),
         ModelNode::Component(id) => components::dependency(snapshot, id),
-        ModelNode::StructuralAnalysis => super::super::super::analytical_members::dependency(snapshot),
+        ModelNode::StructuralAnalysis => crate::standards::v1::subsets::any::schema::inferences::analytical_members::dependency(snapshot),
         ModelNode::Mep(id) => mep::dependency(snapshot, id),
         ModelNode::MepClash(_) => DslValue::Null,
-        ModelNode::OptionScope => super::super::super::option_scope::dependency(snapshot),
+        ModelNode::OptionScope => crate::standards::v1::subsets::any::schema::inferences::option_scope::dependency(snapshot),
         ModelNode::Schedule(id) => schedules::dependency(snapshot, id),
         ModelNode::Zone(id) => zones::zone_dependency(snapshot, id),
         ModelNode::Scheme(id) => zones::scheme_dependency(snapshot, id),
@@ -297,7 +297,7 @@ pub fn value(snapshot: &ModelSnapshot, key: &ModelNode, parents: &[ModelValue]) 
     count(key);
     let index = Index::of(parents);
     let data = match key {
-        ModelNode::OptionScope => Data::OptionScope(Arc::new(super::super::super::option_scope::scope_of(snapshot, parents.iter().filter_map(|parent| match (&parent.node, &parent.data) { (ModelNode::Quantity(id), Data::Quantity(Some(quantity))) => Some((id.as_str(), quantity.as_ref())), _ => None })))),
+        ModelNode::OptionScope => Data::OptionScope(Arc::new(crate::standards::v1::subsets::any::schema::inferences::option_scope::scope_of(snapshot, parents.iter().filter_map(|parent| match (&parent.node, &parent.data) { (ModelNode::Quantity(id), Data::Quantity(Some(quantity))) => Some((id.as_str(), quantity.as_ref())), _ => None })))),
         ModelNode::Storey(id) => Data::Level(resolve(snapshot, id, index.levels.values().next())),
         ModelNode::Band(id) => Data::Band(snapshot.walls.get(id).and_then(|wall| band_of(snapshot, wall))),
         ModelNode::Cut(id) => Data::Cut(snapshot.openings.get(id).map(|opening| cut_rect(snapshot, opening)).unwrap_or_else(|| CutRect { size: crate::standards::v1::subsets::any::schema::authored::sizes::Resolved { width: 0.0, height: 0.0, sill: 0.0, type_found: false }, cut: OpeningCut::default() })),
@@ -325,14 +325,14 @@ pub fn value(snapshot: &ModelSnapshot, key: &ModelNode, parents: &[ModelValue]) 
         ModelNode::Family(id) => Data::Family(Arc::new(families::family_of(snapshot, id, &BTreeMap::new()))),
         ModelNode::Component(id) => Data::Component(Arc::new(component_value(snapshot, id, &index))),
         ModelNode::Mep(id) => Data::Mep(Arc::new(snapshot.mep_elements.get(id).map_or_else(MepValue::default, |element| mep::mep_of(snapshot, id, &index.level(&element.storey))))),
-        ModelNode::StructuralAnalysis => Data::Structure(Arc::new(super::super::super::analytical_members::analysis_of(snapshot, &index.levels, &index.layouts, &index.solids))),
+        ModelNode::StructuralAnalysis => Data::Structure(Arc::new(crate::standards::v1::subsets::any::schema::inferences::analytical_members::analysis_of(snapshot, &index.levels, &index.layouts, &index.solids))),
         ModelNode::MepClash(_) => Data::MepClashes(Arc::new(clash::clashes_of(index.meps.iter().map(|(id, value)| (*id, *value))))),
         ModelNode::PhaseVisibility(storey) => Data::Phases(Arc::new(phase_visibility::visibility_of(snapshot, storey))),
         ModelNode::Surface(id) => Data::Surface(Arc::new(references::storey_of(snapshot, id).map_or_else(AttachSurface::default, |storey| attach::surface_of(snapshot, id, &index.level(storey))))),
         ModelNode::Envelope(id) => Data::Envelope(Arc::new(energy_envelope::envelope_of(snapshot, id, &energy_envelope::Inputs { rooms: &index.rooms, layouts: &index.layouts, frames: &index.frames }))),
         ModelNode::EnergyTotals(scope) => Data::EnergyTotals(Arc::new(energy_envelope::totals_of(scope, &index.envelopes.values().copied().collect::<Vec<_>>(), &energy_envelope::Climate::of(snapshot)))),
         ModelNode::Diagnostics(scope) => Data::Findings(Arc::new(findings_value(snapshot, scope, &index))),
-        ModelNode::DiagnosticIndex => Data::Index(Arc::new(diagnostics::DiagnosticIndex::of(&super::projection::rebuild_diagnostics(parents)))),
+        ModelNode::DiagnosticIndex => Data::Index(Arc::new(diagnostics::DiagnosticIndex::of(&crate::standards::v1::subsets::any::schema::inferences::model_graph::projection::rebuild_diagnostics(parents)))),
     };
     wrap(key, data)
 }

@@ -1,4 +1,4 @@
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import{readBuildMode,type BuildMode}from"../🟦️.ts";
 import sourceSchema from"./🧬️schema/🔣️.json"with{type:"json"};
 const schema:typeof sourceSchema=JSON.parse(JSON.stringify(sourceSchema)),protocol=Object.freeze({...schema.definitions.Protocol.const});

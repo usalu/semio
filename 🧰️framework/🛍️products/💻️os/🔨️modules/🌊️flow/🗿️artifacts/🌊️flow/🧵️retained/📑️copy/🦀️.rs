@@ -10,7 +10,7 @@ use crate::retained::{FlowOwner as Owner, FlowRetirement as Retirement};
 use crate::os_store::{ErasedSnapshotRetirement, SnapshotRetirementFactory};
 use std::mem::{ManuallyDrop,size_of,size_of_val};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,admit_retained_clone_close}};
-use crate::{FlowHostSnapshot, neural, FlowChannelRef, FlowGui, FlowNodeGui, FlowPreviewGui, NodeChrome, SynapseSpec, Widget, WidgetLayout};
+use crate::{FlowHostComponents, FlowHostSnapshot, neural, FlowChannelRef, FlowGui, FlowNodeGui, FlowPreviewGui, NodeChrome, SynapseSpec, Widget, WidgetLayout};
 use std::any::Any;
 use semio_framework_value::retained_clone::RetainedCloneSource;
 use crate::os_store::snapshot_read::SnapshotRead;
@@ -227,7 +227,7 @@ impl<T: Copy> Task for BoxTask<T> {
 macro_rules! retire_owner {
     ($type:ty, $variant:ident) => { impl Retire for $type { fn retire(self, retirement: &mut Retirement) { retirement.push(Owner::$variant(self)).unwrap_or_else(|_|panic!("Flow copy requires empty retirement handoff")); } } };
 }
-retire_owner!(FlowHostSnapshot, HostSnapshot);
+impl Retire for FlowHostSnapshot { fn retire(self, retirement: &mut Retirement) { retirement.push(Owner::HostSnapshot(FlowHostComponents::from(self))).unwrap_or_else(|_|panic!("Flow copy requires empty retirement handoff")); } }
 retire_owner!(Widget, Widget);
 retire_owner!(Vec<Widget>, Widgets);
 retire_owner!(Vec<String>, Strings);
@@ -586,7 +586,7 @@ pub struct FlowSnapshotIntakeProducer<R:RetireOwned+Sync>{pub project:for<'sourc
 impl<R:RetireOwned+Sync+'static> semio_framework_job::OriginalSnapshotIntakeProducer<FlowHostSnapshot,SnapshotRead<R>> for FlowSnapshotIntakeProducer<R>{
  type Intake=FlowHostSnapshotCopy<R>;
  type Rejected=FlowSnapshotCopyIntakeSource<R>;
- fn source_demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::borrowed_constructor_demand::<SnapshotRead<R>>())}
+ fn source_demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{let demand=RetainedCloneSource::<FlowHostSnapshot,SnapshotRead<R>>::borrowed_constructor_demand::<SnapshotRead<R>>();Ok(semio_framework_value::RetirementDemand{capacity_bytes:demand.capacity_bytes,depth:demand.depth,..Default::default()})}
  fn preserve_source(&self,source:SnapshotRead<R>)->Self::Rejected{FlowSnapshotCopyIntakeSource::Read(source)}
  fn admit(&self,source:SnapshotRead<R>,revision:[u8;32],source_generation:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<Self::Intake,(semio_framework_job::OriginalTurnFailure,Self::Rejected)>{FlowHostSnapshotCopy::from_read(source,self.project,revision,source_generation,cx)}
 }

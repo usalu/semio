@@ -5,10 +5,8 @@
 
 #[path = "🎚️config/🦀️.rs"]
 pub mod config;
-#[path = "✏️edit/🦀️.rs"]
-pub mod edit;
-#[path = "🏷️vocabulary/🦀️.rs"]
-pub mod vocabulary;
+pub use semio_s_artifact_bim_model_ramp_runs::editor::bim::modes::edit::windows::schedule::edit;
+pub use semio_s_artifact_bim_model_interaction::editor::bim::modes::edit::windows::schedule::vocabulary;
 
 use crate::editor::bim::interaction::BIM_ELEMENT_DOMAIN;
 use crate::editor::bim::kit::bim_window_action;
@@ -54,7 +52,7 @@ pub fn definition() -> WindowKindDefinition {
 //#endregion 🔖️Definition
 
 //#region 🔖️Cells
-fn text(value: impl Into<String>) -> TableCell {
+pub fn text(value: impl Into<String>) -> TableCell {
     TableCell::Text { value: value.into() }
 }
 
@@ -79,7 +77,7 @@ fn view_button(icon: &str, label: &str, field: &str, value: &str) -> UiTreeItemA
     button(icon, label, "setView", object([("field", field), ("value", value)]))
 }
 
-fn row(id: &str, cells: Vec<(String, TableCell)>) -> DslValue {
+pub fn row(id: &str, cells: Vec<(String, TableCell)>) -> DslValue {
     let mut entries = vec![("id".to_string(), DslValue::String(id.to_string()))];
     entries.extend(cells.into_iter().map(|(column, cell)| (column, semio_framework_value::ToValue::to_value(&cell))));
     DslValue::object(entries)
@@ -322,6 +320,4 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, config: &con
 
 //#endregion 🔖️Render
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

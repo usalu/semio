@@ -46,7 +46,8 @@ fn a_file_that_differs_from_its_declaration_is_refused_by_name() {
 #[test]
 fn a_module_descriptor_beside_the_wasm_names_the_assets_a_host_delivers() {
     let root = scratch("beside");
-    std::fs::write(root.join("nx.json"), b"{}").expect("write");
+    std::fs::write(root.join("📋️project.json"), b"{}").expect("write");
+    std::fs::write(root.join("package.json"), br#"{"workspaces":[]}"#).expect("write");
     std::fs::create_dir_all(root.join("modules/layout")).expect("module directory");
     std::fs::write(root.join("fonts/a.ttf"), b"first").expect("write");
     let descriptor = serde_json::json!({ "packageId": "p", "assets": [declaration("fonts/a.ttf", b"first")] });

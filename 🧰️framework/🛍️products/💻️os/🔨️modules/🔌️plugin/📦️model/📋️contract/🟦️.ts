@@ -1,6 +1,6 @@
 import publicationSchema from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/💾️storage/🧬️schema/🔣️.json" with {type:"json"};
 import type {RepositoryArtifactRequestV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading/📋️contract/🟦️.ts";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 import {createHash} from "node:crypto";
 import {isAbsolute,join,resolve} from "node:path";

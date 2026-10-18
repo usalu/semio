@@ -2,7 +2,7 @@
 //! positive angle of at most 60 degrees towards a finite direction. The tilted solid, its volume and the joins follow by inference; the position stays the base point.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::tilt_flaw;
-use super::SetColumnTilt;
+use crate::standards::v1::subsets::any::schema::mutations::set_column_tilt::SetColumnTilt;
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ColumnPatch, Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

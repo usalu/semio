@@ -4,8 +4,8 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import picomatch from "picomatch";
-import { loadCatalogTaxonomy } from "../../../🔍️discovery/🟦️.ts";
-import { taxonomyClosedScope } from "../../🟦️.ts";
+import { loadCatalogTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { taxonomyClosedScope } from "../../🌳️tree-digests/🟦️.ts";
 
 type Case = { readonly id: string; readonly scope: string; readonly holdsMutations: readonly string[]; readonly closed: string };
 

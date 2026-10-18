@@ -22,7 +22,7 @@ serde_json.workspace = true
 flow = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
 machine = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine" }
 semio-framework = { path = "../../../../../../../../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
-semio-framework-2d = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
+semio-framework-2d-compute = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-flow-flow = { workspace = true }
 semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }

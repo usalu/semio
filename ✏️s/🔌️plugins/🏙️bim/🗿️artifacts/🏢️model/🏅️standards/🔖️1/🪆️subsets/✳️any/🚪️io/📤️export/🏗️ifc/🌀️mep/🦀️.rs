@@ -138,6 +138,4 @@ pub fn emit_systems(x: &mut Export<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+

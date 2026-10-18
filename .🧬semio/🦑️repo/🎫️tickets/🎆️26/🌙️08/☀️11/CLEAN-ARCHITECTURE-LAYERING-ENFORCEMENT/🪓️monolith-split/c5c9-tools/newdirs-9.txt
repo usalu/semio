@@ -1,0 +1,16 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/📜️http-and-transport-contracts
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/⚠️errors-and-event-pages
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🔑️socket-grants-and-authority
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧰️wire-helpers-and-credentials
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/📡️directory-client
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌊️directory-stream
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🖥️native-transport
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🌉️browser-transport
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔖️mutation-source-authority
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🧾️mutation-leaf-descriptor
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🪪️mutation-leaf-attrs-and-schema-index
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🏗️document-diff-and-composite-expansion
+🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔁️mutations-expansion
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🔬️unit/🔐️credential-wipe-fakes-and-event-page-laws
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🔬️unit/🛰️execution-target-admission-and-stream-laws
+🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🧪️tests/🔬️unit/🚦️turns-receipts-cancellation-and-store-laws

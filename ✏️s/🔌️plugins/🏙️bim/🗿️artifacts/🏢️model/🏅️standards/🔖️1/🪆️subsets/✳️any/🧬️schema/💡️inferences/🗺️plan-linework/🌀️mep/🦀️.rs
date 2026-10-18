@@ -2,7 +2,7 @@
 //! a circle (pipe) or a rectangle (duct, tray) at the foot of the drop. The band and the drops are cut, projected or hidden by the vertical span of the element against the cut plane like every element. The colour of every
 //! primitive is the colour of the system, `mep[id].colour` of the inference (the primitives carry the id of the element).
 
-use super::{classify, outline_style, Context, PlanKind, PlanVertex, Sheet};
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, PlanKind, PlanVertex, Sheet};
 use crate::standards::v1::subsets::any::schema::inferences::mep::{MepSectionKind, MepSegment, MepValue, EPS};
 
 /// 📏️ The smallest cosine of the half bend angle: a sharper turn is mitred as if it were this one.

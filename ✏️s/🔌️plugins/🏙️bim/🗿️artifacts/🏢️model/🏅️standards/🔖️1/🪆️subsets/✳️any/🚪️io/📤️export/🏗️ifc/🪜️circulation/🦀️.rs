@@ -54,7 +54,7 @@ fn part_of(x: &mut Export<'_>, solid: &ElementSolid, storey: crate::standards::v
     Some(entity)
 }
 
-fn stair(x: &mut Export<'_>, id: &str, row: &Stair) {
+pub fn stair(x: &mut Export<'_>, id: &str, row: &Stair) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("stair", id, "its storey is missing");
         return;
@@ -82,7 +82,7 @@ fn stair(x: &mut Export<'_>, id: &str, row: &Stair) {
     x.links.aggregated.insert(entity, flights);
 }
 
-fn railing(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Railing) {
+pub fn railing(x: &mut Export<'_>, id: &str, row: &crate::standards::v1::subsets::any::schema::snapshot::Railing) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("railing", id, "its storey is missing");
         return;
@@ -117,6 +117,4 @@ pub fn emit(x: &mut Export<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

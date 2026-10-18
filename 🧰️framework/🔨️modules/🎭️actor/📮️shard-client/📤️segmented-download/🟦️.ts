@@ -4,9 +4,9 @@
  *
  * 1. the guest PRODUCER (`🔌️plugin/🦀️.rs`'s `ARTIFACT_OUTPUT_CHUNK_BYTES` /
  *    `ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES`, which slice and cap `ArtifactOutputChunks`),
- * 2. the generated shard WORKER (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`'s `shardWorkerSource`, which
+ * 2. the generated shard WORKER (`🔌️plugin/🌐️browser-bundle/🏗️materialization/🧵️shard-worker-source/🟦️.ts`'s `shardWorkerSource`, which
  *    interpolates {@link SEGMENTED_DOWNLOAD_CONTRACT}`.chunkBytes` straight out of the declared mirror
- *    `SEGMENTED_DOWNLOAD_CHUNK_BYTES` there),
+ *    `SEGMENTED_DOWNLOAD_CHUNK_BYTES` in `🔌️plugin/🌐️browser-bundle/🏗️materialization/🧾️contract/🟦️.ts`),
  * 3. the host TRANSPORT (`📮️shard-client/🟦️.ts`'s `takeSegmentedDownloadChunk`), and
  * 4. the host DRAIN (`📤️SegmentedDownload/🟦️.ts`'s `drainSegmentedMediaExport`).
  *

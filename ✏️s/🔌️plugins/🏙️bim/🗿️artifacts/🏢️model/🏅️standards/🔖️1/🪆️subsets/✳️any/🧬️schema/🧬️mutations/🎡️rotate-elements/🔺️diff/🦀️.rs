@@ -3,8 +3,8 @@
 //! Openings follow their host by inference. Refused: an empty selection, a non-finite pivot or angle, unknown ids and elements
 //! without a placement; a zero angle is `mutation.no-op`.
 
-use super::super::elements::{self, Change, Refusal};
-use super::RotateElements;
+use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Change, Refusal};
+use crate::standards::v1::subsets::any::schema::mutations::rotate_elements::RotateElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

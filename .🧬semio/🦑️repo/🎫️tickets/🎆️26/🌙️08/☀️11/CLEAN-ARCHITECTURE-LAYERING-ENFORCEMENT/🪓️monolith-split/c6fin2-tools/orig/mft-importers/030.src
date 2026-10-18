@@ -1,0 +1,476 @@
+import { phaseCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import { createHash, webcrypto } from "node:crypto";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, truncateSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import Ajv from "ajv";
+import { parseInstallationDirectoryV1 } from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
+import { parseModuleDirectories, moduleDirectoryName, moduleIdForDirectoryName } from "../../📦️deployment/🟦️.ts";
+import { registryModuleDirectories, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts";
+import { validateDescriptorEmissionInputV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_SCHEMA_ID, componentDeliverableV1, encodeComponentReceiptV1, writeComponentReceiptV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
+import { auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage } from "../../✅️catalog-verification/📚️navbar-example-audits/🟦️.ts";
+import { auditPluginCatalogSources } from "../../✅️catalog-verification/🔎️source-audit/🟦️.ts";
+import { createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier } from "../../✅️catalog-verification/🏗️fresh-build-verifier/🟦️.ts";
+import { executeCatalogVerificationPlan, orderCatalogNodes } from "../../✅️catalog-verification/🗺️verification-plan/🟦️.ts";
+import { rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair, verifySemanticDescriptorPairBytesV1 } from "../../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { sha256CatalogArtifact } from "../../✅️catalog-verification/📥️artifact-io/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { auditInteractiveJobClassificationDrift, shippedComponentFindings } from "../../🛂️descriptor-verification/🟦️.ts";
+import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
+import { resolvePlaygroundBoot } from "@semio-tech/framework";
+import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import type { PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { identityInstallationSchemaUrl } from "../../../../../../../🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts";
+
+const fixtureRoot = join(import.meta.dirname, "../🧫️fixtures/🧬️catalog-complete");
+const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
+  readonly nodes: readonly CatalogVerificationNode[];
+  readonly expectedOrder: readonly string[];
+  readonly parentFailure: { readonly failedPluginId: string; readonly statuses: Readonly<Record<string, string>>; readonly publication: string };
+  readonly expectedProgress: readonly object[];
+  readonly expectedResult: object;
+};
+const temporaryRoots: string[] = [];
+
+describe("explicit module deployment directories", () => {
+  it("admits only schema-owned module routes and canonical encoded request paths", async () => {
+    const deployment = await import("../../📦️deployment/🟦️.ts"), { URL: IndependentUrl } = await import("whatwg-url");
+    const routes = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🛣️routes.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+    const validate = new Ajv({ strict: true }).addKeyword({ keyword: "x-semio-formats", schemaType: "array", valid: true }).compile(schema.$defs.DeploymentModuleRoutesV1);
+    expect(validate(routes)).toBe(true);
+    expect(deployment.parseModuleRoutes(routes)).toEqual(routes);
+    for (const hostile of [null, [], {}, { ...routes, plugin: "/plugin-modules" }, { ...routes, extension: "/extensions" }, { ...routes, plugin: routes.extension }, { ...routes, extra: true }, { ...routes, plugin: "/🔌️plugin-modules/child" }]) {
+      expect(validate(hostile)).toBe(false);
+      expect(() => deployment.parseModuleRoutes(hostile)).toThrow();
+    }
+    for (const row of cases.routeCases) {
+      expect(deployment.moduleRoutePath(row.input), row.input).toBe(row.output);
+      if (row.output !== null) expect(decodeURIComponent(new IndependentUrl(row.input, "https://example.invalid").pathname)).toBe(row.output);
+    }
+  });
+
+  it("uses the declared authored bridge without deriving a filename from the public ID", async () => {
+    const emojiRegex = (await import("emoji-regex")).default;
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+    for (const name of [cases.bridgeFile, cases.installMetaFile]) expect([...name.matchAll(emojiRegex())]).toHaveLength(1);
+    const deployment = await import("../../📦️deployment/🟦️.ts");
+    const inventory = parseModuleDirectories({ version: 1, modules: cases.modules });
+    expect(deployment.moduleStaticDirectoryNames(cases.modules[0].pluginId, false, inventory)).toEqual(cases.staticDirectories);
+    expect(deployment.moduleStaticDirectoryNames(cases.modules[1].pluginId, true, inventory)).toBeUndefined();
+    expect(() => deployment.moduleStaticDirectoryNames("unknown", true, inventory)).toThrow();
+    const pluginModuleUrl = (id: string) => `${deployment.MODULE_PLUGIN_ROUTE}/${moduleDirectoryName(id, inventory)}/${deployment.MODULE_BRIDGE_FILE}`;
+    const extensionModuleUrl = (id: string) => `${deployment.MODULE_EXTENSION_ROUTE}/${moduleDirectoryName(id, inventory)}/${deployment.MODULE_BRIDGE_FILE}`;
+    for (const row of cases.moduleUrls) {
+      expect(pluginModuleUrl(row.pluginId)).toBe(row.plugin);
+      expect(extensionModuleUrl(row.pluginId)).toBe(row.extension);
+      expect(decodeURIComponent(new URL(pluginModuleUrl(row.pluginId), "https://example.invalid").pathname)).toBe(row.plugin);
+    }
+    expect(() => pluginModuleUrl("unknown-public-id")).toThrow();
+    expect(() => extensionModuleUrl("unknown-public-id")).toThrow();
+  });
+  it("matches the schema and independent emoji oracle without changing public identities", async () => {
+    const emojiRegex = (await import("emoji-regex")).default;
+    const portable = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+    const entries = portable.modules.map((row: { pluginId: string; directoryName: string }) => ({ pluginId: row.pluginId, directoryName: parseInstallationDirectoryV1(row.directoryName) }));
+    const catalog = { version: 1, modules: registryModuleDirectories(entries) };
+    const schema = JSON.parse(readFileSync(join(import.meta.dirname, "../../📦️deployment/🧬️schema/🔣️.json"), "utf8"));
+    const cases = JSON.parse(readFileSync(join(import.meta.dirname, "../🧫️fixtures/📦️deployment/🧪️cases.json"), "utf8"));
+    const registrySchemas = new Ajv({ strict: true }).addKeyword("x-semio-formats").addSchema(JSON.parse(readFileSync(identityInstallationSchemaUrl, "utf8"))).addSchema(schema);
+    const validate = registrySchemas.getSchema(`${schema.$id}#/$defs/DeploymentCatalogV1`)!;
+    expect(validate(catalog)).toBe(true);
+    expect(parseModuleDirectories(catalog)).toEqual(catalog.modules);
+    const ids = entries.map((entry: { pluginId: string }) => entry.pluginId);
+    expect(catalog.modules.map((entry: { pluginId: string }) => entry.pluginId)).toEqual(ids);
+    const identities = new Set<string>();
+    for (const row of catalog.modules) {
+      const matches = [...row.directoryName.matchAll(emojiRegex())];
+      expect(matches).toHaveLength(1);
+      expect(identities.has(matches[0][0].replaceAll("\uFE0F", ""))).toBe(false);
+      identities.add(matches[0][0].replaceAll("\uFE0F", ""));
+      expect(moduleDirectoryName(row.pluginId, catalog.modules)).toBe(row.directoryName);
+      expect(moduleIdForDirectoryName(row.directoryName, catalog.modules)).toBe(row.pluginId);
+    }
+    for (const directoryName of [...cases.validDirectories, ...cases.invalidDirectories]) {
+      const candidate = { version: 1, modules: [{ pluginId: "example", directoryName }] };
+      const valid = cases.validDirectories.includes(directoryName);
+      expect(validate(candidate), directoryName).toBe(valid);
+      if (valid) expect(parseModuleDirectories(candidate)).toEqual(candidate.modules);
+      else expect(() => parseModuleDirectories(candidate), directoryName).toThrow();
+    }
+    expect(() => moduleDirectoryName("unknown-public-id", catalog.modules)).toThrow();
+    expect(moduleIdForDirectoryName("unknown-directory", catalog.modules)).toBeUndefined();
+    for (const attack of cases.hostileCatalogs) {
+      const candidate: { version: number; modules: Record<string, unknown>[] } = JSON.parse(JSON.stringify(catalog));
+      if (attack === "duplicate-id") candidate.modules[1].pluginId = candidate.modules[0].pluginId;
+      if (attack === "duplicate-emoji") candidate.modules[1].directoryName = candidate.modules[0].directoryName;
+      if (attack === "missing-name") delete candidate.modules[0].directoryName;
+      if (attack === "extra-field") candidate.modules[0].extra = true;
+      if (attack === "wrong-version") candidate.version = 2;
+      expect(() => parseModuleDirectories(candidate), attack).toThrow();
+    }
+  });
+});
+
+function temporaryRoot(): string {
+  const root = mkdtempSync(join(tmpdir(), "semio-catalog-complete-"));
+  temporaryRoots.push(root);
+  return root;
+}
+
+async function sha256(bytes: Uint8Array): Promise<string> {
+  return Buffer.from(await webcrypto.subtle.digest("SHA-256", bytes)).toString("hex");
+}
+
+function syntheticDescriptor(pluginId: string): { readonly descriptor: Record<string, any>; readonly bytes: Uint8Array } {
+  const descriptor: Record<string, any> = {
+    descriptorVersion: 1,
+    packageId: `semio:${pluginId}`,
+    role: "plugin",
+    manifest: { pluginId, label: pluginId, version: "1.0.0", apps: [], examples: [], capabilities: [], topicContributions: [], commands: [], artifactKinds: [] },
+    execution: "isolated",
+    executionProtocol: { appChannelVersion: APP_CHANNEL_VERSION },
+    quotas: {},
+    contributions: {},
+  };
+  return { descriptor, bytes: encodePackValue(descriptor) };
+}
+
+/** 🧾️ The shipped receipt binding `semantic` to the raw component bytes `raw` of `pluginId`. */
+async function shippedReceipt(pluginId: string, raw: Uint8Array, semantic: Uint8Array): Promise<ComponentReceiptV1> {
+  return { schema: COMPONENT_RECEIPT_SCHEMA_ID, pluginId, packageId: `semio:${pluginId}`, profile: "release", target: "wasm32-wasip2", wasmSha256: await sha256(raw), wasmBytes: raw.byteLength, semanticDescriptorSha256: await sha256(semantic), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
+}
+
+/** 🔏️ A descriptor carrying a byte binding of its own — a shape no semantic reader admits. */
+function byteBoundDescriptor(descriptor: Record<string, any>): { readonly descriptor: Record<string, any>; readonly bytes: Uint8Array; readonly json: Uint8Array } {
+  const bound = { ...descriptor, hashes: { wasmSha256: "1".repeat(64), coreWasmSha256: "2".repeat(64), descriptorSha256: "3".repeat(64) } };
+  return { descriptor: bound, bytes: encodePackValue(bound), json: new TextEncoder().encode(`${JSON.stringify(bound, null, 2)}\n`) };
+}
+
+function syntheticEntry(): CompiledComponentOwnerV1 {
+  return {
+    pluginId: "parent",
+    packageId: "semio:parent",
+    cratePath: join("owner", "📦️packages", "🦀️rust"),
+    packageName: "semio-s-plugin-parent",
+    wasmOut: "semio_s_plugin_parent.wasm",
+    role: "plugin",
+    capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated",
+  };
+}
+
+afterEach(() => {
+  for (const root of temporaryRoots.splice(0)) rmSync(root, { recursive: true, force: true });
+});
+
+describe("strict plugin catalog completion", () => {
+  it("validates the neutral contract and withholds every publication after a parent failure", async () => {
+    expect(orderCatalogNodes(fixture.nodes).map(({ pluginId }) => pluginId)).toEqual(fixture.expectedOrder);
+    const verified: string[] = [];
+    const publications: string[][] = [];
+    const progress: object[] = [];
+    const result = await executeCatalogVerificationPlan(fixture.nodes, {
+      async verify(node) {
+        verified.push(node.pluginId);
+        if (node.pluginId === fixture.parentFailure.failedPluginId) throw new Error("forced parent failure");
+        return node.pluginId;
+      },
+      async publish(rows) { publications.push(rows.map(({ node }) => node.pluginId)); },
+    }, { cancelled: () => false, progress: (event) => progress.push(event) });
+    expect(verified).toEqual(["parent"]);
+    expect(Object.fromEntries(result.results.map((row) => [row.pluginId, row.status]))).toEqual(fixture.parentFailure.statuses);
+    expect(result.publication).toBe(fixture.parentFailure.publication);
+    expect(publications).toEqual([]);
+    expect(progress).toEqual(fixture.expectedProgress);
+    expect(result).toEqual(fixture.expectedResult);
+    const committed: string[][] = [];
+    const success = await executeCatalogVerificationPlan(fixture.nodes, {
+      async verify(node) { return node.pluginId; },
+      async publish(rows) { committed.push(rows.map(({ node }) => node.pluginId)); },
+    }, { cancelled: () => false });
+    expect(success.publication).toBe("committed");
+    expect(committed).toEqual([fixture.expectedOrder]);
+  });
+
+  it("rejects max+1, duplicates, missing parents and cycles, and bounds cancellation diagnostics", async () => {
+    const nodes = Array.from({ length: CATALOG_NODE_MAX + 1 }, (_, index) => ({ pluginId: `p-${index}`, role: "plugin" as const, dependsOn: [] }));
+    expect(() => orderCatalogNodes(nodes)).toThrow(/1\.\.256/);
+    expect(() => orderCatalogNodes([{ pluginId: "child", role: "plugin", dependsOn: Array.from({ length: CATALOG_DEPENDENCY_MAX + 1 }, (_, index) => `p-${index}`) }])).toThrow(/dependencies/);
+    expect(() => orderCatalogNodes([{ pluginId: "same", role: "plugin", dependsOn: [] }, { pluginId: "same", role: "extension", dependsOn: [] }])).toThrow(/duplicate/);
+    expect(() => orderCatalogNodes([{ pluginId: "child", role: "plugin", dependsOn: ["absent"] }])).toThrow(/absent/);
+    expect(() => orderCatalogNodes([{ pluginId: "a", role: "plugin", dependsOn: ["b"] }, { pluginId: "b", role: "plugin", dependsOn: ["a"] }])).toThrow(/cycle/);
+    const failed = await executeCatalogVerificationPlan(fixture.nodes, { async verify() { throw new Error("x".repeat(10_000)); } }, { cancelled: () => false });
+    expect(Buffer.byteLength(failed.results[0]!.diagnostic ?? "")).toBeLessThanOrEqual(4096);
+    const cancelled = await executeCatalogVerificationPlan(fixture.nodes, { async verify() { return "unused"; } }, { cancelled: () => true });
+    expect(cancelled.results.every(({ status }) => status === "cancelled")).toBe(true);
+  });
+
+  it("strict-decodes both descriptor forms and verifies fresh bytes with a WebCrypto oracle", async () => {
+    const sourceRoot = temporaryRoot();
+    const buildRoot = temporaryRoot();
+    const raw = new TextEncoder().encode("raw-component");
+    const { descriptor, bytes: semanticBytes } = syntheticDescriptor("parent");
+    const entry = syntheticEntry();
+    const ownerRoot = join(sourceRoot, "owner");
+    mkdirSync(join(ownerRoot, "📦️packages", "🦀️rust"), { recursive: true });
+    writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(descriptor, null, 2)}\n`);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), semanticBytes);
+    const source = validateCatalogDescriptorPair(entry, sourceRoot);
+    expect(source.semanticSha256).toBe(await sha256(semanticBytes));
+    expect(entry.pluginId).not.toBe(entry.packageName);
+    const wrongPackage = structuredClone(descriptor);
+    wrongPackage.packageId = "semio:not-parent";
+    writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(wrongPackage, null, 2)}\n`);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), encodePackValue(wrongPackage));
+    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/packageId/);
+    const mismatch = syntheticDescriptor("package-name-is-not-plugin-id");
+    mismatch.descriptor.packageId = "semio:parent";
+    writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(mismatch.descriptor, null, 2)}\n`);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), encodePackValue(mismatch.descriptor));
+    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/manifest\.pluginId/);
+    const bound = byteBoundDescriptor(descriptor);
+    writeFileSync(join(ownerRoot, "🔣️.json"), bound.json);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), bound.bytes);
+    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/unknown fields hashes/);
+    const duplicatePackageId = `${JSON.stringify(descriptor, null, 2).replace(/\n\}/u, ',\n  "packageId": "semio:parent"\n}')}\n`;
+    writeFileSync(join(ownerRoot, "🔣️.json"), duplicatePackageId);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), semanticBytes);
+    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/duplicate object field "packageId"/);
+    writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(descriptor, null, 2)}\n`);
+    rmSync(join(ownerRoot, "🛂️.descriptor.semio"));
+    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow();
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), semanticBytes);
+    const rowRoot = join(buildRoot, entry.pluginId);
+    const receipt = await shippedReceipt(entry.pluginId, raw, semanticBytes);
+    const receiptBytes = new TextEncoder().encode(encodeComponentReceiptV1(receipt));
+    for (const part of ["raw", "descriptor", "receipt"]) mkdirSync(join(rowRoot, part), { recursive: true });
+    writeFileSync(join(rowRoot, "raw", entry.wasmOut), raw);
+    writeFileSync(join(rowRoot, "descriptor", "🛂️.descriptor.semio"), semanticBytes);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), receiptBytes);
+    const verifier = createFreshCatalogBuildVerifier(sourceRoot, buildRoot);
+    expect(() => verifier.verify(source.entry)).toThrow(/commit marker/);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), encodeComponentReceiptV1({ ...receipt, profile: "prototype" }));
+    expect(() => createFreshCatalogCommitMarker(source, buildRoot)).toThrow(/staged receipt does not bind/);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), receiptBytes);
+    const marker = createFreshCatalogCommitMarker(source, buildRoot);
+    writeFileSync(join(rowRoot, CATALOG_COMMIT_MARKER_FILENAME), `${JSON.stringify(marker)}\n`, { flag: "wx" });
+    rmSync(source.jsonPath);
+    rmSync(source.packPath);
+    const ownerlessEntry = source.entry;
+    const verified = verifier.verify(ownerlessEntry);
+    expect(verified.rawSha256).toBe(await sha256(raw));
+    expect(verified.descriptorSha256).toBe(await sha256(semanticBytes));
+    expect(verified.receipt).toEqual(receipt);
+    expect(() => verifier.verify({ ...ownerlessEntry, packageId: "semio:not-parent" })).toThrow(/carried Cargo identity/);
+    expect(() => verifier.verify({ ...ownerlessEntry, packageId: "semio:Parent" })).toThrow(/carried Cargo identity/);
+    expect(createHash("sha256").update(raw).digest("hex")).toBe(await sha256(raw));
+    writeFileSync(join(rowRoot, CATALOG_COMMIT_MARKER_FILENAME), `${JSON.stringify({ ...marker, pluginId: "tampered" })}\n`);
+    expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
+    writeFileSync(join(rowRoot, CATALOG_COMMIT_MARKER_FILENAME), `${JSON.stringify(marker)}\n`);
+    const rawMutation = Uint8Array.from(raw);
+    rawMutation[0] ^= 1;
+    writeFileSync(join(rowRoot, "raw", entry.wasmOut), rawMutation);
+    expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
+    writeFileSync(join(rowRoot, "raw", entry.wasmOut), raw);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), encodeComponentReceiptV1({ ...receipt, provenanceSha256: "5".repeat(64) }));
+    expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), receiptBytes);
+    let rewroteRawAfterRead = false;
+    const pinned = verifier.verify(ownerlessEntry, {
+      afterArtifact(artifact) {
+        if (artifact === "raw" && !rewroteRawAfterRead) {
+          rewroteRawAfterRead = true;
+          writeFileSync(join(rowRoot, "raw", entry.wasmOut), rawMutation);
+        }
+      },
+    });
+    expect(Buffer.from(pinned.rawBytes).equals(Buffer.from(raw))).toBe(true);
+    expect(Buffer.from(pinned.descriptorBytes).equals(Buffer.from(semanticBytes))).toBe(true);
+    expect(readFileSync(join(rowRoot, "raw", entry.wasmOut))).toEqual(Buffer.from(rawMutation));
+    writeFileSync(join(rowRoot, "raw", entry.wasmOut), raw);
+    const descriptorMutation = Uint8Array.from(semanticBytes);
+    descriptorMutation[0] ^= 1;
+    writeFileSync(join(rowRoot, "descriptor", "🛂️.descriptor.semio"), descriptorMutation);
+    expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
+  });
+
+  it("refuses ambient roots and detects the exact artifact max+1 boundary", () => {
+    expect(parseComponentPackageId('[package.metadata.component]\npackage = "semio:parent"\n', "fixture/Cargo.toml")).toBe("semio:parent");
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:parent"\n[package.metadata.component]\npackage = "semio:parent"\n', "fixture/Cargo.toml")).toThrow(/repeats/);
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:parent"\npackage = "semio:parent"\n', "fixture/Cargo.toml")).toThrow(/repeats/);
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:parent"\npackage = 7\n', "fixture/Cargo.toml")).toThrow(/repeats/);
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:Parent"\n', "fixture/Cargo.toml")).toThrow(/lowercase/);
+    expect(() => parseComponentPackageId('[package.metadata.component]\npackage-name = "semio:parent"\n', "fixture/Cargo.toml")).toThrow(/missing/);
+    const repoRoot = temporaryRoot();
+    const cache = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist", "🔌️plugin-modules");
+    const sharedTarget = cargoTargetDirectory(repoRoot);
+    mkdirSync(sharedTarget, { recursive: true });
+    mkdirSync(cache, { recursive: true });
+    expect(() => createFreshCatalogBuildVerifier(repoRoot, sharedTarget)).toThrow(/ambient shared target/);
+    expect(() => createFreshCatalogBuildVerifier(repoRoot, cache)).toThrow(/development cache/);
+    const hugeRoot = temporaryRoot();
+    const huge = join(hugeRoot, "huge");
+    writeFileSync(huge, "");
+    truncateSync(huge, CATALOG_ARTIFACT_MAX_BYTES + 1);
+    expect(statSync(huge).size).toBe(CATALOG_ARTIFACT_MAX_BYTES + 1);
+    expect(() => sha256CatalogArtifact(huge, hugeRoot)).toThrow(/exceeds/);
+  });
+
+  it("verifies one emitted semantic pair and refuses a descriptor carrying a byte binding of its own", async () => {
+    const { descriptor, bytes } = syntheticDescriptor("parent");
+    const json = new TextEncoder().encode(`${JSON.stringify(descriptor, null, 2)}\n`);
+    const pair = verifySemanticDescriptorPairBytesV1(json, bytes);
+    expect(pair).toMatchObject({ pluginId: "parent", packageId: "semio:parent", role: "plugin", version: "1.0.0", execution: "isolated", semanticSha256: await sha256(bytes) });
+    const bound = byteBoundDescriptor(descriptor);
+    expect(() => verifySemanticDescriptorPairBytesV1(bound.json, bound.bytes)).toThrow(/unknown fields hashes/);
+    for (const invalidProtocol of [undefined, null, {}, { appChannelVersion: 13 }, { appChannelVersion: 14, extra: true }]) {
+      const hostile: Record<string, any> = structuredClone(descriptor);
+      if (invalidProtocol === undefined) delete hostile.executionProtocol;
+      else hostile.executionProtocol = invalidProtocol;
+      expect(() => verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostile, null, 2)}\n`), encodePackValue(hostile))).toThrow(/executionProtocol/);
+    }
+    const divergent = structuredClone(descriptor);
+    divergent.manifest.label = "a different label";
+    expect(() => verifySemanticDescriptorPairBytesV1(json, encodePackValue(divergent))).toThrow(/JSON and pack forms disagree/);
+    expect(() => verifySemanticDescriptorPairBytesV1(json, new Uint8Array([...bytes, 0]))).toThrow();
+    for (const identity of [{ pluginId: "empty", version: "1.0.0" }, { pluginId: "cad-extension-spatial-shape", version: "0.0.0" }]) {
+      const placeholder = syntheticDescriptor(identity.pluginId);
+      placeholder.descriptor.manifest.version = identity.version;
+      expect(() => verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(placeholder.descriptor, null, 2)}\n`), encodePackValue(placeholder.descriptor)), identity.pluginId).toThrow(/placeholder identity/);
+    }
+    expect(() => rejectPlaceholderCatalogIdentity("cad-extension-spatial-shape", "1.0.0")).not.toThrow();
+    const hosted = syntheticDescriptor("host-extension-child");
+    hosted.descriptor.role = "extension";
+    hosted.descriptor.manifest.dependencies = [{ pluginId: "host" }];
+    expect(verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hosted.descriptor, null, 2)}\n`), encodePackValue(hosted.descriptor))).toMatchObject({ role: "extension", extends: "host" });
+    const hostless = structuredClone(hosted.descriptor);
+    hostless.manifest.dependencies = [];
+    expect(() => verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostless, null, 2)}\n`), encodePackValue(hostless))).toThrow(/extension host must be its first dependency/);
+  });
+
+  it("preserves finite emission input validation deadlines without claiming native execution", async () => {
+    const fixtureDir = join(import.meta.dirname, "../../../🖨️describe/🧪️tests/🧫️fixtures/⏱️emission-budget");
+    const cases = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8"));
+    const describeSchema = JSON.parse(readFileSync(join(import.meta.dirname, "../../../🖨️describe/🧬️schema/🔣️.json"), "utf8"));
+    const describeAjv = new Ajv({ strict: true });
+    describeAjv.addSchema(describeSchema);
+    
+    
+    const { Decimal } = await import("decimal.js");
+    const repoRoot = temporaryRoot();
+    const artifactRoot = join(repoRoot, "artifacts");
+    mkdirSync(artifactRoot);
+    const component = join(artifactRoot, "component.wasm");
+    writeFileSync(component, "raw-component");
+    for (const row of cases.cases) {
+      const budget = new Decimal(row.budgetMs);
+      expect(!budget.isZero() && new Decimal(row.elapsedMs).greaterThan(budget), row.name).toBe(row.expired);
+      expect(budget.isZero() ? 0 : Decimal.max(1, budget.minus(row.elapsedMs)).toNumber(), row.name).toBe(row.remainingMs);
+      let now = 0;
+      const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
+      try {
+        await expect(validateDescriptorEmissionInputV1(repoRoot, { artifactRoot, component }, {
+          compiler: phaseCompilerAdmissionControlV1(new AbortController().signal, 30000, () => undefined, async () => undefined),
+          deadlineMs: row.budgetMs,
+          checkpoint(stage) {
+            if (stage === "validate") now = row.elapsedMs;
+            if (stage === "emit") throw new Error("fixture stopped before native emission");
+          },
+        }), row.name).rejects.toThrow(row.expired ? /deadline of .*ms exceeded/ : /fixture stopped before native emission/);
+      } finally {
+        clock.mockRestore();
+      }
+      expect(remainingDescriptorEmissionBudgetMs(row.budgetMs, row.elapsedMs), row.name).toBe(row.remainingMs);
+      expect(readdirSync(artifactRoot), row.name).toEqual(["component.wasm"]);
+    }
+  });
+
+  it("refuses every unusable emission validation input and leaves no staging behind", async () => {
+    const repoRoot = temporaryRoot();
+    const artifactRoot = join(repoRoot, "target-emission");
+    const outsideRoot = temporaryRoot();
+    mkdirSync(artifactRoot, { recursive: true });
+    const component = join(artifactRoot, "component.wasm");
+    writeFileSync(component, "raw-component");
+    const outsideComponent = join(outsideRoot, "component.wasm");
+    writeFileSync(outsideComponent, "raw-component");
+    const emptyComponent = join(artifactRoot, "empty.wasm");
+    writeFileSync(emptyComponent, "");
+    const linkedComponent = join(artifactRoot, "linked.wasm");
+    symlinkSync(component, linkedComponent);
+    const request = { component, artifactRoot };
+    const compiler = phaseCompilerAdmissionControlV1(new AbortController().signal, 30000, () => undefined, async () => undefined);
+    const cases: readonly [string, Parameters<typeof validateDescriptorEmissionInputV1>[1], Parameters<typeof validateDescriptorEmissionInputV1>[2], RegExp][] = [
+      ["outside the artifact root", { ...request, component: outsideComponent }, { compiler }, /resolves outside the declared artifact root/],
+      ["an empty artifact", { ...request, component: emptyComponent }, { compiler }, /regular non-symlink file/],
+      ["a symlinked artifact", { ...request, component: linkedComponent }, { compiler }, /regular non-symlink file/],
+      ["an artifact root that is a file", { ...request, artifactRoot: component }, { compiler }, /regular non-symlink directory/],
+      ["a cancelled emission", request, { compiler, cancelled: () => true }, /cancelled at validate/],
+      ["an exhausted deadline", request, { compiler, deadlineMs: -1 }, /deadline of -1ms exceeded/],
+    ];
+    for (const [label, input, control, expected] of cases) {
+      await expect(validateDescriptorEmissionInputV1(repoRoot, input, control), label).rejects.toThrow(expected);
+      expect(readdirSync(artifactRoot).sort(), label).toEqual(["component.wasm", "empty.wasm", "linked.wasm"]);
+    }
+    const stages: string[] = [];
+    await expect(validateDescriptorEmissionInputV1(repoRoot, request, { compiler, checkpoint: (stage) => { stages.push(stage); if (stages.length === 2) throw new Error("stopped after emit"); } })).rejects.toThrow(/stopped after emit/);
+    expect(stages).toEqual(["validate", "emit"]);
+    expect(readdirSync(artifactRoot).sort()).toEqual(["component.wasm", "empty.wasm", "linked.wasm"]);
+  });
+
+  it("reports only committed classifications that contradict the owner's own Rust", () => {
+    const ownerRoot = temporaryRoot();
+    const surface = join(ownerRoot, "🗿️artifacts", "✏️editor");
+    mkdirSync(surface, { recursive: true });
+    writeFileSync(join(surface, "🦀️.rs"), [
+      '.action_interactive_job("migratedAction", InteractiveJobClassification::Migrated)',
+      '.action_interactive_job("batchAction", semio_framework::InteractiveJobClassification::BatchOnlyPendingRewrite)',
+      '.action_interactive_job("perSurfaceAction", InteractiveJobClassification::Migrated)',
+    ].join("\n"));
+    mkdirSync(join(ownerRoot, "🧩️extensions"), { recursive: true });
+    writeFileSync(join(ownerRoot, "🧩️extensions", "🦀️.rs"), '.action_interactive_job("migratedAction", InteractiveJobClassification::Deleted)');
+    const viewer = join(ownerRoot, "🗿️artifacts", "👁️viewer");
+    mkdirSync(viewer, { recursive: true });
+    writeFileSync(join(viewer, "🦀️.rs"), '.action_interactive_job("perSurfaceAction", InteractiveJobClassification::BatchOnlyPendingRewrite)');
+    const action = (id: string, interactiveJob?: string) => ({ id, semantics: { execution: interactiveJob ? { interactiveJob } : {} } });
+    const descriptor = { manifest: { apps: [{ id: "s.owner.app@1/*#editor", windowKinds: [{ actions: [action("migratedAction", "batchOnlyPendingRewrite"), action("batchAction", "batchOnlyPendingRewrite"), action("perSurfaceAction", "migrated"), action("migratedAction"), action("frameworkAction", "migrated"), action("unclassifiedAction", "unclassified")] }] }] } };
+    const drift = auditInteractiveJobClassificationDrift("owner", ownerRoot, descriptor);
+    expect(drift).toHaveLength(1);
+    expect(drift[0]).toMatch(/s\.owner\.app@1\/\*#editor#migratedAction is committed as "batchOnlyPendingRewrite" but its Rust declares "migrated"/);
+    expect(auditInteractiveJobClassificationDrift("owner", join(ownerRoot, "absent"), descriptor)).toEqual([]);
+  });
+
+
+});
+
+describe("descriptor gate component identity", () => {
+  it("checks the shipped receipt against the committed semantic pack and the bytes beside it, never an ambient cargo artifact", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-shipped-component-"));
+    try {
+      const entry = { pluginId: "fixture", packageId: "semio:fixture", packageName: "semio-s-plugin-fixture", cratePath: "plugins/fixture/rust" };
+      const deliverable = componentDeliverableV1(join(root, entry.cratePath), entry.packageName, "release");
+      expect(deliverable.wasm).toBe(join(root, "plugins/fixture/rust/dist/components/release/semio_s_plugin_fixture.wasm"));
+      const bytes = new TextEncoder().encode("\0asm\r\0\x01\0shipped component bytes");
+      const pack = encodePackValue({ semantic: true });
+      expect(shippedComponentFindings(root, entry, pack)).toEqual({ warnings: [expect.stringContaining("no shipped component and receipt")], errors: [] });
+      mkdirSync(deliverable.directory, { recursive: true });
+      writeFileSync(deliverable.wasm, bytes);
+      const receipt = { schema: COMPONENT_RECEIPT_SCHEMA_ID, pluginId: entry.pluginId, packageId: entry.packageId, profile: "release" as const, target: "wasm32-wasip2" as const, wasmSha256: createHash("sha256").update(bytes).digest("hex"), wasmBytes: bytes.byteLength, semanticDescriptorSha256: createHash("sha256").update(pack).digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
+      writeComponentReceiptV1(deliverable.receipt, receipt);
+      expect(shippedComponentFindings(root, entry, pack)).toEqual({ warnings: [], errors: [] });
+      const stale = shippedComponentFindings(root, entry, encodePackValue({ semantic: false }));
+      expect(stale.warnings).toEqual([]);
+      expect(stale.errors).toEqual([expect.stringContaining("committed semantic descriptor is not the descriptor the receipt names")]);
+      writeFileSync(deliverable.wasm, new TextEncoder().encode("\0asm\r\0\x01\0other bytes"));
+      expect(shippedComponentFindings(root, entry, pack).errors).toEqual([expect.stringContaining("component bytes are not the bytes the receipt names")]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});

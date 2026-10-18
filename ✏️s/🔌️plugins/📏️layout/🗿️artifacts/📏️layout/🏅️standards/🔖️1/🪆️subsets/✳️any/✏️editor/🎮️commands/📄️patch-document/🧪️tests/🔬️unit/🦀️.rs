@@ -127,8 +127,8 @@ async fn patch_frame_limits_a_character_style_to_a_span() {
     let run = &story.style_runs[0];
     assert_eq!(run.start, 0);
     assert_eq!(run.end, u64::try_from(story.content.char_indices().nth(5).unwrap().0).unwrap());
-    let mut engine = semio_s_artifact_layout_layout_engine::scene::LayoutEngine::new();
-    let list = semio_s_artifact_layout_layout_engine::scene::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
+    let mut engine = semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::LayoutEngine::new();
+    let list = semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::build_display_list_for_page(&mut engine, &snapshot, &snapshot.pages[0], "", &[], None, false);
     let glyphs = &list.text_runs.iter().find(|run| run.object_id == "frame-text-1").expect("story").glyphs;
     assert!(glyphs.iter().any(|glyph| (glyph.font_size - 24.0).abs() < 0.1), "{glyphs:?}");
     assert!(glyphs.iter().any(|glyph| (glyph.font_size - 12.0).abs() < 0.1), "{glyphs:?}");

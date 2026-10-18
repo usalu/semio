@@ -1,8 +1,8 @@
 //! 🫧️ The overlay of the authoring tools: a window transient's preview turned into canvas records painted over the plan or section. Marks arrive in model metres (`x`, `y` or
 //! section `u`, `v`) and leave in the window's mirrored logical space; sizes that must stay legible at any zoom (markers, handles, labels) are scaled by the metres one pixel spans.
 
-use super::plane::P;
-use super::select;
+use crate::editor::bim::gestures::plane::P;
+use crate::editor::bim::gestures::select;
 use crate::editor::bim::marks::{Preview, Shape, Style};
 use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
 use crate::editor::bim::kit::{path, path_record, text_record, Paint, Rgba};
@@ -46,7 +46,7 @@ fn disc(centre: P, radius: f64) -> Vec<P> {
     (0..12).map(|step| [centre[0] + radius * (TAU * f64::from(step) / 12.0).cos(), centre[1] + radius * (TAU * f64::from(step) / 12.0).sin()]).collect()
 }
 
-fn marker(kind: &str, at: P, size: f64) -> Vec<DslValue> {
+pub fn marker(kind: &str, at: P, size: f64) -> Vec<DslValue> {
     let [x, y] = at;
     match kind {
         "endpoint" => path(&[[x - size, y - size], [x + size, y - size], [x + size, y + size], [x - size, y + size]], true),
@@ -84,7 +84,7 @@ pub fn records(preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
 /// 📄️ The overlay of a sheet window: the scale handles of the selected viewports while the select utility is armed, then the preview of the gesture in progress. Marks arrive in paper millimetres, y downward, which is the canvas of the sheet.
 pub fn sheet_records(layout: Option<&crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout>, selected: &[String], utility: &str, preview: &Preview, per_pixel: f64) -> Vec<DslValue> {
     let handles = match layout {
-        Some(layout) if utility == crate::editor::bim::utilities::DEFAULT_UTILITY => super::viewports::handles(layout, selected),
+        Some(layout) if utility == crate::editor::bim::utilities::DEFAULT_UTILITY => crate::editor::bim::gestures::viewports::handles(layout, selected),
         _ => Vec::new(),
     };
     let mirrored = handles.into_iter().chain(preview.marks.iter().cloned()).map(|mark| crate::editor::bim::marks::Mark { points: mark.points.chunks_exact(2).flat_map(|pair| [pair[0], -pair[1]]).collect(), ..mark }).collect();
@@ -103,6 +103,4 @@ pub fn section_records(inference: &ModelInference, start: P, end: P, utility: &s
     records(&Preview::of(handles.into_iter().chain(preview.marks.iter().cloned()).collect()), per_pixel)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

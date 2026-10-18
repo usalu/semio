@@ -35,16 +35,17 @@ mod child_content {
  pub(crate) use semio_framework_plugin_composition_publication::group::{PrivateChildGroupSource,PrivateChildPublicationGroup};
  pub(crate) use semio_framework_plugin_composition_publication::group::private_publication_group::PrivateOwnedPublicationLane;
 }
-#[path="../🧬️mutation-fixtures-wire/🦀️.rs"]
-mod wire_fixture;
-#[path="../🧬️mutation-fixtures-job-close/🦀️.rs"]
-mod job_close_fixture;
-#[path="../🧬️mutation-fixtures-no-state/🦀️.rs"]
-mod no_state_fixture;
+#[path="."]
 mod app_testing {
  pub(crate) use semio_framework_plugin_testing_laws::artifact_app_laws;
+ #[path="."]
  pub(crate) mod mutation_fixture {
-  pub(crate) use crate::{wire_fixture as wire,job_close_fixture as job_close,no_state_fixture as no_state};
+  #[path="../🧬️mutation-fixtures-wire/🦀️.rs"]
+  pub(crate) mod wire;
+  #[path="../🧬️mutation-fixtures-job-close/🦀️.rs"]
+  pub(crate) mod job_close;
+  #[path="../🧬️mutation-fixtures-no-state/🦀️.rs"]
+  pub(crate) mod no_state;
  }
 }
 #[path="../🧬️mutation-fixtures-surface/🦀️.rs"]

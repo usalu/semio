@@ -46,7 +46,7 @@ pub struct DwgLogicalEntity {
 }
 impl DwgLogicalEntity {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn to_native(&self) -> Result<semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity, String> {
+    pub(crate) fn to_native(&self) -> Result<semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity, String> {
         let color = match self.color {
             -1 => semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByLayer,
             -2 => semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByBlock,
@@ -66,7 +66,7 @@ pub fn vec3(values: &[f64]) -> Result<[f64; 3], String> {
 }
 impl DwgLogicalGeometry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn from_native(geometry: &semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry) -> Self {
+    pub(crate) fn from_native(geometry: &semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry) -> Self {
         use semio_s_artifact_stdio_dwg_geometry::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::*;
         match geometry {
             Point { at } => Self { kind: DwgLogicalGeometryKind::Point, values: at.to_vec(), ..Default::default() },

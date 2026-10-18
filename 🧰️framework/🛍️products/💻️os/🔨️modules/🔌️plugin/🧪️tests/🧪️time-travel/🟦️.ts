@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { applyTimeTravel, timeTravelFinalizeRefusal, timeTravelSession, type TimeTravelEvent, type TimeTravelSession } from "../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
 import { replayReportBlocksFinalize, type InputReplacement, type ReplayReport } from "../../../../../../🔨️modules/📡️replication/🟦️.ts";
+import { readModuleTreeSource } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 type Step = Readonly<Record<string, unknown>>;
 type Scenario = Readonly<{ id: string; steps: readonly Step[]; status: Readonly<{ stage: string; blocking: boolean; acceptedCount: number; nextProblem?: number }> | null; finalizeRefusal?: string | null }>;
@@ -70,7 +71,7 @@ function step(session: TimeTravelSession, value: Step, scenario: string): TimeTr
 
 /** ⚖️ Checks domain refusals and replays every scenario through the reducer twin; answers the scenario count. */
 export function timeTravelScenarioOracle(repoRoot: string): number {
-  const source = readFileSync(join(repoRoot, PLUGIN_ROOT, "⏪️time-travel/🦀️.rs"), "utf8");
+  const source = readModuleTreeSource(join(repoRoot, PLUGIN_ROOT, "⏪️time-travel/🦀️.rs"));
   assert.equal(source.includes("Fault::from(error.into_message())"), false);
   assert.equal(source.includes("map_err(ValueError::into_fault)"), true);
   assert.equal(source.includes("actor != store.local_actor_id().0.as_str()"), true);

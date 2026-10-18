@@ -1,6 +1,6 @@
 //! 🧰️ Shared helpers of the sheet export tests: English headings, and the committed house with a sheet set placed on it (two plans, a section and two elevations over three sheets) together with the inference of that model.
 
-use super::TitleLabels;
+use crate::standards::v1::subsets::any::io::export::sheets::TitleLabels;
 use crate::standards::v1::subsets::any::io::export::svg::testkit::house;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
 use crate::standards::v1::subsets::any::schema::{snapshot::{IsoSize, ModelSnapshot, Orientation, Paper, Point2, Sheet, SheetRevision, Viewport}, inferences::ModelInference};
@@ -10,7 +10,7 @@ use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 pub const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/📄️sheet-layout/🏠️room/📸️snapshot/🔣️.json");
 
 /// 📁️ The directory of the committed sheet exports of the room (one SVG per sheet and the PDF of the set) that the lxml + shapely and pypdf oracles read.
-pub const ROOM_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/🚪️sheets/🏠️room");
+pub const ROOM_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../🧪️tests/🧫️fixtures/🚪️sheets/🏠️room");
 
 /// 📄️ The decoded room with its sheet set.
 pub fn room() -> ModelSnapshot {

@@ -1,0 +1,218 @@
+[
+ {
+  "name": "semio-framework-os-store-engine-live",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust",
+  "tags": [
+   "live"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-engine-core",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🧱️core/📦️packages/🦀️rust",
+  "tags": [
+   "core"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-sync-tests-1",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🍰️bin-1/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🍰️bin-1/📦️packages/🦀️rust",
+  "tags": [
+   "sunit"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-tests-06",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌴️bin-06/📦️packages/🦀️rust",
+  "tags": [
+   "b06"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-engine",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust",
+  "tags": [
+   "elift"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-owned-schema-decode",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/📦️packages/🦀️rust",
+  "tags": [
+   "cos"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-sync",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/📦️packages/🦀️rust",
+  "tags": [
+   "sync"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-tests-03",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌈️bin-03/📦️packages/🦀️rust",
+  "tags": [
+   "b03"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-config",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎚️config/📦️packages/🦀️rust",
+  "tags": [
+   "cfg"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-command",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/📦️packages/🦀️rust",
+  "tags": [
+   "cmd"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-replay",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/📦️packages/🦀️rust",
+  "tags": [
+   "rpl"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-sync-wasm",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🌐️wasm/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🌐️wasm/📦️packages/🦀️rust",
+  "tags": [
+   "wac"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-read",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/📦️packages/🦀️rust",
+  "tags": [
+   "rd"
+  ]
+ },
+ {
+  "name": "semio-framework-os-kernel",
+  "root": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+  "tags": [
+   "str"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-durable-group-wire",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust",
+  "tags": [
+   "dgw"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-owned-schema-fields",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🧱️fields/📦️packages/🦀️rust",
+  "tags": [
+   "osf"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-sync-native",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🖥️native/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🖥️native/📦️packages/🦀️rust",
+  "tags": [
+   "nac"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-durable-group",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📦️packages/🦀️rust",
+  "tags": [
+   "dg"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-tests-05",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌅️bin-05/📦️packages/🦀️rust",
+  "tags": [
+   "b05"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-tests-04",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🌌️bin-04/📦️packages/🦀️rust",
+  "tags": [
+   "b04"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-text-io",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📦️packages/🦀️rust",
+  "tags": [
+   "iot"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-space-member",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/👥️space-member/📦️packages/🦀️rust",
+  "tags": [
+   "smi"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-durable-group-tests",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🥧️companion/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🗄️durable-group/🧪️tests/🥧️companion/📦️packages/🦀️rust",
+  "tags": [
+   "dgt"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-tests-01",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🏙️bin-01/📦️packages/🦀️rust",
+  "tags": [
+   "b01"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-sync-tests-2",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🥧️bin-2/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync/🧪️tests/🥧️bin-2/📦️packages/🦀️rust",
+  "tags": [
+   "ssr"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-document",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/📦️packages/🦀️rust",
+  "tags": [
+   "hyd"
+  ]
+ },
+ {
+  "name": "semio-framework-os-store-ephemeral",
+  "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/🦀️.rs",
+  "mdir": "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🫧️ephemeral/📦️packages/🦀️rust",
+  "tags": [
+   "eph"
+  ]
+ }
+]

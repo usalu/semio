@@ -1,0 +1,14 @@
+{
+ "tag": "c7",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️plugin-runtime-plugin-builder-contract-part-7/🦀️.rs",
+ "folders": [
+  "🆔️request-context-serializer-and-shared-job",
+  "🏗️media-result-close-destructor-and-builder",
+  "🗒️peers-clipboard-and-history-panel",
+  "🧭️ribbon-menus-and-surface-context",
+  "🪪️command-handler-and-registry-laws",
+  "🧩️task-admission-and-cancellation",
+  "📜️mounted-history-and-reserved-job-currency"
+ ]
+}

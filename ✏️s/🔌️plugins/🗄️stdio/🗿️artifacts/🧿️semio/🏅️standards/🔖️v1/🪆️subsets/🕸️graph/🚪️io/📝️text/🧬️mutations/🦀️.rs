@@ -258,7 +258,7 @@ impl protocol::OpText for SemioGraphMutation {
 /// law`/`protocol_walk_law` in `🚪️io/🦀️.rs` and this file's own round-trip test.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
     use crate::schema::snapshot::SemioGraphPortKind;
     vec![
         SemioGraphMutation::CreateNode(CreateNode {

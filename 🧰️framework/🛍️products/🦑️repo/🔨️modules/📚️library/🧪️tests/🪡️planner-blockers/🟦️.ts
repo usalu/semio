@@ -8,16 +8,17 @@ import { resolve } from "node:path";
 import Ajv from "ajv";
 import { parseArgsStringToArgv } from "string-argv";
 import ts from "typescript";
-import { loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
-import { frozenCoordinateEvidenceCoordinates, frozenMarkdownCoordinateEvidenceCoordinates } from "../../🧹️normalization/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { frozenCoordinateEvidenceCoordinates, frozenMarkdownCoordinateEvidenceCoordinates } from "../../🧹️normalization/❄️frozen-evidence/🟦️.ts";
 import { utf8Compare } from "../../🧹️normalization/🛣️path/🟦️.ts";
+import { normalizationEngineDeclarations } from "../../🧹️normalization/🧪️support/🏗️source-services/🟦️.ts";
 
 type Fixture = { schemaVersion: number; argumentCases: { id: string; command: string; values: string[] }[]; frozenEvidenceContractId: string };
 type Token = { start: number; end: number; value: string; structuredLocation: string };
 type Edit = { path: string; structuredLocation: string; oldValue: string; newValue: string };
 const library = resolve(import.meta.dir, "../..");
 const fixture = JSON.parse(readFileSync(resolve(library, "🧪️tests/🧫️fixtures/🪡️planner-blockers/🔣️.json"), "utf8")) as Fixture;
-const syntax = ts.createSourceFile("normalization.ts", readFileSync(resolve(library, "🧹️normalization/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+const syntax = ts.createSourceFile("normalization.ts", normalizationEngineDeclarations(resolve(library, "🧹️normalization")), ts.ScriptTarget.Latest, true);
 
 /** 🧬️ Compiles the named production declarations of the normalizer into one closure over the injected dependencies. */
 function production<T>(names: readonly string[], entry: string, dependencies: Record<string, unknown> = {}): T {
@@ -32,7 +33,7 @@ function random(seed: number): () => number {
   return () => { state = (state * 1103515245 + 12345) & 0x7fffffff; return state / 0x80000000; };
 }
 
-const jsonTokens = production<(path: string, content: string, adapter: string) => Token[]>(["jsonTokens", "embeddedArgumentTokens", "lineLocation", "indexedLineContent", "indexedLineStarts", "EMBEDDED_ARGUMENT_WORD", "EMBEDDED_ESCAPED_ARGUMENT_WORD", "EMBEDDED_ARGUMENT_PATH"], "jsonTokens");
+const jsonTokens = production<(path: string, content: string, adapter: string) => Token[]>(["requireTaxonomyValue", "jsonTokens", "embeddedArgumentTokens", "lineLocation", "indexedLineContent", "indexedLineStarts", "EMBEDDED_ARGUMENT_WORD", "EMBEDDED_ESCAPED_ARGUMENT_WORD", "EMBEDDED_ARGUMENT_PATH"], "jsonTokens");
 const argv = (command: string): Token[] => jsonTokens(".vscode/launch.json", JSON.stringify({ command }), "json").filter((token) => token.structuredLocation.startsWith("embedded-argv"));
 
 test("fixture satisfies its schema", () => {

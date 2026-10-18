@@ -29,7 +29,7 @@ pub mod examples {
 
 use semio_s_artifact_process_process3d_commands::{camera, contribution, cursor, document, engagement, inspector, media, step, stock, sun, workshop, world};
 use semio_s_artifact_process_process3d_config::{Process3dConfig, Process3dConfigMutation, PROCESS3D_DEFAULT_UTILITY, Process3dConfigSetCamera, Process3dConfigSetContributions, Process3dConfigSetCursor, Process3dConfigSetEngagementInput, Process3dConfigSetSun};
-use semio_s_artifact_process_process3d_modes;
+use semio_s_artifact_process_process3d_modes as edit;
 use semio_s_artifact_process_process3d_modes::windows::workpiece;
 use semio_s_artifact_process_process3d_panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
 use semio_s_artifact_process_process3d_presence::{Process3dPresence, Process3dPresenceMutation};
@@ -91,7 +91,7 @@ use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use pack::snapshot::ArtifactPack;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 

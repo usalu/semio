@@ -1,0 +1,8 @@
+//! 🔙️ cascade-restore of `semio-s-artifact-bim-model` — a path-preserving carve of the artifact root mounts.
+
+extern crate semio_framework_os_kernel as protocol;
+extern crate semio_framework_schema as schema;
+
+#[path = "🪞️mirror/🦀️.rs"]
+mod mirror;
+pub use mirror::*;

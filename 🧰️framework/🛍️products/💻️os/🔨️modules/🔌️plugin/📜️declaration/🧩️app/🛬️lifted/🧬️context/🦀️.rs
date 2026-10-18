@@ -3,7 +3,7 @@
 //! WP3 owns the source file and cuts the items here (mod original_fields;, Source, ArtifactOwnedContextHandle, impl ArtifactOwnedContextHandle, impl Deref for ArtifactOwnedContextHandle, impl AsRef for ArtifactOwnedContextHandle, ...); WP2 wires this file with one `mod` line in the crate root. Until `decl-app` exists, the source module re-exports the items with `pub use`.
 use crate::ArtifactApp;
 use crate::tool_contract::ArtifactOwnedToolJobContext;
-use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetirementCursor,RetirementStep,RetireOwned,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetirementCursor,RetirementStep,RetireOwned,controlled::ControlledRetirement},shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::mem::ManuallyDrop;
 #[path="../📸️fields/🦀️.rs"]
 mod original_fields;

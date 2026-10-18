@@ -8,7 +8,7 @@ use crate::editor::jpg_baseline::modes::edit::windows::main;
 use crate::standards::v_jfif_1_01::subsets::document::schema::mutations::JpgMutation;
 use crate::standards::v_jfif_1_01::subsets::baseline::schema::snapshot::JpgSnapshot;
 use crate::{JPG_BASELINE_DIALECT, STDIO_JPG_DOCUMENT_SCHEMA};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
 use semio_framework_plugin::ArtifactEditor;

@@ -1,6 +1,7 @@
-use super::{ComponentIssueCode, ComponentValue, component_of, dependency, overrides_of, signed_area};
-use crate::standards::v1::subsets::any::schema::storey_levels::StoreyLevel;
-use crate::standards::v1::subsets::any::schema::families;
+use crate::standards::v1::subsets::any::schema::inferences::components::{ComponentIssueCode, ComponentValue, component_of, dependency, overrides_of, signed_area};
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+use crate::standards::v1::subsets::any::schema::inferences::families;
+use semio_framework_test_fixtures::fixture_text;
 use std::sync::Arc;
 use std::collections::BTreeMap;
 use crate::standards::v1::subsets::any::schema::snapshot::{FamilyCategory, MepSystem, ModelSnapshot, Point2};
@@ -8,10 +9,10 @@ use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 
-const ROOM: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json");
+static ROOM: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪑️components/🏠️room/📸️snapshot/🔣️.json"));
 
 fn room() -> ModelSnapshot {
-    from_json_str(ROOM, JsonMemberPolicy::Reject).expect("the room decodes")
+    from_json_str((*ROOM), JsonMemberPolicy::Reject).expect("the room decodes")
 }
 
 fn inferred() -> ModelInference {

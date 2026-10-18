@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "revisionToken": "A symbolic revision names the lowercase hex sha256 of its UTF-8 bytes; a component source renders its value followed by the parenthesized renderings of its needs; every step first applies its value edits to the component sources.",
+  "top": "top",
+  "components": [
+    { "name": "leaf-node", "needs": [], "value": "L1" },
+    { "name": "mid", "needs": ["leaf-node"], "value": "M1" },
+    { "name": "top", "needs": ["leaf-node", "mid"], "value": "T1" }
+  ],
+  "steps": [
+    { "id": "initial", "revision": "a", "expect": { "accepted": true, "render": "T1(L1,M1(L1))", "wired": ["leaf-node", "mid", "top"], "evaluations": { "leaf-node": 1, "mid": 1, "top": 1 }, "scope": 0 } },
+    { "id": "repeated-revision", "revision": "a", "expect": { "accepted": true, "render": "T1(L1,M1(L1))", "wired": [], "evaluations": { "leaf-node": 1, "mid": 1, "top": 1 }, "scope": 0 } },
+    { "id": "leaf-edit-reloads-every-component", "revision": "b", "set": { "leaf-node": "L2" }, "expect": { "accepted": true, "render": "T1(L2,M1(L2))", "wired": ["leaf-node", "mid", "top"], "evaluations": { "leaf-node": 2, "mid": 2, "top": 2 }, "scope": 1 } },
+    { "id": "revisited-revision-keeps-its-components", "revision": "a", "expect": { "accepted": true, "render": "T1(L1,M1(L1))", "wired": [], "evaluations": { "leaf-node": 2, "mid": 2, "top": 2 }, "scope": 0 } },
+    { "id": "root-edit-reloads-every-component", "revision": "c", "set": { "top": "T2" }, "expect": { "accepted": true, "render": "T2(L2,M1(L2))", "wired": ["leaf-node", "mid", "top"], "evaluations": { "leaf-node": 3, "mid": 3, "top": 3 }, "scope": 2 } },
+    { "id": "concurrent-loads-share-one-graph", "revision": "d", "concurrent": 2, "expect": { "accepted": true, "render": "T2(L2,M1(L2))", "wired": ["leaf-node", "mid", "top"], "evaluations": { "leaf-node": 4, "mid": 4, "top": 4 }, "scope": 3, "shared": true } },
+    { "id": "refused-wiring-is-not-cached", "revision": "e", "set": { "mid": "M2" }, "refuseWire": "mid", "expect": { "accepted": false, "error": "wire refused: mid", "wired": ["leaf-node"], "evaluations": { "leaf-node": 5, "mid": 5, "top": 5 } } },
+    { "id": "refused-revision-wires-again", "revision": "e", "expect": { "accepted": true, "render": "T2(L2,M2(L2))", "wired": ["leaf-node", "mid", "top"], "evaluations": { "leaf-node": 5, "mid": 5, "top": 5 }, "scope": 4 } }
+  ],
+  "rosters": [
+    { "id": "chain", "components": [{ "name": "a", "path": "./a/x.mjs", "needs": [] }, { "name": "b", "path": "./b/x.mjs", "needs": ["a"] }], "accepted": true, "schema": true },
+    { "id": "need-names-a-later-component", "components": [{ "name": "a", "path": "./a/x.mjs", "needs": ["b"] }, { "name": "b", "path": "./b/x.mjs", "needs": [] }], "accepted": false, "schema": true },
+    { "id": "need-names-an-unknown-component", "components": [{ "name": "a", "path": "./a/x.mjs", "needs": ["zzz"] }], "accepted": false, "schema": true },
+    { "id": "component-needs-itself", "components": [{ "name": "a", "path": "./a/x.mjs", "needs": ["a"] }], "accepted": false, "schema": true },
+    { "id": "duplicate-name", "components": [{ "name": "a", "path": "./a/x.mjs", "needs": [] }, { "name": "a", "path": "./b/x.mjs", "needs": [] }], "accepted": false, "schema": true },
+    { "id": "absolute-path", "components": [{ "name": "a", "path": "/abs/x.mjs", "needs": [] }], "accepted": false, "schema": false },
+    { "id": "parent-path", "components": [{ "name": "a", "path": "./../x.mjs", "needs": [] }], "accepted": false, "schema": false },
+    { "id": "query-path", "components": [{ "name": "a", "path": "./a/x.mjs?revision=1", "needs": [] }], "accepted": false, "schema": false },
+    { "id": "windows-path", "components": [{ "name": "a", "path": ".\\a\\x.mjs", "needs": [] }], "accepted": false, "schema": false },
+    { "id": "uppercase-name", "components": [{ "name": "Upper", "path": "./a/x.mjs", "needs": [] }], "accepted": false, "schema": false },
+    { "id": "repeated-need", "components": [{ "name": "a", "path": "./a/x.mjs", "needs": [] }, { "name": "b", "path": "./b/x.mjs", "needs": ["a", "a"] }], "accepted": false, "schema": false },
+    { "id": "empty-roster", "components": [], "accepted": false, "schema": false }
+  ]
+}

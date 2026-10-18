@@ -2047,26 +2047,6 @@
       "tag": "setCell"
     },
     {
-      "directory": "📸️set-snapshot",
-      "positive": {
-        "snapshot": {
-          "schema": "stdio.tsv",
-          "records": [],
-          "trailingNewline": false,
-          "lineEnding": "lf"
-        }
-      },
-      "negative": {
-        "snapshot": {
-          "schema": "stdio.tsv",
-          "records": [],
-          "trailing_newline": false,
-          "line_ending": "lf"
-        }
-      },
-      "tag": "setSnapshot"
-    },
-    {
       "directory": "🔀set-line-ending",
       "positive": {
         "lineEnding": "crlf"

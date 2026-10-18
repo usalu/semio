@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `CreateDoorType`: one created door type entry. The id must be free, the material must exist and every dimension must be valid.
 
-use super::super::elements;
-use super::CreateDoorType;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::create_door_type::CreateDoorType;
 use crate::standards::v1::subsets::any::schema::{snapshot::{is_positive_length, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

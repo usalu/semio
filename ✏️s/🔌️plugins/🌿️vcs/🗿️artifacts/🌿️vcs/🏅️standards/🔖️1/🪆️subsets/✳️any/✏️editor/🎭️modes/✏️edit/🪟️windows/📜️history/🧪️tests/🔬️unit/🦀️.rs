@@ -1,6 +1,6 @@
 use semio_framework_ui_scene::GraphTimelineScene;
-use crate::editor::vcs::modes::edit::windows::history::*;
-use crate::editor::vcs::unit_tests::context::{app, render as render_body};
+use semio_s_artifact_vcs_vcs_editor::editor::vcs::modes::edit::windows::history::*;
+use crate::unit_tests::context::{app, render as render_body};
 
 /// 🗄️ The history window is a PACKED `graph-timeline` surface now — its `HistoryColumn[]` travels as
 /// the scene doc's binary `columnsJson`, not as literal text in the projected tree — so the lane

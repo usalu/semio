@@ -31,16 +31,20 @@ COPY rust-toolchain.toml ./
 RUN rustup toolchain install
 
 # 🦀️ The proctor alone, from the locked dependency graph of its workspace (`🎓️teaching/Cargo.toml` with its own
-# `Cargo.lock`; the framework crates it depends on by path inherit from the root manifest). A private `CARGO_TARGET_DIR`
-# puts the one uplifted binary at a fixed path; the registry and the shared build directory of `.cargo/config.toml` are
-# cache mounts, so a rebuild compiles only what changed. The build is attempted twice: the pinned nightly compiler crashed
-# once in 13 builds of this crate (SIGSEGV in LLVM while linking the binary with thin LTO, 2026-10-01), and cargo resumes
-# from every unit already compiled, so the second attempt repeats only what crashed — and a real compile error is simply
-# reported twice.
+# `Cargo.lock`; the framework crates it depends on by path inherit from the root manifest). The builder compiles with the
+# plain `rustc` of the pinned toolchain under its own Cargo configuration (`Dockerfile.cargo.toml`, installed as
+# `$CARGO_HOME/config.toml`): the repository's `.cargo/config.toml` routes every compile through a launcher-only ingress
+# that needs bun and a reservation, so the build context does not carry it (`Dockerfile.dockerignore`) and the `test ! -e`
+# below fails the build should it ever return. A private `CARGO_TARGET_DIR` puts the one uplifted binary at a fixed path;
+# the registry and the build directory of that configuration are cache mounts, so a rebuild compiles only what changed.
+# The build is attempted twice: the pinned nightly compiler crashed once in 13 builds of this crate (SIGSEGV in LLVM while
+# linking the binary with thin LTO, 2026-10-01), and cargo resumes from every unit already compiled, so the second attempt
+# repeats only what crashed — and a real compile error is simply reported twice.
+COPY 🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile.cargo.toml /usr/local/cargo/config.toml
 COPY . .
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    --mount=type=cache,target=/src/.🧬semio/🦑️repo/⚡️cache/cargo/build \
-    cd "🎓️teaching" && for attempt in 1 2; do \
+    --mount=type=cache,target=/cache/build \
+    test ! -e .cargo && cd "🎓️teaching" && for attempt in 1 2; do \
       CARGO_TARGET_DIR=/out cargo build --release --locked --package teaching-proctor --bin proctor && exit 0; \
     done; exit 1
 

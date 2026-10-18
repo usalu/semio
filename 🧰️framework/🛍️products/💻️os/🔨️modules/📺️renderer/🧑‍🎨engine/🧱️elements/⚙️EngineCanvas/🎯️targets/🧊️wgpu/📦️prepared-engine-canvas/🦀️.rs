@@ -132,7 +132,7 @@ pub enum EngineCanvasPacketDestination {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 struct EngineCanvasPacketReservation {
     pub(super) generation: u64,
     pub sequence: u64,
@@ -142,9 +142,9 @@ struct EngineCanvasPacketReservation {
 
 /// 🧰️ Worker-owned fixed resource sink threaded through chrome/scene traversal.
 pub struct EngineCanvasBuildContext {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub document_generation: u64,
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     pub scene_revision: u64,
     packets: semio_framework_async::OriginalFixedSlotPages<EngineCanvasPacket,16,16>,
     rejected: semio_framework_async::OriginalFixedSlotPages<EngineCanvasPacket,16,16>,
@@ -158,9 +158,9 @@ pub struct EngineCanvasBuildContext {
 impl Default for EngineCanvasBuildContext {
     fn default() -> Self {
         Self {
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             document_generation: 0,
-            #[cfg(test)]
+            #[cfg(any(test, feature = "testkit"))]
             scene_revision: 0,
             packets: semio_framework_async::OriginalFixedSlotPages::new(),
             rejected: semio_framework_async::OriginalFixedSlotPages::new(),

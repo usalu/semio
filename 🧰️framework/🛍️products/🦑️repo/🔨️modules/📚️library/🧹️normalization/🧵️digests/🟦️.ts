@@ -1,5 +1,5 @@
 import { writeFileSync } from "node:fs";
-import { referenceDigestRecordLines } from "../🟦️.ts";
+import { referenceDigestRecordLines } from "../🔬️reference-analysis/🟦️.ts";
 
 /** 🧵️ One reference digest work order: every leaf to digest (largest first), the cursor all workers claim leaves from, where to publish the
  * `key<TAB>digest` lines, and the shared status words (`[0]`: 0 running, 1 done, 2 failed; `[1]`: leaves processed). */

@@ -7,7 +7,8 @@ use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuth
 use semio_framework_os_store_command::HistoryLane;
 use semio_framework_value_snapshot_read::{SnapshotRead, SnapshotReadRegistryHandle};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
-use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, SharedValueRetirementFactory};
+use semio_framework_value::factory::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
+use semio_framework_value::retirement::RetireOwned;
 use std::sync::Arc;
 
 /// ⚖️ What a lawful preparation published: the post snapshot, the ordered inverse rows and the cumulative physical cost.

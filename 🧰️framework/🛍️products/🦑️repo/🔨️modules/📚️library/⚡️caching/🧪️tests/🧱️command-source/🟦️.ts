@@ -4,7 +4,8 @@ import { dirname, relative, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
 import schema from "./🧬️schema/🔣️.json";
-import { getWorkspaceRoot, loadTaxonomy, semanticDirectoryKindId } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const domainRoot = resolve(import.meta.dir, "../..");

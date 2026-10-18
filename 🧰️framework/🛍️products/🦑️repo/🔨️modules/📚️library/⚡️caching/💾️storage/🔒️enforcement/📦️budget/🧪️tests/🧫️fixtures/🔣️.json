@@ -53,5 +53,49 @@
     "stdout": "bounded\u0000capture\n",
     "stderr": "diagnostic\n",
     "status": 0
-  }
+  },
+  "logicalCases": [
+    {
+      "id": "current-physical-sized",
+      "maximumLogicalBytes": 8588886016,
+      "missing": false,
+      "accepted": true
+    },
+    {
+      "id": "authored-read-ceiling",
+      "maximumLogicalBytes": 68719476736,
+      "missing": false,
+      "accepted": true
+    },
+    {
+      "id": "zero",
+      "maximumLogicalBytes": 0,
+      "missing": false,
+      "accepted": false
+    },
+    {
+      "id": "fraction",
+      "maximumLogicalBytes": 1.5,
+      "missing": false,
+      "accepted": false
+    },
+    {
+      "id": "above-ceiling",
+      "maximumLogicalBytes": 68719476737,
+      "missing": false,
+      "accepted": false
+    },
+    {
+      "id": "string",
+      "maximumLogicalBytes": "68719476736",
+      "missing": false,
+      "accepted": false
+    },
+    {
+      "id": "missing",
+      "maximumLogicalBytes": null,
+      "missing": true,
+      "accepted": false
+    }
+  ]
 }

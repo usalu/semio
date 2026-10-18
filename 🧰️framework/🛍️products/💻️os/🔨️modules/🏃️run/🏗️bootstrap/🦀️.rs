@@ -117,7 +117,7 @@ struct RegistryPluginEntry {
 /// `📦️packages/🦀️rust`; the descriptor sits two levels up, at the plugin crate's own root — see
 /// `describe_component`'s doc, `🔌️plugin/🖨️describe/📦️packages/🦀️rust/🦀️.rs`). Reads the SAME
 /// generated `🔣️plugins.json` `resolve_plugin_paths` above reads `🦀️artifacts.rs` from (both
-/// produced by the one `plugin-registry:generate` nx target); a plugin id absent here, or whose
+/// produced by the one `plugin-registry:generate` build target); a plugin id absent here, or whose
 /// file does not exist on disk, simply has no committed descriptor yet — `WasmtimeNodeHost` treats
 /// that as an honest per-plugin load failure, not a hard error at startup.
 fn resolve_descriptor_paths(repo_root: &Path) -> Result<HashMap<String, PathBuf>, String> {

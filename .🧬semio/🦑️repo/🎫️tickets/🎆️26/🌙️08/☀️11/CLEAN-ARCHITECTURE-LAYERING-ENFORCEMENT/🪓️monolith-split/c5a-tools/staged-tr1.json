@@ -1,0 +1,15 @@
+{
+ "tag": "tr1",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run-part-1/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️tests/🔬️tool-run-part-1/🦀️.rs",
+ "folders": [
+  "🧸️toy-job-ticks-abort-and-finalize",
+  "🚰️reclaim-ingest-pause-and-reconfigure",
+  "🔌️integration-seams",
+  "🔢️action-arg-carriers-and-read-only-runs",
+  "🎯️base-change-chords-and-retarget",
+  "🪟️trace-requests-and-window-config",
+  "📖️reader-windows-and-panel-fixtures",
+  "🛑️terminal-run-and-retained-config-close"
+ ]
+}

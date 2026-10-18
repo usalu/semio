@@ -17,11 +17,9 @@
   ],
   "copied": [
     "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/📍️ownership/🟦️.ts",
-    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧫️fixtures/📍️ownership/🔣️.json",
-    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧬️schema/📍️ownership/🔣️.json",
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🧫️fixtures/📍️ownership/🔣️.json",
     "🧰️framework/🔨️modules/◻️2d/🧮️compute/🦀️.rs",
     "🧰️framework/🔨️modules/◻️2d/🧮️compute/🧪️tests/🔬️unit/🦀️.rs",
-    "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/🦀️.rs",
-    "🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust/Cargo.toml"
+    "🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust/Cargo.toml"
   ]
 }

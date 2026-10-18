@@ -1,0 +1,1370 @@
+//! 🩹️ Retained fixed-admission reconciliation for mounted plugin surfaces.
+
+use semio_framework_plugin_reactor_lifecycle::instance_lifetime::NativeCloseKey;
+use semio_framework_job::StepContext;
+use semio_framework_ui_contract as ui_contract;
+use semio_framework_ui_runtime::ComponentTree;
+use semio_framework_ui_runtime::{ComponentTreeProducer, ComponentTreeProducerStep, SurfaceReconcileJob, SurfaceReconcileJobStep, SurfaceReconcilePublishedAck, SurfaceReconcileReadyPatch, SurfaceReconcileRejected, SurfaceReconcileReservation, SurfaceReconcileTerminal, SurfaceReconciler, SURFACE_RECONCILE_ADMISSION_SLOTS};
+use semio_framework_ui_runtime::{SurfaceReconcileOutputReservation, SurfaceReconcileOutputTransfer, SurfaceReconcileOutputs};
+use std::cell::RefCell;
+
+const READY_PATCH_CAPACITY: usize = SURFACE_RECONCILE_ADMISSION_SLOTS;
+
+struct SurfaceSlot {
+    pub key: NativeCloseKey,
+    output_index: Option<usize>,
+    pub surface: ui_contract::SurfaceId,
+    pub generation: u64,
+    acknowledged_revision: ui_contract::UiRevision,
+    pub cancelled: bool,
+    pending_render: bool,
+    pending_render_source: Option<ui_contract::UiTextOriginalCopy>,
+    reconciler: Option<SurfaceReconciler>,
+    pub producer: Option<MountedTreeProducer>,
+    pub job: Option<SurfaceReconcileJob>,
+}
+
+struct MountedTreeProducer {
+    reconciler: Option<SurfaceReconciler>,
+    pub reservation: Option<SurfaceReconcileReservation>,
+    rejected_index: usize,
+    pub authority: Box<ComponentTreeProducer>,
+    pub outcome: Option<ComponentTreeProducerStep>,
+}
+
+struct MountedTreeTerminal {
+    pub key: NativeCloseKey,
+    pub instance: Option<u32>,
+    surface_index: Option<usize>,
+    pub surface: ui_contract::SurfaceId,
+    reconciler: Option<SurfaceReconciler>,
+    pub reservation: Option<SurfaceReconcileReservation>,
+    pub authority: Option<Box<ComponentTreeProducer>>,
+    pub close: bool,
+}
+
+impl MountedTreeTerminal {
+    /// 🧹️ The original source and native resources retire before the separately funded native shell release.
+    pub fn close_step(&mut self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if let Some(authority) = self.authority.as_mut() {
+            if !authority.close_step_on_original(cx)? || !authority.terminal_is_empty() { return Ok(false); }
+            let capacity=ComponentTreeProducer::required_capacity_bytes();let grant=cx.retained_grant();
+            if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_release_bytes<capacity{return Ok(false);}
+            cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,released_bytes:capacity,..Default::default()})?;cx.consume_fuel(1);
+            self.authority = None;
+            return Ok(false);
+        }
+        if let Some(reconciler) = self.reconciler.as_mut() {
+            if reconciler.close_native_resources_on_original(cx)? != Some(true) { return Ok(false); }
+        }
+        if cx.should_yield() || cx.retained_grant().maximum_items == 0 { return Ok(false); }
+        if self.reservation.take().is_some() { cx.consume_fuel(1); return Ok(false); }
+        if self.reconciler.take().is_some() { cx.consume_fuel(1); return Ok(false); }
+        Ok(true)
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        self.authority.is_none() && self.reservation.is_none() && self.reconciler.is_none()
+    }
+}
+
+struct TerminalSlot {
+    pub key: NativeCloseKey,
+    pub instance: Option<u32>,
+    pub authority: SurfaceReconcileTerminal,
+    pub close: bool,
+}
+
+struct RejectedSlot {
+    pub key: NativeCloseKey,
+    pub surface: ui_contract::SurfaceId,
+    pub authority: SurfaceReconcileRejected,
+}
+
+struct ReadySlot {
+    pub generation: u64,
+    pub key: NativeCloseKey,
+    pub outputs: SurfaceReconcileOutputs,
+    pub reservation: Option<SurfaceReconcileOutputReservation>,
+    pub published: bool,
+    pub closing: bool,
+}
+
+impl ReadySlot {
+    pub fn close_step(&mut self, items: usize, bytes: usize) -> Result<bool, &'static str> {
+        self.closing = true;
+        if let Some(reservation) = self.reservation.as_mut() {
+            if reservation.close_step(items)?.complete {
+                self.reservation = None;
+            }
+            return Ok(false);
+        }
+        Ok(self.outputs.close_step(items, bytes)?.complete && self.outputs.terminal_is_empty())
+    }
+}
+
+struct UnadmittedSlot {
+    pub key: NativeCloseKey,
+    pub generation: u64,
+}
+
+/// 🎟️ Exact mounted render reservation; the tree cannot exist before its fixed slot does.
+pub struct MountedReconcileGrant {
+    pub key: NativeCloseKey,
+    output_index: usize,
+    pub state: std::rc::Rc<RefCell<PatchTrackerState>>,
+    pub index: usize,
+    surface_index: usize,
+    rejected_index: usize,
+    pub generation: u64,
+    pub owner: MountedReconcileOwner,
+    pub active: bool,
+}
+
+#[expect(clippy::large_enum_variant, reason = "The grant keeps its reconciler and reservation inline until the exact ownership transfer; an extra heap owner would escape that pre-admitted storage.")]
+enum MountedReconcileOwner {
+    Live { reconciler: SurfaceReconciler, reservation: SurfaceReconcileReservation },
+    Transferred,
+}
+
+impl MountedReconcileGrant {
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
+    pub fn commit_source(&mut self, source: &mut Option<ComponentTree>, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let capacity=ComponentTreeProducer::required_capacity_bytes();let grant=cx.retained_grant();
+        if self.generation==0||source.is_none()||cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity{return Ok(false);}
+        let mut state = self.state.borrow_mut();
+        if state.closing_instances.iter().flatten().any(|closing| closing.key == self.key) {
+            return Ok(false);
+        }
+        if state.unadmitted[self.index].as_ref().is_none_or(|slot| slot.generation != self.generation) {
+            return Ok(false);
+        }
+        let Some(slot) = state.slots[self.surface_index].as_ref() else { return Ok(false); };
+        if slot.key!=self.key||slot.output_index!=Some(self.output_index)||slot.reconciler.is_some()||slot.producer.is_some()||slot.job.is_some()||!matches!(self.owner,MountedReconcileOwner::Live{..}) { return Ok(false); }
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()})?;
+        cx.consume_fuel(1);
+        let mut slot=state.slots[self.surface_index].take().expect("preflight original surface slot");
+        let marker=state.unadmitted[self.index].take().expect("preflight original reservation marker");
+        let MountedReconcileOwner::Live{reconciler,reservation}=std::mem::replace(&mut self.owner,MountedReconcileOwner::Transferred)else{unreachable!("preflight live original grant")};
+        let producer=ComponentTreeProducer::try_new(source.take().expect("preflight original tree source"),self.generation).unwrap_or_else(|_|unreachable!("preflight nonzero original generation"));
+        slot.generation = marker.generation;
+        slot.cancelled = false;
+        slot.producer = Some(MountedTreeProducer { reconciler: Some(reconciler), reservation: Some(reservation), rejected_index: self.rejected_index, authority: Box::new(producer), outcome: None });
+        state.slots[self.surface_index] = Some(slot);
+        self.active = false;
+        Ok(true)
+    }
+
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn commit(mut self, tree: ComponentTree) {
+        let owned = std::rc::Rc::clone(&self.state);
+        let mut state = owned.borrow_mut();
+        let owner = std::mem::replace(&mut self.owner, MountedReconcileOwner::Transferred);
+        let MountedReconcileOwner::Live { reconciler, reservation } = owner else { return };
+        let admission = SurfaceReconcileJob::try_new_reserved(reconciler, tree, reservation);
+        let marker = state.unadmitted[self.index].take().filter(|slot| slot.generation == self.generation);
+        let Some(marker) = marker else {
+            drop(admission);
+            self.release(&mut state);
+            return;
+        };
+        let surface = {
+            let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index) && slot.reconciler.is_none() && slot.producer.is_none() && slot.job.is_none()) else {
+                drop(admission);
+                self.release(&mut state);
+                return;
+            };
+            slot.generation = marker.generation;
+        slot.cancelled = false;
+            slot.surface.clone()
+        };
+        match admission {
+            Ok(job) => {
+                state.rejected_reserved[self.rejected_index] = None;
+                if let Some(slot) = state.slots[self.surface_index].as_mut() {
+                    slot.job = Some(job);
+                } else {
+                    drop(job);
+                }
+            }
+            Err(authority) => {
+                state.rejected_reserved[self.rejected_index] = None;
+                state.rejected[self.rejected_index] = Some(RejectedSlot { key: self.key, surface, authority });
+            }
+        }
+        self.active = false;
+    }
+
+    /// 🧹️ Releases EVERY slot this reservation holds — the unadmitted marker, the rejected-slot
+    /// reservation, the reserved output, the surface slot's `output_index` and the checked-out
+    /// reconciler — and disarms the [`Drop`] that would otherwise run it a second time. The ONE
+    /// release, shared by [`MountedReconcileGrant::cancel`] and `Drop`.
+    ///
+    /// 🐛️ `Drop` used to release only the reconciler and the reservation, so a reservation that ended
+    /// WITHOUT `cancel` — which is exactly what `commit_source`'s seven `Err(root)` exits do — left
+    /// `slot.output_index` set and its `state.ready` output open. `reserve_mounted_owned` refuses any
+    /// slot whose `output_index.is_some()`, so that surface became **permanently un-reservable**: every
+    /// later dirty render was refused and only `defer`red, `deferred_surface_ready` answered `true` (no
+    /// producer, no job, reconciler restored, revision acknowledged), the turn re-dirtied it, and the
+    /// refusal repeated forever — a surface frozen at its last published revision while the actor
+    /// answers `more-work` and publishes nothing. Each such exit also leaked one of
+    /// [`READY_PATCH_CAPACITY`] output slots, so after 64 of them `reserve_mounted` refuses EVERY
+    /// surface and the whole shell stops re-rendering.
+    ///
+    /// Measured live on `:6013` at wasm #58: after a pick on the 1-object document the host asked for
+    /// all three world bodies, dropped none, and the guest answered `changed:[]` with every retained
+    /// surface still at revision 1, so `data-guest-selection-json` kept `selectedIds:[]` — while
+    /// `PLUGIN_UI_ZERO_PROGRESS_CONTINUATION_LIMIT`'s own doc records the same actor spinning with
+    /// `acks=0` for over a thousand consecutive continuations (ticket
+    /// 26/09/02/PUZZLE-3D-END-TO-END wave B46 §5 and §8.1, wave B48 §3).
+    pub fn release(&mut self, state: &mut PatchTrackerState) {
+        self.active = false;
+        if state.unadmitted[self.index].as_ref().is_some_and(|slot| slot.generation == self.generation) {
+            state.unadmitted[self.index] = None;
+        }
+        if state.rejected_reserved[self.rejected_index] == Some(self.generation) {
+            state.rejected_reserved[self.rejected_index] = None;
+        }
+        if let Some(output) = state.ready[self.output_index].as_mut().filter(|output| output.key == self.key && output.generation == self.generation) {
+            output.closing = true;
+        }
+        if let Some(slot) = state.slots[self.surface_index].as_mut().filter(|slot| slot.key == self.key && slot.output_index == Some(self.output_index)) {
+            slot.output_index = None;
+        }
+        let owner = std::mem::replace(&mut self.owner, MountedReconcileOwner::Transferred);
+        if let (MountedReconcileOwner::Live { reconciler, reservation }, Some(slot)) = (owner, state.slots[self.surface_index].as_mut()) {
+            slot.reconciler = Some(reconciler);
+            drop(reservation);
+        }
+    }
+
+    pub fn cancel_and_defer(mut self) {
+        let state = std::rc::Rc::clone(&self.state);
+        let mut state = state.borrow_mut();
+        if let Some(slot)=state.slots[self.surface_index].as_mut().filter(|slot|slot.key==self.key){slot.pending_render=true;}
+        self.release(&mut state);
+    }
+
+    pub fn cancel(mut self) {
+        let state = std::rc::Rc::clone(&self.state);
+        let mut state = state.borrow_mut();
+        self.release(&mut state);
+    }
+}
+
+impl Drop for MountedReconcileGrant {
+    fn drop(&mut self) {
+        if !self.active {
+            return;
+        }
+        let state = std::rc::Rc::clone(&self.state);
+        let mut state = state.borrow_mut();
+        self.release(&mut state);
+    }
+}
+
+#[derive(Clone, Copy)]
+struct ClosingInstance {
+    pub instance: u32,
+    pub key: NativeCloseKey,
+    pub active: bool,
+    pub complete: bool,
+}
+
+struct PatchTrackerState {
+    pub slots: Box<[Option<SurfaceSlot>]>,
+    pub rejected: Box<[Option<RejectedSlot>]>,
+    terminals: Box<[Option<TerminalSlot>]>,
+    producer_terminals: Box<[Option<MountedTreeTerminal>]>,
+    rejected_reserved: Box<[Option<u64>]>,
+    pub deferred: Box<[Option<ui_contract::SurfaceId>]>,
+    pub unadmitted: Box<[Option<UnadmittedSlot>]>,
+    pub closing_instances: Box<[Option<ClosingInstance>]>,
+    pub ready: Box<[Option<ReadySlot>]>,
+    pub next_generation: u64,
+    generation_exhausted: bool,
+    drive_cursor: usize,
+    pub close_cursor: usize,
+    output_fault: Option<(NativeCloseKey, &'static str, bool)>,
+    /// 🩺️ Why the LAST mounted render reservation was refused, and for which surface. A refusal is not a
+    /// fault — the turn defers that render and retries — but eight of the eleven refusal predicates in
+    /// [`PatchTracker::reserve_mounted_owned`] produced no evidence at all, so a guest stuck in a
+    /// refuse/defer cycle was indistinguishable from a guest with nothing to do. Read back through
+    /// [`PatchTracker::debug_state`], which the reactor's own more-work streak trace prints.
+    ///
+    /// 🐛️ Measured live on `:6013` at wasm #58 on the Nakagin switch: `streak=57451` consecutive
+    /// more-work turns, `effects=0`, ALL THIRTEEN surfaces of instance 1 in `deferred`, twelve of them
+    /// with a clean slot (`--R:ack1/rev1:outNone`) that `reserve_mounted` nonetheless refused, and no
+    /// record anywhere of which predicate refused them (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B48
+    /// §6.4).
+    reserve_refusal: Option<(u8, &'static str, bool)>,
+}
+
+impl Default for PatchTrackerState {
+    fn default() -> Self {
+        Self {
+            slots: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            rejected: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            terminals: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            producer_terminals: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            rejected_reserved: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            deferred: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            unadmitted: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS + 1),
+            closing_instances: fixed_slots(SURFACE_RECONCILE_ADMISSION_SLOTS),
+            ready: fixed_slots(READY_PATCH_CAPACITY),
+            next_generation: 0,
+            generation_exhausted: false,
+            drive_cursor: 0,
+            close_cursor: 0,
+            output_fault: None,
+            reserve_refusal: None,
+        }
+    }
+}
+
+/// 🩺️ Which mounted slot a refused reservation named, as a `u8` so the fixed tracker state keeps its
+/// 256-byte stack budget (`tracker_initialization_fits_the_component_stack_budget`). `u8::MAX` means the
+/// surface holds no slot yet, which is itself part of the refusal's reading.
+fn refused_slot_index(state: &PatchTrackerState, surface: &ui_contract::SurfaceId) -> u8 {
+    state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| &slot.surface == surface)).and_then(|index| u8::try_from(index).ok()).unwrap_or(u8::MAX)
+}
+
+fn fixed_slots<T>(capacity: usize) -> Box<[Option<T>]> {
+    std::iter::repeat_with(|| None).take(capacity).collect::<Vec<_>>().into_boxed_slice()
+}
+
+/// 🧵️ Fixed surface, rejected-owner, terminal-owner, and ready-publication authority.
+#[derive(Default)]
+pub struct PatchTracker {
+    pub state: std::rc::Rc<RefCell<PatchTrackerState>>,
+}
+
+impl PatchTracker {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn can_begin(&self, surface: &str) -> bool {
+        if surface.len() > 256 {
+            return false;
+        }
+        let state = self.state.borrow();
+        if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface) == Some(closing.instance)) || state.unadmitted.iter().all(Option::is_some) {
+            return false;
+        }
+        if let Some(slot) = state.slots.iter().flatten().find(|slot| slot.surface.as_ref() == surface) {
+            return slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0);
+        }
+        state.slots.iter().any(Option::is_none)
+    }
+
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
+    pub fn defer(&self, surface: ui_contract::SurfaceId) -> Result<(), ui_contract::SurfaceId> {
+        let mut state = self.state.borrow_mut();
+        if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface.as_ref()) == Some(closing.instance)) {
+            return Err(surface);
+        }
+        if state.deferred.iter().flatten().any(|queued| queued == &surface) {
+            return Ok(());
+        }
+        let Some(slot) = state.deferred.iter_mut().find(|slot| slot.is_none()) else { return Err(surface) };
+        *slot = Some(surface);
+        Ok(())
+    }
+
+    pub fn take_pending_render_on_original(&self,cx:&mut StepContext<'_>)->Result<Option<ui_contract::SurfaceId>,semio_framework_job::OriginalTurnFailure>{
+        let mut state=self.state.borrow_mut();
+        let Some(slot)=state.slots.iter_mut().flatten().find(|slot|pending_render_ready(slot))else{return Ok(None)};
+        let grant=cx.retained_grant();
+        if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+        if slot.pending_render_source.is_none(){slot.pending_render_source=Some(ui_contract::UiTextOriginalCopy::new(&slot.surface.0));cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);return Ok(None)}
+        let source=slot.pending_render_source.as_mut().unwrap();let (ready,progress)=source.step(&slot.surface.0,grant)?;
+        cx.consume_retained(progress)?;if progress!=Default::default(){cx.consume_fuel(1)}
+        if let Some(surface)=ready{slot.pending_render_source=None;slot.pending_render=false;return Ok(Some(ui_contract::SurfaceId(surface)))}Ok(None)
+    }
+
+    pub fn take_deferred_ready(&self) -> Option<ui_contract::SurfaceId> {
+        let mut state = self.state.borrow_mut();
+        let index = state.deferred.iter().position(|entry| entry.as_ref().is_some_and(|surface| deferred_surface_ready(&state, surface)))?;
+        state.deferred[index].take()
+    }
+
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn begin(&self, surface: String, tree: ComponentTree) -> Result<u64, (String, ComponentTree)> {
+        let surface_id = match ui_contract::SurfaceId::try_from(surface) {
+            Ok(surface) => surface,
+            Err(surface) => return Err((surface, tree)),
+        };
+        let key = NativeCloseKey::fixture(surface_instance(surface_id.as_ref()).unwrap_or(0), 1);
+        let grant = match self.reserve_mounted_owned(surface_id, key) {
+            Ok(grant) => grant,
+            Err(surface) => return Err((surface.0.to_string(), tree)),
+        };
+        let generation = grant.generation;
+        grant.commit(tree);
+        Ok(generation)
+    }
+
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn retain_unadmitted(&self, surface: String, tree: ComponentTree) -> Result<u64, (String, ComponentTree)> {
+        self.begin(surface, tree)
+    }
+
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
+    pub fn reserve_mounted(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
+        if surface_instance(surface.as_ref()) != Some(key.instance()) {
+            return Err(self.refuse_reserve(surface, "instance-mismatch"));
+        }
+        self.reserve_mounted_owned(surface, key)
+    }
+
+    /// 🩺️ Records WHY one mounted render reservation was refused and hands the surface identity back
+    /// unchanged — see [`PatchTrackerState::reserve_refusal`]. Every refusal predicate goes through
+    /// here, so a guest stuck in a refuse/defer cycle names the predicate holding it instead of looking
+    /// identical to a guest with nothing to do.
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity without allocation.")]
+    fn refuse_reserve(&self, surface: ui_contract::SurfaceId, reason: &'static str) -> ui_contract::SurfaceId {
+        let mut state = self.state.borrow_mut();
+        let index = refused_slot_index(&state, &surface);
+        state.reserve_refusal = Some((index, reason, false));
+        surface
+    }
+
+    #[expect(clippy::result_large_err, reason = "Admission failure returns the original bounded surface identity or tree owner without allocation.")]
+    fn reserve_mounted_owned(&self, surface: ui_contract::SurfaceId, key: NativeCloseKey) -> Result<MountedReconcileGrant, ui_contract::SurfaceId> {
+        let mut state = self.state.borrow_mut();
+        let refuse = |state: &mut PatchTrackerState, surface: ui_contract::SurfaceId, reason: &'static str| -> ui_contract::SurfaceId {
+            let index = refused_slot_index(state, &surface);
+            state.reserve_refusal = Some((index, reason, false));
+            surface
+        };
+        if state.closing_instances.iter().flatten().any(|closing| surface_instance(surface.as_ref()) == Some(closing.instance)) {
+            return Err(refuse(&mut state, surface, "instance-closing"));
+        }
+        let Some(index) = state.unadmitted.iter().position(Option::is_none) else { return Err(refuse(&mut state, surface, "unadmitted-full")) };
+        let Some(surface_index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface == surface)).or_else(|| state.slots.iter().position(Option::is_none)) else {
+            return Err(refuse(&mut state, surface, "slots-full"));
+        };
+        if let Some(reason) = state.slots[surface_index].as_ref().and_then(|slot| {
+            if slot.key != key {
+                Some("slot-key-stale")
+            } else if slot.output_index.is_some() {
+                Some("slot-output-held")
+            } else if slot.producer.is_some() {
+                Some("slot-producer-live")
+            } else if slot.job.is_some() {
+                Some("slot-job-live")
+            } else if slot.reconciler.is_none() {
+                Some("slot-reconciler-checked-out")
+            } else {
+                None
+            }
+        }) {
+            return Err(refuse(&mut state, surface, reason));
+        }
+        let Some(generation) = next_generation(&state) else { return Err(refuse(&mut state, surface, "generations-exhausted")) };
+        let Some(rejected_index) = state.rejected.iter().enumerate().find_map(|(index, slot)| (slot.is_none() && state.rejected_reserved[index].is_none()).then_some(index)) else {
+            return Err(refuse(&mut state, surface, "rejected-full"));
+        };
+        let reservation = match SurfaceReconcileReservation::try_new(generation) {
+            Ok(reservation) => reservation,
+            Err(refusal) => return Err(refuse(&mut state, surface, refusal.reason())),
+        };
+        let Some(output_index) = state.ready.iter().position(Option::is_none) else { return Err(refuse(&mut state, surface, "ready-full")) };
+        let mut outputs = SurfaceReconcileOutputs::default();
+        let output_reservation = match outputs.try_reserve(generation, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES) {
+            Ok(Some(owner)) => owner,
+            Ok(None) => return Err(refuse(&mut state, surface, "output-reservation-unavailable")),
+            Err(fault) => {
+                state.output_fault = Some((key, fault, false));
+                return Err(refuse(&mut state, surface, "output-reservation-fault"));
+            }
+        };
+        state.reserve_refusal = None;
+        state.ready[output_index] = Some(ReadySlot { generation, key, outputs, reservation: Some(output_reservation), published: false, closing: false });
+        let reconciler = if let Some(slot) = state.slots[surface_index].as_mut() {
+            slot.output_index = Some(output_index);
+            slot.reconciler.take().expect("preflight retained current root")
+        } else {
+            let reconciler = SurfaceReconciler::new(surface.clone());
+            state.slots[surface_index] = Some(SurfaceSlot {
+                key,
+                output_index: Some(output_index),
+                reconciler: None,
+                surface,
+                generation,
+                acknowledged_revision: ui_contract::UiRevision::default(),
+                cancelled: false,
+                pending_render: false,
+                pending_render_source: None,
+                producer: None,
+                job: None,
+            });
+            reconciler
+        };
+        commit_generation(&mut state, generation);
+        state.rejected_reserved[rejected_index] = Some(generation);
+        state.unadmitted[index] = Some(UnadmittedSlot { key, generation });
+        drop(state);
+        Ok(MountedReconcileGrant { key, output_index, state: self.state.clone(), index, surface_index, rejected_index, generation, owner: MountedReconcileOwner::Live { reconciler, reservation }, active: true })
+    }
+
+    /// 🩺️ The refusal reason of the LAST mounted render reservation, answered once, so the turn that
+    /// deferred that render can name the process-wide table holding it instead of deferring in silence. The
+    /// census field itself is retained for [`PatchTracker::debug_state`] — only the "already reported" mark
+    /// moves (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B58; wave B56 named the reasons, this reports them).
+    pub fn take_unreported_reserve_refusal(&self) -> Option<&'static str> {
+        let mut state = self.state.borrow_mut();
+        let (_, reason, reported) = state.reserve_refusal.as_mut()?;
+        if *reported {
+            return None;
+        }
+        *reported = true;
+        Some(*reason)
+    }
+
+}
+
+impl PatchTracker {
+    pub fn drive_one(&self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        let mut state = self.state.borrow_mut();
+        if state.output_fault.is_some() {
+            return Ok(true);
+        }
+        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .map(|offset| (state.drive_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .find(|index| state.slots[*index].as_ref().is_some_and(|slot| !state.closing_instances.iter().flatten().any(|closing| closing.key == slot.key) && (slot.producer.is_some() || slot.job.is_some())))
+        else {
+            return Ok(has_work(&state));
+        };
+        state.drive_cursor = (index + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
+        if state.slots[index].as_ref().is_some_and(|slot| slot.job.is_some()) {
+            drive_job_one(&mut state, index, cx)?;
+            return Ok(has_work(&state));
+        }
+        let outcome = state.slots[index].as_ref().and_then(|slot| slot.producer.as_ref()).and_then(|producer| producer.outcome);
+        let Some(outcome) = outcome else {
+            let slot = state.slots[index].as_mut().expect("selected structural producer slot");
+            let Some(producer) = slot.producer.as_mut() else { return Ok(has_work(&state)) };
+            if cx.should_yield() { return Ok(has_work(&state)); }
+            let outcome = producer.authority.step_on_original(slot.generation,slot.cancelled,cx)?;
+            #[cfg(test)]
+            tests::after_producer_step();
+            if outcome != ComponentTreeProducerStep::MoreWork {
+                producer.outcome = Some(outcome);
+            }
+            return Ok(has_work(&state));
+        };
+        let grant=cx.retained_grant();
+        if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||state.producer_terminals.iter().all(Option::is_some){return Ok(has_work(&state));}
+        cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,..Default::default()})?;cx.consume_fuel(1);
+        let Some(mut slot) = state.slots[index].take() else { return Ok(has_work(&state)) };
+        if let Some(mut producer) = slot.producer.take() {
+            match outcome {
+                ComponentTreeProducerStep::MoreWork => slot.producer = Some(producer),
+                ComponentTreeProducerStep::Complete => {
+                    let Some(target)=state.producer_terminals.iter().position(Option::is_none)else{slot.producer=Some(producer);state.slots[index]=Some(slot);return Ok(has_work(&state));};
+                    let sources = if producer.reconciler.is_some() && producer.reservation.is_some() && producer.authority.has_complete() {
+                        Some((producer.reconciler.take().expect("preflight current root"), producer.reservation.take().expect("preflight producer reservation"), producer.authority.take_complete().expect("preflight completed tree")))
+                    } else {
+                        None
+                    };
+                    if let Some((reconciler, reservation, tree)) = sources {
+                        match SurfaceReconcileJob::try_new_reserved(reconciler, tree, reservation) {
+                            Ok(job) => {
+                                if state.rejected_reserved[producer.rejected_index] == Some(slot.generation) {
+                                    state.rejected_reserved[producer.rejected_index] = None;
+                                }
+                                slot.job = Some(job);
+                            }
+                            Err(authority) => {
+                                state.rejected_reserved[producer.rejected_index] = None;
+                                state.rejected[producer.rejected_index] = Some(RejectedSlot { key: slot.key, surface: slot.surface.clone(), authority });
+                            }
+                        }
+                        state.producer_terminals[target]=Some(MountedTreeTerminal{key:slot.key,instance:surface_instance(slot.surface.as_ref()),surface_index:None,surface:slot.surface.clone(),reconciler:None,reservation:None,authority:Some(producer.authority),close:true});
+                    } else {
+                        state.rejected_reserved[producer.rejected_index] = None;
+                        state.producer_terminals[target] = Some(MountedTreeTerminal {
+                            key: slot.key,
+                            instance: surface_instance(slot.surface.as_ref()),
+                            surface_index: Some(index),
+                            surface: slot.surface.clone(),
+                            reconciler: producer.reconciler.take(),
+                            reservation: producer.reservation.take(),
+                            authority: Some(producer.authority),
+                            close: true,
+                        });
+                    }
+                }
+                ComponentTreeProducerStep::Fault(_) => {
+                    if let Some(target) = state.producer_terminals.iter().position(Option::is_none) {
+                        state.rejected_reserved[producer.rejected_index] = None;
+                        state.producer_terminals[target] = Some(MountedTreeTerminal {
+                            key: slot.key,
+                            instance: surface_instance(slot.surface.as_ref()),
+                            surface_index: Some(index),
+                            surface: slot.surface.clone(),
+                            reconciler: producer.reconciler.take(),
+                            reservation: producer.reservation.take(),
+                            authority: Some(producer.authority),
+                            close: false,
+                        });
+                    } else {
+                        slot.producer = Some(producer);
+                    }
+                }
+            }
+            if slot.producer.is_none() && slot.job.is_none() && state.rejected.iter().flatten().all(|rejected| rejected.authority.generation() != slot.generation) {
+                if let Some(output) = slot.output_index.take().and_then(|index| state.ready[index].as_mut()) {
+                    output.closing = true;
+                }
+            }
+            state.slots[index] = Some(slot);
+            return Ok(has_work(&state));
+        }
+        state.slots[index] = Some(slot);
+        Ok(has_work(&state))
+    }
+
+    /// 🐞️ Temporary trace summary of every retained slot family, read by the reactor's more-work streak trace.
+    /// 📊️ WHAT the two process-wide reconcile tables hold, printed beside every refusal so a
+    /// `registry-*` refusal can be read against the occupancy that caused it rather than guessed at
+    /// (ticket 26/09/02/PUZZLE-3D-END-TO-END wave B56).
+    pub fn debug_state(&self) -> String {
+        let state = self.state.borrow();
+        let slots: Vec<String> = state
+            .slots
+            .iter()
+            .flatten()
+            .map(|slot| {
+                format!(
+                    "{}#g{}:{}{}{}:ack{}/rev{}:out{:?}",
+                    slot.surface.as_ref(),
+                    slot.generation,
+                    if slot.producer.is_some() { "P" } else { "-" },
+                    if slot.job.is_some() { "J" } else { "-" },
+                    if slot.reconciler.is_some() { "R" } else { "-" },
+                    slot.acknowledged_revision.0,
+                    slot.reconciler.as_ref().map_or(0, |reconciler| reconciler.revision().0),
+                    slot.output_index
+                )
+            })
+            .collect();
+        let ready: Vec<String> = state
+            .ready
+            .iter()
+            .flatten()
+            .map(|ready| {
+                format!("g{}:{}{}{}{}", ready.generation, if ready.published { "p" } else { "-" }, if ready.closing { "c" } else { "-" }, if ready.reservation.is_some() { "r" } else { "-" }, if ready.outputs.terminal_is_empty() { "e" } else { "-" })
+            })
+            .collect();
+        let terminals: Vec<String> = state
+            .terminals
+            .iter()
+            .flatten()
+            .map(|terminal| format!("g{}:{}{}{}", terminal.authority.generation(), if terminal.close { "c" } else { "-" }, if terminal.authority.fault().is_some() { "F" } else { "-" }, if terminal.authority.terminal_is_empty() { "e" } else { "-" }))
+            .collect();
+        let producer_terminals: Vec<String> = state
+            .producer_terminals
+            .iter()
+            .flatten()
+            .map(|terminal| {
+                format!(
+                    "{}:{}{}{}{}",
+                    terminal.surface.as_ref(),
+                    if terminal.close { "c" } else { "-" },
+                    if terminal.authority.is_some() { "A" } else { "-" },
+                    if terminal.reconciler.is_some() { "R" } else { "-" },
+                    if terminal.reservation.is_some() { "V" } else { "-" }
+                )
+            })
+            .collect();
+        let deferred: Vec<String> = state.deferred.iter().flatten().map(|surface| surface.as_ref().to_owned()).collect();
+        format!(
+            "slots=[{}] ready=[{}] terminals=[{}] producer_terminals=[{}] deferred=[{}] rejected={} unadmitted={} closing={} output_fault={} reserve_refusal={} registry={} generation_exhausted={} close_cursor={}",
+            slots.join(","),
+            ready.join(","),
+            terminals.join(","),
+            producer_terminals.join(","),
+            deferred.join(","),
+            state.rejected.iter().flatten().count(),
+            state.unadmitted.iter().flatten().count(),
+            state.closing_instances.iter().flatten().count(),
+            state.output_fault.as_ref().map_or("none", |fault| fault.1),
+            state.reserve_refusal.as_ref().map_or_else(|| "none".to_string(), |(index, reason, _)| format!("{}:{reason}", state.slots.get(usize::from(*index)).and_then(Option::as_ref).map_or("unmounted", |slot| slot.surface.as_ref())),),
+            registry_census_line(),
+            state.generation_exhausted,
+            state.close_cursor
+        )
+    }
+
+    /// 📤️ Work that can still produce or publish a patch (producers, jobs, ready outputs, deferred
+    /// surfaces whose slot is ready to re-admit them, unadmitted surfaces, a pending output fault).
+    /// Terminal and producer-terminal retirement is background maintenance driven by `close_step`
+    /// every turn and must not hold the actor in `more-work`, otherwise a host drain waits for the
+    /// retirement of trees it will never see. A deferred surface whose slot still awaits the host's
+    /// acknowledgement of an earlier revision is host-blocked the same way: the acknowledgement
+    /// arrives as its own lifecycle turn, so counting it here only makes the drain spin on itself.
+    pub fn has_publishable_work(&self) -> bool {
+        let state = self.state.borrow();
+        state.output_fault.is_some()
+            || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some() || pending_render_ready(slot))
+            || state.deferred.iter().flatten().any(|surface| deferred_surface_ready(&state, surface))
+            || state.unadmitted.iter().any(Option::is_some)
+            || state.closing_instances.iter().any(Option::is_some)
+            || state.ready.iter().flatten().any(|ready| ready.published && !ready.closing)
+    }
+
+    /// 🚗️ Work this guest can advance BY ITSELF — [`Self::has_publishable_work`] minus the one term
+    /// that is not the guest's to advance: a ready output already marked published, whose extraction
+    /// needs a free publication slot and therefore the host's acknowledgement of an earlier one.
+    ///
+    /// 🐛️ The reactor's reconcile loop used to spin on `has_publishable_work` alone, so a turn with a
+    /// ready output and a full [`super::pending::PendingPatchAuthority`] burnt its whole 1 024-step
+    /// opportunity budget (or the turn's wall deadline) calling `drive_one` on a tracker with nothing
+    /// to drive, answered `MoreWork`, and the host paid a round trip to watch it do that again —
+    /// 6.0 ms of guest per empty crossing, 59 such crossings per `flowEvalTick` hop
+    /// (`📓️reactor-reconcile-spin-2026-09-14.md` §1, family 2).
+    pub fn has_drivable_work(&self) -> bool {
+        let state = self.state.borrow();
+        state.output_fault.is_some()
+            || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some() || pending_render_ready(slot))
+            || state.deferred.iter().flatten().any(|surface| deferred_surface_ready(&state, surface))
+            || state.unadmitted.iter().any(Option::is_some)
+            || state.closing_instances.iter().any(Option::is_some)
+    }
+
+    pub fn has_work(&self) -> bool {
+        has_work(&self.state.borrow())
+    }
+
+    /// 🚨️ Returns one mounted surface failure while retaining its incremental cleanup owner.
+    ///
+    /// 🔎️ The message names the AUTHORITY that reported the fault, because the two authorities know
+    /// their surface differently: a producer terminal carries its own `SurfaceId`, while a reconcile
+    /// terminal is matched back to a slot BY GENERATION and names `unknown surface` once that slot is
+    /// gone. A reader that cannot tell the two apart cannot tell an exact attribution from a derived
+    /// one. A `DuplicateSiblingKey` additionally names the parent and the key it refused
+    /// ([`ComponentTreeProducer::duplicate_sibling`]), so the author is pointed at the node rather
+    /// than at the whole surface.
+    pub fn take_render_fault(&self) -> Option<(u32, String)> {
+        let mut state = self.state.borrow_mut();
+        if let Some((key, fault, reported)) = state.output_fault.as_mut() {
+            if !*reported {
+                *reported = true;
+                return Some((key.instance(), (*fault).to_owned()));
+            }
+        }
+        for terminal in state.producer_terminals.iter_mut().flatten().filter(|terminal| !terminal.close) {
+            if let Some(fault) = terminal.authority.as_ref().and_then(|authority| authority.fault()) {
+                let detail = terminal.authority.as_ref().and_then(|authority| authority.duplicate_sibling()).map_or_else(String::new, |(parent, key)| format!(" parent={parent} key={key}"));
+                terminal.close = true;
+                return Some((terminal.instance.unwrap_or(0), format!("{} [producer]: {fault:?}{detail}", terminal.surface.as_ref())));
+            }
+        }
+        let terminal = state.terminals.iter_mut().flatten().find(|terminal| !terminal.close && terminal.authority.fault().is_some())?;
+        let fault = terminal.authority.fault().cloned()?;
+        let generation = terminal.authority.generation();
+        let instance = terminal.instance.unwrap_or(0);
+        terminal.close = true;
+        let surface = state.slots.iter().flatten().find(|slot| slot.generation == generation).map_or("unknown surface", |slot| slot.surface.as_ref());
+        Some((instance, format!("{surface} [reconciler g{generation}]: {fault:?}")))
+    }
+
+}
+
+impl PatchTracker {
+    pub fn ready_patch_key(&self) -> Result<Option<(NativeCloseKey, u64)>, &'static str> {
+        let state = self.state.try_borrow().map_err(|_| "patch publication target is busy")?;
+        Ok(next_ready_index(&state).map(|index| {
+            let ready = state.ready[index].as_ref().expect("selected output");
+            (ready.key, ready.generation)
+        }))
+    }
+
+    /// 🎚️ The generations of every slot still holding a producer or a job — what [`next_ready_index`]
+    /// used to compare a ready output against GLOBALLY. A law reads it to prove the widened gate
+    /// admits an output while a DIFFERENT allocation's lower-generation job is still running, which is
+    /// exactly the state the global gate refused.
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn in_flight_generations(&self) -> Vec<(NativeCloseKey, u64)> {
+        let state = self.state.borrow();
+        state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| (slot.key, slot.generation)).collect()
+    }
+
+    pub fn take_ready_patch_into(&self, key: NativeCloseKey, generation: u64, target: &mut Option<SurfaceReconcileReadyPatch>, admitted_bytes: usize) -> Result<bool, &'static str> {
+        if target.is_some() {
+            return Ok(false);
+        }
+        let metadata = size_of::<ReadySlot>();
+        let Some(bytes) = admitted_bytes.checked_sub(metadata) else { return Ok(false) };
+        let mut state = self.state.try_borrow_mut().map_err(|_| "patch publication target is busy")?;
+        let Some(index) = next_ready_index(&state) else { return Ok(false) };
+        let output = state.ready[index].as_mut().expect("selected retained output");
+        if output.key != key || output.generation != generation {
+            return Err("patch publication belongs to another allocation or generation");
+        }
+        if !output.outputs.take_front_into(target, bytes)? {
+            return Ok(false);
+        }
+        output.published = false;
+        output.closing = true;
+        Ok(true)
+    }
+
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub fn take_ready_patch(&self) -> Option<SurfaceReconcileReadyPatch> {
+        let (key, generation) = self.ready_patch_key().unwrap()?;
+        let mut target = None;
+        self.take_ready_patch_into(key, generation, &mut target, semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES).unwrap();
+        target
+    }
+
+    pub fn mark_rejected(&self, surface: &str, expected_generation: u64) -> bool {
+        let mut state = self.state.borrow_mut();
+        let Some(index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.surface.as_ref() == surface)) else { return false };
+        let current_generation = state.slots[index].as_ref().expect("matched rejection surface").generation;
+        if current_generation != expected_generation {
+            return expected_generation != 0 && current_generation > expected_generation;
+        }
+        let Some(target_index) = state.terminals.iter().position(Option::is_none) else { return false };
+        if state.slots[index].as_ref().is_some_and(|slot| slot.producer.is_some() || slot.job.is_some()) {
+            let Some(slot) = state.slots[index].as_mut() else { return false };
+            slot.cancelled = true;
+            if slot.producer.is_some() {
+                return false;
+            }
+            let Some(job) = slot.job.take() else { return false };
+            let terminal = job.into_terminal();
+            if slot.reconciler.is_none() {
+                slot.reconciler = Some(SurfaceReconciler::new(slot.surface.clone()));
+            }
+            state.terminals[target_index] = Some(TerminalSlot { key: slot.key, instance: surface_instance(surface), authority: terminal, close: true });
+            close_output(&mut state, index);
+            return true;
+        }
+        let Some(generation) = next_generation(&state) else { return false };
+        let Some(reconciler) = state.slots[index].as_mut().and_then(|slot| slot.reconciler.take()) else { return false };
+        let terminal = match SurfaceReconcileTerminal::try_from_reconciler(reconciler, generation) {
+            Ok(terminal) => terminal,
+            Err(reconciler) => {
+                if let Some(slot) = state.slots[index].as_mut() {
+                    slot.reconciler = Some(reconciler);
+                } else {
+                    drop(reconciler);
+                }
+                return false;
+            }
+        };
+        commit_generation(&mut state, generation);
+        let Some(slot) = state.slots[index].as_mut() else {
+            drop(terminal);
+            return false;
+        };
+        slot.cancelled = true;
+        slot.reconciler = Some(SurfaceReconciler::new(slot.surface.clone()));
+        state.terminals[target_index] = Some(TerminalSlot { key: slot.key, instance: surface_instance(surface), authority: terminal, close: true });
+        true
+    }
+
+    pub fn with_published_native_resource_loans_on_original<R>(&self,surface:&str,generation:u64,revision:ui_contract::UiRevision,cx:&mut StepContext<'_>,receive:impl FnOnce(&mut semio_framework_ui_runtime::UiNativeResourceLoans,&mut StepContext<'_>)->Result<R,semio_framework_job::OriginalTurnFailure>)->Result<Option<R>,semio_framework_job::OriginalTurnFailure>{
+        let Ok(mut state)=self.state.try_borrow_mut()else{return Ok(None)};
+        let Some(index)=state.slots.iter().position(|slot|slot.as_ref().is_some_and(|slot|slot.surface.as_ref()==surface && slot.generation==generation && slot.acknowledged_revision.0<revision.0))else{return Ok(None)};
+        let key=state.slots[index].as_ref().expect("selected original native surface").key;
+        if !state.ready.iter().flatten().any(|ready|ready.key==key && ready.published && !ready.closing && ready.generation==generation){return Ok(None)}
+        let Some(reconciler)=state.slots[index].as_mut().and_then(|slot|slot.reconciler.as_mut()).filter(|reconciler|reconciler.revision()==revision)else{return Ok(None)};
+        reconciler.with_native_resource_loans_on_original(cx,receive)
+    }
+
+    pub fn mark_published_ack(&self, ack: &SurfaceReconcilePublishedAck) -> Result<bool, &'static str> {
+        let generation = ack.generation();
+        let revision = ack.revision().0;
+        let Some(surface) = ack.surface().map(|surface| surface.0.as_str()) else { return Ok(false) };
+        let mut state = self.state.try_borrow_mut().map_err(|_| "published ACK target is busy")?;
+        let Some(slot) = state.slots.iter_mut().flatten().find(|slot| slot.surface.0.as_str() == surface) else { return Ok(false) };
+        if slot.generation != generation {
+            return Ok(generation != 0 && slot.generation > generation);
+        }
+        let current = slot.reconciler.as_ref().map_or_else(
+            || slot.producer.as_ref().and_then(|producer| producer.reconciler.as_ref()).map_or_else(|| slot.job.as_ref().map_or(ui_contract::UiRevision::default(), SurfaceReconcileJob::base_revision), SurfaceReconciler::revision),
+            SurfaceReconciler::revision,
+        );
+        if slot.reconciler.as_ref().is_some_and(|reconciler|!reconciler.native_resource_loans_terminal_is_empty()){return Ok(false)}
+        if revision == current.0 && revision > slot.acknowledged_revision.0 {
+            slot.acknowledged_revision = ui_contract::UiRevision(revision);
+            return Ok(true);
+        }
+        Ok(false)
+    }
+
+    pub fn revision(&self, surface: &str) -> ui_contract::UiRevision {
+        self.state
+            .borrow()
+            .slots
+            .iter()
+            .flatten()
+            .find(|slot| slot.surface.as_ref() == surface)
+            .map(|slot| {
+                slot.reconciler.as_ref().map_or_else(
+                    || slot.producer.as_ref().and_then(|producer| producer.reconciler.as_ref()).map_or_else(|| slot.job.as_ref().map_or(ui_contract::UiRevision::default(), SurfaceReconcileJob::base_revision), SurfaceReconciler::revision),
+                    SurfaceReconciler::revision,
+                )
+            })
+            .unwrap_or_default()
+    }
+
+}
+
+impl PatchTracker {
+    pub fn preflight_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
+        let state = self.state.try_borrow().map_err(|_| "patch close reservation is busy")?;
+        if let Some(closing) = state.closing_instances.iter().flatten().find(|closing| closing.instance == key.instance()) {
+            return if closing.key == key { Ok(()) } else { Err("patch close reservation belongs to another allocation") };
+        }
+        if state.slots.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.ready.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.rejected.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.producer_terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.unadmitted.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+        {
+            return Err("patch descendants belong to another allocation");
+        }
+        if state.closing_instances.iter().all(Option::is_some) {
+            return Err("patch close reservation is full");
+        }
+        Ok(())
+    }
+
+    pub fn reserve_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
+        let mut state = self.state.try_borrow_mut().map_err(|_| "patch close reservation is busy")?;
+        if let Some(closing) = state.closing_instances.iter().flatten().find(|closing| closing.instance == key.instance()) {
+            return if closing.key == key { Ok(()) } else { Err("patch close reservation belongs to another allocation") };
+        }
+        if state.slots.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.ready.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.rejected.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.producer_terminals.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+            || state.unadmitted.iter().flatten().any(|slot| slot.key.instance() == key.instance() && slot.key != key)
+        {
+            return Err("patch descendants belong to another allocation");
+        }
+        let slot = state.closing_instances.iter_mut().find(|slot| slot.is_none()).ok_or("patch close reservation is full")?;
+        *slot = Some(ClosingInstance { instance: key.instance(), key, active: false, complete: false });
+        Ok(())
+    }
+
+    pub fn activate_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
+        let mut state = self.state.try_borrow_mut().map_err(|_| "patch close reservation is busy")?;
+        let closing = state.closing_instances.iter_mut().flatten().find(|closing| closing.key == key).ok_or("exact patch close reservation missing")?;
+        closing.active = true;
+        Ok(())
+    }
+
+    pub fn close_instance_complete(&self, key: NativeCloseKey) -> Result<bool, &'static str> {
+        let state = self.state.try_borrow().map_err(|_| "patch close receipt is busy")?;
+        state.closing_instances.iter().flatten().find(|closing| closing.key == key).map(|closing| closing.complete).ok_or("exact patch close receipt missing")
+    }
+
+    pub fn release_close_instance(&self, key: NativeCloseKey) -> Result<(), &'static str> {
+        let mut state = self.state.try_borrow_mut().map_err(|_| "patch close receipt is busy")?;
+        let closing = state.closing_instances.iter_mut().find(|closing| closing.is_some_and(|closing| closing.key == key && closing.complete)).ok_or("exact patch close receipt is not terminal")?;
+        *closing = None;
+        Ok(())
+    }
+
+    /// 🧹️ Retires one unit of the oldest closing owner against the caller's grant — see
+    /// [`super::pending::PendingPatchAuthority::close_step`] for why a retirement unit must be priced
+    /// per PAGE and not per item: every unit the reactor cannot finish this turn is answered as
+    /// `MoreWork`, and every `MoreWork` is one host round trip the user waits through.
+    pub fn close_step(&self, cx: &mut StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+        if cx.should_yield() { return Ok(false); }
+        let grant = cx.retained_grant();
+        if grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(false); }
+        let items = 1;
+        let bytes = grant.maximum_copy_bytes.min(grant.maximum_release_bytes);
+        let Ok(mut state) = self.state.try_borrow_mut() else { return Ok(false) };
+        if state.output_fault.is_some() {
+            return Ok(false);
+        }
+        close_stranded_outputs(&mut state);
+        if let Some(index) = state.ready.iter().position(|output| output.as_ref().is_some_and(|output| output.closing)) {
+            match state.ready[index].as_mut().expect("retained output close").close_step(items, bytes) {
+                Ok(true) => state.ready[index] = None,
+                Ok(false) => {}
+                Err(fault) => state.output_fault = Some((state.ready[index].as_ref().expect("faulted retained output").key, fault, false)),
+            }
+            return Ok(false);
+        }
+        if let Some(closing_index) = state.closing_instances.iter().position(|closing| closing.is_some_and(|closing| closing.active && !closing.complete)) {
+            let closing = state.closing_instances[closing_index].expect("closing instance existed");
+            let terminal_target = state.terminals.iter().position(Option::is_none);
+            if terminal_target.is_none() {
+                if let Some(index) = state.terminals.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == Some(closing.instance))) {
+                    let terminal = state.terminals[index].as_mut().expect("matching capacity-producing terminal");
+                    terminal.close = true;
+                    if terminal.authority.close_step_on_original(cx)? && terminal.authority.terminal_is_empty() {
+                        state.terminals[index] = None;
+                    }
+                    return Ok(false);
+                }
+            }
+            if let Some(ready_index) = state.ready.iter().position(|ready| ready.as_ref().is_some_and(|ready| ready.key == closing.key)) {
+                let ready = state.ready[ready_index].as_mut().expect("matching ready patch");
+                ready.closing = true;
+                return Ok(false);
+            }
+            if let Some(index) = state.deferred.iter().position(|entry| entry.as_ref().is_some_and(|surface| surface_instance(surface.as_ref()) == Some(closing.instance))) {
+                state.deferred[index].take();
+                return Ok(false);
+            }
+            if state.unadmitted.iter().flatten().any(|entry| entry.key == closing.key) {
+                return Ok(false);
+            }
+            if let Some(index) = state.rejected.iter().position(|entry| entry.as_ref().is_some_and(|entry| surface_instance(entry.surface.as_ref()) == Some(closing.instance))) {
+                if let Some(target) = terminal_target {
+                    let rejected = state.rejected[index].take().expect("matching rejected owner");
+                    state.terminals[target] = Some(TerminalSlot { key: rejected.key, instance: Some(closing.instance), authority: rejected.authority.into_terminal(), close: true });
+                }
+                return Ok(false);
+            }
+            if let Some(index) = state.producer_terminals.iter().position(|entry| entry.as_ref().is_some_and(|entry| entry.instance == Some(closing.instance))) {
+                let terminal = state.producer_terminals[index].as_mut().expect("matching producer terminal");
+                terminal.close = true;
+                if terminal.close_step(cx)? && terminal.terminal_is_empty() {
+                    state.producer_terminals[index] = None;
+                }
+                return Ok(false);
+            }
+            if let Some(surface_index) = state.slots.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.key == closing.key)) {
+                if state.slots[surface_index].as_ref().is_some_and(|slot| slot.job.is_some() && slot.reconciler.is_some()) {
+                    let Some(target) = terminal_target else { return Ok(false) };
+                    let PatchTrackerState { slots, terminals, .. } = &mut *state;
+                    let surface = slots[surface_index].as_mut().expect("transferred job and canonical root retained");
+                    terminals[target] = Some(TerminalSlot { key: surface.key, instance: Some(closing.instance), authority: surface.job.take().expect("retained transferred job shell").into_terminal(), close: true });
+                    surface.output_index = None;
+                    return Ok(false);
+                }
+                if state.slots[surface_index].as_ref().is_some_and(|slot| slot.producer.is_some()) {
+                    let Some(target) = state.producer_terminals.iter().position(Option::is_none) else { return Ok(false) };
+                    let Some(mut surface) = state.slots[surface_index].take() else { return Ok(false) };
+                    surface.cancelled = true;
+                    let Some(mut producer) = surface.producer.take() else {
+                        state.slots[surface_index] = Some(surface);
+                        return Ok(false);
+                    };
+                    if state.rejected_reserved[producer.rejected_index] == Some(surface.generation) {
+                        state.rejected_reserved[producer.rejected_index] = None;
+                    }
+                    state.producer_terminals[target] = Some(MountedTreeTerminal {
+                        key: surface.key,
+                        instance: Some(closing.instance),
+                        surface_index: None,
+                        surface: surface.surface,
+                        reconciler: producer.reconciler.take(),
+                        reservation: producer.reservation.take(),
+                        authority: Some(producer.authority),
+                        close: true,
+                    });
+                    return Ok(false);
+                }
+                let Some(target) = terminal_target else { return Ok(false) };
+                let mut surface = state.slots[surface_index].take().expect("matching closing surface");
+                surface.cancelled = true;
+                let terminal = if let Some(job) = surface.job.take() {
+                    Some(job.into_terminal())
+                } else if let Some(reconciler) = surface.reconciler.take() {
+                    match SurfaceReconcileTerminal::try_from_reconciler(reconciler, surface.generation) {
+                        Ok(terminal) => Some(terminal),
+                        Err(reconciler) => {
+                            surface.reconciler = Some(reconciler);
+                            state.slots[surface_index] = Some(surface);
+                            return Ok(false);
+                        }
+                    }
+                } else {
+                    state.rejected.iter_mut().find(|entry| entry.as_ref().is_some_and(|rejected| rejected.authority.generation() == surface.generation)).and_then(Option::take).map(|rejected| rejected.authority.into_terminal())
+                };
+                if let Some(terminal) = terminal {
+                    state.terminals[target] = Some(TerminalSlot { key: surface.key, instance: Some(closing.instance), authority: terminal, close: true });
+                }
+                return Ok(false);
+            }
+            if let Some(index) = state.terminals.iter().position(|slot| slot.as_ref().is_some_and(|slot| slot.instance == Some(closing.instance))) {
+                let terminal = state.terminals[index].as_mut().expect("matching terminal");
+                if terminal.authority.close_step_on_original(cx)? && terminal.authority.terminal_is_empty() {
+                    state.terminals[index] = None;
+                }
+                return Ok(false);
+            }
+            state.closing_instances[closing_index].as_mut().expect("exact retained close receipt").complete = true;
+            return Ok(false);
+        }
+        let Some(index) = (0..SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .map(|offset| (state.close_cursor + offset) % SURFACE_RECONCILE_ADMISSION_SLOTS)
+            .find(|index| state.producer_terminals[*index].as_ref().is_some_and(|slot| slot.close) || state.terminals[*index].as_ref().is_some_and(|slot| slot.close))
+        else {
+            return Ok(true);
+        };
+        state.close_cursor = (index + 1) % SURFACE_RECONCILE_ADMISSION_SLOTS;
+        if let Some(terminal) = state.producer_terminals[index].as_mut().filter(|slot| slot.close) {
+            if terminal.close_step(cx)? && terminal.terminal_is_empty() {
+                let Some(terminal) = state.producer_terminals[index].take() else { return Ok(false) };
+                if let Some(surface_index) = terminal.surface_index {
+                    if let Some(surface) = state.slots[surface_index].as_mut().filter(|slot| slot.surface == terminal.surface && slot.reconciler.is_none() && slot.producer.is_none() && slot.job.is_none()) {
+                        surface.reconciler = Some(SurfaceReconciler::new(surface.surface.clone()));
+                    }
+                }
+            }
+            return Ok(!state.terminals.iter().flatten().any(|slot| slot.close) && !state.producer_terminals.iter().flatten().any(|slot| slot.close));
+        }
+        let Some(terminal) = state.terminals[index].as_mut().filter(|slot| slot.close) else {
+            return Ok(!state.terminals.iter().flatten().any(|slot| slot.close) && !state.producer_terminals.iter().flatten().any(|slot| slot.close));
+        };
+        if terminal.authority.close_step_on_original(cx)? && terminal.authority.terminal_is_empty() {
+            state.terminals[index] = None;
+        }
+        Ok(!state.terminals.iter().flatten().any(|slot| slot.close) && !state.producer_terminals.iter().flatten().any(|slot| slot.close))
+    }
+
+    pub fn take_terminal(&self, generation: u64) -> Option<SurfaceReconcileTerminal> {
+        let mut state = self.state.borrow_mut();
+        let slot = state.terminals.iter_mut().find(|slot| slot.as_ref().is_some_and(|slot| slot.authority.generation() == generation))?;
+        slot.take().map(|slot| slot.authority)
+    }
+
+    pub fn take_rejected(&self, generation: u64) -> Option<SurfaceReconcileRejected> {
+        let mut state = self.state.borrow_mut();
+        let slot = state.rejected.iter_mut().find(|slot| slot.as_ref().is_some_and(|slot| slot.authority.generation() == generation))?;
+        slot.take().map(|slot| slot.authority)
+    }
+
+    pub fn resume_rejected(&self, rejected: SurfaceReconcileRejected) -> Result<(), SurfaceReconcileTerminal> {
+        let generation = rejected.generation();
+        let job = match rejected.retry(Default::default()) {
+            Ok(job) => job,
+            Err(rejected) => return Err(rejected.into_terminal()),
+        };
+        let mut state = self.state.borrow_mut();
+        let Some(slot) = state.slots.iter_mut().flatten().find(|slot| slot.generation == generation && slot.job.is_none() && slot.reconciler.is_none()) else { return Err(job.into_terminal()) };
+        slot.job = Some(job);
+        Ok(())
+    }
+
+    pub fn resume_terminal(&self, terminal: SurfaceReconcileTerminal) -> Result<(), SurfaceReconcileTerminal> {
+        let generation = terminal.generation();
+        let job = terminal.resume(generation)?;
+        let mut state = self.state.borrow_mut();
+        let Some(slot) = state.slots.iter_mut().flatten().find(|slot| slot.generation == generation && slot.job.is_none()) else { return Err(job.into_terminal()) };
+        slot.job = Some(job);
+        Ok(())
+    }
+
+    pub fn terminal_is_empty(&self) -> bool {
+        let state = self.state.borrow();
+        state.slots.iter().all(Option::is_none)
+            && state.rejected.iter().all(Option::is_none)
+            && state.terminals.iter().all(Option::is_none)
+            && state.producer_terminals.iter().all(Option::is_none)
+            && state.rejected_reserved.iter().all(Option::is_none)
+            && state.unadmitted.iter().all(Option::is_none)
+            && state.deferred.iter().all(Option::is_none)
+            && state.ready.iter().all(Option::is_none)
+            && state.closing_instances.iter().all(Option::is_none)
+            && state.output_fault.is_none()
+    }
+}
+
+/// 🎚️ The oldest ready output that may leave the guest NOW — the whole of what "readiness" means to
+/// [`super::turn::drive_reconcile_within`].
+///
+/// 🐛️ The refusal used to be GLOBAL: the minimum generation over EVERY slot still holding a producer
+/// or a job was compared against the chosen output, so one surface's running reconcile job blocked
+/// every other surface's finished one. That is the term
+/// `📓️ui-turn-patch-batching-2026-09-15.md` §7.1 names — "widening the batch means widening
+/// READINESS" — and it is why 18 of 25 measured boot turns had exactly ONE surface ready while the
+/// wire could already carry sixteen.
+///
+/// Ordering is a per-ALLOCATION contract, never a global one. A retained patch is addressed by its own
+/// `(surface, revision)` and applied into that surface's own retained document; two surfaces share no
+/// revision line, no document and no reader, so nothing about surface B's in-flight job constrains
+/// when surface A's finished output may be published. What DOES constrain it is the same allocation's
+/// own earlier work, so the gate asks exactly that question and nothing wider.
+fn next_ready_index(state: &PatchTrackerState) -> Option<usize> {
+    state
+        .ready
+        .iter()
+        .enumerate()
+        .filter_map(|(index, ready)| ready.as_ref().filter(|ready| ready.published && !ready.closing && !state.closing_instances.iter().flatten().any(|closing| closing.key == ready.key)).map(|ready| (index, ready)))
+        .filter(|(_, ready)| ready_output_is_admissible(ready.key, ready.generation, state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| (slot.key, slot.generation))))
+        .min_by_key(|(_, ready)| ready.generation)
+        .map(|(index, _)| index)
+}
+
+/// 🎚️ Whether one finished reconcile output may leave the guest while `in_flight` allocations are
+/// still producing — the whole ordering contract of [`next_ready_index`], as a function so it can be
+/// stated as a law instead of inferred from a ladder.
+///
+/// An output waits only for ITS OWN allocation's earlier work. A retained patch is addressed by its
+/// own `(surface, revision)` and applied into that surface's own retained document; two allocations
+/// share no revision line, no document and no reader, so surface B's in-flight job says nothing about
+/// when surface A's finished output may be published.
+///
+/// 🐛️ The refusal used to be GLOBAL — the minimum generation over EVERY producing slot, compared
+/// against the chosen output — so one slow surface serialized every other surface's publication. That
+/// is the term `📓️ui-turn-patch-batching-2026-09-15.md` §7.1 names: 18 of 25 measured boot turns had
+/// exactly ONE surface ready while the wire could already carry sixteen.
+#[doc(hidden)]
+pub fn ready_output_is_admissible(ready_key: NativeCloseKey, ready_generation: u64, in_flight: impl Iterator<Item = (NativeCloseKey, u64)>) -> bool {
+    !in_flight.into_iter().any(|(key, generation)| key == ready_key && generation < ready_generation)
+}
+
+/// 🧹️ An unpublished, not-yet-closing output whose surface slot holds no producer or job any more can
+/// never be published (its job was retired into a terminal by an instance close or a supersession), so
+/// it is closed here — otherwise `has_work` reports it forever and every drain spins on `reconcile`.
+fn close_stranded_outputs(state: &mut PatchTrackerState) {
+    for output_index in 0..state.ready.len() {
+        let Some(ready) = state.ready[output_index].as_ref() else { continue };
+        if ready.published || ready.closing {
+            continue;
+        }
+        let publisher_alive = state.slots.iter().flatten().any(|slot| slot.output_index == Some(output_index) && (slot.producer.is_some() || slot.job.is_some()));
+        if publisher_alive {
+            continue;
+        }
+        for slot in state.slots.iter_mut().flatten() {
+            if slot.output_index == Some(output_index) {
+                slot.output_index = None;
+            }
+        }
+        state.ready[output_index].as_mut().expect("stranded output").closing = true;
+    }
+}
+
+fn close_output(state: &mut PatchTrackerState, index: usize) {
+    if let Some(output) = state.slots[index].as_mut().and_then(|slot| slot.output_index.take()).and_then(|output| state.ready[output].as_mut()) {
+        output.closing = true;
+    }
+}
+
+fn drive_job_one(state: &mut PatchTrackerState, index: usize, cx: &mut StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+    let Some(slot) = state.slots[index].as_ref() else { return Ok(()) };
+    let Some(job) = slot.job.as_ref() else { return Ok(()) };
+    if slot.reconciler.is_some() && !job.is_ready() {
+        let Some(target) = state.terminals.iter().position(Option::is_none) else { return Ok(()) };
+        let stranded = slot.output_index.and_then(|output| state.ready[output].as_ref()).is_some_and(|ready| !ready.published);
+        if stranded {
+            close_output(state, index);
+        }
+        let slot = state.slots[index].as_mut().expect("retained transferred job");
+        state.terminals[target] = Some(TerminalSlot { key: slot.key, instance: surface_instance(slot.surface.as_ref()), authority: slot.job.take().expect("retained empty job shell").into_terminal(), close: true });
+        slot.output_index = None;
+        return Ok(());
+    }
+    let Some(output_index) = slot.output_index else { return Ok(()) };
+    let Some(_) = state.ready[output_index].as_ref().filter(|output| output.key == slot.key && output.generation == slot.generation) else { return Ok(()) };
+    if job.is_ready() {
+        let slot = state.slots[index].as_mut().expect("retained ready job slot");
+        if slot.job.as_mut().expect("retained ready job authority").drive_one(slot.generation, cx)? != SurfaceReconcileJobStep::Ready {
+            return Ok(());
+        }
+        let receiver_bytes = size_of::<ReadySlot>();
+        let Some(grant) = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES.checked_sub(receiver_bytes) else { return Ok(()) };
+        let output = state.ready[output_index].as_mut().expect("output reserved before producer");
+        let result = output.outputs.receive_job_into(&mut output.reservation, slot.job.as_mut().expect("structural job receiver"), &mut slot.reconciler, grant);
+        match result {
+            Ok(SurfaceReconcileOutputTransfer::Published) => output.published = true,
+            Ok(SurfaceReconcileOutputTransfer::Empty) => {
+                slot.acknowledged_revision = slot.reconciler.as_ref().expect("transferred canonical root").revision();
+                output.closing = true;
+            }
+            Ok(SurfaceReconcileOutputTransfer::Pending) => return Ok(()),
+            Err(fault) => {
+                state.output_fault = Some((slot.key, fault, false));
+                return Ok(());
+            }
+        }
+        #[cfg(test)]
+        tests::after_output_transfer();
+        return Ok(());
+    }
+    let slot = state.slots[index].as_mut().expect("retained job slot");
+    let outcome = slot.job.as_mut().expect("retained job authority").drive_one(slot.generation, cx)?;
+    if outcome == SurfaceReconcileJobStep::Fault {
+        if let Some(target) = state.terminals.iter_mut().find(|slot| slot.is_none()) {
+            *target = Some(TerminalSlot { key: slot.key, instance: surface_instance(slot.surface.as_ref()), authority: slot.job.take().expect("faulted job remains retained").into_terminal(), close: false });
+        }
+    }
+    Ok(())
+}
+
+/// 🎟️ Whether a deferred surface can be re-admitted now: no slot holds it, or its slot has no live
+/// producer/job and the host has acknowledged the slot's current revision (the predicate
+/// `take_deferred_ready` releases on).
+fn deferred_surface_ready(state: &PatchTrackerState, surface: &ui_contract::SurfaceId) -> bool {
+    state.slots.iter().flatten().find(|slot| slot.surface == *surface).is_none_or(|slot| slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0))
+}
+
+fn pending_render_ready(slot: &SurfaceSlot) -> bool {
+    slot.pending_render && slot.producer.is_none() && slot.job.is_none() && slot.reconciler.as_ref().is_some_and(|reconciler| slot.acknowledged_revision.0 >= reconciler.revision().0)
+}
+
+#[cfg(any(test,feature="original-actor-context-testing"))]
+#[path="🔁️retry/🧪️tests/🦀️.rs"]
+pub mod original_retry_laws;
+
+#[doc(hidden)]
+pub fn has_work(state: &PatchTrackerState) -> bool {
+    state.output_fault.is_some()
+        || state.slots.iter().flatten().any(|slot| slot.producer.is_some() || slot.job.is_some() || pending_render_ready(slot))
+        || state.terminals.iter().any(Option::is_some)
+        || state.producer_terminals.iter().any(Option::is_some)
+        || state.deferred.iter().any(Option::is_some)
+        || state.unadmitted.iter().any(Option::is_some)
+        || state.closing_instances.iter().any(Option::is_some)
+        || state.ready.iter().any(Option::is_some)
+}
+
+#[doc(hidden)]
+pub fn next_generation(state: &PatchTrackerState) -> Option<u64> {
+    if state.generation_exhausted {
+        return None;
+    }
+    state.next_generation.checked_add(1)
+}
+
+fn commit_generation(state: &mut PatchTrackerState, generation: u64) {
+    debug_assert_eq!(state.next_generation.checked_add(1), Some(generation));
+    state.next_generation = generation;
+    state.generation_exhausted = generation == u64::MAX;
+}
+
+/// 📊️ One line of both reconcile registries' live occupancy: `resident=<slots>s/<bytes>B of
+/// <aggregate>B` and `handback=<free>/<slots>`. A `registry-resident-credit-exhausted` refusal beside
+/// `resident=4s/33550336B of 33554432B` is a credit accounting fact, not a guess.
+fn registry_census_line() -> String {
+    let census = semio_framework_ui_runtime::surface_reconcile_registry_census();
+    format!("resident={}s/{}i/{}B of {}B handback={}/{}", census.resident_slots, census.resident_items, census.resident_bytes, census.resident_aggregate_bytes, census.handback_free, census.handback_slots)
+}
+
+fn surface_instance(surface: &str) -> Option<u32> {
+    surface.split(':').next()?.parse().ok()
+}
+
+#[doc(hidden)]
+#[cfg(test)]
+#[path = "🧪️tests/🔬️unit/🦀️.rs"]
+pub mod tests;
+#[cfg(test)]
+extern crate semio_framework_os_kernel as dsl;
+
+semio_framework_plugin_abi::component_persistent_local! {
+    /// 🩹️ One `PatchTracker` shared by every instance this actor hosts (surfaces are already
+    /// namespaced by their own `surface` string, which today embeds the instance — see
+    /// `render_surface`'s key).
+    // 🌉️ `thread_local!` initializer expressions run in a plain (non-const, non-async) context —
+    // bridged via `resolve_ready` since every `::new()` here is a pure `Self::default()`.
+    pub static PATCHES: PatchTracker = PatchTracker::new();
+}

@@ -37,6 +37,4 @@ pub fn handle(payload: &AttachWalls, doc: &ArtifactView<'_, ModelSnapshot>, _cfg
     Ok(Emit::mutations(walls.into_iter().filter_map(|id| write_top_attach(snapshot, id, target)).collect()))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

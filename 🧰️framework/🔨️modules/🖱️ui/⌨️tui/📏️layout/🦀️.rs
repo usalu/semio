@@ -1,5 +1,5 @@
-use crate::tui::geometry::Rect;
-use crate::tui::scene::{NodeContent, NodeId, Scene};
+use semio_framework_ui_tui_core::geometry::Rect;
+use crate::scene::{NodeContent, NodeId, Scene};
 
 /// 📐️ How one axis of a node's size is determined.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -31,7 +31,7 @@ pub struct Constraint {
 
 fn measure(scene: &Scene, id: NodeId) -> (u16, u16) {
     match &scene.node(id).content {
-        NodeContent::Text(s) => (crate::tui::text::display_width(s), 1),
+        NodeContent::Text(s) => (semio_framework_ui_tui_core::text::display_width(s), 1),
         NodeContent::Widget(w) => {
             let size = w.preferred_size();
             (size.width, size.height)
@@ -102,7 +102,7 @@ fn layout_node(scene: &mut Scene, id: NodeId, rect: Rect) {
     scene.node_raw_mut(id).rect = rect;
     let constraint = scene.node(id).constraint;
     let [top, right, bottom, left] = match &scene.node(id).content {
-        NodeContent::Chrome(crate::tui::chrome::ChromeState::Window(window)) => crate::tui::chrome::window_content_padding(window, rect),
+        NodeContent::Chrome(crate::chrome::ChromeState::Window(window)) => crate::chrome::window_content_padding(window, rect),
         _ => constraint.padding,
     };
     let inner = rect.inset_sides(top, right, bottom, left);

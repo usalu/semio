@@ -56,7 +56,7 @@ use semio_framework_plugin::NoDraft;
 use semio_framework_plugin::NoDraftMutation;
 use semio_framework_pack_json::Value;
 use std::collections::BTreeMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const BLOCK5D_PLAY_APP_ID: &str = "block5d-play";

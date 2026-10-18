@@ -161,7 +161,7 @@ impl EnergyJobAuthority {
         }
     }
 
-    pub(super) fn wire_identity(&self, sequence: u64) -> EnergyWireIdentity {
+    pub fn wire_identity(&self, sequence: u64) -> EnergyWireIdentity {
         EnergyWireIdentity { operation: self.operation.operation.0, base_revision: self.operation.base_revision.0, generation: self.operation.generation.0, seed: self.operation.seed, sequence }
     }
 
@@ -316,8 +316,8 @@ impl EnergyJobAuthority {
         }
     }
 
-    #[cfg(test)]
-    pub(super) fn numerical_cursor_signature(&self) -> [u64; 13] {
+    #[cfg(any(test, feature = "testkit"))]
+    pub fn numerical_cursor_signature(&self) -> [u64; 13] {
         [
             self.stage.code() as u64,
             self.tier.code() as u64,

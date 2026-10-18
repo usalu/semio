@@ -1,12 +1,15 @@
 //! ↩️ Inverse of `CreateFamilySolid`: the concrete `DeleteFamilySolid` of the id it created, none when the id was already taken.
 
-use super::super::delete_family_solid::DeleteFamilySolid;
-use super::CreateFamilySolid;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid;
+use crate::standards::v1::subsets::any::schema::mutations::create_family_solid::CreateFamilySolid;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &CreateFamilySolid, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &CreateFamilySolid, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid>,
+{
     if base.family_solids.contains_key(&payload.id) {
         return Vec::new();
     }
-    vec![ModelMutation::DeleteFamilySolid(DeleteFamilySolid { id: payload.id.clone() })]
+    vec![Op::from(DeleteFamilySolid { id: payload.id.clone() })]
 }

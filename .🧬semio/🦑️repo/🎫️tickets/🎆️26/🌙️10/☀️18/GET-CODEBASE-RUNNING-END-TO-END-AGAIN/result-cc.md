@@ -1,0 +1,28 @@
+# Result: cc (COMPILE critical-path executor)
+
+## Phase 1: launcher (DONE, green)
+`bun repo cargo --store=shared --configuration=prototype -- check --manifest-path 🧰️framework/Cargo.toml -p semio-framework-geometry-primitives --lib --message-format=short` exits 0 (rustup toolchain nightly-2026-07-20 installed into the APFS tools image, crates downloaded, `Finished prototype` in 1.4 s). Note: a bare call without `--manifest-path` targets the ROOT workspace.
+
+Root causes fixed (in order):
+1. `rustup/📥️installation/🟦️.ts` `acquireArchive`: the cache probe used the tracked `hashRustupFileV1`; the expected ENOENT failed a tracked operation and `track()` (`invocation/process/🟦️.ts`) closes the whole invocation on ANY tracked failure, even a caught one, so the next download died with "Original process admission closed". Fix: untracked `lstat` first, hash only when present. (Observation, not changed: `settle()` rethrows the secondary "admission closed" error instead of `failures[0]`, which hides root causes.)
+2. Stale legacy `.🧬semio/🦑️repo/⚡️cache/rust/fixed` (image.json without mountDirectory, fixed.dmg already deleted but still attached as /dev/disk4): detached and removed; the cleanup command then requires the parent `⚡️cache/rust` to exist (non-recursive mkdir). Zero-touch fix in `budget/📥️opening/🟦️.ts` `openRepositoryCachePartitionV1`: `mkdirSync(dirname(declaration.directory),{recursive:true})` before opening a partition (the `rust` partition lives outside the `.cache/b` ancestors the parents-schema materializes). Not exercised on a clean tree yet.
+3. Tools image `.cache/b/t` was already APFS (coordinator): no ENOTSUP.
+4. `wgpu/📦️packages/🦀️rust/Cargo.toml` path dep used `🧿️test-support`; the directory (and all 18 other manifests) use `🧯️test-support`. Fixed the one manifest.
+5. Framework workspace "member of the wrong workspace": 8 recently carved crates in the framework workspace depend on root-workspace crates (os-kernel, plugin-*). Moved them to the root workspace (members entry moved from `🧰️framework/Cargo.toml` to `Cargo.toml`, `package.workspace` key re-pointed to the repo root): original-snapshot-owners, transient-preparation-law, typed-input-law (framework/🔨️modules/🧪️test), sqlite-snapshot testing/💰️backing, plugin tests surface-fixture, surface-carriers, app-typed-command-full-operation laws, plugin testing declared-verb-verdicts. `cc-tools/wscheck.mjs <ws>` (bun) lists members with path deps outside the workspace: 0 violators for framework now. The compile plan must treat these 8 as ROOT crates.
+6. Reverted a temporary `[DEBUG]` log in `invocation/process/🟦️.ts` (file byte-identical to original).
+
+## Phase 2
+- Framework lock refreshed ONLINE: `update --workspace --manifest-path 🧰️framework/Cargo.toml` (22 packages added). `--offline` fails: `zip` (deflate dev-dependency) is not in the offline index cache. Lock backups: `🗑️generated/cc-*-Cargo.lock.before`.
+- Root lock refreshed online (`update --workspace`); offline not possible (index cache).
+- Launcher/tooling fixes found by batches: planning-capture cap 16 MiB -> shared `cargoPlanningOutputBytesV1` (128 MiB) in `native-build/🕸️units/📥️capture` used by launcher, relay, descriptor selection, process (root `cargo metadata` is 17.2 MB); regenerated stale `🗂️schema-document-index.json` (hand-patched entries pointed outside their roots; regenerated through `mutationSchemaDocumentIndexProjection`).
+- Source gate: `semio-framework-ui` (all-features closure) is refused ("extent or boundary exceeded"); 257 of 549 root members depend on it, so every batch skips them (`cc-tools/refused.txt`, `🗑️generated/cc-bNNN.skipped`). Needs the ui carve (c6ui reports it still above 12,000 lines).
+
+## Batches (cc-tools/run.mjs, `--parallelism=4`, `--keep-going`)
+| idx | scope | result |
+| --- | --- | --- |
+| 34 | framework 1 (lib) | green |
+| 35 | framework 2 (lib) | green |
+| 36 | framework 3 | blocked: peer adds new framework members mid-run (3d-brep-construction-unit-tests `testkit` feature; `ui/tests/targets-wgpu-prepared-laws` manifest) |
+| 63 | root 1 (lib) | green after the fixes below (2 crates skipped behind `semio-framework-ui`) |
+
+Source fixes (63): dsl-record-derive `ContainerAttrs` pub(super); companions `extern crate` cfg(test) (32 files); neural model hash import; pack-format `EncodedSegment`/`DecodedSegment` pub(super); ui-contract-builder `BuiltChildRetire*` pub(super); ui-contract accessibility serde import + `is_default`; neural registry/model: `OperatorRetirement` + `RetireOwned for Box<dyn Operator>` + exported `original_retirement_cursor!` moved to the model crate (orphan rule); store-ephemeral missing imports + deps (io-control, os-store-read); store-replay `ReplayProgress` retire impl moved next to the type, `CursorRevisionRecord` fields pub; space-schema lifted snapshot trait import; engine `exhausted` pub; decode-pages `slot_address()`; `TryFrom<OpsSupersededInput> for SupersededInput` moved to os-store-command; `IoFidelityClass` inherent impl moved to its defining crate (codec-registry); `BindingKey` pub; envelope owns `DslField for OwnerRef` + helpers (new dsl-record dep); `StoreMintWitness` path; engine-core/live explicit lifetimes (9 methods); `MemberGroupPreparation` duplicate removed (single lifted type); `MemberHistoryDictionaryAdmissionError`, `MemberFactorySelectionRejected` pub; `CommandDecodeError` fault impl and `HistoryColumn` retire impl moved to their defining crates; durable-group `value_field!` impls moved to the wire crate; initialization genesis factory bounds; directed presentation uses `semio_framework_graph_dsl::Wire*`; flow-document os-command dep; flow-copy `FlowHostComponents` owner + demand conversion.

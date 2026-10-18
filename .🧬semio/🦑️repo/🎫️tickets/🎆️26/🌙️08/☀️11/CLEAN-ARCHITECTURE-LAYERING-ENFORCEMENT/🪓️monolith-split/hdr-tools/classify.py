@@ -1,9 +1,7 @@
 import csv,sys,re,json
 csv.field_size_limit(10**9)
 OWN=[
- (r'puzzle-(2d|5d)$|puzzle-(2d|5d)-','r8a'),(r'bim-','r9a'),
- (r'raster-','bd10'),
- (r'process-process3d-host','bd10'),
+ (r'bim-','r9a'),
 ]
 def owner(n):
     for p,o in OWN:

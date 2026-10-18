@@ -2,7 +2,7 @@
 //! the category, no repeated key, filters with their values, a scope without repeats) and every storey of a new scope must exist; providing only equal values is a no-op. A list replaces the whole
 //! list, because columns, sort keys, filters and grouping levels are one ordered definition and not addressable records.
 
-use super::SetSchedule;
+use crate::standards::v1::subsets::any::schema::mutations::set_schedule::SetSchedule;
 use crate::standards::v1::subsets::any::schema::snapshot::schedule_kit::schedule_problem;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};

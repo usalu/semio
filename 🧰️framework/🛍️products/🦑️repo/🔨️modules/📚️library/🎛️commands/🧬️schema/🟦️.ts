@@ -3,9 +3,11 @@
  */
 import { createIssuedResourceControlV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
-import { dispatchOwnedScriptRoute, runCmd, runCmdStatus } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { dispatchOwnedScriptRoute } from "../../🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
+import { runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import { inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory, loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory } from "../../🔍️discovery/🧾️schema-scope-catalog/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join } from "node:path";
@@ -109,13 +111,13 @@ export class SchemaScript extends Script {
 
   /**
    * 🪞️ `parsers report|apply|check`: projects the schema exports of a scope into typed `parse<Export>` entry points
-   * (`--under`, `--formats`, `--closing`, `--replace`, `--restate`, `--all`), or gates their freshness (`check`). Ctrl-C cancels between modules.
+   * (`--under`, `--formats`, `--closing`, `--replace`, `--restate`, `--distribute`, `--all`), or gates their freshness (`check`). Ctrl-C cancels between modules.
    * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts
    */
   private parsers(args: string[]): void {
     const options = parseProjectionArguments(this.root, args);
-    if (options.command === "apply" && !options.closing && options.replace.size === 0 && options.restate.size === 0 && !options.all) {
-      throw new Error("[schema parsers] apply without --closing, --replace or --restate would project every undeclared export in every format; pass --all to do that on purpose.");
+    if (options.command === "apply" && !options.closing && options.replace.size === 0 && options.restate.size === 0 && options.distribute.length === 0 && !options.all) {
+      throw new Error("[schema parsers] apply without --closing, --replace, --restate or --distribute would project every undeclared export in every format; pass --all to do that on purpose.");
     }
     const controller = new AbortController();
     const cancel = (): void => controller.abort(new Error("[schema parsers] cancelled."));

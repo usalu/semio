@@ -71,7 +71,7 @@ use semio_s_artifact_trinity_jack::standards::v1::subsets::any::schema::snapshot
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::{BTreeMap, HashMap};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use store::{pack::snapshot::ArtifactPack};
 #[cfg(test)] use store::{pack::snapshot::ArtifactDsl};
 

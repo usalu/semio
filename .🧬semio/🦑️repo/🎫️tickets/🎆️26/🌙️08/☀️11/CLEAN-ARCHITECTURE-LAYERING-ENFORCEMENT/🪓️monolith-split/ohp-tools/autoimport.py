@@ -83,4 +83,5 @@ for rel, uses in want.items():
     if apply:
         lines[idx:idx] = todo
         open(p, "w", encoding="utf-8").write("\n".join(lines))
+        open(GEN + "/ohp-touched-imports.txt", "a", encoding="utf-8").write(rel + "\n")
 print("total imports", tot, "skipped", dict(skipped), "APPLIED" if apply else "dry")

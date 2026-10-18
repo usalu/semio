@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { Buffer } from "node:buffer";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../🧫️fixtures/📦️ingress-paging/🔣️.json" with { type: "json" };
+import {pluginSubtreeText} from "../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 
 test("original ingress slots retire as indivisible pages then a separate pointer backing", async () => {
 
@@ -22,7 +23,7 @@ test("original ingress slots retire as indivisible pages then a separate pointer
   }
   
   
-  const source = await Bun.file(new URL("../../../🦀️.rs", import.meta.url)).text();
+  const source = pluginSubtreeText("🪆️child") + pluginSubtreeText("🏛️ownership");
   expect(source.includes("OWNED_DOCUMENT_INGRESS_PAGE_SLOTS: usize = 8")).toBe(true);
   expect(source.includes("pages: Vec<Option<Box<[std::mem::MaybeUninit<OwnedDocumentMemberIngress>]>>>")).toBe(true);
   expect(source.includes("empty_backing_byte_demand")).toBe(true);

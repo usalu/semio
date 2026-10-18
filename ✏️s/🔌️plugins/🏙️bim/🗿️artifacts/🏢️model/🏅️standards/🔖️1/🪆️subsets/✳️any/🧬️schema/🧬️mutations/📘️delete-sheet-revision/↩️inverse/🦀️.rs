@@ -1,8 +1,8 @@
 //! ↩️ Inverse of `DeleteSheetRevision`: one concrete create per removed record and one setter per removed property or classification, in storage order (dependants first, the target last), so the store, which replays the
 //! vector reversed, recreates the target before anything on it.
 
-use super::super::cascade;
-use super::DeleteSheetRevision;
+use crate::standards::v1::subsets::any::schema::mutations::cascade;
+use crate::standards::v1::subsets::any::schema::mutations::delete_sheet_revision::DeleteSheetRevision;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot};
 
 pub fn inverse<Op>(payload: &DeleteSheetRevision, base: &ModelSnapshot) -> Vec<Op>

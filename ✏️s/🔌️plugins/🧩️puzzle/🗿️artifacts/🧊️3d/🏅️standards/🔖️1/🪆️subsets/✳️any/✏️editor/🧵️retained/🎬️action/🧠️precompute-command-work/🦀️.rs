@@ -1,6 +1,7 @@
 //! 🧠️ Precompute command work: the staged precompute commands that decode and page the scene, its catalogs and the mesh positions and indices into the engine session before they publish.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dPrecomputeCommandStage {

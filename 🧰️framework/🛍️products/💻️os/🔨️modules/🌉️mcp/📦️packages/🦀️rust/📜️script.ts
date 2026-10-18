@@ -11,7 +11,10 @@ import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import { daemonBudgetOpts, orchestratorBudgetOpts, runCargo, runRepositoryCargoTests, runCmd, runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, orchestratorBudgetOpts, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { runCargo } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runRepositoryCargoTests } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎟️admission/🟦️.ts";
+import { runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🔍️probe/🟦️.ts";
 import { BundleScript, ScriptRouter, scriptInvocationBudget } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
@@ -144,10 +147,10 @@ class TestScript extends BundleScript {
 class OriginalInferenceSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Original inference source law has no arguments");
-    const source = join(this.root, "..", "..", "💡️inference", "🧪️tests", "💼️inference-service-law", "🟦️.ts");
+    const source = join(this.root, "..", "..", "💡️inference", "🧪️tests", "💼️inference-service-law", "🟦️.ts");const originalCaller = join(this.root, "..", "..", "💡️inference", "🧪️tests", "🔬️inference-jobs", "🟦️.ts");
     const budget = {version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null} as const;
-    await runRepositoryCommand(this.invocation, process.execPath, [Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source], this.repoRoot, "mcp:original-inference:types", budget, {env:process.env});
-    await runRepositoryCommand(this.invocation, process.execPath, ["test",source], this.repoRoot, "mcp:original-inference:source", budget, {env:process.env});
+    await runRepositoryCommand(this.invocation, process.execPath, [Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source,originalCaller], this.repoRoot, "mcp:original-inference:types", budget, {env:process.env});
+    await runRepositoryCommand(this.invocation, process.execPath, ["test",source,originalCaller], this.repoRoot, "mcp:original-inference:source", budget, {env:process.env});
   }
 }
 

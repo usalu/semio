@@ -80,6 +80,4 @@ pub fn reveal_flaw(base: &ModelSnapshot, depth: Option<f64>, material: Option<&s
 }
 //#endregion 🔖️Reveal
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

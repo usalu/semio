@@ -10,9 +10,9 @@ type TestSource = { readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../../📃️UiDocumentStore/🟦️.tsx"), "UiDocumentStore"> & Pick<typeof import("../../🧱️node-tree/🟦️.tsx"), "UiNodeView">, _source: TestSource): Promise<void> {
   const { UiDocumentStore, UiNodeView } = dependencies;
-  type Component = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").Component;
-  type UiIntent = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiIntent;
-  type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🟦️.ts").UiNodeRecord;
+  type Component = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").Component;
+  type UiIntent = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiIntent;
+  type UiNodeRecord = import("../../../../../../../../../🔨️modules/🛂️manifest/🏷️ui-contract-and-canvas-types/🟦️.ts").UiNodeRecord;
   type KeyRow = { readonly case: string; readonly current: number; readonly min: number | null; readonly max: number | null; readonly step: number; readonly snaps: readonly number[]; readonly key: SliderKey; readonly large: boolean; readonly precision?: number | null; readonly factor?: number | null; readonly expected: number };
   type TypedRow = { readonly case: string; readonly typed: number; readonly factor: number | null; readonly precision: number | null; readonly candidates: readonly number[]; readonly expected: number };
   type LimitRow = { readonly case: string; readonly value: number; readonly min: number | null; readonly max: number | null; readonly limits: Record<string, unknown> | null; readonly crossed: "min" | "max" | null };

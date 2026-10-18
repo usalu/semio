@@ -1,0 +1,14 @@
+{
+  "title": "Fix Staging Pathspec Failure",
+  "emoji": "🩹",
+  "status": "closed",
+  "description": "Staging all unstaged files fails with `error: daemon terminated` and `fatal: pathspec '(literal)…/benchmark.go' did not match any files`. Fix the failure and stage every unstaged change. Do not discard any valuable worktree or index changes.",
+  "summary": "The fsmonitor socket was stale, so git printed daemon terminated and a collapsed pathspec for the metrics Go benchmark file failed the whole stage. The monitor is watching again, and every unstaged path that still exists was staged without dropping index-only blobs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2773"
+  },
+  "goal": "🎯consistentrepohistory",
+  "sessions": [
+    "⚪d6144c023871424794956136919d2323"
+  ]
+}

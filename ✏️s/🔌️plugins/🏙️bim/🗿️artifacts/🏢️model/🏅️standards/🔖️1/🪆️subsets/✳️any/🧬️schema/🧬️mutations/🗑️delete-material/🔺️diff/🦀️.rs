@@ -1,7 +1,7 @@
 //! 🔺️ Diff constructor for `DeleteMaterial`: one deleted material entry. A material that any layer, profile type, railing, ramp or curtain
 //! wall type, panel override or space finish still names is refused as `mutation.target-referenced`.
 
-use super::DeleteMaterial;
+use crate::standards::v1::subsets::any::schema::mutations::delete_material::DeleteMaterial;
 use crate::standards::v1::subsets::any::schema::{snapshot::{CurtainPanel, Layer, ModelSnapshot}, diff::{Entry, ModelDiff}};
 use protocol::{MutationOutcome, OutcomeCode};
 

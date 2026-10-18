@@ -128,9 +128,9 @@ pub fn inverse_semio_audio_mutation(mutation: &SemioAudioMutation, base: &SemioA
 /// 🌱 Representative `SemioAudioMutation` cases, one per variant — single source of truth for
 /// `ops_grammar_conformance_law`/`protocol_walk_law` in `🎹️composer/🦀️.rs` and this
 /// file's own `op_text_binary_roundtrip_law`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
+pub fn demo_mutation_cases() -> Vec<SemioAudioMutation> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn channel(seed: f32) -> SemioAudioChannel {
         SemioAudioChannel { samples: vec![seed, seed + 1.0, seed + 2.0] }

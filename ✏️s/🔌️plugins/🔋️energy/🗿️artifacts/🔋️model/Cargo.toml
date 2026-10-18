@@ -524,6 +524,9 @@ path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️p
 [workspace.dependencies.semio-framework-2d]
 path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
 
+[workspace.dependencies.semio-framework-2d-compute]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-s-artifact-energy-model-editor]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"
 

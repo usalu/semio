@@ -153,9 +153,9 @@ pub const KINDS: &[&str] = &[
 /// `protocol_walk_law` (`../../../../⚙️engine/🦀️.rs`'s `conformance_laws` module) —
 /// every one of the 19 real variants, incl. `Some`/`None` shapes of every `Option<T>` field
 /// (`gct`, `loop_count`, `transparent_index`) — mirrors 87a's own `demo_mutation_cases()`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<GifMutation> {
+pub fn demo_mutation_cases() -> Vec<GifMutation> {
     // 🧭️ Deliberately a small, hand-built snapshot — NOT
     // `engine::demo_gif_snapshot()` (the real, 800×800/54-frame `dancing.gif` fixture used by
     // the snapshot-facet conformance laws): embedding that full fixture in every case

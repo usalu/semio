@@ -1,0 +1,6 @@
+{
+ "name": "bd12",
+ "crates": ["semio-framework-plugin-reactor-turn"],
+ "base": {"rev": "OVERLAY", "crates": ["semio-framework-plugin-reactor-turn"]},
+ "note": "BD12 item 3 differential: base side = live tree with the reactor turn folder replaced by the pre-edit snapshot (orig/rt)"
+}

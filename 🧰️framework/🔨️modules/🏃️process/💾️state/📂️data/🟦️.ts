@@ -6,7 +6,7 @@ import{join,resolve}from"node:path";
 import{checkResourceLeaseControl,requireMaterializedPathV1,type ResourceLeaseControl}from"../../🔒️leases/🟦️.ts";
 import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1}from"../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
-import type{NativeStorageAllocationV1}from"../../📦️artifacts/🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStorageAllocationV1}from"../../📦️artifacts/🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 import{persistentStatePolicyV1}from"../📋️layout/🟦️.ts";
 import{readPersistentStateRecordV1,writePersistentStateRecordV1,syncPersistentDirectoryV1}from"../🧾️records/🟦️.ts";
 import publicSchema from"../🧬️schema/🔣️.json";

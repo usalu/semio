@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "texts",
+    "iterations",
+    "longPrefixUnits",
+    "cost",
+    "goldens"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "texts": {
+      "const": [
+        "",
+        "\u0000",
+        "A",
+        "Z",
+        "_",
+        "a",
+        "aa",
+        "a\u0000",
+        "aé",
+        "é",
+        "é",
+        "ß",
+        "Ω",
+        "中",
+        "߿",
+        "ࠀ",
+        "퟿",
+        "",
+        "�",
+        "￿",
+        "𐀀",
+        "􏿿",
+        "😀",
+        "😀a",
+        "😀\u0000",
+        "\ud800",
+        "\udbff",
+        "\udc00",
+        "\udfff",
+        "\ud800a",
+        "\udc00a",
+        "\ud800\ud800",
+        "𐀀",
+        "􏿿",
+        "��",
+        "�a",
+        "\udc00\ud800"
+      ]
+    },
+    "iterations": {
+      "const": 4096
+    },
+    "longPrefixUnits": {
+      "const": 4096
+    },
+    "cost": {
+      "const": {
+        "canonicalBufferAllocations": 0,
+        "planBufferComparisons": 0
+      }
+    },
+    "goldens": {
+      "const": [
+        {
+          "mode": "prototype",
+          "plans": 3,
+          "bytes": 11400,
+          "sha256": "aa2c96d4aecf82b173ef1e9087785b79ae5490745f36f811ebe7c47f29085a55"
+        },
+        {
+          "mode": "release",
+          "plans": 3,
+          "bytes": 11340,
+          "sha256": "4736a6cde4f50cb2fc1d71d3860556c9d9905e3c10b5b909d3d670506c97f35c"
+        }
+      ]
+    }
+  }
+}

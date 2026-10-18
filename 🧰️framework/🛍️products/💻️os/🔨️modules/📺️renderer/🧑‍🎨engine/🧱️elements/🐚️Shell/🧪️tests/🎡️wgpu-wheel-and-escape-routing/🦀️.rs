@@ -261,7 +261,7 @@ fn a_modal_layer_opening_clears_every_published_hover_in_that_frame() {
         !WGPU_RENDERER_SOURCE().contains("if modal && world3d_hover_is_published(&state.selection)"),
         "🚧️ and it asks the OWED predicate, never the published one — a per-FRAME caller that asks `is_published` re-enqueues one leave per frame until the bounded queue saturates and the frame faults"
     );
-    assert!(WGPU_RENDERER_SOURCE().contains("let modal = shell.pointer_input_is_modal();"), "🚧️ and it asks the shell's own modal predicate, the one W12a's overlay laws already pin");
+    assert!(WGPU_RENDERER_SOURCE().contains("let modal = shell.input.pointer_input_is_modal();"), "🚧️ and it asks the shell's own modal predicate, the one W12a's overlay laws already pin");
 
     let fixture: serde_json::Value = serde_json::from_str(WORLD_JOURNAL_SEQUENCES).expect("🧫️ the world journal oracle parses");
     let case = fixture["steps"].as_array().expect("steps").iter().find(|case| case["id"] == "modal-open").expect("🧫️ the oracle carries the modal-open step");

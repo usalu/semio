@@ -1,4 +1,41 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::{inferences::ModelInference, snapshot::ModelSnapshot};
+#[allow(unused_imports)]
+use crate::editor::bim::commands::attach_walls;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::wall_sweeps::top_attach_text;
+#[allow(unused_imports)]
+use crate::editor::bim::entities::{fields_of, kind_holding, property_text, EntityKind, FieldRow, PROJECT_FIELDS, PROJECT_ID};
+#[allow(unused_imports)]
+use crate::editor::bim::kit::{bim_action, tree_item_with_icon, ui_capacity_error, ui_label, ui_text, ui_value_list, ui_value_map, ui_value_text};
+#[allow(unused_imports)]
+use crate::editor::bim::terminology::BimLabels;
+#[allow(unused_imports)]
+use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase, HasChildren, InputKind, Trigger};
+#[allow(unused_imports)]
+use semio_framework_plugin::tree_item_desc;
+#[allow(unused_imports)]
+use semio_framework_plugin::ui_node_list;
+#[allow(unused_imports)]
+use semio_framework_plugin::BuiltNode;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelGroup;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabDefinition;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTabKind;
+#[allow(unused_imports)]
+use semio_framework_plugin::PanelTreeBuilder;
+#[allow(unused_imports)]
+use semio_framework_plugin::ActionId;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiAssemblyResult;
+#[allow(unused_imports)]
+use semio_framework_plugin::UiValue;
+#[allow(unused_imports)]
+use semio_framework_ui_contract as ui;
+#[allow(unused_imports)]
+use semio_framework_ui_locale::Label;
+use crate::editor::bim::panels::properties::*;
 use semio_framework_ui_locale::Locale;
 
 fn demo() -> (ModelSnapshot, ModelInference) {

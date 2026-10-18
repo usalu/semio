@@ -1,6 +1,7 @@
 /** 🧩️ TS reducer, ring, store and codecs against the shared fixtures; oracles: ajv (schema), xstate (machine built from the matrix), fast-check (random event sequences, reducer vs xstate). */
 import { describe, expect, test } from "bun:test";
 import Ajv from "ajv";
+import Ajv2020 from "ajv/dist/2020";
 import fc from "fast-check";
 import { assign, createMachine, initialTransition, transition, type AnyMachineSnapshot } from "xstate";
 import lifecycle from "../🧫️fixtures/⚖️lifecycle-law.json";
@@ -97,7 +98,7 @@ test("schema oracle original progress clone preserves every canonical field and 
 });
 
 test("schema oracle original pending tick and writer custody matches independent fields",()=>{
- expect(new Ajv({strict:true}).compile(pendingSchema)(pendingLaw)).toBe(true);
+ expect(new Ajv2020({strict:true}).compile(pendingSchema)(pendingLaw)).toBe(true);
  for(const row of ticks.ticks){for(const owner of pendingLaw.owners){
   const original=JSON.parse(JSON.stringify(row.tick));
   const independent=applyPatch({},Object.entries(original).map(([key,value])=>({op:"add" as const,path:`/${key}`,value})),true,false).newDocument;

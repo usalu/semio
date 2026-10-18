@@ -92,7 +92,7 @@ pub fn fold_plan_inverse<P: Clone, Op: Mutation<P>, K: CompositeMutationKind<P, 
 /// footprint `ArtifactStoreOneItemFootprint::for_leaf` declared. Returns one line per breach and the number of cases checked. A
 /// decoded base is never dropped: a snapshot may own fail-closed roots that only its store retires.
 #[cfg(any(test, feature = "mutation-testing"))]
-pub fn mutation_inverse_rows_failures<P: crate::FromValue, M: Mutation<P> + crate::FromValue>(root: &std::path::Path) -> (Vec<String>, usize) {
+pub fn mutation_inverse_rows_failures<P: protocol::value::FromValue, M: Mutation<P> + protocol::value::FromValue>(root: &std::path::Path) -> (Vec<String>, usize) {
     fn walk(directory: &std::path::Path, found: &mut Vec<std::path::PathBuf>) {
         let Ok(entries) = std::fs::read_dir(directory) else { return };
         for entry in entries.flatten() {

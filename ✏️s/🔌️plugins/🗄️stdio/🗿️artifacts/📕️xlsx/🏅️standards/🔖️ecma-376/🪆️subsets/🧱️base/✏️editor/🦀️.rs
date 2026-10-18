@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base
 use semio_s_artifact_stdio_xlsx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::XlsxMutation;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxSnapshot;
 use semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::STDIO_XLSX_DOCUMENT_SCHEMA;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_plugin::ArtifactEditor;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ConfigView;
@@ -269,7 +269,7 @@ impl ArtifactEditor for XlsxEditor {
 
 /// 🔐️ The token an agent's omitted `set-cell` revision is admitted against: the addressed cell's own token, as its rendered
 /// binding carries it; a stale address is refused exactly as the edit itself would refuse it.
-pub(crate) fn xlsx_agent_target_revision(snapshot: &XlsxSnapshot, args: &semio_framework_value::DslValue) -> Result<Option<String>, Fault> {
+pub fn xlsx_agent_target_revision(snapshot: &XlsxSnapshot, args: &semio_framework_value::DslValue) -> Result<Option<String>, Fault> {
     let sheet_name = semio_s_artifact_stdio_contract::window_kit_required_text_argument(Some(args), "sheetName")?;
     let row = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "row")?;
     let column = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "column")?;
@@ -281,7 +281,7 @@ fn xlsx_set_cell_emit(snapshot: &XlsxSnapshot, command: &XlsxEditorCommand) -> R
     xlsx_set_cell_emit_fields(snapshot, sheet_name, *row, *column, revision, value, "stdio.xlsx")
 }
 
-pub(crate) fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32, revision: &str, value: &str, fault_prefix: &'static str) -> Result<Emit<XlsxMutation>, Fault> {
+pub fn xlsx_set_cell_emit_fields(snapshot: &XlsxSnapshot, sheet_name: &str, row: u32, column: u32, revision: &str, value: &str, fault_prefix: &'static str) -> Result<Emit<XlsxMutation>, Fault> {
     let fault = |suffix: &'static str, message: String| {
         Fault::new(
             semio_framework_plugin::FaultOrigin::App,

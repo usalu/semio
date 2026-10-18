@@ -18,7 +18,7 @@ test("Store publication authority exposes original native semantic fields", () =
   expect(Buffer.from(JSON.parse(original).actor).equals(Buffer.from(fixture.authority.actor))).toBe(true);
   db.close();
   const source = readFileSync(new URL("🦀️.rs", root), "utf8");
-  expect(source).toContain("impl crate::command::ArtifactCanonicalEditAuthority for ArtifactStoreOneItemLiveAuthority");
+  expect(source).toContain("impl semio_framework_os_spr::command::ArtifactCanonicalEditAuthority for ArtifactStoreOneItemLiveAuthority");
   expect(source).toContain("&self.actor");
   expect(source).toContain("self.line.as_ref()");
   expect(source).toContain("self.group_id.as_ref()");

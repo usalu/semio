@@ -73,7 +73,7 @@ use semio_framework_plugin::NoTransient;
 #[allow(unused_imports)]
 use semio_framework_plugin::NoTransientMutation;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 #[allow(unused_imports)]
 use semio_s_artifact_stdio_contract::editing;
 use crate::editor::svg_tiny::*;

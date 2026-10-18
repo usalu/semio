@@ -3,7 +3,7 @@
 import { runArtifactRustPackageMain,runArtifactRustTests } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import {BundleScript} from "../../../../../../../🧰️framework/📦️packages/🟦️typescript/🏃️process/🧭️routing/🟦️.ts";
 import { join } from "node:path";
-import { runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts";
+import { runRepositoryTestCommand } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🎛️repository-command/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 /** 🧫️ Executes the bounded intrinsic byte property projection against its independent oracle. */
 class TestBytePropertyScript extends BundleScript{async run(segments:string[]):Promise<void>{if(segments.length)throw Error("Unknown byte property command");await runArtifactRustTests("semio-s-artifact-norm-contract", this.repoRoot, ["--lib","byte_properties_render_their_bounded_localized_extent"], this.invocation);}}

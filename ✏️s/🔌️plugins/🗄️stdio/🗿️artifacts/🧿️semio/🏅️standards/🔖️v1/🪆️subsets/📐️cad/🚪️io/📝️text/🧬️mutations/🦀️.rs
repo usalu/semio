@@ -53,7 +53,7 @@ fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn print_cad_mutation(m: &SemioCadMutation) -> String {
+pub fn print_cad_mutation(m: &SemioCadMutation) -> String {
     match m {
         SemioCadMutation::AddLayer(add_layer::AddLayer { layer, at }) => format!("add-layer layer={}{}", enc_layer(layer), enc_at(*at)),
         SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name }) => format!("remove-layer name={}", enc_str(name)),

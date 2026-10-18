@@ -1,4 +1,4 @@
-use super::*;
+use crate::editor::bim::terminology::*;
 use semio_framework_ui_locale::{Locale, Terminology};
 
 fn rows(labels: &BimLabels) -> Vec<(&'static str, String)> {

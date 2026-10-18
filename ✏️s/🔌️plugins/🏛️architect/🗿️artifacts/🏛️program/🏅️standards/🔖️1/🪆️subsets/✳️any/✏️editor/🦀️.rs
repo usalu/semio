@@ -66,7 +66,7 @@ use semio_framework_plugin::ToolExecutionContract;
 use semio_framework_plugin::ToolFactoryKey;
 use semio_framework_plugin::ToolJobFactory;
 use semio_framework_plugin::ToolJobFactoryError;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 pub use semio_s_artifact_architect_program_snapshot::editor::architect::base;
 pub use base::*;

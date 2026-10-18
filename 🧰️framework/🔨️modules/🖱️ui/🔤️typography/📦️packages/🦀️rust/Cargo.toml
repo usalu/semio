@@ -49,6 +49,7 @@ serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
 semio-framework-async-macros = { path = "../../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 js-sys = "0.3.83"

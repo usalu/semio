@@ -4,13 +4,14 @@ import Decimal from "decimal.js";
 import fixture from "./🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
 import {RetainedWorkBudget} from "../🟦️.ts";
+import {readModuleTreeSource} from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 const validate=new Ajv2020({strict:true}).compile(schema);
 test("retained work funding matches shared independent decimal oracle",()=>{
  for(const row of fixture.cases){expect(validate(row.grant)).toBe(true);const oracle=new Decimal(row.grant.maximumItems).greaterThan(0)&&new Decimal(row.grant.maximumCopyBytes).greaterThanOrEqualTo(row.demand.copyBytes)&&new Decimal(row.grant.maximumCapacityBytes).greaterThanOrEqualTo(row.demand.capacityBytes)&&new Decimal(row.grant.maximumReleaseBytes).greaterThanOrEqualTo(row.demand.releaseBytes)&&new Decimal(row.grant.maximumDepth).greaterThanOrEqualTo(row.demand.depth);expect(oracle).toBe(row.accepted);const budget=new RetainedWorkBudget(row.grant);expect(budget.canEnter(row.demand)).toBe(oracle);expect(budget.remaining()).toEqual(row.grant);}
  const row=fixture.sequence,budget=new RetainedWorkBudget(row.grant);for(const accepted of row.accepted){expect(budget.canEnter(row.demand)).toBe(accepted);if(accepted)budget.charge(row.receipt);}expect(budget.remaining()).toEqual({maximumItems:0,maximumCopyBytes:0,maximumCapacityBytes:0,maximumReleaseBytes:0,maximumDepth:2});const before=budget.remaining();expect(()=>budget.charge(row.receipt)).toThrow();expect(budget.remaining()).toEqual(before);
 });
 test("retained command host validates original work demand before calling producer",async()=>{
- const source=await Bun.file(new URL("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",import.meta.url)).text();
+ const source=readModuleTreeSource(new URL("../../../../../🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs",import.meta.url));
  const quote=source.indexOf("let demand = match work.work_demands");
  const entry=source.indexOf("let step = work.step(&input, cx)",quote);
  expect(quote>=0&&entry>quote).toBe(true);

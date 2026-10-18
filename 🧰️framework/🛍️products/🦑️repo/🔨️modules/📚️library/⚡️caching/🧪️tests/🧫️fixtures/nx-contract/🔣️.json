@@ -1223,8 +1223,8 @@
     "module": "github.com/usalu/semio/framework/filesystem/durability",
     "files": [
       "go.mod",
-      "🐹️_unix.go",
-      "🐹️_windows.go"
+      "🐚️unix-durability/🐹️.go",
+      "🪟️windows-durability/🐹️.go"
     ]
   },
   "ownerCommandClosure": {

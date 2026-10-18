@@ -13,7 +13,7 @@ export type TextEditorOutboxV1 = { readonly text: string; readonly start: number
  * in between is part of what goes out (ticket 26/09/23 C12, live wave p33: a splice computed from a snapshot older than that fold
  * deleted the collaborator's run and re-inserted everything around it, so both editors duplicated and lost runs). `notify` after
  * every change; a state equal to the last one delivered is not sent again; a refused round trip frees the lane like a settled one.
- * @see ../🧫️fixtures/📮️delivery/🔣️.json */
+ * @see ../🧪️tests/🧫️fixtures/📮️delivery/🔣️.json */
 export function createTextEditorOutboxV1<T>(read: () => T | null, deliver: (value: T) => unknown, isEqual: (a: T, b: T) => boolean): () => void {
   let inFlight = false;
   let owed = false;

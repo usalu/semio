@@ -16,7 +16,8 @@ import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_SCHEMA_ID, COMPONENT_TARG
 import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 import { fileSha256V1, STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { CATALOG_DESCRIPTOR_MAX_BYTES,verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { CATALOG_DESCRIPTOR_MAX_BYTES } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME } from "../🏗️component-build/🟦️.ts";
 import { emitSemanticDescriptorV1, type DescriptorEmissionControlV1, type SemanticDescriptorEmissionV1 } from "../🛂️descriptor-emission/🟦️.ts";
 

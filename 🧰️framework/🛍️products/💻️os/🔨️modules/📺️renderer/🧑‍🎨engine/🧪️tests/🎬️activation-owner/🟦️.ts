@@ -5,7 +5,8 @@ import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/�
 
 import { describe, expect, it } from "vitest";
 import { ActivationRegistry, AppRouter, type AppRouterManifest, type OpeningPreferences, activationEventEnvelope, activationReasonForAppId, artifactKindActivationOwner, type PluginCatalog, type PluginCatalogTarget } from "@semio-tech/framework";
-import { ShardClient, type ShardBudget } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { ShardClient } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { type ShardBudget } from "../../../../../../../🔨️modules/🎭️actor/📮️shard-client/📜️wire/🟦️.ts";
 import { OwnedResidentLedger } from "../../../../../../../🔨️modules/🌱️value/💾️resident/🟦️.ts";
 import { resolveArtifactOpeningRelay } from "@semio-tech/framework-os";
 

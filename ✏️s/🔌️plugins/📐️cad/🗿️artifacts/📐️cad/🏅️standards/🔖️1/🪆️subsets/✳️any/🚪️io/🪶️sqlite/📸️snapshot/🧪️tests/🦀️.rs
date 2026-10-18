@@ -3,7 +3,6 @@ use semio_framework_test_fixtures::fixture_path;
 
 extern crate semio_framework_os_kernel as store;
 use semio_framework_test_original_snapshot_owners as original_owners;
-pub(crate) use semio_framework_io_sqlite_snapshot_testing_backing as backing_observer;
 fn complete_literal_cad(actual:&CadSnapshot,expected:&CadSnapshot){
  assert_eq!(actual.schema,expected.schema);assert_eq!(actual.id,expected.id);
  assert_eq!(actual.shape_model,expected.shape_model);assert_eq!(actual.building_model,expected.building_model);assert_eq!(actual.energy_model,expected.energy_model);assert_eq!(actual.structure_classic_model,expected.structure_classic_model);
@@ -17,17 +16,17 @@ fn complete_literal_cad(actual:&CadSnapshot,expected:&CadSnapshot){
 #[test]
 fn sqlite_snapshot_cad_parent_projection_settles_actual_system_backing_requests(){
  let expected=fixture();let wanted=database(&expected);let limits=SqliteDatabaseLimits::default();let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,limits);
- let(result,observed)=backing_observer::measure(||expected.to_sqlite_database(&mut control));assert_eq!(result.unwrap(),wanted);assert!(observed.bytes>0&&observed.requests>0);assert_eq!(limits.max_allocation_bytes-control.allocation_remaining_bytes(),observed.bytes,"ProjectSnapshot full concrete request settlement");
+ let(result,observed)=semio_framework_io_sqlite_snapshot_testing_backing::measure(||expected.to_sqlite_database(&mut control));assert_eq!(result.unwrap(),wanted);assert!(observed.bytes>0&&observed.requests>0);assert_eq!(limits.max_allocation_bytes-control.allocation_remaining_bytes(),observed.bytes,"ProjectSnapshot full concrete request settlement");
 }
 #[test]
 fn sqlite_snapshot_cad_parent_reconstruction_settles_actual_system_backing_requests(){
  let expected=fixture();let source=database(&expected);let limits=SqliteDatabaseLimits::default();let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,limits);
- let(result,observed)=backing_observer::measure(||CadSnapshot::from_sqlite_database(&source,&mut control));complete_literal_cad(&result.unwrap(),&expected);assert!(observed.bytes>0&&observed.requests>0);assert_eq!(limits.max_allocation_bytes-control.allocation_remaining_bytes(),observed.bytes,"ReconstructSnapshot full concrete request settlement");
+ let(result,observed)=semio_framework_io_sqlite_snapshot_testing_backing::measure(||CadSnapshot::from_sqlite_database(&source,&mut control));complete_literal_cad(&result.unwrap(),&expected);assert!(observed.bytes>0&&observed.requests>0);assert_eq!(limits.max_allocation_bytes-control.allocation_remaining_bytes(),observed.bytes,"ReconstructSnapshot full concrete request settlement");
 }
 #[test]
 fn sqlite_snapshot_cad_parent_all_fields_raw_words_and_cumulative_exact_backing(){
  let neutral=laws();assert_eq!(neutral["ownership"]["semanticBudget"],"completeSqlScalarBytes");assert_eq!(neutral["ownership"]["backingBudget"],"cumulativeSystemAllocatorRequests");
- for hex in neutral["binary64Words"].as_array().unwrap(){let mut expected=fixture();fill(&mut expected,f64::from_bits(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap()));let source=database(&expected);complete_literal_cad(&restore(&source),&expected);backing_observer::verify_snapshot_backing_by(&expected,&source,complete_literal_cad);}
+ for hex in neutral["binary64Words"].as_array().unwrap(){let mut expected=fixture();fill(&mut expected,f64::from_bits(u64::from_str_radix(hex.as_str().unwrap(),16).unwrap()));let source=database(&expected);complete_literal_cad(&restore(&source),&expected);semio_framework_io_sqlite_snapshot_testing_backing::verify_snapshot_backing_by(&expected,&source,complete_literal_cad);}
 }
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use semio_s_artifact_cad_cad_model::standards::v1::subsets::any::io::sqlite::snapshot::CadSnapshot;

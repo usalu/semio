@@ -35,7 +35,7 @@ use semio_framework_plugin::ToolRef;
 use semio_framework_plugin::ToolRunJob;
 use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// ✏️ The editor's typed command channel — one variant per document verb, plus the three the surface

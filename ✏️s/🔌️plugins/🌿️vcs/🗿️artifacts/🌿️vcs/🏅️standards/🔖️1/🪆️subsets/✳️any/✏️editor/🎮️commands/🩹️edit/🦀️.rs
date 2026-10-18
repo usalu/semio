@@ -34,7 +34,7 @@ const VCS_EDIT_RULES: [VcsEditRule; 5] = [
 /// `VcsSnapshot` and emits the concrete kinds of every edited field. A live typing delivery (`typing` argument) folds into its
 /// window's typing run — a single buffer, so the run's net is the diff of its last text — which commits as ONE edit (design
 /// §13.2); a one-shot dispatch is one edit.
-pub(crate) fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
+pub fn text_edit_operations(text: &str, current: &VcsSnapshot) -> Emit<VcsDemoMutation, VcsDemoConfigMutation> {
     match semio_framework_pack_json::from_json_str::<VcsSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject) {
         Ok(next_projection) => Emit::mutations(VCS_EDIT_RULES.iter().flat_map(|rule| rule(current, &next_projection)).collect()),
         Err(_) => Emit::default(),

@@ -24,9 +24,9 @@ import { parseDocumentSocketGrantReceiptV1 } from "@semio-tech/framework-os";
 import { createSpaceCommandV1 } from "@semio-tech/framework/directory/spaces";
 
 import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
-import { isDiscoverySkipDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { isDiscoverySkipDirectory } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🪧️owner-markers/🟦️.ts";
 
-export { getWorkspaceRoot } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+export { getWorkspaceRoot } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 //#region 🧬️Scope-owned schema resolution
 

@@ -56,7 +56,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
     });
 
     it.runIf(Boolean(process.env.SEMIO_DISTRIBUTION_AUDIT_PATH))("checks actual compiled distribution bytes and preserves the entire old primary distribution", async () => {
-      const { loadTaxonomy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
+      const { loadTaxonomy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts");
       const compiled = resolve(process.env.SEMIO_DISTRIBUTION_AUDIT_PATH!), artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!);
       expect(relative(artifacts, compiled)).toMatch(/^distribution-compiled-[A-Za-z0-9]+$/u);
       const manifest = parseDistributionManifest(JSON.parse(readFileSync(join(compiled, DISTRIBUTION_LAYOUT.manifest), "utf8")), DISTRIBUTION_LAYOUT);
@@ -366,7 +366,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
     itLong("serves every declared component import and tool-fixed vendor file byte-identically", async () => {
       const ts = await import("typescript"), { PassThrough } = await import("node:stream");
       const { isAbsolute } = await import("node:path");
-      const styling = ts.createSourceFile("styling.ts", readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+      const styling = ts.createSourceFile("styling.ts", [readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/📤️file-serving/🟦️.ts"), "utf8"), readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts"), "utf8")].join("\n"), ts.ScriptTarget.Latest, true);
       const sourceFunctions = ["contentTypeForStaticDirAsset", "serveFileWithValidatorsV1", "createStaticDirMiddleware", "staticDirVitePlugin"].map((name) => {
         const node = styling.statements.find((entry) => ts.isFunctionDeclaration(entry) && entry.name?.text === name);
         if (!node) throw new Error(`missing production function ${name}`);
@@ -374,7 +374,7 @@ export async function registerVendorTransportTests(vitest: NonNullable<ImportMet
       });
       const emitted = ts.transpileModule(sourceFunctions.join("\n"), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
       const staticDirVitePlugin = new Function("exports", "resolve", "relative", "isAbsolute", "existsSync", "statSync", "createReadStream", "mkdirSync", "cpSync", "process", emitted + "\nreturn exports.staticDirVitePlugin;")({}, resolve, relative, isAbsolute, existsSync, statSync, createReadStream, mkdirSync, cpSync, process);
-      const { loadCatalogTaxonomy, fixedFilenameContractIdsForPath } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts");
+      const { loadCatalogTaxonomy } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts"), { fixedFilenameContractIdsForPath } = await import("../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/⚖️fixed-contract-resolution/🟦️.ts");
       const taxonomy = loadCatalogTaxonomy(), fixture = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧪️tests/🧫️fixtures/🪞️vendor.json"), "utf8"));
       const vendorRoot = join(pluginOutRoot, fixture.vendorPath), urls = new Map<string, string>();
       expect(readdirSync(vendorRoot).filter((name) => name !== ".semio-artifact.json").sort()).toEqual(fixture.vendorFiles);

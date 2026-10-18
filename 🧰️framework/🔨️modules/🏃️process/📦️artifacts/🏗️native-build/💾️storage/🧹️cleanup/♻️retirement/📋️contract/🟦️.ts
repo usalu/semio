@@ -1,12 +1,12 @@
 import{dirname,join,resolve}from"node:path";
 import{constants,type BigIntStats}from"node:fs";
 import{open,lstat}from"node:fs/promises";
-import{withArtifactDescriptorV1}from"@semio-tech/framework/filesystem/observation/descriptor";
-import storageSchema from"../../../🧬️schema/🔣️.json";
+import{withArtifactDescriptorV1}from"../../../../../../../../📦️packages/🟦️typescript/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";
+import storageSchema from"../../../🧬️schema/🔣️.json" with{type:"json"};
 import{assertNativeSelectedDescriptorCustodyV1,nativeSelectedDescriptorProtocolV1,type NativeSelectedDescriptorGuardV1}from"../../../../../💾️cache/📂️descriptors/🟦️.ts";
 import{captureOwnedCommandResultV1}from"../../../../../../🎛️owned-execution/🟦️.ts";
-import type{NativeStorageBackingV1}from"../../../🟦️.ts";
-import exportedSchema from"../🧬️schema/🔣️.json";
+import type{NativeStorageBackingV1}from"../../../📜️journal/🟦️.ts";
+import exportedSchema from"../🧬️schema/🔣️.json" with{type:"json"};
 const protocol=Object.freeze({...exportedSchema.definitions.Protocol.const,operations:Object.freeze([...exportedSchema.definitions.Protocol.const.operations])});
 /** 🧬️ Captures finite cleanup policy independently of mutable public schema DATA. */
 export function nativeImageCleanupProtocolV1():typeof protocol{return protocol;}
@@ -22,7 +22,8 @@ import{withIssuedResourceOperationV1,withAcceptedPhysicalCleanupV1,beginAccepted
 import type{AcceptedPhysicalCleanupV1}from"../../../../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
 import{checkResourceLeaseControl,type ResourceLeaseControl}from"../../../../../../🔒️leases/🟦️.ts";
 import type{NativeImageStorageV1}from"../../../🌐️platform/📋️contract/🟦️.ts";
-import{readNativeStorageImageReservationV1,type NativeStorageReservationV1,type NativeStorageAllocationV1}from"../../../🟦️.ts";
+import{readNativeStorageImageReservationV1,type NativeStorageReservationV1}from"../../../🟦️.ts";
+import type{NativeStorageAllocationV1}from"../../../📜️journal/🟦️.ts";
 declare const disposableBrand:unique symbol;
 /** 🎟️ Identifies one accepting actual disposable child; it exposes no path, writer or command authority. */
 export type NativeDisposableImageV1=Readonly<{[disposableBrand]:true}>;
@@ -35,11 +36,12 @@ export function bindNativeDisposableImageAllocationV1(owner:NativeDisposableImag
 /** 🛟️ Funds terminal work before birth and joins only body descendants before private physical settlement. */
 export function runNativeDisposableImageV1<T>(control:ResourceLeaseControl,resource:string,port:NativeDisposableImagePortV1,body:(image:NativeImageStorageV1,control:ResourceLeaseControl,owner:NativeDisposableImageV1)=>Promise<T>):Promise<T>{return withIssuedResourceOperationV1(control,()=>{const failures:unknown[]=[];let value:T|undefined,failed=false,primary:unknown;const retain=(error:unknown)=>{if(!failed){failed=true;primary=error;}if(!failures.some(prior=>Object.is(prior,error)))failures.push(error);},finish=()=>{if(failed)throw primary;return value as T;};return withAcceptedPhysicalCleanupV1(control,{version:1,kind:"native-image",resource,reserveMilliseconds:protocol.disposableReserveMilliseconds},async(enrollment,actual)=>{let scope:DisposableScope|undefined,opened:NativeImageStorageV1|undefined;try{opened=await port.open(actual,enrollment);const image=opened,backing=port.capture(image,actual,enrollment),owner=Object.freeze({})as NativeDisposableImageV1;scope={image,control:actual,backing,accepting:true};disposableImages.set(owner,scope);checkResourceLeaseControl(actual);value=await body(image,actual,owner);checkResourceLeaseControl(actual);}catch(error){retain(error);}if(scope)scope.accepting=false;if(opened)try{await opened.close();}catch(error){retain(error);}try{await beginAcceptedPhysicalCleanupV1(enrollment);}catch(error){retain(error);}try{await port.retire(enrollment,scope?.allocation);}catch(error){const include=(value:unknown)=>{if(failures.some(prior=>Object.is(prior,value)))return;if(value instanceof AggregateError)for(const item of value.errors)include(item);else retain(value);};include(error);try{port.unresolved(error);}catch(secondary){retain(secondary);}}}).then(finish,error=>{const include=(value:unknown)=>{if(failures.some(prior=>Object.is(prior,value)))return;if(value instanceof AggregateError)for(const item of value.errors)include(item);else retain(value);};include(error);return finish();});});}
 
-import{nativeStorageStateV1,nativeStorageEventV1}from"../../../🟦️.ts";
+import{nativeStorageStateV1,nativeStorageEventV1}from"../../../📜️journal/🟦️.ts";
 /** 📜️ Derives exact retirement bytes only for an empty image or its sole authentically bound allocation. */
 export function nativeDisposableJournalV1(bytes:Uint8Array,capacity:number,allocation:NativeStorageAllocationV1|undefined):Uint8Array{const text=new TextDecoder("utf-8",{fatal:true}).decode(bytes);if(text&&!text.endsWith("\n"))throw Error("Complete disposable allocation journal required");let state=nativeStorageStateV1();for(const line of text?text.slice(0,-1).split("\n"):[])state=nativeStorageEventV1(state,JSON.parse(line),capacity);if(state.allocations.length!==(allocation?1:0))throw Error("Exact disposable allocation census required");if(!allocation)return bytes.slice();const held=state.allocations[0]!;if((["id","owner","kind","bytes"]as const).some(key=>held[key]!==allocation[key])||held.kind==="persistent-state")throw Error("Exact disposable allocation identity required");let suffix="";if(held.phase!=="retiring"){const event={type:"retiring"as const,id:held.id};state=nativeStorageEventV1(state,event,capacity);suffix+=JSON.stringify(event)+"\n";}state=nativeStorageEventV1(state,{type:"retired",id:held.id},capacity);if(state.allocations.length)throw Error("Disposable allocations remain held");return Buffer.from(text+suffix+JSON.stringify({type:"retired",id:held.id})+"\n");}
 
-import{withNativeStorageFundedChildReservationV1,settleEnteredNativeStorageFundedChildV1,retainNativeStorageFundedChildV1,type NativeStorageFailedBirthRetirementV1,type NativeStorageChildRequestV1}from"../../../🟦️.ts";
+import{withNativeStorageFundedChildReservationV1,settleEnteredNativeStorageFundedChildV1,retainNativeStorageFundedChildV1,type NativeStorageFailedBirthRetirementV1}from"../../../🟦️.ts";
+import type{NativeStorageChildRequestV1}from"../../../📜️journal/🟦️.ts";
 import{readNativeStorageFundedFactoryV1,type NativeStorageChildFundingV1}from"../../../🌱️birth/🟦️.ts";
 import type{NativeFixedPlatformOptionsV1}from"../../../🧱️fixed/🟦️.ts";
 /** 🪢️ Actual backends keep their private EX and failed-preparation settlement inside these callbacks. */

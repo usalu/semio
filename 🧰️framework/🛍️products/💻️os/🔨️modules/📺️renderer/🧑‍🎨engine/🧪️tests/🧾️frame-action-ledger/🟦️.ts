@@ -38,7 +38,7 @@ it("correlates receipt refusals independently of identical action payloads", () 
 });
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fixturePath = resolve(here, "../../🧫️fixtures/🧾️frame-action-ledger/🔣️.json");
+const fixturePath = resolve(here, "../🧫️fixtures/🧾️frame-action-ledger/🔣️.json");
 const rendererPath = resolve(here, "../../🎯️targets/🧊️wgpu/🧊️renderer/🦀️.rs");
 const frameJobPath = resolve(here, "../../🎯️targets/🧊️wgpu/🧵️frame-job/🦀️.rs");
 
@@ -138,7 +138,7 @@ describe("frame action ledger", () => {
   });
 
   it("states the ledger once, on the runtime, and leaves no frame candidate owning one", () => {
-    expect(rendererSource).toContain("    frame_actions: FrameActionOwners,");
+    expect(rendererSource).toContain("    pub frame_actions: FrameActionOwners,");
     expect(rendererSource).toContain("app.frame_actions.try_push(action)");
     expect(rendererSource).toContain("std::mem::take(&mut self.frame_actions)");
     for (const declaration of ["struct FrameTransaction {", "struct FrameBuildCursor {", "struct AppFrameAfterChrome {", "struct FrameFinishCursor {"]) {

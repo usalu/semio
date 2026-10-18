@@ -1,4 +1,4 @@
-use crate::tui::geometry::{Pos, Size};
+use crate::geometry::{Pos, Size};
 
 /// ⌨️ A decoded terminal key.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

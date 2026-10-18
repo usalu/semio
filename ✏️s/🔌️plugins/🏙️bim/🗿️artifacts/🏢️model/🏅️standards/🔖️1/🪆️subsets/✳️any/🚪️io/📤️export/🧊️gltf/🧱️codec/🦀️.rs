@@ -31,6 +31,4 @@ pub fn decode(bytes: &[u8]) -> Result<Snapshot, String> {
     decode_glb(bytes)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

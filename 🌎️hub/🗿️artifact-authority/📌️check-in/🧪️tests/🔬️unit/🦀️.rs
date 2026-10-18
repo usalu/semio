@@ -214,7 +214,7 @@ impl TrustedArtifactCatalog for LinkedGisMapCatalog {
 /// 🌱️ The GIS Map genesis pair of the check-in document and the ledger a real map editor emits for `mutations`, one
 /// one-operation edit each — exactly its store's own event log.
 async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutation>) -> (ArtifactPair, Vec<protocol::MutationEnvelope>) {
-    use ::directory::os_store::{store_schema::ArtifactCommand, pack::snapshot::ArtifactPack, ArtifactStore, SnapshotRetirementStep};
+    use ::directory::os_store::{store_schema::ArtifactCommand, pack::snapshot::ArtifactPack, ArtifactStore};
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, GIS_MAP_SCHEMA};
     let pack = <GisMapSnapshot as ArtifactPack>::encode_pack(&GisMapSnapshot::default());
     let spr = ::directory::os_store::text_format::empty_document_spr("karte", GIS_MAP_SCHEMA).await;
@@ -229,12 +229,10 @@ async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutati
         }
     }
     let events = store.event_log();
-    loop {
-        match store.close_owned_step(1, ::directory::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("editor store closes") {
-            SnapshotRetirementStep::Complete => break,
-            SnapshotRetirementStep::Pending { .. } => {}
-            SnapshotRetirementStep::Blocked => panic!("editor store close blocked"),
-        }
+    while !store.close_owned_terminal_is_empty() {
+        let demand = store.close_owned_demands(0).expect("the store quotes its next close turn");
+        let grant = ::directory::os_store::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        store.close_owned_step(grant).expect("editor store closes");
     }
     drop(store);
     applied.expect("editor edits apply");

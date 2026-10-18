@@ -1,6 +1,7 @@
 //! 🪟️ Process3d play app body rendering and the `ArtifactEditor` implementation.
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_process_process3d_kit::Process3dDispatchCtx;
 use semio_s_artifact_process_process3d_kit::Process3dInteractionSnapshot;
 

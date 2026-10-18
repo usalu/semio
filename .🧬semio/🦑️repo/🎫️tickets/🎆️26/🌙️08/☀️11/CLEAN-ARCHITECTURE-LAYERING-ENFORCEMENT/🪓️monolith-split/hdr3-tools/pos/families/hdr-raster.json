@@ -1,0 +1,5 @@
+{
+ "name": "hdr-raster",
+ "crates": ["semio-s-artifact-raster-raster-io", "semio-s-artifact-raster-raster-io-media-bridge", "semio-s-artifact-raster-raster-editor-commands", "semio-s-artifact-raster-raster-editor-commands-2"],
+ "note": "HDR-2: raster io media bridge peeled, editor commands split in two"
+}

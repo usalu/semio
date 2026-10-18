@@ -1,0 +1,17 @@
+{
+ "tag": "vt",
+ "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs",
+ "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🌿️vcs/🧪️tests/🔬️flow-vcs/🦀️.rs",
+ "folders": [
+  "🧾️oracle-records-and-serde-json-oracle",
+  "🧮️oracle-json-helpers-and-expected-rows",
+  "🧨️hostile-fingerprints-and-scalars",
+  "🎬️oracle-cases-and-hostile-sessions",
+  "🪜️retained-helpers-and-ordered-layout-laws",
+  "🔁️rejection-stale-aba-and-vector-signatures",
+  "🧬️fixture-byte-authority-and-cancel-vectors",
+  "🚦️zero-fuel-partial-grants-and-limits",
+  "🛑️transfer-cancel-and-document-replacement-laws",
+  "🏁️complete-route-round-trips-and-close-receipts"
+ ]
+}

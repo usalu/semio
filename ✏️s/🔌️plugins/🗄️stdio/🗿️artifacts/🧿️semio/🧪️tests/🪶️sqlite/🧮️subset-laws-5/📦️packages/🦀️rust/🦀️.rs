@@ -10,7 +10,6 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub(crate) use semio_framework_io_sqlite_snapshot_testing_backing as snapshot_test_backing;
 pub use semio_s_artifact_stdio_semio::*;
 
 #[path = "../../../../../🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🦀️.rs"]

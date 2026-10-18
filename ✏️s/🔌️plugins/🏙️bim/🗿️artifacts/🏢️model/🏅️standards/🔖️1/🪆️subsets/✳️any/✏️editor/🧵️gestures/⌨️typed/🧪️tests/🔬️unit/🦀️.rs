@@ -1,8 +1,11 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::editor::bim::gestures::plane::{angle, dist, polar, COINCIDENT, P};
+use crate::editor::bim::gestures::typed::*;
 use crate::editor::bim::gestures::plane::{axis_ends, signed_area};
 use crate::editor::bim::marks::Shape;
 use crate::editor::bim::fixture::{model, room, Rig};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
+use semio_framework_test_fixtures::fixture_text;
 
 #[semio_framework_async_macros::async_test]
 async fn every_form_of_the_grammar_parses_to_its_entry() {
@@ -221,11 +224,11 @@ async fn a_typed_point_on_the_world_and_the_section_surface_is_a_click_there_too
     assert!(step.refused.is_none(), "a section takes distance along the line and height");
 }
 
-const TYPED_CASES: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json");
+static TYPED_CASES: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../🧪️tests/🧫️fixtures/🛠️gestures/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_lines_the_third_party_oracle_resolved_resolve_to_the_same_points() {
-    let cases: serde_json::Value = serde_json::from_str(TYPED_CASES).expect("the committed cases");
+    let cases: serde_json::Value = serde_json::from_str((*TYPED_CASES)).expect("the committed cases");
     let point = |value: &serde_json::Value| value.as_array().map(|pair| [pair[0].as_f64().expect("x"), pair[1].as_f64().expect("y")]);
     let typed = cases["typed"].as_array().expect("the typed cases");
     assert!(typed.len() >= 16);
@@ -255,7 +258,7 @@ fn step_delta(name: &str) -> [f64; 2] {
 
 #[semio_framework_async_macros::async_test]
 async fn the_arrow_keys_land_the_cursor_on_the_points_the_third_party_oracle_summed() {
-    let cases: serde_json::Value = serde_json::from_str(TYPED_CASES).expect("the committed cases");
+    let cases: serde_json::Value = serde_json::from_str((*TYPED_CASES)).expect("the committed cases");
     let point = |value: &serde_json::Value| [value[0].as_f64().expect("x"), value[1].as_f64().expect("y")];
     let walk = cases["cursor"].as_array().expect("the cursor cases");
     assert!(walk.len() >= 3);

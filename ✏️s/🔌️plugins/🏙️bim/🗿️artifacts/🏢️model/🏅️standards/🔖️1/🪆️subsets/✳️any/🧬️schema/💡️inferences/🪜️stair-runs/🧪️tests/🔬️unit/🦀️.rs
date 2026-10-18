@@ -1,12 +1,22 @@
+use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Stair, StairFlight, Turn};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{vertical_of, StoreyLevel};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use std::f64::consts::{FRAC_PI_2, PI};
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::{flight};
 use crate::standards::v1::subsets::any::io::text::inferences::stair_runs::table_json;
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::*;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_model_mutation, set_storey_height::SetStoreyHeight};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{kinds, plan, ModelInferenceSession, ModelNode};
 use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::TopConstraint};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_stair_runs;
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🏠️house/📸️snapshot/🔣️.json"));
 
 fn close(left: f64, right: f64) -> bool {
     (left - right).abs() <= 1e-9 * right.abs().max(1.0)
@@ -17,7 +27,7 @@ fn stair(flight: StairFlight, top: TopConstraint) -> Stair {
 }
 
 fn with(stair: Stair) -> ModelSnapshot {
-    let mut snapshot: ModelSnapshot = from_json_str(HOUSE, JsonMemberPolicy::Reject).expect("house decodes");
+    let mut snapshot: ModelSnapshot = from_json_str((*HOUSE), JsonMemberPolicy::Reject).expect("house decodes");
     snapshot.stairs.insert("s-1".into(), stair);
     snapshot
 }
@@ -152,13 +162,13 @@ async fn a_stair_on_a_missing_storey_is_not_planned() {
     assert!(compute_stair_runs(&snapshot).is_empty());
 }
 
-const FLIGHTS: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪜️stair-runs/🪜️flights/📸️snapshot/🔣️.json");
-const FLIGHTS_TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪜️stair-runs/🪜️flights/💡️inference/🪜️stair-runs/🔣️.json");
+static FLIGHTS: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪜️stair-runs/🪜️flights/📸️snapshot/🔣️.json"));
+static FLIGHTS_TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🪜️stair-runs/🪜️flights/💡️inference/🪜️stair-runs/🔣️.json"));
 
 #[semio_framework_async_macros::async_test]
 async fn the_subject_reproduces_the_third_party_oracle_table() {
-    let snapshot: ModelSnapshot = from_json_str(FLIGHTS, JsonMemberPolicy::Reject).expect("the flights model decodes");
-    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems(FLIGHTS_TABLE, &table_json(&compute_stair_runs(&snapshot)));
+    let snapshot: ModelSnapshot = from_json_str((*FLIGHTS), JsonMemberPolicy::Reject).expect("the flights model decodes");
+    let problems = crate::standards::v1::subsets::any::schema::inferences::storey_levels::table_problems((*FLIGHTS_TABLE), &table_json(&compute_stair_runs(&snapshot)));
     assert!(problems.is_empty(), "{} disagreements with the shapely oracle: {:?}", problems.len(), &problems[..problems.len().min(12)]);
 }
 

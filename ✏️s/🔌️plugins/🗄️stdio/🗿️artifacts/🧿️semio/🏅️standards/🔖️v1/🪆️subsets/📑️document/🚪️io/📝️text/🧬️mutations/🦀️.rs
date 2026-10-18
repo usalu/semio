@@ -157,7 +157,7 @@ fn dec_at(args: &std::collections::BTreeMap<&str, &str>) -> Result<Option<usize>
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn print_document_mutation(m: &SemioDocumentMutation) -> String {
+pub fn print_document_mutation(m: &SemioDocumentMutation) -> String {
     match m {
         SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path, block }) => format!("insert-block path={} block={}", enc_block_path(path), enc_block(block)),
         SemioDocumentMutation::RemoveBlock(remove_block::RemoveBlock { path }) => format!("remove-block path={}", enc_block_path(path)),

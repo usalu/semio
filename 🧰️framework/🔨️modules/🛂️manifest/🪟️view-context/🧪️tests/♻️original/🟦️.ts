@@ -1,6 +1,6 @@
 import {expect,test} from "bun:test";
 import Ajv from "ajv";
-import {parseResolvedPluginViewState} from "../../../🟦️.ts";
+import { parseResolvedPluginViewState } from "../../../👁️view-state-and-public-invocation/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json" with {type:"json"};
 import fixture from "../🧫️fixtures/♻️original/🔣️.json" with {type:"json"};
 

@@ -2,9 +2,9 @@
 //! the pointer is on, the selections of both domains), what a tool answers (`Step`: the mutations of one history row, a selection request, a utility to arm) and what it shows
 //! meanwhile (`Preview`: marks painted over the window, never part of the document). A tool is a small statechart: `event` advances it, `preview` projects it.
 
-use super::plane::P;
+use crate::editor::bim::gestures::plane::P;
 use crate::editor::bim::marks::{Mark, Preview, Shape, Style};
-use super::snap::{snap, SnapHit, SnapKind, SnapRequest};
+use crate::editor::bim::gestures::snap::{snap, SnapHit, SnapKind, SnapRequest};
 use crate::editor::bim::entities::id_taken;
 use crate::editor::bim::kit::IdMint;
 use crate::editor::bim::terminology::BimLabels;
@@ -211,7 +211,7 @@ impl Step {
 //#region 🔖️Preview
 /// 📏️ A length label at the middle of a segment, in metres with two decimals.
 pub fn length_label(a: P, b: P) -> Mark {
-    Mark::label(super::plane::mid(a, b), format!("{:.2} m", super::plane::dist(a, b)))
+    Mark::label(crate::editor::bim::gestures::plane::mid(a, b), format!("{:.2} m", crate::editor::bim::gestures::plane::dist(a, b)))
 }
 
 /// 🧲️ The marker a snap hit shows: a snap mark named by the kind of the hit.
@@ -258,6 +258,4 @@ impl Tool for Idle {
 }
 //#endregion 🔖️Tool
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -754,9 +754,9 @@ fn absorb_named<K: Clone + PartialEq, D, X: Clone>(
 /// fallback, nested list/map collection triples, and the empty/`None` diff) — the single source of truth reused by
 /// `diff_codec_text_binary_roundtrip_law` below AND by `🎹️composer/🦀️.rs`'s `diff_grammar_conformance_law`/`protocol_walk_law`
 /// conformance tests, same convention json's own `demo_diff_cases` uses.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioValueTreeDiff> {
+pub fn demo_diff_cases() -> Vec<SemioValueTreeDiff> {
     let root = |diff: SemioValueDiff| SemioValueTreeDiff { root: Some(diff), nodes: None };
     let int = |lexeme: &str| SemioValue::Int { lexeme: lexeme.into() };
     let list = IndexedTripleDiff {

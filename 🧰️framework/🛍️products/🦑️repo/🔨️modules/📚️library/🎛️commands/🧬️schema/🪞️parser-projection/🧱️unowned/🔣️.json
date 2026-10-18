@@ -594,6 +594,46 @@
       "reason": "normalizing-reader"
     },
     {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "GifDiff",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "GifImageAdded",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "GifImageDiff",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "GifAppExtensionAdded",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "GifAppExtensionModified",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "GifDiff",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "GifFrameAdded",
+      "reason": "unrenderable"
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
+      "name": "GifFrameDiff",
+      "reason": "unrenderable"
+    },
+    {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts",
       "name": "SvgDiff",
       "reason": "schema-disagrees-with-type"
@@ -607,16 +647,6 @@
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/🟦️.ts",
       "name": "SvgArtifact",
       "reason": "unrenderable"
-    },
-    {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/🟦️.ts",
-      "name": "Ifc2x3SnapshotBinary",
-      "reason": "in-memory-model"
-    },
-    {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🚪️io/💾️binary/🔺️diff/🟦️.ts",
-      "name": "Ifc2x3DiffBinary",
-      "reason": "in-memory-model"
     },
     {
       "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/🟦️.ts",

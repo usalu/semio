@@ -72,12 +72,17 @@ def mods_of(items):
 def find_container(lines):
     wrappers = []
     items = parse_items(lines)
+    pre, post = [], []
     while True:
         mods = mods_of(items)
         others = [it for it in items if it["kind"] == "other"]
         if len(mods) >= 2:
-            return wrappers, items
-        if len(mods) == 1 and mods[0]["body"] is not None and not others:
+            return wrappers, items, pre, post
+        if len(mods) == 1 and mods[0]["body"] is not None and (not others or not wrappers):
+            idx = items.index(mods[0])
+            if not wrappers:
+                pre = [l for it in items[:idx] for l in it["raw"]]
+                post = [l for it in items[idx + 1:] for l in it["raw"]]
             wrappers.append(mods[0])
             items = parse_items(mods[0]["body"])
             continue
@@ -150,7 +155,7 @@ def main():
     if first is None:
         die("no mounts")
     header = lines[:first]
-    wrappers, leafitems = find_container(lines[first:])
+    wrappers, leafitems, pre_lines, post_lines = find_container(lines[first:])
     leaves = mods_of(leafitems)
     if any(it["kind"] == "other" for it in leafitems):
         die("non-module items at the leaf level")
@@ -167,6 +172,15 @@ def main():
                     continue
                 for m in rx.finditer(l):
                     refs[idx].add(names.index(m.group(1)))
+    pins = args[args.index("--pin-word") + 1].split(",") if "--pin-word" in args else []
+    forced = set(i for i in range(n) if any(re.search(r"\b%s\b" % re.escape(w), open(f).read()) for f in fileset[i] for w in pins))
+    grew = True
+    while grew:
+        grew = False
+        for a_, rs in refs.items():
+            if a_ not in forced and rs & forced:
+                forced.add(a_)
+                grew = True
     uf = list(range(n))
     def find(x):
         while uf[x] != x:
@@ -176,6 +190,9 @@ def main():
     for a_, rs in refs.items():
         for b_ in rs:
             uf[find(a_)] = find(b_)
+    fl = sorted(forced)
+    for i in fl[1:]:
+        uf[find(i)] = find(fl[0])
     comps = {}
     for i in range(n):
         comps.setdefault(find(i), []).append(i)
@@ -185,6 +202,12 @@ def main():
         die("only %d independent leaf groups" % len(comps))
     bins = [[] for _ in range(parts)]
     tot = [[1, 0] for _ in range(parts)]
+    if fl:
+        fc = next(cc for cc in comps if fl[0] in cc)
+        comps = [cc for cc in comps if cc is not fc]
+        bins[0] += fc
+        tot[0][0] += sum(fb[i][0] for i in fc)
+        tot[0][1] += sum(fb[i][1] for i in fc)
     def score(t):
         return max(t[0] / 32, t[1] / 262144)
     for c in comps:
@@ -194,7 +217,7 @@ def main():
         tot[k][0] += cf
         tot[k][1] += cb
     weights = [round(score(t), 3) for t in tot]
-    groups = sorted([sorted(b_) for b_ in bins], key=lambda g: g[0])
+    groups = sorted([sorted(b_) for b_ in bins], key=lambda g: (0 if (fl and set(g) & forced) else 1, g[0]))
     if max(weights) > 0.93:
         die("unbalanced parts %s components %s refs %s" % (weights, [[names[i] for i in c] for c in comps], {names[a]: [names[b] for b in v] for a, v in refs.items() if v}))
     keep, moved_groups = groups[0], groups[1:]
@@ -275,12 +298,13 @@ def main():
         if not no_reexport:
             old_inner += [f"{indent}pub use {snake(newpkg_name)}::{prefix}{{{ids}}};"]
     old_lines = list(header)
-    out = []
+    out = list(pre_lines)
     for w in wrappers:
         out += w["attrs"] + [w["head"]]
     out += old_inner
     for w in reversed(wrappers):
         out.append(w["close"])
+    out += post_lines
     newold = "\n".join(old_lines).rstrip("\n") + "\n\n" + "\n".join(out) + "\n"
     print(f"{pkg}: {n} leaves (parts {weights}) -> keep {len(keep)}, move {len(moved_all)} into {[c['pkg'] for c in created]}; wrappers {chain}")
     for c in created:

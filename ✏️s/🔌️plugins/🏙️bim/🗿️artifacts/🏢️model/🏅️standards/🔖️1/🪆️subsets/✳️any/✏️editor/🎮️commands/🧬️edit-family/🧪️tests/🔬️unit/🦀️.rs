@@ -1,11 +1,27 @@
-use super::*;
+use crate::editor::bim::kit::fault;
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+#[allow(unused_imports)]
+use crate::editor::bim::entities::id_taken;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::IdMint;
+#[allow(unused_imports)]
+use crate::editor::bim::modes::edit::windows::family::edit::{apply, Edit};
+#[allow(unused_imports)]
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::commands::edit_family::*;
 use crate::editor::bim::fixture::support::{applied, ctx, run};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
+static TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json"));
 
 fn model() -> ModelSnapshot {
-    from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes")
+    from_json_str((*TABLE), JsonMemberPolicy::Reject).expect("the table decodes")
 }
 
 fn edit(part: &str, op: &str, key: &str, value: &str) -> Result<Emit<ModelMutation, NoConfigMutation>, Fault> {

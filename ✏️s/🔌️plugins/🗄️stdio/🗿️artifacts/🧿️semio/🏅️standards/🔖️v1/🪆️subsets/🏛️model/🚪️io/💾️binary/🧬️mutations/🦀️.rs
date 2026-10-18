@@ -49,7 +49,7 @@ use protocol::{OpBinary, OpText};
 use semio_s_artifact_stdio_contract::deserialize_double_option;
 use crate::io::text::mutations::print_semio_model_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn wire_tag(m: &SemioModelMutation) -> u8 {
+pub fn wire_tag(m: &SemioModelMutation) -> u8 {
     match m {
         SemioModelMutation::InsertSpatialNode(_) => TAG_INSERT_SPATIAL_NODE,
         SemioModelMutation::RemoveSpatialNode(_) => TAG_REMOVE_SPATIAL_NODE,

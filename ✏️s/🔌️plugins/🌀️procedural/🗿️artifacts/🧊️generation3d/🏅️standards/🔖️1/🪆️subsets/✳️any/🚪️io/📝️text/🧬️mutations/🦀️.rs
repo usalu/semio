@@ -55,7 +55,7 @@ use semio_s_artifact_procedural_3d_mut_generations::select_generation::SelectGen
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
-pub(crate) enum Generation3dOperationDsl {
+pub enum Generation3dOperationDsl {
     CreateWidget {
         index: usize,
         #[dsl(statements)]
@@ -143,7 +143,7 @@ impl protocol::OpText for Generation3dOperationDsl {
     }
 }
 
-pub(crate) fn generation3d_operation_to_dsl(operation: &Generation3dMutation) -> Generation3dOperationDsl {
+pub fn generation3d_operation_to_dsl(operation: &Generation3dMutation) -> Generation3dOperationDsl {
     match operation {
         Generation3dMutation::CreateWidget(CreateWidget { index, widget }) => Generation3dOperationDsl::CreateWidget { index: *index, widget: Box::new(widget_to_dsl(widget)) },
         Generation3dMutation::UpdateWidget(UpdateWidget { widget }) => Generation3dOperationDsl::UpdateWidget { widget: Box::new(widget_to_dsl(widget)) },
@@ -170,7 +170,7 @@ pub(crate) fn generation3d_operation_to_dsl(operation: &Generation3dMutation) ->
     }
 }
 
-pub(crate) fn generation3d_operation_from_dsl(operation: Generation3dOperationDsl) -> Result<Generation3dMutation, semio_framework_diagnostic::TextError> {
+pub fn generation3d_operation_from_dsl(operation: Generation3dOperationDsl) -> Result<Generation3dMutation, semio_framework_diagnostic::TextError> {
     Ok(match operation {
         Generation3dOperationDsl::CreateWidget { index, widget } => Generation3dMutation::CreateWidget(CreateWidget { index, widget: widget_from_dsl(*widget)? }),
         Generation3dOperationDsl::UpdateWidget { widget } => Generation3dMutation::UpdateWidget(UpdateWidget { widget: widget_from_dsl(*widget)? }),

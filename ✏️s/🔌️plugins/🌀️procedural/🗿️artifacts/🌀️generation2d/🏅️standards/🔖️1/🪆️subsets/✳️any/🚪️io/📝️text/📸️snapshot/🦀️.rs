@@ -38,7 +38,7 @@ pub use semio_s_procedural_core_generation_sqlite_native::{
 /// into one top-level `#[derive(dsl::DslRecord)]` grammar.
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord)]
 #[dsl(id = "procedural.generation2d", layout = "lines")]
-pub(crate) struct Generation2dSnapshotDsl {
+pub struct Generation2dSnapshotDsl {
     schema: String,
     #[dsl(block)]
     camera: CameraJsonDsl,
@@ -78,7 +78,7 @@ impl pack::snapshot::ArtifactDsl for Generation2dSnapshotDsl {
 
 //#endregion 🔖️HandcraftedArtifactCodecs
 
-pub(crate) fn generation2d_document_to_dsl(document: &Generation2dSnapshot) -> Generation2dSnapshotDsl {
+pub fn generation2d_document_to_dsl(document: &Generation2dSnapshot) -> Generation2dSnapshotDsl {
     let host_snapshot = &document.host_snapshot;
     let generation = &document.generation;
     Generation2dSnapshotDsl {
@@ -93,7 +93,7 @@ pub(crate) fn generation2d_document_to_dsl(document: &Generation2dSnapshot) -> G
     }
 }
 
-pub(crate) fn generation2d_document_from_dsl(parsed: Generation2dSnapshotDsl) -> Result<Generation2dSnapshot, semio_framework_diagnostic::TextError> {
+pub fn generation2d_document_from_dsl(parsed: Generation2dSnapshotDsl) -> Result<Generation2dSnapshot, semio_framework_diagnostic::TextError> {
     let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
     let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
     let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(&entry))).collect();

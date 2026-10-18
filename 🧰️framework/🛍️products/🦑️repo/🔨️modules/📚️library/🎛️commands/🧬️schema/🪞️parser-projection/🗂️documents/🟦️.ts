@@ -2,8 +2,8 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/🧬️schema/🪞️parser-projection/🟦️.ts
  */
 import { spawnSync } from "node:child_process";
-import { readFileSync, readdirSync, writeFileSync, type Dirent } from "node:fs";
-import { join, relative, resolve, sep } from "node:path";
+import { existsSync, readFileSync, readdirSync, writeFileSync, type Dirent } from "node:fs";
+import { dirname, join, relative, resolve, sep } from "node:path";
 import { EXPORT_NAME, asDict, codePointOrder, isDict, type Dict } from "../🔡️json-text/🟦️.ts";
 import { listModuleTree } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { Owner, type SourceReader } from "../🧾️parser-render/🟦️.ts";
@@ -20,19 +20,26 @@ const FACET_DIRS = new Set(["🔺️diff", "📸️snapshot", "💡️inferences
 
 const SCHEMA_DIR = "🧬️schema";
 
-/** 🗺️ The scopes whose schema documents are addressable by `$id`: every plugin and app contract, and every hub composition. */
-export const INDEXED_SCOPES: readonly string[] = ["✏️s", "🌎️hub"];
+/** 🗺️ The scopes whose schema documents are addressable by `$id`: every plugin and app contract, every hub composition, and the framework (a reference into the framework calls a parser its referrer already imports; it never generates one there). */
+export const INDEXED_SCOPES: readonly string[] = ["✏️s", "🌎️hub", "🧰️framework"];
+
+const FRAMEWORK_SCOPE = "🧰️framework";
+
+/** 🗂️ Folders below a `🧬️schema` folder whose `🔣️.json` is no schema document of a facet. */
+const NON_FACET_DIRS = new Set(["🧪️tests", "📦️packages", "🧾️descriptor", "🧬️mutations"]);
 
 const SKIPPED_DIRS = new Set(["node_modules", ".venv", ".git", "target", "🎯️target", "⚡️cache"]);
 
 /** 🧭️ A repository-relative path with forward slashes. */
 export const portable = (root: string, path: string): string => relative(root, path).split(sep).join("/");
 
-/** 📚️ The leaf sources of one run: each file is read once, and a file written with CRLF line ends keeps them. `read` and `write` address the leaf file itself; `declarations` is the leaf followed by the child modules it imports, so a TypeScript leaf split into child modules still declares every type the unsplit leaf declared. */
+/** 📚️ The leaf sources of one run: each file is read once, and a file written with CRLF line ends keeps them. `read` and `write` address the leaf file itself; `tree` lists the leaf followed by the child modules it imports, and `declarations` is their text, so a TypeScript leaf split into child modules (types and parsers) still declares everything the unsplit leaf declared. */
 export class SourceStore implements SourceReader {
   private readonly texts = new Map<string, string>();
   private readonly crlf = new Set<string>();
   private readonly trees = new Map<string, string>();
+  private readonly listings = new Map<string, readonly string[]>();
+  private readonly holdings = new Map<string, readonly string[]>();
 
   read(path: string): string {
     const cached = this.texts.get(path);
@@ -51,17 +58,42 @@ export class SourceStore implements SourceReader {
     return text;
   }
 
+  tree(path: string): readonly string[] {
+    const cached = this.listings.get(path);
+    if (cached !== undefined) return cached;
+    let files: readonly string[] = [path];
+    if (path.endsWith(LEAF["🟦️typescript"])) {
+      try {
+        files = listModuleTree(path);
+      } catch {
+        files = [path];
+      }
+    }
+    this.listings.set(path, files);
+    return files;
+  }
+
+  /** 🍃️ The files of a leaf's module tree that belong to its own document: the tree without the leaves of other schema documents (a folder with a normative document) and everything only they import. */
+  owned(path: string): readonly string[] {
+    const cached = this.holdings.get(path);
+    if (cached !== undefined) return cached;
+    const files = this.tree(path);
+    const foreign = files.slice(1).filter((file) => existsSync(join(dirname(file), LEAF["🔣️jsonschema"])));
+    const dropped = new Set(foreign.flatMap((file) => this.tree(file)));
+    const own = foreign.length === 0 ? files : files.filter((file, at) => at === 0 || !dropped.has(file));
+    this.holdings.set(path, own);
+    return own;
+  }
+
+  /** 🍃️ The text of the files of a leaf's own document (see `owned`): where its parsers are defined, imported and called. */
+  parsers(path: string): string {
+    return this.owned(path).map((file) => this.read(file)).join("\n");
+  }
+
   declarations(path: string): string {
     const cached = this.trees.get(path);
     if (cached !== undefined) return cached;
-    let tree = this.read(path);
-    if (path.endsWith(LEAF["🟦️typescript"])) {
-      try {
-        for (const child of listModuleTree(path).slice(1)) tree += `\n${readFileSync(child, "utf8").replace(/\r\n?/gu, "\n")}`;
-      } catch {
-        tree = this.read(path);
-      }
-    }
+    const tree = this.tree(path).map((file) => this.read(file)).join("\n");
     this.trees.set(path, tree);
     return tree;
   }
@@ -88,38 +120,59 @@ function versionedFiles(root: string, scopes: readonly string[]): string[] | und
   return listed.status === 0 ? listed.stdout.split("\0").filter((path) => path !== "") : undefined;
 }
 
-/** 🔎️ Every normative document below `scope` found by walking the directories, for a tree that is no git work tree. */
+/** 🔎️ Every normative document and package manifest below `scope` found by walking the directories, for a tree that is no git work tree. */
 function walkedDocuments(root: string, scope: string): string[] {
   const found: string[] = [];
   const walk = (directory: string): void => {
     for (const entry of entriesOf(directory)) {
       if (entry.isDirectory() && !SKIPPED_DIRS.has(entry.name)) walk(join(directory, entry.name));
-      else if (!entry.isDirectory() && entry.name === LEAF["🔣️jsonschema"]) found.push(portable(root, join(directory, entry.name)));
+      else if (!entry.isDirectory() && (entry.name === LEAF["🔣️jsonschema"] || entry.name === "package.json")) found.push(portable(root, join(directory, entry.name)));
     }
   };
   walk(resolve(root, scope));
   return found;
 }
 
-/** 🗂️ The schema modules of a tree and their normative documents. A module is a `🧬️schema` folder with a normative document, outside mutation folders; its documents are its own and one per nested facet folder. */
+/** 🗂️ The schema modules of a tree and their normative documents. A module is a `🧬️schema` folder with a normative document, outside mutation folders; its documents are its own and one per nested facet folder, plus the documents of any other folder that states an `$id` next to a TypeScript leaf (`📍️feature`, `📝️definition`, …). */
 export class SchemaCatalog {
   private readonly documentsByModule = new Map<string, Set<string>>();
+  private readonly extras: string[] = [];
+  private readonly promoted = new Set<string>();
+  readonly manifests: string[] = [];
 
   constructor(root: string, scopes: readonly string[] = INDEXED_SCOPES) {
     const leaf = LEAF["🔣️jsonschema"];
     const listed = versionedFiles(root, scopes);
     const files = listed !== undefined && listed.some((file) => file.endsWith(`/${leaf}`)) ? listed : scopes.flatMap((scope) => walkedDocuments(root, scope));
     for (const file of files) {
+      if (file.endsWith("/package.json") && file.startsWith(FRAMEWORK_SCOPE)) this.manifests.push(file);
       if (!file.endsWith(`/${leaf}`)) continue;
       const directories = file.split("/").slice(0, -1);
       const at = directories.findLastIndex((directory, position) => directory === SCHEMA_DIR && directories.slice(position + 1).every((facet) => FACET_DIRS.has(facet)));
-      if (at < 0) continue;
+      if (at < 0) {
+        const schemaAt = directories.lastIndexOf(SCHEMA_DIR);
+        const rest = directories.slice(schemaAt + 1);
+        if (schemaAt >= 0 ? !rest.some((directory) => NON_FACET_DIRS.has(directory)) : directories[0] === FRAMEWORK_SCOPE && !directories.some((directory) => NON_FACET_DIRS.has(directory))) this.extras.push(file);
+        continue;
+      }
       const module = directories.slice(0, at + 1).join("/");
       if (`${module}/`.includes("/🧬️mutations/")) continue;
       if (!this.documentsByModule.has(module)) this.documentsByModule.set(module, new Set());
       this.documentsByModule.get(module)!.add(file);
     }
     for (const [module, documents] of this.documentsByModule) if (!documents.has(`${module}/${leaf}`)) this.documentsByModule.delete(module);
+    for (const file of this.extras) {
+      const directories = file.split("/").slice(0, -1);
+      const module = directories.slice(0, directories.lastIndexOf(SCHEMA_DIR) + 1).join("/");
+      if (!this.documentsByModule.has(module) || !existsSync(join(root, ...directories, LEAF["🟦️typescript"])) || typeof readDocument(root, file)?.$id !== "string") continue;
+      this.documentsByModule.get(module)!.add(file);
+      this.promoted.add(file);
+    }
+  }
+
+  /** 🔎️ The schema documents in folders of a module that are no facet the projection knows (`📍️feature`, `📝️definition`, …) and that no module claims: addressable by reference, never projected. */
+  extraDocuments(): readonly string[] {
+    return this.extras.filter((file) => !this.promoted.has(file));
   }
 
   /** 🔎️ Every module at or below `under`, in code-point order. */
@@ -165,14 +218,16 @@ export function readDocument(root: string, path: string): Dict | undefined {
   }
 }
 
-/** 📤️ The exports a document states: its root object (named by `title`) and every `$defs` entry named like an export. */
+/** 📤️ The exports a document states: its root object (named by `title`) and every `$defs` or `definitions` entry named like an export. */
 export function exportsOf(document: Dict): Map<string, Dict> {
   const found = new Map<string, Dict>();
   const root = document.title;
   const rootObject = document.type === "object" || (!Object.hasOwn(document, "type") && isDict(document.properties));
   if (typeof root === "string" && rootObject && EXPORT_NAME.test(root)) found.set(root, document);
-  for (const [name, definition] of Object.entries(asDict(document.$defs))) {
-    if (EXPORT_NAME.test(name) && !found.has(name)) found.set(name, asDict(definition));
+  for (const container of [document.$defs, document.definitions]) {
+    for (const [name, definition] of Object.entries(asDict(container))) {
+      if (EXPORT_NAME.test(name) && !found.has(name)) found.set(name, asDict(definition));
+    }
   }
   return found;
 }
@@ -196,16 +251,65 @@ export function helperPrefix(documentId: unknown): string {
   return `${head}${parts.slice(1).map((part) => part.slice(0, 1).toUpperCase() + part.slice(1)).join("")}Guard`;
 }
 
+/** 📦️ The module specifier under which each leaf of the framework is imported across packages: a package entry file (`./modules/store/child/schema` of `@semio-tech/framework-os`) names itself and every file it re-exports, so the real leaf behind the entry is found. */
+export function frameworkSpecifiers(root: string, manifests: readonly string[]): Map<string, string> {
+  const found = new Map<string, string>();
+  for (const manifestPath of manifests) {
+    let manifest: unknown;
+    try {
+      manifest = JSON.parse(readFileSync(join(root, manifestPath), "utf8"));
+    } catch {
+      continue;
+    }
+    if (!isDict(manifest) || typeof manifest.name !== "string" || !isDict(manifest.exports)) continue;
+    const directory = resolve(root, dirname(manifestPath));
+    for (const [key, target] of Object.entries(manifest.exports)) {
+      if (typeof target !== "string") continue;
+      const specifier = key === "." ? manifest.name : `${manifest.name}/${key.replace(/^\.\//u, "")}`;
+      const entry = resolve(directory, target);
+      if (!found.has(entry)) found.set(entry, specifier);
+      let text = "";
+      try {
+        text = readFileSync(entry, "utf8");
+      } catch {
+        continue;
+      }
+      for (const reexport of text.matchAll(/\bfrom\s+"(\.[^"]+)"/gu)) {
+        const real = resolve(dirname(entry), reexport[1]!);
+        if (!found.has(real)) found.set(real, specifier);
+      }
+    }
+  }
+  return found;
+}
+
 /** 🗺️ Every schema document of the indexed scopes, by `$id`, so a `$ref` into another document finds that document's TypeScript leaf. */
 export function buildOwnerIndex(root: string, catalog: SchemaCatalog): Map<string, Owner> {
   const index = new Map<string, Owner>();
+  const specifiers = frameworkSpecifiers(root, catalog.manifests);
   for (const module of INDEXED_SCOPES.flatMap((scope) => catalog.modules(scope))) {
     for (const path of catalog.documents(module)) {
       const document = readDocument(root, path);
-      const identifier = document?.$id;
-      if (document === undefined || typeof identifier !== "string") continue;
-      index.set(identifier, new Owner(leafPath(root, module, facetOf(module, path), "🟦️typescript"), new Set(exportsOf(document).keys())));
+      if (document === undefined) continue;
+      const exports = exportsOf(document);
+      const title = typeof document.title === "string" && exports.has(document.title) ? document.title : undefined;
+      const leaf = leafPath(root, module, facetOf(module, path), "🟦️typescript");
+      const shared = module.startsWith(FRAMEWORK_SCOPE);
+      const owner = new Owner(leaf, new Set(exports.keys()), title, shared, () => readDocument(root, path), shared ? specifiers.get(leaf) : undefined);
+      if (typeof document.$id === "string") index.set(document.$id, owner);
+      index.set(`file:${resolve(root, path)}`, owner);
     }
+  }
+  for (const path of catalog.extraDocuments()) {
+    const document = readDocument(root, path);
+    if (document === undefined) continue;
+    const exports = exportsOf(document);
+    const title = typeof document.title === "string" && exports.has(document.title) ? document.title : undefined;
+    const leaf = join(root, path.slice(0, path.lastIndexOf("/")), LEAF["🟦️typescript"]);
+    const shared = path.startsWith(FRAMEWORK_SCOPE);
+    const owner = new Owner(leaf, new Set(exports.keys()), title, shared, () => readDocument(root, path), shared ? specifiers.get(leaf) : undefined);
+    if (typeof document.$id === "string") index.set(document.$id, owner);
+    index.set(`file:${resolve(root, path)}`, owner);
   }
   return index;
 }

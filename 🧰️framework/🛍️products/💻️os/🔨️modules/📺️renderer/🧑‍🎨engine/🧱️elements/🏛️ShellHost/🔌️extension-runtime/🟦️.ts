@@ -10,7 +10,7 @@ import { type ActiveSession, type LoadedProgramState } from "../../🐚️Shell/
 import { resolveManifestLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { beginCancellableExtensionRequest } from "../../🛠️ShellHelpers/🛑️extension-io/🟦️.ts";
 import { type PluginExtensionCompletion, serializePerActor } from "../../🔌️PluginRuntime/🟦️.tsx";
-import { isShardLostError } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/🟦️.ts";
+import { isShardLostError } from "../../../../../../../../🔨️modules/🎭️actor/📮️shard-client/💓️heartbeat/🟦️.ts";
 import { hopTrace, type HopTraceDetail } from "@semio-tech/framework/trace";
 import { commandStallBandTextV1, commandStallHeldSecondsV1, type CommandStallV1 } from "../../🔌️PluginRuntime/⏱️command-stall/🟦️.ts";
 

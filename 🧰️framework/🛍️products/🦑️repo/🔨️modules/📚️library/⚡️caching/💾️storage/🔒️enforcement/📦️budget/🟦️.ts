@@ -7,14 +7,14 @@ import policy from "./🔣️policy.json" with {type:"json"};
 
 /** 📦️ Identifies the complete closed set of managed generated-storage owners. */
 export type RepositoryCachePartitionIdV1="rust"|"tools"|"graph"|"dependencies"|"products"|"diagnostics"|"leases";
-/** 🗜️ Declares a physical image envelope independently of its live platform admission. */
-export interface RepositoryCachePartitionV1 {readonly directory:string;readonly capacityBytes:number;readonly filesystemBytes:number}
+/** 🗜️ Declares physical funding and independent logical publication observation limits. */
+export interface RepositoryCachePartitionV1 {readonly directory:string;readonly capacityBytes:number;readonly filesystemBytes:number;readonly maximumLogicalBytes:number}
 /** 📏️ Accounts all fixed backing envelopes plus their finite bootstrap-control allowance. */
 export interface RepositoryCacheBudgetV1 {readonly version:1;readonly maximumBytes:number;readonly maximumControlBytes:number;readonly partitionBytes:number;readonly headroomBytes:number;readonly partitions:Readonly<Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>>}
 /** 📋️ Validates the entire partition ledger before any physical provisioning or cache write. */
 export function readRepositoryCacheBudgetV1(value:unknown):RepositoryCacheBudgetV1{
  if(validateJsonSchemaSubset(schema,value).length)throw Error("Closed repository cache partition declaration required");
- const declaration=value as {version:1;maximumBytes:number;maximumControlBytes:number;partitions:Record<RepositoryCachePartitionIdV1,{directory:string;capacityBytes:number}>},partitions={} as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,paths:string[]=[];let partitionBytes=0;
+ const declaration=value as {version:1;maximumBytes:number;maximumControlBytes:number;partitions:Record<RepositoryCachePartitionIdV1,{directory:string;capacityBytes:number;maximumLogicalBytes:number}>},partitions={} as Record<RepositoryCachePartitionIdV1,RepositoryCachePartitionV1>,paths:string[]=[];let partitionBytes=0;
  for(const[id,partition]of Object.entries(declaration.partitions)){
   const directory=partition.directory,path=directory.toLowerCase();
   if(directory.startsWith("/")||/[\\:\u0000-\u001f]/u.test(directory)||directory.split("/").some(part=>!part||part==="."||part==="..")||partition.capacityBytes%1048576!==0)throw Error("Aligned physical cache partition and relative directory required");

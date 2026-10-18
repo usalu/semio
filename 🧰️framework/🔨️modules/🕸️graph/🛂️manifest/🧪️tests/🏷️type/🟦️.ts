@@ -21,7 +21,7 @@ test("Graph binds the canonical lower type without a Neural product API", () => 
   expect(graph).not.toMatch(/neural_engine|property_value_to_neural/u);
   expect(graph).toContain("if matches!(expected, ValueType::Any)");
   expect(graph).toContain("PropertyValue::Object(_) if matches!(expected, ValueType::Schema(_)) => true");
-  const manifest = toml.parse(readFileSync(resolve(root, "🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust/Cargo.toml"), "utf8"));
+  const manifest = toml.parse(readFileSync(resolve(root, "🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust/Cargo.toml"), "utf8"));
   expect((manifest.dependencies as Record<string, unknown>).neural_engine).toBeUndefined();
 });
 

@@ -2,7 +2,8 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🧩️plugin-consistency/🧭️breaches/🟦️.ts
  */
 import { type PolicyModSpan, policyMaskLiterals, policyTestModSpans, policyLineInTestMod } from "../../../🔍️discovery/📋️policy/🔎️source/🟦️.ts";
-import { loadTaxonomy, type BreachRecord } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { type BreachRecord } from "../../../🚨️policy/🔖️breach/🟦️.ts";
 import { POLICY_SKIP_DIRS, policyReadFileSafe, policyReaddirSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { policyLineOfIndex } from "../../../🔍️discovery/📍️source-coordinate/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME } from "../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
@@ -95,7 +96,7 @@ const POLICY_PLUGIN_CLOSED_SHAPE_LEGACY_FACETS: Readonly<Record<string, string>>
  * `loadTaxonomy()` rather than hardcoded, per the ticket's instruction — a dedicated `pluginRootAllowedEntries`
  * taxonomy key was deliberately NOT added: every field this rule needs already exists on `Taxonomy`
  * (`pluginChildDirs`/`artifactsDirName`/`packagesDirName`/`rootDocFileNames`/`rootDataDirNames`/
- * `rootDataFileNames`), and `🔣️taxonomy.json`/`🔍️discovery/🟦️.ts`/`🧪️index.test.ts` are outside
+ * `rootDataFileNames`), and `🔣️taxonomy.json`/`🔍️discovery`/`🧪️index.test.ts` are outside
  * this session's single-writer boundary on `📜️script.ts` — adding a key there risks colliding with W1's
  * concurrent taxonomy work for no expressive gain.
  */
@@ -259,7 +260,7 @@ function policyPluginPurityTsFiles(repoRoot: string, rootRel: string): string[] 
  *   `LinkPin::Snapshot` escrows), which belongs to the artifact mechanism, not to config. Flagging it
  *   would be a category error: it is not local-only UI state routing around a lane.
  */
-const POLICY_STATE_LANE_CONFIG_ADAPTER_PREFIXES = ["🧰️framework/🔨️modules/🖥️platform/", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"];
+const POLICY_STATE_LANE_CONFIG_ADAPTER_PREFIXES = ["🧰️framework/🔨️modules/🖥️platform/", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts", "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🗂️config-lane/🟦️.ts"];
 
 /** 🫧️Trees excluded from the lane rules: the parallel `compose/` stack and product/site code that is not an app. */
 const POLICY_STATE_LANE_EXCLUDED_PREFIXES = ["compose/", "♻️mit-bestand/", "🌎️hub/", "🧰️framework/🛍️products/🦑️repo/"];

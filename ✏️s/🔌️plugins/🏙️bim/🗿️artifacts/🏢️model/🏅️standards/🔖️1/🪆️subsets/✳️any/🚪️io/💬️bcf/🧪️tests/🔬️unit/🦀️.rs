@@ -1,17 +1,39 @@
 //! 🧪️ The BCF 2.1 exchange: guids, moments, the topics of a model, the container bytes, the round trip into the same model and the committed container of the frame.
 
-use super::*;
+use crate::standards::v1::subsets::any::io::export::ifc::writer::global_id;
+use crate::standards::v1::subsets::any::schema::snapshot::{Issue, IssueComment, IssuePriority, IssueStatus, ModelSnapshot, Point3, SectionBox, ViewCamera};
+use semio_framework::io_schema::{Confidence, IoPayload};
+use semio_framework_deflate::zip_archive::{ZipArchive, ZipWriter};
+use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Deserializer, Serializer};
+use std::collections::BTreeSet;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::io::export::gbxml::codec::{attr, document_text, element, leaf, number};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::ClashRef;
+#[allow(unused_imports)]
+use semio_framework::io_schema::{IoError, IoFidelity, IoOutcome, IoResult};
+#[allow(unused_imports)]
+use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_xml::schema::snapshot::XmlNode;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::xml_document_from_text;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::io::bcf::{is_uuid, parse, status_of, priority_of};
+use crate::standards::v1::subsets::any::io::bcf::*;
 use crate::standards::v1::subsets::any::schema::snapshot::{IssueViewpoint, Point2};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const FRAME: &str = include_str!("../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json");
+static FRAME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧨️clash-sets/🏢️frame/📸️snapshot/🔣️.json"));
 
 fn camera() -> ViewCamera {
     ViewCamera { target: Point2 { x: 3.0, y: 2.0 }, target_height: 1.5, azimuth: 0.8, pitch: 0.5, distance: 12.0 }
 }
 
 fn model() -> ModelSnapshot {
-    let mut model: ModelSnapshot = from_json_str(FRAME, JsonMemberPolicy::Reject).expect("the frame decodes");
+    let mut model: ModelSnapshot = from_json_str((*FRAME), JsonMemberPolicy::Reject).expect("the frame decodes");
     let viewpoint = IssueViewpoint { camera: camera(), section: Some(SectionBox { min: Point3 { x: 0.0, y: 0.0, z: 0.0 }, max: Point3 { x: 6.0, y: 4.0, z: 4.0 } }), isolate: vec!["b-2".into()] };
     let issue = |title: &str, status: IssueStatus, priority: IssuePriority, assignee: &str, elements: &[&str], viewpoint: Option<IssueViewpoint>| Issue {
         title: title.into(),
@@ -185,7 +207,7 @@ async fn the_serializer_writes_the_container_and_the_deserializer_reads_it_back_
 
 #[test]
 fn the_committed_container_is_the_current_export_of_the_frame() {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🚪️bcf/🏢️frame");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/🚪️bcf/🏢️frame");
     let bytes = export_bcf(&model()).expect("encodes");
     if std::env::var_os("BIM_BLESS").is_some() {
         std::fs::create_dir_all(&path).expect("directory");

@@ -66,17 +66,22 @@ describe("DirectoryClient http (getJson/postJson timeout + abort)", () => {
     }
   });
 
-  it("pairs every shared workflow DSL fixture with a pack fixture", async () => {
-    const { readdirSync, readFileSync } = await import("node:fs");
+  it("keeps every shared workflow fixture a complete graph case with its dirty set and expected deliveries", async () => {
+    const { readdirSync, readFileSync, existsSync } = await import("node:fs");
     const { fileURLToPath } = await import("node:url");
     const { dirname, join } = await import("node:path");
     const here = dirname(fileURLToPath(source.url));
     const fixturesDir = join(here, "🧪️tests/🧫️fixtures");
-    const owners = readdirSync(fixturesDir, { withFileTypes: true }).filter((entry) => entry.isDirectory() && readdirSync(join(fixturesDir, entry.name)).some((name) => name === "🗣️.dsl" || name === "📦️.spk"));
-    expect(owners.length).toBeGreaterThanOrEqual(5);
-    for (const owner of owners) {
-      expect(readFileSync(join(fixturesDir, owner.name, "🗣️.dsl"), "utf8").length).toBeGreaterThan(0);
-      expect(readFileSync(join(fixturesDir, owner.name, "📦️.spk")).byteLength).toBeGreaterThan(0);
+    const cases = readdirSync(fixturesDir, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory() && existsSync(join(fixturesDir, entry.name, "🔣️.json")))
+      .map((entry) => ({ owner: entry.name, body: JSON.parse(readFileSync(join(fixturesDir, entry.name, "🔣️.json"), "utf8")) as { name?: string; graph?: { nodes?: unknown[] }; dirtyNodeIds?: unknown[]; expectedDeliveries?: unknown[] } }))
+      .filter(({ body }) => body.graph !== undefined);
+    expect(cases.length).toBeGreaterThanOrEqual(5);
+    for (const { owner, body } of cases) {
+      expect(owner.endsWith(body.name ?? "\0")).toBe(true);
+      expect(body.graph?.nodes?.length).toBeGreaterThan(0);
+      expect(Array.isArray(body.dirtyNodeIds)).toBe(true);
+      expect(Array.isArray(body.expectedDeliveries)).toBe(true);
     }
   });
 });

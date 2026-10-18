@@ -50,7 +50,7 @@ test("Rewriting admits independently renumbered structural surrogate keys",async
 test("Rewriting exact row/schema frontier precedes semantic ownership",async()=>{const input=specimen(),database=await project(input,{maxRows:89});expect(database.tables.reduce((n,t)=>n+t.rows.length,0)).toBe(89);await expect(project(input,{maxRows:88})).rejects.toThrow();await expect(restore(database,{maxRows:88})).rejects.toThrow();const bytes=Math.max(Buffer.byteLength(sql),database.tables.reduce((n,t)=>n+Buffer.byteLength(t.sql)+Buffer.byteLength(t.name),0));await expect(project(input,{maxSchemaBytes:bytes-1})).rejects.toThrow();expect(await restore(database,{maxSchemaBytes:bytes})).toEqual(owner.parseRewritingArtifact(input));});
 test("Rewriting iterative retained property depth and interior cancellation",async()=>{let value:owner.PropertyValue={kind:"null"};for(let i=0;i<1024;i++)value={kind:"array",values:[value]};const input=owner.parseRewritingArtifact(specimen());input.parameterBindings={deep:value};const database=await project(input),output=await restore(database);let depth=0,node=output.parameterBindings.deep!;while(node.kind==="array"){depth++;node=node.values[0]!;}expect(depth).toBe(1024);for(const phase of["projectSnapshot","reconstructSnapshot"]){let observed=0;const controller=new AbortController();const options={signal:controller.signal,onProgress:(p:{phase:string;completed:number})=>{if(p.phase===phase&&p.completed>=256){observed=p.completed;controller.abort();}return true;}};await expect(phase==="projectSnapshot"?project(input,options):restore(database,options)).rejects.toThrow();expect(observed).toBeGreaterThanOrEqual(256);}});
 test("Rewriting declared JSON word boundary is the actual published parent",()=>{const api=owner as unknown as {parseRewritingJsonValue:(v:unknown)=>unknown;rewritingToJsonValue:(v:owner.RewritingArtifact)=>unknown};expect(typeof api.parseRewritingJsonValue).toBe("function");for(const word of fixture.binary64Bits){const input=owner.parseRewritingArtifact(specimen(word)),wire=api.rewritingToJsonValue(input);expect(api.parseRewritingJsonValue(JSON.parse(JSON.stringify(wire)))).toEqual(input);}});
-test("Rewriting committed snapshots use the closed canonical declared JSON scalar schema",()=>{const root=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});for(const url of JSON.parse(readFileSync(new URL("./🧫️fixtures/🌳️typed/🔣️.json",import.meta.url),"utf8")).schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(url,import.meta.url),"utf8")));const validate=ajv.compile(JSON.parse(readFileSync(new URL("../../../../🧬️schema/🔣️.json",import.meta.url),"utf8")));const files=readdirSync(root,{recursive:true}).map(String).filter(p=>p.endsWith("/📸️snapshot/⬅️before/🔣️.json")||p.endsWith("/📸️snapshot/➡️after/🔣️.json"));expect(files.length).toBe(18);expect(files).toContain('🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🔣️.json');expect(files).toContain('🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🔣️.json');for(const path of files)expect(validate(JSON.parse(readFileSync(new URL(path,root),"utf8")))).toBe(true);});
+test("Rewriting committed snapshots use the closed canonical declared JSON scalar schema",()=>{const root=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations/",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});for(const url of JSON.parse(readFileSync(new URL("./🧫️fixtures/🌳️typed/🔣️.json",import.meta.url),"utf8")).schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(url,import.meta.url),"utf8")));const validate=ajv.compile(JSON.parse(readFileSync(new URL("../../../../🧬️schema/🔣️.json",import.meta.url),"utf8")));const files=readdirSync(root,{recursive:true}).map(String).filter(p=>p.endsWith("/📸️snapshot/⬅️before/🔣️.json")||p.endsWith("/📸️snapshot/➡️after/🔣️.json"));expect(files.length).toBe(18);expect(files).toContain('🫳️drag-rule/🫳️moves/📸️snapshot/⬅️before/🔣️.json');expect(files).toContain('🫳️drag-rule/🫳️moves/📸️snapshot/➡️after/🔣️.json');for(const path of files)expect(validate(JSON.parse(readFileSync(new URL(path,root),"utf8")))).toBe(true);});
 
 test("Rewriting typed domain contract closes rule and composed graph semantics",async()=>{
  const vector=await Bun.file(new URL("./🧫️fixtures/🌳️typed/🔣️.json",import.meta.url)).json();const schema=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🌳️typed/🔣️.json",import.meta.url)).json();const ajv=semioSchemaAjvV1({allErrors:true});
@@ -95,7 +95,7 @@ test("Rewriting inline manifest owns all seven declared value type families",asy
 });
 
 test("Rewriting committed mutation children are exact typed graphs whose edges join held nodes",()=>{
- const root=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url),files=readdirSync(root,{recursive:true}).map(String).filter(p=>p.endsWith("/📸️snapshot/⬅️before/🪆️child/🔣️.json")||p.endsWith("/📸️snapshot/➡️after/🪆️child/🔣️.json"));
+ const root=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations/",import.meta.url),files=readdirSync(root,{recursive:true}).map(String).filter(p=>p.endsWith("/📸️snapshot/⬅️before/🪆️child/🔣️.json")||p.endsWith("/📸️snapshot/➡️after/🪆️child/🔣️.json"));
  expect(files.length).toBe(18);
  const ajv=semioSchemaAjvV1({allErrors:true}),validate=ajv.compile(JSON.parse(readFileSync(new URL("../../../../🧬️schema/📸️snapshot/🌳️typed/🪆️child/🔣️.json",import.meta.url),"utf8")));
  for(const path of files){const child=JSON.parse(readFileSync(new URL(path,root),"utf8"));expect(validate(child)).toBe(true);const ids=new Set(child.nodes.map((node:any)=>node.id.value));for(const edge of child.edges){expect(ids.has(edge.source.value)).toBe(true);expect(ids.has(edge.target.value)).toBe(true);}}
@@ -128,7 +128,7 @@ test("Rewriting composed working slot declares the actual Semio child owner",()=
 });
 
 test("Rewriting committed sparse deltas own typed fields and exact inverse assets",()=>{
- const root=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});
+ const root=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations/",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true});
  const vector=JSON.parse(readFileSync(new URL("./🧫️fixtures/🌳️typed/🔣️.json",import.meta.url),"utf8"));
  for(const url of vector.schemaDocuments)ajv.addSchema(JSON.parse(readFileSync(new URL(url,import.meta.url),"utf8")));
  ajv.addSchema(JSON.parse(readFileSync(new URL("../../../../🧬️schema/🔣️.json",import.meta.url),"utf8")));
@@ -143,22 +143,22 @@ test("Rewriting committed sparse deltas own typed fields and exact inverse asset
    const diff=JSON.parse(readFileSync(new URL(path,root),"utf8"));
    expect(validate(diff)).toBe(true);
    expect(Object.keys(diff).sort()).toEqual(["lhs","parameterBindings","rhs","ruleLayout","workingGraph"]);
-   const after=JSON.parse(readFileSync(new URL(path.replace("/🔺️diff/🔣️.json","/📸️snapshot/➡️after/🔣️.json"),root),"utf8"));
-   for(const role of ["lhs","rhs","workingGraph"]){if(diff[role]!==null){db.run("INSERT INTO delta VALUES(?,?,?)",[path,role,JSON.stringify(diff[role])]);expect(diff[role]).toEqual(after[role]);}}
+   const after=JSON.parse(readFileSync(new URL(path.replace("/🔺️diff/🔣️.json","/📸️snapshot/➡️after/🔣️.json"),root),"utf8")),before=JSON.parse(readFileSync(new URL(path.replace("/🔺️diff/🔣️.json","/📸️snapshot/⬅️before/🔣️.json"),root),"utf8"));
+   for(const role of ["lhs","rhs","workingGraph"]){if(diff[role]!==null){db.run("INSERT INTO delta VALUES(?,?,?)",[path,role,JSON.stringify(diff[role])]);expect({...before[role],...Object.fromEntries(Object.entries(diff[role]).filter(([,value])=>value!==null))}).toEqual(after[role]);}}
   }
   for(const row of db.query("SELECT case_name,role,payload FROM delta ORDER BY case_name COLLATE BINARY").all() as {case_name:string;role:string;payload:string}[]){
-   const after=JSON.parse(readFileSync(new URL(row.case_name.replace("/🔺️diff/🔣️.json","/📸️snapshot/➡️after/🔣️.json"),root),"utf8"));expect(JSON.parse(row.payload)).toEqual(after[row.role]);
+   const after=JSON.parse(readFileSync(new URL(row.case_name.replace("/🔺️diff/🔣️.json","/📸️snapshot/➡️after/🔣️.json"),root),"utf8")),before=JSON.parse(readFileSync(new URL(row.case_name.replace("/🔺️diff/🔣️.json","/📸️snapshot/⬅️before/🔣️.json"),root),"utf8"));expect({...before[row.role],...Object.fromEntries(Object.entries(JSON.parse(row.payload)).filter(([,value])=>value!==null))}).toEqual(after[row.role]);
   }
  }finally{db.close();}
 });
 
 test("Rewriting published mutation union accepts all nine typed committed inputs",()=>{
- const root=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true}),read=(relative:string)=>JSON.parse(readFileSync(new URL(relative,import.meta.url),"utf8"));
+ const root=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations/",import.meta.url),ajv=semioSchemaAjvV1({allErrors:true}),read=(relative:string)=>JSON.parse(readFileSync(new URL(relative,import.meta.url),"utf8"));
  for(const relative of read("./🧫️fixtures/🌳️typed/🔣️.json").schemaDocuments)ajv.addSchema(read(relative));
  ajv.addSchema(read("../../../../🧬️schema/🔣️.json"));
  const declared=read("../../../../🧬️schema/🧬️mutations/🔣️.json");
  const schemas=readdirSync(new URL("../../../../🧬️schema/🧬️mutations",import.meta.url),{recursive:true}).map(String).filter(path=>path.endsWith("/🧬️schema/🔣️.json"));
- expect(schemas.length).toBe(9);for(const path of schemas)ajv.addSchema(read("../../../../🧬️schema/🧬️mutations"+path));
+ expect(schemas.length).toBe(9);for(const path of schemas)ajv.addSchema(read("../../../../🧬️schema/🧬️mutations/"+path));
  const validate=ajv.compile(declared),files=readdirSync(root,{recursive:true}).map(String).filter(path=>path.endsWith("/🦠️mutation/🔣️.json"));
  expect(files.length).toBe(9);
  for(const path of files){const input=JSON.parse(readFileSync(new URL(path,root),"utf8"));expect(validate(input)).toBe(true);expect(validate({...input,legacyBody:"{}"})).toBe(false);expect(JSON.parse(JSON.stringify(input))).toEqual(input);}
@@ -166,11 +166,11 @@ test("Rewriting published mutation union accepts all nine typed committed inputs
 
 test("Rewriting GraphQL body inputs own full typed rules and composed parent",()=>{
  const read=(relative:string)=>readFileSync(new URL(relative,import.meta.url),"utf8");
- const roots=["../../../../🧬️schema/🔗️.graphql","../../../../🧬️schema/🧬️mutations/🔗️.graphql","../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql",frameworkSourcePath("🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔗️.graphql"),frameworkSourcePath("🔨️modules/🌱️value/🧬️schema/🔗️.graphql"),frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"),frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔗️.graphql")];
+ const roots=["../../../../🧬️schema/🔗️.graphql","../../../../🧬️schema/🧬️mutations/🔗️.graphql","../../../../../../../../../🔌️jack/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔗️.graphql",frameworkSourcePath("🔨️modules/🕸️graph/🛂️manifest/🌱️value/🧬️schema/🔗️.graphql"),frameworkSourcePath("🔨️modules/🌱️value/🧬️schema/🔗️.graphql"),frameworkSourcePath("🔨️modules/🧬️schema/🗿️artifact-reference/🔗️.graphql"),frameworkSourcePath("🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔗️.graphql"),frameworkSourcePath("🔨️modules/🚪️io/🧬️schema/🔗️.graphql")];
  const documents=roots.map(relative=>parseGraphql(read(relative)));
  const types=new Map(documents.flatMap(document=>document.definitions).filter((node:any)=>node.name).map((node:any)=>[node.name.value,node]));
  for(const [slug,type,field,payload]of [["👈️edit-lhs","EditLhsInput","newLhs","LhsInput"],["👉️edit-rhs","EditRhsInput","newRhs","RhsInput"],["🖼️edit-working-graph","EditWorkingGraphInput","newWorkingGraph","JackSnapshotInput"]]){
-  const leaf:any=parseGraphql(read("../../../../🧬️schema/🧬️mutations"+slug+"/🔗️.graphql")).definitions[0];
+  const leaf:any=parseGraphql(read("../../../../🧬️schema/🧬️mutations/"+slug+"/🔗️.graphql")).definitions[0];
   expect(leaf.fields.map((item:any)=>item.name.value)).toEqual([field]);
   expect(printGraphql(leaf.fields[0].type)).toBe(payload+"!");
   const aggregate:any=types.get(type);expect(printGraphql(aggregate)).toBe(printGraphql(leaf));
@@ -189,7 +189,7 @@ test("Rewriting GraphQL body inputs own full typed rules and composed parent",()
  for(const name of["PropertyValueInput","ValueTypeInput"])expect((graph.getType(name) as any).isOneOf).toBe(true);
  for(const [name,input]of[["EditLhsInput",{newLhs:"{}"}],["EditRhsInput",{newRhs:"{}"}],["EditWorkingGraphInput",{newWorkingGraph:"{}"}],["PropertyValueInput",{string:"literal",number:{bits:"0000000000000000"}}],["ValueTypeInput",{scalar:"TEXT",schema:"literal"}]] as const){expect(coerceInputValue(input,graph.getType(name) as any)).toBeUndefined();}
 
- const mutationRoot=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations",import.meta.url);
+ const mutationRoot=new URL("../../../../🧪️tests/🧫️fixtures/🧬️mutations/",import.meta.url);
  const mutations=readdirSync(mutationRoot,{recursive:true}).map(String).filter(path=>path.endsWith("/🦠️mutation/🔣️.json"));expect(mutations.length).toBe(9);
  expect((graph.getType("RewriteRuleMutationInput") as any).isOneOf).toBe(true);expect(Object.keys((graph.getType("RewriteRuleMutationInput") as any).getFields()).length).toBe(9);
  for(const path of mutations){
@@ -198,7 +198,7 @@ test("Rewriting GraphQL body inputs own full typed rules and composed parent",()
   if(input.newRhs)input.newRhs={...input.newRhs,set:input.newRhs.set.map((item:any)=>({...item,value:property(item.value)})),parameters:input.newRhs.parameters.map((item:any)=>({...item,kind:item.kind.toUpperCase(),default:property(item.default)}))};
   if(input.newWorkingGraph)input.newWorkingGraph={...input.newWorkingGraph,manifest:{nodeKinds:input.newWorkingGraph.manifest.nodeKinds.map(kind),edgeKinds:input.newWorkingGraph.manifest.edgeKinds.map(kind),portKinds:input.newWorkingGraph.manifest.portKinds.map(kind)}};
   const type=mutation[0].toUpperCase()+mutation.slice(1)+"Input";
-  const leaf:any=parseGraphql(read("../../../../🧬️schema/🧬️mutations"+path.split("/")[0]+"/🔗️.graphql")).definitions[0];expect(printGraphql(types.get(type) as any)).toBe(printGraphql(leaf));
+  const leaf:any=parseGraphql(read("../../../../🧬️schema/🧬️mutations/"+path.split("/")[0]+"/🔗️.graphql")).definitions[0];expect(printGraphql(types.get(type) as any)).toBe(printGraphql(leaf));
   accepted(type,input);accepted("RewriteRuleMutationInput",{[mutation]:input});
  }
  expect(coerceInputValue({editLhs:{newLhs:vector.snapshot.lhs},editRhs:{newRhs:rhs}},graph.getType("RewriteRuleMutationInput") as any)).toBeUndefined();
@@ -216,7 +216,7 @@ test("Rewriting GraphQL body inputs own full typed rules and composed parent",()
 test("Rewriting Proto field roles retain typed bodies and complete Jack manifests",()=>{
  const read=(relative:string)=>readFileSync(new URL(relative,import.meta.url),"utf8");
  for(const [slug,name,field,type]of [["👈️edit-lhs","EditLhs","new_lhs","semio.s.trinity.rewriting.artifact.Lhs"],["👉️edit-rhs","EditRhs","new_rhs","semio.s.trinity.rewriting.artifact.Rhs"],["🖼️edit-working-graph","EditWorkingGraph","new_working_graph","semio.s.trinity.jack.snapshot.JackSnapshot"]]){
-  const source=read("../../../../🧬️schema/🧬️mutations"+slug+"/🛰️.proto"),body=source.match(new RegExp("message\\s+"+name+"\\s*\\{([^}]+)\\}"))![1]!;
+  const source=read("../../../../🧬️schema/🧬️mutations/"+slug+"/🛰️.proto"),body=source.match(new RegExp("message\\s+"+name+"\\s*\\{([^}]+)\\}"))![1]!;
   expect(body.trim().replace(/\s+/g," ")).toBe(type+" "+field+" = 1;");
   expect(read("../../../../🧬️schema/🧬️mutations/🛰️.proto")).toContain(type+" "+field+" = 1;");
  }
@@ -237,7 +237,7 @@ test("Rewriting Proto field roles retain typed bodies and complete Jack manifest
 
 
 test("Rewriting retained child capture contract preserves exact publication and release authority",async()=>{
- const base=new URL("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️child/👁️capture",import.meta.url);
+ const base=new URL("../../../../🧪️tests/🧫️fixtures/📸️snapshot/🪆️child/👁️capture/",import.meta.url);
  const contract=await Bun.file(new URL("🔣️.json",base)).json();
  
  const vector=await Bun.file(new URL("./🧫️fixtures/🌳️typed/🔣️.json",import.meta.url)).json();
@@ -267,7 +267,7 @@ test("Rewriting exact twenty-eight scenario roster owns all eighteen closed type
  for(const relative of read("./🧫️fixtures/🌳️typed/🔣️.json").schemaDocuments)ajv.addSchema(read(relative));
  ajv.addSchema(read("../../../../🧬️schema/🔣️.json"));
  const schemas=readdirSync(new URL("../../../../🧬️schema/🧬️mutations",import.meta.url),{recursive:true}).map(String).filter(path=>path.endsWith("/🧬️schema/🔣️.json"));
- expect(schemas.length).toBe(9);for(const path of schemas)ajv.addSchema(read("../../../../🧬️schema/🧬️mutations"+path));
+ expect(schemas.length).toBe(9);for(const path of schemas)ajv.addSchema(read("../../../../🧬️schema/🧬️mutations/"+path));
  const validate=ajv.compile(read("../../../../🧬️schema/🧬️mutations/🔣️.json"));
  const inline=feature.scenarios.filter(row=>row.id.startsWith("mutate-")||row.id.startsWith("inverse-"));
  expect(inline.length).toBe(18);
@@ -296,8 +296,8 @@ test("Rewriting member membership identity remains separate from its exact addre
  const ajv=semioSchemaAjvV1({allErrors:true});ajv.addSchema(JSON.parse(readFileSync(new URL("../../../../🧬️schema/📸️snapshot/🌳️typed/🪆️child/🔣️.json",import.meta.url),"utf8")));
  expect(contract["contractId"]).toEqual("rewriting-full-child-frame-lifetime");expect(contract["slot"]).toEqual("workingGraph");expect(contract["target"]["dialect"]["artifactKind"]).toEqual("s.stdio.semio");expect(contract["target"]["dialect"]["standard"]).toEqual("v1");expect(contract["target"]["dialect"]["subset"]).toEqual("graph");expect(contract["retainedTailBytes"]).toEqual(65536);expect(contract["borrowedCaptureAllocationBytes"]).toEqual(0);expect(contract["closeGrants"]).toEqual([0,1]);expect(contract["refusals"]).toEqual(["wrongParent","missingSlot","missingTarget","wrongDialect"]);expect(contract["intrinsicKinds"]).toEqual(["bool","bytes","float","int","list","map","null","ref","str"]);expect(contract["childId"]).toEqual("logical !@/\u0000引用😀");
  const db=new Database(":memory:");try{db.exec("CREATE TABLE member (parent TEXT NOT NULL,slot TEXT NOT NULL,child_id TEXT NOT NULL,target TEXT NOT NULL UNIQUE,PRIMARY KEY(parent,slot,child_id));");db.run("INSERT INTO member VALUES (?,?,?,?)",["parent",contract.slot,contract.childId,contract.target.artifactId]);expect(db.query("SELECT target FROM member WHERE parent=? AND slot=? AND child_id=?").get("parent",contract.slot,contract.childId)).toEqual({target:contract.target.artifactId});expect(()=>db.run("INSERT INTO member VALUES (?,?,?,?)",["other","other","other",contract.target.artifactId])).toThrow();}finally{db.close();}
- const plugin=readFileSync(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"),"utf8");
- const admission=plugin.slice(plugin.indexOf("fn declared_child_reference("),plugin.indexOf("async fn prepare_child_member("));expect(admission).toContain("fields.artifact_id");expect(admission).toContain("fields.child_id == child_id");expect(admission).not.toContain("artifact_id: child_id.clone()");
- const store=readFileSync(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"),"utf8"),sync=store.slice(store.indexOf("pub async fn sync_member<P: ArtifactRefs>"),store.indexOf("/// 🧹️ One grant-sized retirement turn"));
+ const plugin=readFileSync(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🏪️stores/📥️staging/🚪️ingress/🦀️.rs"),"utf8"),declaration=plugin.indexOf("fn declared_child_reference(");
+ const admission=plugin.slice(declaration,plugin.indexOf("\n    }\n",declaration));expect(admission).toContain("fields.artifact_id");expect(admission).toContain("fields.child_id == child_id");expect(admission).not.toContain("artifact_id: child_id.clone()");
+ const store=readFileSync(frameworkSourceUrl("🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🦀️.rs"),"utf8"),syncStart=store.indexOf("pub async fn sync_member<P: ArtifactRefs>"),sync=store.slice(syncStart,store.indexOf("\n    }\n",syncStart));
  expect(sync).not.toContain("child.child_id != child.target.artifact_id");expect(sync).toContain("next_owns.insert(child.target.artifact_id");
 });

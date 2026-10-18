@@ -1,4 +1,4 @@
-import{compileJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{compileJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 const profileContract=compileJsonSchemaSubset(schema),schedulerContract=compileJsonSchemaSubset(schema.definitions.SchedulerSuffix,schema);
 /** 📋️ Complete observed Cargo profile DATA supplies no output path or resource authority. */

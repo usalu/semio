@@ -1,0 +1,2858 @@
+use pack::snapshot::ArtifactSqliteSnapshot as _;
+use pack::snapshot::{ArtifactDsl, ArtifactPack};
+use semio_framework_os_store_sync::{ARTIFACT_MAILBOX_BYTES, ARTIFACT_MAILBOX_ITEMS, ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactMailboxSendError, ArtifactSyncStatus, CommandAckOutcome, DocumentBackboneRetentionV1, HISTORY_TRANSITION_REFUSED_CODE, OpenDocument, PersistenceBinding, PresenceHeartbeatProducer, RemoteState, SyncError, SyncSession, artifact_actor_message_bytes, artifact_mailbox_pair, backbone_worker_wire, decode_document_backbone_message_exact, envelopes_from_history_edit, frontier_reaches, hub_ws_url, presence_to_bytes, rollback_envelope, spr_op_ids, stamp_session};
+use semio_framework_os_spr::{AckStage, ActorId, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapPair, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationId, PresencePeer, PresenceToolRun, RuntimeFrontierSummary, ServerFrame, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes};
+use semio_framework_os_store_sync::fixtures::{ActorFixture, FixtureInbound, load_fixtures};
+use semio_framework_os_store_sync_native::native_actor::ArtifactHost;
+use semio_framework_os_store_text_io::ArtifactPackFiles;
+use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_framework_os_store_backbone::{BackboneMessage, Backbones, ChannelBackbone, decode_hot_backbone_message_exact};
+use semio_framework_os_store_sync_native::lifted_sync::{FOLDER_EVENT_MAGIC, FolderEventLogStorage, FolderTextStorage};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value::ValueError;
+use tokio::sync::broadcast;
+use semio_framework_os_spr::{ArtifactId, Edit, Mutation, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcomeClass, OpBinary, OpText};
+use semio_framework_os_store_codec_factory::lifted_store::artifact_codec;
+use semio_framework_os_store_document::create_document_envelope;
+use semio_framework_os_pack::{pack_rt, PackDecodeOptions, PackEncodeOptions, PackError};
+use semio_framework_os_store_text_io::text_format::{parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, ParsedDocumentText};
+use semio_framework_os_store_codec_registry::register_document_codec;
+use semio_framework_os_store_text_io::ArtifactCodec;
+use semio_framework_os_store_space_schema::ArtifactCommand;
+use semio_framework_os_store_space_member::lifted_store::BlobStore;
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+#[tokio::test]
+async fn folder_event_log_refuses_the_repository_root() {
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    std::fs::write(dir.path().join("📋️project.json"), "{}\n").expect("build marker");
+    std::fs::write(dir.path().join("package.json"), r#"{"workspaces":[]}"#).expect("workspace declaration");
+    let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+    let error = storage.write("doc", "schema", b"pack", b"spr").await.expect_err("repository root");
+    assert!(error.to_string().contains("repository root"), "{error}");
+    assert!(!dir.path().join(".semio").join("events.semio").exists());
+}
+
+fn test_pool() -> Arc<semio_framework_async::WorkerPool> {
+    static POOL: std::sync::OnceLock<Arc<semio_framework_async::WorkerPool>> = std::sync::OnceLock::new();
+    POOL.get_or_init(|| Arc::new(semio_framework_async::WorkerPool::new(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, 3)))).clone()
+}
+
+fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
+    MutationEnvelope {
+        mutation_id: MutationId(id.into()),
+        document_id: ArtifactId(document_id.into()),
+        actor: ActorId("actor-a".into()),
+        dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
+        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
+        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
+        timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
+        transaction: None, verb: None, line: None,
+    }
+}
+
+fn document_backbone_message(envelopes: &[MutationEnvelope]) -> Vec<u8> {
+    BackboneMessage::Mutations { envelopes: encode_envelopes(envelopes) }.encode_op().expect("canonical document backbone message")
+}
+
+fn document_backbone_event_envelopes(event: &ArtifactEvent) -> Option<Vec<MutationEnvelope>> {
+    let ArtifactEvent::DocumentBackbone { message } = event else { return None };
+    decode_document_backbone_message_exact(message).ok()
+}
+
+#[semio_framework_async_macros::async_test]
+async fn document_opening_attempt_wire_preserves_outer_owner_without_widening_actor_messages() {
+    let attempt = "11111111-1111-4111-8111-111111111111";
+    let request = backbone_worker_wire::BackboneWorkerRequest::Open { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, document_id: "document-a".into(), client_instance_id: Some(attempt.into()), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: Some(true), actor: "actor-a".into() };
+    let wire = backbone_worker_wire::encode_request(&request);
+    let decoded = backbone_worker_wire::decode_request(&wire).await.expect("decode exact opening owner");
+    assert!(matches!(decoded, backbone_worker_wire::BackboneWorkerRequest::Open { client_instance_id: Some(owner), .. } if owner == attempt));
+
+    let response = backbone_worker_wire::BackboneWorkerResponse::Event { document_id: "document-a".into(), client_instance_id: attempt.into(), event: ArtifactEvent::Status(ArtifactSyncStatus::default()) };
+    let wire = backbone_worker_wire::encode_response(&response);
+    let decoded = backbone_worker_wire::decode_response(&wire).await.expect("decode exact event owner");
+    assert!(matches!(decoded, backbone_worker_wire::BackboneWorkerResponse::Event { client_instance_id: owner, .. } if owner == attempt));
+}
+
+#[test]
+fn artifact_mailbox_item_cap_plus_one_returns_exact_owner_and_preserves_fifo() {
+    let (sender, receiver) = artifact_mailbox_pair();
+    for seq in 0..ARTIFACT_MAILBOX_ITEMS as u64 {
+        sender.send(ArtifactActorMsg::PublishPreview { key: format!("key-{seq}"), seq, payload: vec![seq as u8] }).expect("admit fixed mailbox owner");
+    }
+    let rejected = sender.send(ArtifactActorMsg::PublishPreview { key: "cap-plus-one".into(), seq: 256, payload: vec![7, 8] }).expect_err("item cap + 1 must reject");
+    assert!(matches!(rejected.into_message(), ArtifactActorMsg::PublishPreview { key, seq: 256, payload } if key == "cap-plus-one" && payload == vec![7, 8]));
+    for seq in 0..ARTIFACT_MAILBOX_ITEMS as u64 {
+        assert!(matches!(receiver.try_recv(), Some(ArtifactActorMsg::PublishPreview { seq: actual, .. }) if actual == seq));
+    }
+    assert!(receiver.try_recv().is_none());
+}
+
+#[test]
+fn artifact_mailbox_byte_cap_and_plus_one_preflight_before_mutation() {
+    let exact_payload = vec![3; ARTIFACT_MAILBOX_BYTES - 17];
+    let (exact_sender, exact_receiver) = artifact_mailbox_pair();
+    exact_sender.send(ArtifactActorMsg::PublishPreview { key: String::new(), seq: 1, payload: exact_payload }).expect("exact byte cap admits");
+    assert_eq!(exact_sender.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).bytes, ARTIFACT_MAILBOX_BYTES);
+    assert!(matches!(exact_receiver.try_recv(), Some(ArtifactActorMsg::PublishPreview { seq: 1, .. })));
+
+    let (overflow_sender, overflow_receiver) = artifact_mailbox_pair();
+    let rejected = overflow_sender.send(ArtifactActorMsg::PublishPreview { key: String::new(), seq: 2, payload: vec![9; ARTIFACT_MAILBOX_BYTES - 16] }).expect_err("byte cap + 1 must reject");
+    assert!(matches!(rejected.into_message(), ArtifactActorMsg::PublishPreview { seq: 2, payload, .. } if payload.len() == ARTIFACT_MAILBOX_BYTES - 16));
+    assert!(overflow_receiver.try_recv().is_none(), "byte rejection cannot mutate FIFO state");
+}
+
+#[test]
+fn document_backbone_mailbox_and_retention_are_exact_bounded_and_terminal() {
+    let envelope = document_backbone_envelope("mutation-a", "document-a");
+    let message = document_backbone_message(std::slice::from_ref(&envelope));
+    let (sender, receiver) = artifact_mailbox_pair();
+    sender.send(ArtifactActorMsg::DocumentBackbone { message: message.clone() }).expect("canonical mutation message is admitted");
+    assert!(matches!(receiver.try_recv(), Some(ArtifactActorMsg::DocumentBackbone { message: actual }) if actual == message));
+    let ack = BackboneMessage::Ack { op_ids: Vec::new() }.encode_op().expect("ack encodes");
+    assert!(matches!(sender.send(ArtifactActorMsg::DocumentBackbone { message: ack }), Err(ArtifactMailboxSendError::Bytes { .. })), "host ingress refuses a Store acknowledgment");
+    let member = BackboneMessage::Member { owner: String::new(), slot: "content".into(), child_id: "child-a".into(), envelopes: encode_envelopes(std::slice::from_ref(&envelope)) }.encode_op().expect("member message encodes");
+    let rejected = sender.send(ArtifactActorMsg::DocumentBackbone { message: member.clone() }).expect_err("a root document actor cannot flatten a member lane");
+    assert!(matches!(rejected.into_message(), ArtifactActorMsg::DocumentBackbone { message: returned } if returned == member), "member refusal returns the exact encoded message to its caller");
+    assert!(receiver.try_recv().is_none(), "member refusal leaves root document ingress empty");
+
+    let mut retention = DocumentBackboneRetentionV1::default();
+    retention.retain(message.len(), std::slice::from_ref(&envelope)).expect("first exact owner is retained");
+    assert_eq!((retention.bytes, retention.messages, retention.entries.len()), (message.len(), 1, 1));
+    assert!(retention.retain(message.len(), std::slice::from_ref(&envelope)).is_err(), "duplicate mutation identity cannot replace its owner");
+    retention.release(std::slice::from_ref(&envelope));
+    assert_eq!((retention.bytes, retention.messages, retention.entries.len()), (0, 0, 0));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[test]
+fn artifact_mailbox_wake_storm_coalesces_until_fifo_becomes_empty() {
+    let (sender, receiver) = artifact_mailbox_pair();
+    let wakes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let observed = wakes.clone();
+    receiver.set_wake(Arc::new(move || {
+        observed.fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+    }));
+    for _ in 0..ARTIFACT_MAILBOX_ITEMS {
+        sender.send(ArtifactActorMsg::ExternalChanged).expect("wake-storm owner admitted");
+    }
+    assert_eq!(wakes.load(std::sync::atomic::Ordering::Acquire), 1);
+    while receiver.try_recv().is_some() {}
+    sender.send(ArtifactActorMsg::Detach).expect("new readiness edge admitted");
+    assert_eq!(wakes.load(std::sync::atomic::Ordering::Acquire), 2);
+}
+
+#[test]
+fn artifact_mailbox_stale_late_send_hands_back_exact_owner_and_interrupted_close_drains_one_per_grant() {
+    let (sender, receiver) = artifact_mailbox_pair();
+    for seq in 0..3 {
+        sender.send(ArtifactActorMsg::PublishPreview { key: "close".into(), seq, payload: vec![seq as u8] }).expect("close fixture admission");
+    }
+    let close = receiver.close_handle();
+    close.close();
+    let late = sender.send(ArtifactActorMsg::PublishPreview { key: "late".into(), seq: 99, payload: vec![4, 5, 6] }).expect_err("late generation rejects");
+    assert!(matches!(late, ArtifactMailboxSendError::Stale { message: ArtifactActorMsg::PublishPreview { key, seq: 99, payload } } if key == "late" && payload == vec![4, 5, 6]));
+    for remaining in [2, 1, 0] {
+        assert!(close.close_one());
+        assert_eq!(close.authority.state.lock().unwrap_or_else(std::sync::PoisonError::into_inner).len, remaining);
+    }
+    assert!(!close.close_one());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_ownership_order() {
+    use semio_framework_os_store_backbone::Backbone;
+    let nested = sample_presence_peer_with_interaction().await;
+    let bare = PresencePeer {
+        actor: nested.actor.clone(),
+        connected_at_ms: nested.connected_at_ms,
+        label: None,
+        presence_pack: None,
+        user_id: None,
+        role: None,
+        drag_ghost_json: None,
+        interaction: None,
+        color: None,
+        surface: None,
+        views: Vec::new(),
+        ui: None,
+        tool_run: None,
+        principal_kind: None, active_tool: None, history_edit: None,
+        typing: Vec::new(),
+    };
+    let nested_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(nested) }).expect("nested message fits");
+    let bare_bytes = artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(bare) }).expect("bare message fits");
+    assert!(nested_bytes > bare_bytes, "all nested identifiers and collections contribute byte credit");
+
+    let (mut channel, remote) = ChannelBackbone::pair("store-sync-one-pop").await;
+    channel.send(BackboneMessage::Ack { op_ids: vec!["first".into()] }).await.expect("first backbone owner");
+    channel.send(BackboneMessage::Ack { op_ids: vec!["second".into()] }).await.expect("second backbone owner");
+    assert!(matches!(remote.try_pop_front().expect("first opportunity"), Some(BackboneMessage::Ack { op_ids }) if op_ids == vec!["first"]));
+    assert!(matches!(remote.try_pop_front().expect("second opportunity"), Some(BackboneMessage::Ack { op_ids }) if op_ids == vec!["second"]));
+    assert!(remote.try_pop_front().expect("idle opportunity").is_none());
+}
+
+// 🎯️ `id` must be dotted `plugin.artifact` — `os_semio`'s preamble validator rejects a bare
+// extension (this crate never compiled with `--features sync` before this packet, so the
+// mismatch was never exercised at runtime). `extension_suffix` is the id's LAST segment, so
+// `"demo.demo"` keeps `__DSL_EXTENSION` == "demo", unchanged from the old bare-extension form.
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_dsl::DslArtifact, semio_framework_value::RetireOwned)]
+#[artifact(id = "demo.demo")]
+pub(super) struct DemoSnapshot {
+    n: i32,
+}
+
+
+impl semio_framework_os_store_text_io::ArtifactSqliteSnapshotHost for DemoSnapshot {
+    
+    
+    
+}
+impl pack::snapshot::ArtifactSqliteSnapshot for DemoSnapshot {
+const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
+fn to_sqlite_database(&self, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<semio_framework_io_sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
+        use semio_framework_io_sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 1)?;
+        let mut database = SqliteDatabase::from_schema(Self::SQLITE_SCHEMA)?;
+        database.table_mut("demo_state")?.rows.push(SqliteRow { rowid: 1, values: vec![SqliteValue::Integer(1), SqliteValue::Integer(i64::from(self.n))] });
+        control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 1, 1)?;
+        Ok(database)
+    }
+fn from_sqlite_database(database: &semio_framework_io_sqlite_snapshot::SqliteDatabase, control: &mut semio_framework_io_sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        use semio_framework_io_sqlite_snapshot::{SqliteValue, SqliteSnapshotPhase};
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 0, 1)?;
+        let rows = &database.table("demo_state")?.rows;
+        if rows.len() != 1 || rows[0].rowid != 1 || rows[0].integer(0)? != 1 { return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"demo SQLite snapshot requires one state row")); }
+        let snapshot = Self { n: i32::try_from(rows[0].integer(1)?).map_err(|_|semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"demo state n exceeds i32"))? };
+        control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, 1, 1)?;
+        Ok(snapshot)
+    }
+}
+
+impl ArtifactDsl for DemoSnapshot {
+    const EXTENSION: &'static str = Self::__DSL_EXTENSION;
+    fn envelope_id() -> &'static str {
+        Self::__DSL_ENVELOPE_ID
+    }
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let body = match semio_framework_os_semio::split_text_preamble(text) {
+            Ok((_, rest)) => rest,
+            Err(_) => text,
+        };
+        let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
+    }
+    fn print_dsl(&self) -> String {
+        let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
+        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Dsl, 1).expect("valid envelope_id");
+        semio_framework_os_semio::wrap_text(&envelope, &body)
+    }
+}
+
+impl ArtifactPack for DemoSnapshot {
+    /// 🪶️ Publishes this owner's actual relational snapshot capability.
+    
+
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        let inner = pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+        let envelope = semio_framework_os_semio::SemioEnvelope::from_envelope_id(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1).map_err(|error| PackError::from(error.into_value_error()))?;
+        Ok(semio_framework_os_semio::wrap_binary(&envelope, &inner))
+    }
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        let (envelope, inner) = semio_framework_os_semio::unwrap_binary(bytes).map_err(|error| PackError::from(error.into_value_error()))?;
+        if !envelope.matches_identity(<Self as ArtifactDsl>::envelope_id(), semio_framework_os_semio::Component::Pack, 1) {
+            return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        }
+        let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(semio_framework_os_store_text_io::text_error_to_pack_error)
+    }
+    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+}
+impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DemoSnapshot {
+fn sqlite_snapshot_codec() -> Option<semio_framework_os_store_text_io::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec())
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+pub(crate) struct DemoDiff {
+    n: Option<i32>,
+}
+
+impl semio_framework_os_spr::DiffAlgebra<DemoSnapshot> for DemoDiff {
+    fn inverse(&self, base: &DemoSnapshot) -> Self {
+        Self { n: self.n.map(|_| base.n) }
+    }
+    fn is_empty(&self) -> bool {
+        self.n.is_none()
+    }
+}
+
+impl MutationDiff<DemoSnapshot> for DemoDiff {
+    fn apply(&self, snapshot: &DemoSnapshot, _capability: semio_framework_os_spr::ApplyCapability) -> semio_framework_os_spr::MutationApplyResult<DemoSnapshot> {
+        Ok(DemoSnapshot { n: self.n.unwrap_or(snapshot.n) })
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.n.is_some() {
+            self.n = other.n;
+        }
+    }
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned)]
+#[serde(tag = "operation")]
+#[value(tag = "operation")]
+pub(super) enum DemoMutation {
+    #[dsl(key = "set-n")]
+    SetN { n: i32 },
+}
+
+impl OpText for DemoMutation {
+    fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        for (keyword, spec_fn) in &variants {
+            let probe = format!("{} ", keyword);
+            if line == keyword.as_str() || line.starts_with(&probe) {
+                let record = semio_framework_dsl_record::parse(line, &(spec_fn.ordinary)(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Inline })?;
+                return <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record);
+            }
+        }
+        Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,(format!("unknown operation line '{line}'")).to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))
+    }
+    fn print_op(&self) -> String {
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+        semio_framework_dsl_record::print(&record, &(spec_fn.ordinary)(), semio_framework_dsl_record::JoinMode::Inline)
+    }
+}
+
+impl OpBinary for DemoMutation {
+    fn encode_op(&self) -> Result<Vec<u8>, semio_framework_os_spr::ProtocolError> {
+        let (keyword, record) = <Self as semio_framework_dsl_record::DslVariants>::to_named_record(self);
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        let (idx, (_, spec_fn)) = variants.iter().enumerate().find(|(_, (k, _))| k == &keyword).expect("variant spec must exist");
+        let body = semio_framework_os_pack::record::encode_record_body(&(spec_fn.ordinary)(), &record, &PackEncodeOptions::default()).map_err(|e| semio_framework_os_spr::ProtocolError::Malformed { what: "op pack", offset: 0, detail: e.to_string() })?;
+        let mut out = Vec::with_capacity(2 + body.len());
+        out.push(pack_rt::OP_BINARY_FORMAT);
+        out.push(idx as u8);
+        out.extend_from_slice(&body);
+        Ok(out)
+    }
+    fn decode_op(bytes: &[u8]) -> Result<Self, semio_framework_os_spr::ProtocolError> {
+        let mut reader = semio_framework_os_pack::ByteReader::new(bytes);
+        let format = reader.read_u8().map_err(|e| semio_framework_os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: e.to_string() })?;
+        if format != pack_rt::OP_BINARY_FORMAT {
+            return Err(semio_framework_os_spr::ProtocolError::Malformed { what: "op format", offset: 0, detail: format!("unsupported op binary format: {format}") });
+        }
+        let ordinal = reader.read_u8().map_err(|e| semio_framework_os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: e.to_string() })?;
+        let variants = <Self as semio_framework_dsl_record::DslVariants>::variants();
+        let (keyword, spec_fn) = variants.get(ordinal as usize).ok_or_else(|| semio_framework_os_spr::ProtocolError::Malformed { what: "op ordinal", offset: 1, detail: format!("op ordinal {ordinal} out of range for {}", variants.len()) })?;
+        let spec = (spec_fn.ordinary)();
+        let body = &bytes[reader.position()..];
+        let (record, _report) = semio_framework_os_pack::record::decode_record_body(body, &spec, &PackDecodeOptions::default()).map_err(semio_framework_os_spr::ProtocolError::from)?;
+        let offset = reader.position() as u64;
+        <Self as semio_framework_dsl_record::DslVariants>::from_named_record(keyword, &record).map_err(|error| semio_framework_os_spr::ProtocolError::Malformed { what: "op record", offset, detail: error.to_string() })
+    }
+}
+
+impl Mutation<DemoSnapshot> for DemoMutation {
+    type Diff = DemoDiff;
+    const DESCRIPTORS: &'static [MutationLeafDescriptor] = &[MutationLeafDescriptor {
+        schema_version: 1,
+        owner: "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔄️sync",
+        semantic_kind: "set-n",
+        display_name: "Set N",
+        emoji: "🔢️",
+        aggregate_variant: "SetN",
+        payload_schema: "DemoMutation::SetN",
+        text_opcode: Some("set-n"),
+        binary_tag: Some(0),
+        invertibility: MutationInvertibility::ExplicitMutation,
+        diff_participation: MutationDiffParticipation::ApplyOnly,
+        outcome_classes: &[MutationOutcomeClass::Applied],
+        composition: MutationComposition::Atomic,
+        required_language_surfaces: &[MutationLanguageSurface::Rust, MutationLanguageSurface::Text, MutationLanguageSurface::Binary],
+    }];
+
+    fn descriptor(&self) -> &'static MutationLeafDescriptor {
+        match self {
+            Self::SetN { .. } => &Self::DESCRIPTORS[0],
+        }
+    }
+
+    fn diff(&self, _snapshot: &DemoSnapshot) -> semio_framework_os_spr::MutationOutcome<DemoDiff> {
+        semio_framework_os_spr::MutationOutcome::new(match self {
+            DemoMutation::SetN { n } => DemoDiff { n: Some(*n) },
+        })
+    }
+
+    fn inverse(&self, snapshot: &DemoSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+    Ok((|| {
+        vec![DemoMutation::SetN { n: snapshot.n }]
+    
+    })())
+}
+
+    fn may_emit_foreign_steps(&self) -> bool {
+        false
+    }
+}
+
+/// 🎯️ Idempotently registers the `demo/v1` codec (process-global `OnceLock` registry,
+/// shared across every test in this binary) — needed by any test exercising `FolderEndpoint`
+/// end-to-end (both `Sqlite` and `Pack` now go through `document_codec` per the pack+spr flip),
+/// mirroring a real app's program-init-time `register_document_codec_for_app` call. A concurrent
+/// caller returns only once the registration has landed (a swapped flag let parallel laws run
+/// codec-less: ticket 26/09/23 `📓️wp-h6.md`).
+pub(super) async fn ensure_demo_codec_registered() {
+    static ONCE: std::sync::Once = std::sync::Once::new();
+    ONCE.call_once(|| register_document_codec(artifact_codec::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec"));
+}
+
+fn bootstrap_frontier(document_id: &str, ordinal: u64, edit_id: &str, commit: u64, chain: u8) -> RuntimeFrontierSummary {
+    RuntimeFrontierSummary { document_id: ArtifactId(document_id.into()), head_edit_ordinal: ordinal, head_edit_id: edit_id.into(), last_commit_seq: commit, chain_hash: [chain; 32] }
+}
+
+async fn demo_artifact_bootstrap(inline: bool) -> (ArtifactBootstrap, ArtifactBootstrapPair) {
+    ensure_demo_codec_registered().await;
+    let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 7 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let files = print_document_pack(&envelope).await.expect("print bootstrap pair");
+    drop(envelope.into_owners());
+    let pair = ArtifactBootstrapPair { pack: files.pack, spr: files.spr };
+    let pack_schema_hash = semio_framework_os_store_codec_registry::document_codec("demo/v1").await.expect("codec lookup").expect("demo codec").pack_schema_hash;
+    let bootstrap = ArtifactBootstrap {
+        format_version: semio_framework_os_spr::ARTIFACT_BOOTSTRAP_FORMAT_VERSION,
+        descriptor_hash: [0x11; 32],
+        artifact_schema: "demo/v1".into(),
+        artifact_kind: "demo".into(),
+        pack_schema_hash,
+        baseline_frontier: bootstrap_frontier("demo", 7, "edit-7", 3, 0x33),
+        pack_hash: semio_framework_hash::Sha256::digest(&pair.pack),
+        spr_hash: semio_framework_hash::Sha256::digest(&pair.spr),
+        pack_length: pair.pack.len() as u64,
+        spr_length: pair.spr.len() as u64,
+        chunk_count: if inline { 0 } else { 3 },
+        aggregate_hash: semio_framework_os_spr::artifact_bootstrap_aggregate_hash(&pair.pack, &pair.spr),
+        required_tail_frontier: bootstrap_frontier("demo", 9, "edit-9", 4, 0x44),
+        inline: inline.then(|| pair.clone()),
+    };
+    (bootstrap, pair)
+}
+
+#[test]
+fn bootstrap_frontier_identity_rejects_same_ordinals_with_wrong_authenticated_head() {
+    let required = bootstrap_frontier("demo", 9, "edit-9", 4, 0x44);
+    let mut wrong_head = required.clone();
+    wrong_head.head_edit_id = "edit-other".into();
+    let mut wrong_chain = required.clone();
+    wrong_chain.chain_hash = [0x55; 32];
+    assert!(!frontier_reaches(&wrong_head, &required));
+    assert!(!frontier_reaches(&wrong_chain, &required));
+    assert!(frontier_reaches(&required, &required));
+}
+
+/// 🔌️ Dials `actor` into a loopback hub socket and answers the hub's end of it.
+#[cfg(not(target_arch = "wasm32"))]
+async fn connect(actor: &mut native_actor::ArtifactActor, receipt_actor: &str) -> tokio_tungstenite::WebSocketStream<tokio::net::TcpStream> {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind test socket");
+    let url = format!("ws://{}", listener.local_addr().expect("test socket address"));
+    let accepted = tokio::spawn(async move {
+        let (stream, _) = listener.accept().await.expect("accept test socket");
+        tokio_tungstenite::accept_async(stream).await.expect("upgrade test socket")
+    });
+    actor.connect_test_socket(&url, receipt_actor).await;
+    accepted.await.expect("test socket task")
+}
+
+/// 📨️ The next client frame the hub's end of a loopback socket reads.
+#[cfg(not(target_arch = "wasm32"))]
+async fn receive_frame(socket: &mut tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>) -> ClientFrame {
+    use futures::StreamExt;
+    let message = tokio::time::timeout(std::time::Duration::from_secs(1), socket.next()).await.expect("client frame deadline").expect("client frame owner").expect("client frame");
+    let tokio_tungstenite::tungstenite::Message::Binary(bytes) = message else { panic!("expected binary client frame") };
+    semio_framework_os_spr::decode_client_frame(&bytes).await.expect("decode client frame").1
+}
+
+/// 🪢️ A hub document's actor seeded with the canonical checkpoint pair its shell verified starts AT the pair: the pair
+/// and its history are the actor's, no transfer is in flight, and its first `SocketHelloV1` names the pair's baseline,
+/// so the hub tails only what followed it — the one seed of every shell (ticket 26/09/23 slice WG10).
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn a_seeded_hub_actor_says_hello_at_the_canonical_pair_baseline() {
+    let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
+    let baseline = bootstrap.baseline_frontier.clone();
+    let (_, remote) = ChannelBackbone::pair("native-seed-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(8);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "seed-test".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let blob = |bytes: &[u8]| semio_framework_os_directory::PublishedArtifactBlob { sha256: semio_framework_os_directory::ArtifactHash(semio_framework_hash::Sha256::digest(bytes)), byte_length: bytes.len() as u64 };
+    actor
+        .seed_hub_document(semio_framework_os_directory::CanonicalCheckpointPairV1 {
+            scope: semio_framework_os_directory::DocumentScope::new("space-seed", "demo"),
+            descriptor_digest_v1: semio_framework_os_directory::ArtifactHash([0x11; 32]),
+            active_checkpoint_id: semio_framework_os_directory::ArtifactHash([0x22; 32]),
+            baseline_frontier: semio_framework_os_directory::ArtifactFrontier { document_id: "demo".into(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: semio_framework_os_directory::ArtifactHash(baseline.chain_hash) },
+            pack: blob(&pair.pack),
+            spr: blob(&pair.spr),
+            aggregate_sha256: semio_framework_os_directory::ArtifactHash(semio_framework_os_spr::artifact_bootstrap_aggregate_hash(&pair.pack, &pair.spr)),
+            pack_bytes: pair.pack.clone(),
+            spr_bytes: pair.spr.clone(),
+        })
+        .await;
+    let (pack, spr, frontier, pending_required, resume, pending_resume, remote_state, outbox, _) = actor.bootstrap_test_state();
+    assert_eq!((pack.as_deref(), spr.as_deref()), (Some(pair.pack.as_slice()), Some(pair.spr.as_slice())));
+    assert_eq!(frontier, Some(baseline.clone()), "the actor's hub frontier is the pair's baseline");
+    assert_eq!((pending_required, resume, pending_resume, outbox.len()), (None, None, None, 0), "a seed is no transfer in flight");
+    assert!(!matches!(remote_state, RemoteState::Live { .. }));
+    let mut socket = connect(&mut actor, "hub.v1.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd").await;
+    let ClientFrame::SocketHelloV1 { frontier, resume_token, .. } = receive_frame(&mut socket).await else { panic!("the first frame is the hello") };
+    assert_eq!((frontier, resume_token), (Some(baseline), None), "the hello asks the hub only for what followed the pair");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn native_terminal_connection_failure_clears_receipt_actor_before_reissue() {
+    use futures::StreamExt;
+
+    let (_, remote) = ChannelBackbone::pair("native-actor-epoch-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(8);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "local-only".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let stale = "hub.v1.aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    let fresh = "hub.v1.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+    actor.install_test_socket_actor(stale);
+    actor.inject_hub_frame(ServerFrame::Session { actor: stale.into(), color: 3 }).await;
+    assert_eq!(actor.socket_epoch_test_state(), (Some(stale.into()), true, 0, Vec::new()));
+    actor.fail_test_bootstrap().await;
+    assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, Vec::new()));
+    let first = sample_operation_envelope("after-bootstrap-failure", 1).await;
+    let first_actor = first.actor.0.as_str().to_owned();
+    actor.relay_test_envelope(first).await;
+    assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor.clone()]));
+
+    actor.install_test_socket_actor(stale);
+    actor.inject_hub_frame(ServerFrame::Session { actor: stale.into(), color: 4 }).await;
+    actor.fail_test_connection().await;
+    assert_eq!(actor.socket_epoch_test_state().0, None);
+    assert!(!actor.socket_epoch_test_state().1);
+    let second = sample_operation_envelope("after-eof", 2).await;
+    let second_actor = second.actor.0.as_str().to_owned();
+    actor.relay_test_envelope(second).await;
+    assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, vec![first_actor.clone(), second_actor.clone()]));
+
+    let mut socket = connect(&mut actor, fresh).await;
+    assert!(matches!(receive_frame(&mut socket).await, ClientFrame::SocketHelloV1 { .. }));
+    let before_session = sample_operation_envelope("before-fresh-session", 3).await;
+    let before_session_actor = before_session.actor.0.as_str().to_owned();
+    actor.relay_test_envelope(before_session).await;
+    assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), false, 0, vec![first_actor, second_actor, before_session_actor]));
+    assert!(tokio::time::timeout(std::time::Duration::from_millis(30), socket.next()).await.is_err(), "queued mutations cannot cross the socket before Session confirms the receipt actor");
+    actor.inject_hub_frame(ServerFrame::Session { actor: fresh.into(), color: 5 }).await;
+    let first_batch = receive_frame(&mut socket).await;
+    let ClientFrame::Commands { batch_id, envelopes } = first_batch else { panic!("fresh Session must flush one command batch") };
+    assert_eq!(envelopes.len(), 3);
+    assert!(envelopes.iter().all(|envelope| envelope.actor.0.as_str() == fresh));
+    assert!(tokio::time::timeout(std::time::Duration::from_millis(30), socket.next()).await.is_err(), "each queued mutation is sent exactly once after Session");
+    assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), true, 1, Vec::new()));
+    actor.inject_hub_frame(ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: bootstrap_frontier("demo", 3, "after-session", 3, 0x66) }).await;
+    assert_eq!(actor.socket_epoch_test_state(), (Some(fresh.into()), true, 0, Vec::new()));
+
+    actor.fail_test_connection().await;
+    let reconnected = "hub.v1.cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc";
+    let queued_during_reconnect = sample_operation_envelope("during-reconnect", 4).await;
+    actor.relay_test_envelope(queued_during_reconnect).await;
+    let mut reconnected_socket = connect(&mut actor, reconnected).await;
+    assert!(matches!(receive_frame(&mut reconnected_socket).await, ClientFrame::SocketHelloV1 { .. }));
+    assert!(tokio::time::timeout(std::time::Duration::from_millis(30), reconnected_socket.next()).await.is_err(), "reconnect cannot flush before its own Session");
+    actor.inject_hub_frame(ServerFrame::Session { actor: reconnected.into(), color: 6 }).await;
+    let ClientFrame::Commands { envelopes, .. } = receive_frame(&mut reconnected_socket).await else { panic!("reconnect Session must flush queued mutation") };
+    assert_eq!(envelopes.len(), 1);
+    assert_eq!(envelopes[0].actor.0.as_str(), reconnected);
+    assert!(tokio::time::timeout(std::time::Duration::from_millis(30), reconnected_socket.next()).await.is_err(), "reconnect flush is exactly once");
+    assert_eq!(actor.socket_epoch_test_state(), (Some(reconnected.into()), true, 1, Vec::new()));
+}
+
+/// 🛰️ A native document actor dialled into its own loopback hub socket as `socket_actor`, the receipt confirmed.
+#[cfg(not(target_arch = "wasm32"))]
+async fn confirmed_hub_actor(name: &str, socket_actor: &str) -> (native_actor::ArtifactActor, tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>) {
+    let (_, remote) = ChannelBackbone::pair(name).await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(8);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "authored-stamps".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: name.into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let mut socket = connect(&mut actor, socket_actor).await;
+    assert!(matches!(receive_frame(&mut socket).await, ClientFrame::SocketHelloV1 { .. }));
+    actor.inject_hub_frame(ServerFrame::Session { actor: socket_actor.into(), color: 1 }).await;
+    (actor, socket)
+}
+
+/// ⏰️ Author stamps are canonical: an authored envelope crosses the hub socket with its own `(hlc, id)` — only the
+/// actor is bound to the socket subject — so two replicas whose concurrent supersessions of one operation reach the hub
+/// in the opposite order of their authoring fold the same winner, the last by authored `(hlc, id)`. A send-time clock
+/// would let each author keep its own supersession (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, audit F-M5).
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_socket() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    const LEFT: &str = "hub.v1.1111111111111111111111111111111111111111111111111111111111111111";
+    const RIGHT: &str = "hub.v1.2222222222222222222222222222222222222222222222222222222222222222";
+    let genesis = || create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "authored-stamps", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let mut left = semio_framework_os_store_test_support::plain_test_store(genesis()).await;
+    let mut right = semio_framework_os_store_test_support::plain_test_store(genesis()).await;
+    let mut shared = sample_operation_envelope("shared-edit", 1).await;
+    shared.document_id = ArtifactId("authored-stamps".into());
+    shared.actor = ActorId("peer".into());
+    shared.timestamp = semio_framework_os_spr::HybridLogicalTimestamp { actor: 5, physical_ms: 1 << 50, logical: 0 };
+    for store in [&mut left, &mut right] {
+        store.ingest_remote(shared.clone()).await.expect("both replicas ingest the shared edit");
+    }
+    let target = shared.mutation_id.clone();
+    let supersede = |n: i32| ArtifactCommand::Supersede { scope: None, inputs: vec![semio_framework_os_store_space_schema::SupersedeInput { target: target.clone(), replacement: Some(DemoMutation::SetN { n }) }] };
+    left.dispatch(supersede(7), &mut identity).await.expect("left supersedes");
+    right.dispatch(supersede(9), &mut identity).await.expect("right supersedes concurrently");
+    let authored = |store: &semio_framework_os_store_engine::lifted_store::ArtifactStore<DemoSnapshot, DemoMutation>| store.envelope().transitions.last().cloned().expect("an authored supersession");
+    let (left_authored, right_authored) = (authored(&left), authored(&right));
+    let (winner, value) = if (left_authored.timestamp.cmp_key(), &left_authored.mutation_id.0) > (right_authored.timestamp.cmp_key(), &right_authored.mutation_id.0) { (&left_authored, 7) } else { (&right_authored, 9) };
+    let (mut right_actor, mut right_socket) = confirmed_hub_actor("right", RIGHT).await;
+    right_actor.relay_test_envelope(right_authored.clone()).await;
+    let ClientFrame::Commands { envelopes: right_wire, .. } = receive_frame(&mut right_socket).await else { panic!("the right replica relays one command batch") };
+    let (mut left_actor, mut left_socket) = confirmed_hub_actor("left", LEFT).await;
+    left_actor.relay_test_envelope(left_authored.clone()).await;
+    let ClientFrame::Commands { envelopes: left_wire, .. } = receive_frame(&mut left_socket).await else { panic!("the left replica relays one command batch") };
+    for (wire, authored, socket_actor) in [(&left_wire[0], &left_authored, LEFT), (&right_wire[0], &right_authored, RIGHT)] {
+        assert_eq!((&wire.mutation_id, wire.timestamp), (&authored.mutation_id, authored.timestamp), "the wire carries the authored identity and clock");
+        assert_eq!(wire.actor.0.as_str(), socket_actor, "only the actor is bound to the socket subject");
+    }
+    left.ingest_remote(right_wire[0].clone()).await.expect("left ingests the right supersession from the hub");
+    right.ingest_remote(left_wire[0].clone()).await.expect("right ingests the left supersession from the hub");
+    for store in [&left, &right] {
+        assert_eq!(store.supersessions()[&target].transition_id, winner.mutation_id.0, "every replica folds the same last supersession");
+        assert_eq!(store.snapshot().expect("snapshot"), DemoSnapshot { n: value });
+    }
+    semio_framework_os_store_test_support::close_plain_test_store(&mut left);
+    semio_framework_os_store_test_support::close_plain_test_store(&mut right);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_without_duplicate() {
+    use semio_framework_os_store_backbone::Backbone;
+    let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
+    let required = bootstrap.required_tail_frontier.clone();
+    let baseline = bootstrap.baseline_frontier.clone();
+    let (mut channel, remote) = ChannelBackbone::pair("native-bootstrap-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, mut event_rx) = broadcast::channel(32);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-bootstrap-test".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let local = sample_operation_envelope("pending-local", 8).await;
+    actor.queue_test_outbox(vec![local.clone(), local.clone()]);
+    actor.inject_bootstrap_local_replay_failure();
+    let welcome =
+        |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap".into(), resume_token: "resume-bootstrap".into(), server_frontier: required.clone(), bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap)) };
+
+    actor.inject_hub_frame(welcome(bootstrap.clone())).await;
+    let first = channel.receive().await.expect("baseline queue");
+    assert_eq!(first.len(), 1, "failed replay queues only the committed baseline");
+    assert!(matches!(&first[0], BackboneMessage::Genesis { pack } if pack == &pair.pack), "the baseline is the hub document's genesis followed by its (here: no) events");
+    let (pack, spr, frontier, pending_required, resume, pending_resume, remote_state, outbox, _rebootstrap) = actor.bootstrap_test_state();
+    assert_eq!(pack.as_deref(), Some(pair.pack.as_slice()));
+    assert_eq!(spr.as_deref(), Some(pair.spr.as_slice()));
+    assert_eq!(frontier, Some(baseline.clone()));
+    assert_eq!(pending_required, Some(required.clone()));
+    assert_eq!(resume, None);
+    assert_eq!(pending_resume.as_deref(), Some("resume-bootstrap"));
+    assert!(!matches!(remote_state, RemoteState::Live { .. }));
+    assert_eq!(outbox, vec![local.mutation_id.0.clone()], "failure preserves one deduplicated local owner");
+    assert!(matches!(event_rx.try_recv(), Ok(ArtifactEvent::BootstrapProgress { .. })));
+
+    actor.inject_hub_frame(ServerFrame::Presence { peers: Vec::new() }).await;
+    assert!(!matches!(actor.bootstrap_test_state().6, RemoteState::Live { .. }), "presence cannot bypass authenticated catch-up");
+    actor.inject_hub_frame(welcome(bootstrap)).await;
+    let restarted = channel.receive().await.expect("restart queue");
+    assert_eq!(restarted.iter().filter(|message| matches!(message, BackboneMessage::Genesis { .. })).count(), 1);
+    let replayed: Vec<MutationEnvelope> = restarted
+        .iter()
+        .filter_map(|message| match message {
+            BackboneMessage::Mutations { envelopes } => Some(decode_envelopes(envelopes).expect("decode replay")),
+            _ => None,
+        })
+        .flatten()
+        .collect();
+    assert_eq!(replayed.iter().map(|envelope| &envelope.mutation_id).collect::<Vec<_>>(), vec![&local.mutation_id], "restart performs one successful local replay");
+
+    let mut wrong = required.clone();
+    wrong.head_edit_id = "edit-wrong".into();
+    wrong.chain_hash = [0x55; 32];
+    actor.inject_hub_frame(ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor-bootstrap-test".into()), frontier: wrong }).await;
+    assert!(!matches!(actor.bootstrap_test_state().6, RemoteState::Live { .. }), "same ordinals cannot authenticate a different chain");
+    actor.inject_hub_frame(ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor-bootstrap-test".into()), frontier: required.clone() }).await;
+    let (_, _, frontier, pending_required, resume, _, remote_state, outbox, _) = actor.bootstrap_test_state();
+    assert_eq!(frontier, Some(required));
+    assert_eq!(pending_required, None);
+    assert_eq!(resume.as_deref(), Some("resume-bootstrap"));
+    assert!(matches!(remote_state, RemoteState::Live { .. }));
+    assert_eq!(outbox, vec![local.mutation_id.0], "offline hub retains the exact local owner after semantic replay");
+    assert!(channel.receive().await.expect("no duplicate store replay").is_empty());
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn native_inline_and_chunked_bootstrap_install_the_same_typed_pair_after_cancelled_restart() {
+    use semio_framework_os_store_backbone::Backbone;
+    async fn actor_pair(uri: &str) -> (native_actor::ArtifactActor, ChannelBackbone) {
+        let (channel, remote) = ChannelBackbone::pair(uri).await;
+        let (_, receiver) = artifact_mailbox_pair();
+        let (events, _) = broadcast::channel(32);
+        let actor = native_actor::ArtifactActor::new(
+            test_pool(),
+            ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-bootstrap-test".into() },
+            remote,
+            receiver,
+            events,
+            Arc::new(std::sync::RwLock::new(None)),
+            Arc::new(std::sync::RwLock::new(None)),
+            None,
+            semio_framework_async::CancelToken::root_now(),
+        )
+        .await;
+        (actor, channel)
+    }
+    let (inline_bootstrap, pair) = demo_artifact_bootstrap(true).await;
+    let (mut chunked_bootstrap, _) = demo_artifact_bootstrap(false).await;
+    let required = inline_bootstrap.required_tail_frontier.clone();
+    let welcome =
+        |bootstrap: ArtifactBootstrap| ServerFrame::Welcome { session_id: "session-bootstrap".into(), resume_token: "resume-bootstrap".into(), server_frontier: required.clone(), bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap)) };
+
+    let (mut inline_actor, mut inline_channel) = actor_pair("native-bootstrap-inline").await;
+    inline_actor.inject_hub_frame(welcome(inline_bootstrap)).await;
+    let inline_messages = inline_channel.receive().await.expect("inline messages");
+    assert!(matches!(&inline_messages[..], [BackboneMessage::Genesis { pack }] if pack == &pair.pack));
+
+    let mut combined = pair.pack.clone();
+    combined.extend_from_slice(&pair.spr);
+    let chunk_size = combined.len().div_ceil(3);
+    let chunks: Vec<Vec<u8>> = combined.chunks(chunk_size).map(<[u8]>::to_vec).collect();
+    assert_eq!(chunks.len(), 3);
+    chunked_bootstrap.chunk_count = chunks.len() as u32;
+    let descriptor_hash = chunked_bootstrap.descriptor_hash;
+    let (mut chunked_actor, mut chunked_channel) = actor_pair("native-bootstrap-chunked").await;
+    chunked_actor.inject_hub_frame(welcome(chunked_bootstrap.clone())).await;
+    chunked_actor.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: 0, bytes: semio_framework_os_spr::ArtifactBootstrapChunkBytes::try_from_slice(&chunks[0]).expect("bounded chunk") }).await;
+    chunked_actor.cancel_test_bootstrap();
+    assert!(chunked_channel.receive().await.expect("cancelled staging").is_empty(), "cancellation commits no partial pair");
+
+    chunked_actor.inject_hub_frame(welcome(chunked_bootstrap)).await;
+    for (index, chunk) in chunks.iter().enumerate() {
+        chunked_actor.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: index as u32, bytes: semio_framework_os_spr::ArtifactBootstrapChunkBytes::try_from_slice(chunk).expect("bounded chunk") }).await;
+        if index + 1 < chunks.len() {
+            assert!(chunked_channel.receive().await.expect("staged chunk").is_empty(), "chunks stay invisible before done");
+        }
+    }
+    chunked_actor.inject_hub_frame(ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count: chunks.len() as u32 }).await;
+    let chunked_messages = chunked_channel.receive().await.expect("chunked messages");
+    assert_eq!(chunked_messages, inline_messages, "inline and chunked replace with byte-identical typed pairs");
+    chunked_actor.inject_hub_frame(ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor-bootstrap-test".into()), frontier: required.clone() }).await;
+    let (actual_pack, actual_spr, frontier, pending_required, resume, _, remote_state, _, _) = chunked_actor.bootstrap_test_state();
+    assert_eq!(actual_pack, Some(pair.pack));
+    assert_eq!(actual_spr, Some(pair.spr));
+    assert_eq!(frontier, Some(required));
+    assert_eq!(pending_required, None);
+    assert_eq!(resume.as_deref(), Some("resume-bootstrap"));
+    assert!(matches!(remote_state, RemoteState::Live { .. }));
+}
+
+/// 🚏️ Ticket `26/09/18/OS-HUB-COLLABORATION-AI-END-TO-END` slice C1 — the document socket's bootstrap
+/// ORDER as a law, not just its frame shapes. A hub that relayed a command tail before the snapshot it
+/// rebases on would hand the client envelopes against a document it has never seen, so `on_hub_frame`
+/// refuses a `Commands` frame while an artifact bootstrap is still in flight: nothing is installed, the
+/// refusal is emitted as an `artifactBootstrap` conflict, and the connection drops to reconnect rather
+/// than diverging in silence. The same frame after `ArtifactBootstrapDone` is accepted, which is what
+/// makes this an ordering law and not a blanket rejection.
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn bootstrap_sequence_refuses_a_command_tail_that_arrives_before_the_snapshot() {
+    use semio_framework_os_store_backbone::Backbone;
+    async fn ordered_actor(uri: &str) -> (native_actor::ArtifactActor, ChannelBackbone, broadcast::Receiver<ArtifactEvent>) {
+        let (channel, remote) = ChannelBackbone::pair(uri).await;
+        let (_, receiver) = artifact_mailbox_pair();
+        let (events, event_receiver) = broadcast::channel(32);
+        let actor = native_actor::ArtifactActor::new(
+            test_pool(),
+            ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: Vec::new(), watch_external: false, actor: "actor-order-test".into() },
+            remote,
+            receiver,
+            events,
+            Arc::new(std::sync::RwLock::new(None)),
+            Arc::new(std::sync::RwLock::new(None)),
+            None,
+            semio_framework_async::CancelToken::root_now(),
+        )
+        .await;
+        (actor, channel, event_receiver)
+    }
+
+    let (_, pair) = demo_artifact_bootstrap(true).await;
+    let (mut bootstrap, _) = demo_artifact_bootstrap(false).await;
+    let required = bootstrap.required_tail_frontier.clone();
+    let mut combined = pair.pack.clone();
+    combined.extend_from_slice(&pair.spr);
+    let chunk_size = combined.len().div_ceil(3);
+    let chunks: Vec<Vec<u8>> = combined.chunks(chunk_size).map(<[u8]>::to_vec).collect();
+    bootstrap.chunk_count = chunks.len() as u32;
+    let descriptor_hash = bootstrap.descriptor_hash;
+    let welcome = ServerFrame::Welcome {
+        session_id: "session-order".into(),
+        resume_token: "resume-order".into(),
+        server_frontier: required.clone(),
+        bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap.clone())),
+    };
+    let tail = || ServerFrame::Commands { envelopes: Vec::new(), origin: ActorId("actor-order-test".into()), frontier: required.clone() };
+
+    let (mut early, _early_channel, mut early_events) = ordered_actor("native-bootstrap-order-early").await;
+    early.inject_hub_frame(welcome).await;
+    early.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: 0, bytes: semio_framework_os_spr::ArtifactBootstrapChunkBytes::try_from_slice(&chunks[0]).expect("bounded chunk") }).await;
+    early.inject_hub_frame(tail()).await;
+    let (early_pack, early_spr, early_frontier, _, _, _, early_remote_state, _, _) = early.bootstrap_test_state();
+    assert_eq!(early_pack, None, "a tail before the snapshot installs nothing");
+    assert_eq!(early_spr, None, "a tail before the snapshot installs nothing");
+    assert_eq!(early_frontier, None, "and never advances the client's view of the server frontier");
+    assert!(!matches!(early_remote_state, RemoteState::Live { .. }), "an out-of-order bootstrap must not read as a live session");
+    let mut refusal = None;
+    while let Ok(event) = early_events.try_recv() {
+        if let ArtifactEvent::Conflict(message) = event {
+            refusal = Some(message);
+        }
+    }
+    let refusal = refusal.expect("the refusal is emitted, never swallowed");
+    assert_eq!(refusal.code.0, "artifactBootstrap");
+    assert!(refusal.message.contains("tail arrived before artifact bootstrap completion"), "the refusal names the order it enforced: {}", refusal.message);
+
+    let (mut ordered, mut ordered_channel, _ordered_events) = ordered_actor("native-bootstrap-order-ok").await;
+    ordered
+        .inject_hub_frame(ServerFrame::Welcome {
+            session_id: "session-order".into(),
+            resume_token: "resume-order".into(),
+            server_frontier: required.clone(),
+            bootstrap: Bootstrap::ArtifactBootstrap(Box::new(bootstrap)),
+        })
+        .await;
+    for (index, chunk) in chunks.iter().enumerate() {
+        ordered.inject_hub_frame(ServerFrame::ArtifactBootstrapChunk { descriptor_hash, index: index as u32, bytes: semio_framework_os_spr::ArtifactBootstrapChunkBytes::try_from_slice(chunk).expect("bounded chunk") }).await;
+    }
+    ordered.inject_hub_frame(ServerFrame::ArtifactBootstrapDone { descriptor_hash, chunk_count: chunks.len() as u32 }).await;
+    let _ = ordered_channel.receive().await.expect("installed messages");
+    ordered.inject_hub_frame(tail()).await;
+    let (ordered_pack, ordered_spr, ordered_frontier, ordered_pending, _, _, ordered_remote_state, _, _) = ordered.bootstrap_test_state();
+    assert_eq!(ordered_pack, Some(pair.pack), "the same tail AFTER the snapshot is accepted");
+    assert_eq!(ordered_spr, Some(pair.spr));
+    assert_eq!(ordered_frontier, Some(required));
+    assert_eq!(ordered_pending, None);
+    assert!(matches!(ordered_remote_state, RemoteState::Live { .. }));
+}
+
+async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
+    let edit = Edit { line: None,
+        id: edit_id.into(),
+        actor: None,
+        forwards: vec![DemoMutation::SetN { n }],
+        inverse: vec![DemoMutation::SetN { n: 0 }].into(),
+        mutation_meta: Vec::new(), verb: None,
+        sequence_number: 1,
+        started_at: "0".into(),
+        finished_at: None,
+    };
+    let document_id = ArtifactId("demo".to_string());
+    let schema = semio_framework_os_spr::SchemaId("demo/v1".to_string());
+    let mut envelopes = semio_framework_os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("operation envelope");
+    envelopes.pop().expect("exactly one op envelope for a single-op edit")
+}
+
+/// 🪪️ Admits the fixture caller's independent byte ceiling and observes the original cumulative identity operation.
+async fn receive_under_fixture_identity(session: &mut SyncSession<DemoSnapshot, DemoMutation>, envelope: MutationEnvelope) -> Result<(), SyncError> {
+    const CEILING: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut observed = 0;
+    let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
+        assert!(progress.owned_bytes <= CEILING);
+        observed = progress.owned_bytes;
+        true
+    };
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(CEILING, &mut observer).expect("declared fixture receive identity authority");
+    let result = session.receive(envelope, &mut identity).await;
+    drop(identity.pause().expect("original fixture receive identity receipt"));
+    drop(observer);
+    result
+}
+
+//#region 🧪️SyncSession
+#[semio_framework_async_macros::async_test]
+async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
+    let envelope: semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let store = semio_framework_os_store_test_support::plain_test_store(envelope).await;
+    let mut session = SyncSession::new(store).await;
+    receive_under_fixture_identity(&mut session, sample_operation_envelope("edit-1", 5).await).await.expect("receive");
+    assert_eq!(session.store.snapshot().expect("snapshot").n, 5);
+    assert_eq!(session.store.envelope().vcs.edits.len(), 1);
+    semio_framework_os_store_test_support::close_plain_test_store(&mut session.store);
+}
+
+#[tokio::test]
+async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
+    let envelope: semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let store = semio_framework_os_store_test_support::plain_test_store(envelope).await;
+    let mut session = SyncSession::new(store).await;
+    let first = sample_operation_envelope("edit-1", 5).await;
+    let mut second = sample_operation_envelope("edit-2", 9).await;
+    second.dependencies = vec![first.mutation_id.clone()];
+    receive_under_fixture_identity(&mut session, second).await.expect("receive second first");
+    assert_eq!(session.store.envelope().vcs.edits.len(), 0, "buffered until edit-1 arrives");
+    receive_under_fixture_identity(&mut session, first).await.expect("receive first");
+    assert_eq!(session.store.envelope().vcs.edits.len(), 2, "both edits now applied");
+    assert_eq!(session.store.snapshot().expect("snapshot").n, 9);
+    semio_framework_os_store_test_support::close_plain_test_store(&mut session.store);
+}
+//#endregion 🧪️SyncSession
+
+//#region 🧪️Helpers
+#[tokio::test]
+async fn hub_ws_url_derives_ws_endpoint_from_remote_uri() {
+    assert_eq!(hub_ws_url("remote://host:6070", "studio-1", "doc-1", None).await, "ws://host:6070/scopes/studio-1%2Fdoc-1/document/ws");
+    assert_eq!(hub_ws_url("https://semio_hub.example.com", "studio-1", "doc-2", None).await, "wss://semio_hub.example.com/scopes/studio-1%2Fdoc-2/document/ws");
+    assert_eq!(hub_ws_url("ws://127.0.0.1:5000/prefix", "studio-1", "d", None).await, "ws://127.0.0.1:5000/scopes/studio-1%2Fd/document/ws");
+    assert_eq!(
+        hub_ws_url("remote://host:6070", "studio /東京?", "doc#ä", Some("s.space.home@1/*#editor")).await,
+        "ws://host:6070/scopes/studio%20%2F%E6%9D%B1%E4%BA%AC%3F%2Fdoc%23%C3%A4/document/ws?surface=s.space.home%401%2F%2A%23editor",
+        "ticket 26/08/16/HUB-SPACES-…: surface travels out of band as ?surface= on the document WS URL"
+    );
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() {
+    use semio_framework_os_directory_client::{DirectoryClientError, DocumentSocketAdmissionV1, DocumentSocketAuthorityV1, DocumentSocketGrantReceiptV1, HubSocketGrantSource, LocalHubCredential};
+    use semio_framework_os_directory::{DocumentOpenArtifactV1, DocumentOpenCatalogV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenParentDialectV1, DocumentOpenRendererTargetV1, DocumentOpenRevalidationV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1, DocumentScope};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    struct BoundSource {
+        admissions: AtomicUsize,
+        trusted_origin: String,
+    }
+
+    impl HubSocketGrantSource for BoundSource {
+        fn admit_document_socket(
+            &self,
+            _ctx: &semio_framework_async::OperationContext,
+            space_id: &str,
+            document_id: &str,
+            expectation: &semio_framework_os_directory_client::DocumentSocketExpectationV1,
+            _client_instance_id: &str,
+            _timeout_ms: u64,
+        ) -> Result<DocumentSocketAdmissionV1, DirectoryClientError> {
+            self.admissions.fetch_add(1, Ordering::SeqCst);
+            Ok(DocumentSocketAdmissionV1 {
+                socket: DocumentSocketGrantReceiptV1 {
+                    schema: "semio.hub.document-socket-grant/v1".into(),
+                    protocol: "semio.session.v1".into(),
+                    actor_id: format!("hub.v1.{}", "3".repeat(64)),
+                    expires_at_ms: i64::MAX,
+                },
+                authority: DocumentSocketAuthorityV1 {
+                    admitted_lease: expectation.lease.clone(),
+                    hub_origin: self.trusted_origin.clone(),
+                    browser_actor: semio_framework_os_directory::DocumentOpenBrowserActorV1::None,
+                    expires_at_unix_ms: u64::try_from(i64::MAX).expect("positive max"),
+                    scope: DocumentScope::new(space_id, document_id),
+                    descriptor_digest_v1: "4".repeat(64),
+                    catalog: DocumentOpenCatalogV1 { generation_id: "5".repeat(64) },
+                    package: DocumentOpenPackageV1 {
+                        plugin_id: "trusted-plugin".into(),
+                        package_id: "semio:trusted-plugin".into(),
+                        version: "1.0.0".into(),
+                        component_sha256: "6".repeat(64),
+                        component_blake3: "7".repeat(64),
+                        descriptor_byte_sha256: "8".repeat(64),
+                        execution_protocol: semio_framework_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_framework_os_spr::CHANNEL_VERSION },
+                        component_receipt: semio_framework_plugin_component_receipt::ComponentReceiptV1 {
+                            schema: semio_framework_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+                            plugin_id: "trusted-plugin".into(),
+                            package_id: "semio:trusted-plugin".into(),
+                            profile: semio_framework_plugin_component_receipt::ComponentProfileV1::Release,
+                            target: semio_framework_plugin_component_receipt::COMPONENT_TARGET.into(),
+                            wasm_sha256: "6".repeat(64),
+                            wasm_bytes: 1024,
+                            semantic_descriptor_sha256: "8".repeat(64),
+                            toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)".into(),
+                            source_tree_digest: "3".repeat(64),
+                            provenance_sha256: "4".repeat(64),
+                        },
+                    },
+                    artifact: DocumentOpenArtifactV1 { kind: "trusted.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
+                    parent_dialect: DocumentOpenParentDialectV1 { artifact_kind: "trusted.document".into(), standard: "1".into(), subset: "*".into() },
+                    pack_schema_hash: [0x11; 32],
+                    surface: DocumentOpenSurfaceV1 {
+                        surface_id: "trusted.surface".into(),
+                        app_id: "trusted.app".into(),
+                        window_kind_id: "trusted.window".into(),
+                        role: DocumentOpenSurfaceRoleV1::Editor,
+                        renderer_target: DocumentOpenRendererTargetV1::Wgpu,
+                    },
+                    grant: DocumentOpenGrantV1 { read: true, write: true, observe: true },
+                    checkpoint: semio_framework_os_directory::DocumentOpenCheckpointV1 {
+                        checkpoint_id: "9".repeat(64),
+                        descriptor_digest_v1: "4".repeat(64),
+                        baseline_frontier: semio_framework_os_directory::ArtifactFrontier {
+                            document_id: document_id.to_string(),
+                            head_edit_ordinal: 0,
+                            head_edit_id: String::new(),
+                            last_commit_seq: 0,
+                            chain_hash: semio_framework_os_directory::ArtifactHash::new([0; 32]),
+                        },
+                        aggregate_sha256: "a".repeat(64),
+                    },
+                    revalidation: DocumentOpenRevalidationV1 { directory_revision: 1, membership_generation: 1, session_generation: Some(1), share_generation: None },
+                },
+            })
+        }
+    }
+
+    ensure_demo_codec_registered().await;
+    let hostile = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("hostile listener");
+    let hostile_origin = format!("http://{}", hostile.local_addr().expect("hostile address"));
+    let source = Arc::new(BoundSource { admissions: AtomicUsize::new(0), trusted_origin: "http://127.0.0.1:1".into() });
+    let (_, remote) = ChannelBackbone::pair("hostile-binding-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(8);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
+            document_id: "document".into(),
+            schema: "demo/v1".into(),
+            bindings: vec![PersistenceBinding::Hub { base_url: hostile_origin, space_id: "space".into(), surface: Some("trusted.surface".into()) }],
+            watch_external: false,
+            actor: "local-untrusted".into(),
+        },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(Some(Arc::new(LocalHubCredential::test("http://127.0.0.1:1", &format!("session.v1.{}.{}", "a".repeat(32), "b".repeat(64))))))),
+        Arc::new(std::sync::RwLock::new(Some(source.clone()))),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    actor.run_test_connect_attempt().await;
+    assert_eq!(source.admissions.load(Ordering::SeqCst), 1);
+    assert!(tokio::time::timeout(std::time::Duration::from_millis(50), hostile.accept()).await.is_err(), "hostile binding receives no dial or grant header");
+    assert_eq!(actor.socket_epoch_test_state(), (None, false, 0, Vec::new()));
+}
+
+/// 🎨️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4: both
+/// actors call `stamp_session` on every outbound `PresenceHeartbeat` right before
+/// `presence_to_bytes` — shells never fill `color`/`surface` themselves. This proves the pure
+/// helper both actors call: sets both fields from the actor's own `session_color`/`hub_surface`
+/// state, overwriting whatever the shell handed in, and clears `surface` to `None` when the
+/// document has no hub binding (folder-only) even if `session_color` is somehow set.
+#[semio_framework_async_macros::async_test]
+async fn actor_stamps_session_color_and_surface_on_outbound_heartbeat() {
+    let mut peer = PresencePeer {
+        actor: "actor-1".into(),
+        connected_at_ms: 1000,
+        label: None,
+        presence_pack: None,
+        user_id: None,
+        role: None,
+        drag_ghost_json: None,
+        interaction: None,
+        color: Some(99),
+        surface: Some("shell-should-never-set-this".into()),
+        views: Vec::new(),
+        ui: None,
+        tool_run: None,
+        principal_kind: None, active_tool: None, history_edit: None,
+        typing: Vec::new(),
+    };
+    stamp_session(&mut peer, Some(7), Some("s.space.home@1/*#editor")).await;
+    assert_eq!(peer.color, Some(7));
+    assert_eq!(peer.surface.as_deref(), Some("s.space.home@1/*#editor"));
+
+    stamp_session(&mut peer, None, None).await;
+    assert_eq!(peer.color, None, "no session color yet (folder-only document, or hub not yet assigned one)");
+    assert_eq!(peer.surface, None, "folder-only document carries no surface");
+}
+//#endregion 🧪️Helpers
+
+//#region 🧪️WireBridge
+// 🎯️ W6: `wire_bridge_round_trips_identity_and_diff_through_protocol_causal` is DELETED — the
+// local/wire bridge it tested (`to_wire_envelope`/`from_wire_envelope`) no longer exists; local
+// and wire envelopes are the same `crate::os_spr::MutationEnvelope` type now, an identity the type
+// system enforces, not something a round-trip test needs to prove.
+#[semio_framework_async_macros::async_test]
+async fn rollback_envelope_synthesizes_an_undo_from_the_original_inverse() {
+    let envelope = sample_operation_envelope("edit-1", 5).await;
+    let rollback = rollback_envelope(&envelope).await.expect("a domain operation rolls back by its inverse");
+    assert_eq!(rollback.dependencies, vec![envelope.mutation_id.clone()], "the undo depends on the operation it undoes");
+    assert_eq!(rollback.diff.payload, envelope.inverse.payload, "the undo's forward diff IS the original's inverse");
+    assert_ne!(rollback.mutation_id, envelope.mutation_id, "the undo gets its own operation id");
+}
+
+/// 🎬️ Compares nineteen committed wire specimens with Rust encoding and decoding without
+/// modifying them. The TypeScript replication suite consumes the same semantic-owner files
+/// under `🧰️framework/🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire`.
+/// The current socket hello round-trips in memory; the committed obsolete hello must reject.
+#[semio_framework_async_macros::async_test]
+async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
+    let fixtures_dir = fixture_path!("../../../../../../../../../🔨️modules/📡️replication/🧪️tests/🧫️fixtures/📡️wire");
+
+    async fn check_client(dir: &std::path::Path, name: &str, frame: &ClientFrame, lane: Lane) {
+        let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|error| panic!("read {name}: {error}"));
+        assert_eq!(encode_client_frame(frame, lane).await, bytes, "{name} committed bytes");
+        let (decoded_lane, decoded) = semio_framework_os_spr::decode_client_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
+        assert_eq!(decoded_lane, lane, "{name} lane round trip");
+        assert_eq!(&decoded, frame, "{name} frame round trip");
+    }
+
+    async fn check_server(dir: &std::path::Path, name: &str, frame: &ServerFrame, lane: Lane) {
+        let bytes = std::fs::read(dir.join(name)).unwrap_or_else(|error| panic!("read {name}: {error}"));
+        assert_eq!(semio_framework_os_spr::encode_server_frame(frame, lane).await, bytes, "{name} committed bytes");
+        let (decoded_lane, decoded) = decode_server_frame(&bytes).await.unwrap_or_else(|error| panic!("decode {name}: {error}"));
+        assert_eq!(decoded_lane, lane, "{name} lane round trip");
+        assert_eq!(&decoded, frame, "{name} frame round trip");
+    }
+
+    let frontier = RuntimeFrontierSummary { document_id: ArtifactId("doc-1".to_string()), head_edit_ordinal: 1, head_edit_id: "op-1".to_string(), last_commit_seq: 1, chain_hash: [9u8; 32] };
+    let wire_envelope = MutationEnvelope {
+        mutation_id: MutationId("op-1".to_string()),
+        document_id: ArtifactId("doc-1".to_string()),
+        actor: ActorId("actor-1".into()),
+        dependencies: Vec::new(),
+        observed: None,
+        target: Vec::new(),
+        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
+        timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
+        transaction: None, verb: None, line: None,
+    };
+
+    let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None };
+    let hello_bytes = encode_client_frame(&hello, Lane::Command).await;
+    let (hello_lane, decoded_hello) = semio_framework_os_spr::decode_client_frame(&hello_bytes).await.expect("decode current socket hello");
+    assert_eq!(hello_lane, Lane::Command, "current socket hello lane round trip");
+    assert_eq!(decoded_hello, hello, "current socket hello frame round trip");
+    let rejected_hello = std::fs::read(fixtures_dir.join("🚫️legacy-client-hello-rejected/💾️.bin")).expect("read rejected obsolete hello");
+    assert!(semio_framework_os_spr::decode_client_frame(&rejected_hello).await.is_err(), "obsolete hello must reject");
+    check_client(&fixtures_dir, "🕹️client-commands/💾️.bin", &ClientFrame::Commands { batch_id: 1, envelopes: vec![wire_envelope.clone()] }, Lane::Command).await;
+    check_client(&fixtures_dir, "🚩️client-frontier-advertise/💾️.bin", &ClientFrame::FrontierAdvertise { frontier: frontier.clone() }, Lane::Command).await;
+    check_client(&fixtures_dir, "📣️client-preview-publish/💾️.bin", &ClientFrame::PreviewPublish { key: "cursor".to_string(), seq: 3, payload: vec![1, 2, 3] }, Lane::Preview).await;
+    check_client(&fixtures_dir, "🙋️client-presence/💾️.bin", &ClientFrame::Presence { peer: presence_to_bytes(&sample_presence_peer_with_interaction().await).await }, Lane::Preview).await;
+    check_client(&fixtures_dir, "🎟️client-credit-grant/💾️.bin", &ClientFrame::CreditGrant { n: 16 }, Lane::Command).await;
+    check_client(&fixtures_dir, "👋️client-bye/💾️.bin", &ClientFrame::Bye, Lane::Command).await;
+
+    check_server(&fixtures_dir, "🔗️server-welcome-tail/💾️.bin", &ServerFrame::Welcome { session_id: "session-1".to_string(), resume_token: "resume-1".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail }, Lane::Command).await;
+    check_server(
+        &fixtures_dir,
+        "📸️server-welcome-snapshot-inline/💾️.bin",
+        &ServerFrame::Welcome { session_id: "session-2".to_string(), resume_token: "resume-2".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Snapshot { pack_hash: [3u8; 32], inline: Some(vec![9, 9, 9]) } },
+        Lane::Command,
+    )
+    .await;
+    check_server(&fixtures_dir, "🧩️server-snapshot-chunk/💾️.bin", &ServerFrame::SnapshotChunk { seq: 0, bytes: semio_framework_os_spr::SnapshotChunkBytes::try_from_slice(&[1, 2, 3, 4]).unwrap() }, Lane::Command).await;
+    check_server(&fixtures_dir, "🏁️server-snapshot-done/💾️.bin", &ServerFrame::SnapshotDone { seq_count: 4 }, Lane::Command).await;
+    check_server(&fixtures_dir, "🎮️server-commands/💾️.bin", &ServerFrame::Commands { envelopes: vec![wire_envelope], origin: ActorId("actor-1".into()), frontier: frontier.clone() }, Lane::Command).await;
+    check_server(
+        &fixtures_dir,
+        "✅️server-ack-accepted/💾️.bin",
+        &ServerFrame::Ack { batch_id: 1, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: frontier.clone() },
+        Lane::Command,
+    )
+    .await;
+    check_server(
+        &fixtures_dir,
+        "🔀️server-ack-transformed/💾️.bin",
+        &ServerFrame::Ack {
+            batch_id: 2,
+            stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Transformed { envelope: Box::new(sample_wire_envelope_for_fixtures().await) }) }],
+            frontier: frontier.clone(),
+        },
+        Lane::Command,
+    )
+    .await;
+    check_server(
+        &fixtures_dir,
+        "⛔️server-ack-rejected/💾️.bin",
+        &ServerFrame::Ack { batch_id: 3, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "conflict".to_string(), messages: vec![1, 2, 3] }) }], frontier: frontier.clone() },
+        Lane::Command,
+    )
+    .await;
+    check_server(&fixtures_dir, "👁️server-preview/💾️.bin", &ServerFrame::Preview { actor: ActorId("actor-1".into()), key: "cursor".to_string(), seq: 3, payload: vec![5, 6] }, Lane::Preview).await;
+    check_server(&fixtures_dir, "👥️server-presence/💾️.bin", &ServerFrame::Presence { peers: vec![b"{\"id\":\"a\"}".to_vec(), presence_to_bytes(&sample_presence_peer_with_interaction().await).await] }, Lane::Preview).await;
+    check_server(&fixtures_dir, "🎫️server-credit-grant/💾️.bin", &ServerFrame::CreditGrant { n: 32 }, Lane::Command).await;
+    check_server(&fixtures_dir, "🚨️server-error/💾️.bin", &ServerFrame::Error { code: "rejected".to_string(), message: "bad batch".to_string() }, Lane::Command).await;
+    check_server(&fixtures_dir, "🪪️server-session/💾️.bin", &ServerFrame::Session { actor: "actor-1".to_string(), color: 5 }, Lane::Command).await;
+}
+
+/// 🧸️ A second, distinct `MutationEnvelope` for `🔀️server-ack-transformed/💾️.bin`'s
+/// `ApplyOutcome::Transformed` payload — must differ from the primary `wire_envelope` fixture so
+/// the vitest canary can assert it decodes as its own value, not an accidental copy.
+async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
+    MutationEnvelope {
+        mutation_id: MutationId("op-2".to_string()),
+        document_id: ArtifactId("doc-1".to_string()),
+        actor: ActorId("actor-2".into()),
+        dependencies: vec![MutationId("op-1".to_string())],
+        observed: None,
+        target: Vec::new(),
+        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
+        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
+        timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
+        transaction: None, verb: None, line: None,
+    }
+}
+
+/// 🕹️ A `PresencePeer` whose `interaction` carries THREE domains (one selection-only, one
+/// hover-only, one with both), TWO `views` (one Orbit with a pointer, one Canvas), a `color` +
+/// `surface`, and a `ui` — `🙋️client-presence/💾️.bin`/`👥️server-presence/💾️.bin` match this so
+/// the TS vitest twin exercises every `PresencePeer` v3 flag bit (§C7.1) with a realistic payload.
+async fn sample_presence_peer_with_interaction() -> PresencePeer {
+    PresencePeer {
+        actor: "actor-1".to_string(),
+        connected_at_ms: 1_700_000_000_000,
+        label: Some("Ada".to_string()),
+        presence_pack: None,
+        user_id: Some("user-9".to_string()),
+        role: Some("owner".to_string()),
+        drag_ghost_json: None,
+        interaction: Some(semio_framework_os_spr::PresenceInteraction {
+            app_id: "space".to_string(),
+            domains: vec![
+                semio_framework_os_spr::PresenceDomain { domain: "outline".to_string(), granularity: "task".to_string(), selected: vec!["t1".to_string(), "t2".to_string()], hovered: vec![] },
+                semio_framework_os_spr::PresenceDomain { domain: "board".to_string(), granularity: "card".to_string(), selected: vec![], hovered: vec!["c1".to_string()] },
+                semio_framework_os_spr::PresenceDomain { domain: "canvas".to_string(), granularity: "node".to_string(), selected: vec!["n9".to_string()], hovered: vec!["n9".to_string(), "n10".to_string()] },
+            ],
+        }),
+        color: Some(5),
+        surface: Some("s.space.home@1/*#editor".to_string()),
+        views: vec![
+            semio_framework_os_spr::PresenceWindowView {
+                window_id: "w1".to_string(),
+                space: "world".to_string(),
+                kind: semio_framework_os_spr::PresenceViewKind::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 1.0, 0.0], fov: 45.0 },
+                size: [1024.0, 768.0],
+                pointer: Some([0.5, 0.5, 0.5]),
+                ray_origin: Some([1.0, 2.0, 3.0]),
+            },
+            semio_framework_os_spr::PresenceWindowView { window_id: "w2".to_string(), space: "canvas".to_string(), kind: semio_framework_os_spr::PresenceViewKind::Canvas { x: 12.5, y: -4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None },
+        ],
+        ui: Some(semio_framework_os_spr::PresenceUi { hovered_path: Some("row[2]#t1".to_string()), focused_path: None, pressed_path: None }),
+        tool_run: None,
+        principal_kind: None, active_tool: None, history_edit: None,
+        typing: Vec::new(),
+    }
+}
+//#endregion 🧪️WireBridge
+
+// 🎯️ ticket 26/08/17/SHARED-PRESENCE-SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.4:
+// `assemble_presence_interaction` and its `🧪️PresenceInteraction` tests MOVED to
+// `crate::os_spr::wire`'s `🔖️PresenceInteraction` region (`assemble_presence_interaction_tests`
+// module there) alongside the function itself — see this file's `🔖️WireBridge` region for the
+// pointer left behind.
+
+//#region 🧪️PresenceInteraction
+#[semio_framework_async_macros::async_test]
+async fn presence_heartbeat_producer_publishes_immediately_then_coalesces_to_latest() {
+    let mut producer = PresenceHeartbeatProducer::new(100);
+    let mut first = sample_presence_peer_with_interaction().await;
+    first.views = vec![semio_framework_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_framework_os_spr::PresenceViewKind::Canvas { x: 1.0, y: 2.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
+    assert_eq!(producer.offer(1_000, first.clone()), Some(first));
+
+    let mut intermediate = sample_presence_peer_with_interaction().await;
+    intermediate.views = vec![semio_framework_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_framework_os_spr::PresenceViewKind::Canvas { x: 3.0, y: 4.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
+    assert_eq!(producer.offer(1_040, intermediate), None);
+
+    let mut latest = sample_presence_peer_with_interaction().await;
+    latest.views = vec![semio_framework_os_spr::PresenceWindowView { window_id: "w1".into(), space: "canvas".into(), kind: semio_framework_os_spr::PresenceViewKind::Canvas { x: 5.0, y: 6.0, zoom: 1.0 }, size: [800.0, 600.0], pointer: None, ray_origin: None }];
+    assert_eq!(producer.offer(1_099, latest.clone()), None);
+    assert_eq!(producer.pending(), Some(&latest));
+    assert_eq!(producer.offer(1_100, latest.clone()), Some(latest));
+    assert!(producer.pending().is_none());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn presence_tool_run_summary_is_byte_credited_and_last_writer_wins() {
+    let run = |state, completed, total| semio_framework_os_spr::PresenceToolRun { tool_id: "fill".into(), state, stage: 1, completed, total };
+    let bare = sample_presence_peer_with_interaction().await;
+    let mut indeterminate = bare.clone();
+    indeterminate.tool_run = Some(run(semio_framework_os_spr::PresenceToolRunState::Starting, 0, None));
+    let mut determinate = bare.clone();
+    determinate.tool_run = Some(run(semio_framework_os_spr::PresenceToolRunState::Running, 42, Some(100)));
+    let bytes = |peer: &PresencePeer| artifact_actor_message_bytes(&ArtifactActorMsg::PresenceHeartbeat { peer: Box::new(peer.clone()) }).expect("presence fits the mailbox");
+    assert!(bytes(&bare) < bytes(&indeterminate) && bytes(&indeterminate) < bytes(&determinate), "tool run id, counters and total contribute byte credit");
+    assert_eq!(semio_framework_os_spr::decode_presence_peer(&presence_to_bytes(&determinate).await).await.expect("tool run presence decodes"), determinate);
+
+    let mut producer = PresenceHeartbeatProducer::new(100);
+    assert_eq!(producer.offer(1_000, indeterminate.clone()), Some(indeterminate));
+    assert_eq!(producer.offer(1_050, determinate.clone()), None);
+    let mut finalized = determinate.clone();
+    finalized.tool_run = Some(run(semio_framework_os_spr::PresenceToolRunState::Finalized, 100, Some(100)));
+    assert_eq!(producer.offer(1_080, finalized.clone()), None);
+    assert_eq!(producer.pending(), Some(&finalized), "the newest tool run summary replaces pending progress");
+    assert_eq!(producer.offer(1_100, finalized.clone()), Some(finalized));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn artifact_host_presence_heartbeat_owns_cadence_per_document() {
+    let host = ArtifactHost::new(test_pool());
+    let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(1);
+    let runner = native_actor::retained_turn_fixtures::fixture_runner_handle(host.core().pool.clone(), 1, cmd_rx.close_handle());
+    host.core().insert_document(ArtifactDocumentKey::local("doc"), OpenDocument { generation: 1, cancel: semio_framework_async::CancelToken::root_now(), cmd_tx, events, presence: PresenceHeartbeatProducer::default(), runner });
+
+    let first = sample_presence_peer_with_interaction().await;
+    assert!(host.presence_heartbeat("doc", 500, first.clone()));
+    assert!(matches!(cmd_rx.try_recv(), Some(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == first));
+
+    let mut latest = sample_presence_peer_with_interaction().await;
+    latest.ui = Some(semio_framework_os_spr::PresenceUi { hovered_path: Some("row[0]#changed".into()), focused_path: None, pressed_path: None });
+    assert!(!host.presence_heartbeat("doc", 550, latest.clone()));
+    assert!(cmd_rx.try_recv().is_none(), "sub-interval offer must not publish");
+    assert!(host.presence_heartbeat("doc", 600, latest.clone()));
+    assert!(matches!(cmd_rx.try_recv(), Some(ArtifactActorMsg::PresenceHeartbeat { peer }) if *peer == latest));
+    assert!(!host.presence_heartbeat("missing", 700, sample_presence_peer_with_interaction().await));
+}
+
+/// ⏯️ The presence assembly carries the guest's tool run summary (`AppFrame::Ephemeral.tool_run`) into the local
+/// peer: an observed summary wins over the renderer's, its absence clears a stale one, and `completed` never
+/// exceeds `total`, so every published peer decodes.
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn artifact_host_presence_heartbeat_stamps_the_observed_tool_run_summary() {
+    let host = ArtifactHost::new(test_pool());
+    let (cmd_tx, cmd_rx) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(1);
+    let runner = native_actor::retained_turn_fixtures::fixture_runner_handle(host.core().pool.clone(), 1, cmd_rx.close_handle());
+    let key = ArtifactDocumentKey::local("doc");
+    host.core().insert_document(key.clone(), OpenDocument { generation: 1, cancel: semio_framework_async::CancelToken::root_now(), cmd_tx, events, presence: PresenceHeartbeatProducer::new(100), runner });
+    let run = |state, completed, total| semio_framework_os_spr::PresenceToolRun { tool_id: "fill".into(), state, stage: 0, completed, total };
+
+    let mut renderer_peer = sample_presence_peer_with_interaction().await;
+    renderer_peer.tool_run = Some(run(semio_framework_os_spr::PresenceToolRunState::Running, 9, Some(4)));
+    assert!(host.presence_heartbeat_key(&key, 1_000, renderer_peer.clone()));
+    let Some(ArtifactActorMsg::PresenceHeartbeat { peer }) = cmd_rx.try_recv() else { panic!("first heartbeat publishes") };
+    assert_eq!(peer.tool_run.as_ref().map(|tool_run| (tool_run.completed, tool_run.total)), Some((4, Some(4))), "an unobserved renderer summary is still clamped");
+
+    assert!(host.observe_presence_tool_run_key(&key, Some(run(semio_framework_os_spr::PresenceToolRunState::Complete, 120, Some(100)))));
+    assert!(host.presence_heartbeat_key(&key, 1_100, sample_presence_peer_with_interaction().await));
+    let Some(ArtifactActorMsg::PresenceHeartbeat { peer }) = cmd_rx.try_recv() else { panic!("second heartbeat publishes") };
+    assert_eq!(peer.tool_run, Some(run(semio_framework_os_spr::PresenceToolRunState::Complete, 100, Some(100))), "the observed summary is stamped, completed clamped to total");
+    assert_eq!(semio_framework_os_spr::decode_presence_peer(&presence_to_bytes(&peer).await).await.expect("the stamped peer decodes"), *peer);
+
+    assert!(host.observe_presence_tool_run_key(&key, None));
+    assert!(host.presence_heartbeat_key(&key, 1_200, renderer_peer));
+    let Some(ArtifactActorMsg::PresenceHeartbeat { peer }) = cmd_rx.try_recv() else { panic!("third heartbeat publishes") };
+    assert!(peer.tool_run.is_none(), "a dismissed run clears the renderer's stale summary");
+    assert!(!host.observe_presence_tool_run_key(&ArtifactDocumentKey::local("missing"), None));
+}
+//#endregion 🧪️PresenceInteraction
+
+//#region 🧪️Helpers
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
+    let edit = semio_framework_os_spr::HistoryEdit { line: None,
+        id: "ext-1".into(),
+        actor: Some("peer".into()),
+        started_at: "0".into(),
+        finished_at: None, verb: None,
+        ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
+        inverse: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 0 }.encode_op().expect("encode")) }],
+        meta: None, lane: None,
+    };
+    let envelopes = envelopes_from_history_edit(&edit, "demo", "demo/v1", semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}).await.expect("envelopes from history edit");
+    assert_eq!(envelopes.len(), 1, "single-op edit yields one envelope");
+    assert_eq!(envelopes[0].mutation_id.0, "ext-1#0", "meta-less fallback: edit id # op index");
+    let recovered = <DemoMutation as OpBinary>::decode_op(&envelopes[0].diff.payload).expect("decode op");
+    assert_eq!(recovered, DemoMutation::SetN { n: 42 });
+}
+//#endregion 🧪️Helpers
+
+//#region 🧪️Actor
+#[cfg(not(target_arch = "wasm32"))]
+mod actor_tests {
+    use semio_framework_test_fixtures::fixture_path;
+
+    use super::*;
+    use semio_framework_os_store_sync::{ARTIFACT_MAILBOX_BYTES, ARTIFACT_MAILBOX_ITEMS, ArtifactActorConfig, ArtifactActorMsg, ArtifactDocumentKey, ArtifactEvent, ArtifactMailboxSendError, ArtifactSyncStatus, CommandAckOutcome, DocumentBackboneRetentionV1, HISTORY_TRANSITION_REFUSED_CODE, OpenDocument, PersistenceBinding, PresenceHeartbeatProducer, RemoteState, SyncError, SyncSession, artifact_actor_message_bytes, artifact_mailbox_pair, backbone_worker_wire, decode_document_backbone_message_exact, envelopes_from_history_edit, frontier_reaches, hub_ws_url, presence_to_bytes, rollback_envelope, spr_op_ids, stamp_session};
+use semio_framework_os_spr::{AckStage, ActorId, ApplyOutcome, ArtifactBootstrap, ArtifactBootstrapPair, Bootstrap, ClientFrame, Lane, MutationEnvelope, MutationId, PresencePeer, PresenceToolRun, RuntimeFrontierSummary, ServerFrame, decode_envelopes, decode_server_frame, encode_client_frame, encode_envelopes};
+use semio_framework_os_store_sync::fixtures::{ActorFixture, FixtureInbound, load_fixtures};
+use semio_framework_os_store_sync_native::native_actor::ArtifactHost;
+use semio_framework_os_store_text_io::ArtifactPackFiles;
+use semio_framework_os_store_engine::lifted_store::ArtifactStore;
+use semio_framework_os_store_backbone::{BackboneMessage, Backbones, ChannelBackbone, decode_hot_backbone_message_exact};
+use semio_framework_os_store_sync_native::lifted_sync::{FOLDER_EVENT_MAGIC, FolderEventLogStorage, FolderTextStorage};
+use semio_framework_value_derive::{FromValue, ToValue};
+use semio_framework_value::ValueError;
+use tokio::sync::broadcast;
+    use semio_framework_os_spr::{decode_client_frame, encode_server_frame};
+    use futures::{SinkExt, StreamExt};
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    use std::sync::Arc;
+    use std::time::Duration;
+    use tokio::sync::{broadcast as tokio_broadcast, Mutex};
+    use tokio_tungstenite::tungstenite::Message as WsMessage;
+
+    async fn demo_envelope(document_id: &str) -> semio_framework_os_store_space_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
+        create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)
+    }
+
+    async fn wait_until<Fut>(label: &str, mut predicate: impl FnMut() -> Fut)
+    where
+        Fut: std::future::Future<Output = bool>,
+    {
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        while !predicate().await {
+            if tokio::time::Instant::now() >= deadline {
+                panic!("{label} not satisfied before 5s deadline");
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    }
+
+    async fn wait_until_value<T, Fut>(label: &str, mut predicate: impl FnMut() -> Fut) -> T
+    where
+        Fut: std::future::Future<Output = Option<T>>,
+    {
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        loop {
+            if let Some(value) = predicate().await {
+                return value;
+            }
+            if tokio::time::Instant::now() >= deadline {
+                panic!("{label} not satisfied before 5s deadline");
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    }
+
+    async fn wait_for_event(events: &mut broadcast::Receiver<ArtifactEvent>, predicate: impl FnMut(&ArtifactEvent) -> bool) -> ArtifactEvent {
+        wait_for_named_event("event", events, predicate).await
+    }
+
+    async fn wait_for_named_event(label: &str, events: &mut broadcast::Receiver<ArtifactEvent>, mut predicate: impl FnMut(&ArtifactEvent) -> bool) -> ArtifactEvent {
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        loop {
+            match tokio::time::timeout_at(deadline, events.recv()).await {
+                Ok(Ok(event)) => {
+                    if predicate(&event) {
+                        return event;
+                    }
+                }
+                Ok(Err(broadcast::error::RecvError::Lagged(_))) => continue,
+                other => panic!("no matching {label} before deadline: {other:?}"),
+            }
+        }
+    }
+
+    async fn wait_for_mock_hub_event(label: &str, hub: &MockHub, events: &mut broadcast::Receiver<ArtifactEvent>, mut predicate: impl FnMut(&ArtifactEvent) -> bool) -> ArtifactEvent {
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+        let mut observed = Vec::new();
+        loop {
+            match tokio::time::timeout_at(deadline, events.recv()).await {
+                Ok(Ok(event)) => {
+                    if predicate(&event) {
+                        return event;
+                    }
+                    observed.push(format!("{event:?}"));
+                }
+                Ok(Err(broadcast::error::RecvError::Lagged(count))) => observed.push(format!("lagged:{count}")),
+                other => panic!("no matching {label} before deadline: {other:?}; actor-events={observed:?}; mock-hub={:?}", hub.trace()),
+            }
+        }
+    }
+
+    // 🔬️ External folder edit → RemoteMutations event + the store timeline grows on tick().
+    /// 📁️ A local apply establishes a persisted edit on disk.
+    ///
+    /// Wait until the actor has persisted the local edit to the folder db as real pack+spr bytes.
+    ///
+    /// Out-of-band: append a foreign edit directly to the spr bytes (real binary op
+    /// payloads, no codec, no JSON) before writing pack+spr back.
+    ///
+    /// Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
+    ///
+    /// The store ingests the pushed operation on tick(); the timeline grows and snapshot updates.
+    #[tokio::test]
+    async fn folder_external_edit_delivers_remote_operations() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+        ensure_demo_codec_registered().await;
+        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let host = ArtifactHost::new(test_pool());
+        let channels = host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
+        let mut events = host.subscribe("doc-a").await;
+        let mut store = semio_framework_os_store_test_support::plain_test_store(demo_envelope("doc-a").await).await;
+        store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
+
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply");
+        channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
+
+        let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+        let mut archive = wait_until_value("persisted edit on disk", || async {
+            let bytes = storage.read_archive("doc-a").await.expect("read archive")?;
+            let archive = semio_framework_os_spr::decode_document_archive_bytes(&bytes).await.ok()?;
+            if spr_op_ids(&archive.parent_spr).await.ok()?.is_empty() {
+                None
+            } else {
+                Some(archive)
+            }
+        })
+        .await;
+
+        let external_edit = semio_framework_os_spr::HistoryEdit { line: None,
+            id: "external-1".into(),
+            actor: Some("peer".into()),
+            started_at: "0".into(),
+            finished_at: None, verb: None,
+            ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 42 }.encode_op().expect("encode")) }],
+            inverse: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
+            meta: None, lane: None,
+        };
+        archive.parent_spr = semio_framework_os_store_text_io::text_format::append_history_events_to_spr(&archive.parent_spr, &[external_edit], &[]).await.expect("append external edit");
+        let bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode externally changed archive");
+        storage.write_archive("doc-a", "demo/v1", &bytes).await.expect("out-of-band archive write");
+
+        channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
+
+        let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::RemoteMutations { .. })).await;
+        match event {
+            ArtifactEvent::RemoteMutations { envelopes } => {
+                assert_eq!(envelopes.len(), 1);
+                assert_eq!(envelopes[0].mutation_id.0, "external-1#0", "single-op edit -> mutation_id is edit.id#0 (crate::os_spr::mutation_envelope_from_edit's ordinal-suffix convention)");
+            }
+            other => panic!("expected RemoteMutations, got {other:?}"),
+        }
+
+        store.tick().await.expect("tick");
+        assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
+        assert_eq!(store.snapshot().expect("snapshot").n, 42);
+        host.close("doc-a");
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+    }
+
+    //#region 🔖️MockHub
+    /// 🧪️ A minimal in-process semio_hub speaking the real, binary `crate::os_spr::wire::ClientFrame`/
+    /// `ServerFrame` protocol, so the semio_hub endpoint is exercised end-to-end without linking a real
+    /// `db`-backed semio_hub (that's CW6's job — this mock never touches `db`). Ordinal-indexed log,
+    /// mirroring `db_sync`'s replica-catch-up shape (`Hello.frontier` -> filtered backlog ->
+    /// `Welcome` then a follow-up `Commands`), but with a placeholder `chain_hash`/`resume_token`
+    /// (this mock has no durable log to derive a real chain hash from).
+    struct MockHub {
+        log: Arc<Mutex<Vec<(u64, MutationEnvelope)>>>,
+        broadcast: tokio_broadcast::Sender<ServerFrame>,
+        connections: AtomicUsize,
+        session_gate: Option<Arc<tokio::sync::Semaphore>>,
+        trace: Arc<std::sync::Mutex<Vec<&'static str>>>,
+    }
+
+    impl MockHub {
+        fn record(&self, event: &'static str) {
+            self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push(event);
+        }
+
+        fn trace(&self) -> Vec<&'static str> {
+            self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
+        }
+    }
+
+    struct MockHubSocketGrantSource {
+        hub_origin: String,
+        actor_id: String,
+        plan_window_ms: u64,
+        trace: Arc<std::sync::Mutex<Vec<&'static str>>>,
+    }
+
+    impl semio_framework_os_directory_client::HubSocketGrantSource for MockHubSocketGrantSource {
+        fn admit_document_socket(
+            &self,
+            _ctx: &semio_framework_async::OperationContext,
+            space_id: &str,
+            document_id: &str,
+            expectation: &semio_framework_os_directory_client::DocumentSocketExpectationV1,
+            _client_instance_id: &str,
+            _timeout_ms: u64,
+        ) -> Result<semio_framework_os_directory_client::DocumentSocketAdmissionV1, semio_framework_os_directory_client::DirectoryClientError> {
+            self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("grant.entered");
+            let expires_at_ms = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).expect("system clock after epoch").as_millis().saturating_add(u128::from(self.plan_window_ms)).min(i64::MAX as u128) as i64;
+            let admission = semio_framework_os_directory_client::DocumentSocketAdmissionV1 {
+                socket: semio_framework_os_directory_client::DocumentSocketGrantReceiptV1 {
+                    schema: "semio.hub.document-socket-grant/v1".into(),
+                    protocol: "semio.session.v1".into(),
+                    actor_id: self.actor_id.clone(),
+                    expires_at_ms,
+                },
+                authority: semio_framework_os_directory_client::DocumentSocketAuthorityV1 {
+                    admitted_lease: expectation.lease.clone(),
+                    hub_origin: self.hub_origin.clone(),
+                    browser_actor: semio_framework_os_directory::DocumentOpenBrowserActorV1::None,
+                    expires_at_unix_ms: u64::try_from(expires_at_ms).expect("positive mock expiry"),
+                    scope: semio_framework_os_directory::DocumentScope::new(space_id, document_id),
+                    descriptor_digest_v1: "4".repeat(64),
+                    catalog: semio_framework_os_directory::DocumentOpenCatalogV1 { generation_id: "5".repeat(64) },
+                    package: semio_framework_os_directory::DocumentOpenPackageV1 {
+                        plugin_id: "mock-plugin".into(),
+                        package_id: "semio:mock-plugin".into(),
+                        version: "1.0.0".into(),
+                        component_sha256: "6".repeat(64),
+                        component_blake3: "7".repeat(64),
+                        descriptor_byte_sha256: "8".repeat(64),
+                        execution_protocol: semio_framework_os_directory::DocumentExecutionProtocolV1 { app_channel_version: semio_framework_os_spr::CHANNEL_VERSION },
+                        component_receipt: semio_framework_plugin_component_receipt::ComponentReceiptV1 {
+                            schema: semio_framework_plugin_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+                            plugin_id: "mock-plugin".into(),
+                            package_id: "semio:mock-plugin".into(),
+                            profile: semio_framework_plugin_component_receipt::ComponentProfileV1::Release,
+                            target: semio_framework_plugin_component_receipt::COMPONENT_TARGET.into(),
+                            wasm_sha256: "6".repeat(64),
+                            wasm_bytes: 1024,
+                            semantic_descriptor_sha256: "8".repeat(64),
+                            toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)".into(),
+                            source_tree_digest: "3".repeat(64),
+                            provenance_sha256: "4".repeat(64),
+                        },
+                    },
+                    artifact: semio_framework_os_directory::DocumentOpenArtifactV1 { kind: "mock.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
+                    parent_dialect: semio_framework_os_directory::DocumentOpenParentDialectV1 { artifact_kind: "mock.document".into(), standard: "1".into(), subset: "*".into() },
+                    pack_schema_hash: expectation.pack_schema_hash,
+                    surface: semio_framework_os_directory::DocumentOpenSurfaceV1 {
+                        surface_id: expectation.requested_surface_id.clone().unwrap_or_else(|| "mock.surface".into()),
+                        app_id: "mock.app".into(),
+                        window_kind_id: "mock.window".into(),
+                        role: semio_framework_os_directory::DocumentOpenSurfaceRoleV1::Editor,
+                        renderer_target: semio_framework_os_directory::DocumentOpenRendererTargetV1::Wgpu,
+                    },
+                    grant: semio_framework_os_directory::DocumentOpenGrantV1 { read: true, write: true, observe: true },
+                    checkpoint: semio_framework_os_directory::DocumentOpenCheckpointV1 {
+                        checkpoint_id: "9".repeat(64),
+                        descriptor_digest_v1: "4".repeat(64),
+                        baseline_frontier: semio_framework_os_directory::ArtifactFrontier {
+                            document_id: document_id.to_string(),
+                            head_edit_ordinal: 0,
+                            head_edit_id: String::new(),
+                            last_commit_seq: 0,
+                            chain_hash: semio_framework_os_directory::ArtifactHash::new([0; 32]),
+                        },
+                        aggregate_sha256: "a".repeat(64),
+                    },
+                    revalidation: semio_framework_os_directory::DocumentOpenRevalidationV1 { directory_revision: 1, membership_generation: 1, session_generation: Some(1), share_generation: None },
+                },
+            };
+            self.trace.lock().unwrap_or_else(std::sync::PoisonError::into_inner).push("grant.returned");
+            Ok(admission)
+        }
+    }
+
+    fn configure_mock_hub(host: &ArtifactHost, hub_origin: &str, actor_fill: char, hub: &MockHub) {
+        configure_mock_hub_with_plan_window(host, hub_origin, actor_fill, hub, 60_000);
+    }
+
+    /// ⏳️ [`configure_mock_hub`] with the admission plan's exchange window the grant source answers.
+    fn configure_mock_hub_with_plan_window(host: &ArtifactHost, hub_origin: &str, actor_fill: char, hub: &MockHub, plan_window_ms: u64) {
+        host.set_local_hub_credential(Arc::new(semio_framework_os_directory_client::LocalHubCredential::test(hub_origin, &format!("session.v1.{}.{}", actor_fill.to_string().repeat(32), actor_fill.to_string().repeat(64)))));
+        host.set_hub_socket_grant_source(Arc::new(MockHubSocketGrantSource { hub_origin: hub_origin.into(), actor_id: format!("hub.v1.{}", actor_fill.to_string().repeat(64)), plan_window_ms, trace: hub.trace.clone() }));
+    }
+
+    async fn mock_frontier(ordinal: u64) -> RuntimeFrontierSummary {
+        RuntimeFrontierSummary { document_id: ArtifactId("mock".to_string()), head_edit_ordinal: ordinal, head_edit_id: format!("edit-{ordinal}"), last_commit_seq: ordinal, chain_hash: [0u8; 32] }
+    }
+
+    async fn spawn_mock_hub() -> (std::net::SocketAddr, Arc<MockHub>) {
+        spawn_mock_hub_with_session_gate(false).await
+    }
+
+    /// 🎭️ Framework document WS (C4b): client offers `semio.session.v1, <token>`;
+    /// server selects the protocol token only (mirrors gateway `.protocols([SESSION_PROTOCOL_V1])`).
+    ///
+    /// Session actor is derived from the session credential (last segment of
+    /// `session.v1.<selector>.<secret>` → `hub.v1.<secret>`), never from a
+    /// caller-supplied `?actor=` query — mirrors the real hub binding.
+    async fn spawn_mock_hub_with_session_gate(gated: bool) -> (std::net::SocketAddr, Arc<MockHub>) {
+        ensure_demo_codec_registered().await;
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("addr");
+        let (broadcast, _rx) = tokio_broadcast::channel(256);
+        let semio_hub = Arc::new(MockHub { log: Arc::new(Mutex::new(Vec::new())), broadcast, connections: AtomicUsize::new(0), session_gate: gated.then(|| Arc::new(tokio::sync::Semaphore::new(0))), trace: Arc::new(std::sync::Mutex::new(Vec::new())) });
+        let accept_hub = semio_hub.clone();
+        tokio::spawn(async move {
+            loop {
+                let Ok((stream, _)) = listener.accept().await else { break };
+                let conn_hub = accept_hub.clone();
+                conn_hub.record("tcp.accepted");
+                tokio::spawn(async move {
+                    let socket_actor = std::sync::Arc::new(std::sync::Mutex::new(None::<String>));
+                    let socket_actor_for_hdr = socket_actor.clone();
+                    let accepted = tokio_tungstenite::accept_hdr_async(
+                        stream,
+                        move |request: &tokio_tungstenite::tungstenite::handshake::server::Request,
+                         mut response: tokio_tungstenite::tungstenite::handshake::server::Response|
+                         -> Result<_, tokio_tungstenite::tungstenite::handshake::server::ErrorResponse> {
+                            const SESSION_PROTOCOL_V1: &str = "semio.session.v1";
+                            let offered = request
+                                .headers()
+                                .get("Sec-WebSocket-Protocol")
+                                .and_then(|value| value.to_str().ok())
+                                .unwrap_or("");
+                            let selected = offered.split(',').next().map(str::trim).filter(|token| *token == SESSION_PROTOCOL_V1);
+                            let Some(selected) = selected else {
+                                return Err(tokio_tungstenite::tungstenite::http::Response::builder().status(400).body(None).expect("static refuse"));
+                            };
+                            response.headers_mut().insert("Sec-WebSocket-Protocol", selected.parse().expect("static protocol header"));
+                            let actor = offered.split_once(", ").and_then(|(_, token)| {
+                                let secret = token.rsplit('.').next()?;
+                                (!secret.is_empty()).then(|| format!("hub.v1.{secret}"))
+                            });
+                            *socket_actor_for_hdr.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = actor;
+                            Ok(response)
+                        },
+                    )
+                    .await;
+                    match accepted {
+                        Ok(ws) => {
+                            conn_hub.record("websocket.accepted");
+                            let actor = match socket_actor.lock().unwrap_or_else(std::sync::PoisonError::into_inner).take() {
+                                Some(actor) => {
+                                    let _ = conn_hub.connections.fetch_add(1, Ordering::SeqCst);
+                                    actor
+                                }
+                                None => {
+                                    let n = conn_hub.connections.fetch_add(1, Ordering::SeqCst);
+                                    let fill = if n == 0 { 'a' } else { 'b' };
+                                    format!("hub.v1.{}", fill.to_string().repeat(64))
+                                }
+                            };
+                            mock_hub_connection(ws, conn_hub, actor).await;
+                        }
+                        Err(_) => conn_hub.record("websocket.refused"),
+                    }
+                });
+            }
+        });
+        (addr, semio_hub)
+    }
+
+    /// 🤝️ Expect Hello first.
+    ///
+    /// 👻️ Best-effort fan-out on the uncredited preview lane — this mock
+    /// semio_hub doesn't track per-connection actor identity beyond `Hello`, so
+    /// it stamps a fixed sentinel origin (fine for the round-trip test
+    /// this drives, which only asserts the *other* peer receives it).
+    async fn mock_hub_connection(ws: tokio_tungstenite::WebSocketStream<tokio::net::TcpStream>, semio_hub: Arc<MockHub>, actor: String) {
+        let (mut write, mut read) = ws.split();
+        let requested_ordinal = match read.next().await {
+            Some(Ok(WsMessage::Binary(bytes))) => match decode_client_frame(&bytes).await {
+                Ok((_, ClientFrame::SocketHelloV1 { frontier, .. })) => {
+                    semio_hub.record("client.socket-hello");
+                    frontier.map_or(0, |frontier| frontier.head_edit_ordinal)
+                }
+                Ok(_) => {
+                    semio_hub.record("client.unexpected-first-frame");
+                    return;
+                }
+                Err(_) => {
+                    semio_hub.record("client.malformed-first-frame");
+                    return;
+                }
+            },
+            Some(Ok(_)) => {
+                semio_hub.record("client.nonbinary-first-frame");
+                return;
+            }
+            Some(Err(_)) => {
+                semio_hub.record("client.first-frame-error");
+                return;
+            }
+            None => {
+                semio_hub.record("client.closed-before-hello");
+                return;
+            }
+        };
+        let (frontier, backlog) = {
+            let log = semio_hub.log.lock().await;
+            let ordinal = log.last().map_or(0, |(ordinal, _)| *ordinal);
+            let backlog: Vec<MutationEnvelope> = log.iter().filter(|(ordinal, _)| *ordinal > requested_ordinal).map(|(_, envelope)| envelope.clone()).collect();
+            (mock_frontier(ordinal).await, backlog)
+        };
+        if let Some(gate) = &semio_hub.session_gate {
+            semio_hub.record("server.session-gate-waiting");
+            gate.acquire().await.expect("mock session gate remains live").forget();
+            semio_hub.record("server.session-gate-released");
+        }
+        let welcome = ServerFrame::Welcome { session_id: "mock-session".to_string(), resume_token: "mock-resume".to_string(), server_frontier: frontier.clone(), bootstrap: Bootstrap::Tail };
+        if write.send(WsMessage::Binary(encode_server_frame(&welcome, Lane::Command).await.into())).await.is_err() {
+            semio_hub.record("server.welcome-send-failed");
+            return;
+        }
+        semio_hub.record("server.welcome-sent");
+        let session = ServerFrame::Session { actor, color: 1 };
+        if write.send(WsMessage::Binary(encode_server_frame(&session, Lane::Command).await.into())).await.is_err() {
+            semio_hub.record("server.session-send-failed");
+            return;
+        }
+        semio_hub.record("server.session-sent");
+        let commands = ServerFrame::Commands { envelopes: backlog, origin: ActorId("semio_hub-backlog".into()), frontier: frontier.clone() };
+        if write.send(WsMessage::Binary(encode_server_frame(&commands, Lane::Command).await.into())).await.is_err() {
+            semio_hub.record("server.commands-send-failed");
+            return;
+        }
+        semio_hub.record("server.commands-sent");
+        let mut broadcast_rx = semio_hub.broadcast.subscribe();
+        loop {
+            tokio::select! {
+                incoming = read.next() => {
+                    match incoming {
+                        Some(Ok(WsMessage::Binary(bytes))) => {
+                            match decode_client_frame(&bytes).await {
+                                Ok((_, ClientFrame::Commands { batch_id, envelopes })) => {
+                                    semio_hub.record("client.commands");
+                                    let mut assigned_frontier = frontier.clone();
+                                    for envelope in envelopes {
+                                        let (ordinal, origin) = {
+                                            let mut log = semio_hub.log.lock().await;
+                                            let next = log.last().map_or(0, |(ordinal, _)| *ordinal) + 1;
+                                            log.push((next, envelope.clone()));
+                                            (next, envelope.actor.clone())
+                                        };
+                                        assigned_frontier = mock_frontier(ordinal).await;
+                                        let _ = semio_hub.broadcast.send(ServerFrame::Commands { envelopes: vec![envelope], origin, frontier: assigned_frontier.clone() });
+                                    }
+                                    let ack = ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Accepted) }], frontier: assigned_frontier };
+                                    let _ = write.send(WsMessage::Binary(encode_server_frame(&ack, Lane::Command).await.into())).await;
+                                }
+                                Ok((_, ClientFrame::PreviewPublish { key, seq, payload })) => {
+                                    semio_hub.record("client.preview-publish");
+                                    let _ = semio_hub.broadcast.send(ServerFrame::Preview { actor: ActorId("mock-semio_hub-peer".into()), key, seq, payload });
+                                }
+                                Ok((_, ClientFrame::Bye)) => semio_hub.record("client.bye"),
+                                Ok(_) => semio_hub.record("client.other"),
+                                Err(_) => semio_hub.record("client.malformed-frame"),
+                            }
+                        }
+                        Some(Ok(WsMessage::Close(_))) | None | Some(Err(_)) => break,
+                        Some(Ok(_)) => {}
+                    }
+                }
+                frame = broadcast_rx.recv() => {
+                    match frame {
+                        Ok(frame) => {
+                            if write.send(WsMessage::Binary(encode_server_frame(&frame, Lane::Command).await.into())).await.is_err() {
+                                break;
+                            }
+                        }
+                        Err(tokio_broadcast::error::RecvError::Lagged(_)) => {}
+                        Err(tokio_broadcast::error::RecvError::Closed) => break,
+                    }
+                }
+            }
+        }
+    }
+    //#endregion 🔖️MockHub
+
+    /// 🔬️ Two stores, each behind its own ArtifactHost, converge through a semio_hub on edits AND
+    /// structural history: every step A authors (apply, undo, checkpoint, redo) reaches B only as
+    /// events relayed by the hub, and B's fold lands on exactly A's position after each one.
+    #[tokio::test]
+    async fn two_hosts_converge_through_hub() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+        ensure_demo_codec_registered().await;
+        let (addr, hub) = spawn_mock_hub_with_session_gate(true).await;
+        let base_url = format!("ws://{addr}");
+        let config = |actor: &str| ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
+            document_id: "shared".into(),
+            schema: "demo/v1".into(),
+            bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+            watch_external: false,
+            actor: actor.into(),
+        };
+        let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
+        let channels_a = host_a.open(config("A")).await;
+        let key_a = channels_a.document_key.clone();
+        let mut events_a = host_a.subscribe_key(&key_a).await;
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+        let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
+        let channels_b = host_b.open(config("B")).await;
+        let key_b = channels_b.document_key.clone();
+        let mut events_b = host_b.subscribe_key(&key_b).await;
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+
+        let mut store_a = semio_framework_os_store_test_support::plain_test_store(demo_envelope("shared").await).await;
+        store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
+        let mut store_b = semio_framework_os_store_test_support::plain_test_store(demo_envelope("shared").await).await;
+        store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
+        let position = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| (store.snapshot().expect("snapshot"), store.applied_edit_ids().len(), store.redo_edit_ids().len(), store.current_checkpoint_id().map(str::to_string));
+
+        let steps: Vec<ArtifactCommand<DemoMutation>> = vec![
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 7 }], transaction: None },
+            ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 9 }], transaction: None },
+            ArtifactCommand::Undo,
+            ArtifactCommand::CommitCheckpoint { message: Some("hub checkpoint".into()), authors: Vec::new() },
+            ArtifactCommand::Redo,
+        ];
+        for command in steps {
+            store_a.dispatch(command, &mut identity).await.expect("a authors the step");
+            channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
+            wait_for_mock_hub_event("B DocumentBackbone", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+            store_b.tick().await.expect("b folds the relayed events");
+            assert_eq!(position(&store_b), position(&store_a), "B sits exactly where A sits after every hub-relayed step");
+        }
+        assert_eq!(store_b.snapshot().expect("snapshot b").n, 9, "the redo reinstated A's second edit on B too");
+
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store_a);
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store_b);
+        host_a.close_key(&key_a);
+        host_b.close_key(&key_b);
+    }
+
+    #[tokio::test]
+    async fn raw_document_backbone_reaches_hub_once_and_returns_one_canonical_event() {
+        ensure_demo_codec_registered().await;
+        let (addr, hub) = spawn_mock_hub_with_session_gate(true).await;
+        let base_url = format!("ws://{addr}");
+        let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
+        let channels_a = host_a
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
+                document_id: "raw-shared".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "A".into(),
+            })
+            .await;
+        let key_a = channels_a.document_key.clone();
+        let mut events_a = host_a.subscribe_key(&key_a).await;
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        assert!(matches!(wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
+        let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
+        let channels_b = host_b
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
+                document_id: "raw-shared".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "B".into(),
+            })
+            .await;
+        let key_b = channels_b.document_key.clone();
+        let mut events_b = host_b.subscribe_key(&key_b).await;
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        assert!(matches!(wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
+
+        let original = document_backbone_envelope("raw-mutation", "raw-shared");
+        channels_a.cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: document_backbone_message(std::slice::from_ref(&original)) }).expect("exact raw owner admitted");
+        let event = wait_for_mock_hub_event("B DocumentBackbone", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+        let delivered = document_backbone_event_envelopes(&event).expect("canonical raw event");
+        assert_eq!(delivered.len(), 1);
+        assert_eq!(delivered[0].mutation_id, original.mutation_id);
+        assert_eq!(delivered[0].diff, original.diff);
+        assert_eq!(delivered[0].inverse, original.inverse);
+        assert_ne!(delivered[0].actor, original.actor, "Hub authority stamps its actor without rewriting opaque mutation fields");
+        assert!(matches!(wait_for_mock_hub_event("A CommandOutcome", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await, ArtifactEvent::CommandOutcome { outcome: CommandAckOutcome::Accepted, .. }));
+        while let Ok(next) = events_b.try_recv() {
+            assert!(!matches!(next, ArtifactEvent::RemoteMutations { .. }), "one server Commands frame cannot emit a duplicate legacy mutation event");
+        }
+
+        host_a.close_key(&key_a);
+        host_b.close_key(&key_b);
+    }
+
+    /// 🔌️ A live document socket outlives its admission plan's exchange window: the plan's expiry bounds when its grant
+    /// may be exchanged (the hub's `DOCUMENT_OPEN_PLAN_MAX_TTL_MS`, 30 s), never the socket, which the hub re-proves every
+    /// second. With a 3 s window, an edit sent 3.5 s after Session goes out on the SAME socket and is accepted — the React
+    /// worker's contract since 09-22 (ticket 26/09/23 session 14c: both Rust actors re-planned every live socket at it).
+    #[tokio::test]
+    async fn a_live_socket_outlives_its_admission_plan_window() {
+        ensure_demo_codec_registered().await;
+        let (addr, hub) = spawn_mock_hub_with_session_gate(true).await;
+        let base_url = format!("ws://{addr}");
+        let host = ArtifactHost::new(test_pool());
+        configure_mock_hub_with_plan_window(&host, &base_url, 'a', &hub, 3_000);
+        let channels = host
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
+                document_id: "plan-window".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "A".into(),
+            })
+            .await;
+        let key = channels.document_key.clone();
+        let mut events = host.subscribe_key(&key).await;
+        hub.session_gate.as_ref().expect("gated mock").add_permits(1);
+        assert!(matches!(wait_for_mock_hub_event("Session", &hub, &mut events, |event| matches!(event, ArtifactEvent::Session { .. })).await, ArtifactEvent::Session { .. }));
+        tokio::time::sleep(std::time::Duration::from_millis(3_500)).await;
+        let edit = document_backbone_envelope("after-the-plan-window", "plan-window");
+        channels.cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: document_backbone_message(std::slice::from_ref(&edit)) }).expect("edit after the plan window");
+        assert!(matches!(wait_for_mock_hub_event("CommandOutcome", &hub, &mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await, ArtifactEvent::CommandOutcome { outcome: CommandAckOutcome::Accepted, .. }));
+        assert_eq!(hub.connections.load(Ordering::SeqCst), 1, "the edit went out on the socket admitted inside the plan window");
+        host.close_key(&key);
+    }
+
+    // 🔬️ Reconnect with `since` catch-up: after A appends operations while B is offline, B reconnects and
+    // its Welcome backlog carries only the operations it missed.
+    /// 📬️ A applies two operations while nobody else is connected.
+    ///
+    /// B connects fresh (since_version 0) and its Welcome backlog replays both operations.
+    #[tokio::test]
+    async fn reconnect_since_catch_up_replays_backlog() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+        let (addr, hub) = spawn_mock_hub().await;
+        let base_url = format!("ws://{addr}");
+
+        let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
+        let channels_a = host_a
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
+                document_id: "catchup".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "A".into(),
+            })
+            .await;
+        let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
+        let mut store_a = semio_framework_os_store_test_support::plain_test_store(demo_envelope("catchup").await).await;
+        let key_a = channels_a.document_key.clone();
+        store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
+        wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+
+        for n in [3, 4] {
+            store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n }], transaction: None }, &mut identity).await.expect("apply on a");
+            channels_a.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake a");
+            tokio::time::sleep(Duration::from_millis(80)).await;
+        }
+
+        let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
+        let channels_b = host_b
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
+            .await;
+        let key_b = channels_b.document_key.clone();
+        let mut events_b = host_b.subscribe_key(&key_b).await;
+        let mut store_b = semio_framework_os_store_test_support::plain_test_store(demo_envelope("catchup").await).await;
+        store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
+        wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+
+        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+        assert_eq!(document_backbone_event_envelopes(&event).expect("exact backlog event").len(), 2, "backlog replays both missed operations");
+        store_b.tick().await.expect("tick b");
+        assert_eq!(store_b.envelope().vcs.edits.len(), 2, "B caught up on the full backlog");
+        assert_eq!(store_b.snapshot().expect("snapshot b").n, 4);
+
+        host_a.close_key(&key_a);
+        host_b.close_key(&key_b);
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store_a);
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store_b);
+    }
+
+    // 🔬️ Detach drains the outbox: an operation applied right before close still reaches the semio_hub (and B).
+    /// 🚿️ Observer B stays connected to witness A's last operation.
+    ///
+    /// Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
+    #[tokio::test]
+    async fn detach_drains_pending_outbound_operations() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+        let (addr, hub) = spawn_mock_hub().await;
+        let base_url = format!("ws://{addr}");
+
+        let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
+        let channels_b = host_b
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
+                document_id: "drain".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "B".into(),
+            })
+            .await;
+        let key_b = channels_b.document_key.clone();
+        let mut events_b = host_b.subscribe_key(&key_b).await;
+        let mut store_b = semio_framework_os_store_test_support::plain_test_store(demo_envelope("drain").await).await;
+        store_b.attach_backbone(Backbones::Channel(channels_b.channel_backbone)).await.expect("attach b");
+        wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+
+        let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
+        let channels_a =
+            host_a.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "drain".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
+        let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
+        let mut store_a = semio_framework_os_store_test_support::plain_test_store(demo_envelope("drain").await).await;
+        let key_a = channels_a.document_key.clone();
+        store_a.attach_backbone(Backbones::Channel(channels_a.channel_backbone)).await.expect("attach a");
+        wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+
+        store_a.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 5 }], transaction: None }, &mut identity).await.expect("apply on a");
+        host_a.close_key(&key_a);
+
+        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::DocumentBackbone { .. })).await;
+        assert_eq!(document_backbone_event_envelopes(&event).expect("exact drain event").len(), 1, "the operation applied before detach was not lost");
+        store_b.tick().await.expect("tick b");
+        assert_eq!(store_b.snapshot().expect("snapshot b").n, 5);
+        host_b.close_key(&key_b);
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store_b);
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store_a);
+    }
+
+    // 🔬️ The mock semio_hub always Acks `Accepted` — confirms the new `ServerFrame::Ack` ->
+    // `ArtifactEvent::CommandOutcome` wiring actually fires (not just that it compiles).
+    #[tokio::test]
+    async fn command_outcome_accepted_fires_after_hub_ack() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+        let (addr, hub) = spawn_mock_hub().await;
+        let base_url = format!("ws://{addr}");
+        let host = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host, &base_url, 'a', &hub);
+        let channels =
+            host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "outcome".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "A".into() }).await;
+        let key = channels.document_key.clone();
+        let mut events = host.subscribe_key(&key).await;
+        let mut store = semio_framework_os_store_test_support::plain_test_store(demo_envelope("outcome").await).await;
+        store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
+        wait_for_mock_hub_event("A Session", &hub, &mut events, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply");
+        channels.cmd_tx.send(ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).expect("wake");
+
+        let event = wait_for_event(&mut events, |event| matches!(event, ArtifactEvent::CommandOutcome { .. })).await;
+        match event {
+            ArtifactEvent::CommandOutcome { outcome, .. } => assert_eq!(outcome, CommandAckOutcome::Accepted),
+            other => panic!("expected CommandOutcome, got {other:?}"),
+        }
+        host.close_key(&key);
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+    }
+
+    // 🔬️ `SyncSession::publish_preview` -> `ClientFrame::PreviewPublish` -> the mock semio_hub's
+    // preview-lane fan-out -> `ServerFrame::Preview` -> `ArtifactEvent::Preview` on another peer.
+    #[tokio::test]
+    async fn publish_preview_round_trips_through_hub() {
+        let (addr, hub) = spawn_mock_hub().await;
+        let base_url = format!("ws://{addr}");
+
+        let host_a = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_a, &base_url, 'a', &hub);
+        let channels_a = host_a
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64}, 
+                document_id: "preview".into(),
+                schema: "demo/v1".into(),
+                bindings: vec![PersistenceBinding::Hub { base_url: base_url.clone(), space_id: "studio-1".into(), surface: None }],
+                watch_external: false,
+                actor: "A".into(),
+            })
+            .await;
+        let mut events_a = host_a.subscribe_key(&channels_a.document_key).await;
+
+        let host_b = ArtifactHost::new(test_pool());
+        configure_mock_hub(&host_b, &base_url, 'b', &hub);
+        let channels_b = host_b
+            .open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "preview".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, space_id: "studio-1".into(), surface: None }], watch_external: false, actor: "B".into() })
+            .await;
+        let key_a = channels_a.document_key.clone();
+        let key_b = channels_b.document_key.clone();
+        let mut events_b = host_b.subscribe_key(&key_b).await;
+        wait_for_mock_hub_event("A Session", &hub, &mut events_a, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+        wait_for_mock_hub_event("B Session", &hub, &mut events_b, |event| matches!(event, ArtifactEvent::Session { .. })).await;
+
+        channels_a.cmd_tx.send(ArtifactActorMsg::PublishPreview { key: "cursor".into(), seq: 1, payload: vec![1, 2, 3] }).expect("publish preview");
+
+        let event = wait_for_event(&mut events_b, |event| matches!(event, ArtifactEvent::Preview { .. })).await;
+        match event {
+            ArtifactEvent::Preview { key, seq, payload, .. } => {
+                assert_eq!(key, "cursor");
+                assert_eq!(seq, 1);
+                assert_eq!(payload, vec![1, 2, 3]);
+            }
+            other => panic!("expected Preview, got {other:?}"),
+        }
+        host_a.close_key(&key_a);
+        host_b.close_key(&key_b);
+    }
+
+    // 🔬️ Shared fixtures replay: each fixture's inbound stimuli produce the expected ArtifactEvent
+    // sequence and final timeline. The same fixtures drive WS-E's vitest harness against the TS twin.
+    #[tokio::test]
+    async fn fixtures_replay_matches_expected_events() {
+        let fixtures_dir = fixture_path!("../../../../🧫️fixtures");
+        let fixtures = load_fixtures(&fixtures_dir).await;
+        assert!(!fixtures.is_empty(), "expected fixtures in {fixtures_dir:?}");
+        for fixture in fixtures {
+            replay_fixture(&fixture).await;
+        }
+    }
+
+    /// 🎞️ Lockstep: apply each stimulus, then wait for its paired expected event before the next
+    /// (removes any write/poke race). Folder-replayable fixtures pair inbound 1:1 with events.
+    async fn replay_fixture(fixture: &ActorFixture) {
+        ensure_demo_codec_registered().await;
+        let codec = semio_framework_os_store_codec_registry::document_codec(&fixture.schema).await.expect("codec registry available").unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
+        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let host = ArtifactHost::new(test_pool());
+        let channels =
+            host.open(ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() }).await;
+        let mut events = host.subscribe(&fixture.document_id).await;
+        let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>(&fixture.schema, &fixture.document_id, DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+        store.attach_backbone(Backbones::Channel(channels.channel_backbone)).await.expect("attach");
+        let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+        wait_until(&format!("seed snapshot for {} on disk", fixture.document_id), || async { storage.read_archive(&fixture.document_id).await.expect("read archive").is_some() }).await;
+
+        assert_eq!(fixture.inbound.len(), fixture.expected_events.len(), "fixture {} must pair each inbound stimulus with one expected event", fixture.name);
+        let mut observed: Vec<String> = Vec::new();
+        for (inbound, expected) in fixture.inbound.iter().zip(fixture.expected_events.iter()) {
+            match inbound {
+                FixtureInbound::ExternalEdits { ops_text } => {
+                    let archive_bytes = storage.read_archive(&fixture.document_id).await.expect("read archive").expect("some archive");
+                    let mut archive = semio_framework_os_spr::decode_document_archive_bytes(&archive_bytes).await.expect("decode current archive");
+                    let parsed = semio_framework_os_spr::parse_ops_text(ops_text).unwrap_or_else(|error| panic!("fixture {} parse_ops_text: {error}", fixture.name));
+                    let mut new_edits: Vec<semio_framework_os_spr::HistoryEdit> = Vec::new();
+                    for edit in parsed.edits {
+                        let mut ops: Vec<semio_framework_os_spr::OpPayload> = Vec::new();
+                        for op in &edit.ops {
+                            let text = op.text.as_deref().unwrap_or_else(|| panic!("fixture {} op line has no text", fixture.name));
+                            let concrete = DemoMutation::parse_op(text).unwrap_or_else(|error| panic!("fixture {} parse_op {text:?}: {error}", fixture.name));
+                            ops.push(semio_framework_os_spr::OpPayload { text: None, binary: Some(concrete.encode_op().expect("encode demo op")) });
+                        }
+                        new_edits.push(semio_framework_os_spr::HistoryEdit { ops, meta: None, ..edit });
+                    }
+                    archive.parent_spr = semio_framework_os_store_text_io::text_format::append_history_events_to_spr(&archive.parent_spr, &new_edits, &[]).await.expect("append fixture edits");
+                    let archive_bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode fixture archive");
+                    storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("write archive");
+                    channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
+                }
+                FixtureInbound::ReplaceDocument { dsl_text, ops_text } => {
+                    let (pack_files, _dsl_mirror) = (codec.compile_dsl)(dsl_text, ops_text).await.unwrap_or_else(|error| panic!("fixture {} compile_dsl: {error}", fixture.name));
+                    let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: pack_files.pack, parent_spr: pack_files.spr, members: Vec::new() };
+                    let archive_bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode replacement archive");
+                    storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("replace archive write");
+                    channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
+                }
+                FixtureInbound::HubFrame { .. } => {
+                    panic!("fixture {} uses a HubFrame stimulus not supported by the Rust harness", fixture.name);
+                }
+            }
+            let event = wait_for_event(&mut events, |event| document_event_tag(event) == expected.as_str()).await;
+            observed.push(document_event_tag(&event).to_string());
+            store.tick().await.expect("tick");
+        }
+        assert_eq!(&observed, &fixture.expected_events, "fixture {} event sequence", fixture.name);
+        let timeline_ids: Vec<String> = store.envelope().vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+        for expected_id in &fixture.expected_edit_ids {
+            assert!(timeline_ids.contains(expected_id), "fixture {} expected edit id {expected_id} in timeline {timeline_ids:?}", fixture.name);
+        }
+        host.close(&fixture.document_id);
+        semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+    }
+
+    // 🚫️async: E1-adjacent — pure match with no suspension point, consumed by
+    // `wait_for_event`'s sync `FnMut(&ArtifactEvent) -> bool` predicate bound — see R9.
+    fn document_event_tag(event: &ArtifactEvent) -> &'static str {
+        match event {
+            ArtifactEvent::RemoteMutations { .. } => "remoteMutations",
+            ArtifactEvent::DocumentBackbone { .. } => "documentBackbone",
+            ArtifactEvent::DocumentArchiveReplaced { .. } => "documentArchiveReplaced",
+            ArtifactEvent::DocumentArchiveAbsent => "documentArchiveAbsent",
+            ArtifactEvent::BootstrapProgress { .. } => "bootstrapProgress",
+            ArtifactEvent::Status(_) => "status",
+            ArtifactEvent::Presence { .. } => "presence",
+            ArtifactEvent::Session { .. } => "session",
+            ArtifactEvent::Preview { .. } => "preview",
+            ArtifactEvent::CommandOutcome { .. } => "commandOutcome",
+            ArtifactEvent::Conflict(_) => "conflict",
+            ArtifactEvent::RebootstrapRequired { .. } => "rebootstrapRequired",
+        }
+    }
+}
+//#endregion 🧪️Actor
+
+/// 🎯️ `FolderEventLogStorage` is a pure `(pack, spr)` event store — schema-agnostic,
+/// no JSON/codec involvement at this layer (that lives one level up, in `FolderEndpoint`, tested
+/// via `folder_external_edit_delivers_remote_operations`). This test exercises exactly the
+/// storage mechanics: per-id folding, append-only replacement, and the folder-wide index.
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn folder_event_log_storage_round_trips_by_document_id() {
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+    assert_eq!(storage.read("doc-a").await.expect("read empty"), None, "absent document reads as None");
+
+    storage.write("doc-a", "demo/v1", b"pack-a", b"spr-a").await.expect("write a");
+    storage.write("doc-b", "demo/v1", b"pack-b", b"spr-b").await.expect("write b");
+    assert_eq!(storage.read("doc-a").await.expect("read a").expect("some a"), (b"pack-a".to_vec(), b"spr-a".to_vec()), "documents are keyed independently");
+    assert_eq!(storage.read("doc-b").await.expect("read b").expect("some b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
+
+    storage.write("doc-a", "demo/v1", b"pack-a2", b"spr-a2").await.expect("upsert a");
+    assert_eq!(storage.read("doc-a").await.expect("reread a").expect("some a2"), (b"pack-a2".to_vec(), b"spr-a2".to_vec()), "the latest snapshot event replaces the projection");
+
+    let mut ids = storage.document_ids().await.expect("document ids");
+    ids.sort();
+    assert_eq!(ids, vec!["doc-a".to_string(), "doc-b".to_string()], "folder indexes every document");
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn document_archive_event_log_storage_round_trips_complete_owned_bytes() {
+    let archive = persisted_recursive_document_archive();
+    let bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode recursive archive");
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+    assert_eq!(storage.read_archive("root-1").await.expect("read absent archive"), None);
+    storage.write_archive("root-1", "s.test.root/1/*", &bytes).await.expect("write recursive archive");
+    let persisted = storage.read_archive("root-1").await.expect("read recursive archive").expect("archive exists");
+    assert_eq!(persisted, bytes);
+    assert_eq!(semio_framework_os_spr::decode_document_archive_bytes(&persisted).await.expect("decode persisted recursive archive"), archive);
+    assert!(storage.document_ids().await.expect("archive document index").contains(&"root-1".to_string()));
+    let mut trailing = persisted.clone();
+    trailing.push(0);
+    assert!(storage.write_archive("root-1", "s.test.root/1/*", &trailing).await.is_err());
+    assert_eq!(storage.read_archive("root-1").await.expect("read after malformed refusal").expect("prior archive remains"), persisted);
+    let oversized = vec![1; semio_framework_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1];
+    assert!(storage.write_archive("root-1", "s.test.root/1/*", &oversized).await.is_err());
+    assert_eq!(storage.read_archive("root-1").await.expect("read after over-limit refusal").expect("prior archive remains"), bytes);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn persisted_recursive_document_archive() -> semio_framework_os_spr::DocumentArchivePack {
+    let root = semio_framework_os_spr::DocumentArchiveArtifactRef { artifact_id: "root-1".into(), artifact_kind: "s.test.root".into(), standard: "1".into(), subset: "*".into() };
+    let child = semio_framework_os_spr::DocumentArchiveArtifactRef { artifact_id: "child-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
+    let leaf = semio_framework_os_spr::DocumentArchiveArtifactRef { artifact_id: "leaf-1".into(), artifact_kind: "s.test.child".into(), standard: "1".into(), subset: "native".into() };
+    semio_framework_os_spr::DocumentArchivePack {
+        parent_pack: vec![1, 2],
+        parent_spr: vec![3],
+        members: vec![
+            semio_framework_os_spr::OwnedDocumentMemberPackEntry {
+                ordinal: 0,
+                reference: child.clone(),
+                owner: semio_framework_os_spr::DocumentArchiveOwnerRef { parent: root, slot: "children".into(), child_id: child.artifact_id.clone() },
+                envelope_pack: vec![4, 5],
+            },
+            semio_framework_os_spr::OwnedDocumentMemberPackEntry {
+                ordinal: 1,
+                reference: leaf.clone(),
+                owner: semio_framework_os_spr::DocumentArchiveOwnerRef { parent: child, slot: "nested".into(), child_id: leaf.artifact_id.clone() },
+                envelope_pack: vec![6],
+            },
+        ],
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn document_archive_actor_refuses_malformed_and_over_limit_candidates_without_displacing_live_bytes() {
+    let live = semio_framework_os_spr::encode_document_archive_bytes(&persisted_recursive_document_archive()).expect("encode live recursive archive");
+    let (_, remote) = ChannelBackbone::pair("document-archive-refusal").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, _) = broadcast::channel(8);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "root-1".into(), schema: "s.test.root/1/*".into(), bindings: Vec::new(), watch_external: false, actor: "local".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    actor.handle_test_document_archive(live.clone()).await;
+    assert_eq!(actor.current_archive_test(), Some(live.clone()));
+
+    let mut trailing = live.clone();
+    trailing.push(0);
+    assert!(artifact_actor_message_bytes(&ArtifactActorMsg::LocalDocumentArchive { archive: trailing.clone() }).is_some());
+    actor.handle_test_document_archive(trailing).await;
+    assert_eq!(actor.current_archive_test(), Some(live.clone()));
+
+    let unsupported = vec![2];
+    assert!(artifact_actor_message_bytes(&ArtifactActorMsg::LocalDocumentArchive { archive: unsupported.clone() }).is_none());
+    actor.handle_test_document_archive(unsupported).await;
+    assert_eq!(actor.current_archive_test(), Some(live.clone()));
+
+    let mut oversized = vec![0; semio_framework_os_spr::DOCUMENT_ARCHIVE_MAXIMUM_BYTES + 1];
+    oversized[0] = 1;
+    assert!(artifact_actor_message_bytes(&ArtifactActorMsg::LocalDocumentArchive { archive: oversized.clone() }).is_none());
+    actor.handle_test_document_archive(oversized).await;
+    assert_eq!(actor.current_archive_test(), Some(live));
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn document_archive_text_storage_round_trips_complete_owned_bytes() {
+    let archive = persisted_recursive_document_archive();
+    let bytes = semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode recursive archive");
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
+    let files = ArtifactPackFiles { pack: archive.parent_pack.clone(), spr: archive.parent_spr.clone(), ops: String::new() };
+    assert_eq!(storage.read_archive("root-1", "test").await.expect("read absent archive"), None);
+    storage.write_archive("root-1", "test", &bytes, &files, "root = 1\n").await.expect("write recursive archive");
+    let persisted = storage.read_archive("root-1", "test").await.expect("read recursive archive").expect("archive exists");
+    assert_eq!(persisted, bytes);
+    assert_eq!(semio_framework_os_spr::decode_document_archive_bytes(&persisted).await.expect("decode persisted recursive archive"), archive);
+    let mut malformed = persisted.clone();
+    malformed.push(0);
+    assert!(storage.write_archive("root-1", "test", &malformed, &files, "root = 2\n").await.is_err());
+    assert_eq!(storage.read_archive("root-1", "test").await.expect("read after malformed refusal").expect("prior archive remains"), persisted);
+}
+
+/// 🔐️ The endpoint-level save→load→undo proof: a store's undo/redo position survives a
+/// full write/read cycle through the ACTUAL `FolderEventLogStorage` byte storage (`store`'s own
+/// `save_load_undo_proof_pack_spr_round_trip_preserves_undo_redo_position` proves the pure
+/// in-memory pack/spr encoding; this proves the folder persistence layer built on top of it).
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn folder_event_log_storage_round_trips_undo_position_through_pack_spr() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+
+    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "doc-a", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply e1");
+    let post_e1 = store.snapshot().expect("post-e1");
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply e2");
+    store.dispatch(ArtifactCommand::Undo, &mut identity).await.expect("undo e2");
+    assert_eq!(store.snapshot().expect("live"), post_e1, "precondition: live store is back at post-e1");
+
+    let files = print_document_pack(store.envelope()).await.expect("print document pack");
+    storage.write("doc-a", "demo/v1", &files.pack, &files.spr).await.expect("write");
+
+    let (pack, spr) = storage.read("doc-a").await.expect("read").expect("some");
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&pack, &spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
+    assert_eq!(parsed.snapshot, post_e1, "loaded snapshot must equal post-e1 through the folder storage layer");
+    let mut reloaded = semio_framework_os_store_test_support::plain_test_store(parsed.envelope).await;
+    assert_eq!(reloaded.snapshot().expect("reloaded"), post_e1);
+
+    reloaded.dispatch(ArtifactCommand::Redo, &mut identity).await.expect("redo e2 after folder reload");
+    assert_eq!(reloaded.snapshot().expect("post-redo"), DemoSnapshot { n: 2 });
+    semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+    semio_framework_os_store_test_support::close_plain_test_store(&mut reloaded);
+}
+
+/// 🎯️ Seeds the write from a ZERO-edit envelope (no cursor line — a cursor is only
+/// synced once an edit is dispatched, see `ArtifactStore::sync_cursor`) so both edits are then
+/// added purely via the raw `append_ops` hot path with no cursor line ever written; a cursor
+/// pinned to an earlier edit count would otherwise cap the reconstructed snapshot at that
+/// edit (see `document_text_round_trips_a_cursor_after_undo_then_apply_interleaving` in
+/// `store`'s own test suite for that law, exercised correctly there).
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn folder_text_storage_round_trips_dsl_and_appends_ops() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
+    assert_eq!(storage.read("demo", "demo").await.expect("read empty"), None, "absent document reads as None");
+
+    let mut seed = semio_framework_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let files = print_document_text(seed.envelope()).await.expect("print document text");
+    storage.write("demo", "demo", &files).await.expect("write");
+
+    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
+    let first_edit = store.envelope().vcs.edits.last().expect("first edit");
+    storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
+
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply 2");
+    let second_edit = store.envelope().vcs.edits.last().expect("second edit");
+    storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
+
+    let reloaded = storage.read("demo", "demo").await.expect("read").expect("some");
+    let parsed: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded.dsl, &reloaded.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse: {error}"));
+    assert_eq!(parsed.snapshot.n, 2, "write + append reconstructs every edit in order");
+    let _ = parsed.into_snapshot();
+
+    assert_eq!(storage.document_ids("demo").await.expect("document ids"), vec!["demo".to_string()]);
+    semio_framework_os_store_test_support::close_plain_test_store(&mut seed);
+    semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+}
+
+/// 🎯️ Unlike the `.ops`-text hot path (`append_ops`, tested above), `.pack`+`.spr` have
+/// no incremental-append primitive wired up yet (that's `crate::os_spr::HistoryAppender`, a future
+/// wave's job to thread through this storage layer) — `write_pack` is the whole-file cold path
+/// for the AUTHORITATIVE pair, called again after every edit. `append_ops` still keeps the
+/// `.ops` TEXT MIRROR current independently (it is never read by the pack+spr-first
+/// `parse_document_pack`/`read_pack` path — see `ArtifactPackFiles`'s doc — only by
+/// `parse_document_text`), which this test verifies explicitly: appending ops text alone,
+/// without an accompanying `write_pack`, does NOT change what `read_pack`/`parse_document_pack`
+/// reconstructs, because pack+spr (not ops text) are authoritative for that path.
+///
+/// Text mirror is current (both edits landed via append_ops).
+///
+/// pack+spr are unaffected by ops-text-only appends — still the zero-edit snapshot from
+/// the initial write_pack, proving read_pack/parse_document_pack never reads .ops.
+///
+/// A fresh whole-file write_pack (the actual cold-path persistence flow) brings pack+spr
+/// current with the live store.
+///
+/// The always-written DSL mirror must also be on disk and agree with the initial-snapshot.
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn folder_text_storage_round_trips_pack() {
+    const IDENTITY_CEILING:usize=201*semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
+    let mut identity_observer=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{assert!(progress.owned_bytes<=IDENTITY_CEILING);true};
+    let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>=semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(IDENTITY_CEILING,&mut identity_observer).expect("declared original Store test identity");
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let storage = FolderTextStorage::new(dir.path().to_path_buf()).await;
+    assert_eq!(storage.read_pack("demo", "demo").await.expect("read empty"), None, "absent pack reads as None");
+
+    let mut seed = semio_framework_os_store_test_support::plain_test_store::<DemoSnapshot, DemoMutation>(create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    let files = print_document_pack(seed.envelope()).await.expect("print document pack");
+    let dsl_mirror = seed.envelope().vcs.genesis.facts().snapshot().print_dsl();
+    storage.write_pack("demo", "demo", &files, &dsl_mirror).await.expect("write pack");
+
+    let mut store = semio_framework_os_store_test_support::plain_test_store(create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: 0 }, None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer)).await;
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 1 }], transaction: None }, &mut identity).await.expect("apply 1");
+    let first_edit = store.envelope().vcs.edits.last().expect("first edit");
+    storage.append_ops("demo", "demo", &print_edit_lines(first_edit).await.expect("print edit lines")).await.expect("append ops 1");
+
+    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN { n: 2 }], transaction: None }, &mut identity).await.expect("apply 2");
+    let second_edit = store.envelope().vcs.edits.last().expect("second edit");
+    storage.append_ops("demo", "demo", &print_edit_lines(second_edit).await.expect("print edit lines")).await.expect("append ops 2");
+
+    let reloaded_text = storage.read("demo", "demo").await.expect("read text").expect("some text");
+    let parsed_text: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_text(&reloaded_text.dsl, &reloaded_text.ops, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse text: {error}"));
+    assert_eq!(parsed_text.snapshot.n, 2, "the .ops text mirror reflects every appended edit");
+    let _ = parsed_text.into_snapshot();
+
+    let reloaded_pack = storage.read_pack("demo", "demo").await.expect("read pack").expect("some pack");
+    let parsed_pack: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack.pack, &reloaded_pack.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack: {error}"));
+    assert_eq!(parsed_pack.snapshot.n, 0, "pack+spr are authoritative and independent of ops-text-only appends");
+    let _ = parsed_pack.into_snapshot();
+
+    let files2 = print_document_pack(store.envelope()).await.expect("print document pack 2");
+    let dsl_mirror2 = store.envelope().vcs.genesis.facts().snapshot().print_dsl();
+    storage.write_pack("demo", "demo", &files2, &dsl_mirror2).await.expect("write pack 2");
+    let reloaded_pack2 = storage.read_pack("demo", "demo").await.expect("read pack 2").expect("some pack 2");
+    let parsed_pack2: ParsedDocumentText<DemoSnapshot, DemoMutation> = parse_document_pack(&reloaded_pack2.pack, &reloaded_pack2.spr, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.unwrap_or_else(|error| panic!("parse pack 2: {error}"));
+    assert_eq!(parsed_pack2.snapshot.n, 2, "a fresh write_pack brings pack+spr current with the live store");
+    let _ = parsed_pack2.into_snapshot();
+
+    let mirror_path = dir.path().join(semio_framework_os_semio::semio_filename("demo", "demo", semio_framework_os_semio::Component::Dsl));
+    let mirror = std::fs::read_to_string(&mirror_path).expect("dsl mirror on disk");
+    assert_eq!(DemoSnapshot::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial snapshot, not later edits");
+    semio_framework_os_store_test_support::close_plain_test_store(&mut seed);
+    semio_framework_os_store_test_support::close_plain_test_store(&mut store);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn blob_store_put_get_dedupes_idempotently() {
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let storage = FolderEventLogStorage::new(dir.path().to_path_buf());
+    let bytes = b"hello content-addressed world";
+    assert!(!storage.has("not-a-real-hash").await.expect("has on empty store"));
+
+    let first = storage.put(bytes, "text/plain").await.expect("first put");
+    let second = storage.put(bytes, "text/plain").await.expect("second put");
+    assert_eq!(first, second, "putting identical bytes twice is idempotent and dedupes by hash");
+    assert_eq!(first.size, bytes.len() as u64);
+    assert_eq!(first.media_type, "text/plain");
+
+    assert!(storage.has(&first.hash).await.expect("has after put"));
+    let fetched = storage.get(&first.hash).await.expect("get").expect("blob present");
+    assert_eq!(fetched, bytes);
+
+    let other = storage.put(b"different content", "text/plain").await.expect("put other");
+    assert_ne!(other.hash, first.hash, "different bytes hash differently");
+
+    storage.delete(&first.hash).await.expect("delete");
+    assert!(!storage.has(&first.hash).await.expect("has after delete"));
+    assert_eq!(storage.get(&first.hash).await.expect("get after delete"), None);
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn folder_event_log_ignores_an_incomplete_tail_and_coordinates_handles() {
+    use std::io::Write;
+
+    let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+    let first = FolderEventLogStorage::new(dir.path().to_path_buf());
+    let second = FolderEventLogStorage::new(dir.path().to_path_buf());
+    first.write("doc-a", "demo/v1", b"pack-a", b"spr-a").await.expect("first handle write");
+    second.write("doc-b", "demo/v1", b"pack-b", b"spr-b").await.expect("second handle write");
+
+    let mut file = std::fs::OpenOptions::new().append(true).open(first.event_path()).expect("open event log");
+    file.write_all(&FOLDER_EVENT_MAGIC[..3]).expect("partial crash tail");
+    file.sync_data().expect("sync crash tail");
+
+    assert_eq!(first.read("doc-a").await.expect("read a").expect("doc a"), (b"pack-a".to_vec(), b"spr-a".to_vec()));
+    assert_eq!(second.read("doc-b").await.expect("read b").expect("doc b"), (b"pack-b".to_vec(), b"spr-b".to_vec()));
+}
+
+
+#[path = "../🔬️backbone-parity/🦀️.rs"]
+mod backbone_parity;
+
+/// 🛟️ A hub `RebootstrapRequired` never strands a native document again (LD item 3, WG10 item 6): the actor asks its host for
+/// the pair and does not dial into a Welcome it would have to refuse; the host's reseed restarts it at the pair — unacked local
+/// work handed back to the guest — and its next Hello names the pair's baseline, so the hub's None/Tail Welcome goes Live.
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline() {
+    let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
+    let baseline = bootstrap.baseline_frontier.clone();
+    let (_, remote) = ChannelBackbone::pair("native-rebootstrap-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, mut event_rx) = broadcast::channel(32);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: "http://hub.local".into(), space_id: "space-reseed".into(), surface: None }], watch_external: false, actor: "rebootstrap-test".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let local = sample_operation_envelope("unacked-local", 5).await;
+    actor.queue_test_outbox(vec![local.clone()]);
+    let control = semio_framework_os_spr::RebootstrapRequired { space_id: "space-reseed".into(), document_id: "demo".into(), checkpoint_id: [0x22; 32], descriptor_hash: [0x11; 32], baseline_frontier: baseline.clone() };
+    actor.inject_hub_frame(ServerFrame::RebootstrapRequired { control }).await;
+    let mut asked = None;
+    while let Ok(event) = event_rx.try_recv() {
+        if let ArtifactEvent::RebootstrapRequired { control } = event {
+            asked = Some(control);
+        }
+    }
+    let asked = asked.expect("the actor asks its host for the pair instead of waiting for it inside a Welcome");
+    assert_eq!((asked.scope.document_id.as_str(), asked.checkpoint_id.0, asked.baseline_frontier.head_edit_ordinal), ("demo", [0x22; 32], baseline.head_edit_ordinal));
+    assert!(actor.bootstrap_test_state().8, "the actor waits for its host's reseed");
+    let baseline_frontier = semio_framework_os_directory::ArtifactFrontier { document_id: "demo".into(), head_edit_ordinal: baseline.head_edit_ordinal, head_edit_id: baseline.head_edit_id.clone(), last_commit_seq: baseline.last_commit_seq, chain_hash: semio_framework_os_directory::ArtifactHash(baseline.chain_hash) };
+    let _ = actor.handle_test_cmd(ArtifactActorMsg::Reseed { pack: pair.pack.clone(), spr: pair.spr.clone(), baseline: baseline_frontier }).await;
+    let mut replayed = Vec::new();
+    while let Ok(event) = event_rx.try_recv() {
+        if let ArtifactEvent::RemoteMutations { envelopes } = event {
+            replayed.extend(envelopes.into_iter().map(|envelope| envelope.mutation_id.0));
+        }
+    }
+    assert_eq!(replayed, vec![local.mutation_id.0.clone()], "the unacked local operation goes back to the re-seeded guest");
+    let (pack, spr, frontier, _, resume, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();
+    assert_eq!((pack.as_deref(), spr.as_deref(), frontier, resume, rebootstrap), (Some(pair.pack.as_slice()), Some(pair.spr.as_slice()), Some(baseline.clone()), None, false));
+    assert_eq!(outbox, vec![local.mutation_id.0.clone()], "and stays queued for the hub");
+    let mut socket = connect(&mut actor, "hub.v1.eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee").await;
+    let ClientFrame::SocketHelloV1 { frontier, .. } = receive_frame(&mut socket).await else { panic!("the first frame is the hello") };
+    assert_eq!(frontier, Some(baseline.clone()), "the rebuilt socket says Hello at the pair's baseline");
+    actor.inject_hub_frame(ServerFrame::Welcome { session_id: "session-reseed".into(), resume_token: "resume-reseed".into(), server_frontier: baseline.clone(), bootstrap: Bootstrap::None }).await;
+    assert!(matches!(actor.bootstrap_test_state().6, RemoteState::Live { .. }), "the hub's None Welcome is accepted like a first open");
+}
+
+/// 🛟️ A hub-refused `Supersede` has no inverse (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING): the refused batch's
+/// operation rolls back by its inverse, the transition is retracted — the store receives `BackboneMessage::Retract`
+/// naming it, on its channel and through the document backbone alike — and the actor raises the typed
+/// [`HISTORY_TRANSITION_REFUSED_CODE`] refusal naming it. No rebuild follows — the hub forces none after a refusal — and
+/// the refused batch is never requeued or resent: the socket stays live and the author converges by the retraction.
+#[cfg(not(target_arch = "wasm32"))]
+#[tokio::test]
+async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
+    use semio_framework_os_store_backbone::Backbone;
+    let (bootstrap, _) = demo_artifact_bootstrap(true).await;
+    let baseline = bootstrap.baseline_frontier.clone();
+    let (mut backbone, remote) = ChannelBackbone::pair("native-refused-supersede-test").await;
+    let (_, receiver) = artifact_mailbox_pair();
+    let (events, mut event_rx) = broadcast::channel(32);
+    let mut actor = native_actor::ArtifactActor::new(
+        test_pool(),
+        ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: "demo".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url: "http://hub.local".into(), space_id: "space-supersede".into(), surface: None }], watch_external: false, actor: "supersede-test".into() },
+        remote,
+        receiver,
+        events,
+        Arc::new(std::sync::RwLock::new(None)),
+        Arc::new(std::sync::RwLock::new(None)),
+        None,
+        semio_framework_async::CancelToken::root_now(),
+    )
+    .await;
+    let operation = sample_operation_envelope("supersede-edit", 5).await;
+    let supersede = semio_framework_os_spr::TransitionSupersede { scope: None, inputs: vec![semio_framework_os_spr::SupersededInput { target: MutationId("ghost".into()), replacement: semio_framework_os_spr::InputReplacement::Withdrawn }] };
+    let dependencies = supersede.targets();
+    let transition = semio_framework_os_spr::history_transition_envelope(&semio_framework_os_spr::HistoryTransition::Supersede(supersede), &ArtifactId("demo".into()), &ActorId("supersede-test".into()), dependencies, semio_framework_os_spr::HybridLogicalTimestamp::new(1, 9));
+    actor.queue_test_outbox(vec![operation.clone(), transition.clone()]);
+    let receipt = "hub.v1.ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    let mut socket = connect(&mut actor, receipt).await;
+    assert!(matches!(receive_frame(&mut socket).await, ClientFrame::SocketHelloV1 { .. }));
+    actor.inject_hub_frame(ServerFrame::Session { actor: receipt.into(), color: 2 }).await;
+    let ClientFrame::Commands { batch_id, envelopes } = receive_frame(&mut socket).await else { panic!("the Session flushes the queued batch") };
+    assert_eq!(envelopes.iter().map(|envelope| envelope.mutation_id.clone()).collect::<Vec<_>>(), vec![operation.mutation_id.clone(), transition.mutation_id.clone()]);
+    while event_rx.try_recv().is_ok() {}
+
+    actor.inject_hub_frame(ServerFrame::Ack { batch_id, stages: vec![AckStage::Applied { outcome: Box::new(ApplyOutcome::Rejected { reason: "history.unknown-target".into(), messages: Vec::new() }) }], frontier: baseline.clone() }).await;
+    let (mut rolled_back, mut retracted, mut outcome, mut refusal) = (Vec::new(), Vec::new(), None, None);
+    while let Ok(event) = event_rx.try_recv() {
+        match event {
+            ArtifactEvent::DocumentBackbone { message } => match semio_framework_os_store_backbone::decode_hot_backbone_message_exact(&message).expect("canonical backbone message") {
+                BackboneMessage::Mutations { envelopes } => rolled_back.extend(decode_envelopes(&envelopes).expect("rollback batch").into_iter().map(|envelope| envelope.mutation_id.0)),
+                BackboneMessage::Retract { mutation_ids } => retracted.extend(mutation_ids),
+                other => panic!("unexpected document backbone message {other:?}"),
+            },
+            ArtifactEvent::CommandOutcome { outcome: ack, .. } => outcome = Some(ack),
+            ArtifactEvent::Conflict(message) => refusal = Some(message),
+            _ => {}
+        }
+    }
+    assert_eq!(rolled_back, vec![format!("{}~undo", operation.mutation_id.0)], "only the operation rolls back; a transition has no inverse");
+    assert_eq!(retracted, vec![transition.mutation_id.0.clone()], "the transition is retracted instead");
+    let store_bound: Vec<BackboneMessage> = backbone.receive().await.expect("the store end receives");
+    assert!(store_bound.contains(&BackboneMessage::Retract { mutation_ids: vec![transition.mutation_id.0.clone()] }), "the store's own channel carries the retraction: {store_bound:?}");
+    assert!(matches!(outcome, Some(CommandAckOutcome::Rejected { .. })), "the batch's own outcome is still reported: {outcome:?}");
+    let refusal = refusal.expect("a refused transition is a typed refusal the runtime can show");
+    assert_eq!((refusal.code.0.as_str(), refusal.level, refusal.target.clone()), (HISTORY_TRANSITION_REFUSED_CODE, semio_framework_diagnostic::Severity::Error, vec![transition.mutation_id.0.clone()]));
+
+    assert!(!std::iter::from_fn(|| event_rx.try_recv().ok()).any(|event| matches!(event, ArtifactEvent::RebootstrapRequired { .. })), "a refusal asks for no rebuild");
+    let (_, _, _, _, _, _, _, outbox, rebootstrap) = actor.bootstrap_test_state();
+    assert_eq!((outbox, rebootstrap), (Vec::<String>::new(), false), "the refused batch is never requeued and nothing rebuilds");
+}
+
+/// 🫙️ Every case of the folder-archive-presence corpus an append-only folder log can stage (its folder never returns to
+/// absent after holding an archive), through the native actor over a real folder: the bootstrap read of an empty folder
+/// announces `DocumentArchiveAbsent` exactly once, no later read does, and an archive whose bytes the folder is known to hold
+/// is not written again. The TypeScript worker runs the whole corpus (`💻️os/🧪️tests/🧪️folder-archive-restore`).
+#[cfg(not(target_arch = "wasm32"))]
+#[semio_framework_async_macros::async_test]
+async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🧫️folder-archive-presence/🔣️.json")).expect("the corpus parses");
+    let (document, schema) = ("presence-1", "s.test.root/1/*");
+    let mut archives: std::collections::HashMap<&str, Vec<u8>> = std::collections::HashMap::new();
+    for name in ["a", "b"] {
+        let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: name.as_bytes().to_vec(), parent_spr: semio_framework_os_store_text_io::text_format::empty_document_spr(document, schema).await, members: Vec::new() };
+        archives.insert(name, semio_framework_os_spr::encode_document_archive_bytes(&archive).expect("encode the archive"));
+    }
+    let content = |value: &serde_json::Value| value.as_str().filter(|content| *content != "absent").map(|content| archives[content].clone());
+    let mut staged = 0;
+    for case in corpus["cases"].as_array().expect("cases") {
+        let name = case["name"].as_str().expect("a case name");
+        let steps = case["steps"].as_array().expect("steps");
+        let mut holds = content(&case["bootstrap"]).is_some();
+        let mut stageable = true;
+        for step in steps {
+            match step.get("read") {
+                Some(read) if content(read).is_none() && holds => stageable = false,
+                Some(read) => holds = content(read).is_some(),
+                None => holds = true,
+            }
+        }
+        if !stageable {
+            continue;
+        }
+        let dir = semio_framework_os_store_test_support::tempdir().expect("tempdir");
+        let other_writer = FolderEventLogStorage::new(dir.path().to_path_buf());
+        if let Some(archive) = content(&case["bootstrap"]) {
+            other_writer.write_archive(document, schema, &archive).await.expect("the folder holds an archive at the open");
+        }
+        let (_, remote) = ChannelBackbone::pair(name).await;
+        let (_, receiver) = artifact_mailbox_pair();
+        let (events, mut observed) = broadcast::channel(64);
+        let mut actor = native_actor::ArtifactActor::new(
+            test_pool(),
+            ArtifactActorConfig { actor_identity_grant: semio_framework_value::RetainedCloneGrant {maximum_items:1024,maximum_copy_bytes:65536,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64},  document_id: document.into(), schema: schema.into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: false, actor: "local".into() },
+            remote,
+            receiver,
+            events,
+            Arc::new(std::sync::RwLock::new(None)),
+            Arc::new(std::sync::RwLock::new(None)),
+            None,
+            semio_framework_async::CancelToken::root_now(),
+        )
+        .await;
+        actor.setup_test().await;
+        for step in steps {
+            match (step.get("read"), step.get("write")) {
+                (Some(read), _) => {
+                    if let Some(wanted) = content(read) {
+                        if other_writer.read_archive(document).await.expect("the folder reads").as_ref() != Some(&wanted) {
+                            other_writer.write_archive(document, schema, &wanted).await.expect("another writer's archive");
+                        }
+                    }
+                    actor.handle_test_cmd(ArtifactActorMsg::ExternalChanged).await;
+                }
+                (None, Some(write)) => actor.handle_test_document_archive(content(write).expect("a write names an archive")).await,
+                (None, None) => panic!("{name}: a step reads or writes"),
+            }
+        }
+        let mut absent = 0;
+        while let Ok(event) = observed.try_recv() {
+            if matches!(event, ArtifactEvent::DocumentArchiveAbsent) {
+                absent += 1;
+            }
+        }
+        assert_eq!((absent, actor.folder_writes_test() as u64), (case["expected"]["absent"].as_u64().expect("absent"), case["expected"]["puts"].as_u64().expect("puts")), "{name}");
+        staged += 1;
+    }
+    assert_eq!(staged, 7, "every case that never empties a held folder is staged");
+}

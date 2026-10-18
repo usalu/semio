@@ -61,7 +61,7 @@ fn original_source_loan_cancellation_witness_borrows_exact_parent_without_alias_
 /// 🛬️ A real bounded producer reserves, allocates, copies and releases through the same original supplier.
 #[test]
 fn original_native_decode_source_receives_actual_physical_producer_and_preserves_denial(){
- use semio_framework_job::{OriginalNativeDecodeSource,OriginalNativeDecodePolicy,OriginalNativeDecodeIssued};
+ use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodePolicy,OriginalNativeDecodeIssued};
  let parent=source_parent();let mut sequence=0;let mut receipt=Default::default();let mut cx=parent.borrow_context(StepBudget::new(16,12345,grant()),clock,&mut sequence,&mut receipt).unwrap();
  let(mut source,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||OriginalNativeDecodeSource::empty(OriginalNativeDecodePolicy{maximum_owned_bytes:128}));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
  for _ in 0..3{let(ready,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.admit_step(&mut cx).unwrap());assert!(!ready);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));}assert!(source.admit_step(&mut cx).unwrap());assert_eq!(source.owned_bytes(),Some(0));assert_eq!(cx.retained_progress().copied_items,3);drop(cx);
@@ -78,7 +78,7 @@ fn original_native_decode_source_receives_actual_physical_producer_and_preserves
 /// 🧳️ An overspent raw producer reply retains its successful value beside the complete receiving refusal.
 #[test]
 fn original_native_decode_source_preserves_outcome_on_raw_work_receiving_refusal(){
- use semio_framework_job::{OriginalNativeDecodeSource,OriginalNativeDecodePolicy,OriginalNativeDecodeIssued};
+ use semio_framework_job_native_decode::{OriginalNativeDecodeSource,OriginalNativeDecodePolicy,OriginalNativeDecodeIssued};
  let parent=source_parent();let mut sequence=0;let mut receipt=Default::default();let mut cx=parent.borrow_context(StepBudget::new(8,12345,grant()),clock,&mut sequence,&mut receipt).unwrap();let mut source=OriginalNativeDecodeSource::empty(OriginalNativeDecodePolicy{maximum_owned_bytes:128});for _ in 0..4{source.admit_step(&mut cx).unwrap();}drop(cx);
  let mut raw_receipt=Default::default();let mut raw=parent.borrow_context(StepBudget::new(1,12345,grant()),clock,&mut sequence,&mut raw_receipt).unwrap();let(outcome,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||source.receive_step(&mut raw,|_,grant|OriginalNativeDecodeIssued{value:Ok(81u8),grant,progress:Default::default(),work:9}).unwrap().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(outcome.value.unwrap(),81);assert!(outcome.receiving_refusal.is_some());assert_eq!(outcome.work,9);assert_eq!(raw.original_work_units_spent(),9);assert_eq!(raw.fuel_remaining(),0);drop(raw);
  let mut close_receipt=Default::default();let mut close=parent.borrow_context(StepBudget::new(8,12345,grant()),clock,&mut sequence,&mut close_receipt).unwrap();for _ in 0..8{if source.terminal_is_empty(){break}source.close_step(&mut close).unwrap();}assert!(source.terminal_is_empty());drop(close);drop(source);retire(parent);

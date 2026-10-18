@@ -1,0 +1,741 @@
+cargo-features = [ "trim-paths" ]
+
+[workspace]
+resolver = "2"
+members = [
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🪜️examples-2/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🧬️mutations/🕸️apply-mesh/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/📚️examples/🌊️pipeline/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/📍️set-node-position/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📚️examples/🚶️walk/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🧬️schema/🧬️mutations/📻insert-channel/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎬️video/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/📚️examples/🏢️building/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🧬️schema/🧬️mutations/🧱insert-element/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/📈️series/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/🗂️applied/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/🤝️dependence/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🎲️probability-internals/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📊️statistics-internals/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📋️tabular-internals/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧭️causal-internals/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/📚️examples/📐️drawing/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/📚️examples/🗒️memo/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📑️document/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📦️object/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📦️object/📚️examples/📦️crate/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📦️object/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📦️object/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/📚️examples/📽️deck/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🧬️schema/🧬️mutations/🧩insert-layout/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/➕️algebra-internals/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🌫️fuzzy-internals/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔤️text/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📚️examples/🕸️wires/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🌉️create-edge/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧪️tests/🔬️fixture/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/💾️binary/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/💡️inferences/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/➕create-node/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/📐change-stroke-width/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🔺️diff/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/📚️examples/🧊️solid/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/✏️editor/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/📚️examples/🪑️furniture/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🚪️io/💾️binary/🧬️mutations/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/📸️snapshot/📦️packages/🦀️rust",
+  "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+  "📦️packages/🦀️rust",
+  "🧪️tests/🥣️inverts-tests/📦️packages/🦀️rust",
+  "🧩️composition/📦️packages/🦀️rust",
+  "🧪️tests/🪶️sqlite/🧫️subset-laws-1/📦️packages/🦀️rust",
+  "🧪️tests/🪶️sqlite/🧬️subset-laws-2/📦️packages/🦀️rust",
+  "🧪️tests/🪶️sqlite/🧮️subset-laws-5/📦️packages/🦀️rust",
+  "🧪️tests/🪶️sqlite/🧱️subset-laws-4/📦️packages/🦀️rust",
+  "🧪️tests/🪶️sqlite/🧲️subset-laws-3/📦️packages/🦀️rust",
+]
+exclude = [
+    "**/🏭️bridge/**",
+    "**/🏭️generator/**",
+    "**/👽️guest/**",
+    "**/🔬️probes/**",
+    "**/🔮️oracles/**",
+    "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🏭️generator/🧩️json/📦️packages/🦀️rust",
+    "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🔬️probes/📖️reader/📦️packages/🦀️rust",
+    "🏅️standards/🔖️v1/🪆️subsets/📑️document/🏭️generator/🧩️json/📦️packages/🦀️rust",
+    "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🏭️generator/🧩️json/📦️packages/🦀️rust",
+    "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/🔁️codec/📦️packages/🦀️rust",
+    "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/🧩️json/📦️packages/🦀️rust",
+    "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/📖️reader/📦️packages/🦀️rust",
+    "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🏭️generator/🧩️json/📦️packages/🦀️rust",
+    "🔮️oracles/📦️packages/🦀️rust",
+]
+
+[workspace.metadata.semio.repository]
+schema-version = 1
+exclude-patterns = [
+  "**/🏭️generator/**",
+  "**/🔬️probes/**",
+  "**/🏭️bridge/**",
+  "**/👽️guest/**",
+  "**/🔮️oracles/**"
+]
+member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
+
+  [workspace.package]
+  version = "0.1.0"
+  edition = "2021"
+  rust-version = "1.95"
+
+[workspace.dependencies.pack]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
+package = "semio-framework-pack"
+
+[workspace.dependencies.semio-framework]
+path = "../../../../../🧰️framework/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-engine]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-curve]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➰️curve/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-surface]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/🏄️surface/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-tolerance]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📏️tolerance/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-vector]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/➡️vector/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-construction]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-boolean]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-sweep]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/➡️sweep/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-offset]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/↔️offset/📦️packages/🦀️rust"
+
+
+[workspace.dependencies.semio-framework-3d-brep-queries]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-tessellation]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/🧩tessellation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-validation]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✅validation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-3d-brep-representation]
+path = "../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-artifact-reference]
+path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-async-macros]
+path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-geometry]
+path = "../../../../../🧰️framework/🔨️modules/📐️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-hash]
+path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-graph-algorithms]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🧮️algorithms/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-graph-engine]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/⚙️engine/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-graph-manifest]
+path = "../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-job]
+path = "../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-mesh-engine]
+path = "../../../../../🧰️framework/🔨️modules/🏗️mesh-engine/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-kernel]
+path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-plugin]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-derive]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-avi]
+path = "../📼️avi/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-bcf]
+path = "../💬️bcf/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-bmp]
+path = "../🪟️bmp/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-contract]
+path = "../../📇️registry/🧬️contract/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-csv]
+path = "../📊️csv/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-docx]
+path = "../📜️docx/📦️packages/🦀️rust"
+
+
+[workspace.dependencies.semio-s-artifact-stdio-docx-base-model]
+path = "../📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-dwg-model]
+path = "../🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+
+
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot-drawing]
+path = "../🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/✏️drawing/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-dwg-geometry]
+path = "../🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-snapshot]
+path = "../🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-dwg-read]
+path = "../🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-dwg-write]
+path = "../🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-dxf]
+path = "../🖋️dxf/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gif]
+path = "../🎞️gif/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf]
+path = "../🧊️gltf/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf-model]
+path = "../🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-ifc]
+path = "../🏗️ifc/📦️packages/🦀️rust"
+
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4-model]
+path = "../🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-jpg]
+path = "../📸️jpg/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-json]
+path = "../🧾️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-las]
+path = "../☁️las/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-md]
+path = "../📝️md/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-mp3]
+path = "../🎵️mp3/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-mp4]
+path = "../🎥️mp4/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-obj]
+path = "../🗽️obj/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pdf]
+path = "../📖️pdf/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ply]
+path = "../🧱️ply/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-png]
+path = "../📷️png/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx]
+path = "../📽️pptx/📦️packages/🦀️rust"
+
+
+[workspace.dependencies.semio-s-artifact-stdio-pptx-base-model]
+path = "../📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-step]
+path = "../📐️step/📦️packages/🦀️rust"
+
+
+[workspace.dependencies.semio-s-artifact-stdio-step-snapshot]
+path = "../📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust"
+[workspace.dependencies.semio-s-artifact-stdio-stl]
+path = "../🔺️stl/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-svg]
+path = "../🎨️svg/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-tiff]
+path = "../🖼️tiff/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-txt]
+path = "../🔤️txt/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-wav]
+path = "../🔊️wav/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-xml]
+path = "../📰️xml/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-zip]
+path = "../🎒️zip/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-2d]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-2d-compute]
+path = "../../../../../🧰️framework/🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-async]
+path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-diagnostic]
+path = "../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-dsl-record-derive]
+path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-pack-json]
+path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-composition]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-registry]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-schema-state]
+path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-trace]
+path = "../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-ui-locale]
+path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-base]
+path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-animation]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-audio]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-brep]
+path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-cad]
+path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-document]
+path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-drawing]
+path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-flow]
+path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-graph]
+path = "🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-image]
+path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-kit]
+path = "🏅️standards/🔖️v1/🪆️subsets/🧰️kit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-mesh]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-model]
+path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-object]
+path = "🏅️standards/🔖️v1/🪆️subsets/📦️object/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-presentation]
+path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-text]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-video]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-animation-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-animation-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎞️animation/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-audio-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-audio-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-brep-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-brep-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-cad-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-cad-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/📐️cad/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-document-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-document-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/📑️document/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-drawing-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-drawing-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-flow-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-flow-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-image-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-image-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🖼️image/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-mesh-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-mesh-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-model-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-model-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-presentation-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-presentation-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/📽️presentation/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-video-import]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/📥️import/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-video-export]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🚪️io/📤️export/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio]
+path = "📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-catalog]
+path = "🧩️composition/📦️packages/🦀️rust"
+
+[workspace.dependencies.parry3d]
+version = "0.17"
+
+[workspace.dependencies.num-rational]
+version = "0.4"
+
+[workspace.dependencies.resvg]
+version = "0.45.1"
+
+[workspace.dependencies.hayro]
+version = "0.4.0"
+
+[workspace.dependencies.serde]
+version = "1.0.228"
+features = [ "derive" ]
+
+[workspace.dependencies.serde_json]
+version = "1.0.149"
+features = [ "raw_value" ]
+
+[workspace.lints.rust]
+unsafe_op_in_unsafe_fn = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+
+  [workspace.lints.rust.future_incompatible]
+  level = "warn"
+  priority = -1
+
+  [workspace.lints.rust.rust_2018_idioms]
+  level = "warn"
+  priority = -1
+
+[workspace.lints.clippy]
+cloned_instead_of_copied = "warn"
+inefficient_to_string = "warn"
+map_unwrap_or = "warn"
+needless_pass_by_value = "warn"
+semicolon_if_nothing_returned = "warn"
+unnecessary_wraps = "warn"
+redundant_clone = "warn"
+
+  [workspace.lints.clippy.all]
+  level = "warn"
+  priority = -1
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-base-examples]
+path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-base-examples-2]
+path = "🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🪜️examples-2/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-entropy]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-dependence]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/🤝️dependence/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-series]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/📈️series/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-applied]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🌀️entropy-internals/🗂️applied/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-tabular]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📋️tabular-internals/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-probability]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🎲️probability-internals/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-statistics]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📊️statistics-internals/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-causal]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧭️causal-internals/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-model]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-inferences]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-mutations]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-table-descriptor]
+path = "🏅️standards/🔖️v1/🪆️subsets/📊️table/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-text-descriptor]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-text-inferences]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-text-mutations]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-text-model]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔤️text/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-algebra]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/➕️algebra-internals/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-fuzzy]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🌫️fuzzy-internals/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-descriptor]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-inferences]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-mutations]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-value-model]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔢️value/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-video-descriptor]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-video-inferences]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-video-mutations]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-video-model]
+path = "🏅️standards/🔖️v1/🪆️subsets/🎬️video/🧬️schema/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-audio-descriptor]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📇️descriptor/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-audio-inferences]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-audio-mutations]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-semio-audio-model]
+path = "🏅️standards/🔖️v1/🪆️subsets/🔊️audio/🧬️schema/📦️packages/🦀️rust"

@@ -86,7 +86,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::collections::BTreeMap;
 use semio_framework_artifact_reference::ArtifactRef;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use pack::snapshot::ArtifactPack;
 use semio_framework_os_kernel::os_store::backbone::Backbone;
 use semio_framework_os_kernel::{MemberFactory, SpaceMember};

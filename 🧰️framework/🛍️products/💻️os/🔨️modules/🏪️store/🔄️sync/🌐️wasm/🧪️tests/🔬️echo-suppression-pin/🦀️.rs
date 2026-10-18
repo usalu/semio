@@ -2,7 +2,13 @@
 
 #[test]
 fn the_browser_actor_admits_authors_and_settles_by_operation_identity() {
-    let source = include_str!("../../🎭️actor/🦀️.rs");
+    let source = concat!(
+        include_str!("../../🎭️actor/🎛️wasm-actor-state-status-and-connect/🦀️.rs"),
+        include_str!("../../🎭️actor/🚇️wasm-actor-relay-and-bootstrap/🦀️.rs"),
+        include_str!("../../🎭️actor/📡️wasm-actor-protocol-and-spawn/🦀️.rs"),
+        include_str!("../../🎭️actor/🏠️wasm-artifact-host/🦀️.rs"),
+        include_str!("../../🎭️actor/🦀️.rs"),
+    );
     assert!(!source.contains("Some(origin.0.as_str())"), "no Commands frame is discarded by its origin");
     assert_eq!(source.matches("admit_remote_envelopes(&mut self.applied_op_ids").count(), 1, "the browser actor admits by operation identity");
     assert_eq!(source.matches("note_authored_envelopes(&mut self.applied_op_ids, envelopes);").count(), 1, "the browser actor records what it authors");

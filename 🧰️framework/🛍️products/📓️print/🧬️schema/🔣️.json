@@ -10323,6 +10323,14 @@
             "de": "Umrissbreite als TeX-Dimension; standardmäßig das Haarlinien-Token."
           }
         },
+        "mode": {
+          "syntax": "identifier",
+          "type": "string",
+          "description": {
+            "en": "Which member of the family the preset renders.",
+            "de": "Welches Mitglied der Familie die Voreinstellung zeichnet."
+          }
+        },
         "opacity": {
           "syntax": "expression",
           "type": "number",
@@ -10397,6 +10405,22 @@
           "description": {
             "en": "Dimensionless normalized-width factor: route strokes use 0.3 + factor × normalized value points; flow half-width uses 0.4 + 2 × factor × normalized value millimetres.",
             "de": "Dimensionsloser Faktor der normierten Breite: Routenlinien nutzen 0,3 + Faktor × normierter Wert Punkt; Flusshalbbreiten nutzen 0,4 + 2 × Faktor × normierter Wert Millimeter."
+          }
+        },
+        "samples": {
+          "syntax": "expression",
+          "type": "integer",
+          "description": {
+            "en": "Number of samples the curve or field is evaluated at.",
+            "de": "Anzahl der Stützstellen, an denen Kurve oder Feld ausgewertet werden."
+          }
+        },
+        "stations": {
+          "syntax": "scalar",
+          "type": "boolean",
+          "description": {
+            "en": "Draw the stations along the route.",
+            "de": "Die Stationen entlang der Route zeichnen."
           }
         },
         "stroke": {

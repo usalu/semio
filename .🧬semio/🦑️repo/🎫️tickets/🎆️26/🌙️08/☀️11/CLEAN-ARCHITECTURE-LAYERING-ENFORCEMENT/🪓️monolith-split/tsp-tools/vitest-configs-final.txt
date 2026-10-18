@@ -1,0 +1,14 @@
+✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/💡️inference/🧪️tests/🎚️config/📺️renderer/🟦️.ts
+✏️s/🔌️plugins/🏗️fem/🧪️tests/🎚️config/🟦️.ts
+✏️s/🔌️plugins/📏️layout/🧪️tests/🎚️renderer-contract/🟦️.ts
+✏️s/🔌️plugins/📐️cad/🧩️extensions/🏢️aec-building/🧪️tests/🎚️config/🟦️.ts
+✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/🧪️tests/🎚️config/🟦️.ts
+✏️s/🔌️plugins/📐️cad/🧩️extensions/🔥️aec-building-energy/🧪️tests/🎚️config/🟦️.ts
+✏️s/🔌️plugins/📸️remodel/🧪️tests/🎚️config/🟦️.ts
+✏️s/🔌️plugins/🔱️trinity/🔨️modules/🔌️jack/🧠️lsp/🧪️tests/🎚️config/🟦️.ts
+✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🎚️config/🟦️.ts
+✏️s/🔌️plugins/🧩️puzzle/🧪️tests/🎚️renderer-contract/🟦️.ts
+✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🎚️config/🟦️.ts
+✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🎚️config/🧵️gis-inference-bridge/🟦️.ts
+✏️s/🧑‍💻dev/🎭️variants/🌍️gis/🧩️service-composition/🎚️config/🟦️.ts
+✏️s/🧑‍💻dev/🧩️catalog/🧪️tests/🎚️config/🟦️.ts

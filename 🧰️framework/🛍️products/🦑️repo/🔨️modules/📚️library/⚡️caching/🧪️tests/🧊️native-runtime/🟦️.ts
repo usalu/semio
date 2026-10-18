@@ -50,7 +50,7 @@ export async function testNativeRuntime(workspace:string,_output:string,invocati
   assert.ok(!/runCmdStatus|new NativeRunScript|\["repo", "run"/.test(script));
   assert.ok(!/class NativeRunScript|ensureAssetServer/.test(old));
   const capture = await require("esbuild").build({ entryPoints: [join(native, "📦️modules/📜️script.ts")], bundle: true, write: false, metafile: true, platform: "node", format: "esm", packages: "external", logLevel: "silent" });
-  assert.ok(!Object.keys(capture.metafile.inputs).some(path => path.includes("🏗️compiler") || path.includes("styling/🏗️builder") || path.endsWith("📚️library/🟦️.ts")), "Native publication must not load application tooling or asset servers");
+  assert.ok(!Object.keys(capture.metafile.inputs).some(path => path.includes("🏗️compiler") || path.includes("styling/🏗️builder") || path.includes("📚️library/🎮️playground/🖥️asset-server/") || path.includes("📚️library/🏃️process/🍞️bun/")), "Native publication must not load application tooling or asset servers");
   const plugin=join(workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin"),declaration={pluginId:fixture.pluginId,cratePath:fixture.cratePath};
   const {buildComponentClosureV1}=await import(join(plugin,"🏗️build/🧩️driver-stages/🟦️.ts"));
   await withInstalledNxFixtureV1(workspace,{kind:"products"},invocation,phaseControl,async(root,namespaceEnvironment,productOutput,actualPhase,toolkitRoot)=>{

@@ -1,0 +1,324 @@
+{
+ "file": "/Users/ueli/Documents/semio/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts",
+ "cap": 950,
+ "chunks": [
+  {
+   "dir": "📜️taxonomy-contracts",
+   "ranges": [
+    [
+     1,
+     72
+    ]
+   ],
+   "parts": [
+    "📦️package-projection-contracts"
+   ]
+  },
+  {
+   "dir": "📑️taxonomy-document",
+   "ranges": [
+    [
+     73,
+     83
+    ]
+   ]
+  },
+  {
+   "dir": "🧭️workspace-taxonomy-locator",
+   "ranges": [
+    [
+     0,
+     0
+    ],
+    [
+     84,
+     96
+    ]
+   ]
+  },
+  {
+   "dir": "📄️implementation-findings",
+   "ranges": [
+    [
+     97,
+     130
+    ]
+   ],
+   "parts": [
+    "🗂️file-kind-resolution"
+   ]
+  },
+  {
+   "dir": "🛠️generator-commands",
+   "ranges": [
+    [
+     131,
+     148
+    ]
+   ],
+   "parts": [
+    "✍️cli-preparation"
+   ]
+  },
+  {
+   "dir": "📂️semantic-directory-kinds",
+   "ranges": [
+    [
+     149,
+     158
+    ]
+   ]
+  },
+  {
+   "dir": "🗃️owned-file-projection",
+   "ranges": [
+    [
+     159,
+     172
+    ]
+   ]
+  },
+  {
+   "dir": "🧱️path-projection-contracts",
+   "ranges": [
+    [
+     173,
+     196
+    ]
+   ],
+   "parts": [
+    "🪞️path-projection"
+   ]
+  },
+  {
+   "dir": "🎯️taxonomy-path-matching",
+   "ranges": [
+    [
+     197,
+     216
+    ]
+   ],
+   "parts": [
+    "⚖️fixed-contract-resolution"
+   ]
+  },
+  {
+   "dir": "🧾️schema-scope-catalog",
+   "ranges": [
+    [
+     217,
+     257
+    ]
+   ]
+  },
+  {
+   "dir": "👥️mutation-owner-rules",
+   "ranges": [
+    [
+     258,
+     272
+    ]
+   ],
+   "parts": [
+    "🪪️mutation-owner-identity"
+   ]
+  },
+  {
+   "dir": "📦️package-projection-contracts",
+   "ranges": [
+    [
+     274,
+     307
+    ]
+   ],
+   "parts": [
+    "🎁️package-projection",
+    "🔭️repository-scan"
+   ]
+  },
+  {
+   "dir": "✅️owned-file-approvals",
+   "ranges": [
+    [
+     308,
+     326
+    ]
+   ],
+   "parts": [
+    "🔭️repository-scan"
+   ]
+  },
+  {
+   "dir": "🦀️rust-fact-contracts",
+   "ranges": [
+    [
+     327,
+     349
+    ]
+   ]
+  },
+  {
+   "dir": "🧷️rust-path-references",
+   "ranges": [
+    [
+     350,
+     358
+    ]
+   ],
+   "parts": [
+    "🔀️rust-non-repo-join-bases"
+   ]
+  },
+  {
+   "dir": "🏃️rust-runnable-tests",
+   "ranges": [
+    [
+     359,
+     370
+    ]
+   ]
+  },
+  {
+   "dir": "🏛️rust-structure",
+   "ranges": [
+    [
+     371,
+     384
+    ]
+   ]
+  },
+  {
+   "dir": "🌐️rust-module-graph",
+   "ranges": [
+    [
+     385,
+     396
+    ]
+   ]
+  },
+  {
+   "dir": "🔎️rust-source-identities",
+   "ranges": [
+    [
+     397,
+     403
+    ],
+    [
+     417,
+     419
+    ]
+   ]
+  },
+  {
+   "dir": "🛡️mutation-codec-ownership",
+   "ranges": [
+    [
+     404,
+     416
+    ]
+   ]
+  },
+  {
+   "dir": "🪧️owner-markers",
+   "ranges": [
+    [
+     420,
+     447
+    ]
+   ],
+   "parts": [
+    "🔭️repository-scan"
+   ]
+  },
+  {
+   "dir": "📇️registry-catalog-inputs",
+   "ranges": [
+    [
+     448,
+     471
+    ]
+   ],
+   "parts": [
+    "🧲️registry-catalog-projection"
+   ]
+  },
+  {
+   "dir": "🏷️package-source-classification",
+   "ranges": [
+    [
+     472,
+     489
+    ],
+    [
+     516,
+     519
+    ]
+   ],
+   "parts": [
+    "🔭️repository-scan"
+   ]
+  },
+  {
+   "dir": "🛣️ecma-command-routes",
+   "ranges": [
+    [
+     490,
+     515
+    ]
+   ]
+  },
+  {
+   "dir": "🔭️repository-scan",
+   "ranges": [
+    [
+     520,
+     525
+    ]
+   ]
+  },
+  {
+   "dir": "🚚️cargo-provider",
+   "ranges": [
+    [
+     526,
+     551
+    ]
+   ]
+  },
+  {
+   "dir": "🧵️mutation-metadata-source",
+   "ranges": [
+    [
+     552,
+     565
+    ]
+   ]
+  },
+  {
+   "dir": "🧩️semantic-census",
+   "ranges": [
+    [
+     566,
+     621
+    ]
+   ]
+  },
+  {
+   "dir": "🔐️taxonomy-authority",
+   "units": [
+    273
+   ]
+  }
+ ],
+ "anchor": "loadTaxonomy",
+ "pins": {
+  "273": "🔐️taxonomy-authority"
+ },
+ "edits": [
+  {
+   "chunk": "🧭️workspace-taxonomy-locator",
+   "find": "const __dirname = dirname(fileURLToPath(import.meta.url));",
+   "replace": "const __dirname = dirname(dirname(fileURLToPath(import.meta.url)));"
+  }
+ ]
+}

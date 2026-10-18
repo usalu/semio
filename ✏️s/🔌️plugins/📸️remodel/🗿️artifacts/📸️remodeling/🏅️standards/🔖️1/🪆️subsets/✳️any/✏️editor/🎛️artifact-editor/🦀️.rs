@@ -1,6 +1,7 @@
 //! 🎛️ Artifact editor of the remodeling editor: the dispatch-only implementation of the artifact editor trait for the remodeling play app. See [`super`].
 
 use super::*;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️RemodelingPlayApp
 impl ArtifactEditor for RemodelingPlayApp {

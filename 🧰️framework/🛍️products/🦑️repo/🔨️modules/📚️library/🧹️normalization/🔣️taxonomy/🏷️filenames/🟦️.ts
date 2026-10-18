@@ -1,7 +1,8 @@
 /** 🏷️ Taxonomy filename and option helpers shared by the generate, test and policy lanes.
  * @see 📜️script.ts
  */
-import { canonicalPrimaryFilenameForKind, fixedContractFilename, loadTaxonomy } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { canonicalPrimaryFilenameForKind, loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { fixedContractFilename } from "../../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 

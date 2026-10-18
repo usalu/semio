@@ -1,6 +1,7 @@
 //! 🎯️ Focus selection work: the staged focus that sums and measures the selected objects page by page before it publishes the result.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dFocusSelectionStage {

@@ -52,25 +52,16 @@ use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLay
 use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_svg::SvgSnapshot;
 
-#[path = "🌉️semio-bridge/🦀️.rs"]
-mod semio_bridge;
-pub use semio_bridge::*;
 
 use semio_framework_pixels::compositing::layers::{RasterStackContent,RasterStackInput,RasterStackJob,RasterStackLayer,RasterStackMask,RasterStackTransform};
 use semio_framework_pixels::{editing::validate_extent,RasterImage};
 use std::{collections::BTreeMap,sync::Arc};
 
-#[path = "🧩️composite-and-media/🦀️.rs"]
-mod composite_and_media;
-pub use composite_and_media::*;
 
 //#region 🧪️Tests
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
-#[cfg(any(test, feature = "testkit"))]
-#[path = "🧪️testing/🦀️.rs"]
-pub mod testing;
 //#endregion 🧪️Tests
 
 #[path = "🎹️derived-composition-and-registry/🦀️.rs"]
@@ -95,6 +86,10 @@ pub mod sqlite;
 #[path = "🏗️derived-construction-and-analysis/🦀️.rs"]
 mod derived_construction_and_analysis;
 pub use derived_construction_and_analysis::*;
+
+pub use semio_s_artifact_raster_raster_io_media_bridge::*;
+#[cfg(any(test, feature = "testkit"))]
+pub use semio_s_artifact_raster_raster_io_media_bridge::testing;
 
 //#region 🪢️TaxonomyMounts
 #[path = "🧭️taxonomy-mounts/🦀️.rs"]

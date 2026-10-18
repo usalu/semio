@@ -1,4 +1,18 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{ElementSolid, SolidFamily};
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidBuilder, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::{key, MepSectionKind};
+#[allow(unused_imports)]
+use semio_framework_geometry::loops::{self, Vertex};
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::TriMesh;
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::{add3, cross3, dot3, normalize3, scale3, sub3, Xyz};
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::mep::*;
 use crate::standards::v1::subsets::any::schema::inferences::mep::mep_of;
 use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
 use crate::standards::v1::subsets::any::schema::snapshot::{MepElement, MepShape, MepSystem, ModelSnapshot, Point3};

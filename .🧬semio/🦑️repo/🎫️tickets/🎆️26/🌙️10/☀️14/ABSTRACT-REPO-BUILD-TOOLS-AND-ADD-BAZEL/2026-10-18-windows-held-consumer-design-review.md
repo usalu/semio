@@ -1,0 +1,9 @@
+# Windows Held Consumer Design Review
+
+The private continuation design closes the sampled-snapshot lifetime gap if the live frame remains bound to actual owner-issued handles, exact registered receiver/options/mapping, same cumulative account, and genuine body/terminal authority. A returned DATA snapshot alone cannot substitute for those handles. No public arbitrary callback, provider or registration should be introduced.
+
+Required implementation ordering: initial complete admission; mint private nominal frame with deep-detached/frozen snapshot DATA; invoke only actual first-party consumer; keep frame live while that consumer's actual requested/accepted children drain; perform final real synchronous held facts plus named/ancestor and actual mapping fences; invalidate frame before release; return only after all descriptor/library closure settles. A close failure cannot produce success. Methods need exact this/live WeakMap identity and genuine authority before reading Native facts.
+
+A body failure can skip new success admission, but must still settle accepted children and owned resources, preserving exact primary and independently truthful close/drain failures. A frame used by an unawaited child must either be included in this actual consumer drain or refuse after expiry; outer Original registration by itself does not establish this boundary.
+
+Timestamp exceptions remain only schema-owned backing/root writeTime/changeTime; all other fields and host/receipt stay strict. The immutable allocation/extent restriction can conservatively refuse genuine writes and should remain explicit. Root-only containment continues until actual nested parent authority is composed. No conceptual objection to this contained private design; implementation/Source workers and eventual NTFS runtime are still required. No Native operations or production edits were performed by this review.

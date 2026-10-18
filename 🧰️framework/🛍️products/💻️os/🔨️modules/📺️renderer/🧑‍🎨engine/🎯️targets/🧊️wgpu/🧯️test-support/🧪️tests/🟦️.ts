@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { inspectRustModuleChildren, listModuleTree, readModuleTreeSource } from "../../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
-const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "🧫️fixtures/🔣️.json"), "utf8"));
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../../../🧪️tests/🧫️fixtures/🧊️wgpu/🧯️test-support/🔣️.json"), "utf8"));
 const scratch = mkdtempSync(join(tmpdir(), "semio-test-support-"));
 afterAll(() => rmSync(scratch, { recursive: true, force: true }));
 

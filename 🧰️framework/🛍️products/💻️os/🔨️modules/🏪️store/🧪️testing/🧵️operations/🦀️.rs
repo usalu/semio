@@ -120,6 +120,8 @@ macro_rules! fixture_canonical_json {
     )*};
 }
 
+fixture_canonical_json!(SeverityMutation, ValidatedMutation, TimestampedMutation);
+
 
 //#region 🔖️OpCodec
 /// 🎞️ Handcrafted OpText (P6).

@@ -1,0 +1,23 @@
+{
+ "name": "rend-misc-w",
+ "crates": [
+  "semio-framework-os-node-graph",
+  "semio-framework-os-node-graph-component",
+  "semio-framework-os-renderer-camera",
+  "semio-framework-os-renderer-wgpu-native-runtime-modules",
+  "semio-framework-os-native-runtime-reader",
+  "semio-framework-os-infinite-board-schema",
+  "semio-framework-os-infinite-board-engine",
+  "semio-framework-os-infinite-board-normal-model",
+  "semio-framework-os-infinite-board-normal-scene",
+  "semio-framework-os-infinite-board-normal-focus",
+  "semio-framework-os-infinite-board-normal-gestures",
+  "semio-framework-os-infinite-board-normal-fill",
+  "semio-framework-os-infinite-board-normal-host",
+  "semio-framework-os-infinite-board-dag-model",
+  "semio-framework-os-infinite-board-dag-graph",
+  "semio-framework-os-infinite-board-dag-host",
+  "semio-framework-os-infinite-directed-presentation"
+ ],
+ "note": "OHR non-wgpu + real board crates"
+}

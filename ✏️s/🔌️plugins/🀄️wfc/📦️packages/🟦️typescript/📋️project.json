@@ -2,7 +2,7 @@
   "name": "@semio-tech/wfc-js",
   "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
   "namedInputs": {
-    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🀄️wfc/🧪️tests/🎚️config/🟦️.ts"]
+    "default": ["{projectRoot}/**/*", "{workspaceRoot}/✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/**/*"]
   },
   "targets": {
     "test": {

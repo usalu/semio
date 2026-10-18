@@ -148,12 +148,13 @@
   "wiring": {
     "why": "Source-level anchors both twins re-check, so no implementation can reintroduce a private spelling of these five words — which is exactly how the live defect was introduced.",
     "codec": {
-      "file": "🧰️framework/🔨️modules/📡️replication/📡️wire/🦀️.rs",
+      "file": "🧰️framework/🔨️modules/📡️replication/📡️wire/🕹️interaction/🦀️.rs",
       "toWire": "pub fn wire_label(self) -> &'static str {",
       "fromWire": "pub fn from_wire_label(raw: &str) -> Option<Self> {"
     },
     "domainPath": {
-      "file": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs",
+      "decoderFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/🧭️topology/🦀️.rs",
+      "worldPathFile": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🌍️world3d/🦀️.rs",
       "decoder": "protocol::MergeMode::from_wire_label(raw).ok_or_else(|| plugin_sdk_fault(format!(\"interactionSelect: unknown merge '{raw}'\")))",
       "worldPath": "pub async fn merge_world_selection_ids(existing: &SelectionSet, incoming: &[String], merge: protocol::MergeMode) -> SelectionSet {"
     },

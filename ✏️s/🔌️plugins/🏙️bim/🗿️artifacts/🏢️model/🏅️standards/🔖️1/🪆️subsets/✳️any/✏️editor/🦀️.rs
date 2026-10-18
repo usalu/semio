@@ -14,7 +14,7 @@ use crate::editor::bim::terminology::{bim_labels, BimLabels};
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;
 use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, BIM_MODEL_DIALECT, BIM_MODEL_DOCUMENT_SCHEMA};
 use semio_framework::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework_artifact_reference::Dialect;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -56,9 +56,9 @@ use std::collections::HashMap;
 
 //#region 🔖️Constants
 pub const BIM_EDITOR_APP_ID: &str = "s.bim.model@1/*#editor";
-const BIM_RETAINED_PAYLOAD_SCHEMA: &str = "bim.model.tool-command.v1";
-const BIM_BOUNDED_RAW_BYTES: usize = 65_536;
-const BIM_BOUNDED_WORK_ITEMS: usize = 4_096;
+pub const BIM_RETAINED_PAYLOAD_SCHEMA: &str = "bim.model.tool-command.v1";
+pub const BIM_BOUNDED_RAW_BYTES: usize = 65_536;
+pub const BIM_BOUNDED_WORK_ITEMS: usize = 4_096;
 //#endregion 🔖️Constants
 
 //#region 🔖️CommandTable
@@ -239,7 +239,7 @@ bim_command_table!(manifest_actions);
 /// 🌉️ Host-action bridge into the closed `BimCommand` enum: the shells speak `{action, args}` with camelCase keys, every payload derives `FromValue` over snake_case, so this boundary
 /// folds the keys, applies the per-verb aliases and decodes.
 #[path = "🔀️args-bridge/🦀️.rs"]
-mod args_bridge;
+pub mod args_bridge;
 
 //#endregion 🔖️ActionBridge
 
@@ -259,17 +259,13 @@ pub use play_app::*;
 mod manifest;
 pub use manifest::*;
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod unit_tests;
+
 
 #[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🧰️fixture/🦀️.rs"]
 pub mod fixture;
 
-#[cfg(test)]
-#[path = "🧪️tests/⌨️completeness/🦀️.rs"]
-mod completeness_tests;
+
 
 //#region 🧩️Modules
 

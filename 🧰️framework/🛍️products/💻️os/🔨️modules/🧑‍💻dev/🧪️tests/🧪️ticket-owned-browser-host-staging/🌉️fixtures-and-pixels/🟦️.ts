@@ -30,7 +30,7 @@ export async function registerFixtureAndPixelTests(vitest: NonNullable<ImportMet
   describe("linkedSessionEngines", () => {
     itLong("matches strict schema validation and deduplicates only exact owner engine paths", async () => {
       const { default: Ajv } = await import("ajv");
-      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧫️fixtures/🔗️linked-session-engines.json"), "utf8"));
+      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧪️tests/🧫️fixtures/🔗️linked-session-engines.json"), "utf8"));
       const validate = await devContractModule("LinkedSessionEnginesV1");
       for (const vector of fixture.valid) {
         expect(validate(vector.declarations)).toBe(true);

@@ -4,10 +4,12 @@
 //! annotation writes one history row of `create-*` mutations; the first annotation of a model also creates the standard annotation style in the same row. The preview shows the printed value as it
 //! will read.
 
-use super::plane::{angle, dist, point2, same, P};
-use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use crate::editor::bim::gestures::session::Modifiers;
+use crate::editor::bim::modes::edit::windows::plan;
+use crate::editor::bim::gestures::plane::{angle, dist, point2, same, P};
+use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, PICK_PIXELS, REJECTED, STOREY_MISSING};
 use crate::editor::bim::marks::{Mark, Preview, Style};
-use super::snap::SnapHit;
+use crate::editor::bim::gestures::snap::SnapHit;
 use crate::editor::bim::entities::notations::standard_style;
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{reference_point, resolve, Reference};
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::{dimensions, Inputs};
@@ -358,6 +360,4 @@ impl Tool for Annotate {
 }
 
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

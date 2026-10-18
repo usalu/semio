@@ -12,13 +12,19 @@ import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modul
 import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts";
 import { validateDescriptorEmissionInputV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
 import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_SCHEMA_ID, componentDeliverableV1, encodeComponentReceiptV1, writeComponentReceiptV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
-import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifySemanticDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
+import { auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage } from "../../✅️catalog-verification/📚️navbar-example-audits/🟦️.ts";
+import { auditPluginCatalogSources } from "../../✅️catalog-verification/🔎️source-audit/🟦️.ts";
+import { createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier } from "../../✅️catalog-verification/🏗️fresh-build-verifier/🟦️.ts";
+import { executeCatalogVerificationPlan, orderCatalogNodes } from "../../✅️catalog-verification/🗺️verification-plan/🟦️.ts";
+import { rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair, verifySemanticDescriptorPairBytesV1 } from "../../✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
+import { sha256CatalogArtifact } from "../../✅️catalog-verification/📥️artifact-io/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { auditInteractiveJobClassificationDrift, shippedComponentFindings } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
-import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
-import type { PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🗣️contributions-and-examples/🟦️.ts";
+import type { PluginManifest } from "../../../../../../../🔨️modules/🛂️manifest/🗣️contributions-and-examples/🟦️.ts";
 import { identityInstallationSchemaUrl } from "../../../../../../../🔨️modules/🪪️identity/🧪️tests/🧫️fixtures/🟦️.ts";
 
 const fixtureRoot = join(import.meta.dirname, "../🧫️fixtures/🧬️catalog-complete");

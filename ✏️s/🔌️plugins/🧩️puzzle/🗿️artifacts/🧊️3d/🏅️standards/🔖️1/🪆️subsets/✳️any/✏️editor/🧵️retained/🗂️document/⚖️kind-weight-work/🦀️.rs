@@ -1,6 +1,7 @@
 //! ⚖️ Kind weight work: the staged edit of the brush kind weights, the catalog, its validation, the sum of the other weights and the rebuilt publication.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dKindWeightStage {

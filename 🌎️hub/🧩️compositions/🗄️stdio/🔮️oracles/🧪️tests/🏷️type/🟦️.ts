@@ -23,7 +23,7 @@ test("the complete preservation witness has independent closed schema admission"
 
 test("separated type examples retain the authored cases", () => {
   const before = original(lower + "/🧫️fixtures/🔣️.json");
-  const neutral = JSON.parse(read(before.path)), specific = JSON.parse(read(graph + "/🧫️fixtures/🏷️type/🔣️.json"));
+  const neutral = JSON.parse(read(lower + "/🧪️tests/🧫️fixtures/🔣️.json")), specific = JSON.parse(read(graph + "/🧪️tests/🧫️fixtures/🏷️type/🔣️.json"));
   const prior = JSON.parse(before.source);
   expect(specific.types).toEqual(neutral.types);
   const restored = Object.fromEntries(Object.keys(prior).map((key) => [key, key === "ownership" ? contract.ownership : Object.hasOwn(neutral, key) ? neutral[key] : specific[key]]));

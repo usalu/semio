@@ -14,7 +14,3 @@ pub type Generation3dEnvelope = ArtifactEnvelope<Generation3dSnapshot, Generatio
 pub type Generation3dStore = ArtifactStore<Generation3dSnapshot, Generation3dMutation>;
 //#endregion 🔖️Store
 
-//#region 🔖️MountedRegistry
-#[cfg(test)]
-#[path = "🧪️tests/🔬️mounted-registry/🦀️.rs"]
-mod mounted_registry;

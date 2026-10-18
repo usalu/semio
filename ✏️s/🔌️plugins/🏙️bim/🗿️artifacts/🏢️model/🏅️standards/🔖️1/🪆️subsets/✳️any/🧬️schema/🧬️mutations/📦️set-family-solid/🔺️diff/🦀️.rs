@@ -1,8 +1,8 @@
 //! 🔺️ Diff constructor for `SetFamilySolid`: a sparse solid patch of exactly the provided fields that differ. The solid that results must break none of the create rules (its family cannot change).
 //! Providing only equal values, or no field, is a no-op.
 
-use super::super::family_rules;
-use super::SetFamilySolid;
+use crate::standards::v1::subsets::any::schema::mutations::family_rules;
+use crate::standards::v1::subsets::any::schema::mutations::set_family_solid::SetFamilySolid;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

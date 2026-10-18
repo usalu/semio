@@ -63,7 +63,7 @@ async fn the_manifest_binds_undo_redo_and_delete_while_the_framework_owns_escape
 //#endregion 🔖️Manifest
 
 //#region 🔖️CommandSurface
-pub(super) fn every_command() -> Vec<BimCommand> {
+pub(crate) fn every_command() -> Vec<BimCommand> {
     vec![
         BimCommand::CreateEntity(create_entity::CreateEntity { kind: "storey".into(), parent: "bldg-1".into(), name: "Attic".into() }),
         BimCommand::DeleteSelection(delete_selection::DeleteSelection { ids: vec!["w-south".into()] }),
@@ -430,7 +430,7 @@ async fn every_refusal_code_the_commands_raise_has_an_english_and_a_german_notic
 
 semio_framework_plugin::history_edit_acceptance_law!(
     "bim",
-    super::BimModelApp,
+    crate::editor::bim::BimModelApp,
     context::bim_app_manifest_for_tests,
     "../../🏅️standards/🔖️1/🪆️subsets/✳️any"
 );

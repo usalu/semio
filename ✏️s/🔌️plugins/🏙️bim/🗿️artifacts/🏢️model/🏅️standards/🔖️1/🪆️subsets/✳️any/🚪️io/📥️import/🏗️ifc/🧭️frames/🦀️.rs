@@ -82,6 +82,4 @@ pub fn bulge_of(centre: [f64; 2], start: [f64; 2], end: [f64; 2], ccw: bool) -> 
     snap((sweep / 4.0).tan())
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

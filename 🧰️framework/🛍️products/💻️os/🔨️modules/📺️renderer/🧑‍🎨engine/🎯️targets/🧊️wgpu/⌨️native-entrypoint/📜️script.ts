@@ -74,7 +74,7 @@ function selection(args: string[], smoke = false): { variant: string; profile: "
   return { variant, profile: profile as "prototype" | "release", axes };
 }
 
-/** 🖥️ Runs completed native artifacts without compiling or invoking another Nx graph. */
+/** 🖥️ Runs completed native artifacts without compiling or invoking another build graph. */
 class RunScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const {variant,profile,axes}=selection(args,true),repo=this.repoRoot;if(profile!==readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode)throw Error("Native run must match actual Original mode");
@@ -87,7 +87,7 @@ class RunScript extends BundleScript {
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
       const binary=playgroundNativeHostArtifactV1(repo,row.nativeHost,profile)??nativeRendererBinary(resolve(import.meta.dir,"../📦️packages/🦀️rust"),profile);
-      if(!existsSync(binary))throw new Error(`Missing Nx native host artifact: ${binary}`);
+      if(!existsSync(binary))throw new Error(`Missing native host artifact: ${binary}`);
       // 🧭️ An explicit `--flag` is spelled FIRST, because the binary's `arg_value` reads the first
       // occurrence; the playground row then supplies the per-server defaults (`app`, `brand`) the wgpu
       // serve injects as `<meta name="semio-*">` for the browser.
@@ -106,7 +106,7 @@ class McpScript extends BundleScript {
     const row=catalog.find((entry:{variant:string})=>entry.variant===variant);
     if(!row?.mcpHost)throw new Error(`Playground does not declare an MCP producer: ${variant}`);
     const binary=playgroundNativeHostArtifactV1(this.repoRoot,row.mcpHost,profile as "prototype"|"release");
-    if(!binary || !existsSync(binary))throw new Error("Missing Nx MCP owner artifact");
+    if(!binary || !existsSync(binary))throw new Error("Missing MCP owner artifact");
     const controller=new AbortController(),cancel=()=>controller.abort();
     const phaseControl=createIssuedResourceControlV1(this.invocation,"native:mcp",0,controller.signal);
     process.once("SIGINT",cancel);process.once("SIGTERM",cancel);

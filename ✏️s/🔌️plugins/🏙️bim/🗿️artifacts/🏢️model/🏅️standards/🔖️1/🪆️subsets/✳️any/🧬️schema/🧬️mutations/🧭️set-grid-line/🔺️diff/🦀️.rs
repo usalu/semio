@@ -2,7 +2,7 @@
 //! The label is non-blank and unique within the building (the line itself excluded), the resulting end points are finite and
 //! apart. A patch that restates the current values is a `mutation.no-op`.
 
-use super::SetGridLine;
+use crate::standards::v1::subsets::any::schema::mutations::set_grid_line::SetGridLine;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, Patch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

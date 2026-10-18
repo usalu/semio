@@ -26,7 +26,7 @@ pub struct Case {
 }
 
 fn fixture_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../🧫️fixtures/🧬️mutations")
 }
 
 fn entry_name(path: &Path) -> String {

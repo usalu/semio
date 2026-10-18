@@ -89,7 +89,7 @@ pub(crate) fn table_to_xml(t: &DocxTable) -> XmlNode {
 
 //#region 🔖️BlockMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn block_to_xml(b: &DocxBlock) -> XmlNode {
+pub fn block_to_xml(b: &DocxBlock) -> XmlNode {
     match b {
         DocxBlock::Paragraph(p) => paragraph_to_xml(p),
         DocxBlock::Table(t) => table_to_xml(t),
@@ -109,7 +109,7 @@ pub fn document_to_xml(doc: &DocxDocument) -> XmlDocument {
 const STYLES_NS: &str = "http://schemas.openxmlformats.org/wordprocessingml/2006/main";
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn style_to_xml(s: &DocxStyle) -> XmlNode {
+pub fn style_to_xml(s: &DocxStyle) -> XmlNode {
     let mut sc = vec![elem("w:name", vec![attr("w:val", &s.name)], vec![])];
     if let Some(based_on) = &s.based_on {
         sc.push(elem("w:basedOn", vec![attr("w:val", based_on)], vec![]));

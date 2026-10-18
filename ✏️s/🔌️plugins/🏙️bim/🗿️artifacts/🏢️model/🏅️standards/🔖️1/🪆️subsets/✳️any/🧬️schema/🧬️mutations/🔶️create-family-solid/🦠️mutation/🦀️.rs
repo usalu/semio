@@ -1,6 +1,6 @@
 //! 🔶️ `create-family-solid` payload. Adds a solid to a family: an extrusion, revolution, sweep or cuboid whose dimensions, material and visibility are formulas of the family parameters.
 
-use crate::standards::v1::subsets::any::schema::{snapshot::{FamilySolid, ModelSnapshot}, diff::ModelDiff, mutations::ModelMutation};
+use crate::standards::v1::subsets::any::schema::{snapshot::{FamilySolid, ModelSnapshot}, diff::ModelDiff};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -11,13 +11,16 @@ pub struct CreateFamilySolid {
     pub solid: FamilySolid,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for CreateFamilySolid {
+impl<Op> MutationKind<ModelSnapshot, Op> for CreateFamilySolid
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<CreateFamilySolid> + From<crate::standards::v1::subsets::any::schema::mutations::delete_family_solid::DeleteFamilySolid>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "create", entity: "family-solid", kind: "create-family-solid", record: "CreateFamilySolid" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::create_family_solid::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::create_family_solid::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create family solid \"{}\"", self.solid.name), &format!("Familienkörper \"{}\" anlegen", self.solid.name))

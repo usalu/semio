@@ -129,7 +129,7 @@ use std::collections::HashMap;
 #[allow(unused_imports)]
 use std::sync::Arc;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use crate::editor::flow::{FlowContributionsWork, flow_contributions_registry_receipt, FlowInstanceOperationOwner};
 use crate::editor::flow::*;
 use semio_framework_job::{CancelToken,Generation,OperationId,StepBudget,StepContext};

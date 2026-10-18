@@ -5,6 +5,7 @@ import { buildFrameworkSyncUtilities } from "@semio-tech/framework-os";
 import { cleanup, render } from "@semio-tech/ui-react/test";
 import Ajv from "ajv";
 import { afterEach, describe, expect, test } from "vitest";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 import { TaskManagerWindow, type TaskManagerTaskV1 } from "../../🧱️elements/🧵️TaskManager/🟦️.tsx";
 
 const engineRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -21,9 +22,6 @@ const independentSelectedChoice = (uri: string | null): string | null => {
 afterEach(cleanup);
 
 describe("🔄️ target-neutral Shell utility leaves", () => {
-  test("the shared fixture satisfies its schema", () => {
-  });
-
   test("the independent URI oracle preserves all three choices while detached and selects only the attached kind", () => {
     expect(independentSelectedChoice(null)).toBeNull();
     expect(independentSelectedChoice(fixture.sync.attached.uri)).toBe(fixture.sync.attached.selectedChoiceId);
@@ -48,10 +46,10 @@ describe("🔄️ target-neutral Shell utility leaves", () => {
   });
 
   test("the WGPU Shell owns both retained leaves and the Task Manager open command", () => {
-    const shell = readFileSync(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"), "utf8");
+    const shell = readModuleTreeSource(join(engineRoot, "🧱️elements", "🐚️Shell", "🎯️targets", "🧊️wgpu", "🦀️.rs"));
     expect(shell).toContain('const FRAMEWORK_TASK_MANAGER_PANEL_ID: &str = "os.task-manager"');
-    expect(shell).toContain("fn build_sync_attach_ui(&self) -> UiNode");
-    expect(shell).toContain("fn build_task_manager_ui(&self) -> UiNode");
+    expect(shell).toContain("fn build_sync_attach_ui(&self, prefs: &PrefsState) -> UiNode");
+    expect(shell).toContain("fn build_task_manager_ui(&self, prefs: &PrefsState) -> UiNode");
     expect(shell).toContain('"os.openTaskManager" =>');
     expect(shell).toContain("leaves.push(FRAMEWORK_SYNC_PANEL_TAB_ID.to_string())");
     expect(shell).toContain("leaves.push(FRAMEWORK_TASK_MANAGER_PANEL_ID.to_string())");

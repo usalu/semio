@@ -2,17 +2,17 @@
 //! reproduce what `render_full` paints, across random scene, pointer, key, overlay, layout and resize mutations.
 //! The emulator is the owned VT interpreter, so the oracle shares no code with the diff and patch emitter.
 
-use crate::tui::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, Shell, WindowState};
-use crate::tui::engine::Tui;
-use crate::tui::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Size};
-use crate::tui::layout::{push_window_to_stack, zoom_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutWindowNode};
-use crate::tui::menu::MenuItem;
-use crate::tui::palette::{PaletteItem, PaletteState};
-use crate::tui::scene::{Node, NodeContent, NodeId};
-use crate::tui::theme::Theme;
-use crate::tui::vt::VtScreen;
-use crate::tui::widget::{InputState, ListState, TabsState, WidgetState, WizardState};
+use semio_framework_ui_tui_frame::chrome::{shell, ChromeState, FooterState, KeyHint, NavItem, NavbarState, Shell, WindowState};
+use semio_framework_ui_tui_engine::Tui;
+use semio_framework_ui_tui_core::event::{Event, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Size};
+use semio_framework_ui_tui_frame::layout::{push_window_to_stack, zoom_window, Constraint, Dimension, Direction, WindowLayout, WindowLayoutWindowNode};
+use semio_framework_ui_tui_widgets::menu::MenuItem;
+use semio_framework_ui_tui_widgets::palette::{PaletteItem, PaletteState};
+use semio_framework_ui_tui_frame::scene::{Node, NodeContent, NodeId};
+use semio_framework_ui_tui_core::theme::Theme;
+use semio_framework_ui_tui_vt::VtScreen;
+use semio_framework_ui_tui_widgets::widget::{InputState, ListState, TabsState, WidgetState, WizardState};
 use ui_styling::appearance::AppearanceName;
 
 struct Rng(u64);
@@ -39,7 +39,7 @@ struct World {
 
 fn build(size: Size) -> World {
     let mut tui = Tui::new(size, Theme::new(AppearanceName::Dark));
-    let mut layout = crate::tui::layout::create_default_layout(&["w1".into(), "w2".into(), "w3".into()], "row", None, Some(&["One".into(), "Two".into(), "Three".into()]));
+    let mut layout = semio_framework_ui_tui_frame::layout::create_default_layout(&["w1".into(), "w2".into(), "w3".into()], "row", None, Some(&["One".into(), "Two".into(), "Three".into()]));
     push_window_to_stack(&mut layout, "w1", WindowLayoutWindowNode { window_kind_id: "w4".into(), title: Some("Four".into()), corner: None });
     let nav = |id: &str| NavItem { id: id.into(), label: id.into(), active: false };
     let navbar = NavbarState { left: vec![nav("left"), nav("more")], center: vec![nav("centre")], right: vec![nav("right")] };
@@ -130,7 +130,7 @@ fn random_op(rng: &mut Rng, size: Size) -> Op {
     }
 }
 
-fn apply(world: &mut World, op: &Op, clock: &mut u64) -> Vec<(NodeId, crate::tui::widget::WidgetSignal)> {
+fn apply(world: &mut World, op: &Op, clock: &mut u64) -> Vec<(NodeId, semio_framework_ui_tui_core::signal::WidgetSignal)> {
     let all = nodes(world);
     let pick = |index: usize| all[index % all.len()];
     let tui = &mut world.tui;
@@ -255,7 +255,7 @@ fn apply(world: &mut World, op: &Op, clock: &mut u64) -> Vec<(NodeId, crate::tui
             };
             signals = tui.dispatch_at(&Event::Mouse(MouseEvent { kind, pos, mods: 0, clicks: 1 }), *clock);
             for (_, signal) in &signals {
-                if let crate::tui::widget::WidgetSignal::WindowMaximize(_) = signal {
+                if let semio_framework_ui_tui_core::signal::WidgetSignal::WindowMaximize(_) = signal {
                     let zoom = if world.layout.zoomed.is_some() { None } else { Some("w2") };
                     zoom_window(&mut world.layout, zoom);
                     world.shell.remount(&mut tui.scene, &world.layout);
@@ -285,7 +285,7 @@ fn apply(world: &mut World, op: &Op, clock: &mut u64) -> Vec<(NodeId, crate::tui
                     tui.open_menu(anchor, vec![MenuItem::new("copy").with_shortcut("C-c"), MenuItem::separator(), MenuItem::new("paste").disabled(), MenuItem::new("close")]);
                 }
                 1 => {
-                    tui.open_dialog(crate::tui::dialog::DialogState::new("Title", "A body that wraps over more than one line of the dialog", vec!["No".into(), "Yes".into()]));
+                    tui.open_dialog(semio_framework_ui_tui_widgets::dialog::DialogState::new("Title", "A body that wraps over more than one line of the dialog", vec!["No".into(), "Yes".into()]));
                 }
                 2 => {
                     let mut palette = PaletteState::new((0..14).map(|i| PaletteItem::new(format!("command {i}"), if i % 3 == 0 { "C-x" } else { "" })).collect());
@@ -310,7 +310,7 @@ fn apply(world: &mut World, op: &Op, clock: &mut u64) -> Vec<(NodeId, crate::tui
         }
         Op::Status { window, status } => {
             let id = ["w1", "w2", "w3", "w4"][window % 4];
-            let status = [None, Some(crate::tui::theme::Status::Running), Some(crate::tui::theme::Status::Success), Some(crate::tui::theme::Status::Failure)][*status];
+            let status = [None, Some(semio_framework_ui_tui_core::theme::Status::Running), Some(semio_framework_ui_tui_core::theme::Status::Success), Some(semio_framework_ui_tui_core::theme::Status::Failure)][*status];
             world.shell.set_status(&mut tui.scene, id, status);
         }
         Op::Tick { ms } => {
@@ -419,7 +419,7 @@ fn a_small_mutation_repaints_only_the_changed_cells() {
 
 #[test]
 fn the_engine_measures_scalars_by_default_so_emulators_that_count_scalars_stay_aligned() {
-    use crate::tui::text::WidthMode;
+    use semio_framework_ui_tui_core::text::WidthMode;
     let size = Size { width: 30, height: 3 };
     let mut tui = Tui::new(size, Theme::new(AppearanceName::Dark));
     assert_eq!(tui.width_mode(), WidthMode::Scalar);
@@ -439,9 +439,9 @@ fn the_engine_measures_scalars_by_default_so_emulators_that_count_scalars_stay_a
 
 #[test]
 fn scalar_width_rendering_preserves_combining_marks() {
-    use crate::tui::cell::{Cell, CellBuffer};
-    use crate::tui::geometry::Rect;
-    use crate::tui::text::WidthMode;
+    use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+    use semio_framework_ui_tui_core::geometry::Rect;
+    use semio_framework_ui_tui_core::text::WidthMode;
     use unicode_segmentation::UnicodeSegmentation;
     use unicode_width::UnicodeWidthStr;
     for text in ["e\u{301}", "A界e\u{301}", "a\u{308}\u{301}", "ש\u{5bc}"] {
@@ -451,8 +451,8 @@ fn scalar_width_rendering_preserves_combining_marks() {
         let width = buffer.put_str(Pos { x: 0, y: 0 }, text, [255; 3], [0; 3], 0, Rect::new(0, 0, size.width, size.height));
         assert_eq!(usize::from(width), UnicodeWidthStr::width(text));
         assert_eq!(buffer.row_text(0).trim_end(), text.graphemes(true).collect::<String>());
-        let mut patch = crate::tui::ansi::AnsiPatch::default();
-        crate::tui::ansi::emit_runs(&buffer, &[crate::tui::cell::DiffRun { x: 0, y: 0, len: width }], &mut patch);
+        let mut patch = semio_framework_ui_tui_terminal::ansi::AnsiPatch::default();
+        semio_framework_ui_tui_terminal::ansi::emit_runs(&buffer, &[semio_framework_ui_tui_core::cell::DiffRun { x: 0, y: 0, len: width }], &mut patch);
         assert!(patch.0.contains(text), "scalar ANSI glyphs lost the mark: {:?}", patch.0);
     }
 }

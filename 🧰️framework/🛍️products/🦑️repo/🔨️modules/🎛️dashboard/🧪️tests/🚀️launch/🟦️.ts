@@ -44,6 +44,9 @@ test("parameter values remain raw arguments and never enter shell command text",
  for(const id of fixture.unsafeIds)expect(()=>projectDashboardLaunch({version:"0.2.0",configurations:[],inputs:[]},[{...commands[0],id}],fixture.ticket)).toThrow();
 });
 
+/** 📌️ Input identifiers retain their existing locations while exact current definitions are refreshed. */
+test("dashboard launch input refresh preserves peer positions and current owned order",async()=>{const{projectDashboardLaunch,ticketLaunchCommands}=await owner(),commands=ticketLaunchCommands(fixture.ticket,{tools:fixture.tools}),admit=ajv.compile(read("🧬️schema/🚀️launch/🔣️.json").$defs.InputOrderCase);for(const row of fixture.inputOrder){expect(admit(row),row.name).toBe(true);const current={version:"0.2.0",configurations:fixture.expectedConfigurations,inputs:row.inputs},expected=applyPatch(structuredClone(current),row.patch,true).newDocument,actual=projectDashboardLaunch(structuredClone(current),commands,fixture.ticket);expect(output(actual),JSON.stringify(output.errors)).toBe(true);expect(actual,row.name).toEqual(expected);expect(projectDashboardLaunch(actual,commands,fixture.ticket),row.name).toEqual(actual);}});
+
 test("current ticket declarations and generated launch routes are admitted by their actual owner schemas",async()=>{
  const {ticketLaunchCommands,projectDashboardLaunch}=await owner();
  const root=resolve(dashboard,"../../../../..");

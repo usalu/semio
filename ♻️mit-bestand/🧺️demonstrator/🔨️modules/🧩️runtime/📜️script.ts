@@ -10,24 +10,24 @@ import { BundleScript, checkScriptInvocation, ScriptRouter } from "../../../../�
 import { DEMONSTRATOR_RUNTIME_TARGETS, demonstratorRuntimeModuleLayout } from "./🟦️.ts";
 import { serveVite } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { readDemonstratorActivation } from "./♻️activation/🟦️.ts";
+import { builtPluginModulesRootIn, playgroundSessionsRootV1, playgroundSessionStagedOutputPath } from "@semio-tech/framework-os-dev/activation";
 import { closeServiceSession, openServiceSession, publishServiceReady, readServiceSession } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts";
 import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
 import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 
-/** 🎪️ Verifies the runtime union completed by the outer Nx preparation graph. */
+/** 🎪️ Verifies the runtime union completed by the outer build preparation graph. */
 class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("Preparation mode belongs to the Nx prototype or release configuration");
+    if (args.length) throw new Error("Preparation mode belongs to the build tool's prototype or release configuration");
     const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), profile = mode;
-    const plugin = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
-    const moduleRoot = join(plugin, "📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+    const moduleRoot = builtPluginModulesRootIn(this.repoRoot, profile), sessionsRoot = playgroundSessionsRootV1(this.repoRoot, profile);
     const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout(DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
     for (const name of [...pluginModuleDirNames.slice(2), ...extensionModuleDirNames]) {
       const directory = join(moduleRoot, name), marker = JSON.parse(readFileSync(join(directory, ".semio-artifact.json"), "utf8"));
       if (!Array.isArray(marker.files) || !marker.files.includes("🌉️bridge.js") || !marker.files.includes("🔣️.json") || marker.files.some((file: string) => !existsSync(join(directory, file)))) throw new Error(`Incomplete Demonstrator runtime component: ${name}`);
     }
     for (const target of DEMONSTRATOR_RUNTIME_TARGETS) {
-      const file = join(plugin, "📇️registry/dist/sessions", target.variant, "🎮️playground-session", "🟦️.ts");
+      const file = playgroundSessionStagedOutputPath(sessionsRoot, target.variant);
       const session = (await import(pathToFileURL(file).href)).PLAYGROUND_SESSION;
       if (session.variant !== target.variant || session.registryPluginId !== target.pluginId) throw new Error(`Mismatched Demonstrator session: ${target.variant}`);
     }
@@ -35,7 +35,7 @@ class PreparationScript extends BundleScript {
   }
 }
 
-/** 🏁️ Completes the selected component lane prerequisites owned by Nx. */
+/** 🏁️ Completes the selected component lane prerequisites owned by the build tool. */
 class CompleteScript extends BundleScript {
   run(args: string[]): void {
     if (args.length) throw new Error("Runtime lane completion accepts no arguments");
@@ -53,7 +53,7 @@ class ActivationScript extends BundleScript {
   }
 }
 
-/** 🖥️ Serves completed runtime artifacts for the lifetime owned by Nx. */
+/** 🖥️ Serves completed runtime artifacts for the lifetime owned by the build tool. */
 class ServeScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Demonstrator serving accepts no arguments");

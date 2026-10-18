@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { applyPatch } from "fast-json-patch";
 import { createTutorialClock } from "@semio-tech/ui-react";
 import { makeEffectDispatchOne } from "../../🧱️elements/🛠️ShellHelpers/🔩️plumbing/🚀️effect-dispatch/🟦️.ts";
-import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
+import { parseResolvedPluginViewState } from "../../../../../../../🔨️modules/🛂️manifest/👁️view-state-and-public-invocation/🟦️.ts";
 import type { LoadedProgramState } from "../../🧱️elements/🐚️Shell/📦️program-sessions/🟦️.ts";
 import deepEqual from "fast-deep-equal";
 import dialogOriginFixture from "../../🧱️elements/🏛️ShellHost/🧪️tests/🧫️fixtures/🗨️dialog-origin/🔣️.json";

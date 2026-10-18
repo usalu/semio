@@ -33,7 +33,7 @@ pub mod windows {
 
 use semio_s_artifact_cad_cad_config::CadDislocateOptions;
 use semio_s_artifact_cad_cad_interaction::{accepts_selection, keyed_transitions, list_interactions_for_model_definition, preview_display_items, state_prompt};
-use semio_s_artifact_cad_cad_picking;
+use semio_s_artifact_cad_cad_picking as picking;
 use semio_s_artifact_cad_cad_typology::resolve_typology_style;
 use crate::{windows::building, windows::energy, windows::shape, windows::structure_classic};
 use semio_s_artifact_cad_cad_kit::editor::cad::terminology::CadLabels;

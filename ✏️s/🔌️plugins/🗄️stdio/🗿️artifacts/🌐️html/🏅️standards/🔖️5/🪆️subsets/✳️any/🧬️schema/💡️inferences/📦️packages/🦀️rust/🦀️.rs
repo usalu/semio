@@ -7,7 +7,6 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use standards::v5::subsets::any::schema::snapshot::HtmlSnapshot;
 
 #[path = "."]
 pub mod standards {
@@ -28,7 +27,6 @@ pub mod standards {
                     }
                     #[path = "."]
                     pub mod text {
-                        pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::io::text::snapshot;
                         #[path = "../../../../🚪️io/📝️text/🔺️diff/🦀️.rs"]
                         pub mod diff;
                         #[path = "../../../../🚪️io/📝️text/💡️inferences/🦀️.rs"]
@@ -41,7 +39,6 @@ pub mod standards {
                 pub mod schema {
                     #[path = "."]
                     pub mod snapshot {
-                        pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot::*;
                         #[cfg(test)]
                         #[path = "../../../📸️snapshot/🧪️tests/🔬️unit/🦀️.rs"]
                         mod tests;

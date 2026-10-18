@@ -5,7 +5,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import ts from "typescript";
-import { loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { policyRootScriptModulePaths } from "../../⚖️laws/🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 
 type Owner = Readonly<{ configurationRoot: string; previousPath: string; ownerPath: string; expectedName: string | null; projectionSha256: string }>;

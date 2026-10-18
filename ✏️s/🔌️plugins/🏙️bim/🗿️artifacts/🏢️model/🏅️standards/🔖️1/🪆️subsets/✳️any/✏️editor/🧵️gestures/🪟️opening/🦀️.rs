@@ -3,8 +3,8 @@
 //! refuse the placement (it leaves the host or overlaps a neighbour). One click writes the opening. The same host search places an existing opening that is dragged along or onto
 //! another wall.
 
-use super::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
-use super::session::{Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, TYPE_MISSING};
+use crate::editor::bim::gestures::plane::{axis_length, axis_point_at, axis_tangent_at, project, P};
+use crate::editor::bim::gestures::session::{Pointer, Step, Tool, ToolContext, ToolEvent, REJECTED, TYPE_MISSING};
 use crate::editor::bim::marks::{Mark, Preview, Style};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, ModelSnapshot, Opening, OpeningKind}, mutations::ModelMutation};
@@ -92,7 +92,7 @@ impl Placing {
 
     fn candidate(&self, ctx: &ToolContext<'_>, pointer: &Pointer) -> Option<Candidate> {
         let storey = ctx.storey()?;
-        let host = nearest_host(ctx.snapshot, storey, pointer.at, pointer.tolerance * super::session::PICK_PIXELS)?;
+        let host = nearest_host(ctx.snapshot, storey, pointer.at, pointer.tolerance * crate::editor::bim::gestures::session::PICK_PIXELS)?;
         let Some((kind, width)) = self.opening_kind(ctx) else { return Some(Candidate { offset: host.offset, host, width: 0.0, opening: None, valid: false }) };
         let Some(offset) = fitted_offset(host.length, width, host.offset) else { return Some(Candidate { offset: host.offset, host, width, opening: None, valid: false }) };
         let name = ctx.name_of(|labels| labels.kind_opening, ctx.snapshot.openings.len());
@@ -140,6 +140,4 @@ impl Tool for Placing {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -1,7 +1,7 @@
 import{requireNativeImageEnvelopeV1}from"../🌐️platform/📋️contract/🟦️.ts";
 import{requireMaterializedPathV1}from"../../../../🔒️leases/🟦️.ts";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
-import exportedSchema from"./🧬️schema/🔣️.json";
+import{validateJsonSchemaSubset}from"../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import exportedSchema from"./🧬️schema/🔣️.json" with{type:"json"};
 const schema=JSON.parse(JSON.stringify(exportedSchema))as typeof exportedSchema,protocol=Object.freeze({...schema.definitions.Protocol.const,stages:Object.freeze([...schema.definitions.Protocol.const.stages]),paths:Object.freeze(schema.definitions.Protocol.const.paths.map(path=>Object.freeze([...path])))});
 /** 📋️ Records finite birth order as DATA, never issuing Native or cleanup ownership. */
 export type NativeStorageBirthStateV1=Readonly<{version:1;stage:string|null;accepted:number}>;
@@ -18,9 +18,9 @@ export function nativeStorageUnbornCleanupDecisionV1(value:unknown):boolean{if(v
 
 import{types}from"node:util";
 import type{NativeFixedPlatformOptionsV1}from"../🧱️fixed/🟦️.ts";
-import type{NativeStoragePolicyV1}from"../🟦️.ts";
+import type{NativeStoragePolicyV1}from"../📜️journal/🟦️.ts";
 import type{ScriptInvocation}from"../../../../🧭️routing/📥️invocation/🟦️.ts";
-import exportedStorageSchema from"../🧬️schema/🔣️.json";
+import exportedStorageSchema from"../🧬️schema/🔣️.json" with{type:"json"};
 const storageSchema=structuredClone(exportedStorageSchema);
 /** 🧾️ Declares finite funding DATA beside its authentic Original; it grants no provider authority. */
 export type NativeStorageChildFundingV1=Readonly<{policy:NativeStoragePolicyV1;invocation:ScriptInvocation;owner:string;metadataBytes:number;policySha256:string}>;

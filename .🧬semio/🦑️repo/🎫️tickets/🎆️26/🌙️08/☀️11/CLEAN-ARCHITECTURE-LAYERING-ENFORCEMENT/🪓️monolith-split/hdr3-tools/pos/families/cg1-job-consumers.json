@@ -1,0 +1,6 @@
+{
+ "name": "cg1-job-consumers",
+ "crates": ["semio-framework-job", "semio-framework-job-native-decode", "semio-framework-os-store-command", "semio-framework-plugin-reactor-turn", "semio-framework-plugin-job", "semio-framework-plugin-instance-stores", "semio-framework-plugin-instance-dispatch", "semio-framework-actor"],
+ "base": {"rev": "7880cc36f78", "crates": ["semio-framework-job", "semio-framework-os-store-command", "semio-framework-plugin-reactor-turn", "semio-framework-plugin-job", "semio-framework-plugin-instance-stores", "semio-framework-plugin-instance-dispatch", "semio-framework-actor"]},
+ "note": "CG1: consumers of the native decode crate"
+}

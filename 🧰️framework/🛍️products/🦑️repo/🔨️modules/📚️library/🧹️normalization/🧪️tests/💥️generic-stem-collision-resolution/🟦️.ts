@@ -3,7 +3,7 @@ import fastGlob from "fast-glob";
 import { describe, expect, test } from "bun:test";
 import { readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { classifyPackageSource } from "../../../🔍️discovery/🟦️.ts";
+import { classifyPackageSource } from "../../../🔍️discovery/🏷️package-source-classification/🟦️.ts";
 //#endregion 🔌️Adapters
 
 //#region 🧬️Contract
@@ -18,7 +18,7 @@ const vectors = JSON.parse(readFileSync(new URL("../🧫️fixtures/💥️gener
 
 //#region 🧪️Collision
 /** 🐙️ 26/08/17/END-TO-END-TAXONOMY-NORMALIZATION §goal-collide: `canonicalFile`'s generic-stem
- * short-circuit (`🧹️normalization/🟦️.ts:3122-3124`) discards the leading role/target emoji on a
+ * short-circuit (in `🧹️normalization/📏️fixed-contracts/🟦️.ts`) discards the leading role/target emoji on a
  * file whose trailing stem is generic (`component`, `index`, …) — so a `🦀️.rs` and its
  * `🧪️tests/🦀️.rs` test sibling, or an `⌨️component.rs`/`🧊️component.rs` per-target pair, both
  * project to the same bare kind-only leaf and collide. The taxonomy fix is a DIRECTORY

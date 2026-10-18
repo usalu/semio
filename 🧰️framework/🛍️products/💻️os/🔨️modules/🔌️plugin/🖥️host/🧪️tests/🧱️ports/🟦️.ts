@@ -5,6 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { Database } from "bun:sqlite";
 import Ajv2020 from "ajv/dist/2020";
 import Parser from "web-tree-sitter";
+import { readModuleTreeSource } from "../../../../../../../🔨️modules/📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
 
@@ -54,7 +55,7 @@ test("native host uses one called runtime with first-party guest ports", async (
       assert.deepEqual(actual, row.foreign);
       assert.equal((db.query("select count(*) as count from json_each(?)").get(JSON.stringify(actual)) as { count: number }).count, row.foreign.length);
     }
-    const source = readFileSync(join(owner, "🦀️.rs"), "utf8"), tree = parser.parse(source);
+    const source = readModuleTreeSource(join(owner, "🎭️guest-runtime", "🦀️.rs")), tree = parser.parse(source);
     assert(tree);
     try {
       const port = tree.rootNode.descendantsOfType("trait_item").find(node => node.childForFieldName("name")?.text === "GuestRuntime");

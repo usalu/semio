@@ -3,12 +3,12 @@ import { expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv";
-import { loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
-import { inventoryTaxonomy } from "../../🧹️normalization/🟦️.ts";
+import { loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { inventoryTaxonomy } from "../../🧹️normalization/🔍️inventory-planning/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../..");
 const repoRoot = process.env.SEMIO_FIXTURE_REPO_ROOT ?? resolve(import.meta.dir, "../../../../../../..");
-const vector = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🧫️mutation-wire-witness/🔣️.json"), "utf8"));
+const vector = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🧫️mutation-wire-witness/🔣️.json"), "utf8"));
 const taxonomy = loadCatalogTaxonomy();
 const spec = taxonomy.semanticDirectoryKinds[vector.kindId]!;
 const unresolved = /^(?:directory|file)-kind-(?:unresolved|ambiguous)$|^semantic-stem-(?:unresolved|ambiguous)$/u;

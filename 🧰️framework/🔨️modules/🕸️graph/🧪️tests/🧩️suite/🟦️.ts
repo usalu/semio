@@ -137,7 +137,7 @@ test("independent owner previews execute with every specific owner unavailable",
 test("actual graph contract sources pass strict compiler admission", async () => {
   const { default: ts } = await import("typescript");
   const sources = ["../../🛂️manifest/📇️catalog/🟦️.ts", "../../🛂️manifest/🏃️execution/🟦️.ts", "./🟦️.ts"].map((path) => resolve(import.meta.dir, path));
-  const program = ts.createProgram(sources, { noEmit: true, strict: true, noUncheckedIndexedAccess: true, target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, resolveJsonModule: true, esModuleInterop: true, skipLibCheck: true, types: ["bun", "node"] });
+  const program = ts.createProgram(sources, { noEmit: true, strict: true, noUncheckedIndexedAccess: true, target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, allowImportingTsExtensions: true, resolveJsonModule: true, esModuleInterop: true, skipLibCheck: true, types: ["bun", "node"] });
   const diagnostics = ts.getPreEmitDiagnostics(program);
   expect(diagnostics.map((row) => ts.flattenDiagnosticMessageText(row.messageText, "\n"))).toEqual([]);
 }, 30_000);

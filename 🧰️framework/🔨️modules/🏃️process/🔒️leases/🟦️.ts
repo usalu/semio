@@ -1,5 +1,5 @@
 import{initializeResourceLeaseContinuationV1,requireResourceLeaseContinuationCatalogV1,readResourceLeaseContinuationV1,writeResourceLeaseContinuationV1,resourceLeaseContinuationStartV1,type ResourceLeaseContinuationKindV1,type ResourceLeaseTransactionPhaseV1}from"./♻️retirement/🧭️continuation/🟦️.ts";
-import cleanupLeaseSchema from"./🧹️cleanup/🧬️schema/🔣️.json";
+import cleanupLeaseSchema from"./🧹️cleanup/🧬️schema/🔣️.json" with{type:"json"};
 import metadataSchema from "./📦️metadata/🧬️schema/🔣️.json" with {type:"json"};
 import {captureResourceLeaseCandidateV1,requireResourceLeaseCandidateV1,readOwnedResourceLeaseV1,resourceLeaseBusyV1,resourceLeaseRetirementNamesV1,resourceLeaseRetirementScanLimitsV1,finishResourceLeaseCleanupV1,ResourceLeaseAdmissionFinalizerV1,type ResourceLeaseDatabaseV1,type ResourceLeaseCandidateV1} from "./♻️retirement/🟦️.ts";
 import { createHash } from "node:crypto";
@@ -10,7 +10,7 @@ import { basename, dirname, join, resolve } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
 import queueSchema from "./🧬️schema/📜️ticket.json" with { type: "json" };
 import boundedSchema from "./📦️bounded/🧬️schema/🔣️.json" with {type:"json"};
-import {compileJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {compileJsonSchemaSubset} from "../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 const retirementSchema=queueSchema.definitions.RetirementPolicy,custodySchema=queueSchema.definitions.ClaimCustodyPolicy,retentionSchema=queueSchema.definitions.ClaimRetentionPolicy,boundedContract=compileJsonSchemaSubset(boundedSchema);
 

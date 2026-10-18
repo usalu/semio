@@ -1,5 +1,5 @@
 import type {LocalProfile} from "../../🚀️local-bootstrap/🛂authentication/🟦️.ts";
-import {receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {findWorkspaceRoot,receiveScriptProcessInvocation,scriptInvocationEnvironment} from "../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {captureOwnedCommandResultV1} from "@semio-tech/process/owned-execution";
 import {withBuiltLocalHubHostV1,withLocalHubHostTaskV1,stopLocalHubV1,waitForLocalHubExitV1,startLocalHub,finishLocalHub,waitForReadiness,TRUSTED_CATALOG_READINESS_STALL_BOUND_MS} from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
@@ -18,7 +18,7 @@ import {trustedBootstrapSelectPackages} from "../../🏗️bootstrap/🧾️prov
 // #endregion Header
 
 import Ajv from "ajv";
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -26,16 +26,6 @@ import { describe, expect, it } from "vitest";
 
 const HUB_E2E = process.env.HUB_E2E === "1";
 const TEST_TIMEOUT_MS = 7_200_000;
-
-function findWorkspaceRoot(start: string): string {
-  let dir = start;
-  for (;;) {
-    if (existsSync(join(dir, "AGENTS.md")) && existsSync(join(dir, "nx.json"))) return dir;
-    const parent = dirname(dir);
-    if (parent === dir) throw new Error(`repo root not found from ${start}`);
-    dir = parent;
-  }
-}
 
 function pick(parent: string, pred: (n: string) => boolean): string {
   const hit = readdirSync(parent).find((name) => name !== "node_modules" && pred(name));

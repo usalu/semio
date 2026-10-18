@@ -1,0 +1,31 @@
+from specs.lib import *
+F = DAG + '/🗃️model/🦀️.rs'
+CH = [
+    ch('🪪', 'input-displaced-and-identity-records', 'input_displaced_and_identity_records', [(25, 35)],
+       'Input displaced and identity records of the DAG model: the displaced input, the identity cursor and its step.'),
+    ch('🖍', 'labels-and-paint-helpers', 'labels_and_paint_helpers', [(37, 376)],
+       'Labels and paint helpers of the DAG model: handle caps, port and node label rows, the variadic plus controls, the node name paint, the channel borders, the cluster affordances, the computing border and the note caret.'),
+    ch('🧭', 'grid-step-port-keys-and-tree-toggle', 'grid_step_port_keys_and_tree_toggle', [(378, 435)],
+       'Grid step, port keys and tree toggle of the DAG model: the world grid stroke step, snapshot edge ids, port endpoint parts and keys, the preview tree path toggle and the board engine alias.'),
+    ch('⚠', 'dag-error-and-port-side', 'dag_error_and_port_side', [(437, 508)],
+       'DAG error and port side of the DAG model: the DAG error with its display and conversions, the port side and the computation header rows.', glob=False),
+    ch('📏', 'node-sizes-and-port-rows', 'node_sizes_and_port_rows', [(510, 676)],
+       'Node sizes and port rows of the DAG model: the layout constants, the channel row side, the computation and widget sizes, the row and connector bounds and the port centres.'),
+    ch('🖼', 'preview-content-layout', 'preview_content_layout', [(678, 936)],
+       'Preview content layout of the DAG model: the preview constants, tree rows and layouts, widget pointer kinds, text and media measuring and the preview widget sizes.'),
+    ch('🎚', 'cluster-slider-and-widget-bounds', 'cluster_slider_and_widget_bounds', [(938, 1044)],
+       'Cluster, slider and widget bounds of the DAG model: the cluster explode hit, slider tracks, select, note, preview and action control bounds and the I/O node handle angles.'),
+    ch('🧮', 'computation-columns-and-fit', 'computation_columns_and_fit', [(1046, 1267)],
+       'Computation columns and fit of the DAG model: the variadic plus threshold, label and divider columns, row divider spans and indices, name centres, row counts, node fitting, insert positions and I/O port angles.'),
+    ch('🔁', 'cycle-layout-and-extension', 'cycle_layout_and_extension', [(1268, 1333)],
+       'Cycle, layout and extension of the DAG model: cycle detection, the DAG layout, the DAG extension and the level of detail constants and indices.'),
+    ch('🎨', 'node-style-colors-and-lod', 'node_style_colors_and_lod', [(1335, 1510)],
+       'Node style, colors and level of detail of the DAG model: the handle radius, stroke and label constants, the stroke and label sizes, the body, label, chrome, handle and edge colours, the draw level of detail and its scale JSON.'),
+    ch('🔬', 'interaction-records-and-note-edit', 'interaction_records_and_note_edit', [(1511, 1685)],
+       'Interaction records and note edit of the DAG model: the note edit state, the interaction capacities, the pointer phase, intent, move, offset, projection, snapshot and plan records and the graph edit enum.'),
+    ch('📓', 'graph-edit-rows', 'graph_edit_rows', [(1687, 1855)],
+       'Graph edit rows of the DAG model: the journal refusal, the row sink, the graph edit row writers and strings, the drag gesture id and the edit capacity.'),
+    ch('🗺', 'minimap-and-paint-chrome', 'minimap_and_paint_chrome', [(1857, 1943)],
+       'Minimap and paint chrome of the DAG model: the evaluation status kind, the minimap layout, the pointer clock, colour alpha, node paint chrome, minimap conversions, node bounds and the graph edit retirement.'),
+]
+SPEC = dict(orig='dmodel.rs', file=F, children=CH, wiring='block', external=mounted(F, orig='dmodel.rs'), inert_regions=True)

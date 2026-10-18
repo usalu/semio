@@ -12,8 +12,8 @@ const hubBinaryLaws = [
   ["semio-hub-open-plan-laws", "🧭️open-plan", "scoped_directory_socket_route_rejects_scope_substitution_and_rest_removal_closes_without_event", "🗂️scoped-directory-socket-laws"],
   ["semio-hub-hostile-input-laws", "🎲️hostile-input", "scoped_directory_socket_removal_and_delivery_have_one_total_membership_order", "⚡️quick-hostile-laws"],
   ["semio-hub-hostile-input-laws", "🎲️hostile-input", "socket_admin_user_gate_rejects_a_late_same_user_grant_after_batch_revoke", "⚡️quick-hostile-laws"],
-  ["semio-hub-directory-route-laws", "📇️directory", "socket_directory_revoke_after_admission_suppresses_replay_without_deadlock", ""],
-  ["semio-hub-directory-route-laws", "📇️directory", "socket_directory_visibility_requires_membership_even_for_public_spaces", ""],
+  ["semio-hub-directory-route-laws", "📇️directory", "socket_directory_revoke_after_admission_suppresses_replay_without_deadlock", "🔌️socket-delivery-visibility-and-public-projection"],
+  ["semio-hub-directory-route-laws", "📇️directory", "socket_directory_visibility_requires_membership_even_for_public_spaces", "🔌️socket-delivery-visibility-and-public-projection"],
   ["semio-hub-open-plan-laws", "🧭️open-plan", "socket_grant_directory_route_uses_credential_free_hello_and_revokes_live", "🔌️socket-grant-laws"],
   ["semio-hub-open-plan-laws", "🧭️open-plan", "socket_grant_document_route_is_exact_replay_safe_actor_bound_and_revoke_live", "🔌️socket-grant-laws"],
   ["semio-hub-hostile-input-laws", "🎲️hostile-input", "socket_grant_ledger_is_bounded_single_consume_restart_scoped_and_revoke_race_safe", "🐢️long-hostile-laws"],
@@ -30,7 +30,7 @@ export function socketGrantNativeLawPlan(): readonly SocketGrantNativeStage[] {
   const stages: SocketGrantNativeStage[] = hubBinaryLaws.map(([owner, folder, declaration, child]) => ({
     id: declaration.replaceAll("_", "-"),
     args: ["test", "--manifest-path", "Cargo.toml", "--all-features", "-p", owner, "--lib", `tests::${hubBinaryLawModules[child] ?? ""}${declaration}`, "--", "--exact", "--test-threads=1"],
-    source: `${hubBinaryTests}/${folder}/🔬️unit/${child === "" ? "" : `${child}/`}🦀️.rs`,
+    source: `${hubBinaryTests}/${folder}/🔬️unit/${child}/🦀️.rs`,
     declaration,
   }));
   stages.push(

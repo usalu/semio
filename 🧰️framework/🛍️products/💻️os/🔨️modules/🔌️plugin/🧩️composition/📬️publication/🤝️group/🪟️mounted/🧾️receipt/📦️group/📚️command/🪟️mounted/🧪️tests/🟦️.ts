@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
 import pruning from "../../🧹️pruning/🧪️tests/🧫️fixtures/🔣️.json" with { type: "json" };
+import {pluginSubtreeText} from "../../../../../../../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 
 test("mounted command history uses original paged append and whole physical retirement", async () => {
   
@@ -12,14 +13,14 @@ test("mounted command history uses original paged append and whole physical reti
     expect(actual.commands).toEqual(row.sequences);
     expect(Buffer.from(JSON.stringify(actual.commands), "utf8").toString("utf8")).toBe(JSON.stringify(row.sequences));
   }
-  const source = await Bun.file(new URL("../../../../../../../../../🦀️.rs", import.meta.url)).text();
+  const source = pluginSubtreeText("🧵️instance");
   expect(source.includes("command_log: PagedCommandLog")).toBe(true);
   expect(source.includes("command_log: PagedCommandLog::new()")).toBe(true);
   expect(source.includes("self.command_log.prepare_append()")).toBe(true);
   expect(source.includes("self.command_log.commit_append(")).toBe(true);
-  const ladder = await Bun.file(new URL("../../../../../../../../../🪜️close-ladder/🦀️.rs", import.meta.url)).text();
-  expect(ladder.includes("self.command_log.close_step(")).toBe(true);
-  expect(ladder.includes("self.command_log.retirement_demands()")).toBe(true);
+  const ladder = pluginSubtreeText("🪜️maintenance-ladder", "📥️staging", "🔒️close-ladder");
+  expect(ladder.includes("self.history.command_log.close_step(")).toBe(true);
+  expect(ladder.includes("self.history.command_log.retirement_demands()")).toBe(true);
   expect(source.includes("self.command_log.pop()")).toBe(false);
   expect(source.includes("self.command_log[")).toBe(false);
   expect(source.includes("self.command_log.partition_point(")).toBe(false);
@@ -33,9 +34,9 @@ test("mounted replacement visibility prepares bounded original identities and re
     const replaced = applyPatch({ rows: row.rows.map(entry => entry.seq) }, [{ op: "replace", path: "/rows", value: kept }], true, false).newDocument;
     expect(JSON.parse(Buffer.from(JSON.stringify(replaced.rows), "utf8").toString("utf8"))).toEqual(row.keptSequences);
   }
-  const source = await Bun.file(new URL("../🦀️.rs", import.meta.url)).text();
+  const source = pluginSubtreeText("🧵️instance", "📜️history");
   for (const call of ["prune_current", "advance_prune", "commit_prune", "cancel_prune", "next_pruned_close_byte_demand", "close_pruned_step"]) expect(source.includes(`self.command_log.${call}(`)).toBe(true);
-  expect(source.includes(".min(64)")).toBe(true);
-  expect(source.includes("owner.revision != self.store.content_revision_now()")).toBe(true);
+  expect(source.includes("maximum_copy_bytes: 64")).toBe(true);
+  expect(source.includes("owner.revision != stores.store.content_revision_now()")).toBe(true);
   expect(source.includes("owner.requested != self.command_prune_generation")).toBe(true);
 });

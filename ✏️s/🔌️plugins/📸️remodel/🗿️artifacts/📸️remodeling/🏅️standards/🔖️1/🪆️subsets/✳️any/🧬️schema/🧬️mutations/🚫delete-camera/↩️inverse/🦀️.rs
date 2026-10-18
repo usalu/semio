@@ -4,6 +4,7 @@
 //! Missing target ⇒ `Vec::new()`.
 use crate::standards::v1::subsets::any::schema::mutations::create_camera_calibration::CreateCameraCalibration;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::delete_camera_calibration::component::DeleteCameraCalibration;
 
 //#region 🔖️Inverse
 pub fn inverse<Op: From<CreateCameraCalibration>>(payload: &super::DeleteCameraCalibration, base: &RemodelingSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

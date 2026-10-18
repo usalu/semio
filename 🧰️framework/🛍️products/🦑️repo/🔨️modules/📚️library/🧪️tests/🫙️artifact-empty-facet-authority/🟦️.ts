@@ -5,12 +5,14 @@ import { basename, dirname, join, resolve } from "node:path";
 import Ajv from "ajv";
 import { parse, type ParseError } from "jsonc-parser";
 import * as ts from "typescript";
-import { loadCatalogTaxonomy, semanticArtifactEmptyFacetProjectionAuthority, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { semanticArtifactEmptyFacetProjectionAuthority } from "../../🔍️discovery/🗃️owned-file-projection/🟦️.ts";
+import { type Taxonomy } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
 import optionsFixture from "../🧫️fixtures/🫙️artifact-empty-facet-authority/☑️options.json";
 import optionsOracle from "../../🧬️schema/🫙️artifact-empty-facet-authority/☑️options.json";
 
 const libraryRoot = resolve(import.meta.dir, "../..");
-const goldenPath = join(libraryRoot, "🧫️fixtures/🫙️artifact-empty-facet-authority/🔣️.json");
+const goldenPath = join(libraryRoot, "🧪️tests/🧫️fixtures/🫙️artifact-empty-facet-authority/🔣️.json");
 const goldenBytes = readFileSync(goldenPath);
 const golden = JSON.parse(goldenBytes.toString()) as Readonly<{
   schemaVersion: number; contractId: string; sourceRoot: string; sourceFilename: string; destinationFilename: string;
@@ -25,17 +27,19 @@ const declarationNames = ["canonicalFilenamesForKind", "canonicalFilenameForKind
 
 /** 🔬️ Compiles the exact pure authority closure without granting it filesystem access. */
 function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEmptyFacetProjectionAuthority)[] {
-  const path = join(libraryRoot, "🔍️discovery/🟦️.ts"), source = readFileSync(path, "utf8");
-  const syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  const syntaxes = ["🔐️taxonomy-authority", "📂️semantic-directory-kinds", "🗃️owned-file-projection"].map((owner) => {
+    const path = join(libraryRoot, "🔍️discovery", owner, "🟦️.ts");
+    return ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  });
   const identityPath = resolve(libraryRoot, "../../../../🔨️modules/🪪️identity/🧩️grapheme/🟦️.ts"), identitySource = readFileSync(identityPath, "utf8"), identitySyntax = ts.createSourceFile(identityPath, identitySource, ts.ScriptTarget.Latest, true);
   const segmenters = identitySyntax.statements.filter((node) => ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => ts.isIdentifier(entry.name) && entry.name.text === "PATH_EMOJI_SEGMENTER"));
   const identities = identitySyntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === "leadingEmojiIdentity");
   expect(identities).toHaveLength(1);
   expect(segmenters).toHaveLength(1);
   const code = segmenters[0]!.getText(identitySyntax) + "\n" + identities[0]!.getText(identitySyntax).replace(/^export\s+/u, "") + "\n" + declarationNames.map((name) => {
-    const matches = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? node.name?.text === name : ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => ts.isIdentifier(entry.name) && entry.name.text === name));
+    const matches = syntaxes.flatMap((syntax) => syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? node.name?.text === name : ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => ts.isIdentifier(entry.name) && entry.name.text === name)).map((node) => node.getText(syntax)));
     expect(matches.length, name).toBe(1);
-    return matches[0]!.getText(syntax).replace(/^export\s+/u, "");
+    return matches[0]!.replace(/^export\s+/u, "");
   }).join("\n");
   return [new Bun.Transpiler({ loader: "ts" }).transformSync(code), ts.transpileModule(code, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText].map((javascript) => new Function("basename", "dirname", "loadTaxonomy", `${javascript}\nreturn semanticArtifactEmptyFacetProjectionAuthority;`)(basename, dirname, () => { throw new Error("Pure authority unexpectedly requested workspace discovery"); }) as typeof semanticArtifactEmptyFacetProjectionAuthority);
 }
@@ -106,7 +110,7 @@ test("registers the empty-facet authority through its closed canonical route", a
   expect(project.targets[vector.target]).toBeDefined();
   expect(project.targets[vector.target]).toEqual({ executor: "nx:run-commands", cache: vector.cache, options: { cwd: packageRelative, command: `bun ./📜️script.ts test ${vector.command}` } });
   const manifest = JSON.parse(readFileSync(join(packageRoot, "package.json"), "utf8"));
-  expect(manifest.scripts[vector.target]).toBe(`nx run @semio-tech/repo-lib:${vector.target}`);
+  expect(manifest.scripts[vector.target]).toBe(`bun --cwd "../../../../../../.." repo run @semio-tech/repo-lib:${vector.target}`);
   const path = join(packageRoot, "📜️script.ts"), source = readFileSync(path, "utf8"), syntax = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
   const declarations = syntax.statements.filter((node) => ts.isClassDeclaration(node) && node.name?.text === "TestScript");
   expect(declarations.length).toBe(1);

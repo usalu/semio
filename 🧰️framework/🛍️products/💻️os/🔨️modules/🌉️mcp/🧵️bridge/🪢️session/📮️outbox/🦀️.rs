@@ -14,7 +14,7 @@ pub(super) struct BridgeOutboxGrant {
     pub bytes: usize,
 }
 
-struct BridgeRejectedPublish {
+pub(super) struct BridgeRejectedPublish {
     pub grant: BridgeOutboxGrant,
     pub(crate) encoded: Arc<BridgeEncodedFrame>,
 }

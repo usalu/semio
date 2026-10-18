@@ -1,5 +1,5 @@
 use super::*;
-use super::tests::{atlas_fixture_authority, atlas_fixture_owner, atlas_fixture_page};
+use super::{atlas_fixture_authority, atlas_fixture_owner, atlas_fixture_page};
 use super::measured;
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep as Close, RetainedCloneGrant};
 use semio_framework_test_fixtures::fixture_text;

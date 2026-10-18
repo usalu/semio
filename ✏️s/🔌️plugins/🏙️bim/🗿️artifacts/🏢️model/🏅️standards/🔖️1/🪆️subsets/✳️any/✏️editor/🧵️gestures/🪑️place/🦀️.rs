@@ -4,11 +4,12 @@
 //!
 //! The same options can be typed as a line: `z <length>` (the elevation), `rot <degrees>`, `mirror`, `sys <system|none>` and `fam <id or name>`; a length is in metres, or in millimetres, centimetres or metres with its unit.
 
-use super::plane::{axis_tangent_at, point2, project, P};
-use super::session::{GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, PICK_PIXELS, REJECTED, STOREY_MISSING};
+use crate::editor::bim::gestures::session::{Modifiers, Surface};
+use crate::editor::bim::gestures::plane::{axis_tangent_at, point2, project, P};
+use crate::editor::bim::gestures::session::{GestureKey, Pointer, Step, Tool, ToolContext, ToolEvent, ELEVATION_STEP, PICK_PIXELS, REJECTED, STOREY_MISSING};
 use crate::editor::bim::marks::{Mark, Preview, Style};
-use super::snap::SnapHit;
-use super::typed::INVALID;
+use crate::editor::bim::gestures::snap::SnapHit;
+use crate::editor::bim::gestures::typed::INVALID;
 use crate::editor::bim::entities::components::{placeable, system_of, wall_mounted, SYSTEMS};
 use crate::standards::v1::subsets::any::schema::inferences::wall_layout::thickness_of;
 use crate::standards::v1::subsets::any::schema::{snapshot::{Axis, Component, MepSystem, ModelSnapshot}, mutations::ModelMutation};
@@ -110,7 +111,7 @@ pub fn next_system(current: Option<MepSystem>) -> Option<MepSystem> {
 }
 
 /// 🌀️ The system a typed word names, `none` for no system.
-fn system_word(word: &str) -> Option<Option<MepSystem>> {
+pub fn system_word(word: &str) -> Option<Option<MepSystem>> {
     if word.eq_ignore_ascii_case("none") { Some(None) } else { system_of(word).map(Some) }
 }
 //#endregion 🔖️Options
@@ -302,6 +303,4 @@ impl Tool for Place {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

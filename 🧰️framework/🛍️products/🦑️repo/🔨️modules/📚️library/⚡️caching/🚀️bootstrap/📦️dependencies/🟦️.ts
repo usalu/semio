@@ -1,20 +1,13 @@
 import {admitRepositoryCargoStorageArgumentsV1} from "../../💾️storage/🔒️enforcement/🏗️compiler/🚪️ingress/📥️arguments/🟦️.ts";
-import {javascriptDependencyProducerArgumentsV1,javascriptDependencyProducerEnvironmentV1,requireJavascriptDependencyStorageV1,stageJavascriptDependencyInputsV1,publishJavascriptWorkspaceExportsV1,recheckJavascriptDependencyInputsV1,bindJavascriptDependencyDirectoriesV1,requireJavascriptDependencyInstalledPathsV1,readJavascriptDependencyBindingReceiptV1,requireJavascriptDependencyBindingReceiptV1} from "./💾️storage/🟦️.ts";
-import type {RepositoryCacheStoreV1} from "../../💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
-import {readNativeCallerAuthorityV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
-import {captureOwnedCommandV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {parseCargoPreparationStorageV1,type CargoPreparationStorageV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { spawn, spawnSync } from "node:child_process";
-import { mkdirSync,lstatSync,readFileSync,writeFileSync,renameSync,rmSync } from "node:fs";
-import { dirname, join,relative } from "node:path";
-import { requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,checkScriptInvocation,receiveScriptProcessInvocation,createIssuedResourceControlV1,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
+import {join} from "node:path";
+import { requireIssuedResourceControlInvocationV1,checkScriptInvocation,receiveScriptProcessInvocation,createIssuedResourceControlV1,type ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {runOwnedCommand} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️execution/🟦️.ts";
 import {type NativeCallerPhaseV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import { prepareCargoWorkspaceInvocation,cargoWorkspacePreparationInvocationV1 } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import {cargoPreparationControlV1,withRepositoryCargoPreparationV1} from "../../📦️artifacts/📋️native-orchestration/📥️invocation/🛠️preparation/🟦️.ts";
 import {withPreparedCargoDependencyPairV1} from "../../../🗂️workspaces/🦀️cargo/🛠️preparation/🟦️.ts";
-import {withPublishedBunWorkspaceOwnershipV1} from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
-import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import {fileURLToPath} from "node:url";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 
@@ -82,28 +75,3 @@ async function runBoundedNativeDependencyToolV1(command:string,args:string[],cwd
  catch(error){signal.throwIfAborted();throw error;}
 }
 
-/** 📦️ Runs one original bounded Bun child without lifecycle writers escaping its enforcing installation cwd. */
-export async function runBun(args:string[],cwd:string,store:RepositoryCacheStoreV1,phaseControl:ResourceLeaseControl):Promise<void>{requireIssuedResourceControlInvocationV1(phaseControl,store.invocation);requireIssuedResourceControlRefinementV1(store.control,phaseControl);const repository=(store.invocation.capabilities as {workspaceRoot?:unknown}).workspaceRoot;if(typeof repository!=="string")throw Error("Original JavaScript repository required");await requireJavascriptDependencyStorageV1(repository,store);const mode=JSON.stringify(args)===JSON.stringify(javascriptDependencyArgumentsV1("sync"))?"sync":JSON.stringify(args)===JSON.stringify(javascriptDependencyArgumentsV1("lock"))?"lock":null;if(!mode)throw Error("Exact authored current Bun producer operation required");const environment=javascriptDependencyProducerEnvironmentV1(store.root,store.environment),cache=environment.BUN_INSTALL_CACHE_DIR!,arguments_=javascriptDependencyProducerArgumentsV1(mode,cache),root=lstatSync(store.root,{bigint:true});for(const role of dependencyProducerSchemaV1.$defs.ProducerRecipeProtocol.const.directoryRoles){checkResourceLeaseControl(phaseControl);const path=join(store.root,role),before=lstatSync(path,{bigint:true,throwIfNoEntry:false});if(!before)mkdirSync(path,{mode:0o700});const actual=lstatSync(path,{bigint:true});if(!actual.isDirectory()||actual.isSymbolicLink()||actual.dev!==root.dev)throw Error("Actual same-device private installer directory required");}for(const path of[join(environment.HOME!,".bunfig.toml"),join(environment.XDG_CONFIG_HOME!,".bunfig.toml"),join(environment.HOME!,".npmrc")])if(lstatSync(path,{throwIfNoEntry:false}))throw Error("External installer configuration retained; fixed producer refuses");process.stdout.write(await captureOwnedCommandV1(process.execPath,[...arguments_],cwd,{control:phaseControl,env:environment}));await store.recheck();}
-
-/** 🔌️ Receives actual issued dependency custody for the complete installer child. */
-export type JavascriptDependencyRunner=(args:string[],cwd:string,store:RepositoryCacheStoreV1,phaseControl:ResourceLeaseControl)=>Promise<void>;
-
-/** 🧭️ Selects only the two authored Bun dependency operations. */
-export function javascriptDependencyArgumentsV1(mode:"sync"|"lock"):string[]{if(mode!=="sync"&&mode!=="lock")throw Error("Authored Bun dependency operation required");return["install",mode==="sync"?"--frozen-lockfile":"--lockfile-only"];}
-
-/** 🧾️ Installs only exact Source inputs in a finite immutable generation and then publishes Original package bindings. */
-export async function prepareJavascriptDependencies(mode:"sync"|"lock",workspace:string,store:RepositoryCacheStoreV1,phaseControl:ResourceLeaseControl,runner:JavascriptDependencyRunner=runBun):Promise<void>{
- const repository=(store?.invocation?.capabilities as {workspaceRoot?:unknown}|undefined)?.workspaceRoot;if(typeof repository!=="string")throw Error("Original JavaScript repository required");requireIssuedResourceControlInvocationV1(phaseControl,store.invocation);requireIssuedResourceControlRefinementV1(store.control,phaseControl);await requireJavascriptDependencyStorageV1(repository,store);
- const scope=relative(repository,workspace)||".",started=performance.now(),control={signal:phaseControl.signal,advance:async(progress:{operation:string;completedOperations:number})=>{checkResourceLeaseControl(phaseControl);if(progress.completedOperations%128===0){await phaseControl.publish({resource:"bun-ownership:"+progress.operation,mode:"exclusive",elapsedMs:performance.now()-started});await phaseControl.yieldContinuation();}checkResourceLeaseControl(phaseControl);}};
- await withPublishedBunWorkspaceOwnershipV1(repository,{kind:"scope",owner:scope},control,async custody=>{
-  if(custody.scopes.length!==1)throw Error("One original Bun installation scope required");const selected=custody.scopes[0]!;if(relative(workspace,join(repository,selected.manifest))!=="package.json")throw Error("Original Bun scope manifest changed");
-  const members=selected.packages.map(path=>relative(workspace,join(repository,path)).replaceAll("\\","/")).sort((a,b)=>Buffer.from(a).compare(Buffer.from(b))),plan=await stageJavascriptDependencyInputsV1(repository,store,phaseControl,scope,mode,members),receipt=join(plan.directory,"bindings.json");
-  const recheck=async()=>{await store.recheck();await custody.recheck();recheckJavascriptDependencyInputsV1(plan.sources,phaseControl);};
-  if(mode==="sync"&&lstatSync(receipt,{throwIfNoEntry:false})){const row=await readJavascriptDependencyBindingReceiptV1(store,receipt,phaseControl);requireJavascriptDependencyBindingReceiptV1(row.value,plan.generation,plan.bindings);await recheck();await requireJavascriptDependencyInstalledPathsV1(repository,store,phaseControl,plan.generation);await bindJavascriptDependencyDirectoriesV1(repository,store,phaseControl,scope,plan.members,plan.generation);await recheck();return;}
-  if(readNativeCallerAuthorityV1(store.invocation.capabilities).network.offline)throw Error("Original offline Bun invocation requires an existing immutable dependency generation");await runner(javascriptDependencyArgumentsV1(mode),plan.directory,store,phaseControl);await recheck();
-  if(mode==="lock"){const target=join(workspace,"bun.lock"),temporary=target+"."+plan.generation.slice(0,8);try{writeFileSync(temporary,plan.restoreLock(readFileSync(join(plan.directory,"bun.lock"),"utf8")),{flag:"wx"});renameSync(temporary,target);}finally{rmSync(temporary,{force:true});}return;}
-  await publishJavascriptWorkspaceExportsV1(repository,store,phaseControl,scope,plan.members,plan.generation);await recheck();
- });
-}
-
-import dependencyProducerSchemaV1 from"./💾️storage/🧬️schema/📥️install.json"with{type:"json"};

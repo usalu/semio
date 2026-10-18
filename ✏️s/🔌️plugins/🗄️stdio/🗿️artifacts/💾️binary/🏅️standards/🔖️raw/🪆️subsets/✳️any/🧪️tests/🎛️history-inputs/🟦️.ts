@@ -28,7 +28,7 @@ test("Binary committed byte histories preserve independent ordinal splice intent
    db.run("UPDATE octets SET ordinal=-ordinal-1+? WHERE ordinal<0",[inserted.length-remove]);
    inserted.forEach((value,index)=>db.run("INSERT INTO octets VALUES(?,?)",[offset+index,value]));
    expect(db.query("SELECT value FROM octets ORDER BY ordinal").all()).toEqual(row.after.map(value=>({value})));
-   const file=`🧫️fixtures/🧬️history-edits/${row.kind}/${row.id}/🦠️mutation/🔣️.json`;
+   const file=`🧪️tests/🧫️fixtures/🧬️history-edits/${row.kind}/${row.id}/🦠️mutation/🔣️.json`;
    expect(existsSync(resolve(owner,file)),"committed genuine byte intent").toBe(true);
    const actual=read(file);
    expect(actual).toEqual({mutation:row.mutation,before:{schema:"stdio.binary",bytes:row.before},after:{schema:"stdio.binary",bytes:row.after}});

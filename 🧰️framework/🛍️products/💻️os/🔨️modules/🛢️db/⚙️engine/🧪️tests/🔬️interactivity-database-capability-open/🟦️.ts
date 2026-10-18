@@ -1,4 +1,4 @@
-import { interactivityDatabaseCapabilityOpenFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🟦️.ts";
+import { interactivityDatabaseCapabilityOpenFailures } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚖️laws/🔬️interactivity-audit/🗄️database/🔓️capability-catalog/🟦️.ts";
 
 /** 🧪️ Executes interactivity database capability open policy assertions. */
 export function interactivityDatabaseCapabilityOpenSelfTests(): void {

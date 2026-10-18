@@ -27,6 +27,4 @@ pub fn handle(payload: &RemoveProperty, doc: &ArtifactView<'_, ModelSnapshot>, _
     ))
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

@@ -4,13 +4,13 @@
 //! the plan cut and of the clash tests. Walls, curtain walls, columns, beams, slabs and stairs have one; they are derived from authored
 //! parameters and the already inferred storey levels, wall layouts and stair runs (the nodes the callers are children of). Sloped or curved parts are bounded by their extent.
 
-use super::super::curtain_layout::DEFAULT_MULLION_DEPTH;
-use super::super::element_solids::ceilings;
-use super::super::element_solids::columns::footprint;
-use super::super::element_solids::plan_kit::{bulged, depth_of, extents_of, placed, point, seg};
-use super::super::stair_runs::StairRun;
-use super::super::storey_levels::{target_of, vertical_of, StoreyLevel};
-use super::super::wall_layout::WallLayout;
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::DEFAULT_MULLION_DEPTH;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ceilings;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::footprint;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{bulged, depth_of, extents_of, placed, point, seg};
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::{target_of, vertical_of, StoreyLevel};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use crate::standards::v1::subsets::any::schema::snapshot::{Beam, Ceiling, Column, CurtainWall, ModelSnapshot, Profile, Slab, Stair, TopConstraint, Wall};
 use semio_framework_2d::regions::Region;
 use semio_framework_geometry::loops::{self, Vertex as Corner};
@@ -351,6 +351,4 @@ pub fn level_storeys(snapshot: &ModelSnapshot, storey: &str) -> Vec<String> {
 }
 //#endregion 🔖️Scope
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

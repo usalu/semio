@@ -4,8 +4,9 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { findNodeAtLocation, parseTree } from "jsonc-parser";
-import { loadCatalogTaxonomy, validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/🟦️.ts";
-import { frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { validateFrozenCoordinateEvidenceContracts } from "../../🔍️discovery/📑️taxonomy-document/🟦️.ts";
+import { frozenCoordinateEvidenceCoordinates } from "../../🧹️normalization/❄️frozen-evidence/🟦️.ts";
 //#endregion Imports
 
 //#region Authority

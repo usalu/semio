@@ -1,5 +1,18 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{parts, SolidFamily, SolidGroup};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use semio_framework_plugin::{World3dScene, WorldProjectionConfig};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+#[allow(unused_imports)]
+use semio_framework_plugin::{world3d_camera_projection_json, world3d_scene, world3d_selection_json_with_granularity, MeshData, WorldSunConfig};
+#[allow(unused_imports)]
+use semio_framework_value::{DslValue, ToValue};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::render::world::{instance};
+use crate::render::world::*;
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, BIM_EXAMPLE_TEXT};
+use semio_framework_test_fixtures::fixture_text;
 
 fn demo() -> ModelSnapshot {
     parse_dsl(BIM_EXAMPLE_TEXT).expect("the committed demo parses")
@@ -159,7 +172,7 @@ fn case_projection(name: &str) -> serde_json::Value {
 
 #[test]
 fn the_committed_fixture_is_the_scene_vector_the_three_oracle_measures() {
-    let fixture = json(include_str!("../🧫️fixtures/🔣️.json"));
+    let fixture = json(fixture_text!("../../../../../../../🖌️render/🧊️world/🧪️tests/🧫️fixtures/🔣️.json"));
     let committed = fixture["cases"].as_array().expect("cases");
     assert_eq!(committed.len(), CASES.len(), "run the bless test (BIM_BLESS=1) after changing the scene");
     for (row, name) in committed.iter().zip(CASES) {
@@ -173,7 +186,7 @@ fn bless_the_world_fixture() {
     if std::env::var_os("BIM_BLESS").is_none() {
         return;
     }
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🖌️render/🧊️world/🧫️fixtures/🔣️.json");
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../🖌️render/🧊️world/🧫️fixtures/🔣️.json");
     let cases: Vec<serde_json::Value> = CASES.iter().map(|name| case_projection(name)).collect();
     std::fs::write(path, serde_json::to_string_pretty(&serde_json::json!({ "cases": cases })).expect("fixture serialises") + "\n").expect("fixture is written");
 }

@@ -1,6 +1,7 @@
 //! 🏢️ Sparse patches of the project, wall sweeps, site, buildings, storeys, grid lines, spaces, zones and area schemes.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{entities::*, values::*};
+use crate::standards::v1::subsets::any::schema::diff::algebra::*;
 
 /// 🩹 Sparse patch of [`WallSweep`]: an absent field is untouched.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]

@@ -5,8 +5,10 @@ import Ajv from "ajv/dist/2020.js";
 import TOML from "@iarna/toml";
 import { parseTree, getNodeValue, type Node, type ParseError } from "jsonc-parser";
 import { JsonMemberPolicy } from "../../🧩️members/🟦️.ts";
+import { readModuleTreeSource } from "../../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 const owner = resolve(import.meta.dir, "../.."), read = (path: string): string => readFileSync(resolve(owner, path), "utf8");
+const tree = (): string => readModuleTreeSource(resolve(owner, "🦀️.rs"));
 
 test("controlled JSON retirement retains neutral independent grants and original syntax", () => {
   const fixture = JSON.parse(read("🧪️tests/🧫️fixtures/🎮️retirement/🔣️.json"));
@@ -40,12 +42,12 @@ test("the actual JSON primitive package owns its definitions and depends directl
   expect(native.package.name).toBe("semio-framework-pack-json");
   expect(native.lib).toEqual({name: "semio_framework_pack_json", path: "../../🦀️.rs"});
   expect(Object.keys(native.dependencies)).toEqual(["semio-framework-value"]);
-  expect(read("🦀️.rs")).not.toContain("protocol::value");
-  expect(read("🦀️.rs")).not.toContain("$crate::json::");
+  expect(tree()).not.toContain("protocol::value");
+  expect(tree()).not.toContain("$crate::json::");
 });
 
 test("all public JSON source readers require an explicit decoded-member policy", () => {
-  const source = read("🦀️.rs");
+  const source = tree();
   expect(source.includes("pub fn parse(input: &str, policy: JsonMemberPolicy)"), "ordinary reader policy").toBe(true);
   expect(source.includes("pub fn parse_bytes(input: &[u8], policy: JsonMemberPolicy)"), "byte reader policy").toBe(true);
   expect(source.includes("pub fn from_json_str<T: FromValue>(text: &str, policy: JsonMemberPolicy)"), "typed reader policy").toBe(true);
@@ -129,7 +131,7 @@ test("original normal JSON frontiers require independent physical admission", ()
     expect(errors).toEqual([]);
     expect(getNodeValue(tree!)).toEqual(JSON.parse(source));
   }
-  const native = read("🦀️.rs");
+  const native = tree();
   expect(native).toContain("normal_step_demands");
   expect(native).toContain("normal_step_progress");
   expect(native).not.toContain("release_empty_page(usize::MAX)");

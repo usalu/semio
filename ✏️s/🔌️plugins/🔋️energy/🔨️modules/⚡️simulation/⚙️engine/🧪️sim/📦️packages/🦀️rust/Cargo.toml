@@ -15,6 +15,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
 semio-framework-job = { workspace = true }
 semio-framework-value = { workspace = true }
@@ -34,6 +37,3 @@ semio-s-plugin-energy-engine-site = { workspace = true }
 semio-s-plugin-energy-engine-sizing = { workspace = true }
 semio-s-plugin-energy-engine-units = { workspace = true }
 serde = { workspace = true }
-
-[dev-dependencies]
-semio-s-plugin-energy-engine-schedule = { workspace = true }

@@ -11,7 +11,7 @@ import {
   verifyStdioNativeCodecReceipts,
 } from "../../✅️trusted-stdio-catalog/🟦️.ts";
 
-const fixtureRoot = join(import.meta.dirname, "../../🧫️fixtures/🧬️trusted-stdio-catalog");
+const fixtureRoot = join(import.meta.dirname, "../🧫️fixtures/🧬️trusted-stdio-catalog");
 const schemaRoot = join(import.meta.dirname, "../../🧬️schema/🧬️trusted-stdio-catalog");
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
   readonly schemaVersion: 1;
@@ -56,7 +56,7 @@ describe("trusted stdio catalog", () => {
     expect(validateCatalog).toBeTruthy();
     expect(validateCatalog!(catalog), JSON.stringify(validateCatalog!.errors)).toBe(true);
     expect(catalog.nativeCodecs).toHaveLength(loadFirstPartyStdioNativeCodecReceipts().length);
-    const expectedFactories=source.receipts.map((row:{artifact_kind:string;schema:string;factory_id:string})=>[row.artifact_kind,row.schema,row.factory_id].join("\0")).sort();
+    const expectedFactories=source.receipts.map((row:{artifact_kind:string;artifact_schema:string;factory_id:string})=>[row.artifact_kind,row.artifact_schema,row.factory_id].join("\0")).sort();
     expect(catalog.nativeCodecs.map(row=>[row.artifactKind,row.artifactSchema,row.factoryId].join("\0")).sort()).toEqual(expectedFactories);
     const sourcePayload = JSON.parse(readFileSync(join(import.meta.dirname, "../../📜️native-catalog.json"), "utf8"));
     expect(catalog.openTargets).toEqual(sourcePayload.openTargets);

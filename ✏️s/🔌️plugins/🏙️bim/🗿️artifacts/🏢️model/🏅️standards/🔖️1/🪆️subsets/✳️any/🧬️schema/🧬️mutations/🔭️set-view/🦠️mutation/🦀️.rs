@@ -1,6 +1,6 @@
 //! 🔭️ `set-view` payload. Sparsely changes a view: name, storey of a plan, plane of a section or elevation, camera, cut height (an assigned null returns to the convention), depth, crop (an assigned null clears it), hidden categories, phase filter (an assigned null shows every phase), scale and detail level. The kind and the building of a view never change.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use crate::standards::v1::subsets::any::schema::{diff::{Assigned, patches::ViewPatch}, snapshot::{DetailLevel, Phase, ViewCamera, ViewCategory, ViewCrop, ViewPlane}};
 
@@ -71,13 +71,16 @@ impl SetView {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetView {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetView
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetView>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "view", kind: "set-view", record: "SetView" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_view::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_view::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change view \"{}\"", self.id), &format!("Ansicht \"{}\" ändern", self.id))

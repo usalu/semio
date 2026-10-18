@@ -1,4 +1,30 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
+use crate::standards::v1::subsets::any::schema::snapshot::Infill;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::beams::section_of;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::columns::profile_loop;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::plan_kit::{placed, point, rectangle};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, SolidBuilder, CHORD_TOLERANCE};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::{MaterialCategory, Railing};
+#[allow(unused_imports)]
+use semio_framework_geometry::bulge::BulgeSeg;
+#[allow(unused_imports)]
+use semio_framework_geometry::mesh::{extrude_loops, sweep_profile, TriMesh};
+#[allow(unused_imports)]
+use semio_framework_geometry::placement::ZPlane;
+#[allow(unused_imports)]
+use semio_framework_geometry::vector::lerp;
+#[allow(unused_imports)]
+use semio_framework_geometry::Point;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::railings::*;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::{plan::solid_steps, ModelNode};
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::SolidKey;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Profile};
@@ -9,8 +35,9 @@ use crate::standards::v1::subsets::any::schema::inferences::model_graph::standal
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::standalone::compute_storey_levels;
 use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
 use protocol::Inference;
+use semio_framework_test_fixtures::fixture_text;
 
-const CASE: &str = include_str!("../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json");
+static CASE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧊️element-solids/🛤️railings-posts/🔣️.json"));
 
 fn sections(snapshot: &ModelSnapshot, id: &str) -> ((f64, f64), (f64, f64)) {
     let railing = &snapshot.railings[id];
@@ -24,13 +51,13 @@ fn geometry(snapshot: &ModelSnapshot, id: &str) -> RailingGeometry {
 
 #[semio_framework_async_macros::async_test]
 async fn railings_reproduce_the_third_party_oracle_table() {
-    let case = case(CASE);
+    let case = case((*CASE));
     assert_matches_oracle(&case, &compute_element_solids(&case.snapshot), SolidFamily::Railing);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn posts_divide_every_segment_into_equal_parts_no_longer_than_the_spacing() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let counts = |id: &str| geometry(&snapshot, id).posts.len();
     assert_eq!(counts("r-straight"), 5, "4 m at 1 m: five posts");
     assert_eq!(counts("r-l"), 7, "two 2 m segments at 0.8 m: three parts each, one shared corner post");
@@ -45,7 +72,7 @@ async fn posts_divide_every_segment_into_equal_parts_no_longer_than_the_spacing(
 
 #[semio_framework_async_macros::async_test]
 async fn a_railing_has_the_analytic_volume_of_its_posts_and_its_mitred_rail() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let solids = compute_element_solids(&snapshot);
     let expected = |id: &str, posts: f64, height: f64, length: f64| {
         let ((post_width, post_depth), (rail_width, rail_depth)) = sections(&snapshot, id);
@@ -62,7 +89,7 @@ async fn a_railing_has_the_analytic_volume_of_its_posts_and_its_mitred_rail() {
 
 #[semio_framework_async_macros::async_test]
 async fn posts_stand_on_the_base_and_the_rail_tops_the_railing() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let solids = compute_element_solids(&snapshot);
     let (_, (_, rail_depth)) = sections(&snapshot, "r-l");
     let railing = &solids["r-l"];
@@ -75,7 +102,7 @@ async fn posts_stand_on_the_base_and_the_rail_tops_the_railing() {
 
 #[semio_framework_async_macros::async_test]
 async fn changing_a_storey_height_leaves_ground_railings_and_lifts_the_ones_above() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let before = compute_element_solids(&snapshot);
     assert_eq!(compute_element_solids(&raised(&snapshot, "st-ground", 0.4)), before, "a railing on the ground storey stands on the unchanged ground elevation");
     let mut upstairs = snapshot.clone();
@@ -88,7 +115,7 @@ async fn changing_a_storey_height_leaves_ground_railings_and_lifts_the_ones_abov
 
 #[semio_framework_async_macros::async_test]
 async fn degenerate_railings_are_absent_and_the_result_is_deterministic() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let inferred = ModelInference::infer(&snapshot).expect("infers");
     assert_eq!(inferred, ModelInference::infer(&snapshot).expect("infers"));
     assert!(!inferred.element_solids.contains_key("r-point"));
@@ -107,7 +134,7 @@ fn part_volumes(solid: &ElementSolid) -> std::collections::BTreeMap<String, f64>
 
 #[semio_framework_async_macros::async_test]
 async fn every_part_of_every_railing_has_the_volume_the_oracle_derives() {
-    let case = case(CASE);
+    let case = case((*CASE));
     let solids = compute_element_solids(&case.snapshot);
     for (id, row) in case.expected.as_object().expect("table").iter().filter(|(_, row)| !row.is_null()) {
         let found = part_volumes(&solids[id]);
@@ -121,8 +148,8 @@ async fn every_part_of_every_railing_has_the_volume_the_oracle_derives() {
 
 #[semio_framework_async_macros::async_test]
 async fn balusters_stand_strictly_between_the_posts_in_every_bay() {
-    let snapshot = case(CASE).snapshot;
-    let table = case(CASE).expected;
+    let snapshot = case((*CASE)).snapshot;
+    let table = case((*CASE)).expected;
     for id in ["r-balusters", "r-balusters-glass", "r-balusters-short", "r-straight"] {
         let railing = &snapshot.railings[id];
         let found = geometry(&snapshot, id);
@@ -141,8 +168,8 @@ async fn balusters_stand_strictly_between_the_posts_in_every_bay() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_infill_is_a_slab_per_bay_inset_by_half_a_post_in_glass_or_in_the_railing_material() {
-    let snapshot = case(CASE).snapshot;
-    let table = case(CASE).expected;
+    let snapshot = case((*CASE)).snapshot;
+    let table = case((*CASE)).expected;
     let solids = compute_element_solids(&snapshot);
     let infill_material = |id: &str| solids[id].groups.iter().find(|group| group.part == parts::INFILL).map(|group| group.material.clone());
     assert_eq!(infill_material("r-glass").as_deref(), Some("m-glass"), "glass takes the glass material of the library");
@@ -162,7 +189,7 @@ async fn the_infill_is_a_slab_per_bay_inset_by_half_a_post_in_glass_or_in_the_ra
 
 #[semio_framework_async_macros::async_test]
 async fn the_sections_and_the_infill_are_part_of_the_dependency_of_the_solid() {
-    let snapshot = case(CASE).snapshot;
+    let snapshot = case((*CASE)).snapshot;
     let railing = snapshot.railings["r-glass"].clone();
     let base = dependency(&snapshot, &railing);
     let mut without_glass = snapshot.clone();

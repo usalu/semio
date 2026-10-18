@@ -1,0 +1,367 @@
+{
+  "description": "Language-agnostic corpus of the type renderers: each case lists a schema export and the GraphQL type, protobuf message and TypeScript type every implementation must render for it (null: the format has no form and the export is refused). A nested object becomes a named declaration <Parent><Field>; a form the target cannot express (a union, a map, a tuple, any value, an array of arrays) is the GraphQL scalar JSON or the protobuf field bytes (the JSON text of the value); a field name that is no identifier is made one; a name in `taken` is never claimed.",
+  "cases": [
+    {
+      "name": "nested objects and arrays of objects get named declarations",
+      "definition": {
+        "type": "object",
+        "required": [
+          "origin",
+          "items"
+        ],
+        "properties": {
+          "origin": {
+            "type": "object",
+            "required": [
+              "x"
+            ],
+            "properties": {
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "graphql": "type RowOrigin {\n  x: Float!\n  y: Float\n}\n\ntype RowItems {\n  id: String!\n  tags: [String!]\n}\n\ntype Row {\n  origin: RowOrigin!\n  items: [RowItems!]!\n}\n",
+      "protobuf": "message RowOrigin {\n  double x = 1;\n  optional double y = 2;\n}\n\nmessage RowItems {\n  string id = 1;\n  repeated string tags = 2;\n}\n\nmessage Row {\n  RowOrigin origin = 1;\n  repeated RowItems items = 2;\n}\n",
+      "typescript": "export interface Row {\n  readonly origin: { readonly x: number; readonly y?: number };\n  readonly items: readonly { readonly id: string; readonly tags?: readonly string[] }[];\n}\n"
+    },
+    {
+      "name": "a nested name that is taken falls back to JSON text",
+      "definition": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "object",
+            "properties": {
+              "x": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      },
+      "taken": [
+        "RowOrigin"
+      ],
+      "graphql": "scalar JSON\n\ntype Row {\n  origin: JSON\n}\n",
+      "protobuf": "message Row {\n  optional bytes origin = 1;\n}\n",
+      "typescript": "export interface Row {\n  readonly origin?: { readonly x?: number };\n}\n"
+    },
+    {
+      "name": "string enums, numeric enums and constants are scalars",
+      "definition": {
+        "type": "object",
+        "required": [
+          "mode",
+          "depth",
+          "kind",
+          "ratio"
+        ],
+        "properties": {
+          "mode": {
+            "enum": [
+              "fast",
+              "slow"
+            ]
+          },
+          "depth": {
+            "enum": [
+              1,
+              2,
+              4
+            ]
+          },
+          "kind": {
+            "const": "v1"
+          },
+          "ratio": {
+            "enum": [
+              0.5,
+              1
+            ]
+          },
+          "flag": {
+            "const": true
+          }
+        }
+      },
+      "graphql": "type Row {\n  mode: String!\n  depth: Int!\n  kind: String!\n  ratio: Float!\n  flag: Boolean\n}\n",
+      "protobuf": "message Row {\n  string mode = 1;\n  int64 depth = 2;\n  string kind = 3;\n  double ratio = 4;\n  optional bool flag = 5;\n}\n",
+      "typescript": "export interface Row {\n  readonly mode: \"fast\" | \"slow\";\n  readonly depth: 1 | 2 | 4;\n  readonly kind: \"v1\";\n  readonly ratio: 0.5 | 1;\n  readonly flag?: true;\n}\n"
+    },
+    {
+      "name": "maps are protobuf maps and GraphQL JSON",
+      "definition": {
+        "type": "object",
+        "required": [
+          "byName"
+        ],
+        "properties": {
+          "byName": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            }
+          },
+          "open": {
+            "type": "object"
+          },
+          "anyMap": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "any"
+            }
+          }
+        }
+      },
+      "graphql": "scalar JSON\n\ntype Row {\n  byName: JSON!\n  open: JSON\n  anyMap: JSON\n}\n",
+      "protobuf": "message Row {\n  map<string, int64> by_name = 1;\n  optional bytes open = 2;\n  optional bytes any_map = 3;\n}\n",
+      "typescript": "export interface Row {\n  readonly byName: Readonly<Record<string, number>>;\n  readonly open?: Readonly<Record<string, unknown>>;\n  readonly anyMap?: Readonly<Record<string, unknown>>;\n}\n"
+    },
+    {
+      "name": "unions, tuples and any value carry their JSON",
+      "definition": {
+        "type": "object",
+        "required": [
+          "choice",
+          "pair"
+        ],
+        "properties": {
+          "choice": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ]
+          },
+          "pair": {
+            "type": "array",
+            "items": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "number"
+              }
+            ]
+          },
+          "anything": {},
+          "merged": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/Base"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "more": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "graphql": "scalar JSON\n\ntype Row {\n  choice: JSON!\n  pair: JSON!\n  anything: JSON\n  merged: JSON\n}\n",
+      "protobuf": "message Row {\n  bytes choice = 1;\n  bytes pair = 2;\n  optional bytes anything = 3;\n  optional bytes merged = 4;\n}\n",
+      "typescript": "export interface Row {\n  readonly choice: number | string;\n  readonly pair: readonly [number, number];\n  readonly anything?: unknown;\n  readonly merged?: Base & { readonly more?: string };\n}\n"
+    },
+    {
+      "name": "arrays of arrays, nullable arrays and arrays of nullable items carry their JSON in protobuf",
+      "definition": {
+        "type": "object",
+        "properties": {
+          "grid": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "maybe": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "holes": {
+            "type": "array",
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      },
+      "graphql": "type Row {\n  grid: [[Float!]!]\n  maybe: [String!]\n  holes: [String]\n}\n",
+      "protobuf": "message Row {\n  optional bytes grid = 1;\n  optional bytes maybe = 2;\n  optional bytes holes = 3;\n}\n",
+      "typescript": "export interface Row {\n  readonly grid?: readonly (readonly number[])[];\n  readonly maybe?: readonly string[] | null;\n  readonly holes?: readonly (string | null)[];\n}\n"
+    },
+    {
+      "name": "field names that are no identifiers are made one",
+      "definition": {
+        "type": "object",
+        "required": [
+          "2d"
+        ],
+        "properties": {
+          "2d": {
+            "type": "string"
+          },
+          "a-b": {
+            "type": "integer"
+          }
+        }
+      },
+      "graphql": "type Row {\n  _2d: String!\n  a_b: Int\n}\n",
+      "protobuf": "message Row {\n  string _2d = 1;\n  optional int64 a_b = 2;\n}\n",
+      "typescript": "export interface Row {\n  readonly \"2d\": string;\n  readonly \"a-b\"?: number;\n}\n"
+    },
+    {
+      "name": "two fields that make the same identifier refuse the export",
+      "definition": {
+        "type": "object",
+        "properties": {
+          "a-b": {
+            "type": "string"
+          },
+          "a_b": {
+            "type": "string"
+          }
+        }
+      },
+      "graphql": null,
+      "protobuf": null,
+      "typescript": "export interface Row {\n  readonly \"a-b\"?: string;\n  readonly a_b?: string;\n}\n"
+    },
+    {
+      "name": "a top-level array",
+      "definition": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "graphql": "scalar Row\n",
+      "protobuf": "message Row {\n  repeated string value = 1;\n}\n",
+      "typescript": "export type Row = readonly string[];\n"
+    },
+    {
+      "name": "a top-level map",
+      "definition": {
+        "type": "object",
+        "additionalProperties": {
+          "$ref": "#/$defs/Pt"
+        }
+      },
+      "graphql": "scalar Row\n",
+      "protobuf": "message Row {\n  map<string, Pt> entries = 1;\n}\n",
+      "typescript": "export type Row = Readonly<Record<string, Pt>>;\n"
+    },
+    {
+      "name": "a top-level union of objects",
+      "definition": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "a"
+            ],
+            "properties": {
+              "a": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "required": [
+              "b"
+            ],
+            "properties": {
+              "b": {
+                "type": "integer"
+              }
+            }
+          }
+        ]
+      },
+      "graphql": "scalar Row\n",
+      "protobuf": "message Row {\n  bytes value = 1;\n}\n",
+      "typescript": "export type Row = { readonly a: string } | { readonly b: number };\n"
+    },
+    {
+      "name": "a top-level reference",
+      "definition": {
+        "$ref": "#/$defs/Pt"
+      },
+      "graphql": "scalar Row\n",
+      "protobuf": "message Row {\n  Pt value = 1;\n}\n",
+      "typescript": "export type Row = Pt;\n"
+    },
+    {
+      "name": "type lists and null",
+      "definition": {
+        "type": "object",
+        "required": [
+          "id",
+          "none"
+        ],
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "integer"
+            ]
+          },
+          "none": {
+            "type": "null"
+          }
+        }
+      },
+      "graphql": "scalar JSON\n\ntype Row {\n  id: JSON!\n  none: JSON!\n}\n",
+      "protobuf": "message Row {\n  bytes id = 1;\n  bytes none = 2;\n}\n",
+      "typescript": "export interface Row {\n  readonly id: string | number;\n  readonly none: null;\n}\n"
+    }
+  ]
+}

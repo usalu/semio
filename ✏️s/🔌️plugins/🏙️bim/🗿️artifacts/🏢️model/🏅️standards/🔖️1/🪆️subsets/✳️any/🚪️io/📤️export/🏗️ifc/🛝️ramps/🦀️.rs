@@ -50,7 +50,7 @@ fn piece_of(run: &RampRun, s: f64) -> Piece {
     run.flights.iter().position(|flight| covers(flight.from, flight.to)).map(Piece::Flight).or_else(|| run.landings.iter().position(|landing| covers(landing.from, landing.to)).map(Piece::Landing)).unwrap_or(Piece::Landing(0))
 }
 
-fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
+pub fn ramp(x: &mut Export<'_>, id: &str, row: &Ramp) {
     let Some(storey) = x.storeys.get(&row.storey).copied() else {
         x.skip("ramp", id, "its storey is missing");
         return;
@@ -109,6 +109,4 @@ pub fn emit(x: &mut Export<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+

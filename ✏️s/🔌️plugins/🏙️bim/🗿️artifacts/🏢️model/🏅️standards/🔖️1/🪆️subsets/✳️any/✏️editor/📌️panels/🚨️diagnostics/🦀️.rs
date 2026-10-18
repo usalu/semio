@@ -23,7 +23,7 @@ pub const PANEL_TAB_ID: &str = "bim.panel.diagnostics";
 pub const BODY_KEY: &str = "bim.edit.diagnostics";
 pub const ROOT: &str = "bim-diagnostics";
 /// ✂️ The longest message or description a row shows, in characters (a fixed UI text holds 512 bytes).
-const CLIP: usize = 240;
+pub const CLIP: usize = 240;
 /// 📂️ A kind of finding with at most this many findings opens on first paint; a longer list waits for the host to open it and then streams its slice.
 const OPEN_GROUP_LIMIT: usize = 12;
 /// 🚦️ The severities in the order of the groups: the most severe first.
@@ -166,7 +166,7 @@ pub fn category_label<'a>(labels: &'a BimLabels, category: &'a str) -> &'a str {
     }
 }
 
-fn clip(text: &str) -> String {
+pub fn clip(text: &str) -> String {
     if text.chars().count() <= CLIP {
         return text.to_string();
     }
@@ -241,6 +241,4 @@ pub fn render(snapshot: &ModelSnapshot, inference: &ModelInference, labels: &Bim
 }
 //#endregion 🔖️Render
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

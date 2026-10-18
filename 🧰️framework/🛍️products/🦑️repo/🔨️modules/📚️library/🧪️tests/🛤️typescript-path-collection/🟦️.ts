@@ -7,7 +7,7 @@ import ts from "typescript";
 
 const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
-const sourcePath = join(root, library, "🧹️normalization/🟦️.ts"), source = normalizationSourceDeclarations(sourcePath);
+const sourcePath = join(root, library, "🧹️normalization"), source = normalizationSourceDeclarations(sourcePath);
 const syntax = ts.createSourceFile(sourcePath, source, ts.ScriptTarget.Latest, true);
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/🛤️typescript-path-collection/🔣️.json"), "utf8"));
 type Span = { value: string; start: number; end: number; physicalTargets: string[] };
@@ -110,7 +110,7 @@ function oracle(content: string): Span[] {
 
 /** 🧬️ Extracts actual repository-owned declarations without importing workspace dispatch or reading any input consumer. */
 function implementation(compiler: typeof compilers[number]) {
-  const names = new Set(["TYPESCRIPT_COLLECTION_OPERATOR", "lineLocation", "indexedLineContent", "indexedLineStarts", "regexTokens", "runVitestConfigArgumentTokens", "vitestConfigIncludeArrayTokens", "typescriptTokens", "ticketImportantProseReferenceAuthority", "typescriptLeadingDocumentationReferenceAuthority", "typescriptCommentPathReferenceAuthority", "dependencyCruiserBoundaryReferenceAuthority", "normalizeRelative", "sourceRelative", "splitTokenSuffix", "addUniqueIndex", "referencePathIndex", "ancestorReferenceCoordinateRoot", "resolveReferencePath", "resolveReferenceTokenPath", "rewriteReferenceValue", "referenceLeaf", "referenceLeafNames", "referenceLeafNameSets"]);
+  const names = new Set(["TYPESCRIPT_COLLECTION_OPERATOR", "requireTaxonomyValue", "lineLocation", "indexedLineContent", "indexedLineStarts", "regexTokens", "runVitestConfigArgumentTokens", "vitestConfigIncludeArrayTokens", "typescriptTokens", "ticketImportantProseReferenceAuthority", "typescriptLeadingDocumentationReferenceAuthority", "typescriptCommentPathReferenceAuthority", "dependencyCruiserBoundaryReferenceAuthority", "normalizeRelative", "sourceRelative", "splitTokenSuffix", "addUniqueIndex", "referencePathIndex", "ancestorReferenceCoordinateRoot", "resolveReferencePath", "resolveReferenceTokenPath", "rewriteReferenceValue", "referenceLeaf", "referenceLeafNames", "referenceLeafNameSets"]);
   const declarations = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? names.has(node.name?.text ?? "") || /^typescriptCollection|^typescriptPathCollectionReferenceAuthority$/u.test(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => names.has(entry.name.getText(syntax))));
   if (!declarations.some((node) => ts.isFunctionDeclaration(node) && node.name?.text === "typescriptPathCollectionReferenceAuthority")) throw new Error("Missing immutable for-of path-collection authority");
   const code = declarations.map((node) => node.getText(syntax).replace(/^export /u, "")).join("\n");

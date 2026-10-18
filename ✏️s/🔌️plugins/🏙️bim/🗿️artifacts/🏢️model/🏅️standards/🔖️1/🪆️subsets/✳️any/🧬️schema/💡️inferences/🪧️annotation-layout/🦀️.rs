@@ -9,9 +9,9 @@
 //!
 //! Related: <https://en.wikipedia.org/wiki/Technical_drawing#Dimensioning>.
 
-use super::super::diagnostics::{Diagnostic, DiagnosticCode};
-use super::super::element_solids::{dep_object, dep_value};
-use super::super::wall_layout::WallLayout;
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticCode};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
 use crate::standards::v1::subsets::any::schema::snapshot::{AnnotationAnchor, DimensionUnit, ModelSnapshot, Point2, Terminator};
 use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::anchors::{Reason, EPS};
 use semio_framework_value::DslValue;
@@ -181,7 +181,7 @@ pub fn face_walls(snapshot: &ModelSnapshot, storey: &str) -> BTreeSet<String> {
     anchors.filter_map(|anchor| if let AnnotationAnchor::WallFace { wall, .. } = anchor { snapshot.walls.contains_key(wall).then(|| wall.clone()) } else { None }).collect()
 }
 
-fn finding(code: DiagnosticCode, id: &str, storey: &str) -> Diagnostic {
+pub fn finding(code: DiagnosticCode, id: &str, storey: &str) -> Diagnostic {
     Diagnostic::new(code, &[id]).on(storey)
 }
 
@@ -331,6 +331,4 @@ pub fn metrics_json(annotations: &BTreeMap<String, StoreyAnnotations>) -> String
 }
 //#endregion 🔖️Metrics
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

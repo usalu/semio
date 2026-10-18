@@ -1,8 +1,8 @@
 //! 🪓️ The cut of a section: the vertical plane through the section line cuts the triangle mesh of a solid, the chained segments are the outlines of the material (counter-clockwise) and of its
 //! holes (clockwise), in view coordinates `(u, z)`. The cut is taken from the whole mesh and clipped to the plane's length afterwards, so a cut element stays closed.
 
-use super::clip::{clip_ring, Rect};
-use super::frame::Frame;
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::clip::{clip_ring, Rect};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::frame::Frame;
 use crate::standards::v1::subsets::any::schema::inferences::element_solids::ElementSolid;
 use semio_framework_geometry::section::{chain, section_plane};
 

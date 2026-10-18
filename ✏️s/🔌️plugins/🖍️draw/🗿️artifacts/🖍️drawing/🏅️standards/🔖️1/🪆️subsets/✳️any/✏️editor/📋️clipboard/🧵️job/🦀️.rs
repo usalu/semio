@@ -31,6 +31,12 @@ impl semio_s_artifact_draw_drawing_scene::preparation::DrawingSceneSource for Cl
 use semio_s_artifact_draw_drawing_host_arena::DrawingLayerAddress;
 use semio_s_artifact_draw_drawing_host_arena::DrawingLayerLocator;
 use semio_s_artifact_draw_drawing_host_arena::DrawingLayerCloneWorkAuthority;
+use semio_s_artifact_draw_drawing_model::DrawingLayerNode;
+use semio_s_artifact_draw_drawing_model::DrawingImageAsset;
+use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
+use semio_s_artifact_draw_drawing_mutations::DrawingMutation;
+use semio_s_artifact_draw_drawing_host::outcome::DrawingJobOutcomes;
+use semio_s_artifact_draw_drawing_editor_interaction::clipboard::media_type;
 #[path="📋️metadata/🦀️.rs"]
 pub mod metadata;
 struct TreeCursor{address:DrawingLayerAddress,children:[usize;MAX_DEPTH],base:usize,entered:bool,complete:bool,all_roots:bool}

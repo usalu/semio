@@ -11,7 +11,7 @@ import { join } from "node:path";
 import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { requireMcpBinary, spawnRawMcp } from "../../🟦️.ts";
-import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 const bin = requireMcpBinary(repoRoot);

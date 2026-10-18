@@ -1,9 +1,12 @@
 //! ↩️ Inverse of `SetSheetRevision`: an absolute `SetSheetRevision` restoring the base value of exactly the fields the forward really changes, none when the revision is absent or nothing changes.
 
-use super::SetSheetRevision;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot, diff::Patch};
+use crate::standards::v1::subsets::any::schema::mutations::set_sheet_revision::SetSheetRevision;
+use crate::standards::v1::subsets::any::schema::{snapshot::ModelSnapshot, diff::Patch};
 
-pub fn inverse(payload: &SetSheetRevision, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetSheetRevision, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_sheet_revision::SetSheetRevision>,
+{
     let Some(record) = base.sheet_revisions.get(&payload.id) else {
         return Vec::new();
     };
@@ -11,5 +14,5 @@ pub fn inverse(payload: &SetSheetRevision, base: &ModelSnapshot) -> Vec<ModelMut
     if restore.is_empty() {
         return Vec::new();
     }
-    vec![ModelMutation::SetSheetRevision(SetSheetRevision::from_patch(payload.id.clone(), restore))]
+    vec![Op::from(SetSheetRevision::from_patch(payload.id.clone(), restore))]
 }

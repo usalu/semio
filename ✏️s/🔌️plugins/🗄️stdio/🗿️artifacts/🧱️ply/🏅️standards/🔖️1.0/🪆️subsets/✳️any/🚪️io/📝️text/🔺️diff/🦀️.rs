@@ -44,7 +44,7 @@ pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
 /// 🧭️ Bracket-depth-aware split (tracks `[`/`]` only): a top-level `sep` inside nested brackets is
 /// never mistaken for a field separator — the whole hand-rolled grammar's parsing primitive.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
+pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
     if s.is_empty() {
         return Vec::new();
     }
@@ -67,22 +67,22 @@ pub(crate) fn split_top_level(s: &str, sep: char) -> Vec<&str> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn strip_brackets(s: &str) -> Result<&str, String> {
+pub fn strip_brackets(s: &str) -> Result<&str, String> {
     s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_format(f: PlyFormat) -> char {
+pub fn enc_format(f: PlyFormat) -> char {
     match f {
         PlyFormat::Ascii => 'a',
         PlyFormat::BinaryLittleEndian => 'l',
@@ -91,7 +91,7 @@ pub(crate) fn enc_format(f: PlyFormat) -> char {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_format(s: &str) -> Result<PlyFormat, String> {
+pub fn dec_format(s: &str) -> Result<PlyFormat, String> {
     match s {
         "a" => Ok(PlyFormat::Ascii),
         "l" => Ok(PlyFormat::BinaryLittleEndian),
@@ -167,7 +167,7 @@ pub(crate) fn dec_property(s: &str) -> Result<PlyProperty, String> {
 /// — same tag-prefix convention, one lowercase letter per scalar kind (matching `enc_scalar_type`'s
 /// own letters) plus `L[...]` for the recursive `List(Vec<PlyValue>)` variant.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_value(v: &PlyValue) -> String {
+pub fn enc_value(v: &PlyValue) -> String {
     match v {
         PlyValue::Char(x) => format!("c[{x}]"),
         PlyValue::UChar(x) => format!("C[{x}]"),
@@ -182,7 +182,7 @@ pub(crate) fn enc_value(v: &PlyValue) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_value(s: &str) -> Result<PlyValue, String> {
+pub fn dec_value(s: &str) -> Result<PlyValue, String> {
     if s.len() < 2 {
         return Err(format!("value: too short {s:?}"));
     }
@@ -209,24 +209,24 @@ pub(crate) fn dec_value(s: &str) -> Result<PlyValue, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_row(r: &PlyRow) -> String {
+pub fn enc_row(r: &PlyRow) -> String {
     format!("[{}]", r.values.iter().map(enc_value).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_row(s: &str) -> Result<PlyRow, String> {
+pub fn dec_row(s: &str) -> Result<PlyRow, String> {
     let inner = strip_brackets(s)?;
     let values = split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_value).collect::<Result<Vec<_>, String>>()?;
     Ok(PlyRow { values })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_element(e: &PlyElement) -> String {
+pub fn enc_element(e: &PlyElement) -> String {
     format!("[{},{},[{}],[{}]]", enc_str(&e.name), e.count, e.properties.iter().map(enc_property).collect::<Vec<_>>().join(","), e.rows.iter().map(enc_row).collect::<Vec<_>>().join(","),)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_element(s: &str) -> Result<PlyElement, String> {
+pub fn dec_element(s: &str) -> Result<PlyElement, String> {
     let inner = strip_brackets(s)?;
     let parts = split_top_level(inner, ',');
     let [name, count, properties, rows] = parts.as_slice() else { return Err(format!("element: expected 4 fields, got {}", parts.len())) };

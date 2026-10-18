@@ -20,7 +20,7 @@ import { captureOwnedCommandResultV1 } from "@semio-tech/process/owned-execution
 import { buildRepositoryCargoArtifacts } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { parseDocumentOpenPlanV1 } from "@semio-tech/framework-os/modules/directory/schema/document-open";
 import { sealSpaceArtifactCreateV1 } from "@semio-tech/framework-os/modules/directory/schema/space-artifact-creation-v1";
-import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../../🏗️build/🛂staging-environment/🟦️.ts";
 import { issueLocalCredential } from "../../../🚀️local-bootstrap/🔐️credential-issuance/🟦️.ts";
 import { type LocalProfile } from "../../../🚀️local-bootstrap/🛂authentication/🟦️.ts";

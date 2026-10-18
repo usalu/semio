@@ -1,6 +1,7 @@
 //! ➕️ Add object kind work: the staged addition of one object kind, decoded and checked against the catalog, with its representation and vortex, then published.
 
 use super::*;
+use semio_s_artifact_puzzle_3d_editor_snapshot::Puzzle3dCommand;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dAddObjectKindStage {

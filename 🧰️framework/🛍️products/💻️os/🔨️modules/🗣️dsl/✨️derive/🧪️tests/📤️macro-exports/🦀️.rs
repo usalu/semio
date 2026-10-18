@@ -4,9 +4,29 @@
 use semio_framework_test_fixtures::fixture_path;
 use std::collections::BTreeSet;
 
-fn registered(source: &str) -> BTreeSet<String> {
-    let file = syn::parse_file(source).unwrap();
-    file.items.iter().flat_map(|item| match item { syn::Item::Fn(item) => item.attrs.as_slice(), _ => &[] }).filter_map(|attribute| {
+fn owner_items(root: impl AsRef<std::path::Path>) -> Vec<syn::Item> {
+    let mut items = Vec::new();
+    let mut files = vec![root.as_ref().to_path_buf()];
+    while let Some(path) = files.pop() {
+        let file = syn::parse_file(std::fs::read_to_string(&path).expect("fixture").as_str()).unwrap();
+        for item in file.items {
+            if let syn::Item::Mod(module) = &item {
+                for attribute in module.attrs.iter().filter(|attribute| attribute.path().is_ident("path")) {
+                    if let syn::Meta::NameValue(pair) = &attribute.meta {
+                        if let syn::Expr::Lit(literal) = &pair.value {
+                            if let syn::Lit::Str(text) = &literal.lit { files.push(path.parent().unwrap().join(text.value())); }
+                        }
+                    }
+                }
+            }
+            items.push(item);
+        }
+    }
+    items
+}
+
+fn registered(items: &[syn::Item]) -> BTreeSet<String> {
+    items.iter().flat_map(|item| match item { syn::Item::Fn(item) => item.attrs.as_slice(), _ => &[] }).filter_map(|attribute| {
         if !attribute.path().is_ident("proc_macro_derive") { return None; }
         let args = attribute.parse_args_with(syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated).unwrap();
         match args.first().unwrap() { syn::Meta::Path(path) => Some(path.get_ident().unwrap().to_string()), _ => panic!("derive name is not an identifier") }
@@ -17,8 +37,8 @@ fn registered(source: &str) -> BTreeSet<String> {
 fn facade_exports_match_registered_macros() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📤️macro-exports/🔣️.json")).unwrap();
     let expected = |field: &str| fixture[field].as_array().unwrap().iter().map(|name| name.as_str().unwrap().to_owned()).collect::<BTreeSet<_>>();
-    let owner = registered(std::fs::read_to_string(fixture_path!("../../../../🦀️.rs")).expect("fixture").as_str());
-    let compiled = registered(std::fs::read_to_string(fixture_path!("../../../../📦️packages/🦀️rust/🦀️.rs")).expect("fixture").as_str());
+    let owner = registered(&owner_items(fixture_path!("../../../../🦀️.rs")));
+    let compiled = registered(&owner_items(fixture_path!("../../../../📦️packages/🦀️rust/🦀️.rs")));
     assert_eq!(owner, BTreeSet::new(), "owner component.rs must hold implementation only, no crate-root derive tags");
     assert_eq!(compiled, expected("registeredDerives"));
     let facade = syn::parse_file(std::fs::read_to_string(fixture_path!("../../../../../🦀️.rs")).expect("fixture").as_str()).unwrap();

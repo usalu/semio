@@ -40,7 +40,7 @@ impl store::ArtifactOwnedValueRetirementFactory<RasterMutation> for RasterMutati
 
 /// ♻️ Every value a stepwise Raster authority displaces or abandons; the framework's owned retirement closes it under an explicit grant.
 #[derive(semio_framework_value::RetireOwned)]
-pub(super) enum RasterDisplaced {
+pub enum RasterDisplaced {
     String(String),
     Layer(RasterLayerNode),
     Snapshot(RasterSnapshot),
@@ -50,30 +50,30 @@ pub(super) enum RasterDisplaced {
 }
 
 /// 🗑️ One displaced owner and its admitted retirement frame; the owner stays in `pending` until a grant funds its frame.
-pub(super) struct RasterRetirementSlot {
-    pub(super) pending: std::mem::ManuallyDrop<Option<RasterDisplaced>>,
-    pub(super) active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
+pub struct RasterRetirementSlot {
+    pub pending: std::mem::ManuallyDrop<Option<RasterDisplaced>>,
+    pub active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
 }
 
 impl RasterRetirementSlot {
-    pub(super) fn new() -> Self {
+    pub fn new() -> Self {
         Self { pending: std::mem::ManuallyDrop::new(None), active: std::mem::ManuallyDrop::new(None) }
     }
 
-    pub(super) fn put(&mut self, owner: RasterDisplaced) {
+    pub fn put(&mut self, owner: RasterDisplaced) {
         assert!(self.is_empty(), "Raster retirement slot admits one displaced owner at a time");
         *self.pending = Some(owner);
     }
 
-    pub(super) fn is_empty(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.pending.is_none() && self.active.is_none()
     }
 
-    pub(super) fn birth_demand() -> semio_framework_value::RetirementDemand {
+    pub fn birth_demand() -> semio_framework_value::RetirementDemand {
         semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<RasterDisplaced>(), depth: 2, ..Default::default() }
     }
 
-    pub(super) fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+    pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() {
             return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body);
         }
@@ -83,7 +83,7 @@ impl RasterRetirementSlot {
         Ok(Default::default())
     }
 
-    pub(super) fn close(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.is_empty() {
             return Ok(RetainedCloneStep::Complete(empty));
@@ -115,27 +115,27 @@ impl Drop for RasterRetirementSlot {
     }
 }
 
-pub(super) fn raster_short(grant: RetainedCloneGrant, demand: semio_framework_value::RetirementDemand) -> bool {
+pub fn raster_short(grant: RetainedCloneGrant, demand: semio_framework_value::RetirementDemand) -> bool {
     grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes
 }
 
-pub(super) fn raster_finish(step: RetainedCloneStep, terminal: bool) -> RetainedCloneStep {
+pub fn raster_finish(step: RetainedCloneStep, terminal: bool) -> RetainedCloneStep {
     match step {
         RetainedCloneStep::Complete(progress) | RetainedCloneStep::Progress(progress) if terminal => RetainedCloneStep::Complete(progress),
         RetainedCloneStep::Complete(progress) | RetainedCloneStep::Progress(progress) => RetainedCloneStep::Progress(progress),
     }
 }
 
-pub(super) fn raster_nested(mut demand: semio_framework_value::RetirementDemand) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+pub fn raster_nested(mut demand: semio_framework_value::RetirementDemand) -> Result<semio_framework_value::RetirementDemand, ValueError> {
     demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "Raster nested retirement depth overflow"))?;
     Ok(demand)
 }
 
-pub(super) fn raster_child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
+pub fn raster_child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
     RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant }
 }
 
-pub(super) fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool {
+pub fn raster_reserve_unit(cx: &mut semio_framework_job::StepContext<'_>) -> bool {
     if cx.should_yield() || cx.fuel_remaining() == 0 {
         return false;
     }

@@ -1,11 +1,11 @@
 //! 🧬️ The non-geometric data of an IFC file: materials with their physical properties, layered and profiled types, window and door styles, user property sets and classifications.
 //! Parameters IFC has no slot for are read from the `Semio_Authoring` set that the export writes.
 
-use super::reader::{opt_text, real, refs, text, Doc};
+use crate::standards::v1::subsets::any::io::import::ifc::reader::{opt_text, real, refs, text, Doc};
 use crate::standards::v1::subsets::any::io::export::ifc::data::{parent_key, PARENTS_SET};
 use crate::standards::v1::subsets::any::io::export::ifc::Schema;
-use super::spatial::{number_of, single_values, string_of};
-use super::Import;
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::{number_of, single_values, string_of};
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::ifc4::{applicable_entity, measure_type};
 use crate::standards::v1::subsets::any::schema::snapshot::{entries_problem, PropertyDef, PropertyKind, PropertyTemplate, TemplateTarget, BeamType, CeilingType, ClassificationItem, ClassificationSystem, ColumnType, DoorLeaves, DoorType, Layer, LayerFunction, Material, MaterialCategory, Profile, PropertyValue, Rgb, RoofType, SlabType, Swing, WallType, WindowType};
 use crate::standards::v1::subsets::any::io::export::ifc::wall_sweeps::SWEEP_SET;
@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 /// 🧗️ The property sets of the wall depth package: bookkeeping of the export, restored into fields and never user data.
 const WALL_DEPTH_SETS: [&str; 3] = [ATTACH_SET, REVEAL_SET, SWEEP_SET];
 
-fn category(name: &str) -> MaterialCategory {
+pub fn category(name: &str) -> MaterialCategory {
     match name {
         "Concrete" => MaterialCategory::Concrete,
         "Masonry" => MaterialCategory::Masonry,
@@ -30,7 +30,7 @@ fn category(name: &str) -> MaterialCategory {
     }
 }
 
-fn function(name: &str) -> LayerFunction {
+pub fn function(name: &str) -> LayerFunction {
     match name {
         "Substrate" => LayerFunction::Substrate,
         "Insulation" => LayerFunction::Insulation,
@@ -144,7 +144,7 @@ fn panes_of(partitioning: Option<&str>) -> f64 {
     }
 }
 
-fn door_operation(operation: &str) -> (DoorLeaves, Swing) {
+pub fn door_operation(operation: &str) -> (DoorLeaves, Swing) {
     match operation {
         "SINGLE_SWING_RIGHT" => (DoorLeaves::Single, Swing::Right),
         "DOUBLE_DOOR_SINGLE_SWING" | "DOUBLE_DOOR_DOUBLE_SWING" => (DoorLeaves::Double, Swing::Right),
@@ -193,7 +193,7 @@ pub fn read_types(i: &mut Import<'_>) {
     for (instance, args) in i.doc.rows("IFCWINDOWSTYLE").into_iter().chain(i.doc.rows("IFCWINDOWTYPE")) {
         let id = opt_text(args, 7).unwrap_or_else(|| Import::unused(&format!("wnd-{}", Import::slug(&text(args, 2))), |c| i.model.window_types.contains_key(c)));
         let rows = type_authoring(&i.doc, args);
-        let thermal = super::energy::type_thermal(&i.doc, args, true);
+        let thermal = crate::standards::v1::subsets::any::io::import::ifc::energy::type_thermal(&i.doc, args, true);
         let value = |name: &str, default: f64| number(&rows, name).unwrap_or(default);
         i.model.window_types.insert(
             id.clone(),
@@ -204,7 +204,7 @@ pub fn read_types(i: &mut Import<'_>) {
     for (instance, args) in i.doc.rows("IFCDOORSTYLE").into_iter().chain(i.doc.rows("IFCDOORTYPE")) {
         let id = opt_text(args, 7).unwrap_or_else(|| Import::unused(&format!("dr-{}", Import::slug(&text(args, 2))), |c| i.model.door_types.contains_key(c)));
         let rows = type_authoring(&i.doc, args);
-        let thermal = super::energy::type_thermal(&i.doc, args, false);
+        let thermal = crate::standards::v1::subsets::any::io::import::ifc::energy::type_thermal(&i.doc, args, false);
         let value = |name: &str, default: f64| number(&rows, name).unwrap_or(default);
         let (leaves, swing) = door_operation(args.get(if i.schema == Schema::Ifc4 { 10 } else { 8 }).and_then(Part21Value::as_enum).unwrap_or_default());
         let leaves = match label(&rows, "Leaves").as_deref() {
@@ -250,11 +250,11 @@ fn user_rows(doc: &Doc<'_>, set: &[Part21Value]) -> BTreeMap<String, PropertyVal
 pub fn read_attached(i: &mut Import<'_>) {
     let imported: Vec<(u64, String)> = i.ids.iter().map(|(ifc, id)| (*ifc, id.clone())).collect();
     for (ifc, id) in imported {
-        let derived = super::energy::derived_rows(&i.doc, ifc);
+        let derived = crate::standards::v1::subsets::any::io::import::ifc::energy::derived_rows(&i.doc, ifc);
         for definition in i.doc.index.definitions.get(&ifc).into_iter().flatten() {
             let Some(set) = i.doc.args(*definition, "IFCPROPERTYSET") else { continue };
             let name = text(set, 2);
-            if name == "Semio_Authoring" || name == super::zoning::COVERING_SET || name == PARENTS_SET || name == super::components::OVERRIDES_SET || WALL_DEPTH_SETS.contains(&name.as_str()) {
+            if name == "Semio_Authoring" || name == crate::standards::v1::subsets::any::io::import::ifc::zoning::COVERING_SET || name == PARENTS_SET || name == crate::standards::v1::subsets::any::io::import::ifc::components::OVERRIDES_SET || WALL_DEPTH_SETS.contains(&name.as_str()) {
                 continue;
             }
             let mut rows = user_rows(&i.doc, set);
@@ -422,6 +422,4 @@ pub fn read_classifications(i: &mut Import<'_>) {
 }
 //#endregion 🔖️Classifications
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

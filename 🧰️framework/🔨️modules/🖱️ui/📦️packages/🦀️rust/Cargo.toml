@@ -25,12 +25,6 @@ path = "🦀️.rs"
 [features]
 default = []
 testkit = ["wgpu-engine", "semio-framework-ui-retained-tree/testkit"]
-# ⌨️ Terminal target: semio-styled scene/cell renderer, wasm-safe. Carries no platform I/O on its own.
-tui = ["dep:semio-framework-async"]
-# 🖥️ Native terminal backend for `tui`: raw mode, alt screen, stdin ANSI input decoding.
-tui-terminal = ["tui", "dep:libc"]
-# 🌐️ wasm-bindgen exports of the tui `WasmHost` for browser hosts (xterm.js); never default.
-tui-bindgen = ["tui", "dep:wasm-bindgen"]
 # 🧊️ wgpu target: declarative component types only, so wasm32-wasip2 program components stay light.
 # Names the target, not the `wgpu` crate — that one only arrives with `wgpu-engine` below. `bytemuck`
 # backs `draw_types::{UiInstance, VectorVertex}` (GPU vertex layout structs with zero `wgpu`-crate
@@ -124,6 +118,7 @@ wgpu = { version = "29.0.4", default-features = false, features = ["std", "wgsl"
 # `flexbox` because `LayoutSpec::Grid` is a first-class contract variant React renders as real CSS
 # grid — same feature set `semio-framework-ui-render` already resolves for the same reason.
 taffy = { version = "0.9", default-features = false, features = ["std", "flexbox", "grid", "taffy_tree"], optional = true }
+semio-framework-ui-layout = { path = "../../📜️declaration/📐️layout/📦️packages/🦀️rust" }
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], optional = true }
@@ -131,9 +126,6 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], 
 # 🐧️ winit's Linux backends are features; these load their system libraries at run time (no dev packages).
 [target.'cfg(target_os = "linux")'.dependencies]
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "x11", "wayland", "wayland-dlopen"], optional = true }
-
-[target.'cfg(all(unix, not(target_arch = "wasm32")))'.dependencies]
-libc = { version = "0.2.186", optional = true }
 
 # 🌉️ Browser-only device/session bindings (`🎯️targets/🧊️wgpu`'s canvas/clipboard/fetch/cursor
 # bridges — cursor.rs, prepared.rs, host.rs, text.rs, gpu.rs — plus `tui-bindgen`'s xterm.js
@@ -184,11 +176,6 @@ semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️pa
 semio-framework-async = { path = "../../../⏳️async/📦️packages/🦀️rust", features = ["entrypoint"] }
 semio-framework-ui-viewport = { path = "../../🪟️viewport/📦️packages/🦀️rust" }
 tiny-skia = "0.11.4"
-# 📏️ Independent oracles for the `tui` text model: `unicode-width` (UAX #11 plus emoji sequences) and
-# `unicode-segmentation` (UAX #29) must agree with `⌨️tui/📝️text` on every scalar and the width fixture.
-# Dev-only: the terminal text model itself carries its own Unicode tables and no runtime dependency.
-unicode-width = "0.2.2"
-unicode-segmentation = "1.13.2"
 # 🧪️ Keeps `#[test] async fn` bodies' literal `async` while expanding to a sync harness — see the
 # crate's own doc comment. Dev-only: `--lib` never links it, only `--tests`/`--all-targets` do.
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }

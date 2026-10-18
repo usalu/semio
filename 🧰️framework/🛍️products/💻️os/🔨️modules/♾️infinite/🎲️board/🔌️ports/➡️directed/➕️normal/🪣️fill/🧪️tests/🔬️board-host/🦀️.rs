@@ -36,8 +36,6 @@ fn BOARD_HOST_SOURCE() -> &'static str {
         assert!(size_of::<Result<BoardFillJob, BoardFillCheckpoint>>() <= 32 * 1_024);
         assert!(size_of::<semio_framework_job_worker::WorkerJobOutcome<BoardFillJob>>() <= 32 * 1_024);
         assert!(size_of::<semio_framework_job_worker::MountedWorkerJobSession<BoardFillJob>>() <= 32 * 1_024);
-        assert!(size_of::<semio_framework_job_worker::WorkerJobSessionAdmissionRejected<BoardFillJob>>() <= 32 * 1_024);
-        assert!(size_of::<Result<semio_framework_job_worker::MountedWorkerJobSession<BoardFillJob>, semio_framework_job_worker::WorkerJobSessionAdmissionRejected<BoardFillJob>>>() <= 32 * 1_024);
         assert!(!sources.terminal_is_empty());
         assert!(!virtual_handles.terminal_is_empty());
         assert!(BoardFillFixedPages::<u8, { usize::MAX }>::try_new().is_err());

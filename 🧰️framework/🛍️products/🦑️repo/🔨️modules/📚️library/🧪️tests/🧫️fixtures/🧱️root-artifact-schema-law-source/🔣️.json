@@ -111,8 +111,18 @@
     {
       "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🟦️.ts",
       "owners": [
-        "🔍️discovery/📖️source-access/🟦️.ts",
-        "🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts",
+        "🧬️schema/🗿️artifact/⚖️laws/🪪️ownership-field-parity/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🔬️interactivity-lanes/🟦️.ts",
+      "owners": [
+        "🔍️discovery/📖️source-access/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎛️commands/✅️verify/🏁️gate-lanes/🟦️.ts",
+      "owners": [
         "🧬️schema/🗿️artifact/⚖️laws/📋️aggregate/🟦️.ts"
       ]
     },

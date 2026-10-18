@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",
+  "module": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization",
   "fullSchemaExpression": "taxonomy.discoverySchema",
   "consumers": [
     "artifactPathProjectionCatalogRoots",

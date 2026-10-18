@@ -1,5 +1,5 @@
 /** 🎯️ Direct set-named-destination TypeScript payload. */
-import type { PdfDestination, PdfDestinationFit, PdfNamedDestination } from '../../📸️snapshot/🟦️.ts';
+import type { PdfDestination, PdfDestinationFit, PdfNamedDestination } from '../../📸️snapshot/🎯️navigation/🟦️.ts';
 export interface SetNamedDestinationMutation {
   mutation: 'setNamedDestination';
   destination: PdfNamedDestination;

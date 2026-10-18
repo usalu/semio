@@ -1,0 +1,6 @@
+{"owner": "semio-framework-os-kernel-db-io-core", "suffix": "laws", "kind": "framework", "testkit": true,
+ "new_root": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🧪️tests/🔬️laws/🦀️.rs",
+ "moves": [
+  {"mount_file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs", "module_path": "", "mount_name": "db_io_retained_fixtures", "as": "retained_fixtures_laws"},
+  {"mount_file": "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗄️storage/🧱️io-core/🦀️.rs", "module_path": "", "mount_name": "tests", "as": "unit_laws"}
+ ]}

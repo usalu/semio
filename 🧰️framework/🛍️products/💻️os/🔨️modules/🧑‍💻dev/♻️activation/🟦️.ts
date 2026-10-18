@@ -168,7 +168,7 @@ export function preparedComponentVerdict(facts: PreparedComponentFacts): Prepare
 }
 
 /** 🩺️ The HEALTHY SET rule for a multi-plugin host: one component that failed to build is a missing
- * component, not a broken product. `s` fans its Nx closure out to the entire registered catalog, so an
+ * component, not a broken product. `s` fans its build closure out to the entire registered catalog, so an
  * all-or-nothing preparation makes the whole hub un-bootable whenever any single one of ~60 crates is
  * red — which is exactly how every cold `dev s` attempt before ticket 26/09/18 ended (`🧱️block`).
  *

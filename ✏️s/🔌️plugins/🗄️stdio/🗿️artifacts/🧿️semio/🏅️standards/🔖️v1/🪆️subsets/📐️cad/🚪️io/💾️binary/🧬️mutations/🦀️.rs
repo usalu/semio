@@ -33,7 +33,7 @@ use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 use crate::io::text::mutations::print_cad_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn wire_tag(m: &SemioCadMutation) -> u8 {
+pub fn wire_tag(m: &SemioCadMutation) -> u8 {
     match m {
         SemioCadMutation::AddLayer(_) => TAG_ADD_LAYER,
         SemioCadMutation::RemoveLayer(_) => TAG_REMOVE_LAYER,

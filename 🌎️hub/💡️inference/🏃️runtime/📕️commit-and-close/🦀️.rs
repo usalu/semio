@@ -112,13 +112,15 @@ impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B> {
 
     fn close_store<P, M>(slot: &'static str, store: &mut Option<directory::os_store::ArtifactStore<P, M>>) -> Result<bool, GisMapApprovalCommitErrorV1>
     where
-        P: pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Clone + directory::ToValue + directory::FromValue + Send + Sync + 'static,
+        P: pack::snapshot::ArtifactPack + directory::os_store::serialization::ArtifactStoreSnapshot + Clone + directory::ToValue + directory::FromValue + Send + Sync + 'static,
         M: directory::Mutation<P> + directory::os_spr::OpBinary + directory::os_spr::OpText + Clone + directory::ToValue + directory::FromValue + Send + 'static,
     {
-        use directory::os_store::{SnapshotRetirementStep, SpaceMember};
+        use directory::os_store::{RetainedCloneGrant, RetainedCloneStep, SpaceMember};
         let Some(owner) = store.as_mut() else { return Ok(true) };
-        match owner.close_owned_step(1, directory::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).map_err(|error| gis_map_storage_refusal(&error))? {
-            SnapshotRetirementStep::Complete => {
+        let demand = owner.close_owned_demands(0).map_err(|error| gis_map_storage_refusal(&error))?;
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        match owner.close_owned_step(grant) {
+            Ok(RetainedCloneStep::Complete(_)) => {
                 let terminal = owner.close_owned_terminal_is_empty();
                 record_close_store_step(&format!("{slot} Complete terminal_is_empty={terminal}"));
                 if !terminal {
@@ -127,18 +129,18 @@ impl<B: ComposedMapCommitBindingV1> RetainedGisMapApprovalCommitterV1<B> {
                 drop(store.take());
                 Ok(true)
             }
-            SnapshotRetirementStep::Pending { .. } => {
+            Ok(RetainedCloneStep::Progress(_)) => {
                 record_close_store_step(&format!("{slot} Pending"));
                 Ok(false)
             }
-            SnapshotRetirementStep::Blocked => {
+            Err(error) => {
                 let outstanding = owner.outstanding_snapshot_read_count();
                 let returned = owner.returned_snapshot_read_count();
                 let terminal = owner.close_owned_terminal_is_empty();
                 let phase = owner.close_owned_phase_witness();
                 let displaced = owner.close_displaced_witness();
                 record_close_store_step(&format!("{slot} Blocked outstanding_reads={outstanding} returned_reads={returned} terminal_is_empty={terminal} phase={phase} displaced={displaced}"));
-                Err(gis_map_storage_refusal(&"refused"))
+                Err(gis_map_storage_refusal(&error))
             }
         }
     }

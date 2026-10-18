@@ -38,7 +38,7 @@ test("Puzzle2d literal and optional text producers expose the exact active nativ
   }
  }finally{db.close()}
  const mutations=resolve(import.meta.dir,"../../../../🧬️mutations");
- for(const path of["🏷️literal-id-inverse/🦀️.rs","🪢️connect-handles/🎮️prepare/🪢️edge/🦀️.rs","🔤️text/↩️inverse/🦀️.rs","🔤️text/🎮️prepare/📸️candidate/🦀️.rs","📍move-node/🎮️prepare/↩️inverse/🦀️.rs","📍move-node/🎮️prepare/📸️candidate/🦀️.rs","🚩️flag/🎮️prepare/↩️inverse/🦀️.rs","🚩️flag/🎮️prepare/📸️candidate/🦀️.rs","🌱create-node/🎮️prepare/📸️candidate/🦀️.rs","🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs","🗑️delete-node/🎮️prepare/📸️candidate/🦀️.rs","🪢️connect-handles/🎮️prepare/📸️candidate/🦀️.rs","🎮️prepare/🧰️child/🦀️.rs"]){
+ for(const path of["🏷️literal-id-inverse/🦀️.rs","🔌️handle/🪢️connect-handles/🎮️prepare/🪢️edge/🦀️.rs","🔤️text/↩️inverse/🦀️.rs","🔤️text/🎮️prepare/📸️candidate/🦀️.rs","🧭️pose/📍move-node/🎮️prepare/↩️inverse/🦀️.rs","🧭️pose/📍move-node/🎮️prepare/📸️candidate/🦀️.rs","🚩️flag/🎮️prepare/↩️inverse/🦀️.rs","🚩️flag/🎮️prepare/📸️candidate/🦀️.rs","🟢️node/🌱create-node/🎮️prepare/📸️candidate/🦀️.rs","🟢️node/🗑️delete-node/🎮️prepare/↩️inverse/🦀️.rs","🟢️node/🗑️delete-node/🎮️prepare/📸️candidate/🦀️.rs","🔌️handle/🪢️connect-handles/🎮️prepare/📸️candidate/🦀️.rs","🎮️prepare/🧰️child/🦀️.rs"]){
   const source=readFileSync(resolve(mutations,path),"utf8");
   for(const marker of["next_close_copy_byte_demand","next_close_capacity_byte_demand","next_close_release_byte_demand","next_close_depth_demand"])expect(source).toContain(marker);
   expect(source).not.toContain("SnapshotRetirementStep");
@@ -59,11 +59,11 @@ test("Puzzle2d snapshot clones admit original immutable source custody and close
  }finally{db.close()}
  const root=resolve(import.meta.dir,"../../../../../../../../..");
  const helper=readFileSync(resolve(root,"🧪️tests/🔗️source-custody/🦀️.rs"),"utf8");
- expect(helper).toContain("pub(crate) fn admit_source");
- expect(helper).toContain("pub(crate) fn close_source");
+ expect(helper).toContain("pub fn admit_source");
+ expect(helper).toContain("pub fn close_source");
  const native=readFileSync(resolve(import.meta.dir,"../../../🧪️tests/🧬️retained-clone/🦀️.rs"),"utf8");
- expect(native).toContain("test_source_custody::admit_source");
- expect(native).toContain("test_source_custody::close_source");
+ expect(native).toContain("testkit::admit_source");
+ expect(native).toContain("testkit::close_source");
  expect(native).not.toContain("from_authority");
  expect(native).not.toContain("RetainedCloneBorrowAuthority::new");
  expect(native).not.toContain("close_granted");

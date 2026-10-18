@@ -8,7 +8,7 @@ use semio_hub_artifact_creation::{ARTIFACT_CREATION_DEADLINE_MS, ArtifactCreatio
 use semio_hub_artifact_authority::{ArtifactBlobIntegrity, ArtifactPair, AuthorityLimits, AuthorityOperationControl, AuthorityProgress, ImmutableArtifactBlobStore, OperationContext, checkpoint_id_encoding_v1};
 use semio_hub_directory_service::DirectoryService;
 use semio_hub_directory_dispatch::HubDirectories;
-use semio_hub_directory::published_artifact_checkpoint;
+use semio_hub_directory::{ArtifactCasDirectory, ArtifactCreationDirectory, AuthSessionDirectory, DocumentDirectory, EventLog, ProjectionRebuild, published_artifact_checkpoint};
 use directory::os_directory::schema::space_artifact_creation::SpaceArtifactCreationPhaseV1;
 use semio_framework_hash::Sha256;
 use std::sync::Arc;

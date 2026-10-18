@@ -3,10 +3,12 @@
 //! it was written with and is reported by a note.
 //! 📎 <https://standards.buildingsmart.org/IFC/RELEASE/IFC2x3/TC1/HTML/ifcsharedbldgelements/lexical/ifcrelconnectselements.htm>
 
-use super::data::{label, number};
-use super::reader::text;
-use super::spatial::set_of;
-use super::Import;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::instance as inference;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::io::import::ifc::data::{label, number};
+use crate::standards::v1::subsets::any::io::import::ifc::reader::text;
+use crate::standards::v1::subsets::any::io::import::ifc::spatial::set_of;
+use crate::standards::v1::subsets::any::io::import::ifc::Import;
 use crate::standards::v1::subsets::any::io::export::ifc::walls::ATTACH_SET;
 use crate::standards::v1::subsets::any::schema::snapshot::TopConstraint;
 
@@ -53,6 +55,4 @@ pub fn read(i: &mut Import<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+

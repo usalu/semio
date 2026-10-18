@@ -2,10 +2,10 @@
 //! (ticket 26/08/05/UI-ELEMENT-CO-LOCATION-RESTRUCTURE). Wired as a crate-root sibling module of
 //! `crate::tui::widget` (see that mod's `use crate::tui::chip::paint_chip;`).
 
-use crate::tui::cell::{Cell, CellBuffer};
-use crate::tui::geometry::{Pos, Rect};
-use crate::tui::theme::{Role, Surface, Theme};
-use crate::tui::widget::ChipState;
+use semio_framework_ui_tui_core::cell::{Cell, CellBuffer};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect};
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
+use crate::widget::ChipState;
 
 /// 🧊️ Paints the terminal capability fallback as opaque cells because a TUI has no backdrop compositor.
 pub(crate) fn paint_chip(c: &ChipState, theme: &Theme, rect: Rect, buf: &mut CellBuffer) {

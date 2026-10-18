@@ -30,7 +30,7 @@ use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
 use semio_framework_plugin::ViewEmit;
 use semio_framework_plugin::Viewer;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::{AppOperationContext, ArtifactOwnedToolJobRequest, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, Emit, FaultCode, FaultOrigin, HistoryView, InteractiveJobClassification, NoDraftMutation, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError, ViewerApp};

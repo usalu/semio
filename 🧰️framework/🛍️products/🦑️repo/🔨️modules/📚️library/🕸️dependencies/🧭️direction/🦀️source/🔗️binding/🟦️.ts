@@ -1,6 +1,8 @@
 import { posix } from "node:path";
 import { rustSourceTargetProblem, rustSourceTargets, type RustSourceInputInventory, type RustSourceInputProblem } from "../🟦️.ts";
-import { projectCargoProviderManifest, cargoProviderTomlParser, inspectRustModuleGraphFacts, rustModuleScopeProof, type CargoProviderManifestProjection, type CargoProviderTomlParser, type RustModuleContext, type RustModuleGraph, type RustModuleGraphFacts } from "../../../../🔍️discovery/🟦️.ts";
+import { projectCargoProviderManifest, cargoProviderTomlParser, type CargoProviderManifestProjection, type CargoProviderTomlParser } from "../../../../🔍️discovery/🚚️cargo-provider/🟦️.ts";
+import { inspectRustModuleGraphFacts, rustModuleScopeProof, type RustModuleContext, type RustModuleGraph } from "../../../../🔍️discovery/🌐️rust-module-graph/🟦️.ts";
+import { type RustModuleGraphFacts } from "../../../../🔍️discovery/🦀️rust-fact-contracts/🟦️.ts";
 import { rustTokens, rustTokenPairs, rustIdentifierSymbol } from "../../../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 
 export type RustBindingSpan = Readonly<{ start: number; end: number }>;

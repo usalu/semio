@@ -107,7 +107,7 @@ pub(crate) fn decode_option<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>)
 /// `Display`/`FromStr` for `f64` round-trip exactly, the shortest decimal that parses back), `S[hex]`
 /// =String, `E[hex]`=Enum, `F[n]`=Reference, `A[v,v,...]`=Aggregate, `T[hex,[v,v,...]]`=TypedValue.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_ifc_value(v: &IfcValue) -> String {
+pub fn enc_ifc_value(v: &IfcValue) -> String {
     match v {
         IfcValue::Unset => "U".to_string(),
         IfcValue::Derived => "D".to_string(),
@@ -124,7 +124,7 @@ pub(crate) fn enc_ifc_value(v: &IfcValue) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
+pub fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
     if s == "U" {
         return Ok(IfcValue::Unset);
     }
@@ -157,12 +157,12 @@ pub(crate) fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_ifc_value_list(vs: &[IfcValue]) -> String {
+pub fn enc_ifc_value_list(vs: &[IfcValue]) -> String {
     format!("[{}]", vs.iter().map(enc_ifc_value).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_ifc_value_list(s: &str) -> Result<Vec<IfcValue>, String> {
+pub fn dec_ifc_value_list(s: &str) -> Result<Vec<IfcValue>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_ifc_value).collect()
 }
 
@@ -190,12 +190,12 @@ pub(crate) fn dec_complex_list(s: &str) -> Result<Vec<IfcComplexType>, String> {
 
 /// 📦️ `[id,hexname,[args],[complex]]` — positional, mirrors [`IfcEntity`]'s own field order.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity(e: &IfcEntity) -> String {
+pub fn enc_entity(e: &IfcEntity) -> String {
     format!("[{},{},{},{}]", e.id, enc_str(&e.name), enc_ifc_value_list(&e.args), enc_complex_list(&e.complex))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity(s: &str) -> Result<IfcEntity, String> {
+pub fn dec_entity(s: &str) -> Result<IfcEntity, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, name, args, complex] = parts.as_slice() else { return Err(format!("entity: expected 4 fields, got {}", parts.len())) };
     Ok(IfcEntity { id: parse_u64(id)?, name: dec_str(name)?, args: dec_ifc_value_list(args)?, complex: dec_complex_list(complex)? })

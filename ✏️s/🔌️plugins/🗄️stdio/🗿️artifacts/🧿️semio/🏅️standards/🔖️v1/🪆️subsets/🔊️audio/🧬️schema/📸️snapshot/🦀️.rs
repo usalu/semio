@@ -151,9 +151,9 @@ impl Default for SemioAudioSnapshot {
 /// sample format, and one metadata tag — exercising every leaf/collection shape at least once.
 /// Single source of truth for `📚️examples/…/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
+#[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_audio_snapshot() -> SemioAudioSnapshot {
+pub fn demo_audio_snapshot() -> SemioAudioSnapshot {
     SemioAudioSnapshot {
         schema: STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA.into(),
         sample_rate: 44_100,

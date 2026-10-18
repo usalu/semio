@@ -1,6 +1,6 @@
 //! 🎛️ `set-column` payload. Edits a column sparsely: type, position, rotation, base offset, authored top constraint and name; absent fields stay untouched.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::{ModelSnapshot, Point2, TopConstraint}};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::{ModelSnapshot, Point2, TopConstraint}};
 use protocol::{MutationKind, SemanticDescriptor};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -22,13 +22,16 @@ pub struct SetColumn {
     pub name: Option<String>,
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetColumn {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetColumn
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetColumn>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "column", kind: "set-column", record: "SetColumn" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_column::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_column::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Edit column \"{}\"", self.id), &format!("Stütze \"{}\" ändern", self.id))

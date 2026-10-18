@@ -130,7 +130,8 @@ use semio_framework_plugin::app::InteractionView;
 #[allow(unused_imports)]
 use std::collections::{BTreeSet, HashMap, HashSet};
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
+use semio_s_artifact_puzzle_2d_unit_tests::editor::puzzle2d::snapshot::board_snapshot_nodes;
 #[allow(unused_imports)]
 use semio_framework_plugin::{ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest};
 #[allow(unused_imports)]

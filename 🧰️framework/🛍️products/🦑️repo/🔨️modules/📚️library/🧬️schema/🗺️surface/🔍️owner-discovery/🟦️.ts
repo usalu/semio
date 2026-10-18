@@ -1,4 +1,4 @@
-import { loadTaxonomy } from "../../../🟦️.ts";
+import { loadTaxonomy } from "../../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { policySurfaceRoots } from "../../../🔍️discovery/🗺️surface/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceDirectory, policySourceText, type PolicySourceOperations } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { POLICY_RS_COMPONENT_LEAF_NAME } from "../../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";

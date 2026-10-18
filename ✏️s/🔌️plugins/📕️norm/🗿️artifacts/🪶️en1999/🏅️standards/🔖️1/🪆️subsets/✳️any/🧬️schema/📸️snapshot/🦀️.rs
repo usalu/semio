@@ -715,7 +715,7 @@ impl En1999Snapshot {
 pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
 
-use semio_s_plugin_norm_app_surface;
+use semio_s_plugin_norm_app_surface as app_surface;
 
 pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
     app_surface::artifact_kind_spec("en1999", "EN 1999", EN1999_DOCUMENT_SCHEMA)

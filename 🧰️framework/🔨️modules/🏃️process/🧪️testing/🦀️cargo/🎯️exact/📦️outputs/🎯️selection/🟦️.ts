@@ -1,5 +1,5 @@
 import{types}from"node:util";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json";
 const contract=structuredClone(schema);
 /** 🎯️ Selects one completed receipt without accepting a directory or producer claim from DATA. */

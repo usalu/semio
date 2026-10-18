@@ -1,7 +1,7 @@
 /** 📖️ `examples` command: lists and verifies plugin example units.
  * @see 📜️script.ts
  */
-import { loadTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { loadTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { policySurfaceRoots } from "../../🔍️discovery/🗺️surface/🟦️.ts";
 import { policyStripEmoji } from "../../🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts";
@@ -9,7 +9,7 @@ import { existsSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { policyDiscoverCrateDirs } from "../../⚖️laws/🧩️plugin-consistency/🏛️foundation/🟦️.ts";
 import { policyDeadExampleLeafBreaches, policyEmptyExampleBreaches } from "../../⚖️laws/🧩️plugin-consistency/✍️handcrafted-mutation/🟦️.ts";
-import { policySemioArtifactExamplesBreaches } from "../../⚖️laws/🧩️plugin-consistency/🗺️taxonomy-shape/🟦️.ts";
+import { policySemioArtifactExamplesBreaches } from "../../⚖️laws/🧩️plugin-consistency/🗺️taxonomy-shape/📚️examples/🟦️.ts";
 import { taxonomyMappedFilename } from "../../🧹️normalization/🔣️taxonomy/🏷️filenames/🟦️.ts";
 
 //#region 🔖️ExamplesScript

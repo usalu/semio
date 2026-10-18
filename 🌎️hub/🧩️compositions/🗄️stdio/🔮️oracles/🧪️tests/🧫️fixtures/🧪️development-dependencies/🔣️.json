@@ -7,7 +7,8 @@
       "sha256": "c05cc66efcf4285a17d1b004ad3faf598cfd8069bbcb5d443dd27d9e24287da7",
       "references": [
         "image",
-        "png"
+        "png",
+        "semio-framework-test-fixtures"
       ],
       "originalManifest": {
         "source": "[workspace]\n\n[package]\nname = \"semio-s-artifact-stdio-tiff-test-oracle\"\nversion = \"0.1.0\"\nedition = \"2021\"\npublish = false\ndescription = \"🔮️ Owned independent test oracle provider\"\n\n[package.metadata.semio]\nrole = \"test\"\n\n[lib]\nname = \"semio_s_artifact_stdio_tiff_test_oracle\"\npath = \"../../🦀️.rs\"\n\n[features]\noracles = [\"dep:tiff\"]\n\n[dependencies]\n\"semio-repo-test-host\" = { path = \"../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust\", default-features = false }\n\"tiff\" = { version = \"0.11\", optional = true }\n",

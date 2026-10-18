@@ -1,5 +1,6 @@
 use super::*;
 use semio_framework_os_infinite::dag_draw_lod_label;
+use semio_framework_os_infinite_board_dag_host::dimmed_node_ids;
 #[test]
 fn fixture_from_workflow_json() {
     let nodes = r#"[{"id":"a","label":"Alpha","x":10,"y":20,"inputs":[],"outputs":[{"id":"out","label":"Out"}]}]"#;
@@ -316,7 +317,7 @@ fn graph_host_sync_interaction_sets_hover_node_only() {
     let hover = DomainHover { channel: "pointer".into(), ids: vec!["a".into()] };
     host.sync_interaction(None, Some(&hover));
     assert_eq!(host.hovered_node_id().as_deref(), Some("a"));
-    assert_eq!(host.hover_facts(),crate::infinite::board::schema::dag_input::DagHoverFacts::default());
+    assert_eq!(host.hover_facts(),semio_framework_os_infinite::board::schema::dag_input::DagHoverFacts::default());
 }
 
 #[test]
@@ -421,7 +422,7 @@ fn graph_host_selected_node_ids_json_matches_selection() {
     host.sync_from_payload(&payload).expect("sync");
     let selection = DomainSelection { granularity: "node".into(), ids: vec!["a".into()], anchor_id: None };
     host.sync_interaction(Some(&selection), None);
-    assert_eq!(host.selected_node_ids_json(), r#"["a"]"#);
+    assert_eq!(serde_json::to_string(&host.selected_node_ids()).expect("ids encode"), r#"["a"]"#);
 }
 
 #[test]

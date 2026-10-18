@@ -32,7 +32,7 @@ use semio_framework_plugin::NoTransient;
 use semio_framework_plugin::NoTransientMutation;
 use {semio_framework_artifact_reference::StandardId};
 use {semio_framework_artifact_reference::SubsetId};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Dialect
 /// 🎯️ This surface's dialect coordinate — `s.stdio.epw@energyplus/*`, verified against this

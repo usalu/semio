@@ -64,6 +64,4 @@ pub fn transmittance(layers: &[(f64, f64)], flow: HeatFlow, far: FarSide) -> Opt
     total_resistance(layers, flow, far).map(|total| 1.0 / total)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

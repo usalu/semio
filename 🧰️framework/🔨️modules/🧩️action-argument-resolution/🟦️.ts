@@ -1,6 +1,7 @@
 // #region 🧮️ActionArgumentResolution
 /** 🧮️ Resolves staged and default action arguments, then identifies unresolved required arguments. */
-import type { ActionArgDef, DialogChoice } from "../🛂️manifest/🟦️.ts";
+import type { ActionArgDef } from "../🛂️manifest/🎬️action-types-and-semantics/🟦️.ts";
+import type { DialogChoice } from "../🛂️manifest/🔘️definitions-action-ids-and-shell-brand/🟦️.ts";
 
 /** 🌱️ `seed` carries a dialog's pre-seeded context args (e.g. a row-scoped `spaceId` that is never a
  * declared, editable form field) through untouched: declared `defs` still resolve staged-then-default

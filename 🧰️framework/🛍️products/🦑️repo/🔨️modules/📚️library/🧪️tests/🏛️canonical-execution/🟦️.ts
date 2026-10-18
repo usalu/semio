@@ -9,7 +9,7 @@ import { canonicalArchitectureEnvironment, cargoDirectories } from "../../⚡️
 import { orchestratorBudgetOpts } from "../../🏃️process/🟦️.ts";
 
 const libraryRoot = resolve(import.meta.dir, "../..");
-const vectors = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🏛️canonical-execution/🔣️.json"), "utf8"));
+const vectors = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🏛️canonical-execution/🔣️.json"), "utf8"));
 
 const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
 if (!artifactRoot) throw new Error("SEMIO_TEST_ARTIFACT_DIR is required");
@@ -35,8 +35,8 @@ for (const row of vectors.cases) {
     });
     const before = { ...input };
     const actual = canonicalArchitectureEnvironment(root, input);
-    const target = resolve(root, ...row.expectedTarget);
-    expect(actual).toEqual({ ...before, CARGO_TARGET_DIR: target, CARGO_BUILD_BUILD_DIR: target });
+    const target = resolve(root, ...row.expectedTarget), build = resolve(root, ...row.expectedBuild);
+    expect(actual).toEqual({ ...before, CARGO_TARGET_DIR: target, CARGO_BUILD_BUILD_DIR: build });
     expect(input).toEqual(before);
     expect(actual).not.toBe(input);
     expect(Object.keys(actual).sort()).toEqual([...new Set([...Object.keys(input), "CARGO_TARGET_DIR", "CARGO_BUILD_BUILD_DIR"])].sort());
@@ -56,8 +56,8 @@ test("explicit empty environment never captures an ambient secret", () => {
 });
 
 test("the actual root caller preserves canonical Cargo authority through process options", () => {
-  const source = ts.createSourceFile("📜️script.ts", readFileSync(join(process.cwd(), "📜️script.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-  const owner = source.statements.find((node): node is ts.ClassDeclaration => ts.isClassDeclaration(node) && node.name?.text === "VerifyScript");
+  const source = ts.createSourceFile("🟦️.ts", readFileSync(join(libraryRoot, "🎛️commands/✅️verify/🏁️gate-lanes/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
+  const owner = source.statements.find((node): node is ts.ClassDeclaration => ts.isClassDeclaration(node) && node.name?.text === "VerifyGateLanes");
   const method = owner?.members.find((node): node is ts.MethodDeclaration => ts.isMethodDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === "runCanonicalArchitecture");
   if (!method) throw new Error("canonical root execution owner is absent");
   const code = ts.transpileModule(`class Invocation { root = repoRoot; ${method.getText(source)} } new Invocation().runCanonicalArchitecture();`, { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
@@ -68,7 +68,7 @@ test("the actual root caller preserves canonical Cargo authority through process
     let observed: { env: Record<string, string | undefined> } | undefined;
     invoke(root, { env }, (_command: string, _args: string[], options: typeof observed) => { observed = options; }, canonicalArchitectureEnvironment, orchestratorBudgetOpts, () => [], { log() {} });
     expect(observed?.env.CARGO_TARGET_DIR).toBe(resolve(root, ...row.expectedTarget));
-    expect(observed?.env.CARGO_BUILD_BUILD_DIR).toBe(resolve(root, ...row.expectedTarget));
+    expect(observed?.env.CARGO_BUILD_BUILD_DIR).toBe(resolve(root, ...row.expectedBuild));
   }
 });
 
@@ -91,8 +91,9 @@ test("Cargo metadata and independent TOML parsing confirm isolated target and bu
         ...(row.target.mode === "absolute" ? { CARGO_TARGET_DIR: resolve(root, ...row.target.segments) } : {}),
       };
       const isolated = canonicalArchitectureEnvironment(root, input);
-      const target = resolve(root, ...row.expectedTarget);
-      expect(cargoDirectories(root, isolated)).toEqual({ target, build: target });
+      const target = row.target.mode === "default" ? resolve(root, oracle.build["target-dir"]) : resolve(root, ...row.expectedTarget);
+      const build = row.environment.CARGO_BUILD_BUILD_DIR ? resolve(root, row.environment.CARGO_BUILD_BUILD_DIR) : resolve(root, oracle.build["build-dir"]);
+      expect(cargoDirectories(root, isolated)).toEqual({ target, build });
       const { CARGO_TARGET_DIR: _target, CARGO_BUILD_TARGET_DIR: _secondary, CARGO_BUILD_BUILD_DIR: _build, ...ambient } = process.env;
       const cargo = spawnSync("cargo", ["metadata", "--no-deps", "--offline", "--format-version", "1"], {
         cwd: root, encoding: "utf8", timeout: 30_000,

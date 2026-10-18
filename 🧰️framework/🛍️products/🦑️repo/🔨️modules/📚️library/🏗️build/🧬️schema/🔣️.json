@@ -183,6 +183,24 @@
                 },
                 "continuous": {
                   "type": "boolean"
+                },
+                "metadata": {
+                  "type": "object",
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "properties": {
+                        "dashboard": {
+                          "type": "object",
+                          "properties": {
+                            "ready": {
+                              "$ref": "#/$defs/ReadyDeclaration"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
                 }
               },
               "additionalProperties": true,
@@ -559,6 +577,102 @@
           "📜️script.ts",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts"
         ]
+      }
+    },
+    "ReadyDeclaration": {
+      "type": "object",
+      "description": "🟢️ A continuous task is ready after its visible output shows `http://(127.0.0.1|localhost|0.0.0.0):<port>` and the exact ready address answers HTTP with a 2xx or 3xx status. The ready address is the printed match plus `path`, or with `printed` the whole printed address up to whitespace. `portEnv` names the environment value that carries the port of one run; `port` is its default and may stand alone.",
+      "properties": {
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "portEnv": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.-]*$"
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[/?#][^\\s\\u0000]*$"
+        },
+        "printed": {
+          "type": "boolean"
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "port"
+          ]
+        },
+        {
+          "required": [
+            "portEnv"
+          ]
+        }
+      ],
+      "allOf": [
+        {
+          "$ref": "#/$defs/ReadyPrinted"
+        }
+      ],
+      "additionalProperties": false
+    },
+    "ReadyPrinted": {
+      "type": "object",
+      "description": "🖨️ A printed address leaves no room for `path`.",
+      "anyOf": [
+        {
+          "properties": {
+            "printed": {
+              "enum": [
+                false
+              ]
+            }
+          }
+        },
+        {
+          "properties": {
+            "path": false
+          }
+        }
+      ]
+    },
+    "Ready": {
+      "type": "object",
+      "description": "🎯 The resolved readiness of one run: a concrete port and the path that follows the printed match.",
+      "required": [
+        "port",
+        "path"
+      ],
+      "properties": {
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "path": {
+          "type": "string"
+        },
+        "printed": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "ReadinessPolicy": {
+      "const": {
+        "version": 1,
+        "firstProbeMilliseconds": 50,
+        "lastProbeMilliseconds": 1000,
+        "probeBudgetMilliseconds": 500,
+        "connectMilliseconds": 100,
+        "maximumHeaderBytes": 8192,
+        "maximumLineCharacters": 4096,
+        "keptLineCharacters": 64,
+        "maximumAddressCharacters": 2048,
+        "marker": "[semio] ready"
       }
     }
   }

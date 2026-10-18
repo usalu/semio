@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-framework-ui-tui-host"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "semio tui wasm host for browser terminals (feature bindgen)"
+
+[package.metadata.semio]
+role = "framework"
+id = "ui-tui-host"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+bindgen = ["dep:wasm-bindgen"]
+
+[dependencies]
+semio-framework-ui-tui-core = { path = "../../../🧱️core/📦️packages/🦀️rust" }
+semio-framework-ui-tui-engine = { path = "../../../⚙️engine/📦️packages/🦀️rust" }
+semio-framework-ui-tui-terminal = { path = "../../../📺️terminal/📦️packages/🦀️rust" }
+ui_styling = { path = "../../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
+
+[target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
+wasm-bindgen = { version = "0.2.106", optional = true }

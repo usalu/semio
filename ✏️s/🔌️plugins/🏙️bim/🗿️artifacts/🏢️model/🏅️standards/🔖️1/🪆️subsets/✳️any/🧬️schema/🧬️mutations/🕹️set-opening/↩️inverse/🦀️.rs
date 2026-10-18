@@ -1,14 +1,17 @@
 //! ↩️ Inverse of `SetOpening`: an absolute `SetOpening` restoring the base values of exactly the provided fields, none when the opening
 //! is absent.
 
-use super::SetOpening;
-use crate::standards::v1::subsets::any::schema::{diff::Assigned, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::set_opening::SetOpening;
+use crate::standards::v1::subsets::any::schema::{diff::Assigned, snapshot::ModelSnapshot};
 
-pub fn inverse(payload: &SetOpening, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SetOpening, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::set_opening::SetOpening>,
+{
     let Some(opening) = base.openings.get(&payload.id) else {
         return Vec::new();
     };
-    vec![ModelMutation::SetOpening(SetOpening {
+    vec![Op::from(SetOpening {
         id: payload.id.clone(),
         kind: payload.kind.as_ref().map(|_| opening.kind.clone()),
         sill_override: payload.sill_override.as_ref().map(|_| Assigned::new(opening.sill_override)),

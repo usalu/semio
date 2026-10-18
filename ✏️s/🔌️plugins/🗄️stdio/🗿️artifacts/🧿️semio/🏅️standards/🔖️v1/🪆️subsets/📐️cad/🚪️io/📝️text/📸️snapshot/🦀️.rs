@@ -41,12 +41,12 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_str(s: &str) -> String {
+pub fn enc_str(s: &str) -> String {
     hex_encode(s.as_bytes())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_str(s: &str) -> Result<String, String> {
+pub fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
@@ -79,22 +79,22 @@ pub(crate) fn parse_bool(s: &str) -> Result<bool, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
+pub fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
     format!("[{}]", items.iter().map(enc).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
+pub fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
+pub fn enc_point2(p: &SemioPoint2) -> String {
     format!("[{},{}]", native::NativeF64(p.x), native::NativeF64(p.y))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
+pub fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
     Ok(SemioPoint2 { x: parse_f64(x)?, y: parse_f64(y)? })
@@ -104,7 +104,7 @@ pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
 /// tag prefix, same convention this subset's own `🔺️diff/🦀️.rs`'s `enc_entity` uses
 /// (duplicated here, field-for-field).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity(e: &CadEntity) -> String {
+pub fn enc_entity(e: &CadEntity) -> String {
     match e {
         CadEntity::Line { a, b } => format!("L[{},{}]", enc_point2(a), enc_point2(b)),
         CadEntity::Arc { center, radius, start_angle, end_angle } => format!("A[{},{},{},{}]", enc_point2(center), native::NativeF64(*radius), native::NativeF64(*start_angle), native::NativeF64(*end_angle)),
@@ -121,7 +121,7 @@ pub(crate) fn enc_entity(e: &CadEntity) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity(s: &str) -> Result<CadEntity, String> {
+pub fn dec_entity(s: &str) -> Result<CadEntity, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     let parts = split_top_level(inner, ',');
@@ -167,36 +167,36 @@ pub(crate) fn dec_entity(s: &str) -> Result<CadEntity, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_layer(l: &CadLayer) -> String {
+pub fn enc_layer(l: &CadLayer) -> String {
     format!("[{},{},{},{}]", enc_str(&l.name), l.color_index, enc_str(&l.line_type), enc_bool(l.visible))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_layer(s: &str) -> Result<CadLayer, String> {
+pub fn dec_layer(s: &str) -> Result<CadLayer, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, color_index, line_type, visible] = parts.as_slice() else { return Err(format!("layer: expected 4 fields, got {}", parts.len())) };
     Ok(CadLayer { name: dec_str(name)?, color_index: parse_i32(color_index)?, line_type: dec_str(line_type)?, visible: parse_bool(visible)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_entity_record(r: &CadEntityRecord) -> String {
+pub fn enc_entity_record(r: &CadEntityRecord) -> String {
     format!("[{},{},{}]", enc_str(&r.handle), enc_str(&r.layer), enc_entity(&r.entity))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_entity_record(s: &str) -> Result<CadEntityRecord, String> {
+pub fn dec_entity_record(s: &str) -> Result<CadEntityRecord, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [handle, layer, entity] = parts.as_slice() else { return Err(format!("entity record: expected 3 fields, got {}", parts.len())) };
     Ok(CadEntityRecord { handle: dec_str(handle)?, layer: dec_str(layer)?, entity: dec_entity(entity)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block(b: &CadBlock) -> String {
+pub fn enc_block(b: &CadBlock) -> String {
     format!("[{},{},{}]", enc_str(&b.name), enc_point2(&b.base_point), enc_list(&b.entities, enc_entity_record))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block(s: &str) -> Result<CadBlock, String> {
+pub fn dec_block(s: &str) -> Result<CadBlock, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, base_point, entities] = parts.as_slice() else { return Err(format!("block: expected 3 fields, got {}", parts.len())) };
     Ok(CadBlock { name: dec_str(name)?, base_point: dec_point2(base_point)?, entities: dec_list(entities, dec_entity_record)? })

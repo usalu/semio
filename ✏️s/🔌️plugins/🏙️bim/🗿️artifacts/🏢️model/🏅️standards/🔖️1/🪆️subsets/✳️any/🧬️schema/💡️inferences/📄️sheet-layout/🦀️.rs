@@ -12,8 +12,8 @@
 //!
 //! Related: <https://www.iso.org/standard/72482.html>, <https://en.wikipedia.org/wiki/ISO_216>.
 
-use super::super::element_solids::{dep_object, dep_value};
-use super::super::view_linework::ViewLinework;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use crate::standards::v1::subsets::any::schema::snapshot::{revisions_of, viewports_of, ModelSnapshot, ViewKind};
 use semio_framework_value::DslValue;
 use std::collections::{BTreeMap, BTreeSet};

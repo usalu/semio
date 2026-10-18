@@ -2,7 +2,7 @@ import type { RuntimeGraphEdgeV1, RuntimeGraphFindingV1, RuntimeGraphEvidenceV1,
 export type { RuntimeGraphEdgeV1, RuntimeGraphFindingV1, RuntimeGraphEvidenceV1, RuntimeDynamicImportOwnerV1, RuntimeResourceReadInputV1, RuntimeResourceReadOwnerV1 } from "./🧬️schema/🟦️.ts";
 import { posix } from "node:path";
 import { createHash } from "node:crypto";
-import { scanRegistryCompilerImports } from "../../🟦️.ts";
+import { scanRegistryCompilerImports } from "../📇️registry-catalog-inputs/🟦️.ts";
 import { ecmaTokens, ecmaStringValue } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🟨️ecma/🟦️.ts";
 import { rustAttributes, rustFindTopLevel, rustStringValue, rustTokenPairs, rustTokenSegments, rustTokens, rustVisibility, type RustToken } from "../../../../../../🔨️modules/📚️compiler/📖️syntax/🦀️rust/🟦️.ts";
 

@@ -1,20 +1,20 @@
 # syntax=docker/dockerfile:1.7
 #
 # 🐳️ `os-hub` container image — the PRODUCTION topology: one release binary, no repository, no Rust
-# toolchain, no `bun`, no Nx in the runtime layer.
+# toolchain, no `bun`, no build tool in the runtime layer.
 #
 # ─── why this is a binary-only image ──────────────────────────────────────────────────────────────
 #
-# An earlier revision of this file carried the whole repository and ran `bun nx run os-hub:dev` as
+# An earlier revision of this file carried the whole repository and ran `bun repo run os-hub:dev` as
 # its entrypoint, because `validate_auth_startup` (`🏗️bootstrap/🦀️.rs`) then refused `production`
 # without an `IdentityAssertionVerifier` adapter — of which this repository still ships none — so
 # *development* mode was the only topology that booted, and development mode reads its
-# `LocalBootstrapTransport` off an inherited file descriptor 3 that only the Nx launcher creates.
+# `LocalBootstrapTransport` off an inherited file descriptor 3 that only the build launcher creates.
 #
 # That gate is gone. Production now requires *an identity authority*, and the hub grew its own:
 # `os-hub credential set` seeds the first user with no server running and `POST /auth/sessions`
 # mints the session, so `OS_HUB_CREDENTIAL_SIGN_IN=true` is enough. A bare `os-hub` process boots.
-# The launcher, `bun`, Nx and the repository are all dev-loop concerns and none of them belong in a
+# The launcher, `bun`, the build tool and the repository are all dev-loop concerns and none of them belong in a
 # server image; `bun repo run os-hub:dev` is still the right entrypoint for a *development* container,
 # and that is not what this file is for.
 #
@@ -68,8 +68,8 @@ WORKDIR /src
 COPY . .
 
 # 📦️ Dependencies, then the admin SPA, then the release binary. Each project's own `📜️script.ts`
-# verb is invoked directly rather than through `nx run`: the targets are one-line
-# `nx:run-commands` wrappers around exactly these commands, and the Nx project-graph pass costs
+# verb is invoked directly rather than through `bun repo run`: the targets are one-line
+# `repo:script` wrappers around exactly these commands, and the project-graph pass costs
 # minutes in a cold container for nothing. `os-hub:build-dev` is deliberately NOT built — the dev
 # launcher is not part of this image.
 RUN bun install --frozen-lockfile

@@ -53,7 +53,10 @@
         "nextRoundRobin",
         "requestSeq",
         "activationGeneration",
-        "watchdogHandle"
+        "watchdogHandle",
+        "originalWorkStock",
+        "originalClosures",
+        "originalReturns"
       ]
     },
     {
@@ -85,6 +88,7 @@
       "group": "activation",
       "declaration": "ShardActivation",
       "fields": [
+        "originalAdmission",
         "slot",
         "actorId",
         "generation",
@@ -149,7 +153,7 @@
   ],
   "minimumShells": {
     "client": {
-      "bytes": 768,
+      "bytes": 816,
       "slots": 1,
       "owners": 1
     },
@@ -159,7 +163,7 @@
       "owners": 2
     },
     "activation": {
-      "bytes": 416,
+      "bytes": 432,
       "slots": 2,
       "owners": 2
     },
@@ -188,6 +192,7 @@
         "requestId",
         "actorId",
         "activationGeneration",
+        "originalAdmission",
         "moduleUrl",
         "caps",
         "budget",
@@ -305,6 +310,40 @@
   ],
   "inbound": [
     {
+      "kind": "original-turn-receipt",
+      "ok": null,
+      "fields": [
+        "kind",
+        "actorId",
+        "activationGeneration",
+        "receipt"
+      ]
+    },
+    {
+      "kind": "original-producer-held",
+      "ok": null,
+      "fields": [
+        "kind",
+        "actorId",
+        "activationGeneration",
+        "operation",
+        "generation",
+        "refusal"
+      ]
+    },
+    {
+      "kind": "original-source-close",
+      "ok": null,
+      "fields": [
+        "kind",
+        "actorId",
+        "activationGeneration",
+        "operation",
+        "generation",
+        "sourceClosed"
+      ]
+    },
+    {
       "kind": "result",
       "ok": true,
       "fields": [
@@ -378,6 +417,7 @@
   ],
   "workerRequestKinds": [
     "attachHeartbeatSab",
+    "original-root-refusal",
     "dispose",
     "frame",
     "activate",
@@ -396,7 +436,11 @@
     "heartbeat",
     "result",
     "result",
-    "result"
+    "result",
+    "original-turn-receipt",
+    "original-producer-held",
+    "original-source-close",
+    "original-source-close"
   ],
   "hostFramePayloadKinds": [
     "effect-request",

@@ -2,14 +2,17 @@
 //! opening moves back onto the original wall at its base offset (`move-opening` re-hosts with the fit and overlap validation), and the
 //! created wall, which hosts nothing by then, is deleted last.
 
-use super::super::delete_wall::DeleteWall;
-use super::super::move_opening::MoveOpening;
-use super::super::set_wall_axis::SetWallAxis;
+use crate::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall;
+use crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::split;
-use super::SplitWall;
-use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::mutations::split_wall::SplitWall;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
 
-pub fn inverse(payload: &SplitWall, base: &ModelSnapshot) -> Vec<ModelMutation> {
+pub fn inverse<Op>(payload: &SplitWall, base: &ModelSnapshot) -> Vec<Op>
+where
+    Op: From<crate::standards::v1::subsets::any::schema::mutations::delete_wall::DeleteWall> + From<crate::standards::v1::subsets::any::schema::mutations::move_opening::MoveOpening> + From<crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis>,
+{
     let Some(wall) = base.walls.get(&payload.id) else {
         return Vec::new();
     };
@@ -17,8 +20,8 @@ pub fn inverse(payload: &SplitWall, base: &ModelSnapshot) -> Vec<ModelMutation> 
         return Vec::new();
     };
     let handed = base.openings.iter().filter(|(_, opening)| opening.host == payload.id && opening.offset >= parts.at);
-    std::iter::once(ModelMutation::DeleteWall(DeleteWall { id: payload.new_id.clone() }))
-        .chain(handed.map(|(id, opening)| ModelMutation::MoveOpening(MoveOpening { id: id.clone(), offset: opening.offset, host: Some(payload.id.clone()) })))
-        .chain(std::iter::once(ModelMutation::SetWallAxis(SetWallAxis { id: payload.id.clone(), axis: wall.axis.clone() })))
+    std::iter::once(Op::from(DeleteWall { id: payload.new_id.clone() }))
+        .chain(handed.map(|(id, opening)| Op::from(MoveOpening { id: id.clone(), offset: opening.offset, host: Some(payload.id.clone()) })))
+        .chain(std::iter::once(Op::from(SetWallAxis { id: payload.id.clone(), axis: wall.axis.clone() })))
         .collect()
 }

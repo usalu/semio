@@ -39,9 +39,6 @@ const setActive = (utilityId: string, expectedGeneration: number): ActionDescrip
 describe("🎛️ Bounded utility palette", () => {
   afterEach(() => cleanup());
 
-  it("validates the language-neutral end-user palette contract independently", () => {
-  });
-
   for (const locale of paletteFixture.selection.locales) {
     it(`exposes mutually exclusive, named selection choices in ${locale}`, () => {
       const dispatched: ActionDescriptor[] = [];

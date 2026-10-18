@@ -6,7 +6,6 @@ use crate::standards::v_rfc4180::subsets::any::io::text::snapshot::encode_csv;
 use crate::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv_with;
 use crate::standards::v_rfc4180::subsets::any::schema::snapshot::*;
 use crate::CsvMutation;
-use semio_framework_test_fixtures::manifest_dir;
 
 #[semio_framework_async_macros::async_test]
 async fn empty_snapshot_matches_schema() {
@@ -112,17 +111,7 @@ async fn codec_retention_law() {
 #[semio_framework_async_macros::async_test]
 #[ignore]
 async fn zzz_generate_p2p1_fixtures() {
-    let repo_root = {
-        let mut dir = manifest_dir!();
-        loop {
-            let mut marker = dir.clone();
-            marker.push("nx.json");
-            if marker.is_file() {
-                break dir;
-            }
-            assert!(dir.pop(), "could not find repo root");
-        }
-    };
+    let repo_root = semio_framework_test_fixtures::repo_root!();
     let mut assets = repo_root.clone();
     assets.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📚️examples/🎬️demo/🖼️assets");
     let demo = demo_csv_snapshot();

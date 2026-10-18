@@ -1,5 +1,6 @@
 //! 📋️ Counted clipboard identity preimages and bounded borrowed text publication.
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
+use semio_s_artifact_draw_drawing_model::identity::DrawingIdentityKind;
 
 pub fn prepare_paste_identity<'a>(kind:DrawingIdentityKind,document:&semio_framework_value::paged::PagedUtf8<{usize::MAX}>,source:&str,ordinal:usize,material:&mut[u8],output:&'a mut[u8;76],control:&mut NativeEncodeControl<'_>)->Result<&'a str,ValueError>{
  control.checkpoint()?;if document.is_empty()||document.len()>material.len()||source.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Drawing clipboard identity source invalid"));}

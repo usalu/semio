@@ -1,16 +1,20 @@
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, Phase};
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::*;
 use crate::standards::v1::subsets::any::schema::mutations::set_element_phase::SetElementPhase;
 use crate::standards::v1::subsets::any::schema::mutations::set_element_storey::SetElementStorey;
 use crate::standards::v1::subsets::any::schema::inferences::model_graph::ModelInferenceSession;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, inferences::ModelInference, mutations::ModelMutation};
 use protocol::{Inference, Mutation};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 use std::collections::BTreeSet;
 
-const BUILDING: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json");
+static BUILDING: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧮️quantities/🏗️building/📸️snapshot/🔣️.json"));
 
 fn building() -> ModelSnapshot {
-    from_json_str(BUILDING, JsonMemberPolicy::Reject).expect("the building decodes")
+    from_json_str((*BUILDING), JsonMemberPolicy::Reject).expect("the building decodes")
 }
 
 fn step(snapshot: &ModelSnapshot, mutation: ModelMutation) -> (ModelSnapshot, ModelDiff) {

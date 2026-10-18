@@ -1,15 +1,22 @@
 //! 🧪️ The coordination rules: element classes, storeys and phases, selectors, scopes, moments and why a clash set, a rule, an issue or a comment cannot be written.
 
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::values::{ClashRef, ElementClass, ElementSelector, IssueViewpoint, Phase, RuleScope};
+use crate::standards::v1::subsets::any::schema::snapshot::entities::{ClashSet, Issue, IssueComment, Rule};
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::snapshot::values::OpeningKind;
+use crate::standards::v1::subsets::any::schema::snapshot::coordination::{missing};
+use crate::standards::v1::subsets::any::schema::snapshot::coordination::*;
 use crate::standards::v1::subsets::any::schema::snapshot::values::*;
 use crate::standards::v1::subsets::any::schema::snapshot::coordination_values::*;
 use crate::standards::v1::subsets::any::schema::snapshot::{Point2, Point3, SectionBox, ViewCamera};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const HOUSE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json");
+static HOUSE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../🧪️tests/🧫️fixtures/🧬️mutations/➖️create-beam/✅️adds-below-the-storey-top/📸️snapshot/⬅️before/🔣️.json"));
 
 fn model() -> ModelSnapshot {
-    let mut document: serde_json::Value = serde_json::from_str(HOUSE).expect("the committed house is JSON");
+    let mut document: serde_json::Value = serde_json::from_str((*HOUSE)).expect("the committed house is JSON");
     document["window_types"]["win-1"] = serde_json::json!({ "name": "Window", "width": 1.2, "height": 1.2, "sill": 0.9, "frame_width": 0.05, "frame_depth": 0.08, "panes": 2, "material": "m-brick" });
     document["openings"]["o-window"] = serde_json::json!({ "host": "w-south", "kind": { "Window": { "window_type": "win-1" } }, "offset": 2.0, "flip_hand": false, "flip_facing": false, "name": "Window" });
     document["openings"]["o-void"] = serde_json::json!({ "host": "w-south", "kind": { "Void": { "width": 0.5, "height": 0.5 } }, "offset": 5.0, "flip_hand": false, "flip_facing": false, "name": "Void" });

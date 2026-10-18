@@ -60,3 +60,11 @@ semio-s-artifact-layout-layout-mutations-content	semio-s-artifact-layout-layout-
 semio-s-artifact-stdio-pdf-tables	semio-s-artifact-stdio-pdf-glyph-list	✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️fonts/🔡️glyph-list	0
 semio-s-artifact-flow-flow-unit-tests	semio-s-artifact-flow-flow-unit-tests-2	✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2	0
 semio-framework-plugin-tests-07-2	semio-framework-plugin-tests-07-3	🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧷️companions/🫑️tests-07-3	2
+semio-s-artifact-process-process3d-host	semio-s-artifact-process-process3d-host-retained-cursors	✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/🧵️retained-cursors	1
+semio-s-artifact-process-process3d-host	semio-s-artifact-process-process3d-host-publication-authority	✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🔨️modules/🏠️host/🧰️owned/📬️publication-authority	1
+semio-s-artifact-raster-raster-editor-commands	semio-s-artifact-raster-raster-editor-commands-2	✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🪜️commands-2	15
+semio-s-artifact-raster-raster-io	semio-s-artifact-raster-raster-io-media-bridge	✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🖼️media-bridge	3
+semio-s-artifact-raster-raster-host	semio-s-artifact-raster-raster-host-retirement-bounds	✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🔨️modules/🏠️host/🧰️owned/🧱️retirement-bounds	2
+semio-s-artifact-puzzle-5d-v1	semio-s-artifact-puzzle-5d-v1-unit-tests	✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2	1
+semio-s-artifact-puzzle-2d-v1	semio-s-artifact-puzzle-2d-v1-editor-tests	✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit-2	3
+semio-framework-3d-brep-boolean	semio-framework-3d-brep-boolean-unit-tests	🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/🔀️boolean/🧪️tests/🔬️unit	1

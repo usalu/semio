@@ -5,14 +5,16 @@ import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import ts from "typescript";
-import { createTaxonomyPathMatcher, semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/🟦️.ts";
+import { createTaxonomyPathMatcher } from "../../../🔍️discovery/🎯️taxonomy-path-matching/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { assertLexicalInputOutsideOpaque, noFollowDirectoryChain, verifyNoFollowDirectoryChain } from "../../📁️input/🟦️.ts";
-import { loadTaxonomy, type LoadedTaxonomy } from "../../🔣️taxonomy/🟦️.ts";
+import { loadTaxonomy } from "../../🔣️taxonomy/🟦️.ts";
+import { type LoadedTaxonomy } from "../../🔣️taxonomy/📚️loaded/🟦️.ts";
 
 type Row = Readonly<{ id: string; action: "none" | "new-root" | "delete-leaf" | "link-leaf" | "link-parent" | "link-root" | "link-ancestor" | "missing-prefix" | "linked-prefix"; accepted: boolean; physical: "file" | "absent" | "symlink" }>;
 const root = resolve(import.meta.dir, "../.."), library = dirname(root);
 type WitnessRow = Readonly<{ id: string; action: "none" | "replace" | "link" | "delete"; accepted: boolean; physical: "directory" | "absent" | "symlink" }>;
-const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/🔣️taxonomy-input/🔣️.json"), "utf8")) as Readonly<{ schemaVersion: 1; cases: readonly Row[]; witnessCases: readonly WitnessRow[] }>;
+const fixture = JSON.parse(readFileSync(join(root, "🧪️tests/🧫️fixtures/🔣️taxonomy-input/🔣️.json"), "utf8")) as Readonly<{ schemaVersion: 1; cases: readonly Row[]; witnessCases: readonly WitnessRow[] }>;
 
 const bytes = readFileSync(join(library, "🔣️taxonomy.json")), expectedHash = createHash("sha256").update(bytes).digest("hex");
 type PhysicalObservation = Readonly<{ kind: "file"; hash: string }> | Readonly<{ kind: "directory" | "other"; hash: null }> | Readonly<{ kind: "absent" | "symlink" }>;

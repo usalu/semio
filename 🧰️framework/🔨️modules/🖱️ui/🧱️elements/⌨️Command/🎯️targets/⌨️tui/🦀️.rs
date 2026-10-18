@@ -2,13 +2,13 @@
 //! Wired as a crate-root sibling module of `crate::tui::widget`; the engine owns placement, focus
 //! trapping and dismissal (see `crate::tui::engine::Tui::open_palette`). Every string comes from the app.
 
-use crate::tui::cell::{attr, Cell, CellBuffer};
-use crate::tui::dialog::paint_frame;
-use crate::tui::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
-use crate::tui::geometry::{Pos, Rect, Size};
-use crate::tui::text::{display_width, truncate_to};
-use crate::tui::theme::{Role, Surface, Theme};
-use crate::tui::widget::{CursorShape, CursorSpec, WidgetSignal};
+use semio_framework_ui_tui_core::cell::{attr, Cell, CellBuffer};
+use crate::dialog::paint_frame;
+use semio_framework_ui_tui_core::event::{mods, Key, KeyEvent, MouseButton, MouseEvent, MouseKind};
+use semio_framework_ui_tui_core::geometry::{Pos, Rect, Size};
+use semio_framework_ui_tui_core::text::{display_width, truncate_to};
+use semio_framework_ui_tui_core::theme::{Role, Surface, Theme};
+use semio_framework_ui_tui_core::signal::{CursorShape, CursorSpec, WidgetSignal};
 
 const PALETTE_MAX_WIDTH: u16 = 72;
 const PALETTE_MAX_ROWS: u16 = 10;

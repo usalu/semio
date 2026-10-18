@@ -1,4 +1,17 @@
-use super::*;
+use crate::editor::bim::kit::fault;
+use crate::standards::v1::subsets::any::schema::{mutations::ModelMutation, snapshot::ModelSnapshot};
+use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
+#[allow(unused_imports)]
+use crate::editor::bim::commands::set_property::elements_of;
+#[allow(unused_imports)]
+use crate::editor::bim::dispatch_context::BimDispatchCtx;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::target_of;
+#[allow(unused_imports)]
+use semio_framework_plugin::{ArtifactView, ConfigView, NoConfig};
+#[allow(unused_imports)]
+use value_derive::{FromValue, ToValue};
+use crate::editor::bim::commands::apply_template::*;
 use crate::editor::bim::fixture::support::{applied, ctx, demo, run};
 use crate::standards::v1::subsets::any::schema::snapshot::{PropertyDef, PropertyKind, PropertyTemplate, PropertyValue, TemplateTarget};
 

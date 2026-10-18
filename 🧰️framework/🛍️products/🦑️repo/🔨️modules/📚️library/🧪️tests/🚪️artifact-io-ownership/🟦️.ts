@@ -1,20 +1,21 @@
 import { expect, test } from "bun:test";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import picomatch from "picomatch";
 import ts from "typescript";
-import { artifactFacetPathIsDeclared, loadCatalogTaxonomy } from "../../🔍️discovery/🟦️.ts";
+import { artifactFacetPathIsDeclared } from "../../🔍️discovery/🪪️mutation-owner-identity/🟦️.ts";
+import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import { newScaffoldIoTree, newScaffoldSubsetTree } from "../../🏗️authoring/🗿️artifact-tree/🟦️.ts";
 import { artifactIoArchitectureBreaches, missingArtifactDiffWireTypes, semanticArtifactIoItems, schemaTypeScriptWireSymbols, schemaRustWireDependencies } from "../../🚪️io/🏛️architecture/🟦️.ts";
 import Parser from "web-tree-sitter";
 import type { ArtifactScaffoldLeaf } from "../../🏗️builder/🟦️.ts";
 
 const library = resolve(import.meta.dir, "../..");
-const vector = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-io-ownership/🔣️.json"), "utf8")) as { accepted: string[]; rejected: string[] };
+const vector = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🚪️artifact-io-ownership/🔣️.json"), "utf8")) as { accepted: string[]; rejected: string[] };
 const taxonomy = loadCatalogTaxonomy();
 
 test("native codec implementations belong to their declared physical representation", async () => {
-  const fixture = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-native-representations/🔣️.json"), "utf8")) as { cases: {representation: string; source: string; misplaced: string[]}[] };
+  const fixture = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🚪️artifact-native-representations/🔣️.json"), "utf8")) as { cases: {representation: string; source: string; misplaced: string[]}[] };
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
   mkdirSync(output, {recursive:true});
@@ -46,7 +47,7 @@ test("native codec implementations belong to their declared physical representat
 });
 
 test("native codecs exclude host document-store and publication authority",async()=>{
- const fixture=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-io-host-owners/🔣️.json"),"utf8")) as {cases:{source:string;host:string[]}[]};
+ const fixture=JSON.parse(readFileSync(join(library,"🧪️tests/🧫️fixtures/🚪️artifact-io-host-owners/🔣️.json"),"utf8")) as {cases:{source:string;host:string[]}[]};
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
  mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"native-host-"));
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",library)),"out/tree-sitter-rust.wasm")));
@@ -62,7 +63,7 @@ test("native codecs exclude host document-store and publication authority",async
 });
 
 test("framework products with paired snapshot schema and IO are architecture owners", () => {
-  const fixture = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-io-framework-owner-roots/🔣️.json"), "utf8")) as {owners: {path: string; schema: boolean; io: boolean; snapshot: boolean; checked: boolean}[]; semanticSource: string; physicalSource: string};
+  const fixture = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🚪️artifact-io-framework-owner-roots/🔣️.json"), "utf8")) as {owners: {path: string; schema: boolean; io: boolean; snapshot: boolean; checked: boolean}[]; semanticSource: string; physicalSource: string};
   const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
   if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
   mkdirSync(output, {recursive:true});
@@ -86,7 +87,7 @@ test("framework products with paired snapshot schema and IO are architecture own
 });
 
 test("semantic and physical source declarations remain in separate owners", async () => {
-  const rows = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-io-source-boundary/🔣️.json"), "utf8")) as Record<"rust" | "typescript", {source: string; forbidden: string[]}[]>;
+  const rows = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🚪️artifact-io-source-boundary/🔣️.json"), "utf8")) as Record<"rust" | "typescript", {source: string; forbidden: string[]}[]>;
   await Parser.init();
   const parser = new Parser();
   parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", library)), "out/tree-sitter-rust.wasm")));
@@ -124,7 +125,7 @@ test("semantic and physical source declarations remain in separate owners", asyn
 });
 
 test("semantic diffs have independent text and binary IO owners", async () => {
-  const fixture = JSON.parse(readFileSync(join(library, "🧫️fixtures/🚪️artifact-diff-codec-ownership/🔣️.json"), "utf8")) as {cases: {semantic: string; text: string; binary: string; missing: string[]}[]};
+  const fixture = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🚪️artifact-diff-codec-ownership/🔣️.json"), "utf8")) as {cases: {semantic: string; text: string; binary: string; missing: string[]}[]};
   await Parser.init();
   const parser = new Parser();
   parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json", library)), "out/tree-sitter-rust.wasm")));
@@ -246,7 +247,7 @@ test("artifact native IO authoring publishes its declared representation-first f
   if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");
   mkdirSync(output, { recursive: true });
   const root = mkdtempSync(join(output, "artifact-io-authoring-"));
-  const authoring = JSON.parse(readFileSync(join(library, "🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json"), "utf8"));
+  const authoring = JSON.parse(readFileSync(join(library, "🧪️tests/🧫️fixtures/🪶️artifact-empty-facet-authoring/🔣️.json"), "utf8"));
   const owner = authoring.subsetSegments.join("/");
   mkdirSync(dirname(join(root, owner)), { recursive: true });
   try {
@@ -271,12 +272,12 @@ test("artifact IO contracts and command registration parse independently", () =>
   for (const verb of ["test", "lint"]) {
     const id = `${verb}-artifact-io-ownership`;
     expect(targets[id].options.command).toBe(`bun ./📜️script.ts ${verb} artifact-io-ownership`);
-    expect(scripts[id]).toBe(`nx run @semio-tech/repo-lib:${id}`);
+    expect(scripts[id]).toBe(`bun --cwd "${relative(packageRoot, resolve(library, "../../../../.."))}" repo run @semio-tech/repo-lib:${id}`);
   }
 },{timeout:60000});
 
 test("Rust schema rejects physical dependencies while admitting test-only probes",async()=>{
- const fixture=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-schema-dependencies/🔣️.json"),"utf8")) as {cases:{source:string;forbidden:string[]}[]};
+ const fixture=JSON.parse(readFileSync(join(library,"🧪️tests/🧫️fixtures/🚪️artifact-schema-dependencies/🔣️.json"),"utf8")) as {cases:{source:string;forbidden:string[]}[]};
  await Parser.init();const parser=new Parser();parser.setLanguage(await Parser.Language.load(join(dirname(Bun.resolveSync("tree-sitter-wasms/package.json",library)),"out/tree-sitter-rust.wasm")));
  try{for(const row of fixture.cases){const tree=parser.parse(row.source)!;expect(tree.rootNode.hasError()).toBe(false);const fragments:string[]=[],attributeDependencies:string[]=[];
  const visit=(node:Parser.SyntaxNode):void=>{let sibling=node.previousNamedSibling;while(sibling?.type==="attribute_item"){if(/^#\s*\[\s*cfg\s*\(\s*test\s*\)\s*\]/u.test(sibling.text))return;sibling=sibling.previousNamedSibling;}
@@ -290,7 +291,7 @@ test("Rust schema rejects physical dependencies while admitting test-only probes
 });
 
 test("TypeScript schema rejects the complete IO namespace independently",()=>{
- const fixture=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-schema-dependencies/🔣️.json"),"utf8")) as {typescript:{source:string;forbidden:boolean;testOnly?:boolean}[]};
+ const fixture=JSON.parse(readFileSync(join(library,"🧪️tests/🧫️fixtures/🚪️artifact-schema-dependencies/🔣️.json"),"utf8")) as {typescript:{source:string;forbidden:boolean;testOnly?:boolean}[]};
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name caller-owned ticket output");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"schema-io-namespace-"));
  try{for(const row of fixture.typescript){const syntax=ts.createSourceFile("boundary.ts",row.source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS);const dependencies=syntax.statements.flatMap(statement=>ts.isImportDeclaration(statement)||ts.isExportDeclaration(statement)?statement.moduleSpecifier&&ts.isStringLiteral(statement.moduleSpecifier)?[statement.moduleSpecifier.text]:[]:[]);
  expect(dependencies.some(path=>/(?:^|\/)🚪️io(?:\/|$)/u.test(path))).toBe(row.forbidden);
@@ -301,7 +302,7 @@ test("TypeScript schema rejects the complete IO namespace independently",()=>{
 });
 
 test("TypeScript native parser dependencies belong to physical IO", () => {
- const vector=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-parser-dependencies/🔣️.json"),"utf8")) as {cases:{id:string;owner?:"io";testOnly?:boolean;source:string;forbidden:string[]}[]};
+ const vector=JSON.parse(readFileSync(join(library,"🧪️tests/🧫️fixtures/🚪️artifact-parser-dependencies/🔣️.json"),"utf8")) as {cases:{id:string;owner?:"io";testOnly?:boolean;source:string;forbidden:string[]}[]};
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name ticket output");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"native-parser-owner-"));
  try{for(const row of vector.cases){
   const syntax=ts.createSourceFile("parser.ts",row.source,ts.ScriptTarget.Latest,true),dependencies=new Set<string>();
@@ -314,7 +315,7 @@ test("TypeScript native parser dependencies belong to physical IO", () => {
 });
 
 test("TypeScript root implementations and IO semantic definitions have actual owners", () => {
- const vector=JSON.parse(readFileSync(join(library,"🧫️fixtures/🚪️artifact-io-typescript-owners/🔣️.json"),"utf8")) as {cases:{owner:"root"|"io";source:string;forbidden:string[]}[]};
+ const vector=JSON.parse(readFileSync(join(library,"🧪️tests/🧫️fixtures/🚪️artifact-io-typescript-owners/🔣️.json"),"utf8")) as {cases:{owner:"root"|"io";source:string;forbidden:string[]}[]};
  const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw Error("SEMIO_TEST_ARTIFACT_DIR must name ticket output");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"typescript-owned-source-"));
  try{for(const row of vector.cases){
   const file=ts.createSourceFile("owner.ts",row.source,ts.ScriptTarget.Latest,true),defined:string[]=[];

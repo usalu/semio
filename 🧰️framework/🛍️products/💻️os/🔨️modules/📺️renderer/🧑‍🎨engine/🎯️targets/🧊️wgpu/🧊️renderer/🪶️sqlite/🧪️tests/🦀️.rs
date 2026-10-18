@@ -2,6 +2,7 @@
 use ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot as _;
 use pack::snapshot::ArtifactSqliteSnapshot as _;
 use super::{NativeSocketProbeSnapshot,store};
+use store::bare_artifact_codec;
 use store::{os_store::{serialization::ArtifactSqliteSnapshotHost,pack::snapshot::ArtifactDsl,pack::snapshot::ArtifactPack},sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits as Limits,SqliteSnapshotControl as Control,SqliteSnapshotPhase as Phase,SnapshotEncoding,SqliteValue},io_schema::IoPayload};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,NativeDecodeProgress,NativeEncodeProgress,ValueError,ValueRefusalKind as Kind};
 use semio_framework_artifact_reference::ArtifactDialect;

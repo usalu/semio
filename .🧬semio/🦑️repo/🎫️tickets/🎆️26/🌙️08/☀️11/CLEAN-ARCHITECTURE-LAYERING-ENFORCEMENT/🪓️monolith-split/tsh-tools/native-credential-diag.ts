@@ -1,0 +1,20 @@
+/** 🔍️ Diagnostic: which clause of nativeCredentialSourceOrderConforms fails. */
+import { readFileSync } from "node:fs";
+import { sourceDefinitionBodies } from "/Users/ueli/Documents/semio/🌎️hub/🔐️auth/🧪️tests/🧭️credential-source-order/🟦️.ts";
+const R = "/Users/ueli/Documents/semio/";
+const W = R + "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/⌨️native-entrypoint/";
+const entrypoint = readFileSync(W + "🦀️.rs", "utf8"), runner = readFileSync(W + "📜️script.ts", "utf8");
+const credential = readFileSync(R + "🧰️framework/🛍️products/💻️os/🔨️modules/📇️directory/🔌️client/🦀️.rs", "utf8");
+const project = readFileSync(R + "🌎️hub/📦️packages/🦀️rust/📋️project.json", "utf8");
+const mains = sourceDefinitionBodies(entrypoint, /\bfn\s+run_native_entrypoint\s*\([^)]*\)\s*/gu);
+console.log("mains", mains.length, "with claim", mains.filter((b) => b.includes('claim_inherited_local_hub_credential("native")')).length);
+const main = mains[0] ?? "";
+for (const m of ['claim_inherited_local_hub_credential("native")', 'arg_value("--plugin")', "run_native(", 'return value == "3";', "--assert-no-local-credential-state", "protected_credential_environment_is_absent"]) console.log("main has", m, main.includes(m));
+console.log("credential FD_CLOEXEC", credential.includes("FD_CLOEXEC"), "_close(3)", credential.includes("_close(3)"));
+const classes = sourceDefinitionBodies(runner, /\bclass\s+RunScript\b[^\{]*/gu);
+const run = classes.flatMap((b) => sourceDefinitionBodies(b, /\basync\s+run\s*\([^)]*\)\s*(?::[^\{]+)?/gu));
+console.log("classes", classes.length, "run", run.length, run[0]?.includes("await runNativeSession("), run[0]?.includes('runCmd("cargo"'));
+const session = sourceDefinitionBodies(runner, /\basync\s+function\s+runNativeSession\s*\([^)]*\)\s*(?::[^\{]+)?/gu);
+const binary = sourceDefinitionBodies(runner, /\basync\s+function\s+runNativeBinary\s*\([^)]*\)\s*(?::[^\{]+)?/gu);
+console.log("session", session.length, session[0]?.includes("await runNativeBinary("), "binary", binary.length, binary[0]?.includes("await runTool("));
+console.log("target", (JSON.parse(project).targets?.["dev-secure-native"]?.options?.command));

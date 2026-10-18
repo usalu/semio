@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-/** 🏚️ Validates report sources, Nx contracts and produced PDF documents. */
+/** 🏚️ Validates report sources, build contracts and produced PDF documents. */
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -49,7 +49,7 @@ class TestScript extends BundleScript {
     assert.equal(contract.target, `${project.name}:generate-actor-network`);
     assert.deepEqual(project.targets["generate-actor-network"].inputs.flatMap((input: any) => input.externalDependencies ?? []), ["d3-force"]);
     assert.deepEqual(contract.outputRoots.map((output: { path: string }) => `{workspaceRoot}/${output.path}`).sort(), [...project.targets["generate-actor-network"].outputs].sort());
-    console.log("Report catalog, Nx output ownership and generator contract verified");
+    console.log("Report catalog, build output ownership and generator contract verified");
     for (const document of fixture.documents) {
       assert.equal(DOCUMENTS[document.id as keyof typeof DOCUMENTS], document.path);
       const root = dirname(join(ownerRoot, document.path));

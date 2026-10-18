@@ -12,7 +12,7 @@ use {semio_framework_plugin::ArtifactView,semio_framework_plugin::ArtifactViewer
 // through `app`, not yet in the crate-root re-export list (w0-f Gap 1 only closed the surface
 // traits/builders/adapters, not this pre-existing type).
 use semio_framework_plugin::app::InteractionView;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Command
 /// 👁️ The viewer declares no actions (no utilities, no mutations), so its typed command channel has

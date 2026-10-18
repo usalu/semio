@@ -1,0 +1,7 @@
+{
+ "name": "c6ui-p18",
+ "crates": ["semio-framework-ui", "semio-framework-ui-scene-plane", "semio-framework-ui-scene-mesh", "semio-framework-ui-render"],
+ "features": {"semio-framework-ui": ["tui", "tui-terminal"]},
+ "base": {"rev": "HEAD", "crates": ["semio-framework-ui", "semio-framework-ui-scene-plane", "semio-framework-ui-scene-mesh", "semio-framework-ui-render"]},
+ "note": "P18 all crates"
+}

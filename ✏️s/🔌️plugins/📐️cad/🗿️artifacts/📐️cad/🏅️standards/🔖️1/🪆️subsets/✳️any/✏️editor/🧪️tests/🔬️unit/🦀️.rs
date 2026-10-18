@@ -121,7 +121,7 @@ use semio_framework_plugin::app::{ArtifactEditor, Dialect, Editor};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_pack_json::Value;
 use std::collections::HashMap;
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 use semio_s_artifact_cad_cad_io::scene_from_spatial_payload;
 use semio_s_artifact_cad_cad_inferences::{align_mesh_to_host_snapshot_centroid, default_document, object_mesh_data, run_derive_from_geometry, CAD_CONCRETE_FOREST_REFERENCE_URL, CAD_DEFAULT_TYPOLOGY_EXTENT, CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX, CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX, CAD_FOREST_REFERENCE_PLANE_Z, CAD_FOREST_REFERENCE_WIDTH_WORLD, CAD_FOREST_REFERENCE_Y_OFFSET_RATIO};
 use semio_s_artifact_cad_cad_model::{snapshot::empty_cad_snapshot, snapshot::CadNode, snapshot::CadReference, snapshot::CAD_PLAY_DOCUMENT_SCHEMA};

@@ -5,7 +5,7 @@ import { join, dirname } from "node:path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import plugin from "../../../🏗️build/🕸️graph/📥️inference/🟨️.mjs";
-import { getWorkspaceRoot } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { ticketOutput } from "../../🎫️output/🟦️.ts";
 
 test("artifact verification reruns for semantic provider, fixture, DDL and shared control edits", async () => {

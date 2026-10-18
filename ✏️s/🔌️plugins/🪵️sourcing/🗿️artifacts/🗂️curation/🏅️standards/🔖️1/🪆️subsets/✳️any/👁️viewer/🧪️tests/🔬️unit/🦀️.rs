@@ -11,7 +11,7 @@ use {semio_framework_plugin::ArtifactView, semio_framework_plugin::ConfigView, s
 #[allow(unused_imports)]
 use semio_framework_plugin::app::InteractionView;
 #[allow(unused_imports)]
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 use crate::viewer::sourcing::*;
 

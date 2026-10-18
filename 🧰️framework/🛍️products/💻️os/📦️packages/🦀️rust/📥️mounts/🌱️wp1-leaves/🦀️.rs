@@ -25,7 +25,7 @@ pub mod os_pack {
     pub use pack::http;
     #[cfg(not(target_arch = "wasm32"))]
     pub use pack::io;
-    pub use pack::source;
+    pub use semio_framework_pack_source as source;
 
     // 🎾️ The flat codec/ids/source surface arrives through `semio_framework_os_pack`'s `pub use pack::*` above —
     // re-exporting it a second time here would make every primitive an ambiguous glob.

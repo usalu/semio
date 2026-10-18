@@ -1684,6 +1684,15 @@
       "severity": "warning"
     },
     {
+      "code": "timeTravel.unchanged",
+      "label": "ui.timeTravel.refusal.unchanged",
+      "text": {
+        "en": "Change an input before accepting",
+        "de": "Vor dem Übernehmen eine Eingabe ändern"
+      },
+      "severity": "warning"
+    },
+    {
       "code": "timeTravel.cancelled",
       "label": "ui.timeTravel.refusal.cancelled",
       "text": {
@@ -1815,15 +1824,6 @@
       "text": {
         "en": "The draft editor is closed: open the mutation again",
         "de": "Der Entwurfseditor ist geschlossen: die Mutation erneut öffnen"
-      },
-      "severity": "warning"
-    },
-    {
-      "code": "timeTravel.unchanged",
-      "label": "ui.timeTravel.refusal.unchanged",
-      "text": {
-        "en": "Change an input before accepting",
-        "de": "Vor dem Übernehmen eine Eingabe ändern"
       },
       "severity": "warning"
     }

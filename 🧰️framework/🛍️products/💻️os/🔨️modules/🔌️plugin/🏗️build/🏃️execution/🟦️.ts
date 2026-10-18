@@ -3,7 +3,7 @@ import {BundleScript,type ScriptInvocation} from "../../../../../../🔨️modul
 import {scriptCompilerAdmissionControlV1,type CompilerAdmissionControl} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {readNativeCallerAuthorityV1} from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 import {repositoryCargoNetworkV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/📥️dependencies/🟦️.ts";
-import {semioBuildParallel} from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import {semioBuildParallel} from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
 import {resolvePluginBuildTargets} from "../📋️plan/🟦️.ts";
 import {buildComponentClosureV1} from "../🧩️driver-stages/🟦️.ts";
 import type {PluginBuildTargetV1} from "../../📇️registry/🔎️discovery/🟦️.ts";

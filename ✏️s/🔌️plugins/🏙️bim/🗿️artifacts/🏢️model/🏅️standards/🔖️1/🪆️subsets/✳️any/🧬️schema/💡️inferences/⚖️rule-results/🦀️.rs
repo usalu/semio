@@ -13,12 +13,12 @@
 //!
 //! Related: DIN 18065 (stairs), DIN 18040 (accessible building), ASR A1.8, the building codes of the federal states (MBO), <https://www.din.de>.
 
-use super::super::element_solids::{dep_object, dep_value};
-use super::super::opening_frames::OpeningFrame;
-use super::super::ramp_runs::RampRun;
-use super::super::spaces::{SpaceRoom, SpaceStatus, StoreyRooms};
-use super::super::stair_runs::StairRun;
-use super::super::zones::ZoneTotals;
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value};
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::OpeningFrame;
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+use crate::standards::v1::subsets::any::schema::inferences::spaces::{SpaceRoom, SpaceStatus, StoreyRooms};
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+use crate::standards::v1::subsets::any::schema::inferences::zones::ZoneTotals;
 use crate::standards::v1::subsets::any::schema::snapshot::{ModelSnapshot, OpeningKind, Rule, RuleKind};
 use semio_framework_value::DslValue;
 use std::collections::BTreeMap;

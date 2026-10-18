@@ -2,9 +2,9 @@
 //! be positive, the flight must be sensible and a storey top constraint must name a storey of the same building. Riser count and
 //! tread depth are never stored: they are inferred from the storey levels.
 
-use super::super::elements;
-use super::super::placement::{refuse_stair, stair_issue};
-use super::CreateStair;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
+use crate::standards::v1::subsets::any::schema::mutations::placement::{refuse_stair, stair_issue};
+use crate::standards::v1::subsets::any::schema::mutations::create_stair::CreateStair;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

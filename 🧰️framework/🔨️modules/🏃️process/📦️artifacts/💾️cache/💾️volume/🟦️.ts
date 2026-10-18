@@ -12,7 +12,8 @@ import{withNativeImageTerminalCloseV1}from"../../🏗️native-build/💾️stor
 import{nativeImageDirectoryNamesV1,requireNativeStoragePathV1}from"../../🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{measureNativeArtifactCacheV1}from"../📏️inventory/🟦️.ts";
 import{withIssuedResourceOperationV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlRefinementV1,type ScriptInvocation}from"../../../📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
-import{readNativeStorageReservationPolicyV1,requireNativeStorageReservationV1,acquireNativeStorageV1,recoverNativeStorageReservationV1,observeNativeStorageStateV1,type NativeStoragePolicyV1,type NativeStorageReservationV1,type NativeStorageAllocationV1}from"../../🏗️native-build/💾️storage/🟦️.ts";
+import{readNativeStorageReservationPolicyV1,requireNativeStorageReservationV1,acquireNativeStorageV1,recoverNativeStorageReservationV1,observeNativeStorageStateV1,type NativeStorageReservationV1}from"../../🏗️native-build/💾️storage/🟦️.ts";
+import type{NativeStoragePolicyV1,NativeStorageAllocationV1}from"../../🏗️native-build/💾️storage/📜️journal/🟦️.ts";
 import{withNativePlatformFundedChildStorageV1,withNativePlatformChildStorageV1,retireNativePlatformFundedChildStorageV1,requireNativePlatformImageV1,withNativePlatformImageOperationV1,type NativeImageStorageV1}from"../../🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
 import{readNativeImageRetirementFileV1}from"../../🏗️native-build/💾️storage/🧱️fixed/🟦️.ts";
 import{readNativeArtifactCacheParentPolicyV1,readNativeArtifactCachePolicyV1,artifactCacheErrorsV1,type NativeArtifactCachePolicyV1}from"../⚙️policy/🟦️.ts";

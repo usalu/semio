@@ -17,7 +17,7 @@ class CanonicalArchitectureScript extends BundleScript {
 class DistributionOutputCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("distribution-output-check accepts no arguments");
-    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🔣️policy/🟦️.ts");
     const { testDistributionOutputContract } = await import("../../🚚️distribution/📍️output/🧪️tests/🔬️unit/🟦️.ts");
     await testDistributionOutputContract(this.repoRoot, nextestArtifactLocation(this.repoRoot).directory);
   }
@@ -26,7 +26,7 @@ class DistributionOutputCheckScript extends BundleScript {
 class SourceWatchCheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw Error("source-watch-check accepts no arguments");
-    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
+    const { nextestArtifactLocation } = await import("../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🔣️policy/🟦️.ts");
     const { testNativeSourceWatchPlanV1 } = await import("../../../🔌️plugin/🏗️build/👁️watch/🧪️tests/🔬️source-plan/🟦️.ts");
     await testNativeSourceWatchPlanV1(this.repoRoot, nextestArtifactLocation(this.repoRoot).directory);
   }

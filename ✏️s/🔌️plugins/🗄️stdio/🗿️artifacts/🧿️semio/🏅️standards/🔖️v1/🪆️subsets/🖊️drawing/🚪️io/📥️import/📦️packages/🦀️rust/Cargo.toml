@@ -23,6 +23,8 @@ semio-framework-dsl-record = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-s-artifact-stdio-dwg-geometry = { workspace = true }
+semio-s-artifact-stdio-dwg-snapshot = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
 # 🧩️ Capability Dependencies

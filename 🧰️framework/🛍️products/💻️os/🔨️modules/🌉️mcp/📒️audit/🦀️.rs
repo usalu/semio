@@ -14,6 +14,7 @@ use semio_framework_value::ValueError;
 use serde::Deserialize;
 use serde::Serialize;
 use std::fs::OpenOptions;
+use std::io::Write as _;
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;

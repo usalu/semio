@@ -46,6 +46,6 @@ pub fn apply(
 /// behavior as `apply` above, but callable without an `app::InteractionView` (which plugin code cannot
 /// construct; its fields are `pub(crate)` to the framework crate). `selected` is read straight off
 /// `protocol::InteractionState` by the caller.
-pub(crate) fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
+pub fn apply_selected(doc: &ArtifactView<'_, Generation3dSnapshot>, selected: &[String]) -> Emit<Generation3dMutation, Generation3dConfigMutation> {
     delete_selected(&doc.snapshot.host_snapshot, selected)
 }

@@ -7,6 +7,7 @@ import Ajv from "ajv";
 import Ajv2019 from "ajv/dist/2019";
 import { createRequire } from "node:module";
 import { testInitialChildIdentityFixture } from "../🪪️initial-child-identity/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 export function testMemberDialectFixture(): void {
   testInitialChildIdentityFixture();
@@ -50,7 +51,7 @@ export function testMemberDialectFixture(): void {
     assert.equal(admitted, row.accepted, row.id);
     assert.equal(admitted ? direct.variant : null, row.variant, row.id);
   }
-  const store = read("../../🦀️.rs");
+  const store = readModuleTreeSource(new URL("../../🦀️.rs", testSourceUrl.href));
   for (const row of fixture.projectionCases) {
     assert(!ids.has(row.id), `duplicate case ${row.id}`);
     ids.add(row.id);

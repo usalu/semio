@@ -11,7 +11,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { JSDOM } from "jsdom";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { decodeQueryEnvelope, encodeQueryResult, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import type { CatalogView, LearnerView, Query, RunStatus, RunView } from "@semio-tech/quiz";
 import {
@@ -219,6 +219,10 @@ async function arrived(): Promise<void> {
 afterEach(() => {
   window.history.replaceState(null, "", window.location.pathname);
 });
+
+beforeAll(async () => {
+  await Promise.all([import("../../🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx"), import("../../🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx")]);
+}, 180_000);
 
 describe("🧵️ the trail", () => {
   for (const trail of fixture.trails) {

@@ -44,7 +44,7 @@ fn extruded(x: &mut Export<'_>, row: &WallSweep, wall: &Wall, layout: &WallLayou
     Some(x.ifc.definition(&[body]))
 }
 
-fn sweep(x: &mut Export<'_>, id: &str, row: &WallSweep) {
+pub fn sweep(x: &mut Export<'_>, id: &str, row: &WallSweep) {
     let (model, inferred) = (x.model, x.inferred);
     let (Some(wall), Some(layout)) = (model.walls.get(&row.host), inferred.wall_layout.get(&row.host)) else {
         x.skip("wall sweep", id, "its host wall has no layout");
@@ -125,6 +125,4 @@ pub fn emit(x: &mut Export<'_>) {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

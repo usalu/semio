@@ -1,6 +1,6 @@
-use crate::tui::geometry::{Pos, Rect, Size};
-use crate::tui::text::{char_cells, cluster_cells_in, clusters, scalar_mark, WidthMode};
-use crate::tui::theme::Rgb;
+use crate::geometry::{Pos, Rect, Size};
+use crate::text::{char_cells, cluster_cells_in, clusters, scalar_mark, WidthMode};
+use crate::theme::Rgb;
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 
@@ -96,7 +96,7 @@ impl CellBuffer {
     /// hit tests count exactly as this buffer paints.
     pub fn set_width_mode(&mut self, mode: WidthMode) {
         self.mode = mode;
-        crate::tui::text::set_active_width_mode(mode);
+        crate::text::set_active_width_mode(mode);
     }
 
     fn index(&self, x: u16, y: u16) -> Option<usize> {

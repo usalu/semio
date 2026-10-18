@@ -2,9 +2,9 @@
 //! a real sweep, and both top offsets must be finite. The beam top lies the signed `top_offset` above (positive) or below (negative) the storey top at the start and the
 //! `end_top_offset` at the end: no elevation is stored, it is inferred.
 
-use super::super::elements;
+use crate::standards::v1::subsets::any::schema::mutations::elements;
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::{flaw, offsets_flaw};
-use super::CreateBeam;
+use crate::standards::v1::subsets::any::schema::mutations::create_beam::CreateBeam;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

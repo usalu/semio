@@ -205,7 +205,7 @@ pub struct SocketGrantAdmissionV1 {
 
 #[derive(Default)]
 pub(crate) struct SocketGrantLedgerInnerV1 {
-    pub(crate) records: BTreeMap<String, SocketGrantRecordV1>,
+    pub records: BTreeMap<String, SocketGrantRecordV1>,
     pending_by_binding: BTreeMap<SocketBindingKeyV1, BTreeSet<String>>,
     live_by_binding: BTreeMap<SocketBindingKeyV1, BTreeMap<String, (String, Arc<tokio::sync::Notify>)>>,
 }
@@ -264,7 +264,7 @@ impl SocketBindingGatesV1 {
         gate
     }
 
-    pub(crate) async fn share_record(&self, subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> Vec<SocketBindingGuardV1> {
+    pub async fn share_record(&self, subject: &SocketSubjectV1, audience: &SocketAudienceV1) -> Vec<SocketBindingGuardV1> {
         self.share_bindings(socket_record_bindings(subject, audience)).await
     }
 
@@ -274,7 +274,7 @@ impl SocketBindingGatesV1 {
 
     /// 🔗️ Holds every binding in one global key order, a binding named twice in its strongest mode,
     /// so no two callers can wait on each other's gates.
-    pub(crate) async fn acquire(&self, mut bindings: Vec<(SocketBindingKeyV1, SocketBindingModeV1)>) -> Vec<SocketBindingGuardV1> {
+    pub async fn acquire(&self, mut bindings: Vec<(SocketBindingKeyV1, SocketBindingModeV1)>) -> Vec<SocketBindingGuardV1> {
         bindings.sort_by(|left, right| left.0.cmp(&right.0).then(right.1.cmp(&left.1)));
         bindings.dedup_by(|later, earlier| later.0 == earlier.0);
         let mut admissions = Vec::with_capacity(bindings.len());
@@ -408,7 +408,7 @@ impl SocketGrantLedgerV1 {
         Ok(record.clone())
     }
 
-    pub(crate) fn pending_directory(&self, capability: &SocketGrantCapability, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
+    pub fn pending_directory(&self, capability: &SocketGrantCapability, at_ms: i64) -> Result<SocketGrantRecordV1, SocketGrantLedgerErrorV1> {
         let mut inner = self.inner.lock().map_err(|_| SocketGrantLedgerErrorV1::Rejected)?;
         Self::sweep_expired(&mut inner, at_ms);
         let record = inner.records.get(capability.selector()).ok_or(SocketGrantLedgerErrorV1::Rejected)?;
@@ -515,7 +515,7 @@ impl SocketGrantLedgerV1 {
         }
     }
 
-    pub(crate) fn reject_pending(&self, selector: &str) {
+    pub fn reject_pending(&self, selector: &str) {
         let Ok(mut inner) = self.inner.lock() else { return };
         let Some(record) = inner.records.get(selector) else { return };
         if record.state != SocketGrantStateV1::Pending {

@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import Ajv from "ajv";
 import emojiRegex from "emoji-regex";
@@ -177,8 +177,12 @@ test("registers leading grapheme through its closed canonical route", async () =
 
 
 test("Repo discovery consumes neutral identity grapheme without a competing implementation", () => {
-  const path = join(library, "🔍️discovery/🟦️.ts");
-  const previous = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
-  expect(previous.statements.some((node) => ts.isFunctionDeclaration(node) && node.name?.text === "leadingEmojiIdentity")).toBe(false);
-  expect(previous.statements.some((node) => ts.isExportDeclaration(node) && node.exportClause && ts.isNamedExports(node.exportClause) && node.exportClause.elements.some((entry) => entry.name.text === "leadingEmojiIdentity"))).toBe(false);
+  const owner = join(library, "🔍️discovery");
+  const leaves = readdirSync(owner, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => join(owner, entry.name, "🟦️.ts")).filter((path) => existsSync(path));
+  expect(leaves.length).toBeGreaterThan(0);
+  for (const path of leaves) {
+    const previous = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
+    expect(previous.statements.some((node) => ts.isFunctionDeclaration(node) && node.name?.text === "leadingEmojiIdentity"), path).toBe(false);
+    expect(previous.statements.some((node) => ts.isExportDeclaration(node) && node.exportClause && ts.isNamedExports(node.exportClause) && node.exportClause.elements.some((entry) => entry.name.text === "leadingEmojiIdentity")), path).toBe(false);
+  }
 });

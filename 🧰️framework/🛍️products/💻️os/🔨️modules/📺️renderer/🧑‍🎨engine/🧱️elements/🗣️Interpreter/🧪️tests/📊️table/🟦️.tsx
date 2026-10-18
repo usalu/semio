@@ -96,7 +96,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
 
     it("discards a cell draft on Escape without row focus committing it on blur", () => {
       const intents: any[] = [];
-      const draftFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧫️fixtures/♿️editable-controls/🔣️.json"), "utf8"));
+      const draftFixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧪️tests/🧫️fixtures/♿️editable-controls/🔣️.json"), "utf8"));
       mount((intent) => intents.push(intent));
       const name = screen.getByRole("textbox", { name: "Name" }) as HTMLInputElement;
       const published = name.value;

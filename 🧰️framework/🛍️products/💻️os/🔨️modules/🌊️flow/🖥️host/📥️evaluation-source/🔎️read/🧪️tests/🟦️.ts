@@ -5,7 +5,7 @@ import fixture from "./🧫️fixtures/🔣️.json";
 import requestSchema from "../📨️request/🧬️schema/🔣️.json";
 import intakeSchema from "../🏠️intake/🧬️schema/🔣️.json";
 import completeSchema from "../../../../🧩️extensions/🕸️wasm/🧬️schema/📐️tessellation/📤️complete/🔣️.json";
-import completeFixture from "../📨️response/🧫️fixtures/🔣️.json";
+import completeFixture from "../📨️response/🧪️tests/🧫️fixtures/🔣️.json";
 import { meshEngineCanonicalSchema as meshSchema, engineCanonicalDecodeFixture as decoderFixture } from "@semio-tech/framework-mesh-engine-ts/testing/fixtures";
 import { loadNeuralEngineProjectionSchema, loadNeuralEngineProjectionFixture } from "../../../../../🧠️neural/🧪️tests/🧫️fixtures/🟦️.ts";
 import { loadSceneMathResourceSchema, loadSceneMathResourceFixture, loadPresentResourcesTransportSchema, loadPresentResourcesTransportFixture } from "../../../../../../../../🔨️modules/🖱️ui/🧪️tests/🧫️fixtures/🟦️.ts";
@@ -35,13 +35,13 @@ test("original tick cancellation completes only after snapshot and initiating id
 
 test("original incomplete preview carries only current business progress and no mesh custody",async()=>{
  const schema=(await import("../../../../🧩️extensions/🕸️wasm/🧬️schema/📐️tessellation/📈️progress/🔣️.json")).default;
- const fixture=(await import("../../../📥️preview/🧫️fixtures/📈️progress.json")).default;
+ const fixture=(await import("../../../📥️preview/🧪️tests/🧫️fixtures/📈️progress.json")).default;
  const validate=new Ajv({strict:true}).compile(schema);expect(validate(fixture)).toBe(true);expect(Object.keys(fixture)).toHaveLength(10);expect(fixture.unitsDone<=fixture.unitsTotal).toBe(true);for(const field of ["mesh","meshPack","chunk","chunks","budget","retained","operation","generation"]){expect(validate({...fixture,[field]:1})).toBe(false);}for(const phase of schema.properties.phase.enum){expect(validate({...fixture,phase})).toBe(true);}const independent=JSON.parse(JSON.stringify(fixture));expect(independent).toEqual(fixture);expect(independent.unitsDone/independent.unitsTotal).toBe(3/17);
 });
 
 
 test("original preview occupied handle replaces one current canonical mesh and retains its original displaced source",async()=>{
- const law=(await import("../../../📥️preview/🧫️fixtures/🔁️replacement.json")).default;const schema=(await import("../../../📥️preview/🧬️schema/🔁️replacement/🔣️.json")).default;const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,borrowedSourceOnly:false})).toBe(false);expect(validate({...law,sourceEpochs:[0,1,1]})).toBe(false);
+ const law=(await import("../../../📥️preview/🧪️tests/🧫️fixtures/🔁️replacement.json")).default;const schema=(await import("../../../📥️preview/🧬️schema/🔁️replacement/🔣️.json")).default;const validate=new Ajv({strict:true}).compile(schema);expect(validate(law)).toBe(true);expect(validate({...law,borrowedSourceOnly:false})).toBe(false);expect(validate({...law,sourceEpochs:[0,1,1]})).toBe(false);
  const first=JSON.parse(JSON.stringify(completeFixture.mesh)),second=JSON.parse(JSON.stringify(completeFixture.mesh));const handle=completeFixture.handle;
  let cache:{[key:string]:typeof first}={};const displaced=[];let epoch=0;const epochs=[epoch];
  for(const mesh of[first,second]){if(cache[handle])displaced.push(cache[handle]);cache=applyPatch(cache,[{op:cache[handle]?"replace":"add",path:`/${handle.replaceAll("~","~0").replaceAll("/","~1")}`,value:mesh}],true,false).newDocument;epochs.push(++epoch);}
@@ -50,7 +50,7 @@ test("original preview occupied handle replaces one current canonical mesh and r
 
 
 test("original evaluation reply owns a typed complete Dictionary without text output",async()=>{
- const schema=(await import("../📨️response/🧬️schema/🔣️.json")).default,reply=(await import("../📨️response/🧫️fixtures/🧠️dictionary.json")).default;const validate=new Ajv({strict:true}).compile(schema);
+ const schema=(await import("../📨️response/🧬️schema/🔣️.json")).default,reply=(await import("../📨️response/🧪️tests/🧫️fixtures/🧠️dictionary.json")).default;const validate=new Ajv({strict:true}).compile(schema);
  expect(validate(reply)).toBe(true);for(const name of["outputJson","budget","retained","operation","generation"]){expect(validate({...reply,[name]:1})).toBe(false)}expect(validate({...reply,output:JSON.stringify(reply.output)})).toBe(false);const independent=JSON.parse(JSON.stringify(reply));expect(independent.output).toEqual(reply.output);expect(independent.output.solid.handle).toBe("brep:original-s源");expect(validate({...reply,done:false,cancellable:true,phase:"solverIteration",unitsDone:3,output:null})).toBe(true);expect(validate({...reply,done:true,cancellable:false,phase:"cancelled",output:null})).toBe(true);
 });
 

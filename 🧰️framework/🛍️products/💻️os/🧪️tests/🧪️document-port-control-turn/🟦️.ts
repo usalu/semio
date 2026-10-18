@@ -17,7 +17,7 @@ type Answer = "receipt" | "stale" | "refused" | "absent" | "twice" | "damaged" |
 type Step = "bind" | "retire";
 type Case = { readonly id: string; readonly answers: readonly Answer[]; readonly steps: readonly Step[]; readonly outcomes: readonly string[]; readonly controls: readonly string[]; readonly told: readonly string[] };
 
-const fixtures = new URL("🧪️tests/🧫️fixtures", import.meta.url);
+const fixtures = new URL("🧫️fixtures/", import.meta.url);
 const corpus = JSON.parse(readFileSync(new URL("🔣️.json", fixtures), "utf8")) as { readonly cases: readonly Case[] };
 const owner = { runtimeKey: "board.ports.directed.v1", clientInstanceId: "client-a", scope: null, actorId: "actor-1", activationGeneration: 1n, instanceId: 4 } as const;
 const limits = { messageBytes: 1_024, pendingBytes: 4_096, pendingMessages: 8 };

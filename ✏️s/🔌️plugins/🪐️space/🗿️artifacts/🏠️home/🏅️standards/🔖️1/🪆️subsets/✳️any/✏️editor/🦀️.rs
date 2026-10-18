@@ -46,7 +46,7 @@ use semio_framework_plugin::NoDraftMutation;
 use semio_framework_plugin::PluginAssemblyError;
 use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::{ActionArgDef, ActionArgOption, ActionRef, DialogDefinition};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 //#region 🔖️Constants
 pub const S_HOME_CONTROLLER_ID: &str = "s.space.home@1/*#editor";

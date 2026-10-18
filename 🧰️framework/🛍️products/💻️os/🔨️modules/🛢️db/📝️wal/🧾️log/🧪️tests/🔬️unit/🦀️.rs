@@ -1,5 +1,18 @@
 use super::*;
 
+/// 🧾️ The authored source of the WAL log crate: every child module and then the root, in module order, as the one text the source laws scan.
+const WAL_LOG_SOURCE: &str = concat!(
+    include_str!("../../🏷️record-kinds-and-field-codec/🦀️.rs"),
+    include_str!("../../🧱️wal-bytes/🦀️.rs"),
+    include_str!("../../🧾️wal-record/🦀️.rs"),
+    include_str!("../../📤️payload-transform-group-commit-and-sink/🦀️.rs"),
+    include_str!("../../📖️page-source-reader-and-frames/🦀️.rs"),
+    include_str!("../../⛓️transaction-gate-and-segment-chain/🦀️.rs"),
+    include_str!("../../🔐️authenticated-source-and-replay-cursor/🦀️.rs"),
+    include_str!("../../✅️committed-replay-and-validation/🦀️.rs"),
+    include_str!("../../🦀️.rs"),
+);
+
 fn pages(bytes: &[u8]) -> db_io_core::DbIoPages {
     let mut writer = db_io_core::DbIoPageWriter::try_reserve(bytes.len().div_ceil(db_io_core::DB_IO_PAGE_BYTES)).expect("test WAL writer admitted");
     for fragment in bytes.chunks(db_io_core::DB_IO_PAGE_BYTES) {
@@ -268,12 +281,12 @@ async fn group_commit_policy_is_due_on_any_threshold() {
 //#region 🔖️Source laws
 #[test]
 fn history_crc_faults_are_authenticated_by_the_wal_chain() {
-    assert!(include_str!("../../🦀️.rs").contains("wal chain crc or frame length differs"), "history CRC faults are authenticated by the WAL chain");
+    assert!(WAL_LOG_SOURCE.contains("wal chain crc or frame length differs"), "history CRC faults are authenticated by the WAL chain");
 }
 
 #[test]
 fn wal_crc_cursor_and_frame_tokenizer_advance_one_page_per_grant() {
-    let wal = include_str!("../../🦀️.rs");
+    let wal = WAL_LOG_SOURCE;
     assert!(wal.contains("protocol::codec::Crc32cCursor"));
     assert!(wal.contains("frame.crc.update_page(&bytes[crc_start - frame.position..crc_end - frame.position])"));
     assert!(wal.contains("fragment.len().min(db_io_core::DB_IO_PAGE_BYTES)"));

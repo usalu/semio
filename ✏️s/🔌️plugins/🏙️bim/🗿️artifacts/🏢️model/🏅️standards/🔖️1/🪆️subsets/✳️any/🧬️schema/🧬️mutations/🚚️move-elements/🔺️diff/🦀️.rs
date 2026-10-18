@@ -2,8 +2,8 @@
 //! start/end, boundary and holes, footprint, path, outline). Openings are never patched, they follow their host by inference.
 //! Refused: an empty selection, a non-finite vector, unknown ids and elements without a placement; a zero vector is `mutation.no-op`.
 
-use super::super::elements::{self, Change, Refusal};
-use super::MoveElements;
+use crate::standards::v1::subsets::any::schema::mutations::elements::{self, Change, Refusal};
+use crate::standards::v1::subsets::any::schema::mutations::move_elements::MoveElements;
 use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

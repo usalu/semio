@@ -13,7 +13,7 @@
 //!
 //! Related: buildingSMART BCF clash topics, Navisworks clash detective rules; the pair test is the mesh collision of `semio_framework_geometry::collision`.
 
-use super::super::element_solids::{dep_object, dep_value, ElementSolid, SolidKey};
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{dep_object, dep_value, ElementSolid, SolidKey};
 use crate::standards::v1::subsets::any::schema::snapshot::{ClashSet, ElementClass, ModelSnapshot, Point3};
 use semio_framework_geometry::collision::{self, Aabb, Bvh};
 use semio_framework_geometry::mesh::TriMesh;
@@ -140,12 +140,12 @@ fn hosted(rows: &BTreeMap<String, String>, a: &str, b: &str) -> bool {
 
 //#region 🔖️Clashes
 /// 📍️ A world point of the contact as a snapshot point.
-fn point(p: [f64; 3]) -> Point3 {
+pub fn point(p: [f64; 3]) -> Point3 {
     Point3 { x: p[0], y: p[1], z: p[2] }
 }
 
 /// 🧱️ Whether the boxes of two probes can clash at all: they overlap once grown by the clearance.
-fn near(a: &SolidProbe, b: &SolidProbe, margin: f64) -> bool {
+pub fn near(a: &SolidProbe, b: &SolidProbe, margin: f64) -> bool {
     match (&a.bounds, &b.bounds) {
         (Some(left), Some(right)) => left.overlaps(right, margin),
         _ => false,
@@ -291,6 +291,4 @@ pub fn meshes_json(snapshot: &ModelSnapshot, solids: &BTreeMap<String, ElementSo
 }
 //#endregion 🔖️Tables
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

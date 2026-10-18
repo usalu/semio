@@ -4,7 +4,9 @@ import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { centeredLastRowCells, followFactor, veilClip, veilClipPath, type LayeredCell } from "../../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import { OverviewCard, OverviewCardAction } from "../../../🃏️OverviewCard/🟦️.tsx";
-import { LayeredOverview, capturePosterFromCanvases, type LayeredCardState, type LayeredOverviewProps, type LayeredPane } from "../../🟦️.tsx";
+import { LayeredOverview } from "../../🟦️.tsx";
+import { capturePosterFromCanvases } from "../../🧰️pane-helpers/🟦️.ts";
+import { type LayeredCardState, type LayeredOverviewProps, type LayeredPane } from "../../📋️types/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🥞️LayeredOverviewBehaviour

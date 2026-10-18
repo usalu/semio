@@ -1,6 +1,6 @@
 //! 🔺️ Sparse declarative set-element-option diff.
-use super::SetElementOption;
-use crate::*;
+use crate::standards::v1::subsets::any::schema::mutations::set_element_option::SetElementOption;
+use crate::standards::v1::subsets::any::schema::{diff::{ElementMembershipPatch, Entry, ModelDiff}, snapshot::{ElementMembership, ModelSnapshot}};
 use crate::standards::v1::subsets::any::schema::authored::option_rules;
 use protocol::{MutationOutcome, OutcomeCode};
 pub fn diff(payload: &SetElementOption, base: &ModelSnapshot) -> MutationOutcome<ModelDiff> {

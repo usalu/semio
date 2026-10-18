@@ -4,7 +4,9 @@ import { readFileSync,existsSync } from "node:fs";
 import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 import Ajv from "ajv";
+import { listModuleTree } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 import { parseForeignStep, parseForeignSteps } from "../🧬️schema/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 const root=resolve(import.meta.dir,"..");
 const examples=JSON.parse(readFileSync(resolve(root,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8"));
 const schema=JSON.parse(readFileSync(resolve(root,"🧬️schema/🔣️.json"),"utf8"));
@@ -25,7 +27,7 @@ assert.match(mutation,/fn foreign_step_source<'a>/,"actual mutation producer mus
 assert.doesNotMatch(mutation,/fn foreign_steps\(/,"allocating discovery must not coexist with its borrowed replacement");
 const workspace=resolve(root,"../../../../..");
 const owners=["🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧪️testing/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧪️testing/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🦀️.rs","🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧪️tests/🧪️supersede-law/🦀️.rs"];
-for(const owner of owners){const path=resolve(workspace,owner),text=readFileSync(path,"utf8");assert.match(text,/fn foreign_step_source<'a>/,owner);assert.doesNotMatch(text,/fn foreign_steps\(|pub fn plan_foreign_steps/);const parsed=spawnSync("rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true",path],{stdio:["ignore","ignore","pipe"],timeout:5000});assert.equal(parsed.status,0,parsed.stderr?.toString());}
+for(const owner of owners){const path=resolve(workspace,owner),files=owner.includes("🗣️dsl/✨️derive/")?listModuleTree(path):[path],text=files.map(file=>readFileSync(file,"utf8")).join("\n");assert.match(text,/fn foreign_step_source<'a>/,owner);assert.doesNotMatch(text,/fn foreign_steps\(|pub fn plan_foreign_steps/);for(const file of files){const parsed=spawnSync("rustfmt",["--edition","2021","--emit","stdout","--config","skip_children=true",file],{stdio:["ignore","ignore","pipe"],timeout:5000});assert.equal(parsed.status,0,parsed.stderr?.toString());}}
 
 const sequence=examples.cases.map(({id,...payload}:any)=>payload);
 const admitSequence=new Ajv({strict:false}).addSchema(schema).compile({$ref:schema.$id+"#/$defs/ForeignSteps"});
@@ -38,7 +40,7 @@ assert.match(source,/pub struct ForeignStepsPreparation/,"actual borrowed propos
 for(const method of ["source_index","advance_source","preparation_demands","take_prepared"])assert.ok(source.includes(method),method);
 
 const storePath=resolve(workspace,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/⚙️engine/🎞️live/📥️lifted/🏪️store/🦀️.rs");
-const store=readFileSync(storePath,"utf8");
+const store=readModuleTreeSource(storePath);
 assert.match(store,/pub fn advance_prepared_foreign_steps/,"proposal source must come from its actual domain-prepared candidate and original prebase");
 
 const preparedStart=store.indexOf("fn original_proposal_forward");

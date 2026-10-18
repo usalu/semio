@@ -31,10 +31,12 @@ import {parseFreshProcessPolicyV1,type FreshProcessControlV1} from "./🎛️con
 import { cargoDirectories } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { devToolingEnv, readStableBuildFile, resolveWorkspaceBin } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { devToolingEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🌿️environment/🟦️.ts";
+import { readStableBuildFile } from "../../../../../🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🟦️.ts";
+import { resolveWorkspaceBin } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
+import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/✅️owned-file-approvals/🟦️.ts";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
-import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🧬️descriptor-pair/🟦️.ts";
 import { findPluginCargoFiles, parseComponentSourceOwnerV1, DESCRIPTOR_JSON_REL_PATH } from "../../📇️registry/🔎️discovery/🟦️.ts";
 import { COMPONENT_RECEIPT_SCHEMA_ID, COMPONENT_TARGET, SHIPPED_COMPONENT_MAX_BYTES, componentProvenanceDigestsV1, componentReceiptValueV1, rustToolchainIdentityV1, type ComponentReceiptV1 } from "../🏷️component-receipt/🟦️.ts";
 import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";

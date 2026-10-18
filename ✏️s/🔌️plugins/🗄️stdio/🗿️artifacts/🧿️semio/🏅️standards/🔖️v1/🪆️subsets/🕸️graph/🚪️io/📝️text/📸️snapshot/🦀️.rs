@@ -71,7 +71,7 @@ pub(crate) fn enc_edge_id(id: &GraphEdgeId) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
+pub fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
     Ok(GraphEdgeId::new(dec_str(s)?))
 }
 
@@ -80,12 +80,12 @@ pub(crate) fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
 /// back with the explicit numeric-word parser. Two flat comma-separated tokens, no wrapping brackets, so they slot
 /// directly into an outer bracketed field list (matches this facet's committed grammar).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_point2_fields(p: &SemioPoint2) -> String {
+pub fn enc_point2_fields(p: &SemioPoint2) -> String {
     format!("{},{}", enc_str(&native::NativeF64(p.x).to_string()), enc_str(&native::NativeF64(p.y).to_string()))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_f64_hex(s: &str) -> Result<f64, String> {
+pub fn dec_f64_hex(s: &str) -> Result<f64, String> {
     native::parse(&dec_str(s)?)
 }
 
@@ -109,12 +109,12 @@ pub(crate) fn dec_port_kind(s: &str) -> Result<SemioGraphPortKind, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_port(p: &SemioGraphPort) -> String {
+pub fn enc_port(p: &SemioGraphPort) -> String {
     format!("[{},{},{},{}]", enc_str(&p.name), enc_port_kind(p.kind), enc_str(&p.category), enc_list(&p.properties, enc_property))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
+pub fn dec_port(s: &str) -> Result<SemioGraphPort, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [name, kind, category, properties] = parts.as_slice() else { return Err(format!("port: expected 4 fields, got {}", parts.len())) };
     Ok(SemioGraphPort { name: dec_str(name)?, kind: dec_port_kind(kind)?, category:dec_str(category)?, properties:dec_list(properties,dec_property)? })
@@ -162,9 +162,9 @@ pub(crate) fn dec_edge(s: &str) -> Result<SemioGraphEdge, String> {
     Ok(SemioGraphEdge { id: dec_edge_id(id)?, source: dec_node_id(source)?, target: dec_node_id(target)?, kind: dec_str(kind)?, label: dec_str(label)?, source_port:dec_optional(source_port)?,target_port:dec_optional(target_port)?,properties:dec_list(properties,dec_property)? })
 }
 
-pub(crate) fn enc_optional(value:Option<&str>)->String{match value{Some(value)=>format!("[{}]",enc_str(value)),None=>"-".into()}}
+pub fn enc_optional(value:Option<&str>)->String{match value{Some(value)=>format!("[{}]",enc_str(value)),None=>"-".into()}}
 
-pub(crate) fn dec_optional(value:&str)->Result<Option<String>,String>{if value=="-"{Ok(None)}else{Ok(Some(dec_str(strip_brackets(value)?)?))}}
+pub fn dec_optional(value:&str)->Result<Option<String>,String>{if value=="-"{Ok(None)}else{Ok(Some(dec_str(strip_brackets(value)?)?))}}
 
 /// 📄️ The real structured graph body: three lines — `schema=<hex>`, `nodes=[<node>,...]`,
 /// `edges=[<edge>,...]` — matching the grammar's `document = artifact-mark schema-line nodes-line

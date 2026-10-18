@@ -1,6 +1,10 @@
 syntax = "proto3";
 package semio.s_stdio_gif.snapshot;
-message GifSnapshot {
-  string schema = 1;
-  string bytes_wire = 2;
-}
+
+message GifRgb { uint32 r = 1; uint32 g = 2; uint32 b = 3; }
+message GifColorTable { bool sorted = 1; repeated GifRgb colors = 2; }
+enum GifDisposal { GIF_DISPOSAL_UNSPECIFIED = 0; GIF_DISPOSAL_DO_NOT_DISPOSE = 1; GIF_DISPOSAL_RESTORE_TO_BACKGROUND = 2; GIF_DISPOSAL_RESTORE_TO_PREVIOUS = 3; }
+message GifPlainText { uint32 left = 1; uint32 top = 2; uint32 width = 3; uint32 height = 4; uint32 cell_width = 5; uint32 cell_height = 6; uint32 fg_color_index = 7; uint32 bg_color_index = 8; string text = 9; }
+message GifAppExtension { bytes identifier = 1; bytes auth_code = 2; bytes data = 3; }
+message GifFrame { uint32 left = 1; uint32 top = 2; uint32 width = 3; uint32 height = 4; bool interlace = 5; optional GifColorTable lct = 6; bytes indices = 7; uint32 delay_cs = 8; GifDisposal disposal = 9; optional uint32 transparent_index = 10; bool user_input = 11; optional GifPlainText plain_text = 12; }
+message GifSnapshot { string schema = 1; uint32 width = 2; uint32 height = 3; optional GifColorTable gct = 4; uint32 background_color_index = 5; uint32 pixel_aspect_ratio = 6; optional uint32 loop_count = 7; repeated GifFrame frames = 8; repeated string comments = 9; repeated GifAppExtension app_extensions = 10; }

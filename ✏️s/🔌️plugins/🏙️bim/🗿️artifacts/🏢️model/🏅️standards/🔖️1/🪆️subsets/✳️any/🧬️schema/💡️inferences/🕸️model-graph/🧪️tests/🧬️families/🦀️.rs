@@ -1,18 +1,81 @@
-use super::compute::take_hashed;
-use super::*;
+use crate::standards::v1::subsets::any::schema::snapshot::ModelSnapshot;
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::annotation_layout::StoreyAnnotations;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::curtain_layout::CurtainLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::diagnostics::{Diagnostic, DiagnosticIndex};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::element_solids::{SolidEntry, SolidKey};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::components::ComponentEntry;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::families::FamilyValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::clash::MepClashes;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::mep::MepValue;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::clash_sets::{ClashSetResult, SolidProbe};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::rule_results::RuleResult;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::opening_frames::{CutRect, HostExtent, OpeningFrame};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::phase_visibility::PhaseVisibility;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::PlanLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::quantities::{ElementQuantity, QuantityTotals};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::schedules::ScheduleTable;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::zones::{SchemeTotals, ZoneTotals};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::spaces::StoreyRooms;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::stair_runs::StairRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::ramp_runs::RampRun;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::storey_levels::StoreyLevel;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::joins::Band;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::SheetLayout;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::attach::AttachSurface;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::effective_properties::EffectiveProperties;
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::energy_envelope::{EnergyScope, EnergyTotals, EnvelopeSpace};
+#[allow(unused_imports)]
+use crate::standards::v1::subsets::any::schema::inferences::wall_layout::WallLayout;
+#[allow(unused_imports)]
+use semio_framework_value::DslValue;
+#[allow(unused_imports)]
+use std::collections::BTreeMap;
+#[allow(unused_imports)]
+use std::sync::Arc;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::compute::take_hashed;
+use crate::standards::v1::subsets::any::schema::inferences::model_graph::*;
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, patches::{FamilyParameterPatch, ProjectPatch}, ModelDiff}, snapshot::Profile};
 use semio_framework_pack_json::{from_json_str, JsonMemberPolicy};
+use semio_framework_test_fixtures::fixture_text;
 
-const FRAME: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🏛️frame/📸️snapshot/🔣️.json");
-const TABLE: &str = include_str!("../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json");
+static FRAME: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🏛️frame/📸️snapshot/🔣️.json"));
+static TABLE: std::sync::LazyLock<&'static str> = std::sync::LazyLock::new(|| fixture_text!("../../../../../../../🧪️tests/🧫️fixtures/💡️inferences/🧬️families/🪑️table/📸️snapshot/🔣️.json"));
 
 fn frame() -> ModelSnapshot {
-    from_json_str(FRAME, JsonMemberPolicy::Reject).expect("the frame decodes")
+    from_json_str((*FRAME), JsonMemberPolicy::Reject).expect("the frame decodes")
 }
 
 fn table() -> ModelSnapshot {
-    from_json_str(TABLE, JsonMemberPolicy::Reject).expect("the table decodes")
+    from_json_str((*TABLE), JsonMemberPolicy::Reject).expect("the table decodes")
 }
 
 fn settle(session: &mut ModelInferenceSession, snapshot: &ModelSnapshot) {

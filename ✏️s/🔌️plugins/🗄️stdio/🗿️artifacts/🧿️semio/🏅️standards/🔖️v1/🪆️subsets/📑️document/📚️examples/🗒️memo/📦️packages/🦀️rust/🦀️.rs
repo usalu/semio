@@ -40,17 +40,9 @@ pub mod schema {
     #[path = "."]
     pub mod inferences {
         pub use semio_s_artifact_stdio_semio_document_schema::schema::inferences::*;
-        #[cfg(test)]
-        //#region 🧪️Tests
-        #[path = "../../../../🧬️schema/💡️inferences/🧪️tests/🔬️unit/🦀️.rs"]
-        pub mod tests;
         #[path = "."]
         pub mod outline {
             pub use semio_s_artifact_stdio_semio_document_schema::schema::inferences::outline::*;
-            #[cfg(test)]
-            //#region 🧪️Tests
-            #[path = "../../../../🧬️schema/💡️inferences/🧾outline/🧪️tests/🔬️unit/🦀️.rs"]
-            pub mod tests;
         }
     }
     #[path = "."]

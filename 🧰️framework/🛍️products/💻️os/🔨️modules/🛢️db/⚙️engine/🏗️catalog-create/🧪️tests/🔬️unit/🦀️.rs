@@ -3,6 +3,18 @@ use super::*;
 use db_engine_base::{CatalogEntry, CatalogState, DatabaseCreateCatalogToken, encode_catalog_pages, test_worker_pool};
 use db_io_core::{PayloadStorage as _, WalStorage as _};
 
+/// 🧾️ The authored source of the create-catalog crate: every child module and then the root, in module order, as the one text the source laws scan.
+const CATALOG_CREATE_SOURCE: &str = concat!(
+    include_str!("../../🧮️limits-ledger-and-admission/🦀️.rs"),
+    include_str!("../../📋️progress-result-and-rejection/🦀️.rs"),
+    include_str!("../../🧵️work-cursor-phase-and-state/🦀️.rs"),
+    include_str!("../../🚦️state-driver/🦀️.rs"),
+    include_str!("../../🔎️state-scan-clone-and-encode/🦀️.rs"),
+    include_str!("../../📌️state-claim-revalidate-and-publish/🦀️.rs"),
+    include_str!("../../📤️future-terminal-and-state-drop/🦀️.rs"),
+    include_str!("../../🦀️.rs"),
+);
+
 async fn catalog_bootstrap_pages(page_count: usize) -> db_io_core::DbIoPages {
     let mut writer = db_io_core::DbIoPageWriter::try_reserve(page_count).unwrap();
     let full = [b'x'; db_io_core::DB_IO_PAGE_BYTES];
@@ -727,8 +739,8 @@ async fn database_create_catalog_one_production_opportunity_is_under_eight_ms_an
     state.clone().drive_one(state.generation);
     assert!(started.elapsed() < std::time::Duration::from_millis(8));
     assert!(state.opportunities.load(std::sync::atomic::Ordering::Acquire) >= 1);
-    let source = include_str!("../../🦀️.rs");
-    let region = &source[source.find("//#region 🔖️CreateDocumentCatalogCas").unwrap()..source.find("//#endregion 🔖️CreateDocumentCatalogCas").unwrap()];
+    let source = CATALOG_CREATE_SOURCE;
+    let region = &source[source.find("//#region 🔖️CreateDocumentCatalogCas").unwrap()..source.rfind("//#endregion 🔖️CreateDocumentCatalogCas").unwrap()];
     assert!(!region.contains("target_arch = \"wasm32\""));
     assert!(!region.contains("db_actor::block_on"));
     drop(probe);
@@ -798,7 +810,7 @@ async fn database_create_catalog_maximum_catalog_claim_revalidate_and_snapshot_c
     assert_eq!(claim.await.unwrap().into_parts().unwrap().3, Err(DbError::Closed));
     assert_eq!(revalidate.await.unwrap().into_parts().unwrap().3, Err(DbError::Closed));
     assert_eq!(retire.await.unwrap().into_parts().unwrap().3, Err(DbError::Closed));
-    let source = include_str!("../../../🦀️.rs");
+    let source = include_str!("../../../🛠️database-catalog-shutdown-and-hello/🦀️.rs");
     let catalog = &source[source.find("pub async fn catalog(&self)").unwrap()..source.find("pub async fn health(&self)").unwrap()];
     assert!(catalog.find("Arc::clone(&catalog.entries)").unwrap() < catalog.find("entries.as_ref().clone()").unwrap());
     assert!(!catalog.contains("catalog.entries.as_ref().clone()"));
@@ -853,7 +865,7 @@ async fn database_create_catalog_publication_check_register_recheck_has_no_lost_
 //#region 🔖️Source laws
 #[test]
 fn retained_retry_owners_release_their_guard_before_resubmission() {
-    for (name, source) in [("db_engine_catalog_create", include_str!("../../🦀️.rs"))] {
+    for (name, source) in [("db_engine_catalog_create", CATALOG_CREATE_SOURCE)] {
         let lines: Vec<&str> = source.lines().collect();
         for (index, line) in lines.iter().enumerate() {
             let trimmed = line.trim_start().trim_start_matches("} else ");

@@ -5,7 +5,7 @@ import {spawn} from "node:child_process";
 import {StringDecoder} from "node:string_decoder";
 import {terminateOwnedChildTree} from "../../🪓️termination/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../🔒️leases/🟦️.ts";
-import {validateJsonSchemaSubset} from "@semio-tech/schema-validator-ts";
+import {validateJsonSchemaSubset} from "../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type:"json"};
 import outputSchema from "../🧬️schema/📬️output.json" with {type:"json"};
 import channelSchema from "./📡️channel/🧬️schema/🔣️.json" with {type:"json"};

@@ -1,0 +1,17 @@
+import { parseFile, sccs } from "./lib.ts";
+const p = parseFile(process.argv[2]);
+const seedName = process.argv[3];
+const seed = p.units.find((u) => u.names.has(seedName))!;
+const comps = sccs(p.units.length, (i) => p.units[i].deps);
+const comp = comps.find((c) => c.includes(seed.id))!;
+const cs = new Set(comp);
+const D = new Set<number>(), A = new Set<number>();
+const walk = (starts: number[], edges: (i: number) => Iterable<number>, out: Set<number>) => { const st = [...starts]; while (st.length) { const x = st.pop()!; for (const y of edges(x)) if (!cs.has(y) && !out.has(y)) { out.add(y); st.push(y); } } };
+walk(comp, (i) => p.units[i].deps, D);
+const rev: number[][] = p.units.map(() => []);
+p.units.forEach((u) => u.deps.forEach((d) => rev[d].push(u.id)));
+walk(comp, (i) => rev[i], A);
+const sum = (s: Iterable<number>) => [...s].reduce((a, i) => a + p.units[i].lines, 0);
+console.log(`SCC ${comp.length}u ${sum(comp)}L; descendants ${D.size}u ${sum(D)}L; ancestors ${A.size}u ${sum(A)}L; unrelated ${p.units.length - comp.length - D.size - A.size}u ${sum(p.units.map((u) => u.id)) - sum(comp) - sum(D) - sum(A)}L`);
+const nm = (i: number) => [...p.units[i].names][0] ?? "?";
+console.log("D:", [...D].sort((a, b) => a - b).map((i) => `${i}:${nm(i)}(${p.units[i].lines})`).join(" "));

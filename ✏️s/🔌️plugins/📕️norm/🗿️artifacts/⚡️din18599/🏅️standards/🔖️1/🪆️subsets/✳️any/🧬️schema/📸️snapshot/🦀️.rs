@@ -78,7 +78,7 @@ impl Default for Din18599Snapshot {
 pub const SNAPSHOT_LEAVES: semio_framework_schema_registry::FacetLeaves = semio_framework_schema_registry::FacetLeaves { rust: include_str!("🦀️.rs"), typescript: include_str!("🟦️.ts"), graphql: include_str!("🔗️.graphql"), json_schema: include_str!("🔣️.json"), proto: include_str!("🛰️.proto") };
 //#endregion 🍃️FacetLeaves
 
-use semio_s_plugin_norm_app_surface;
+use semio_s_plugin_norm_app_surface as app_surface;
 
 /// 🏢️ Building use class for DIN V 18599-10 usage profiles / GEG reference area.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, semio_framework_dsl_record_derive::DslScalar, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
@@ -349,6 +349,27 @@ pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_art
         columns: vec![SemioTableColumn { name: "thetaEC".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "gHWM2".into(), kind: SemioTableCellKind::Float }],
         rows: climate.theta_e_c.iter().zip(climate.g_h_w_m2.iter()).map(|(theta, g)| SemioTableRow { cells: vec![SemioValue::Float { lexeme: format!("{theta}") }, SemioValue::Float { lexeme: format!("{g}") }] }).collect(),
     }
+}
+
+/// 🔁️ Inverse of [`din18599_climate_table_from_data`] for a foreign reader of the derived child; a short or non-numeric row
+/// reads `0.0` for the missing month.
+pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
+    use semio_s_artifact_stdio_semio_table_model::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_value_model::schema::snapshot::SemioValue;
+    fn cell_f64(row: Option<&SemioTableRow>, index: usize) -> f64 {
+        match row.and_then(|row| row.cells.get(index)) {
+            Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
+            _ => 0.0,
+        }
+    }
+    let mut theta_e_c = [0.0; 12];
+    let mut g_h_w_m2 = [0.0; 12];
+    for month in 0..12 {
+        let row = table.rows.get(month);
+        theta_e_c[month] = cell_f64(row, 0);
+        g_h_w_m2[month] = cell_f64(row, 1);
+    }
+    MonthlyClimate { theta_e_c, g_h_w_m2 }
 }
 
 /// 🏷️ The derived climate table handle: `content_id("din18599-climate", canonical JSON of the climate)`, targeting

@@ -2,7 +2,7 @@
 //! openings are never touched, their placement along the new axis is inferred.
 
 use crate::standards::v1::subsets::any::schema::mutations::wall_geometry::flaw;
-use super::SetWallAxis;
+use crate::standards::v1::subsets::any::schema::mutations::set_wall_axis::SetWallAxis;
 use crate::standards::v1::subsets::any::schema::{diff::{Entry, ModelDiff, patches::WallPatch}, snapshot::ModelSnapshot};
 use protocol::{MutationOutcome, OutcomeCode};
 

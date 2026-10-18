@@ -1,4 +1,6 @@
-use super::*;
+#[allow(unused_imports)]
+use crate::editor::bim::kit::window_config;
+use crate::editor::bim::modes::edit::windows::sheet::config::*;
 use protocol::{OpBinary, OpText};
 use store::{pack::snapshot::ArtifactDsl, pack::snapshot::ArtifactPack};
 

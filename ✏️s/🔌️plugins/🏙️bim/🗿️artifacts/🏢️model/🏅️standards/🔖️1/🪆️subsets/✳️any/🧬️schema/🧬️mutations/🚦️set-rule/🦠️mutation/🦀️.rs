@@ -1,6 +1,6 @@
 //! 🚦️ `set-rule` payload. Sparsely changes a rule: its name, kind, limit, severity and scope (the scope is replaced as a whole). The findings are inferred and follow.
 
-use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, mutations::ModelMutation, snapshot::ModelSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ModelDiff, snapshot::ModelSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 use crate::standards::v1::subsets::any::schema::{snapshot::{RuleKind, RuleScope, RuleSeverity}, diff::patches::RulePatch};
 
@@ -33,13 +33,16 @@ impl SetRule {
     }
 }
 
-impl MutationKind<ModelSnapshot, ModelMutation> for SetRule {
+impl<Op> MutationKind<ModelSnapshot, Op> for SetRule
+where
+    Op: protocol::Mutation<ModelSnapshot, Diff = ModelDiff> + From<SetRule>,
+{
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "rule", kind: "set-rule", record: "SetRule" };
     fn diff(&self, base: &ModelSnapshot) -> protocol::MutationOutcome<ModelDiff> {
-        super::diff::diff(self, base)
+        crate::standards::v1::subsets::any::schema::mutations::set_rule::diff::diff(self, base)
     }
-    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<ModelMutation>, semio_framework_value::ValueError> {
-        Ok(super::inverse::inverse(self, base))
+    fn inverse(&self, base: &ModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+        Ok(crate::standards::v1::subsets::any::schema::mutations::set_rule::inverse::inverse(self, base))
     }
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Change rule \"{}\"", self.id), &format!("Regel \"{}\" ändern", self.id))

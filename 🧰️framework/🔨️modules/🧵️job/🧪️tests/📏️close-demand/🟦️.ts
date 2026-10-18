@@ -2,6 +2,7 @@ import { expect, test } from "bun:test";
 import { applyPatch } from "fast-json-patch";
 import {Database} from "bun:sqlite";
 import fixture from "../🧫️fixtures/📏️close-demand/🔣️.json" with { type: "json" };
+import { readModuleTreeSource } from "../../../📚️compiler/📖️syntax/🌳️module-tree/🟦️.ts";
 
 test("original job close separates exact independent grants and preserves terminal progress",()=>{
   const demands={maximumItems:fixture.progress.copiedItems,maximumCopyBytes:fixture.progress.copiedBytes,maximumCapacityBytes:fixture.progress.retainedCapacityBytes,maximumReleaseBytes:fixture.progress.releasedBytes,maximumDepth:2};
@@ -31,17 +32,17 @@ test("worker physical demand preserves caller authority and independent allocati
     expect(after.releasedBytes).toBeLessThanOrEqual(row.callerBytes);
     expect(Math.max(fixture.pageBytes, row.physicalBytes)).toBeLessThanOrEqual(fixture.admissionBytes);
   }
-  const source = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
+  const worker = readModuleTreeSource(new URL("../../👷️worker/🦀️.rs",import.meta.url)), source = readModuleTreeSource(new URL("../../🦀️.rs",import.meta.url)) + worker + readModuleTreeSource(new URL("../../👷️worker/🎟️authority/🦀️.rs",import.meta.url)) + readModuleTreeSource(new URL("../../👶️scope/🦀️.rs",import.meta.url));
   expect(source.includes("fn next_close_copy_byte_demand(&self)")).toBe(true);
-  expect(source.split("pub fn retirement_demands(&self,maximum_copy_bytes:usize) -> Result<RetirementDemand,WorkerJobDemandError>").length-1).toBe(3);
+  expect(worker.split("pub fn retirement_demands(&self,maximum_copy_bytes:usize) -> Result<RetirementDemand,WorkerJobDemandError>").length-1).toBe(3);
   expect(source.includes("pub fn retirement_demands(&self,maximum_copy_bytes:usize) -> Result<RetirementDemand,ValueError>")).toBe(true);
   expect(source.includes("pub fn next_close_demands(")).toBe(false);
-  const authority=source.slice(source.indexOf("fn worker_job_authority_close_demands"),source.indexOf("fn worker_job_close_step",source.indexOf("fn worker_job_authority_close_demands")));
+  const authority=source.slice(source.indexOf("fn worker_job_authority_close_demands"),source.indexOf("fn worker_payload_step",source.indexOf("fn worker_job_authority_close_demands")));
   expect(authority.includes("Result<RetirementDemand,ValueError>")).toBe(true);
   expect(authority.includes("RetainedCloneGrant{")).toBe(false);
   expect(source.includes("pub fn child_retirement_demands(&self,maximum_copy_bytes:usize)->Result<RetirementDemand,ValueError>")).toBe(true);
   expect(source.includes("pub fn next_child_close_demands")).toBe(false);
-  expect(source.includes("Arc::into_inner(payload_ledger)")).toBe(true);
+  expect(source.includes("Arc::into_inner(original)")).toBe(true);
 });
 
 test("worker close receipt preserves all admitted currencies at pending and completion",async()=>{
@@ -51,7 +52,7 @@ test("worker close receipt preserves all admitted currencies at pending and comp
  expect(expected).toEqual(fixture.progress);
  const changed=applyPatch({kind:"pending",progress:fixture.progress},[{op:"replace",path:"/kind",value:"complete"}],true).newDocument;
  expect<typeof expected>(changed.progress).toEqual(expected);db.close();
- const source=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();
+ const source=readModuleTreeSource(new URL("../../👷️worker/🎟️authority/🦀️.rs",import.meta.url));
  expect(source.includes("impl WorkerJobCloseStep {")).toBe(true);
 });
 
@@ -66,7 +67,7 @@ test("actual worker callers preserve independent page and parent authority polic
   expect(oracle).toEqual({owner:"original",copy:32768,physical:16384});
   for(const copy of [1,3,64]){expect(copy).toBeLessThan(policy.page.maximumCopyBytes);expect({...oracle,copy}).toEqual(applyPatch(structuredClone(oracle),[{op:"replace",path:"/copy",value:copy}],true,false).newDocument);}
   expect(policy.maximumAttempts).toBe(65536);expect(policy.deadlineMs).toBe(30000);expect(policy.refusal).toBe("original-owner-retained");
-  const owner=await Bun.file(new URL("../🔬️retained-ownership/🦀️.rs",import.meta.url)).text();
+  const owner=await Bun.file(new URL("../../👷️worker/🧪️tests/🔬️retained-ownership/🦀️.rs",import.meta.url)).text();
   expect(owner.includes("fn caller_worker_close_policy(")).toBe(true);
   expect(owner.includes("WorkerJobClosePhase::AuthorityRelease")).toBe(true);
   expect(owner.includes("maximum_release_bytes:release_grant")).toBe(false);
@@ -75,8 +76,8 @@ test("actual worker callers preserve independent page and parent authority polic
 
 test("retained fixture Box/Arc and parked queue expose physical ownership before caller funding",async()=>{
  const db=new Database(":memory:");try{db.run("CREATE TABLE owners(bytes INTEGER,credit INTEGER,shared INTEGER)");for(const row of fixture.hostileOwners){db.run("DELETE FROM owners");db.run("INSERT INTO owners VALUES(?,?,?)",[row.allocationBytes,row.callerRelease,Number(row.shared)]);const oracle=db.query("SELECT CASE WHEN credit>=bytes AND shared=0 THEN bytes ELSE 0 END AS releasedBytes, credit<bytes AS retained FROM owners").get() as {releasedBytes:number,retained:number};expect(row.releasedBytes).toBe(oracle.releasedBytes);expect(row.retained).toBe(Boolean(oracle.retained));const after=applyPatch({retained:true,releasedBytes:0},row.retained?[]:[{op:"replace",path:"/retained",value:false},{op:"replace",path:"/releasedBytes",value:row.releasedBytes}],true).newDocument;expect(after).toEqual({retained:row.retained,releasedBytes:row.releasedBytes});}}finally{db.close();}
- const owner=await Bun.file(new URL("../🔬️retained-ownership/🦀️.rs",import.meta.url)).text();
+ const owner=await Bun.file(new URL("../../👷️worker/🧪️tests/🔬️retained-ownership/🦀️.rs",import.meta.url)).text();
  const hostile=owner.slice(owner.indexOf("impl InteractiveJob for HostileJob"),owner.indexOf("fn mounted_admitted"));
  expect(hostile.includes("fn next_close_copy_byte_demand")).toBe(true);expect(hostile.includes("Arc::into_inner")).toBe(true);
- const root=await Bun.file(new URL("../../🦀️.rs",import.meta.url)).text();expect(root.includes("pub fn worker_job_retirement_phase(")).toBe(true);
+ const root=readModuleTreeSource(new URL("../../👷️worker/🦀️.rs",import.meta.url));expect(root.includes("pub fn worker_job_retirement_phase(")).toBe(true);
 });

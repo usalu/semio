@@ -16,7 +16,8 @@
 
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { discoverPackages, loadTaxonomy, readSemioMarkerSubTable } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { discoverPackages, readSemioMarkerSubTable } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔭️repository-scan/🟦️.ts";
+import { loadTaxonomy } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
 import type { AssetDeliveryDeclarationV1 } from "../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import { runtimeAssetDeliveries } from "../../../🧰️framework/🔨️modules/🖼️canvas/🔌️runtime-assets/🟦️.ts";
 import type { OwnedBuildPlugin } from "../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";

@@ -74,6 +74,7 @@ winit = { version = "0.30.12", default-features = false, features = ["rwh_06", "
 ui_gpu = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🎯️targets/🧊️wgpu/🖍️draw/📦️packages/🦀️rust", package = "semio-framework-ui-wgpu-render", features = ["canvas-raster"] }
 
 [dev-dependencies]
+semio-framework-os-renderer-wgpu-scene-state = { path = "../../../🎭️scene-state/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-os-renderer-wgpu-shell-input = { path = "../../../🕹️shell-input/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-ui-declaration = { path = "../../../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

@@ -2,7 +2,8 @@
 //! `set-component` or `set-component-override` mutation, what a new component is, the pickers of the properties panel (family by category, host wall, system) and the placeable families the browser, the place tool and the
 //! `create-entity` command share. What a component shows (its volume, its issues) is read off the inference; the evaluated parameters are rows of the properties panel.
 
-use super::{container, keys, number, parse_flag, parse_number, parse_point, partial, phasing, point, rename_element, variant, Created, EntityKind, FieldRow, InferredRow};
+use crate::standards::v1::subsets::any::schema::inferences::ModelInference;
+use crate::editor::bim::entities::{container, keys, number, parse_flag, parse_number, parse_point, partial, phasing, point, rename_element, variant, Created, EntityKind, FieldRow, InferredRow};
 use crate::editor::bim::modes::edit::windows::family::edit::CATEGORIES;
 use crate::editor::bim::modes::edit::windows::family::vocabulary::category_label;
 use crate::editor::bim::terminology::BimLabels;
@@ -187,6 +188,4 @@ pub const COMPONENT_OVERRIDE: EntityKind = kind!("component-override", "sliders-
     delete: Some(delete_override), rename: None, create: None, fields: COMPONENT_OVERRIDE_FIELDS, inferred: COMPONENT_OVERRIDE_INFERRED);
 //#endregion 🔖️Kinds
 
-#[cfg(any(test, feature = "testkit"))]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub mod tests;
+

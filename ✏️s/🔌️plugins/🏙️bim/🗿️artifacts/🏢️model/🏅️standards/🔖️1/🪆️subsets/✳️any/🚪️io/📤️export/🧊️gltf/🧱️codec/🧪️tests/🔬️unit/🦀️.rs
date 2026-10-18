@@ -1,4 +1,8 @@
-use super::*;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb;
+#[allow(unused_imports)]
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::encode_glb;
+use crate::standards::v1::subsets::any::io::export::gltf::codec::*;
 
 fn snapshot(bytes: Vec<u8>) -> Snapshot {
     let mut document = Document::default();

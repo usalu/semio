@@ -407,7 +407,7 @@ pub struct FrameworkConfigurationBinaryJob<A: ArtifactApp> {
     pub decoded: ManuallyDrop<Option<ConfigurationDecodeCompletion<A::ConfigMutation>>>,
     pub decoded_close: Option<ConfigurationDecodeRetirement<A::ConfigMutation>>,
     pub receiving:ManuallyDrop<Option<store::os_store::command_format::receiving::RetainedArtifactCommandReceiving<A::ConfigMutation>>>,
-    pub native:semio_framework_job::OriginalNativeDecodeSource,
+    pub native:semio_framework_job_native_decode::OriginalNativeDecodeSource,
     pub failure:ManuallyDrop<Option<OriginalConfigurationFailure>>,
     pub state: [u8; 8],
     pub pending: Option<semio_framework_plugin_decl_app::tool_contract::ReservedOutcomeKind>,

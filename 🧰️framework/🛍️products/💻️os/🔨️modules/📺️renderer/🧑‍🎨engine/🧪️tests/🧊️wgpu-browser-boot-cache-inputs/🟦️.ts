@@ -75,7 +75,7 @@ export async function testWgpuBootInputs(workspace: string, generated: string): 
   const fixtureWorkspace = join(output, "workspace"), owner = project.sourceRoot;
   const fixtureRoot = join(fixtureWorkspace, owner, "📦️packages/🦀️rust"), bootSource = resolve(fixtureRoot, "../../🚀️browser-boot/🟦️.ts");
   const taxonomyPath = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-  for (const path of ["nx.json", "📋️project.json", "package.json", taxonomyPath]) {
+  for (const path of ["📋️project.json", "package.json", taxonomyPath]) {
     mkdirSync(resolve(fixtureWorkspace, path, ".."), { recursive: true });
     writeFileSync(join(fixtureWorkspace, path), readFileSync(join(workspace, path)));
   }

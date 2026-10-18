@@ -1,4 +1,4 @@
-import { loadTaxonomy } from "../../🟦️.ts";
+import { loadTaxonomy } from "../🔐️taxonomy-authority/🟦️.ts";
 import { POLICY_SOURCE_OPERATIONS, policySourceDirectory, type PolicySourceOperations } from "../📖️source-access/🟦️.ts";
 
 /** 🗺️ Discovers existing viewer and editor roots through the standard/subset surface axis without following links. */

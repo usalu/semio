@@ -3,10 +3,8 @@
 //! The preview draws the visible solids of the same family on a `World3d` surface. Both windows follow the selection: the family (or the solid, or the parameter row) selected in the library or the outliner
 //! is the one shown, the first family of the model when nothing is selected. Nothing here stores or computes a value: every cell is read from the `families` inference, every edit is the `editFamily` command.
 
-#[path = "✏️edit/🦀️.rs"]
-pub mod edit;
-#[path = "🏷️vocabulary/🦀️.rs"]
-pub mod vocabulary;
+pub use semio_s_artifact_bim_model_viewer::editor::bim::modes::edit::windows::family::edit;
+pub use semio_s_artifact_bim_model_wall_layout::editor::bim::modes::edit::windows::family::vocabulary;
 
 use crate::editor::bim::kit::bim_window_action;
 use crate::editor::bim::terminology::BimLabels;
@@ -73,7 +71,7 @@ pub fn selected(snapshot: &ModelSnapshot, elements: &[String], library: &[String
 //#endregion 🔖️Selection
 
 //#region 🔖️Cells
-fn text(value: impl Into<String>) -> TableCell {
+pub fn text(value: impl Into<String>) -> TableCell {
     TableCell::Text { value: value.into() }
 }
 
@@ -94,7 +92,7 @@ fn button(icon: &str, label: &str, family: &str, part: &str, op: &str, key: &str
     UiTreeItemAction { icon_id: icon.into(), label: Some(Label::data(label.to_string())), action: bim_window_action("editFamily", Some(object(strings))), placement: Some(UiTreeActionPlacement::Row), disabled: false, reason: None }
 }
 
-fn row(id: &str, cells: Vec<(&str, TableCell)>) -> DslValue {
+pub fn row(id: &str, cells: Vec<(&str, TableCell)>) -> DslValue {
     let mut entries = vec![("id".to_string(), DslValue::String(id.to_string()))];
     entries.extend(cells.into_iter().map(|(column, cell)| (column.to_string(), semio_framework_value::ToValue::to_value(&cell))));
     DslValue::object(entries)

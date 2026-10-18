@@ -17,7 +17,7 @@ import {readBuildMode} from "../../../../../../../🔨️modules/🏃️process/
 import { inspectRuntimeGraphV1, runtimeEcmaReferencesV1, runtimeFixturePathV1 } from "../🟦️.ts";
 import { cargoDepInfoChecksumsV1, cargoDepInfoResolvedChecksumsV1, cargoDepInfoSourcesV1, encodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
 const owner = resolve(import.meta.dir, "..");
-const examples = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).examples;
+const examples = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).examples;
 const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/🔣️.json"), "utf8"));
 const admit = new Ajv({ strict: true }).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeGraphEvidenceV1`)!;
 
@@ -27,7 +27,7 @@ if(resolve(process.env.SEMIO_TEST_ARTIFACT_DIR!).length>129)throw Error("Runtime
 
 test("actual build-resource observations bind original bytes and refuse fixture ancestry", async () => {
   const { runtimeBuildResourceInputsV1, runtimeRetainedBuildResourceInputsV1 } = await import("../🔎️verification/🟦️.ts");
-  const examples: { id: string; rows: RuntimeBuildResourceObservationV1[]; files: Record<string, string>; forbidden: boolean; inputMismatch: boolean }[] = JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).resourceObservations;
+  const examples: { id: string; rows: RuntimeBuildResourceObservationV1[]; files: Record<string, string>; forbidden: boolean; inputMismatch: boolean }[] = JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).resourceObservations;
   const admitResource = new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeBuildResourceObservationV1`)!;
   for (const row of examples) {
     for (const observation of row.rows) expect(admitResource(observation),JSON.stringify(admitResource.errors)).toBe(true);
@@ -255,7 +255,7 @@ test("actual native filesystem reads remain resource edges absent from compiler 
 
 test("durable Cargo discovery selects only current exact invocation observations", async()=>{
   const {runtimeCargoObservationsForChecksV1,runtimeCargoInvocationV1}=await import("../🔎️verification/🟦️.ts"), parse=(await import("yargs-parser")).default;
-  const rows=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).cargoObservationSelections;
+  const rows=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).cargoObservationSelections;
   const check={workspace:"Cargo.toml",target:"wasm32-wasip2",packages:["owner"],features:["owner/live"]};
   for(const row of rows){
     const observation={version:1 as const,manifest:"/workspace/Cargo.toml",cwd:"/workspace",command:"cargo" as const,args:row.args,builtAtMs:1,observedAtMs:2,status:0 as const,cancelled:false as const,units:[],buildScripts:[],compilerResourceRoot:null,compilerResources:[]};
@@ -295,7 +295,7 @@ test("a large completed invocation is published as an interned receipt that the 
 test("actual durable Cargo producer acquires current features and refuses stale configuration/artifacts",async()=>{
   const {cargoStreamingStatus}=await import("../../../🏃️process/🟦️.ts"), {runtimeCargoProvenanceV1,runtimeCargoObservationCurrentV1}=await import("../🔎️verification/🟦️.ts");
   const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR; if(!artifacts) throw Error("Caller-owned artifacts are required");
-  const program=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).cargoCurrentnessProgram,directory=join(artifacts,"u"),source=join(directory,"owner"),buildDirectory=sharedCompiler,manifest=join(source,"Cargo.toml");
+  const program=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).cargoCurrentnessProgram,directory=join(artifacts,"u"),source=join(directory,"owner"),buildDirectory=sharedCompiler,manifest=join(source,"Cargo.toml");
   mkdirSync(source,{recursive:true});for(const[path,content]of Object.entries(program.files))writeFileSync(join(source,path),content as string);
   const environment:Record<string,string|undefined>={...process.env,CARGO_TARGET_DIR:join(directory,"target"),CARGO_BUILD_BUILD_DIR:buildDirectory};delete environment.SEMIO_TEST_ARTIFACT_DIR;
   expect(await originalCargoStreamingV1(["generate-lockfile","--offline","--manifest-path",manifest],directory,environment,10000)).toBe(0);
@@ -316,12 +316,12 @@ test("actual durable Cargo producer acquires current features and refuses stale 
 });
 
 test("fresh browser compiler bytes require the same actual mounted output",async()=>{
- const {runtimeBrowserArtifactV1}=await import("../🔎️verification/🟦️.ts"),rows=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).browserArtifacts;
+ const {runtimeBrowserArtifactV1}=await import("../🔎️verification/🟦️.ts"),rows=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).browserArtifacts;
  for(const row of rows){const artifact=runtimeBrowserArtifactV1(row.path,row.compiled,()=>row.mounted??undefined);expect(artifact.current).toBe(row.current);expect(artifact.compiledSha256).toBe(new Bun.CryptoHasher("sha256").update(row.compiled).digest("hex"));expect(artifact.mountedSha256).toBe(row.mounted===null?null:new Bun.CryptoHasher("sha256").update(row.mounted).digest("hex"));}
 });
 
  test("Trunk raw compiler query and actual mounted outputs bind exact bytes", async()=>{
-  const {runtimeTrunkCompilationV1}=await import("../🔎️verification/🟦️.ts"),row=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).trunkOutputs;
+  const {runtimeTrunkCompilationV1}=await import("../🔎️verification/🟦️.ts"),row=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).trunkOutputs;
   const hash=(bytes:string)=>new Bun.CryptoHasher("sha256").update(bytes).digest("hex"),rawSha256=hash(row.raw),outputs=Object.entries(row.outputs).map(([path,bytes])=>({path,sha256:hash(String(bytes))}));
   const receipt={rawSha256,querySha256:rawSha256,outputs},admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeTrunkCompilationV1`)!;
   expect(admit(receipt),JSON.stringify(admit.errors)).toBe(true);
@@ -354,7 +354,7 @@ test("actual Trunk compiled transformation retains current mounted bytes after t
 
  test("actual rustc consumed-byte checksums refuse edits before completed receipt observation",async()=>{
  const {blake3}=await import("@noble/hashes/blake3.js"),{runtimeCargoConsumedInputsV1}=await import("../🔎️verification/🟦️.ts");
- const row=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).compilerChecksums,bytes=Buffer.from(row.source),hash=Buffer.from(blake3(bytes)).toString("hex"),text=`owner.rlib: ${row.path}\n# checksum:blake3=${hash} file_len:${bytes.length} ${row.path}\n`,parsed=(depText:string,baseDirectory:string)=>({path:"/owner.d",sha256:createHash("sha256").update(depText).digest("hex"),baseDirectory,sources:cargoDepInfoSourcesV1(depText),checksums:cargoDepInfoChecksumsV1(depText)}),unit={depInfo:[parsed(text,row.baseDirectory)],inputs:[{path:resolve(row.baseDirectory,row.path),kind:"file" as const}]};
+ const row=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).compilerChecksums,bytes=Buffer.from(row.source),hash=Buffer.from(blake3(bytes)).toString("hex"),text=`owner.rlib: ${row.path}\n# checksum:blake3=${hash} file_len:${bytes.length} ${row.path}\n`,parsed=(depText:string,baseDirectory:string)=>({path:"/owner.d",sha256:createHash("sha256").update(depText).digest("hex"),baseDirectory,sources:cargoDepInfoSourcesV1(depText),checksums:cargoDepInfoChecksumsV1(depText)}),unit={depInfo:[parsed(text,row.baseDirectory)],inputs:[{path:resolve(row.baseDirectory,row.path),kind:"file" as const}]};
  const admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeCompilerChecksumV1`)!;for(const value of cargoDepInfoResolvedChecksumsV1(parsed(text,row.baseDirectory)))expect(admit(value),JSON.stringify(admit.errors)).toBe(true);
  expect(runtimeCargoConsumedInputsV1(unit,()=>bytes)).toEqual([]);expect(runtimeCargoConsumedInputsV1(unit,()=>Buffer.from(row.changed))).toHaveLength(1);expect(runtimeCargoConsumedInputsV1({...unit,depInfo:[parsed(`owner.rlib: ${row.path}\n`,row.baseDirectory)]},()=>bytes)).toHaveLength(1);
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR!;const source=join(artifacts,"compiler-consumed-owner.rs"),dep=join(artifacts,"compiler-consumed-owner.d");writeFileSync(source,row.source);const child=Bun.spawn(["rustc","-Z","checksum-hash-algorithm=blake3","--crate-name","compiler_consumed_owner","--crate-type","lib","--emit",`dep-info=${dep}`,source],{stdout:"pipe",stderr:"pipe"});expect(await child.exited,await new Response(child.stderr).text()).toBe(0);
@@ -363,7 +363,7 @@ test("actual Trunk compiled transformation retains current mounted bytes after t
 
 test("actual proc-macro reads retain in-place byte witnesses and tracked directory inputs",async()=>{
  const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR!,directory=mkdtempSync(join(artifacts,"c-")),resources=join(directory,"inputs"),captures=join(directory,"captures");mkdirSync(resources,{recursive:true});
- const row=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).compilerResourceProgram;for(const[path,value]of Object.entries(row.files)){mkdirSync(join(resources,path,".."),{recursive:true});writeFileSync(join(resources,path),value as string);}
+ const row=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).compilerResourceProgram;for(const[path,value]of Object.entries(row.files)){mkdirSync(join(resources,path,".."),{recursive:true});writeFileSync(join(resources,path),value as string);}
  const helper=resolve(process.cwd(),"🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️resources/🧮️compiler/🦀️.rs"),source=join(directory,"producer.rs"),caller=join(directory,"caller.rs"),library=join(directory,process.platform==="win32"?"compiler_resources.dll":process.platform==="darwin"?"libcompiler_resources.dylib":"libcompiler_resources.so"),binary=join(directory,process.platform==="win32"?"caller.exe":"caller"),dep=join(directory,"caller.d");
  writeFileSync(source,`#![feature(proc_macro_tracked_path,proc_macro_tracked_env)]\nextern crate proc_macro;#[path=${JSON.stringify(helper)}] mod resources;\n#[proc_macro]pub fn observed(_:proc_macro::TokenStream)->proc_macro::TokenStream{let root=proc_macro::tracked::env_var("SEMIO_COMPILER_RESOURCE_ROOT").ok();resources::with_compiler_resources_v1(${JSON.stringify(directory)},${JSON.stringify(source)},proc_macro::Span::call_site().local_file(),root,|path|proc_macro::tracked::path(path),||{let path=std::path::PathBuf::from(proc_macro::tracked::env_var("RESOURCE_INPUT").unwrap());let bytes=resources::read(path.join("input.txt")).unwrap();let entries=resources::read_dir(&path).unwrap().collect::<Result<Vec<_>,_>>().unwrap();assert!(!bytes.is_empty());assert_eq!(entries.len(),2);"const OBSERVED:u8=7;".parse().unwrap()})}\n`);
  writeFileSync(caller,`compiler_resources::observed!();fn main(){assert_eq!(OBSERVED,${row.observedValue});println!("[DEBUG] actual proc-macro payload consumed");}`);
@@ -390,7 +390,7 @@ test("actual Cargo proc-macro receipts bind current original resources and exact
 
  test("compiler resource groups preserve exact operation inputs across actual invocations",async()=>{
  const {runtimeMergeResourceReadOwnersV1}=await import("../🔎️verification/🟦️.ts");
- for(const row of JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).compilerResourceOwnerGroups){const result=runtimeMergeResourceReadOwnersV1(row.groups);expect(result.findings.length>0).toBe(row.refused);if(!row.refused){const graph=new Graph({multi:true});for(const group of row.groups)for(const[source,owners]of Object.entries(group.owners)as any)for(const owner of owners)for(const input of owner.inputs){graph.mergeNode(source);graph.mergeNode(input.path);graph.addDirectedEdge(source,input.path);}expect(result.owners["helper.rs"][0].inputs.map((input:any)=>input.path).sort()).toEqual(row.paths);expect(graph.outNeighbors("helper.rs").sort()).toEqual(row.paths);const validate=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeResourceReadOwnerV1`)!;expect(validate(result.owners["helper.rs"][0]),JSON.stringify(validate.errors)).toBe(true);}}
+ for(const row of JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).compilerResourceOwnerGroups){const result=runtimeMergeResourceReadOwnersV1(row.groups);expect(result.findings.length>0).toBe(row.refused);if(!row.refused){const graph=new Graph({multi:true});for(const group of row.groups)for(const[source,owners]of Object.entries(group.owners)as any)for(const owner of owners)for(const input of owner.inputs){graph.mergeNode(source);graph.mergeNode(input.path);graph.addDirectedEdge(source,input.path);}expect(result.owners["helper.rs"][0].inputs.map((input:any)=>input.path).sort()).toEqual(row.paths);expect(graph.outNeighbors("helper.rs").sort()).toEqual(row.paths);const validate=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeResourceReadOwnerV1`)!;expect(validate(result.owners["helper.rs"][0]),JSON.stringify(validate.errors)).toBe(true);}}
  });
 
 test("actual build reader records original typed directory metadata and exact internal operations",async()=>{
@@ -410,17 +410,17 @@ test("actual guest Cargo build reads bind exact host operations and original met
 
 test("original browser actor producer inputs require complete current owned policy and compiler bytes",async()=>{
  const factory=await import("../../../../../../💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts"),directory=mkdtempSync(join(process.env.SEMIO_TEST_ARTIFACT_DIR!,"a-"));mkdirSync(directory,{recursive:true});
- const program=JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).actorProducerProgram,parse=Bun.spawn(["node","--input-type=module","--eval",'import {parse} from "@bytecodealliance/jco";process.stdout.write(Buffer.from(await parse(process.argv[1])).toString("hex"));',program.component],{stdout:"pipe",stderr:"pipe"});const [component,error,status]=await Promise.all([new Response(parse.stdout).text(),new Response(parse.stderr).text(),parse.exited]);expect(status,error).toBe(0);const actor=await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"actor-producer-inputs",maximumElapsedMilliseconds:0},{},Date.now()),invocation=>factory.buildClosedBrowserActorArtifactV1(Buffer.from(component,"hex"),invocation,scriptCompilerAdmissionControlV1(invocation,"test:actor-production",0))),compiler=join(directory,"compiler.mjs");writeFileSync(compiler,actor.producer.compiler.bytes);
+ const program=JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).actorProducerProgram,parse=Bun.spawn(["node","--input-type=module","--eval",'import {parse} from "@bytecodealliance/jco";process.stdout.write(Buffer.from(await parse(process.argv[1])).toString("hex"));',program.component],{stdout:"pipe",stderr:"pipe"});const [component,error,status]=await Promise.all([new Response(parse.stdout).text(),new Response(parse.stderr).text(),parse.exited]);expect(status,error).toBe(0);const actor=await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"actor-producer-inputs",maximumElapsedMilliseconds:0},{},Date.now()),invocation=>factory.buildClosedBrowserActorArtifactV1(Buffer.from(component,"hex"),invocation,scriptCompilerAdmissionControlV1(invocation,"test:actor-production",0))),compiler=join(directory,"compiler.mjs");writeFileSync(compiler,actor.producer.compiler.bytes);
  const observation={policyCanonical:actor.policyCanonical,policySha256:actor.policySha256,runtime:actor.producer.runtime,compiler:{path:compiler,sha256:actor.producer.compiler.sha256,byteLength:actor.producer.compiler.byteLength},inputs:actor.producer.inputs};
  const document=JSON.parse(readFileSync(resolve(process.cwd(),"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧬️schema/🔣️.json"),"utf8")),admit=new Ajv({strict:true}).addSchema(document).getSchema(`${document.$id}#/$defs/BrowserActorProducerInputsV1`)!;expect(admit(observation),JSON.stringify(admit.errors)).toBe(true);
- for(const row of JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).actorProducerChanges){let value:Mutable<typeof observation>=JSON.parse(JSON.stringify(observation));if(row.name==="missing-input")value.inputs=value.inputs.slice(1);if(row.name==="foreign-input")value.inputs[0]={...value.inputs[0],path:compiler};if(row.name==="changed-policy")value.policySha256="0".repeat(64);if(row.name==="noncanonical-policy")value.policyCanonical=JSON.stringify(JSON.parse(value.policyCanonical),null,2);if(row.name==="changed-compiler")value.compiler.sha256="0".repeat(64);if(row.name==="changed-runtime")value.runtime.sha256="0".repeat(64);
+ for(const row of JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).actorProducerChanges){let value:Mutable<typeof observation>=JSON.parse(JSON.stringify(observation));if(row.name==="missing-input")value.inputs=value.inputs.slice(1);if(row.name==="foreign-input")value.inputs[0]={...value.inputs[0],path:compiler};if(row.name==="changed-policy")value.policySha256="0".repeat(64);if(row.name==="noncanonical-policy")value.policyCanonical=JSON.stringify(JSON.parse(value.policyCanonical),null,2);if(row.name==="changed-compiler")value.compiler.sha256="0".repeat(64);if(row.name==="changed-runtime")value.runtime.sha256="0".repeat(64);
  let accepted=false;try{const result=await withScriptProcessEnvelope(createScriptProcessEnvelope({version:1,owner:"actor-producer-verification",maximumElapsedMilliseconds:120000},{},Date.now()),invocation=>factory.verifyBrowserActorProducerInputsV1(value,invocation,scriptCompilerAdmissionControlV1(invocation,"test:actor-verification",0)));accepted=true;expect(result.inputs).toHaveLength(observation.inputs.length);expect(result.importInterfaces).toEqual(JSON.parse(value.policyCanonical).options.importInterfaces);}catch{}expect(accepted,row.name).toBe(row.accepted);}
  expect(new Bun.CryptoHasher("sha256").update(readFileSync(compiler)).digest("hex")).toBe(observation.compiler.sha256);expect(Buffer.from(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(actor.policyCanonical))).toString("hex")).toBe(actor.policySha256);writeFileSync(join(directory,"original-producer.json"),JSON.stringify(observation));
 },120000);
 
 
 test("selected actor ownership binds only one exact production child operation",async()=>{
- const {runtimeActorChildImportV1}=await import("../🔎️verification/🟦️.ts");for(const row of JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).actorChildCalls){const files:Record<string,string>={"child.ts":row.source,"actor.mjs":"export const value=7;"},selection=runtimeActorChildImportV1(row.source,"child.ts","actor.mjs",createHash("sha256").update(files["actor.mjs"]).digest("hex"));expect(selection?.callsiteIndex??null).toBe(row.index);const transformed=new Bun.Transpiler({loader:"ts",define:{"import.meta.vitest":"undefined"},deadCodeElimination:true}).transformSync(row.source),parsed=ts.createSourceFile("child.ts",transformed,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS),calls:ts.CallExpression[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node)&&node.expression.kind===ts.SyntaxKind.ImportKeyword&&!ts.isStringLiteral(node.arguments[0]!))calls.push(node);ts.forEachChild(node,visit);};visit(parsed);if(selection){expect(calls[selection.callsiteIndex]!.arguments[0]!.getText(parsed)).toBe("moduleUrl");expect(selection.sourceSha256).toBe(new Bun.CryptoHasher("sha256").update(transformed).digest("hex"));}
+ const {runtimeActorChildImportV1}=await import("../🔎️verification/🟦️.ts");for(const row of JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).actorChildCalls){const files:Record<string,string>={"child.ts":row.source,"actor.mjs":"export const value=7;"},selection=runtimeActorChildImportV1(row.source,"child.ts","actor.mjs",createHash("sha256").update(files["actor.mjs"]).digest("hex"));expect(selection?.callsiteIndex??null).toBe(row.index);const transformed=new Bun.Transpiler({loader:"ts",define:{"import.meta.vitest":"undefined"},deadCodeElimination:true}).transformSync(row.source),parsed=ts.createSourceFile("child.ts",transformed,ts.ScriptTarget.Latest,true,ts.ScriptKind.TS),calls:ts.CallExpression[]=[];const visit=(node:ts.Node)=>{if(ts.isCallExpression(node)&&node.expression.kind===ts.SyntaxKind.ImportKeyword&&!ts.isStringLiteral(node.arguments[0]!))calls.push(node);ts.forEachChild(node,visit);};visit(parsed);if(selection){expect(calls[selection.callsiteIndex]!.arguments[0]!.getText(parsed)).toBe("moduleUrl");expect(selection.sourceSha256).toBe(new Bun.CryptoHasher("sha256").update(transformed).digest("hex"));}
  const evidence=inspectRuntimeGraphV1(["child.ts"],{read:path=>files[path],productionTests:"excluded",dynamicImports:selection?{"child.ts":[selection]}:{}});expect(evidence.findings.filter(row=>row.code==="runtime-unresolved-edge")).toHaveLength(row.unresolved);}
 });
 
@@ -463,7 +463,7 @@ test("canonical runtime domain schemas cover complete compiler records and forma
   };
   for (const statement of declarations.statements) if (ts.isTypeAliasDeclaration(statement)) expect(fromType(statement.type), statement.name.text).toEqual(fromJson(schema.$defs[statement.name.text]));
 
-  const samples = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).compilerCustody;
+  const samples = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).compilerCustody;
   const ajv = new Ajv({ strict: true }).addSchema(schema);
   for (const sample of samples) {
     const validate = ajv.getSchema(`${schema.$id}#/$defs/${sample.name}`)!;
@@ -474,7 +474,7 @@ test("canonical runtime domain schemas cover complete compiler records and forma
 
 
 test("runtime malformed ECMA source cannot return partial definitive references", () => {
-  const rows = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🔣️.json"), "utf8")).malformedEcmaSources;
+  const rows = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🔣️.json"), "utf8")).malformedEcmaSources;
   for (const row of rows) {
     const parsed = ts.createSourceFile("malformed.ts", row.source, ts.ScriptTarget.Latest, true);
     expect((parsed as ts.SourceFile & { parseDiagnostics: readonly ts.Diagnostic[] }).parseDiagnostics.length, row.id).toBeGreaterThan(0);
@@ -485,7 +485,7 @@ test("runtime malformed ECMA source cannot return partial definitive references"
   }
 });
 
-for(const vector of JSON.parse(readFileSync(join(owner,"🧫️fixtures/🔣️.json"),"utf8")).resourceReads)test(`runtime in-place read witness: ${vector.id}`,async()=>{
+for(const vector of JSON.parse(readFileSync(join(owner,"🧪️tests/🧫️fixtures/🔣️.json"),"utf8")).resourceReads)test(`runtime in-place read witness: ${vector.id}`,async()=>{
  const {runtimeBuildResourceInputsV1,runtimeRetainedBuildResourceInputsV1}=await import("../🔎️verification/🟦️.ts"),consumed=Buffer.from(vector.hex,"hex"),current=Buffer.from(vector.currentHex,"hex"),sha256=Buffer.from(await crypto.subtle.digest("SHA-256",consumed)).toString("hex"),input={kind:"read" as const,path:"/workspace/resource",bytes:consumed.length,sha256,operation:{source:"/workspace/helper.rs",line:1,name:"read" as const}},text=JSON.stringify(input),resource={package_id:"owner",out_dir:"/workspace/out",path:"/workspace/out/semio-runtime-resource-inputs.jsonl",text,sha256:createHash("sha256").update(text).digest("hex"),observedAtMs:2,resources:[{input,bytes:current.length,sha256:createHash("sha256").update(current).digest("hex"),sourceExact:vector.exact,schemaErrors:[]}]},observation:RuntimeCargoObservationV1={version:1,manifest:"/workspace/Cargo.toml",cwd:"/workspace",command:"cargo",args:["build"],builtAtMs:1,observedAtMs:2,status:0,cancelled:false,units:[],buildScripts:[{reason:"build-script-executed",package_id:"owner",cfgs:[],env:[],out_dir:"/workspace/out"}],compilerResourceRoot:null,compilerResources:[]};
  const context={root:"/workspace",cwd:"/workspace",outDirectory:"/workspace/out",read:(path:string)=>path.endsWith(".jsonl")?text:current,directoryEntries:()=>undefined},admit=new Ajv({strict:true}).addSchema(schema).getSchema(`${schema.$id}#/$defs/RuntimeBuildResourceObservationV1`)!;expect(admit(input),JSON.stringify(admit.errors)).toBe(true);expect(admit({...input,output:"/workspace/out/copied"})).toBe(false);
  const evidence=runtimeBuildResourceInputsV1(text,context);expect(evidence.inputs).toEqual(["resource"]);expect(evidence.findings.length===0).toBe(vector.exact);expect(runtimeRetainedBuildResourceInputsV1(observation,resource,context).verified).toBe(vector.exact);

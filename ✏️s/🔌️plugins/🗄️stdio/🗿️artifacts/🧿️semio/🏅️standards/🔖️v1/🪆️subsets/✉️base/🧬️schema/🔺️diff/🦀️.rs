@@ -249,7 +249,7 @@ impl DiffAlgebra<SemioSnapshot> for SemioDiff {
 /// `protocol_walk_law`.
 #[cfg(any(test, feature = "testkit"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<SemioDiff> {
+pub fn demo_diff_cases() -> Vec<SemioDiff> {
     vec![
         SemioDiff::NoChange,
         SemioDiff::Brep(Default::default()),

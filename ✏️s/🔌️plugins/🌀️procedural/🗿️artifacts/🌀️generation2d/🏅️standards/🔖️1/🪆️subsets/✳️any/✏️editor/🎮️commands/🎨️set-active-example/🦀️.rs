@@ -10,6 +10,7 @@ use semio_framework_os_flow::FlowEvalSession;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_plugin::Effect;
+use semio_s_artifact_procedural_2d_model::GENERATION_2D_SCHEMA;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "active-example")]

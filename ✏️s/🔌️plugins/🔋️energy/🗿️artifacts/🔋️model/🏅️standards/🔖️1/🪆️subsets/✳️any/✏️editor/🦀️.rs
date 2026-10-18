@@ -106,7 +106,7 @@ use semio_framework_plugin::ToolRunJobRequest;
 use semio_framework_plugin::UiAssemblyResult;
 use semio_framework_plugin::{ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use semio_framework_2d::compute::EngineHandles;
+use semio_framework_2d_compute::EngineHandles;
 
 #[path = "🧮️reduce-and-helpers/🦀️.rs"]
 mod reduce_and_helpers;

@@ -2,15 +2,17 @@ import { fixtureOriginalWorkStock } from "../../../../../../../🔨️modules/�
 // @vitest-environment node
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { findWorkspaceRoot } from "@semio-tech/process/routing";
 import { describe, expect, it } from "vitest";
 import { encodeDocumentArchiveBytes, decodeDocumentArchiveBytes } from "@semio-tech/framework-os";
 import documentSurfaceFixture from "../../🧱️elements/🏛️ShellHost/🔀️surface-switch/📄️document/🧪️tests/🧫️fixtures/🔣️.json";
 import emojiRegex from "emoji-regex";
 import ts from "typescript";
-import { loadTaxonomy, parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import { loadTaxonomy } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
+import { parseCanonicalWgpuPackageCatalog, parseSemanticPackageBrowserProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🎁️package-projection/🟦️.ts";
 import browserAuthorityFixture from "../🧫️fixtures/🧊️wgpu-browser-entry-authority/🔣️.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json";
 import { assertPinnedBunVersion, decodeAstralEscapes } from "../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts";
@@ -405,8 +407,8 @@ describe("framework renderer wgpu generated worker", () => {
   it("activates only the current no-follow package through both independent TypeScript compilers", () => {
     const taxonomy = loadTaxonomy(), contract = taxonomy.generatorContracts["wgpu-frame-worker"]!;
     const directory = dirname(fileURLToPath(import.meta.url));
-    const source = readFileSync(join(directory, "../../../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts"), "utf8");
-    const definition = source.match(/^function packageGeneratorActivated\([\s\S]*?^\}/mu)![0];
+    const source = readFileSync(join(directory, "../../../../../../🦑️repo/🔨️modules/📚️library/🧹️normalization/🛫️embedded-roots/🟦️.ts"), "utf8");
+    const definition = source.match(/^(?:export )?function packageGeneratorActivated\([\s\S]*?^\}/mu)![0].replace(/^export /u, "");
     const catalogBytes = readFileSync(join(directory, "../../🎯️targets/🧊️wgpu/🪪️package-catalog.json"), "utf8");
     const catalog = parseCanonicalWgpuPackageCatalog(catalogBytes, contract.packageGeneration!.catalogSha256, contract.packageGeneration!.browserProfile, taxonomy);
     const manifest = `${catalog.ownerPath}/${catalog.packageRelativePath}/Cargo.toml`;
@@ -495,8 +497,7 @@ describe("framework renderer wgpu generated worker", () => {
 
   it("owns every static relative browser runtime import in the neutral package authority", () => {
     const profile = loadTaxonomy().generatorContracts["wgpu-frame-worker"]!.packageGeneration!.browserProfile;
-    let root = dirname(fileURLToPath(import.meta.url));
-    while (!existsSync(join(root, "nx.json"))) root = dirname(root);
+    const root = findWorkspaceRoot(dirname(fileURLToPath(import.meta.url)));
     for (const path of profile.sourceModulePaths) {
       if (!/\.(ts|mjs)$/u.test(path)) continue;
       const emitted = ts.transpileModule(readFileSync(join(root, path), "utf8"), { compilerOptions: { target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext } }).outputText;
@@ -523,10 +524,9 @@ describe("framework renderer wgpu generated worker", () => {
     expect(createHash("sha256").update(first.content).digest("hex")).toBe(subtle);
   });
 
-  it("renders byte-identical worker bytes from unrelated working directories and renderer environments, because the Nx generate target runs in the package directory while the dev lane checks from the repository root", async () => {
+  it("renders byte-identical worker bytes from unrelated working directories and renderer environments, because the generate target runs in the package directory while the dev lane checks from the repository root", async () => {
     const bundleRoot = join(dirname(fileURLToPath(import.meta.url)), "../../🎯️targets/🧊️wgpu/📦️packages/🦀️rust");
-    let workspaceRoot = dirname(fileURLToPath(import.meta.url));
-    while (!existsSync(join(workspaceRoot, "nx.json"))) workspaceRoot = dirname(workspaceRoot);
+    const workspaceRoot = findWorkspaceRoot(dirname(fileURLToPath(import.meta.url)));
     const contexts: readonly { readonly cwd: string; readonly env: Record<string, string> }[] = [
       { cwd: workspaceRoot, env: {} },
       { cwd: bundleRoot, env: { SEMIO_RENDERER: "wgpu", S_OS_PORT: "6118", CARGO_TARGET_DIR: join(workspaceRoot, "target-cross-context-probe") } },
@@ -545,8 +545,7 @@ describe("framework renderer wgpu generated worker", () => {
   }, 30_000);
 
   it("aligns digest-verified devcontainer and native Bun provisioning with the packageManager pin", () => {
-    let repoRoot = dirname(fileURLToPath(import.meta.url));
-    while (!existsSync(join(repoRoot, "nx.json"))) repoRoot = dirname(repoRoot);
+    const repoRoot = findWorkspaceRoot(dirname(fileURLToPath(import.meta.url)));
     const dockerfile = readFileSync(join(repoRoot, ".devcontainer/Dockerfile"), "utf8");
     const packageManager = JSON.parse(readFileSync(join(repoRoot, "package.json"), "utf8")).packageManager;
     const pinnedVersion = /^bun@(\d+\.\d+\.\d+)$/u.exec(packageManager)?.[1];

@@ -16,6 +16,7 @@ import {Database} from "bun:sqlite";
 import {readFileSync} from "node:fs";
 import {resolve} from "node:path";
 import { familyText } from "../../../🧷️companions/🧯️test-support/🧵️instance-family/🟦️.ts";
+import {pluginSubtreeText} from "../../../🧷️companions/🧯️test-support/🔌️plugin-family/🟦️.ts";
 test("media output birth requires caller-funded ownership before any allocation",()=>{
  for(const row of fixture.birth.cases){const db=new Database(":memory:");db.exec("CREATE TABLE owners (id TEXT)");db.exec("BEGIN");db.query("INSERT INTO owners VALUES (?)").run(row.id);db.exec(row.items>0&&row.capacityBytes>0&&row.copyBytes>0&&row.depth>0?"COMMIT":"ROLLBACK");expect(db.query("SELECT COUNT(*) AS count FROM owners").get()).toEqual({count:Number(row.expected)});db.close();}
  const declaration=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🎞️media/🦀️.rs"),"utf8");expect(declaration.includes("original_birth_admit")).toBe(true);const receiver=[["🖼️render/🦀️.rs","🧷️command-routes/🦀️.rs","🧾️typed-operations/🦀️.rs","🔌️plugin-app-impl/🦀️.rs"].map(s=>readFileSync(resolve(import.meta.dir,"../../../🧵️instance/"+s),"utf8")).join("\n"),familyText()].join("\n");expect(receiver.includes("ArtifactMediaExportCredit::original_birth_admit")).toBe(true);
@@ -37,7 +38,7 @@ test("snapshot preparation retains its original source and installed supplier th
 test("media producer keeps paired input and body through each denied publication phase",()=>{
  expect(new Ajv({strict:true}).validate(schema,fixture)).toBe(true);
  for(const row of fixture.producerPreparation.cases){const db=new Database(":memory:");db.exec("CREATE TABLE owners (phase TEXT)");for(const [index,phase]of fixture.producerPreparation.phases.entries()){db.exec("BEGIN");db.query("INSERT INTO owners VALUES (?)").run(phase);const admitted=row.sourceRoot===row.incomingRoot&&index<row.deniedPhase;db.exec(admitted?"COMMIT":"ROLLBACK");if(!admitted)break;}expect(db.query("SELECT phase FROM owners").all()).toEqual(row.expectedPhases.map(phase=>({phase})));db.close();}
- const sdk=readFileSync(resolve(import.meta.dir,"../../../📜️declaration/🧩️app/🦀️.rs"),"utf8");expect(sdk.includes("body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>")).toBe(true);
+ const sdk=pluginSubtreeText("📜️declaration","🧩️app");expect(sdk.includes("body:&mut Option<Box<dyn crate::tool_contract::ArtifactReservedJob+Send>>")).toBe(true);
 });
 
 

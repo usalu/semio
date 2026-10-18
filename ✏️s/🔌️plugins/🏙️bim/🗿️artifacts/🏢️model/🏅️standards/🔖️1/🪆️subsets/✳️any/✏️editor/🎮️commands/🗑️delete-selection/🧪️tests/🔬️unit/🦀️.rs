@@ -1,4 +1,4 @@
-use super::{DeleteSelection, Plan, handle, plan};
+use crate::editor::bim::commands::delete_selection::{DeleteSelection, Plan, handle, plan};
 use crate::standards::v1::subsets::any::schema::mutations::delete_elements::DeleteElements;
 use crate::standards::v1::subsets::any::schema::mutations::cascade::INVERSE_ROWS;
 use crate::standards::v1::subsets::any::schema::mutations::ModelMutation;

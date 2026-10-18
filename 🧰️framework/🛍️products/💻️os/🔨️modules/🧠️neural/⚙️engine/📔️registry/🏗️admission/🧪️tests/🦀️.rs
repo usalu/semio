@@ -7,7 +7,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn observe<T>(run:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);(value,(heap.requested_bytes,heap.released_bytes))}
 fn clock()->Option<u64>{Some(1000)}
-fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
+fn fixture()->serde_json::Value{serde_json::from_str(include_str!("./🧫️fixtures/🔣️.json")).unwrap()}
 fn stock(law:&serde_json::Value)->Grant{let stock=&law["stock"];Grant{maximum_items:stock["items"].as_u64().unwrap()as usize,maximum_copy_bytes:stock["copy"].as_u64().unwrap()as usize,maximum_capacity_bytes:stock["capacity"].as_u64().unwrap()as usize,maximum_release_bytes:stock["release"].as_u64().unwrap()as usize,maximum_depth:stock["depth"].as_u64().unwrap()as usize}}
 fn original_caller(law:&serde_json::Value)->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(945),Generation(32),stock(law),clock,law["deadline"].as_u64().unwrap(),law["fuel"].as_u64().unwrap())}
 fn input()->Registry{let mut source=Registry::new();source.register_schema(Schema{id:"original".into(),..Default::default()});source}

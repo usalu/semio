@@ -21,8 +21,8 @@ test("transaction fixture close retains its declared caller grant independently 
  const source=readFileSync(new URL("./🦀️.rs",import.meta.url),"utf8");
  const close=readFileSync(new URL("../🧬️mutation-fixtures-job-close/🦀️.rs",import.meta.url),"utf8");
  expect(source.includes("caller_grant: [usize; 5]")).toBe(true);
- expect(source.includes("turn(job, original")).toBe(true);
- expect(source.includes("retire_completion(external, original)")).toBe(true);
+ expect(source.includes("turn(&mut job,&mut cx,original,&mut released)")).toBe(true);
+ expect(source.includes("retire_completion(external,&mut cx,original)")).toBe(true);
  expect(close.includes("fn job_grant")).toBe(false);
  expect(close.includes("plugin_demand_grant")).toBe(false);
 });

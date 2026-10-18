@@ -36,14 +36,7 @@ pub mod standards {
             pub mod any {
                 #[path = "../../../🦀️.rs"]
                 pub mod io;
-                #[path = "."]
-                pub mod schema {
-                    pub use semio_s_artifact_stdio_html_schema::standards::v5::subsets::any::schema::*;
-                    pub use semio_s_artifact_stdio_html_snapshot::standards::v5::subsets::any::schema::snapshot;
-                    pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::inferences;
-                    pub use semio_s_artifact_stdio_html_inferences::standards::v5::subsets::any::schema::diff;
-                    pub use semio_s_artifact_stdio_html_mutations::standards::v5::subsets::any::schema::mutations;
-                }
+                
             }
         }
     }

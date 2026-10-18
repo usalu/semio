@@ -6,7 +6,7 @@ use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, Cur
 use semio_framework_os_store_read::ArtifactStoreRevisionAccumulatorRetirement;
 use semio_framework_os_store_replay::lifted_snapshot_read::ArtifactStoreStringVectorRetirement;
 use semio_framework_value::ValueError;
-pub(super) struct MemberGroupPreparation {
+pub struct MemberGroupPreparation {
     pub visibility: Arc<semio_framework_os_vcs::ArtifactGroupVisibility>,
     pub history: Option<ArtifactStoreHistoryCommitReservation>,
     pub displaced: Option<ArtifactStoreDisplacedOwnerReservation>,

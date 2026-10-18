@@ -283,7 +283,7 @@ export function addWorkspaceMembers(manifestText: string, additions: readonly st
 }
 
 /** 🔒️ Adds carved crates to a lockfile and extends the dependency list of the crate they were carved from. Blocks of other crates, including several versions of one name, stay byte-identical and in place. */
-export function patchCargoLock(lockText: string, artifactCrate: string, carved: readonly { name: string; dependsOn: readonly string[] }[]): string {
+export function patchCargoLock(lockText: string, artifactCrate: string, carved: readonly { name: string; dependsOn: readonly string[] }[], memberNames?: ReadonlySet<string>): string {
   const blocks = lockText.split(/\n(?=\[\[package\]\]\n)/u);
   const header = blocks[0]!.startsWith("[[package]]") ? "" : blocks.shift()!;
   const nameOf = (block: string): string => /name = "([^"]+)"/u.exec(block)![1]!;
@@ -296,9 +296,14 @@ export function patchCargoLock(lockText: string, artifactCrate: string, carved: 
   const artifactBlock = blocks.find((block) => nameOf(block) === artifactCrate && isPath(block));
   if (!artifactBlock) throw new Error(`Lockfile has no package ${artifactCrate}`);
   const version = /version = "([^"]+)"/u.exec(artifactBlock)?.[1] ?? "0.1.0";
-  const baseDependencies = dependenciesOf(artifactBlock);
   const carvedNames = new Set(carved.map((crate) => crate.name));
-  const kept = blocks.filter((block) => !(isPath(block) && carvedNames.has(nameOf(block)))).map((block) => (block === artifactBlock ? render(artifactCrate, version, [...new Set([...baseDependencies, ...carved.map((crate) => crate.name)])]) : block.trimEnd() + "\n"));
+  const stale = new Set(memberNames === undefined ? [] : blocks.filter((block) => isPath(block) && nameOf(block).startsWith(`${artifactCrate}-`) && !carvedNames.has(nameOf(block)) && !memberNames.has(nameOf(block))).map(nameOf));
+  const baseDependencies = dependenciesOf(artifactBlock).filter((name) => !stale.has(name));
+  const without = (block: string): string => (stale.size === 0 ? block : block.replace(/dependencies = \[([\s\S]*?)\n\]/u, (_, list: string) => {
+    const kept = [...list.matchAll(/"((?:[^"\\]|\\.)*)"/gu)].map((entry) => entry[1]!).filter((entry) => !stale.has(entry));
+    return kept.length ? `dependencies = [\n${kept.map((entry) => ` "${entry}",`).join("\n")}\n]` : "";
+  }));
+  const kept = blocks.filter((block) => !(isPath(block) && (carvedNames.has(nameOf(block)) || stale.has(nameOf(block))))).map((block) => (block === artifactBlock ? render(artifactCrate, version, [...new Set([...baseDependencies, ...carved.map((crate) => crate.name)])]) : without(block).trimEnd() + "\n"));
   for (const crate of carved) {
     const rendered = render(crate.name, version, [...new Set([...baseDependencies.filter((name) => !carvedNames.has(name)), ...crate.dependsOn])]);
     const after = kept.findIndex((block) => compareBytes(nameOf(block), crate.name) > 0);
@@ -327,9 +332,26 @@ export function patchRouterPackages(scriptText: string, artifactCrate: string, a
 /** 🗂️ One build-owner row of a carved crate. */
 export type BuildOwnerRow = { readonly name: string; readonly root: string };
 
-/** 🗂️ Inserts the owner rows of new crates into `📋️build-owners.json` text at their byte-order position; rows whose name or root is already registered are skipped. */
-export function insertBuildOwnerRows(raw: string, rows: readonly BuildOwnerRow[]): { text: string; added: string[] } {
+/** 🗂️ What `syncBuildOwnerRows` changed: rows added, rows whose name changed at the same root, and rows of the artifact whose crate no longer exists. */
+export type BuildOwnerSync = { text: string; added: string[]; renamed: string[]; removed: { name: string; root: string }[] };
+
+/** 🗂️ Brings the owner rows of a carve up to date in `📋️build-owners.json` text: rows of new crates are inserted at their byte-order position, a row registered at the same root under another name (the crate was named differently by an earlier carve) takes the new name, and, when `scope` is given, rows below the artifact directory named after the artifact crate whose manifest is gone are removed. A row whose name is registered at another root is left alone. */
+export function syncBuildOwnerRows(raw: string, rows: readonly BuildOwnerRow[], scope?: { readonly artifactCrate: string; readonly artifactDir: string; readonly exists: (root: string) => boolean }, rename = true): BuildOwnerSync {
   const document = JSON.parse(raw) as { owners: { name: string; root: string; manifest: string; packages: string[]; [key: string]: unknown }[] };
+  const wanted = new Map(rows.map((row) => [row.root, row.name]));
+  const removed: { name: string; root: string }[] = [];
+  const renamed: string[] = [];
+  if (scope) document.owners = document.owners.filter((owner) => {
+    const stale = owner.name.startsWith(`${scope.artifactCrate}-`) && owner.root.startsWith(`${scope.artifactDir}/`) && !wanted.has(owner.root) && !scope.exists(owner.root);
+    if (stale) removed.push({ name: owner.name, root: owner.root });
+    return !stale;
+  });
+  for (const owner of document.owners) {
+    const name = wanted.get(owner.root);
+    if (!rename || name === undefined || owner.name === name || document.owners.some((other) => other !== owner && other.name === name)) continue;
+    owner.name = name;
+    renamed.push(name);
+  }
   const known = new Set(document.owners.flatMap((owner) => [owner.name, owner.root]));
   const added: string[] = [];
   for (const row of [...rows].sort((left, right) => compareBytes(left.name, right.name))) {
@@ -341,7 +363,13 @@ export function insertBuildOwnerRows(raw: string, rows: readonly BuildOwnerRow[]
     known.add(row.root);
     added.push(row.name);
   }
-  return { text: JSON.stringify(document, null, 2) + "\n", added };
+  return { text: JSON.stringify(document, null, 2) + "\n", added, renamed, removed };
+}
+
+/** 🗂️ Inserts the owner rows of new crates into `📋️build-owners.json` text at their byte-order position; rows whose name or root is already registered are skipped. */
+export function insertBuildOwnerRows(raw: string, rows: readonly BuildOwnerRow[]): { text: string; added: string[] } {
+  const { text, added } = syncBuildOwnerRows(raw, rows, undefined, false);
+  return { text, added };
 }
 
 /** 🧲️ Rebases the file arguments of `include_str!`, `include_bytes!` and `include!` of moved text from the directory it came from to the directory it now lives in. */

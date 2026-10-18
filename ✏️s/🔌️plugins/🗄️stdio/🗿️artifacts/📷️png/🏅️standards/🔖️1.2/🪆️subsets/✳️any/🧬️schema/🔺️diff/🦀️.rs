@@ -80,8 +80,8 @@ pub(crate) fn demo_snap_a() -> PngSnapshot {
     PngSnapshot::default()
 }
 
-#[cfg(test)]
-pub(crate) fn demo_diff_cases() -> Vec<PngDiff> {
+#[cfg(any(test, feature = "testkit"))]
+pub fn demo_diff_cases() -> Vec<PngDiff> {
     use crate::schema::snapshot::PngRegion;
     vec![
         PngDiff::default(),

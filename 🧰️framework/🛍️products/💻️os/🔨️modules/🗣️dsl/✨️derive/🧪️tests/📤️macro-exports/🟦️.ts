@@ -1,6 +1,7 @@
 /** 📤️ Strict schema and source-roster join; native Syn tests independently parse the same sources. */
 import Ajv from "ajv";
 import { strict as assert } from "node:assert";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
 
 //#region 🧬️ExportRoster
 const fixture = await Bun.file(new URL("../🧫️fixtures/📤️macro-exports/🔣️.json", import.meta.url)).json();
@@ -12,7 +13,7 @@ ajv.addSchema(document);
 const facade = await Bun.file(new URL("../../../🦀️.rs", import.meta.url)).text();
 const exports = /pub use dsl_derive::\{([^}]+)\};/.exec(facade)?.[1].split(",").map((name) => name.trim()).filter(Boolean).sort();
 assert.deepEqual(exports, fixture.facadeExports);
-const owner = await Bun.file(new URL("../../🦀️.rs", import.meta.url)).text();
+const owner = readModuleTreeSource(new URL("../../🦀️.rs", import.meta.url));
 assert.deepEqual([...owner.matchAll(/#\[proc_macro_derive\((\w+)/g)], [], "the implementation owner must not register crate-root derives");
 const source = await Bun.file(new URL("../../📦️packages/🦀️rust/🦀️.rs", import.meta.url)).text();
 const names = [...source.matchAll(/#\[proc_macro_derive\((\w+)/g)].map((match) => match[1]).sort();

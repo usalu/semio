@@ -63,6 +63,4 @@ pub fn measures(snapshot: &ModelSnapshot, config: &config::BimViewerPlanWindowCo
 }
 //#endregion 🔖️Measures
 
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
+

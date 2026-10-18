@@ -2,7 +2,7 @@
 //! side, the side a hosted component faces away from its wall) and, for a terminal, a cross at the connector. The outline is cut, projected or hidden like every element by the vertical span of the component against the cut plane;
 //! the tick and the cross are annotation strokes. The colour of the cross is the colour of the system, `components[id].connector.colour` of the inference.
 
-use super::{classify, outline_style, Context, PlanKind, PlanStyle, PlanVertex, Sheet};
+use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{classify, outline_style, Context, PlanKind, PlanStyle, PlanVertex, Sheet};
 use semio_framework_geometry::Point;
 
 /// 📏️ Length in metres of the tick in front of the outline.

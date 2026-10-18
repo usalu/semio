@@ -9,7 +9,9 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { runCargo, runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { readModuleTreeSource } from "@semio-tech/framework-compiler-ts/syntax/module-tree";
+import { runCargo } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🏃️run/🟦️.ts";
+import { runRepositoryExactCargoLaws, configuredRepositoryCargoPreparationPolicyV1 } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🦀️cargo/🎯️exact/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { blake3Hex } from "@semio-tech/framework/hash";
 import { exactCargoStageEnvironments } from "../🧱️script-bases/🟦️.ts";
@@ -57,7 +59,7 @@ export class WalWriterAuthorityCheckScript extends BundleScript {
       assert.equal(row.expected.retainedGuards, row.activeRequested, row.id);
       assert.equal(row.expected.terminalEpochs, 0, row.id);
     }
-    const writerDeferredStorageSource = readFileSync(join(owner, "..", "🦀️.rs"), "utf8");
+    const writerDeferredStorageSource = readModuleTreeSource(join(owner, "..", "🦀️.rs"));
     const writerDeferredSource = readFileSync(join(owner, "🦀️.rs"), "utf8");
     const writerDeferredReleaseSource = readFileSync(join(owner, "🔔️release/🦀️.rs"), "utf8");
     assert(writerDeferredStorageSource.includes(`const DB_IO_BACKEND_CONTROLS: usize = ${writerDeferredWake.capacity.backendControls};`));
@@ -76,7 +78,7 @@ export class WalWriterAuthorityCheckScript extends BundleScript {
     }
     assert(remoteFixture.neo4j.renewEveryMs * 2 < remoteFixture.neo4j.leaseTtlMs, "a Neo4j writer lease must survive one missed renewal");
     for (const backend of ["sqlite", "postgres", "neo4j"]) assert(remoteFixture.laws.filter((law: { backends: string[] }) => law.backends.includes(backend)).length >= 4, `${backend} runs every shared fence law`);
-    const sourceOf = (path: string) => readFileSync(join(owner, "..", path, "🦀️.rs"), "utf8");
+    const sourceOf = (path: string) => readModuleTreeSource(join(owner, "..", path, "🦀️.rs"));
     for (const [marker, path] of [
       ["pg_try_advisory_lock($1)", "🐘️postgres"],
       ["fn fenced_wal_mutation", "🐘️postgres"],
@@ -200,10 +202,10 @@ export class WalWriterAuthorityCheckScript extends BundleScript {
     for (const marker of ["struct ArtifactWalAcquiredRejected", "enum ArtifactWalOpenRejected", "retry_open(", "retry_close(", "open_acquired(", "into_open_rejected"])
       assert(walSource.includes(marker), "missing retained WAL-open owner primitive: " + marker);
     assert(!walSource.includes("release_failed_open"), "WAL open rejection must not await and flatten its writer release");
-    const artifactSource = readFileSync(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"), "utf8");
+    const artifactSource = readModuleTreeSource(join(owner, "..", "..", "🗿️artifact", "🦀️.rs"));
     for (const marker of ["enum ArtifactEngineOpenRejected", "RetainedWal", "has_retained_writer", "Future<Output = Result<Box<ArtifactEngine>, ArtifactEngineOpenRejected>>"])
       assert(artifactSource.includes(marker), "missing engine retained-open propagation: " + marker);
-    const engineSource = readFileSync(join(owner, "..", "..", "⚙️engine", "🦀️.rs"), "utf8");
+    const engineSource = readModuleTreeSource(join(owner, "..", "..", "⚙️engine", "🦀️.rs"));
     for (const marker of ["enum DatabaseDocumentOpenRejected", "Result<ArtifactHandle, DatabaseDocumentOpenRejected>", "rejected.retry_close().await"]) assert(engineSource.includes(marker), "missing database retained-open propagation: " + marker);
     for (const marker of ["enum ReplicationRejected", "ArtifactWal::open_acquired", "ReplicationRejected::WalOpen"]) assert(clusterSource.includes(marker), "missing cluster acquired-writer propagation: " + marker);
     for (const outcome of fixture.replication.releaseAfter) {
@@ -282,7 +284,7 @@ export class WalWriterAuthorityCheckScript extends BundleScript {
       assert(source.includes(marker), `missing writer capability primitive: ${marker}`);
     const explicitRelease = source.slice(source.indexOf("pub fn release(mut self)"), source.indexOf("fn request_release(&self)"));
     assert(!explicitRelease.includes("self.request_release()"), "explicit retained release must stay dormant until its first poll");
-    const storageSource = readFileSync(join(owner, "..", "🦀️.rs"), "utf8");
+    const storageSource = readModuleTreeSource(join(owner, "..", "🦀️.rs"));
     for (const marker of ["WalWriterTable<WalFileWriterGuard>", "fn writer_sidecar", "DbIoTask::WalWriterAcquire", "fn pin_writer_operation", "finish_operation_if_pinned", ".semio-wal-writer"])
       assert(storageSource.includes(marker), `missing filesystem writer integration: ${marker}`);
     for (const marker of [
@@ -304,7 +306,7 @@ export class WalWriterAuthorityCheckScript extends BundleScript {
     const registrationSource = storageSource.slice(storageSource.indexOf("pub fn register_db_io_backend("), storageSource.indexOf("fn db_io_writer_release_lane_step"));
     assert(!registrationSource.includes("let _ = db_io_park_lost_owner"), "backend registration must not discard a saturated retirement owner");
     for (const marker of ["MemoryDbIoExecutor::backing_bytes()", "checked_add(writer::release::controller_credit())"]) assert(storageSource.includes(marker), `missing memory writer backing integration: ${marker}`);
-    const sqliteSource = readFileSync(join(owner, "..", "🪶️sqlite", "🦀️.rs"), "utf8");
+    const sqliteSource = readModuleTreeSource(join(owner, "..", "🪶️sqlite", "🦀️.rs"));
     for (const marker of ["WalWriterTable<SqliteWalWriterGuard>", "canonical_database", "fn physical_writer_sidecar", "DbIoTask::WalWriterAcquire", "fn pin_writer_operation", "finish_operation_if_pinned", ".semio-wal-writer"])
       assert(sqliteSource.includes(marker), `missing SQLite writer integration: ${marker}`);
     const releaseSource = readFileSync(join(owner, "🔔️release/🦀️.rs"), "utf8");
@@ -501,7 +503,7 @@ export class WalCommittedTransactionsCheckScript extends BundleScript {
     assert(source.includes("trait WalImmutableByteSource"), "History must share the authenticated frame source without borrowing another field across polls");
     assert(source.includes("struct WalAuthenticatedSource<S>") && source.includes("source: S"), "History authentication and committed spans must retain the same immutable source owner");
     assert(source.includes("recovered_abort_tx_id") && source.includes("wal recovery abort exceeds retained segment budget"), "active recovery must durably abort within the retained segment budget");
-    const history = readFileSync(join(owner, "../🗿️artifact/🦀️.rs"), "utf8");
+    const history = readModuleTreeSource(join(owner, "../🗿️artifact/🦀️.rs"));
     assert(history.includes("WalAuthenticatedSource<HistoryPageSet>") && !history.includes("struct HistoryFrameCursor"), "History must consume authenticated committed spans, with no independent frame grammar");
     for (const check of ["history envelope document differs", "history frontier document differs", "history committed frontier is not terminal"]) assert(history.includes(check), `History admission is missing ${check}`);
     const decoder = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/📖️retained-decoder/🔣️.json"), "utf8"));
@@ -616,7 +618,7 @@ export class WalCommittedCompactionCheckScript extends BundleScript {
       queuedSubmitDuring: "pending",
       queuedSubmitAfter: "accepted",
     });
-    const source = readFileSync(join(owner, "🦀️.rs"), "utf8");
+    const source = readModuleTreeSource(join(owner, "🦀️.rs"));
     const committedCut = source.slice(source.indexOf("async fn committed_compaction_horizons"), source.indexOf("async fn retained_compaction_under_lease"));
     assert(committedCut.includes("replay_committed_document") && committedCut.includes("close_record_step") && committedCut.includes("transaction.finish()") && committedCut.includes("close_compaction_replay"));
     assert(source.slice(source.indexOf("async fn close_compaction_replay"), source.indexOf("async fn close_compaction_owner")).includes("close_owner_step"));
@@ -628,7 +630,7 @@ export class WalCommittedCompactionCheckScript extends BundleScript {
     assert(!underLeaseCut.includes("loop {\n            let deadline") && underLeaseCut.includes("handle.compact(&mut control).await"));
     const walSource = readFileSync(join(owner, "..", "📝️wal", "🦀️.rs"), "utf8");
     assert(walSource.includes("delete_compacted_sealed_segment"));
-    const artifactSource = readFileSync(join(owner, "..", "🗿️artifact", "🦀️.rs"), "utf8");
+    const artifactSource = readModuleTreeSource(join(owner, "..", "🗿️artifact", "🦀️.rs"));
     assert(artifactSource.includes("ArtifactMessage::Compact") && artifactSource.includes("Priority::Command"));
     const laws = readFileSync(join(owner, "🧪️tests", "🔬️unit", "🦀️.rs"), "utf8");
     assert(laws.includes("fn compaction_applies_only_committed_frontier_snapshot_and_payload_effects("));
@@ -775,7 +777,7 @@ export class WalRecoveryCheckScript extends BundleScript {
       ].map((law) => `db_wal::tests::${law}`),
     );
     const faultStorageLawsSource = readFileSync(join(owner, "../🧪️tests/🧯️fault-storage-laws/🦀️.rs"), "utf8");
-    const walLawsSource = readFileSync(join(owner, "🧪️tests/🔬️unit/🦀️.rs"), "utf8");
+    const walLawsSource = readModuleTreeSource(join(owner, "🧪️tests/🔬️unit/🦀️.rs"));
     const walRetainedLawsSource = readFileSync(join(owner, "🧪️tests/🔬️retained/🦀️.rs"), "utf8");
     for (const law of laws) assert((law.startsWith("db_fault_testing::") ? faultStorageLawsSource : law.startsWith("db_wal::retained_tests::") ? walRetainedLawsSource : walLawsSource).includes(`fn ${law.split("::").at(-1)}(`), `missing exact native law ${law}`);
     if (segments[0] === "--native") {
@@ -840,10 +842,10 @@ export class WalCapacityCheckScript extends BundleScript {
 /** 🚦️ Proves every WAL backend exposes the same read-only active/sealed contract. */
 export function walSegmentStateOracle(repoRoot: string): number {
   const storageRoot = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db");
-  const core = readFileSync(join(storageRoot, "🗄️storage/🦀️.rs"), "utf8");
-  const sqlite = readFileSync(join(storageRoot, "🗄️storage/🪶️sqlite/🦀️.rs"), "utf8");
-  const postgres = readFileSync(join(storageRoot, "🗄️storage/🐘️postgres/🦀️.rs"), "utf8");
-  const neo4j = readFileSync(join(storageRoot, "🗄️storage/🌐️neo4j/🦀️.rs"), "utf8");
+  const core = readModuleTreeSource(join(storageRoot, "🗄️storage/🦀️.rs"));
+  const sqlite = readModuleTreeSource(join(storageRoot, "🗄️storage/🪶️sqlite/🦀️.rs"));
+  const postgres = readModuleTreeSource(join(storageRoot, "🗄️storage/🐘️postgres/🦀️.rs"));
+  const neo4j = readModuleTreeSource(join(storageRoot, "🗄️storage/🌐️neo4j/🦀️.rs"));
   const faultStorage = readFileSync(join(storageRoot, "🧪️tests/🧯️fault-storage/🦀️.rs"), "utf8");
   assert(core.includes("pub enum WalSegmentState") && core.includes("Active,") && core.includes("Sealed,"));
   assert(core.includes("async fn segment_state(&self, document: &ArtifactId, index: u64) -> Result<WalSegmentState, DbError>"));

@@ -9,7 +9,13 @@
         "🕹️interaction/🦀️.rs",
         "🧰️kit/🦀️.rs",
         "🧵️retained/🦀️.rs",
-        "🖌️session/🦀️.rs"
+        "🧵️retained/🧱️board-event-limits-window-export-and-dispatch-work/🦀️.rs",
+        "🧵️retained/🕸️force-layout-work/🦀️.rs",
+        "🧵️retained/🎨️force-layout-command-and-redraw-handles-work/🦀️.rs",
+        "🖌️session/🦀️.rs",
+        "🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs",
+        "🧠️artifact-editor/🦀️.rs",
+        "🚀️app-assembly/🦀️.rs"
       ],
       "groups": [
         {
@@ -357,7 +363,10 @@
         "🖌️session/🦀️.rs",
         "🧵️retained/🦀️.rs",
         "👆️gestures/🦀️.rs",
-        "🧰️kit/🦀️.rs"
+        "🧰️kit/🦀️.rs",
+        "🔧️play-app-retained-commands-and-tool-proofs/🦀️.rs",
+        "✍️artifact-editor/🦀️.rs",
+        "🚀️app-assembly/🦀️.rs"
       ],
       "groups": [
         {

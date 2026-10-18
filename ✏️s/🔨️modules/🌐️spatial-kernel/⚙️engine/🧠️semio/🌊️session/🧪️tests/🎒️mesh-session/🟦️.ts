@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { BoxGeometry, Vector3 } from "three";
 
 test("original Session cold box law agrees with independent geometry", () => {
-  const base = join(import.meta.dir, "../../🧫️fixtures/🧊️validation");
+  const base = join(import.meta.dir, "../🧫️fixtures/🧊️validation");
   const fixture = JSON.parse(readFileSync(join(base, "🔣️.json"), "utf8"));
   const geometry = new BoxGeometry(fixture.box.width, fixture.box.height, fixture.box.depth);
   const positions = geometry.getAttribute("position"), indices = geometry.getIndex()!;
